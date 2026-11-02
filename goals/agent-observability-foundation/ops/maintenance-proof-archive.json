@@ -1,0 +1,119 @@
+{
+  "result": "passed",
+  "archive": "~/.local/state/beep/observation-proof-archive/obs-deploy-dnv_nm1d",
+  "sameHostOnly": true,
+  "tamperedBundleMustNotRun": true,
+  "files": [
+    {
+      "path": "artifacts space/caddy",
+      "bytes": 51953826,
+      "sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9"
+    },
+    {
+      "path": "artifacts space/intake.json",
+      "bytes": 1068,
+      "sha256": "a577b923f79a83f161d37ca6d4b26d2e505805cb4c0abaaeb55fbe74256f0d00"
+    },
+    {
+      "path": "artifacts space/intake.sha256",
+      "bytes": 232,
+      "sha256": "ef2010fdccd7169bc052451066212968fa256b33100a61cf9a6458432b7f6d41"
+    },
+    {
+      "path": "artifacts space/worker.mjs",
+      "bytes": 1318634,
+      "sha256": "d183f46b388f3f27a91a15c0a2d971a8e3bbd5ac6440eee65e458bde5574c5ee"
+    },
+    {
+      "path": "artifacts space/worker.sha256",
+      "bytes": 379,
+      "sha256": "aaafe41575d4b5be90c3b299108101921fefbf7ffa210b2800428ff09d01fdb3"
+    },
+    {
+      "path": "bundle-build.log",
+      "bytes": 68,
+      "sha256": "7859a00bef67835bdeeb1b420ab923a79575078c0421cee6a21c43875f5ea45a"
+    },
+    {
+      "path": "deployment-request.json",
+      "bytes": 523,
+      "sha256": "d15b0b9ba82da9d5d8b940897b3414aae96486ccf42f90061dc2ecd03c06f93f"
+    },
+    {
+      "path": "evidence.json",
+      "bytes": 15850,
+      "sha256": "a8dd1c88a59f8983bf0849ebf21db9d3b8cdf45287b6123377de77f72f8e7723"
+    },
+    {
+      "path": "health-tsdb/queries.active",
+      "bytes": 20001,
+      "sha256": "4d53b2cb8f39eaa2434c0c213d53ac997b1075226374d30a40504f33caf8d8f7"
+    },
+    {
+      "path": "health-tsdb/wal/00000000",
+      "bytes": 32768,
+      "sha256": "7f7950c2113f62c3771fb2c2f75c57bec3228d4ae160352128d38c8120dff466"
+    },
+    {
+      "path": "state/backup-0/journal.sqlite",
+      "bytes": 159744,
+      "sha256": "6f0973ec46d43f3208254be81751728df7cfd57fc5345e43fe92f840979e741c"
+    },
+    {
+      "path": "state/backup-0/manifest.json",
+      "bytes": 399,
+      "sha256": "bd5cf8354410924b202a01419165ada461c2f71d8cffcfcd673754eae848af98"
+    },
+    {
+      "path": "state/frontend-data/caddy/instance.uuid",
+      "bytes": 36,
+      "sha256": "2be8537d528f19bf8bf98bc72a872e5d34f25c2b1db9b67a9aa63cdbfedc0727"
+    },
+    {
+      "path": "state/frontend-data/caddy/last_clean.json",
+      "bytes": 112,
+      "sha256": "cc18c4da9cf5f64cc17383049ba095a34e75549e65076d0709d9f7c37eef0961"
+    },
+    {
+      "path": "state/journal.sqlite",
+      "bytes": 159744,
+      "sha256": "364027577edb9ac1b235f6f2844a81840bce85b1321d557d4d22b19524f3dcbe"
+    },
+    {
+      "path": "state/worker.json",
+      "bytes": 1691,
+      "sha256": "54868055432cba685a07c9f9ccd723a3d9b7231bd3016c48adf55d9b9acfd0a4"
+    },
+    {
+      "path": "state/worker.lock",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "synthetic-api-key",
+      "bytes": 26,
+      "sha256": "f25607bff85f8eb24c17e920be9a6caef478969e75ff43a372e42e4be9c5ea84"
+    },
+    {
+      "path": "synthetic-salt",
+      "bytes": 27,
+      "sha256": "befd250f1495be62bb8fec4e1f3e2801266253fb1849140ec0e9ebb9351c54d8"
+    },
+    {
+      "path": "worker-health-prometheus.yml",
+      "bytes": 291,
+      "sha256": "2ea988c5aea26fcad7bae24af284e2e35395a70b333e43656fd2ada2d3989202"
+    },
+    {
+      "path": "worker-health-rules.yml",
+      "bytes": 4432,
+      "sha256": "faae46e301eb777d4c247f5293a22b6b36d66ccb3b35eef38351b305f0a89ffe"
+    },
+    {
+      "path": "worker-health.prom",
+      "bytes": 1426,
+      "sha256": "33b550577be4f73767c7e07e5a5b42f528ecafc5326849a1acfc8c3190081b96"
+    }
+  ],
+  "totalBytes": 53671277
+}

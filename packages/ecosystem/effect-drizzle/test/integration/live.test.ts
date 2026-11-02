@@ -4,7 +4,7 @@ import { makeNativeRepository, VersionConflictError } from "@beep/effect-drizzle
 import { PgliteClient, PgliteTestLayer } from "@beep/pglite";
 import { it } from "@beep/test-runner";
 import { layer as makePgliteLayer } from "@effect/sql-pglite/PgliteClient";
-import { assert, expect } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { PGlite, types } from "@electric-sql/pglite";
 import { pushSchema } from "drizzle-kit/api-postgres";
@@ -527,11 +527,13 @@ it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGl
       expect(filter(results, isSuccess)).toHaveLength(1);
       const winner = getOrThrow(findFirst(results, isSuccess));
       const loser = getOrThrow(findFirst(results, isFailure));
-      assertTrue(hasFails(loser));
-      assertFalse(hasDies(loser));
-      assertFalse(hasInterrupts(loser));
-      const conflict = getOrThrow(Cause.findErrorOption(loser.cause));
-      assert(isVersionConflict(conflict));
+      loser.pipe(hasFails, assertTrue);
+      loser.pipe(hasDies, assertFalse);
+      loser.pipe(hasInterrupts, assertFalse);
+      const conflict = loser.cause.pipe(Cause.findErrorOption, getOrThrow);
+      if (!isVersionConflict(conflict)) {
+        throw new Error("concurrent loser did not return VersionConflictError");
+      }
       expect(conflict.table).toBe(User.sql.tableName);
       expect(conflict.id).toBe(snapshot.id);
       expect(conflict.expectedVersion).toBe(snapshot.rowVersion);

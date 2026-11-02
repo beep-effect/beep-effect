@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { JsoncFormatter } from "@beep/jsonc/JsoncFormatter";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -16,7 +17,6 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import * as jsonc from "jsonc-parser";
 
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
 const tscBinPath = NodeURL.fileURLToPath(new URL("../../../../../node_modules/.bin/tsc", import.meta.url));
@@ -51,12 +51,9 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
 const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
   const fs = yield* FileSystem.FileSystem;
   const encoded = encodeJson(value);
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
+  const formatted = JsoncFormatter.formatToString(encoded, undefined, { tabSize: 2, insertSpaces: true });
 
-  yield* fs.writeFileString(filePath, `${jsonc.applyEdits(encoded, edits)}\n`);
+  yield* fs.writeFileString(filePath, `${formatted}\n`);
 });
 
 const writeProjectFile = Effect.fn(function* (projectDir: string, relativePath: string, content: string) {
@@ -191,13 +188,13 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
         const context = `tsrs --version: stdout=${Str.takeLeft(tscRs.stdout, 2048)}; stderr=${Str.takeLeft(tscRs.stderr, 2048)}`;
         expect(tscRs.exitCode, context).toBe(0);
         const { catalog } = decodeRootCatalog(yield* fs.readFileString(rootManifestPath));
-        // tsrs pins its own upstream TypeScript (7.1.0-beta as of 0.20.0, the version tag names it) and
+        // tsrs pins its own upstream TypeScript (7.1.0-beta as of 0.20.1, the version tag names it) and
         // `effect-tsgo patch --tsrs` replaces its binary with the Effect build of that exact tsrs
         // version, so the reported build carries the @effect/tsgo suffix and the installed tsrs version.
         expect(catalog.tsrs).toMatch(/^\d+\.\d+\.\d+-ts7\.\d+\.\d+(?:-[0-9A-Za-z.]+)?$/u);
-        expect(catalog["@effect/tsgo"]).toBe("0.59.0");
+        expect(catalog["@effect/tsgo"]).toBe("0.63.0");
         expect(tscRs.stdout, context).toMatch(
-          /^Version 7\.1\.0-beta\+effect-tsgo\.0\.59\.0 \(tsrs 0\.20\.0-ts7\.1\.0-beta,/u
+          /^Version 7\.1\.0-beta\+effect-tsgo\.0\.63\.0 \(tsrs 0\.20\.1-ts7\.1\.0-beta,/u
         );
         expect(tscRs.stdout, context).toContain(`+effect-tsgo.${catalog["@effect/tsgo"]} (tsrs ${catalog.tsrs},`);
       })

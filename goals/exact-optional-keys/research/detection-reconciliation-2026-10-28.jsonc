@@ -1,0 +1,111 @@
+{
+  "baseCommit": "c9035c45e760088fc77d4f4ed6d7dea078f1f45a",
+  "sourceRule": "packages/tooling/policy-pack/lint-rules/rules/prefer-exact-optional-key.grit",
+  "ruleSha256": "9cf66aa559efe6d140e77931c75afa436ccfbaa6812c9965f6ffb2816df83176",
+  "scope": ["packages", "apps", "scratchpad", "infra"],
+  "materializedCandidateFiles": 112,
+  "codemod": {
+    "sites": 440,
+    "changedFiles": 106,
+    "residue": 0
+  },
+  "ripgrep": {
+    "matchingLines": 446,
+    "rawReferences": 448,
+    "nonCodeReferences": 8,
+    "normalizedReferences": 440,
+    "missingCodemodSites": 0,
+    "exclusions": [
+      {
+        "filePath": "packages/agents/server/src/AssistantTurn/AnthropicTurnCodec.ts",
+        "line": 7,
+        "references": 1,
+        "classification": "comment or JSDoc prose/example"
+      },
+      {
+        "filePath": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+        "line": 12,
+        "references": 1,
+        "classification": "comment or JSDoc prose/example"
+      },
+      {
+        "filePath": "packages/foundation/modeling/pandoc-ast/src/internal/Pandoc.table-caption.ts",
+        "line": 44,
+        "references": 1,
+        "classification": "comment or JSDoc prose/example"
+      },
+      {
+        "filePath": "packages/foundation/modeling/schema-org/src/Thing.ts",
+        "line": 25,
+        "references": 1,
+        "classification": "comment or JSDoc prose/example"
+      },
+      {
+        "filePath": "packages/foundation/modeling/schema-org/test/nodes.test.ts",
+        "line": 36,
+        "references": 1,
+        "classification": "comment or JSDoc prose/example"
+      },
+      {
+        "filePath": "packages/foundation/modeling/schema/src/FileDiff.schema.ts",
+        "line": 21,
+        "references": 1,
+        "classification": "comment or JSDoc prose/example"
+      },
+      {
+        "filePath": "packages/foundation/modeling/schema/test/LocalDate.test.ts",
+        "line": 858,
+        "references": 1,
+        "classification": "string fixture or test title"
+      },
+      {
+        "filePath": "packages/tooling/tool/cli/test/laws-schema-tag-idioms.test.ts",
+        "line": 246,
+        "references": 1,
+        "classification": "string fixture or test title"
+      }
+    ]
+  },
+  "biome": {
+    "exitCode": 1,
+    "pluginDiagnostics": 440,
+    "missingCodemodSites": 0,
+    "extraSites": 0,
+    "reconciliationKey": ["filePath", "line"],
+    "sameLineMultiplicityPreserved": true,
+    "tokenReconciliation": {
+      "key": ["filePath", "line", "memberColumn", "facet"],
+      "missing": 0,
+      "extra": 0,
+      "unparsed": 0,
+      "columnNormalization": "Advance the diagnostic span start by its namespace/dot prefix to the member token."
+    },
+    "fullTrackedCorpus": {
+      "filesExported": 8301,
+      "scope": ["packages", "apps", "scratchpad", "infra"],
+      "excludedDirectoryParts": [
+        "node_modules",
+        "dist",
+        "build",
+        ".turbo",
+        ".repos"
+      ],
+      "summary": {
+        "changed": 0,
+        "unchanged": 8298,
+        "matches": 0,
+        "duration": 1763641462,
+        "errors": 440,
+        "warnings": 47,
+        "infos": 0,
+        "skipped": 0,
+        "suggestedFixesSkipped": 0,
+        "diagnosticsNotPrinted": 0,
+        "scannerDuration": 108017
+      },
+      "pluginDiagnostics": 440,
+      "missingCodemodSites": 0,
+      "extraSites": 0
+    }
+  }
+}

@@ -8,10 +8,17 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { commandErrorFields, messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
+
+// The cause-first constructors below take an optional trailing context, so arity alone cannot tell
+// `new(cause, message)` from the curried `new(message, context)`: `dual(3, ...)` read every two-argument
+// call as curried and returned a function in place of the error. A call is cause-first when it has all
+// three arguments, or two whose first is not the message string.
+const isCauseFirst = (args: IArguments): boolean => args.length >= 3 || (args.length === 2 && !P.isString(args[0]));
 
 const $I = $RepoCliId.create("commands/Quality/Quality.errors");
 
@@ -61,7 +68,7 @@ export class ChangesetGraphError extends S.TaggedError<ChangesetGraphError, { re
     (cause: unknown, message: string, file?: string): ChangesetGraphError;
     (message: string, file?: string): (cause: unknown) => ChangesetGraphError;
   } = dual(
-    3,
+    isCauseFirst,
     (cause, message, file): ChangesetGraphError =>
       ChangesetGraphError.make({
         cause,
@@ -112,7 +119,7 @@ export class CatalogUsageError extends S.TaggedError<CatalogUsageError, { readon
     (cause: unknown, message: string, file?: string): CatalogUsageError;
     (message: string, file?: string): (cause: unknown) => CatalogUsageError;
   } = dual(
-    3,
+    isCauseFirst,
     (cause, message, file): CatalogUsageError =>
       CatalogUsageError.make({
         cause,
@@ -165,7 +172,7 @@ export class ChangesetStatusError extends S.TaggedError<ChangesetStatusError, { 
     (cause: unknown, message: string, file?: string): ChangesetStatusError;
     (message: string, file?: string): (cause: unknown) => ChangesetStatusError;
   } = dual(
-    3,
+    isCauseFirst,
     (cause, message, file): ChangesetStatusError =>
       ChangesetStatusError.make({
         cause,
@@ -214,7 +221,7 @@ export class QualityScriptCommandError extends S.TaggedError<
     (cause: unknown, message: string, opts?: QualityScriptCommandErrorOptions): QualityScriptCommandError;
     (message: string, opts?: QualityScriptCommandErrorOptions): (cause: unknown) => QualityScriptCommandError;
   } = dual(
-    3,
+    isCauseFirst,
     (
       cause: unknown,
       message: string,

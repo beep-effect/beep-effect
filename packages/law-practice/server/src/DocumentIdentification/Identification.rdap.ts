@@ -58,8 +58,8 @@ const orgs = Effect.fn("Identification.rdapEntities")(function* (
  * ```ts
  * import { registrantFromRdap } from "@beep/law-practice-server/DocumentIdentification"
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * console.log(Option.isNone(Effect.runSync(registrantFromRdap({ entities: [] })))) // true
+ * import * as O from "effect/Option";
+ * console.log(O.isNone(Effect.runSync(registrantFromRdap({ entities: [] })))) // true
  * ```
  *
  * @category parsing

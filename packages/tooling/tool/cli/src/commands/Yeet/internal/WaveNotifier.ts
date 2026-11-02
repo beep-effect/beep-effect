@@ -31,7 +31,7 @@ import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -51,6 +51,7 @@ import { YeetPrWave } from "./InboxView.ts";
 import { distinctPrSessions, PrNumber, PrRepository } from "./Provenance.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
 import { isClaudeSessionLive, selectResumeRecord } from "./Resume.ts";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { PrSessionRecord } from "./Provenance.ts";
 import type { PrSessionRegistryError } from "./PrSessionRegistry.ts";
@@ -480,10 +481,10 @@ export const yeetPrWaveKey = Effect.fn("YeetWaveNotifier.waveKey")(function* (
   rowIds: ReadonlyArray<string>,
   redSetKey: string
 ) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const text = A.join([`${prNumber}`, headSha, A.join(A.sort(rowIds, Order.String), ","), redSetKey], "\n");
   const bytes = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(text))
+    .digest(Digest.sha256, new TextEncoder().encode(text))
     .pipe(Effect.mapError(YeetCommandError.new("Failed to hash the pull request wave key.")));
   return Str.takeLeft(16)(Hex.encode(bytes));
 });
@@ -761,7 +762,11 @@ export const escalateYeetPrWave = Effect.fn("YeetWaveNotifier.escalate")(functio
 ): Effect.fn.Return<
   YeetPrWaveEscalation,
   never,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;

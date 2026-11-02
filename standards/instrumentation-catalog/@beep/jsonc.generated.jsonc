@@ -12,6 +12,7 @@
     {"name":"JsoncFingerprint.canonicalize","owner":"@beep/jsonc","family":"foundation","conforms":true},
     {"name":"JsoncFingerprint.hash","owner":"@beep/jsonc","family":"foundation","conforms":true},
     {"name":"JsoncFingerprint.hashText","owner":"@beep/jsonc","family":"foundation","conforms":true},
-    {"name":"JsoncModifier.modify","owner":"@beep/jsonc","family":"foundation","conforms":true}
+    {"name":"JsoncModifier.modify","owner":"@beep/jsonc","family":"foundation","conforms":true},
+    {"name":"JsoncModifier.modifyWithFormatting","owner":"@beep/jsonc","family":"foundation","conforms":true}
   ]
 }

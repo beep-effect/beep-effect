@@ -1,0 +1,98 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A device for carrying out a setting process for setting a connecting element, the device comprising:
+<claim-text>a control device for controlling the setting process in operation;</claim-text>
+<claim-text>a setting unit that is attached to a tool carrier and that is movable in a feed direction via a feed unit;</claim-text>
+<claim-text>a component carrier fastened opposite the setting unit on the tool carrier and against which the setting unit is moveable in the feed direction, the setting unit comprising:
+<claim-text>a hold-down device with the aid of which the workpiece is pressed against the component carrier during operation;</claim-text>
+<claim-text>a punch that is moveable in the feed direction relative to the hold-down device for punching a hole in the workpiece; and</claim-text>
+<claim-text>a punch sleeve to press the connecting element into the hole;</claim-text>
+</claim-text>
+<claim-text>wherein the component carrier comprises has:
+<claim-text>a base body with a component support for the workpiece; and</claim-text>
+<claim-text>an embossing sleeve that is displaceably arranged in the base body and moveable against the workpiece during operation, such that in operation a deep-drawn collar is formed around the hole,</claim-text>
+</claim-text>
+<claim-text>wherein the control device is designed such that in operation in a multi-stage setting process, in a first stage, a hole punching and hole forming operation to form the hole with the deep-drawn collar and, in a second stage, a setting process for setting the connecting element takes place, and</claim-text>
+<claim-text>wherein no lateral relative movement between the workpiece and the device takes place between the two stages.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the control device is configured such that the hole punching and the hole forming operation takes place substantially simultaneously.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the control device is configured such that the punch sleeve forms an abutment for the embossing sleeve during the hole-forming operation.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a centering pin is moveable against the feed direction within the embossing sleeve, and wherein the control device is configured such that after the first stage the centering pin is moved into the formed hole.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the embossing sleeve is moveable with the aid of a mechanical linkage, and wherein the mechanical linkage has a knee lever mechanism, and wherein the embossing sleeve is moved against the workpiece by actuating the knee lever mechanism to form the deep-drawn collar.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the control device is configured such that the embossing sleeve is moved back into a retracted position before the connecting element is pressed in, and wherein the embossing sleeve forms an abutment for the connecting element during the setting process.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The device according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the embossing sleeve is moveable into the retracted position against a second fixed stop.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the hold-down device has a first fixed stop that bears against a stop surface of the feed unit during the punching and hole-forming operation</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the feed unit has a plunger, a spring element and a plunger tube that receives the plunger and the spring element, wherein the setting unit is fastened to the plunger tube, wherein the plunger moves against the punch, wherein the spring element acts on the hold-down device and the punch is further designed as a sleeve in which an ejector pin is guided so as to be displaceable relative to the punch sleeve.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A device for carrying out a setting process for setting a connecting element on a workpiece, the device comprising:
+<claim-text>a setting unit that comprises:</claim-text>
+<claim-text>a punch that is moveable in a feed direction relative to the hold-down device for punching a hole in the workpiece; and</claim-text>
+<claim-text>a punch sleeve for pressing the connecting element into the hole,</claim-text>
+<claim-text>wherein the punch and the punch sleeve are connected to one another via an axial forced guidance for a common feed movement in the feed direction, the axial forced guidance being able to be released in a controlled manner, so that the punch is moveable relative to the punch sleeve for the hole punching operation.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The device according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the punch sleeve and the punch are adapted to be rotated relative to one another, so that in a predetermined rotational position the axial forced guidance is released and the punch is movable relative to the punch sleeve for performing the punching operation.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The device according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the punch sleeve and the punch are adapted to be rotated relative to one another with the aid of a drive unit that is controllable freely, a rotation taking place with the aid of a driver that engages in the punch sleeve or the punch.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The device according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the plunger sleeve is guided in the feed direction within the hold-down device in a rotationally secure manner up to a predetermined axial position at which the axial forced guidance is released by rotating the plunger sleeve.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The device according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein front and retracted driver stops are formed on the punch sleeve and on the punch, wherein the front driver stops are disengaged for releasing the forced guidance by rotating the plunger sleeve.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The device according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the control device is set up in such a way that the following steps are carried out:
+<claim-text>in an initial position, the workpiece rests on the component support;</claim-text>
+<claim-text>the setting unit moves in the feed direction and the hold-down device presses the workpiece against the component support and the hole punching and hole-forming operation is carried out;</claim-text>
+<claim-text>the position of the workpiece is fixed by moving in the centering pin;</claim-text>
+<claim-text>resetting the setting unit against the feed direction and feeding the connecting element into the setting unit;</claim-text>
+<claim-text>feeding the setting unit in the feed direction and pressing in the connecting element into the workpiece; and</claim-text>
+<claim-text>returning to a starting position.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The device according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the control device is configured such that the following steps are carried out during the hole punching and hole forming operation:
+<claim-text>the hold-down device moves towards the workpiece until a first fixed stop of the hold-down device comes to rest on a stop surface of the feed unit and the hold-down device is blocked from moving back against the feed direction;</claim-text>
+<claim-text>the embossing sleeve is moved upwards against the feed direction and forms the collar;</claim-text>
+<claim-text>the hole is punched and a punching slug is removed; and</claim-text>
+<claim-text>for punching the hole, an axial forced guidance between the punch sleeve and the punch is released</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The device according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the control device is configured such that the following steps take place between the hole punching/hole forming operation and the setting process for fixing the workpiece:
+<claim-text>return stroke of a plunger tube of the feed unit into an intermediate position in which the workpiece is still clamped;</claim-text>
+<claim-text>return stroke of the embossing sleeve to a second fixed stop;</claim-text>
+<claim-text>moving a centering pin into the hole.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. A method for setting a connecting element on a workpiece with the aid of a device, which has a setting unit with a hold-down device and a component carrier opposite the setting unit with a component support, the method comprising:
+<claim-text>performing a hole punching and hole forming operation in a first stage, in which the workpiece is clamped between the hold-down device and the component support;</claim-text>
+<claim-text>punching a hole with the aid of a punch of the setting unit;</claim-text>
+<claim-text>moving the punch relative to the hold-down device in the feed direction;</claim-text>
+<claim-text>forming a deep-drawn collar surrounding the hole using an embossing sleeve, which is arranged in the component carrier and is moved counter to the feed direction; and</claim-text>
+<claim-text>pressing the connecting element into the hole in a second stage with the aid of the setting unit,</claim-text>
+<claim-text>wherein between the two stages no lateral relative movement between the workpiece and the device takes place.</claim-text>
+</claim-text>
+</claim>
+</claims>

@@ -555,6 +555,23 @@ export const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<Gith
     "preflight",
     bunRunLane(repoRoot, "repo-sanity:config-typecheck", ["check:configs"])
   ),
+  // goals/tsconfig.ops.json: every goals/*/ops script (packet oracles, differentials and codemods),
+  // which no package project or tsconfig.configs.json reaches. Compiler gate only: the project
+  // clears the Effect plugin because the scripts are frozen evidence, not product code.
+  githubCheckLane(
+    "repo-sanity:goals-ops-typecheck",
+    "pre-push",
+    "repo-sanity",
+    "preflight",
+    bunxLane(repoRoot, "repo-sanity:goals-ops-typecheck", [
+      "tsrs",
+      "-p",
+      "goals/tsconfig.ops.json",
+      "--noEmit",
+      "--pretty",
+      "false",
+    ])
+  ),
   githubCheckLane(
     "repo-sanity:bun-audit",
     "pre-push",
@@ -872,6 +889,13 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "repo-quality",
     "preflight",
     rootTaskLane(repoRoot, "lint:schema-tag-idioms", "lint:schema-tag-idioms")
+  ),
+  githubCheckLane(
+    "lint:holds",
+    "cheap-gates",
+    "repo-quality",
+    "preflight",
+    rootTaskLane(repoRoot, "lint:holds", "lint:holds")
   ),
   githubCheckLane(
     "lint:schema-first",

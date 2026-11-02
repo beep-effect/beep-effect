@@ -24,7 +24,7 @@ import { EmailString } from "@beep/schema";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -235,7 +235,7 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const m365 = yield* M365;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
 
   const io =
     (what: string) =>
@@ -244,7 +244,7 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
 
   const hash = (bytes: Uint8Array) =>
     decodeSha256(bytes).pipe(
-      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.provideService(Digest.Digest, crypto),
       Effect.mapError(io("Could not hash attachment bytes."))
     );
 
@@ -414,8 +414,10 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
         M365DownloadMessageAttachmentRequest.make({ attachmentId: attachment.id, messageId, userId: O.some(mailbox) })
       )
       .pipe(
-        Effect.map(({ bytes }) => bytes),
-        Effect.mapError(mailError(`Could not download attachment "${attachmentNameOf(attachment)}"`))
+        Effect.mapBoth({
+          onFailure: mailError(`Could not download attachment "${attachmentNameOf(attachment)}"`),
+          onSuccess: ({ bytes }) => bytes,
+        })
       );
 
   // Write new content under its sanitized name, or that name tagged with a short hash when another file holds it.
@@ -554,7 +556,7 @@ export class DrawingIntake extends Context.Service<DrawingIntake, DrawingIntakeS
    * @category layers
    * @since 0.0.0
    */
-  static readonly layer: Layer.Layer<DrawingIntake, never, M365 | FileSystem.FileSystem | Path.Path | Crypto.Crypto> =
+  static readonly layer: Layer.Layer<DrawingIntake, never, M365 | FileSystem.FileSystem | Path.Path | Digest.Digest> =
     Layer.effect(DrawingIntake, Effect.map(makeService(), DrawingIntake.of));
 }
 
@@ -682,17 +684,18 @@ export const drawingIntakeLaneLayer = <E>(options: {
 }): Layer.Layer<
   DrawingIntake | DrawingIntakeLane,
   DrawingsCommandError | E,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > =>
   Layer.unwrap(
     loadM365AppOnlyEnv(options.envPrefix).pipe(
-      Effect.mapError((cause) => DrawingsCommandError.new(cause, cause.message)),
-      Effect.map((settings) =>
-        Layer.merge(
-          DrawingIntake.layer.pipe(Layer.provide(options.mailLayer(M365AppOnlyConfigInput.make(settings.appOnly)))),
-          Layer.succeed(DrawingIntakeLane, settings)
-        )
-      )
+      Effect.mapBoth({
+        onFailure: (cause) => DrawingsCommandError.new(cause, cause.message),
+        onSuccess: (settings) =>
+          Layer.merge(
+            DrawingIntake.layer.pipe(Layer.provide(options.mailLayer(M365AppOnlyConfigInput.make(settings.appOnly)))),
+            Layer.succeed(DrawingIntakeLane, settings)
+          ),
+      })
     )
   );
 

@@ -1,0 +1,88 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A portable diagnostic assistance system, comprising:
+<claim-text>a mobile device having a memory storing a plurality of histopathological images of tissue samples obtained using a microscope; and</claim-text>
+<claim-text>a processing circuitry configured with
+<claim-text>a pretrained dense convolutional neural network that receives as input a histopathological image of the plurality of histopathological images and extracts global features of the histopathological image, wherein the global features are spatial features of the histopathological image, and wherein the pretrained dense convolutional neural network includes a plurality of convolutional layers,</claim-text>
+<claim-text>a plurality of trainable residual layers connected to an output of a final layer of the plurality of convolutional layers, each of the plurality of trainable residual layers including a skip connection configured with a 1×1 kernel (K) and a sigmoid activation function to extract local features of the histopathological image, wherein the local features are spectral features,</claim-text>
+<claim-text>a concatenation operator that concatenates the global features with the local features to obtain concatenated features, and</claim-text>
+<claim-text>a classification layer connected to an output of the concatenation operator and configured to output a classification of the histopathological image.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the 1×1 kernel (K in the skip connection generates learned features obtained from the global features at each pixel location in the histopathological image.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the sigmoid activation function determines a difference between the learned features and the global features output from the pretrained dense convolutional neural network.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the pretrained dense convolutional neural network is configured with all of the plurality of convolutional layers directly connected with each other, and wherein each convolutional layer of the pretrained dense convolutional neural network obtains additional inputs from all preceding convolutional layers and passes on its own feature-map to all subsequent convolutional layers.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the plurality of histopathological images are obtained from breast tissue samples observed with the microscope.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the classification layer is configured to output a binary classification of benign tissue or malignant tissue.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the classification layer is configured to output a multiclass classification for histopathological images of malignant tissue including ductal carcinoma (DC), lobular carcinoma (LC), mucinous carcinoma (MC), and papillary carcinoma (PC).</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a machine learning engine configured to train the pretrained dense convolutional neural network modified with the plurality of trainable residual layers.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a camera-mounted microscope for capturing images of a tissue specimen to obtain the plurality of histopathological images; and</claim-text>
+<claim-text>a communication circuitry configured to transmit the captured images to the mobile device.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a whole-slide scanner for capturing images of a tissue specimen to obtain the plurality of histopathological images; and</claim-text>
+<claim-text>a communication circuitry configured to transmit the captured images to the mobile device.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A method of diagnostic assistance, comprising:
+<claim-text>retrieving a plurality of histopathological images of tissue samples from a memory;</claim-text>
+<claim-text>receiving, by a processing circuitry configured with a pretrained dense convolutional neural network, a histopathological image of the plurality of histopathological images and extracting global features of the histopathological image, wherein the global features are spatial features of the histopathological image, and wherein the pretrained dense convolutional neural network includes a plurality of convolutional layers;</claim-text>
+<claim-text>extracting, by the processing circuitry, local features of the histopathological image, by a plurality of trainable residual layers connected to an output of a final layer of the plurality of convolutional layers, each of the plurality of residual layers including a skip connection configured with a 1×1 kernel (K) and a sigmoid activation function, wherein the local features are spectral features;</claim-text>
+<claim-text>concatenating, by a concatenation operator, the global features with the local features to obtain concatenated features; and</claim-text>
+<claim-text>outputting, by a classification layer, a classification of the histopathological image.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising generating, by the 1×1 kernel (K in the skip connection, learned features obtained from the global features at each pixel location in the histopathological image.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising determining, by the sigmoid activation function, a difference between the learned features and the global features output from the pretrained dense convolutional neural network.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the pretrained dense convolutional neural network is configured with all of the plurality of convolutional layers directly connected with each other, the method further comprising obtaining, by each convolutional layer of the pretrained dense convolutional neural network, additional inputs from all preceding convolutional layers and passing on its own feature-map to all subsequent convolutional layers.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising obtaining the plurality of histopathological images from breast tissue samples observed with microscope.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00015">claim 15</claim-ref>, further comprising outputting, by the classification layer, a binary classification of benign tissue or malignant tissue.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00015">claim 15</claim-ref>, further comprising outputting, by the classification layer, a multiclass classification for histopathological images of malignant tissue including ductal carcinoma (DC), lobular carcinoma (LC), mucinous carcinoma (MC), papillary carcinoma (PC).</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising training, by a machine learning engine, the pretrained dense convolutional neural network modified with the plurality of trainable residual layers.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>capturing with a camera-mounted microscope, images of a tissue specimen to obtain the plurality of histopathological images; and</claim-text>
+<claim-text>transmitting, by a communication circuitry, the captured images to a mobile device configured with the processing circuitry.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>capturing with a whole-slide scanner, images of a tissue specimen to obtain the plurality of histopathological images; and</claim-text>
+<claim-text>transmitting, by a communication circuitry, the captured images to a mobile device configured with the processing circuitry.</claim-text>
+</claim-text>
+</claim>
+</claims>

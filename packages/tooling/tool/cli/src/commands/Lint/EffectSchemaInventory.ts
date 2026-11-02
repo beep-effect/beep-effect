@@ -64,8 +64,7 @@ const effectSchemaInventoryCommandDefinition = Command.make(
  * Every mode reads `inventoryPin` from the root `package.json` catalog and source bytes only
  * through `git -C .repos/effect show <pin>:<file>`. A missing reference clone, a pin it does not
  * contain, or an extraction with zero rows fails the command; it never passes on empty input.
- * `--check` also re-renders the committed lane prompts, and `--prompt` fails when graft context
- * cannot be read. Hosted CI does not run this command: the repo-cli fixture test verifies the
+ * `--check` also re-renders the committed lane prompts. Hosted CI does not run this command: the repo-cli fixture test verifies the
  * committed rows without an Effect checkout and cannot verify prompts.
  *
  * **Example** (Build the command runner)
@@ -180,7 +179,7 @@ export {
   runEffectSchemaInventory,
 } from "./internal/EffectSchemaInventoryRun.ts";
 /**
- * External input service: catalog pin, pinned sources, and graft context.
+ * External input service: catalog pin and pinned sources.
  *
  * @category services
  * @since 0.0.0

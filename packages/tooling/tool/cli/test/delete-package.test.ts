@@ -18,7 +18,7 @@ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
@@ -38,6 +38,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { DeletePackageRefusal } from "@beep/repo-cli/test/DeletePackage";
 
 const temporaryDirectory = Effect.gen(function* () {
@@ -53,8 +54,9 @@ const target = RegistrationTarget.make({
 
 const commandLayer = Layer.mergeAll(
   NodeServices.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 const runDeletePackage = Command.runWith(deletePackageCommand, { version: "0.0.0" });
 
@@ -747,7 +749,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ChildProcessSpawner.make((command) =>
         Effect.sync(() => {
           if (command._tag === "StandardCommand") {
-            spawned.push(A.join([command.command, ...command.args], " "));
+            spawned.push(A.join([command.command, ...commandArgs(command)], " "));
           }
           return ChildProcessSpawner.makeHandle({
             pid: ChildProcessSpawner.ProcessId(1),
@@ -915,6 +917,32 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           ["unquoted.md", "---\nprobe: patch\nprobe-extra: minor\n---\n\nUnquoted keys.\n"],
         ]);
         assertSome(yield* readUnquoted("unquoted.md"), "---\nprobe-extra: minor\n---\n\nUnquoted keys.\n");
+      })
+    );
+
+    it.effect("removes the key through the YAML edit layer: escaped keys, CRLF blocks and key comments", () =>
+      Effect.gen(function* () {
+        const read = yield* pruneChangesets("@beep/a", [
+          ["escaped.md", '---\n"\\x40beep/a": patch\n"@beep/b": minor\n---\n\nEscaped key.\n'],
+          ["crlf.md", '---\r\n"@beep/a": patch\r\n"@beep/b": minor\r\n"@beep/c": minor\r\n---\r\n\r\nCRLF.\r\n'],
+          ["comment.md", '---\n# bump both\n"@beep/a": patch\n"@beep/b": minor # keep\n---\n\n---\n"@beep/a": prose\n'],
+        ]);
+        assertSome(yield* read("escaped.md"), '---\n"@beep/b": minor\n---\n\nEscaped key.\n');
+        assertSome(yield* read("crlf.md"), '---\r\n"@beep/b": minor\r\n"@beep/c": minor\r\n---\r\n\r\nCRLF.\r\n');
+        assertSome(yield* read("comment.md"), '---\n"@beep/b": minor # keep\n---\n\n---\n"@beep/a": prose\n');
+      })
+    );
+
+    it.effect("re-serializes the whole block: sibling spacing, trailing blank lines and the fence line ending", () =>
+      Effect.gen(function* () {
+        const read = yield* pruneChangesets("@beep/a", [
+          ["spacing.md", "---\n\"@beep/a\": patch\n'@beep/b':   minor\n---\n\nSibling spacing.\n"],
+          ["blank.md", '---\n"@beep/a": patch\n"@beep/b": minor\n\n---\n\nTrailing blank.\n'],
+          ["mixed.md", '---\n"@beep/a": patch\r\n"@beep/b": minor\n---\n\nMixed.\n'],
+        ]);
+        assertSome(yield* read("spacing.md"), "---\n'@beep/b': minor\n---\n\nSibling spacing.\n");
+        assertSome(yield* read("blank.md"), '---\n"@beep/b": minor\n---\n\nTrailing blank.\n');
+        assertSome(yield* read("mixed.md"), '---\n"@beep/b": minor\n---\n\nMixed.\n');
       })
     );
 

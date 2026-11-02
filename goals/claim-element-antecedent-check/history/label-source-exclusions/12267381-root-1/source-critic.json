@@ -1,0 +1,85 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12267381-root-1",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.99,
+  "verdict": "unresolved",
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  "findings": [
+    {
+      "claimNumber": 3,
+      "evidence": {
+        "nativeQuote": "Method according to claim 1",
+        "originalQuote": "Method according to claim 1 or 2",
+        "markedOriginalQuote": "Method according to claim 1 er2hneterizd-ithat wherein"
+      },
+      "requiredCorrection": "Keep unresolved until adopted amended dependency alternatives and source wording are verifiable without interpreting corrupted strike text."
+    }
+  ],
+  "evidence": [
+    "Actual second-paragraph1–11 ground present. Preliminary Amendment inventory and marked original locate the version issue, but no reliable structured deletion evidence resolves3/4/5 alternatives. Native natural family still connects to1."
+  ],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "nativePublicationSha256": "a6df797456d2db1935e7c95e633904ac9079d2a74023bc6cafbc2a681e0b3154",
+    "nativePublicationHashMatches": true,
+    "sourceClaimsXmlSha256": "4330eb8760f199190cfda2f2fb341b50d5aa6c27dfbbffcd66b3e51d0d96a20e",
+    "sourceClaimsHashMatches": true,
+    "fullInventorySha256": "c117cf87ec69390d892203adeb812a5c59355bc525b8e1ba6af4a4db31a05c7a",
+    "inventoryReportedCount": 53,
+    "inventoryActualRows": 53,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "FN9GI0FTPPOPPY4",
+        "documentCode": "A.PE",
+        "officialDate": "2008-11-07T00:00:00.000-0500",
+        "description": "Preliminary Amendment"
+      },
+      {
+        "documentIdentifier": "FNHIZYSWPPOPPY2",
+        "documentCode": "CLM",
+        "officialDate": "2008-11-07T00:00:00.000-0500",
+        "description": "Claims"
+      },
+      {
+        "documentIdentifier": "FNHIZZ03PPOPPY2",
+        "documentCode": "REM",
+        "officialDate": "2008-11-07T00:00:00.000-0500",
+        "description": "Applicant Arguments/Remarks Made in an Amendment"
+      },
+      {
+        "documentIdentifier": "FN9GI0X2PPOPPY4",
+        "documentCode": "CLM",
+        "officialDate": "2008-11-07T00:00:00.000-0500",
+        "description": "Claims"
+      }
+    ],
+    "citedOfficeActionInventoryRows": [
+      {
+        "documentIdentifier": "GHFDDI6IPPOPPY5",
+        "documentCode": "CTNF",
+        "officialDate": "2010-12-09T00:00:00.000-0500"
+      }
+    ],
+    "originalCachedHashes": [
+      {
+        "documentIdentifier": "FNHIZYSWPPOPPY2",
+        "exists": true,
+        "sha256": "d0a65e2caeb1043ce548c484330703c09577f3ecfa81e242865c1591b78c8399",
+        "sha256Matches": true
+      },
+      {
+        "documentIdentifier": "FN9GI0X2PPOPPY4",
+        "exists": true,
+        "sha256": "7355f4be33b9e7c943e52ed85b69f5ca465a368e5af75c016cfa497cd13a63f9",
+        "sha256Matches": true
+      }
+    ]
+  },
+  "extractorVerdictReviewed": "unresolved",
+  "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+  "rationale": "Numbered ground, actual family membership and operative source versions assessed separately. Full inventory chronology is supporting evidence only; unreadable/missing/dependency-conflicting originals remain unresolved."
+}

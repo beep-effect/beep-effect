@@ -131,6 +131,17 @@ const fixtureLockfile = {
   "via-override": ["via-override@1.0.0", "", {}, "sha512-y"],
 };
 
+describe("quality error constructors", () => {
+  it("builds the error, not a curried function, from a two-argument cause-first call", () => {
+    const script = QualityScriptCommandError.new(new Error("cause"), "Failed to read inventory.");
+    expect(script).toBeInstanceOf(QualityScriptCommandError);
+    expect(script.message).toContain("Failed to read inventory.");
+    const usage = CatalogUsageError.new(new Error("cause"), "failed");
+    expect(usage).toBeInstanceOf(CatalogUsageError);
+    expect(CatalogUsageError.new("failed")(new Error("cause"))).toBeInstanceOf(CatalogUsageError);
+  });
+});
+
 describe("catalog usage", () => {
   describe("errors", () => {
     it("builds CatalogUsageError data-first, data-last and through mapError", () => {

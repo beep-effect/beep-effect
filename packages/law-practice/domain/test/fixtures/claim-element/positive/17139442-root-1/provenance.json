@@ -1,0 +1,61 @@
+{
+  "applicationNumber": "17139442",
+  "publicationNumber": "US20210125715A1",
+  "publicationDate": "2021-04-29",
+  "nativeXmlSha256": "aeaacf16fa39b0335b2f72d911fc8eb0edb411c6f6453d82b287c5c469673e08",
+  "claimsXmlSha256": "16d32ec18f041fce2434c32b17cbe2f25c89bba04362db47bcd3d0960f7c2efb",
+  "officeActionDocumentIdentifiers": [
+    "KWAUCLGMLDFLYX9"
+  ],
+  "officeActionMailDate": "2021-11-24",
+  "officeActionSection112Text": [
+    "claims 1-20 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre- aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1 line 13 lacks antecedent basis for “the medical treatment device component.”\r\nclaims 2-7 are rejected because of their dependency on the previously rejected claim 1.\r\nclaim 8 line 2 lacks antecedent basis for “the absence of an authorized helper,” line 14 lacks antecedent basis for “the extracorporeal treatment machine,” and line 15 antecedent basis for “the extracorporeal machine.”\r\nclaim 10 line 5 lacks antecedent basis for “the treatment location,” line 14 lacks antecedent basis for “the normal blood treatment process,” and lines 15-16 lacks antecedent basis for “said treatment session.”\r\nclaim 11 line 1 lacks antecedent basis for “the subsequent input” and line 2 lacks antecedent basis for “the physical presence.”\r\nclaim 12 line 1 lacks antecedent basis for “the subsequent input.”\r\nclaim 13 line 1 lacks antecedent basis for “the subsequent input” and lines1-2 lack antecedent basis for “the identity of the authorized helper.”\r\nclaim 15 line 2 lacks antecedent basis for “said failsafe operational mode.”\r\nclaim 16 line 1 lacks antecedent basis for “said failsafe operational mode.”\r\nclaim 17 line 1 lacks antecedent basis for “said failsafe operational mode.”\r\nclaim 18 line 3 lacks antecedent basis for “the subsequent input” and line 4 lacks antecedent basis for “said failsafe operational mode.”\r\nclaim 19 line 1 lacks antecedent basis for “the subsequent input.”\r\nclaim 20 line 1 lacks antecedent basis for “the receiving subsequent input.”\r\nclaims 9-20 are further rejected because of their dependency on the previously rejected claim 8."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "KJD99Y99DFLYX11",
+      "officialDate": "2020-12-31T14:43:05.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "KJD99Y99DFLYX11",
+      "officialDate": "2020-12-31T14:43:05.000-0500",
+      "sha256": "dbd905fcda15eccd7b1923110c992fb62478c890c2d0aee8c16db37e05b5d15e",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "sourceClaimCount": 20
+    }
+  ],
+  "documentInventoryCount": 102,
+  "documentInventoryRows": 102,
+  "primaryCpc": "G16H  40/63",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/17139442",
+    "https://api.uspto.gov/api/v1/patent/applications/17139442/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

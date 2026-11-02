@@ -1,0 +1,211 @@
+{
+  "schemaVersion": "cache-current-runtime-profile-checkpoint/v1",
+  "recordedAt": "2026-10-29T10:05:33.391812+00:00",
+  "authority": "local-runtime-observation-and-regression-only",
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "sha256": "9d003f173bb5181577ace15195d94ba4e4844580b2f81bdb11dd4e4841bc44ed"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "sha256": "36c69fa69e539bcacd74cd2bc72b6f601e821ff5c4567eecc0b7ff7c90f5a955"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "sha256": "74e58902aaea5dc0ab6684fdb6a68a60edc36ef37fbd263096f4c126d6a264e0"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.linker.ts",
+      "sha256": "ac563e51e4b48c5c6d663e8f4bcb6f18400f0cb5fbbc8aea1f22e6441a72f368"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+      "sha256": "d443672935b5ae9c4bfacb9672180d3c70dfd2faa6b885e0bae06d91a67c2573"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-census.test.ts",
+      "sha256": "1856ea93ec938b54a820d58725d62ebc0e786d6c08462286d9d3a71cf8e528cf"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-control.ts",
+      "sha256": "48bffbbb8e42191aac8908e33e052ca474bdbdbfff16d7fad86cf9e26cdc44c1"
+    }
+  ],
+  "change": "Admit the repository-pinned Bun1.4.4 observation alongside historical1.4.1/1.4.2; retain exact pin checks and separate qualification keys.",
+  "verification": {
+    "node": {
+      "passed": 45,
+      "files": 2,
+      "seconds": 7.59,
+      "logSha256": "bf08b1cc0a2a6a8e3e3fbddb6e742c9b0eadb6b378350898d199e06d1053eb5b"
+    },
+    "bun": {
+      "passed": 45,
+      "files": 2,
+      "seconds": 6.3,
+      "logSha256": "f2ed840ba848726a4e7742b4f6751b6ee9a3dc7a4b1960478d6c006c18976c1b"
+    },
+    "quickPackage": {
+      "lintSeconds": 6.6,
+      "checkSeconds": 15.7,
+      "logSha256": "918f813b8c7ff7969a586d6bde69a22940b60409daf862073bb36b93e06c0d73"
+    },
+    "nativeRuntime": {
+      "observation": "current-runtime-profile-observation.json",
+      "recordedAt": "2026-10-29T09:56:19.732Z",
+      "scope": "Actual binaries, complete installed dependency view and startup linker; wrong declaration rejected and scoped fixture removed.",
+      "sha256": "cb4a728cee0fc45ecc85607338494d0e26c6a27096af1432ca6f9df3a0f208dc"
+    },
+    "supportRemoval": {
+      "sourceSha256": "9d003f173bb5181577ace15195d94ba4e4844580b2f81bdb11dd4e4841bc44ed",
+      "restoredSha256": "9d003f173bb5181577ace15195d94ba4e4844580b2f81bdb11dd4e4841bc44ed",
+      "testSha256": "1856ea93ec938b54a820d58725d62ebc0e786d6c08462286d9d3a71cf8e528cf",
+      "removedSupport": "local-linux-x64-bun1.4.4",
+      "intendedSchemaFailure": true,
+      "exit": 1,
+      "logSha256": "10a31d850d69e02727bf038be5e5e822589f5e19e178796c68341a3297c44927"
+    },
+    "typedDecoderRepair": {
+      "introducedCheckFailure": "Known encoded fixture used decodeUnknownEffect; typed-schema diagnostic required decodeEffect.",
+      "fixed": true,
+      "originalLogSha256": "aae88fb608c1262438e4e67d3c3d96e241f308ada2a586640a9a02af1e956f67"
+    },
+    "wholePackage": {
+      "schemaVersion": "cache-current-runtime-whole-package/v1",
+      "recordedAt": "2026-10-29T10:42:25.811601+00:00",
+      "sourceHead": "2b295197c1866d56246f0bab52ea2cf2c0e67b08",
+      "command": "bun run beep quality package-verify @beep/repo-cli",
+      "exit": 0,
+      "auditSeconds": 1118.9,
+      "docgenSeconds": 36.4,
+      "logSha256": "34171751f61f5f022cfebc7838bc5387296c798719b7df0d8df81483daea0b47",
+      "frozenSourceFiles": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+          "sha256": "9d003f173bb5181577ace15195d94ba4e4844580b2f81bdb11dd4e4841bc44ed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-census.test.ts",
+          "sha256": "1856ea93ec938b54a820d58725d62ebc0e786d6c08462286d9d3a71cf8e528cf"
+        },
+        {
+          "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-control.ts",
+          "sha256": "48bffbbb8e42191aac8908e33e052ca474bdbdbfff16d7fad86cf9e26cdc44c1"
+        },
+        {
+          "path": "goals/turborepo-quality-cache-adoption/research/actual-ignored-input-control.py",
+          "sha256": "a115441e1e5e095e2a8c3ec4713e0accfb3474a9880878f576cb15340c86d285"
+        }
+      ],
+      "goalManifestsMatchHead": true,
+      "qualified": false,
+      "signedTrialActivated": false,
+      "scope": "Whole CLI package verification at the frozen committed source; no qualification or deployment."
+    }
+  },
+  "population": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
+    "sha256": "d3a7ac705438932c1b621ceb818d68538ad2181118b093175be69afa2f5405bd",
+    "sourcesVerified": 431,
+    "counts": {
+      "workspaces": 190,
+      "rootScripts": 113,
+      "configuredGraphNodes": 4586,
+      "executableComputations": 2571,
+      "graphOnlyNodes": 2015,
+      "cacheEnabledExecutableComputations": 1621,
+      "newSinceRetainedHandoff": 638,
+      "retainedCommandTextUnchanged": 1923,
+      "retainedQualificationRecordStates": {
+        "excluded": 5
+      }
+    },
+    "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+    "configuredFlagsChanged": false,
+    "qualificationEntriesChanged": false,
+    "priorPopulationBeforeMainIntegration": "acf0a0e81c5936df4758bf688ac8420d4b0c9c512bdae6b6f7585e39c2cdabcb",
+    "priorPopulationBeforePropertyCoverageRefresh": "8e355c913f6b9faf61ce77f7fdc8d06cad6572539c6d172b9741ae7d19f7132c",
+    "priorInventoryBeforeMainSync": "0ea49f7b903162d1ee7cdfa985d9caff0ab4573657e27b5156dc14a9f724b46f",
+    "priorInventoryBeforeScopeRepair": "bd81cef5053d4329d1547391b0387c45a32d90157f31809eb45812c23eb09d9e",
+    "priorInventoryBeforeCoverageRepair": "1f21cbd2ff7d0a539a02abfbae5ed74c60d679a20262b3b8a44a59a9ff9ec00b",
+    "priorInventoryBeforeGuardHoist": "0f1823c9d647ef62f6412230ec4ed6b25d56c1f6d25d22cdaf328be80f27ff10",
+    "priorBeforeReviewRepair": "b869e63e32cbac1c52a4c1e22a943f55b782b98c94ad9696c0ff45729b9676b2"
+  },
+  "secretHandoff": {
+    "agentCreateFailed": true,
+    "doctorPassed": true,
+    "backend": "service-account",
+    "namedItemVerifiedAbsent": true,
+    "plannedSecretFields": 7,
+    "createdSecretFields": 0,
+    "referenceFilesWritten": 0,
+    "humanBootstrapPrepared": true,
+    "operatorResult": "Operator clarified that the helper has not yet been run; completion is pending."
+  },
+  "qualified": false,
+  "signedTrialActivated": false,
+  "protectedProducerPublished": false,
+  "remaining": [
+    "Durable secret/key handoff",
+    "Closed protected producer and immutable hosted publication",
+    "Current real-computation qualification and adoption",
+    "Signed deployment, rotation, rollback and representative7/7/14-day windows"
+  ],
+  "realComputationInputObservation": {
+    "path": "goals/turborepo-quality-cache-adoption/research/actual-ignored-input-observation.json",
+    "sha256": "ffc155409a9a8860b0d878981105778cc6a8864736a159b7738c07a3d6659400",
+    "scope": "Native dry input counterexample only; semantic irrelevance and task output equivalence remain unproven."
+  },
+  "integrationAfterParentMerge": {
+    "recordedAt": "2026-10-29T10:52:14.451746+00:00",
+    "sourceHead": "77ea30566d421db84757f3d14280ce1720178626",
+    "parentMerge": "ddcf09b48093408bb18f16deced45945ef7c7647",
+    "ownPriorTip": "3341bd33935149d1744f4164857c2eec17f4b5fb",
+    "unpublishedCommitsReplayed": 9,
+    "ownedImplementationFilesByteIdentical": 15,
+    "combinedTestFile": {
+      "path": "packages/tooling/tool/cli/test/cache-conformance.test.ts",
+      "sha256": "1173e07e54716e0fcb89b91041e7b522ad384b42f4374c31fccb486423b1d2cf"
+    },
+    "parentAndOwnReportsPreserved": true,
+    "parentLaneRetired": true,
+    "verification": {
+      "node": {
+        "passed": 359,
+        "files": 18,
+        "seconds": 41.14,
+        "logSha256": "4d2142919ff3263bd8bdee9cc8ed58024d5819aa270e1c42a2f00cb2416166ae"
+      },
+      "bun": {
+        "passed": 359,
+        "files": 18,
+        "seconds": 30.17,
+        "logSha256": "970209c69129f23e879c729550038159c2899dedc5202ee033f41d1df6d66eba"
+      },
+      "quickPackage": {
+        "lintSeconds": 5.4,
+        "checkSeconds": 11.6,
+        "logSha256": "2b29e779bcdc9c5c1ca32dd1082c7b5cd4472555baf235f4e201fb585dc701a5"
+      }
+    },
+    "scope": "Combined source regression and inventory only; the earlier frozen whole-package proof retains its original source head and source bytes."
+  },
+  "reviewedCurrentRuntimeBaseline": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-baseline-checkpoint.json",
+    "sha256": "747dce251c43af011311b34831831bac76d8d0de914086c180c2e66196ecfacd",
+    "scope": "Explicit current baseline review and public observation only; old frozen proofs retain their original source identity."
+  },
+  "publicationGateRepair": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json",
+    "sha256": "7d10fc4c50a2f086c7315912ddc981d23201bf5cece9c38b571d10d26d95b6e2",
+    "scope": "Current test properties/catalog and regression only; no runtime behavior or qualification change.",
+    "priorBeforeReviewRepair": "ef5d83d08a083ca51cf059b26eb0a87a18aee2695d3d88459a08c07939560327"
+  },
+  "producerCoverageRepairCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-coverage-repair-checkpoint.json",
+    "sha256": "7a37b77aef708c66b8480549569a47fa96496777a39b5f28fc423b2f71b506cd",
+    "scope": "Later internal guard/test repair; earlier runtime/native execution proofs keep their original source bindings.",
+    "priorBeforeReviewRepair": "dba0c942aefb3c8ff0ce9185c75d3cb75a463656956e0f83fc4bf4983da40997"
+  }
+}

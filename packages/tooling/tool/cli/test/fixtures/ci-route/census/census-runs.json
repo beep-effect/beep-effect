@@ -1,0 +1,109 @@
+[
+  {
+    "runId": 101,
+    "workflow": "Check",
+    "event": "pull_request",
+    "headBranch": "feat/catalog-bump",
+    "headSha": "p1",
+    "createdAt": "2026-10-02T00:00:00Z",
+    "conclusion": "success",
+    "attempt": 1,
+    "jobs": [
+      {
+        "name": "Lint (lint-a)",
+        "conclusion": "success",
+        "startedAt": "2026-10-02T00:00:00Z",
+        "completedAt": "2026-10-02T00:01:00Z"
+      },
+      {
+        "name": "Lint (lint-b)",
+        "conclusion": "success",
+        "startedAt": "2026-10-02T00:00:00Z",
+        "completedAt": "2026-10-02T00:00:30Z"
+      },
+      {
+        "name": "Heavy / Check",
+        "conclusion": "success",
+        "startedAt": "2026-10-02T00:00:00Z",
+        "completedAt": "2026-10-02T00:02:00Z"
+      },
+      {
+        "name": "PR Size Label",
+        "conclusion": "success",
+        "startedAt": "2026-10-02T00:00:00Z",
+        "completedAt": "2026-10-02T00:00:05Z"
+      },
+      {
+        "name": "Test Unit (unit-a)",
+        "conclusion": "success",
+        "completedAt": "2026-10-02T00:03:00Z"
+      }
+    ]
+  },
+  {
+    "runId": 102,
+    "workflow": "Check",
+    "event": "pull_request",
+    "headBranch": "feat/mixed",
+    "headSha": "x2",
+    "createdAt": "2026-10-03T00:00:00Z",
+    "conclusion": "failure",
+    "attempt": 1,
+    "jobs": [
+      {
+        "name": "Lint",
+        "conclusion": "success",
+        "startedAt": "2026-10-03T00:00:00Z",
+        "completedAt": "2026-10-03T00:00:40Z"
+      },
+      {
+        "name": "Heavy / Check",
+        "conclusion": "failure",
+        "startedAt": "2026-10-03T00:00:00Z",
+        "completedAt": "2026-10-03T00:01:30Z"
+      }
+    ]
+  },
+  {
+    "runId": 103,
+    "workflow": "Check",
+    "event": "pull_request",
+    "headBranch": "feat/mixed",
+    "headSha": "x2",
+    "createdAt": "2026-10-03T01:00:00Z",
+    "conclusion": "success",
+    "attempt": 2,
+    "jobs": [
+      {
+        "name": "Lint",
+        "conclusion": "success",
+        "startedAt": "2026-10-03T01:00:00Z",
+        "completedAt": "2026-10-03T01:00:10Z"
+      }
+    ]
+  },
+  {
+    "runId": 201,
+    "workflow": "Check",
+    "event": "push",
+    "headBranch": "main",
+    "headSha": "m1",
+    "createdAt": "2026-10-01T00:00:00Z",
+    "conclusion": "success",
+    "attempt": 1,
+    "jobs": [
+      {
+        "name": "Property Laws",
+        "conclusion": "success",
+        "startedAt": "2026-10-01T00:00:00Z",
+        "completedAt": "2026-10-01T00:00:20Z"
+      },
+      {
+        "name": "Codegen Drift",
+        "conclusion": "success",
+        "startedAt": "2026-10-01T00:00:00Z",
+        "completedAt": "2026-10-01T00:00:15Z"
+      }
+    ]
+  }
+]

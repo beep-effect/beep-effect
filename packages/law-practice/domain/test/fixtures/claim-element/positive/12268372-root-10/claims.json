@@ -1,0 +1,107 @@
+{
+  "familyId": "12268372-root-10",
+  "rootClaimNumber": 10,
+  "labelClaimNumbers": [10, 11, 12, 13],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "Method for replacing the roping of an elevator, which elevator comprises at least guide rails along which an elevator car provided with safety gear travels in the elevator shaft in an essentially vertical direction, a hoisting machine, a traction sheave and roping, wherein the ropes of the new roping and the ropes of the old roping are joined to each other at one of their ends, after which the new roping is pulled into position by means of the old roping and a friction wheel which friction wheel is arranged to press against the traction sheave (9) and rotated by the traction sheave.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "Method according to claim 1, wherein the old roping is guided to pass between the friction wheel and a lifting wheel arranged to be fitted against the friction wheel.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "Method according to claim 1, wherein the ropes of the new roping and the ropes of the old roping are joined to each other by splicing the ropes together at one of their ends and by strengthening the joint by means of compressive sleeves.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "Method according to claim 3, wherein the ropes of the roping to be replaced are hoisting ropes, and in that one of the ends of each of the new and old hoisting ropes is provided with one or more compressive sleeves, the ends are opened up for a suitable length, every second strand from the opened ends is removed and the core of one of the hoisting ropes is cut off, and the ends of the opened hoisting ropes are spliced together with the remaining strands around the core of the other hoisting rope, and in that the joint location is reinforced at least at the point of the ends of the cut strands with compressive sleeves.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "Method according to claim 3, wherein the joint location is additionally reinforced with one or more compressive sleeves between the ends of the cut strands.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "Method according to claim 1, wherein at least the following procedures are performed in connection with replacement of the hoisting roping: the elevator car is locked into position in the elevator shaft the ends that extend the hoisting ropes of the old hoisting roping are detached from their first fixing points the hoisting ropes of the new hoisting roping and the hoisting ropes of the old hoisting roping are joined together at one of their ends and the joint location is secured by means of compressive sleeves on top of the ropes the hoisting ropes of the old hoisting roping are detached from their second fixing point the hoisting ropes of the old hoisting roping are pulled out of their position by means of the hoisting machine of the elevator using service drive while at the same time feeding the hoisting ropes of the new hoisting roping into the place of the old hoisting ropes.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "Method according to claim 1 in an elevator equipped with a counterweight, wherein in connection with replacement of the hoisting roping at least the following procedures are performed: the elevator car and the counterweight are locked into position in the elevator shaft the traction appliance for the ropes is fastened in such a way that the friction wheel in the traction appliance rests against the traction sheave of the hoisting machine the ends of the hoisting ropes of the old hoisting roping on the counterweight side are detached from their fixing points the ends of the hoisting ropes of the old hoisting roping on the counterweight side are fitted and tightened between the friction wheel and the lifting wheel in the traction appliance the ends of the old hoisting ropes on the elevator car side are detached from their fixing points the hoisting ropes of the new hoisting roping and the hoisting ropes of the old hoisting roping are joined together at one of their ends and the joint location is secured by means of compressive sleeves on top of the ropes the hoisting ropes of the old hoisting roping are pulled out of their position by means of the hoisting machine of the elevator and the traction appliance using service drive while at the same time feeding the hoisting ropes of the new hoisting roping into the place of the old hoisting ropes.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "Method according to claim 1 in an elevator equipped with a counterweight, wherein in connection with replacement of the hoisting ropes at least the following procedures are performed: the elevator car and the counterweight are locked into position in the elevator shaft the traction appliance for the ropes is fastened in such a way that the friction wheel in the traction appliance presses against the traction sheave of the hoisting machine the ends of the hoisting ropes of the old hoisting roping on the counterweight side are detached from their fixing points the ends of the old hoisting ropes on the elevator car side are detached from their fixing points the hoisting ropes of the new hoisting roping and the hoisting ropes of the old hoisting roping are joined together at one of their ends and the joint location is secured by means of compressive sleeves on top of the ropes the hoisting ropes of the old hoisting roping are pulled out of their position by means of the hoisting machine of the elevator and the friction wheel of the traction appliance using service drive while at the same time feeding the hoisting ropes of the new hoisting roping into the place of the old hoisting ropes.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "Method according to claim 1 above in an elevator without counterweight, wherein in connection with replacement of the hoisting ropes at least the following procedures are performed: the elevator car is locked into position in the elevator shaft the ends that extend the hoisting ropes of the old hoisting roping are detached from their first fixing points the hoisting ropes of the new hoisting roping and the hoisting ropes of the old hoisting roping are joined together at one of their ends and the joint location is secured by means of compressive sleeves on top of the ropes the ends of the old hoisting ropes of the old hoisting roping are detached from their fixing point the hoisting ropes of the old hoisting roping are pulled out of their position by means of the hoisting machine of the elevator using service drive while at the same time feeding the hoisting ropes of the new hoisting roping into the place of the old hoisting ropes.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "Traction appliance arrangement for replacing the elevator ropes in an elevator provided with a hoisting machine and a traction sheave, wherein the arrangement comprises at least a traction appliance fixed into position in the elevator shaft, which appliance contains a frame, onto which frame a friction wheel provided with a suitable friction surface is fitted with bearings allowing rotation, which friction wheel is arranged to press against the traction sheave.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "Traction appliance arrangement according to claim 10, wherein a lifting wheel (25) provided with a suitable friction surface is fined with bearings allowing rotation to the frame, in addition to the friction wheel, and in that the elevator hoisting rope to be replaced is arranged for placement between the friction surfaces of the friction wheel and the lifting wheel, and in that at least one of the wheels is fitted to tightened against the other wheel when the elevator rope is placed between the friction surfaces of the wheels.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "Traction appliance arrangement according to claim 10, wherein the friction surface of the friction wheel is rubber, plastic, urethane or other suitable flexible material having essentially large friction.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "Traction appliance arrangement according to claim 11, wherein the rim of the lifting wheel is provided with grooving, serration or other suitable surface having large friction.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "Method according to claim 2, wherein the ropes of the new roping and the ropes of the old roping are joined to each other by splicing the ropes together at one of their ends and by strengthening the joint by means of compressive sleeves.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "Method according to claim 4, wherein the joint location is additionally reinforced with one or more compressive sleeves between the ends of the cut strands.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "Method according to claim 2, wherein at least the following procedures are performed in connection with replacement of the hoisting roping: the elevator car is locked into position in the elevator shaft the ends that extend the hoisting ropes of the old hoisting roping are detached from their first fixing points the hoisting ropes of the new hoisting roping and the hoisting ropes of the old hoisting roping are joined together at one of their ends and the joint location is secured by means of compressive sleeves on top of the ropes the hoisting ropes of the old hoisting roping are detached from their second fixing point the hoisting ropes of the old hoisting roping are pulled out of their position by means of the hoisting machine of the elevator using service drive while at the same time feeding the hoisting ropes of the new hoisting roping into the place of the old hoisting ropes.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "Method according to claim 3, wherein at least the following procedures are performed in connection with replacement of the hoisting roping: the elevator car is locked into position in the elevator shaft the ends that extend the hoisting ropes of the old hoisting roping are detached from their first fixing points the hoisting ropes of the new hoisting roping and the hoisting ropes of the old hoisting roping are joined together at one of their ends and the joint location is secured by means of compressive sleeves on top of the ropes the hoisting ropes of the old hoisting roping are detached from their second fixing point the hoisting ropes of the old hoisting roping are pulled out of their position by means of the hoisting machine of the elevator using service drive while at the same time feeding the hoisting ropes of the new hoisting roping into the place of the old hoisting ropes.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "Method according to claim 4, wherein at least the following procedures are performed in connection with replacement of the hoisting roping: the elevator car is locked into position in the elevator shaft the ends that extend the hoisting ropes of the old hoisting roping are detached from their first fixing points the hoisting ropes of the new hoisting roping and the hoisting ropes of the old hoisting roping are joined together at one of their ends and the joint location is secured by means of compressive sleeves on top of the ropes the hoisting ropes of the old hoisting roping are detached from their second fixing point the hoisting ropes of the old hoisting roping are pulled out of their position by means of the hoisting machine of the elevator using service drive while at the same time feeding the hoisting ropes of the new hoisting roping into the place of the old hoisting ropes.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "Method according to claim 5, wherein at least the following procedures are performed in connection with replacement of the hoisting roping: the elevator car is locked into position in the elevator shaft the ends that extend the hoisting ropes of the old hoisting roping are detached from their first fixing points the hoisting ropes of the new hoisting roping and the hoisting ropes of the old hoisting roping are joined together at one of their ends and the joint location is secured by means of compressive sleeves on top of the ropes the hoisting ropes of the old hoisting roping are detached from their second fixing point the hoisting ropes of the old hoisting roping are pulled out of their position by means of the hoisting machine of the elevator using service drive while at the same time feeding the hoisting ropes of the new hoisting roping into the place of the old hoisting ropes.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "Method according to claim 2 in an elevator equipped with a counterweight, wherein in connection with replacement of the hoisting roping at least the following procedures are performed: the elevator car and the counterweight are locked into position in the elevator shaft the traction appliance for the ropes is fastened in such a way that the friction wheel—in the traction appliance rests against the traction sheave of the hoisting machine the ends of the hoisting ropes—of the old hoisting roping on the counterweight side are detached from their fixing points the ends of the hoisting ropes of the old hoisting roping on the counterweight-side are fitted and tightened between the friction wheel and the lifting wheel in the traction appliance the ends of the old hoisting ropes on the elevator car side are detached from their fixing points the hoisting ropes of the new hoisting roping and the hoisting ropes of the old hoisting roping are joined together at one of their ends and the joint location is secured by means of compressive sleeves on top of the ropes the hoisting ropes of the old hoisting roping are pulled out of their position by means of the hoisting machine of the elevator and the traction appliance using service drive while at the same time feeding the hoisting ropes of the new hoisting roping into the place of the old hoisting ropes.",
+      "sourceXmlParentClaimNumbers": [2]
+    }
+  ]
+}

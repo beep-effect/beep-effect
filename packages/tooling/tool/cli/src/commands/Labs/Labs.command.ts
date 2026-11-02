@@ -14,7 +14,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
+import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
@@ -36,6 +36,7 @@ import {
   LabManifest,
 } from "../../internal/cli/Labs/index.ts";
 import { printJsonOrLines } from "../../internal/cli/Printer.ts";
+import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 
 const $I = $RepoCliId.create("commands/Labs/Labs.command");
 
@@ -140,7 +141,7 @@ const renderRowLine = (row: LabsListRow): string =>
 const labsListHandler = Effect.fn("Labs.list")(function* (options: { readonly json: boolean }) {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot();
-  const workspaces = yield* resolveWorkspaceDirs(repoRoot);
+  const workspaces = yield* workspaceDirectories(repoRoot);
 
   let labEntries = A.empty<readonly [string, string, string]>();
   for (const [name, dir] of workspaces) {

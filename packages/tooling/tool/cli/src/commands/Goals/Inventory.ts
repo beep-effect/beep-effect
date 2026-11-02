@@ -11,6 +11,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import { MarkdownNodeKind } from "@beep/markdown/MarkdownNode";
 import { A, O, pipe, Str } from "@beep/utils";
@@ -23,9 +24,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { parse } from "jsonc-parser";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
-import type { ParseError } from "jsonc-parser";
 import type { GoalManifest, GoalPhase } from "./Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Inventory");
@@ -267,11 +266,11 @@ export const isJsonRecord = (value: unknown): value is Readonly<Record<string, u
  * @category parsing
  * @since 0.0.0
  */
-export const parseGoalManifestText = (text: string): O.Option<unknown> => {
-  const errors: Array<ParseError> = [];
-  const value: unknown = parse(text, errors);
-  return errors.length === 0 && isJsonRecord(value) ? O.some(value) : O.none();
-};
+export const parseGoalManifestText = (text: string): O.Option<unknown> =>
+  Jsonc.parseResult(text, strictJson).pipe(Result.getSuccess, O.filter(isJsonRecord));
+
+// jsonc-parser's default reading: comments allowed, trailing commas rejected.
+const strictJson = JsoncParseOptions.make({ allowTrailingComma: false });
 
 const LIFECYCLE_LINE_PATTERN = /^(Lifecycle:[ \t]*`?)([A-Za-z0-9_-]+)(`?.*)$/m;
 const MISSION_HEADING = "Mission";

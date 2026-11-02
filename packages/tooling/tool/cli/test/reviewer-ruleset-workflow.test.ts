@@ -30,6 +30,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const ROOT = "repos/beep-effect/beep-effect";
 const LIST_ARGS = `api ${ROOT}/rulesets?includes_parents=true&per_page=100 --paginate --slurp`;
@@ -51,6 +52,7 @@ const CommandLayer = Layer.mergeAll(
     Terminal.make({
       columns: Effect.succeed(80),
       rows: Effect.succeed(24),
+      size: Effect.die("unused"),
       readInput: Effect.die("unused"),
       readLine: Effect.die("unused"),
       display: () => Effect.void,
@@ -167,7 +169,7 @@ const fakeGh = Effect.fnUntraced(function* (fixture: GhFixture) {
     Effect.gen(function* () {
       if (!ChildProcess.isStandardCommand(command) || command.command !== "gh")
         return yield* Effect.die("the reviewer ruleset workflow only spawns gh");
-      const args = A.join(command.args, " ");
+      const args = A.join(commandArgs(command), " ");
       const stdin = yield* readStdin(command.options.stdin).pipe(Effect.orDie);
       const priorCalls = yield* Ref.get(calls);
       yield* Ref.update(calls, A.append(GhCall.make({ args, stdin })));

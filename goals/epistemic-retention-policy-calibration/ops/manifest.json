@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "epistemic-retention-policy-calibration",
+    "title": "Epistemic Retention Policy Calibration",
+    "status": "active",
+    "created": "2026-10-28",
+    "updated": "2026-10-29",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/epistemic-retention-policy-calibration",
+  "lifecycle": "active",
+  "mission": "Produce reproducible offline retention calibration evidence and an approval-ready recommendation; keep production inert pending evidence and separate explicit approval.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-memory-tiers-bitemporal-edges",
+    "graduated": "2026-08-13"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Calibration completes only after exact-head hosted readiness, review/window gates, delivery PR merge and matching completion receipt; production activation is not a completion condition.",
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2354,
+        "role": "supporting"
+      },
+      {
+        "number": 2357,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/codex_epistemic-retention-calibration-6457a25f3955/verdict.json",
+        "gating": true
+      }
+    ]
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "standards/ARCHITECTURE.md",
+    "goals/epistemic-retention-policy-calibration/README.md",
+    "goals/epistemic-retention-policy-calibration/SPEC.md",
+    "goals/epistemic-retention-policy-calibration/PLAN.md",
+    "goals/epistemic-retention-policy-calibration/GOAL.md",
+    "goals/epistemic-retention-policy-calibration/ops/EVIDENCE.md",
+    "goals/epistemic-retention-policy-calibration/research/SOURCES.md",
+    "goals/epistemic-memory-retention-projections/ops/REPORT.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/epistemic-retention-policy-calibration/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Freeze baseline, authorized dataset and protocol",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement offline calibration workflow",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Evaluate, replay and review calibration evidence",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet calibration delivery through merge",
+      "status": "in-progress"
+    },
+    {
+      "id": "P4",
+      "name": "Reflect, verify completion and retire lane",
+      "status": "in-progress"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/epistemic-retention-policy-calibration/GOAL.md)\" -le 4000",
+    "jq . goals/epistemic-retention-policy-calibration/ops/manifest.json",
+    "rg -n \"epistemic-retention-policy-calibration|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/epistemic-retention-policy-calibration",
+    "git diff --check -- goals/epistemic-retention-policy-calibration",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Unauthorized product/private dataset access.",
+    "Production activation without accepted calibration evidence and separate explicit human approval.",
+    "Authority mutation, donor code/constants, external authority, operator-memory coupling or RRF integration.",
+    "Evidence or authentication cannot be verified; hold the affected path and retain inert policy.",
+    "New paid resources require explicit authorization."
+  ],
+  "statusNote": "G2 insufficient-evidence accepted; G3 not-requested and G4 excluded. PR #2357 carries proposed completed-retained closeout and reflection. Operative lifecycle stays active until exact-head hosted readiness, review/window, merge and matching completion receipt verify; lane retirement follows.",
+  "dependencies": [
+    "goals/epistemic-memory-retention-projections",
+    "goals/epistemic-bitemporal-edge-core"
+  ],
+  "blockedBy": [],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2357
+  }
+}

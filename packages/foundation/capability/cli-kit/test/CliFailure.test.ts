@@ -46,6 +46,7 @@ const platformServices = Layer.mergeAll(
     Terminal.make({
       columns: Effect.succeed(80),
       rows: Effect.succeed(24),
+      size: Effect.die("unused"),
       readInput: Effect.die("unused"),
       readLine: Effect.die("unused"),
       display: () => Effect.void,
@@ -555,6 +556,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
           Terminal.make({
             columns: Effect.succeed(100),
             rows: Effect.succeed(24),
+            size: Effect.die("unused"),
             readInput: Effect.die("unused"),
             readLine: Effect.die("unused"),
             display: () => Effect.void,

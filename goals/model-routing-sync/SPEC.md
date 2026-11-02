@@ -64,7 +64,7 @@ Locator strategy is per format; every rewrite is line-anchored and idempotent.
 | --- | --- | --- |
 | `AGENTS.md` volume-pools section | md generated block | `codex.heavy`, `cursor.*`, `child.lightweight` |
 | `docs/runbooks/agent-pools.md` seat table | md generated block | `cursor.volume/review/mechanical/never` |
-| `docs/runbooks/graft-local-recovery.md` | md generated block | `graft.deep` |
+| the graft local-recovery runbook (retired 2026-10-28) | md generated block | `graft.deep` |
 | `.claude/skills/browser-qa-loop/SKILL.md`, `resources/judge-prompt.md` | md generated block | `qa.judge` |
 | `.claude/skills/oracle/SKILL.md` | md generated block | `codex.heavy` |
 | `.claude/skills/impeccable/agents/*.toml` | toml top-level key (`model`, `model_reasoning_effort`) | `codex.heavy` x `codex-plugin` |

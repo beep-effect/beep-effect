@@ -1,6 +1,8 @@
 /**
  * Claim gate implementation.
  *
+ * **Details**
+ *
  * Maps a candidate claim plus its evidence into a bounded SHACL dataset (a claim
  * subject typed as a claim, with one quote triple per evidence span), runs the
  * bounded engine requiring at least one evidence quote, and projects the result

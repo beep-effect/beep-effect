@@ -20,7 +20,7 @@ type ContentHashes = {
 /**
  * Streams one file through SHA-1 and SHA-256 at once.
  *
- * `effect/Crypto` only digests a complete in-memory buffer, which cannot hold a
+ * `effect/crypto/Digest` only digests a complete in-memory buffer, which cannot hold a
  * gigabyte-scale source, and the repository's node-builtin gate bars
  * `node:crypto` from typechecked source. The incremental `@noble/hashes`
  * hashers (the same choice as the corpus preservation hasher) are fed from the

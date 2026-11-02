@@ -1,0 +1,83 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A T-shaped parking device, comprising:
+<claim-text>a two-tiered rectangular base,</claim-text>
+<claim-text>a first support comprising a cuboid that is perpendicular to the base, and</claim-text>
+<claim-text>a second support comprising a cuboid that is perpendicular to the first support such that the first and second support form a T-shape,</claim-text>
+<claim-text>wherein the first support has a width=X, and the first and second support have a thickness of 0.1×X to 0.25×X,</claim-text>
+<claim-text>wherein the T-shape has a front side and a back side,</claim-text>
+<claim-text>wherein a front side of the second support contains:
+<claim-text>a camera and a sound device at a center position;</claim-text>
+<claim-text>a LiDAR sensor at a first end and a second end;</claim-text>
+<claim-text>a lamp and/or LED on the first end; and</claim-text>
+<claim-text>a battery and wireless communication node on the second end,</claim-text>
+</claim-text>
+<claim-text>wherein a liquid crystal display (LCD) disposed in a casing having a right trapezoidal prism shape having a thickness that is the same as the thickness of the second support is present on top of the first end of the second support,</claim-text>
+<claim-text>wherein a straight edge of the right trapezoidal prism is aligned with an upper edge of the first end of the second support such that the casing edge and the upper edge of the second support are flush, and an angled edge of the right trapezoidal prism shape is pointed towards the second end of the second support along the upper edge of the second support.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The T-shaped parking device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the camera is configured to capture an image of a license plate of a vehicle,
+<claim-text>wherein the processor includes circuitry configured with instructions to identify and record a license plate number.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The T-shaped parking device of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the parking device includes circuitry configured with instructions to wirelessly send the license plate number to a user device.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The parking device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the LiDAR sensor is configured to detect a distance between a vehicle and the parking device
+<claim-text>wherein the processor includes circuitry configured with instructions to identify an angle and a distance from the vehicle to the parking device at which the vehicle is parked and determine if the angle and/or the distance is within a set parameter.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The parking device of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the processing circuitry is configured with instructions to activate the lamp/LED if the angle and/or the distance is outside the set parameter.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The parking device of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the processing circuitry is configured with instructions to activate the sound device if the angle and/or the distance is outside the set parameter.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The parking device of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the processor includes circuitry configured with instructions to send an alert if the angle and/or the distance is outside the set parameter.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The parking device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the wireless communication node comprises:
+<claim-text>a radio component; and</claim-text>
+<claim-text>a wi-fi component.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The parking device of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the radio component is configured to send information between two or more microprocessors within the same parking device.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The parking device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the wireless communication node connects to a user interface on a mobile device,
+<claim-text>wherein the processor includes circuitry configured with instructions to send parking information to an application on a mobile device.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The parking device of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the application on a mobile device displays vacancy and/or occupancy of a parking spot.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The parking device of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the application on a mobile device displays parking violations.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. A method of reserving a parking spot, comprising:
+<claim-text>accessing the application on a mobile device,</claim-text>
+<claim-text>selecting a parking spot and clicking reserve,</claim-text>
+<claim-text>sending the reservation to the parking device of <claim-ref idref="CLM-00010">claim 10</claim-ref>.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The parking device of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the user interface displays whether a parking spot is occupied or vacant.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The parking device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the back side of the T-shape contains, a camera at its center and a LiDAR sensor at each end.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The parking device of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the parking device can monitor up to two cars simultaneously.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The parking device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the second support contains an antenna.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The parking device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the second support contains a microprocessor.</claim-text>
+</claim>
+</claims>

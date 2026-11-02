@@ -29,6 +29,8 @@ export {
 } from "../commands/Yeet/internal/FallowFeedback.ts";
 export * from "../commands/Yeet/internal/FinalCheck.schemas.ts";
 export * from "../commands/Yeet/internal/FinalCheck.ts";
+export * from "../commands/Yeet/internal/FinalCheckRefresh.schemas.ts";
+export * from "../commands/Yeet/internal/FinalCheckRefresh.ts";
 export * from "../commands/Yeet/internal/GateStaleness.ts";
 export * from "../commands/Yeet/internal/GhCall.ts";
 export * from "../commands/Yeet/internal/GhOps.ts";
@@ -38,6 +40,7 @@ export {
   lockfileChangedSinceBase,
   optionFromNonEmpty,
   refreshBaseRef,
+  runGitFoldedStdout,
   safeOriginBranchFromBaseForTesting,
 } from "../commands/Yeet/internal/GitExec.ts";
 export * from "../commands/Yeet/internal/Guards.ts";
@@ -50,6 +53,7 @@ export * from "../commands/Yeet/internal/IssueArtifacts.ts";
 export * from "../commands/Yeet/internal/IssueClassification.ts";
 export * from "../commands/Yeet/internal/IssueParser.ts";
 export * from "../commands/Yeet/internal/KnowledgeLeaseWarnings.ts";
+export * from "../commands/Yeet/internal/LedgerFile.ts";
 export * from "../commands/Yeet/internal/LocalShardPoison.ts";
 export * from "../commands/Yeet/internal/Merge.ts";
 export * from "../commands/Yeet/internal/MergedPreview.ts";
@@ -84,6 +88,8 @@ export * from "../commands/Yeet/internal/Resume.ts";
 export * from "../commands/Yeet/internal/Retire.schemas.ts";
 export * from "../commands/Yeet/internal/Retire.ts";
 export * from "../commands/Yeet/internal/ReviewBodySignal.ts";
+export * from "../commands/Yeet/internal/ReviewLane.schemas.ts";
+export * from "../commands/Yeet/internal/ReviewLane.ts";
 export * from "../commands/Yeet/internal/ReviewThreadState.ts";
 export * from "../commands/Yeet/internal/ReviewWindow.ts";
 export * from "../commands/Yeet/internal/Settle.ts";

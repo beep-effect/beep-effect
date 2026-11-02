@@ -24,13 +24,12 @@ import {
 } from "./EffectSchemaInventoryRender.ts";
 import { EffectSchemaInventorySource } from "./EffectSchemaInventorySource.ts";
 import { readEffectSchemaInventoryFixture, writeEffectSchemaInventoryFixture } from "./EffectSchemaInventoryStore.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { EffectSchemaInventoryReceipt } from "../EffectSchemaInventory.schemas.ts";
 import type {
   EffectSchemaInventoryCatalogPinError,
-  EffectSchemaInventoryGraftUnavailableError,
   EffectSchemaInventoryPinAbsentError,
   EffectSchemaInventoryReferenceMissingError,
 } from "../Lint.errors.ts";
@@ -43,10 +42,9 @@ type RunEffect = Effect.Effect<
   | EffectSchemaInventoryCatalogPinError
   | EffectSchemaInventoryDriftError
   | EffectSchemaInventoryError
-  | EffectSchemaInventoryGraftUnavailableError
   | EffectSchemaInventoryPinAbsentError
   | EffectSchemaInventoryReferenceMissingError,
-  EffectSchemaInventorySource | FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  Digest.Digest | EffectSchemaInventorySource | FileSystem.FileSystem | Path.Path
 >;
 
 const describeReceipt = (receipt: EffectSchemaInventoryReceipt): string =>
@@ -147,7 +145,7 @@ export const generateEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun
  * **Details**
  *
  * Every owned fixture file must match byte for byte, and every generated prompt under the prompt
- * root must re-render to its committed bytes outside the graft section. Both need the pinned
+ * root must re-render to its committed bytes. Both need the pinned
  * sources, so this is the local proof; hosted CI verifies the committed rows only and cannot
  * verify prompts.
  *
@@ -240,7 +238,7 @@ export const runEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun.run"
   root: string,
   request: EffectSchemaInventoryRequest
 ) {
-  return yield* EffectSchemaInventoryRequest.match<RunEffect>(request, {
+  const program: RunEffect = EffectSchemaInventoryRequest.match(request, {
     write: Effect.fnUntraced(function* () {
       const rendered = yield* generateEffectSchemaInventory();
       yield* writeEffectSchemaInventoryFixture(root, rendered);
@@ -249,9 +247,8 @@ export const runEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRun.run"
     check: () => Effect.flatMap(checkEffectSchemaInventory(root), reportEffectSchemaInventoryCheck),
     prompt: Effect.fnUntraced(function* ({ module, out }) {
       const receipt = yield* generateEffectSchemaInventoryPrompt(root, module, out);
-      yield* Console.log(
-        `${LOG_PREFIX} wrote ${receipt.target} for ${receipt.module} (${receipt.rows} rows; graft working tree ${receipt.workingTreeMatchesPin ? "matches" : "differs from"} the pin)`
-      );
+      yield* Console.log(`${LOG_PREFIX} wrote ${receipt.target} for ${receipt.module} (${receipt.rows} rows)`);
     }),
   });
+  return yield* program;
 });

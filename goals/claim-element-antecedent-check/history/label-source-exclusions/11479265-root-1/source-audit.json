@@ -1,0 +1,155 @@
+{
+  "familyId": "11479265-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.95,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the timing resolution",
+      "nativeQuote": "the timing resolution",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the path timings",
+      "nativeQuote": "the path timings",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the subcarriers",
+      "nativeQuote": "the subcarriers",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the weights",
+      "nativeQuote": "the weights",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the output",
+      "nativeQuote": "the output",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the output",
+      "nativeQuote": "the output",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the output",
+      "nativeQuote": "the output",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the impulse responses",
+      "nativeQuote": "the impulse responses",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the impulse responses",
+      "nativeQuote": "the impulse responses",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the minimum mean square error method",
+      "nativeQuote": "the minimum mean square error method",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the zero forcing method",
+      "nativeQuote": "the zero forcing method",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the results of detection of sliding correlation",
+      "nativeQuote": "the results of detection of sliding correlation",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the results of detection of sliding correlation",
+      "nativeQuote": "the results of detection of sliding correlation",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the results of detection of sliding correlation",
+      "nativeQuote": "the results of detection of sliding correlation",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the peripheral portions",
+      "nativeQuote": "the peripheral portions",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the output",
+      "nativeQuote": "the output",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    }
+  ],
+  "concerns": [
+    "Actual second-paragraph rejection1–14 expressly includes selected;9–13 rejected by dependency.10/13 naturally depend3or4, XML agrees; selected roots/connectivity read. No original comparisons; detailed numbered correspondence supports qualification with limitation."
+  ],
+  "rationale": "Retained ground, numbered examiner phrases, selected natural dependencies and original versions examined. Chronology alone not used to qualify. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "11479265",
+    "nativePublicationNumber": "US20070009023A1",
+    "nativePublicationDate": "20070111",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "deaa3090ac9777d86c676d065038992b0eac89a4fa3bdc2a0d749603096271b5",
+    "sourceClaimsXmlSha256": "a95f5a9d57a63e6616eebcce267f6125aad804eb4b1ff44821b44f9dd17ccab2"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 37,
+    "retainedInventoryCount": 37,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "EPD542NLPP1GUI3",
+        "officialDate": "2006-06-30T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2009-04-13",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [],
+  "nativeContextClaimCount": 14,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": []
+}

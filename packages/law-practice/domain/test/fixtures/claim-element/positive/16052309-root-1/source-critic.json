@@ -1,0 +1,115 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16052309-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20190038021", "A1", "20190207"],
+    "applicationReference": ["US", "16052309", "20180801"],
+    "officeActionDocumentIdentifiers": ["JV5BLJF5RXEAPX3"],
+    "officeActionMailDate": "2019-05-03"
+  },
+  "digestEvidence": [
+    {
+      "file": "16052309.publication.xml",
+      "sha256": "dfbb5b4d018d49cef40c900302e24564c1fa0d48c913a2612a99fbfc692c363f",
+      "matchesProvenance": true
+    },
+    {
+      "file": "16052309.claims.xml",
+      "sha256": "84c8c1daf7b3301a5ee3b0c4192bb4b69d0fdb638b558e8f7aa19fed35490990",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "84c8c1daf7b3301a5ee3b0c4192bb4b69d0fdb638b558e8f7aa19fed35490990",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "JKBMWGYKRXEAPX0",
+      "available": true,
+      "sha256": "b54eed0fdcaca735f61d00d3b028debc3512012d6f142e2c763fc76141204a19",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "JKBMWGYNRXEAPX0",
+      "available": true,
+      "sha256": "d72706fde3d47ecfe8b0b4f2c20bfe8cdd12351426644ac87c31a6f7d1a5f56f",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 58,
+    "actualRows": 58,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2018-08-01T17:19:16.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "JKBMWGYKRXEAPX0"
+      },
+      {
+        "officialDate": "2018-08-01T17:19:16.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "JKBMWGYMRXEAPX0"
+      },
+      {
+        "officialDate": "2018-08-01T17:19:16.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "JKBMWGYNRXEAPX0"
+      },
+      {
+        "officialDate": "2018-08-01T17:19:16.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "JKBMWGYORXEAPX0"
+      }
+    ]
+  },
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the backside section",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the backside section"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the upper and lower ends",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": false,
+      "nativeQuote": "the lower and upper ends"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "its upper bend having an u-shaped bend (2d)",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": false,
+      "nativeQuote": "its upper bend having an U-shaped bend (2d)"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the cabinet box",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the cabinet box"
+    }
+  ],
+  "assessment": "Currently-amended JKBMWGYNRXEAPX0 Del/Ins explicitly replaces original multi-claim dependencies3-6 with claim1. Remaining l/1 and degree glyph differences are localized OCR. OA covers1-6 with numbered corresponding phrases.",
+  "findings": [],
+  "limitations": [
+    "Cached public evidence only; original OCR corroboration only, never repaired into reference. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation inspected/performed.",
+  "officeActionGroundQuotes": [
+    "claims 1-6 are rejected under 35 u.s.c. 112(b) as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor regards as the invention."
+  ]
+}

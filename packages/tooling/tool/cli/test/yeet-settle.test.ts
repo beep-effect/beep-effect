@@ -78,6 +78,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const at = "2026-09-16T00:00:00.000Z";
 const decodeBranchRules = S.decodeUnknownEffect(S.Array(GhBranchRule));
@@ -176,7 +177,7 @@ const handle = (exitCode: number, output: string) =>
 const spawner = (exitCode: number, output: string) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    expect(command.args).toEqual(["api", "repos/{owner}/{repo}/rules/branches/main"]);
+    expect(commandArgs(command)).toEqual(["api", "repos/{owner}/{repo}/rules/branches/main"]);
     return Effect.succeed(handle(exitCode, output));
   });
 const platform = Layer.mergeAll(
@@ -1017,7 +1018,7 @@ it.layer(platform, { timeout: "30 seconds" })((it) =>
         // fallow-ignore-next-line complexity -- fixture routes the git and GitHub command families to fixed census responses (cognitive 9). Owner: @beep/repo-cli. Exit: replace with a table-driven command fixture from the shared repo-run test kit once one exists.
         const runner = ChildProcessSpawner.make((command) => {
           if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-          const [first, second] = command.args;
+          const [first, second] = commandArgs(command);
           if (command.command === "git") return Effect.succeed(handle(0, ""));
           if (first === "pr" && second === "view")
             return Effect.succeed(
@@ -1043,7 +1044,7 @@ it.layer(platform, { timeout: "30 seconds" })((it) =>
                 handle(
                   0,
                   JSON.stringify(
-                    A.contains(command.args, "--required")
+                    A.contains(commandArgs(command), "--required")
                       ? [{ name: "Lint", bucket: "pending", state: "QUEUED" }]
                       : [
                           { name: "Lint", bucket: "pending", state: "QUEUED" },
@@ -1155,7 +1156,7 @@ const selfLoopStaticReply = (command: string, first: string | undefined, second:
 const selfLoopRunner = (restRecoveryAvailable: boolean, pageReads: Ref.Ref<number>, restReads: Ref.Ref<number>) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    const [first, second] = command.args;
+    const [first, second] = commandArgs(command);
     return O.match(selfLoopStaticReply(command.command, first, second), {
       onSome: Effect.succeed,
       onNone: () =>
@@ -1199,7 +1200,7 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
         const reruns = yield* Ref.make(0);
         const runner = ChildProcessSpawner.make((command) => {
           if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-          const [first, second] = command.args;
+          const [first, second] = commandArgs(command);
           if (first === "run" && second === "list")
             return Effect.succeed(
               handle(
@@ -1211,7 +1212,8 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
             );
           if (first === "run" && second === "rerun")
             return Ref.update(reruns, (n) => n + 1).pipe(Effect.as(handle(0, "")));
-          if (A.contains(command.args, "--log-failed")) return Effect.succeed(handle(0, "Test timed out in 5000ms"));
+          if (A.contains(commandArgs(command), "--log-failed"))
+            return Effect.succeed(handle(0, "Test timed out in 5000ms"));
           if (first === "run" && second === "view")
             return Effect.succeed(
               handle(

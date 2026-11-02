@@ -1,0 +1,20 @@
+{
+  "previous": "8e7c9e20996b1c4c4d92acdbf966aef3e6af7e1086a1b8f0a634d7ddcd5bdaa4",
+  "review": {
+    "reviewer": "codex (docgen-node-launch, source-bound manifest review)",
+    "reason": "Acknowledge the ten repo-cli configuration-drift tasks after removing only the forced Bun interpreter flag from beep:docgen. All other manifest/task settings and qualification state remain unchanged.",
+    "basis": {
+      "path": "goals/turborepo-cache-trust-observability/research/docgen-launch-baseline-review-2026-10-29.md",
+      "sha256": "8f3187c95bdd5b4fb8b17904c5738578211f5f881f1dad8d6655c098a48d1cba"
+    }
+  },
+  "subjects": ["@beep/repo-cli"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

@@ -42,6 +42,12 @@
     ".": "./src/index.ts",
     "./DuckDbClient": "./src/DuckDbClient.service.ts",
     "./DuckDbMigrator": "./src/DuckDbMigrator.service.ts",
+    "./DuckDbEventJournal": "./src/DuckDbEventJournal.service.ts",
+    "./DuckDbEventLogServerEncrypted": "./src/DuckDbEventLogServerEncrypted.service.ts",
+    "./DuckDbMessageStorage": "./src/DuckDbMessageStorage.service.ts",
+    "./DuckDbPersistedQueue": "./src/DuckDbPersistedQueue.service.ts",
+    "./DuckDbPersistence": "./src/DuckDbPersistence.service.ts",
+    "./DuckDbRunnerStorage": "./src/DuckDbRunnerStorage.service.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -60,6 +66,12 @@
       ".": "./dist/index.js",
       "./DuckDbClient": "./dist/DuckDbClient.service.js",
       "./DuckDbMigrator": "./dist/DuckDbMigrator.service.js",
+      "./DuckDbEventJournal": "./dist/DuckDbEventJournal.service.js",
+      "./DuckDbEventLogServerEncrypted": "./dist/DuckDbEventLogServerEncrypted.service.js",
+      "./DuckDbMessageStorage": "./dist/DuckDbMessageStorage.service.js",
+      "./DuckDbPersistedQueue": "./dist/DuckDbPersistedQueue.service.js",
+      "./DuckDbPersistence": "./dist/DuckDbPersistence.service.js",
+      "./DuckDbRunnerStorage": "./dist/DuckDbRunnerStorage.service.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }

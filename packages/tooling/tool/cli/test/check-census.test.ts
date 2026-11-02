@@ -5,11 +5,12 @@ import {
   runCheckCensus,
 } from "@beep/repo-cli/test/Quality";
 import { findRepoRoot } from "@beep/repo-utils/Root";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -82,7 +83,7 @@ const writeFixtureRepo = Effect.fn("CheckCensusTest.writeFixtureRepo")(function*
   );
 });
 
-it.layer(NodeServices.layer)("check census", (it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("check census", (it) => {
   it.effect(
     "measures the committed overlay against a reference-keeping overlay and removes the temporary config",
     Effect.fnUntraced(function* () {

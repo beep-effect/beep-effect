@@ -1,0 +1,33 @@
+{
+  "recordedAt": "2026-10-29T06:45:19.488214-05:00",
+  "result": "passed",
+  "scope": "rendered default and opt-in metadata topology plus bounded synthetic route rollback",
+  "tests": 13,
+  "skipped": 0,
+  "logSha256": "80e4d1384b15b5258fb01889ff512c3e6bd7574e002824c10b6563093067f9ae",
+  "defaultPreservesLegacyTraceRoute": true,
+  "legacyUsesNewFileStorage": false,
+  "metadataPortLoopbackOnly": true,
+  "syntheticLegacyMetadataLegacyDelivery": true,
+  "metadataQueueBytesUnchangedDuringRollback": true,
+  "metadataConfigSemanticallyEqualToRetirementCanary": true,
+  "priorCanaryConfigSha256": "b49814316b91999f148f2d0b73f835c36be70fa4e24cab2f1588b8d7fc05ea56",
+  "productionDeployment": false,
+  "crossHostTransportQualified": false,
+  "historicalRecoveryHoldReleased": false,
+  "dankserverSourceSha256": {
+    "ansible/group_vars/all.yml": "55eb82dd108f7c12f32dd275db0a6e2b757a8fa3531b3b5dbc4c66b7f155c2c5",
+    "ansible/roles/monitoring/templates/otel-config.yaml.j2": "20bce80b8a5dd72030facdb46e60822720fd1bff57f94c1bb38bbff708658526",
+    "ansible/roles/monitoring/templates/compose.yaml.j2": "a251dd71ecf0d77650eff8a56e4c121f7fdbd43596e72b9f91997d0c3f9d5b3c",
+    "ansible/roles/monitoring/templates/prometheus-alerts.yml.j2": "fd92ea3735d208c87543d6657bb305e9d7fc54ea16693a324191bdb697c3de23",
+    "ansible/roles/monitoring/tests/test_otel_config.py": "4e456f5977240e3b19d5bc0afe39d0d43ac113f5884a53bbe51222d96ee8e935",
+    "ansible/roles/monitoring/tests/test_otel_migration.py": "35179da4db37df67b2754fd25112f0450821d94311b52384d7c1907146c3eaf7",
+    "ansible/roles/monitoring/tests/test_otel_queue.py": "ec0538f64d41491c921ef02e805d6ffdc2be3cda960bb2b58d4aa11801fb019b",
+    "ansible/roles/monitoring/tests/test_otel_alerts.py": "71b42436363eaa48596ae0acad6121ed04b1cc275fcf0c3b8c225786e11d6d3a",
+    "ansible/roles/monitoring/tests/test_observation_health.py": "ac880fd41a25b865d2e81937f28cf5ca24e5fecab698732b5da06131df5db47b"
+  },
+  "beepSourceSha256": {
+    "ops/live_canary_support.py": "e2e68e0c4b07cb076dfc74f1c6b0eb80949651cf2af03a25228f2d28bd74a874",
+    "ops/verify-native-collector-route.py": "24abce331d3c827d8a01620f9c31b78dac7893e3ecb74fca123542da59d8d5c9"
+  }
+}

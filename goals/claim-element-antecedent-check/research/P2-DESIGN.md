@@ -62,6 +62,7 @@ longest match first:
 | `a` | `a` |
 | `the` | `the` |
 | `said` | `said` |
+| `its`, `their` | `bare` (unsupported possessive; explicit policy abstention) |
 
 **Head.** Take tokens (`[A-Za-z0-9-]+`) after the determiner. Stop at:
 - punctuation `, ; : . ( ) [ ]`;
@@ -98,6 +99,15 @@ only its own anchor, which ends at the colon.
 
 `producer` is `rule`. Build the result through `ClaimElementTree` decoding. A coherence failure is
 a decomposer bug, surfaced as `incoherent-tree`.
+
+## 2026-10-28 explicit unsupported-possessive coverage
+
+Live examiner text for application 16287736 identifies `its forward part`.
+The bounded scan now retains `its` and `their` phrases as `bare` terms,
+using the same head/anchor rules and treating both words as head boundaries.
+The policy emits `pattern-not-covered` with rule `unsupported-determiner`
+for these terms. It does not infer a possessive antecedent. Gold labels must
+include these spans; this change is abstention coverage, not pronoun resolution.
 
 ## Policy (`antecedentPolicy: AntecedentPolicy`)
 

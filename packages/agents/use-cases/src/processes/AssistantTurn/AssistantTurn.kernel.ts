@@ -1,6 +1,8 @@
 /**
  * The assistant-turn generation kernel port.
  *
+ * **Details**
+ *
  * This is the single port both the (future) Anthropic implementation and the
  * deterministic fixture satisfy: given a plain-text history, stream the next
  * assistant turn as indexed-block events followed by one provider-usage

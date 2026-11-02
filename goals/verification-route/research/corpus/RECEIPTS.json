@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "route-corpus/v1",
+  "capturedAt": "2026-10-31T12:48:21.866Z",
+  "since": "2026-09-01",
+  "until": "2026-10-30",
+  "workflows": ["Check", "Heavy"],
+  "runs": 6328,
+  "heads": 6319,
+  "path": "goals/verification-route/research/corpus/hosted-runs.ndjson.gz",
+  "sha256": "e840ea6d2eaf97b37a68cdde21669db6cd68b56e4be677fd608a320eaa84abe4"
+}

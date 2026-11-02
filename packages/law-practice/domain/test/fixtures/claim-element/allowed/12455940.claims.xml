@@ -1,0 +1,96 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A system for sensor data fusion for sensor management and utilization, comprising:
+<claim-text>at least one computer processor including a memory;</claim-text>
+<claim-text>at least one curation engine, at least one link engine, at least one fusion engine, at least one inference engine, and at least one validation engine;</claim-text>
+<claim-text>at least one first sensor, being of a first sensor type, operable to measure a first parameter of a machine; and</claim-text>
+<claim-text>at least one second sensor, being of a second sensor type, operable to measure a second parameter of the machine;</claim-text>
+<claim-text>wherein the at least one computer processor is operable to analyze the first parameter and the second parameter;</claim-text>
+<claim-text>wherein the at least one curation engine is operable to curate the first parameter and the second parameter, the at least one link engine is operable to link the first parameter and the second parameter via calculating a conditional entropy between the first parameter and the second parameter, the at least one fusion engine is operable to fuse the first parameter and the second parameter, the at least one inference engine is operable to determine an inference from the first parameter and the second parameter, and the at least one validation engine is operable to validate the first parameter and the second parameter;</claim-text>
+<claim-text>wherein the at least one curation engine is operable to filter the first parameter and the second parameter based in part on at least one property and/or sub-property before storing the first parameter and the second parameter;</claim-text>
+<claim-text>wherein the at least one fusion engine is operable to fuse the first parameter and the second parameter, wherein the at least one fusion engine creates at least one new data set;</claim-text>
+<claim-text>wherein the at least one computer processor is operable to instruct modification of the machine based on the at least one new data set; and</claim-text>
+<claim-text>wherein the modification of the machine includes adjusting an orientation of a satellite.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one first sensor and/or the at least one second sensor includes an accelerometer, a gyroscope, a force/torque sensor, a proximity sensor, a gear sensor, a magnetic sensor, a humidity sensor, an angle sensor, a temperature sensor, a 6-axis combo inertial sensor, a current sensor, a Light Detection and Ranging (LiDAR) sensor, radar sensor, ultrasonic sensor, visible spectrum camera, Global Positioning System (GPS) sensor, inertial measurement unit, infrared sensor, depth camera, load sensor, a thermal power sensor, a diode detector, and/or a spectrometer.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one property and/or sub-property includes a timestamp and/or a measurement over a common period of time.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one curation engine is operable to use artificial intelligence to automatically categorize the first parameter and the second parameter into the at least one property and/or sub-property based in part on historical accuracy of previous categorizations by an artificial intelligence engine.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one first sensor and the at least one second sensor are operable to measure heterogeneous, partially heterogeneous, or homogeneous machines.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one computer processor is located on or in a machine, an edge device, at least one server, and/or a cloud.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. A method for sensor data fusion for sensor management and utilization, comprising:
+<claim-text>providing at least one computer processor including a memory;</claim-text>
+<claim-text>providing at least one curation engine, at least one link engine, at least one fusion engine, at least one inference engine, and at least one validation engine;</claim-text>
+<claim-text>at least one first sensor, being of a first sensor type, measuring a first parameter of a machine; and</claim-text>
+<claim-text>at least one second sensor, being of a second sensor type, measuring a second parameter of the machine;</claim-text>
+<claim-text>analyzing by the at least one computer processor the first parameter and the second parameter;</claim-text>
+<claim-text>curating the first parameter and the second parameter via the at least one curation engine, linking the first parameter and the second parameter via the at least one link engine via calculating a conditional entropy between the first parameter and the second parameter, fusing the first parameter and the second parameter via the at least one fusion engine, determining an inference from the first parameter and the second parameter via the at least one inference engine, and validating the first parameter and the second parameter via the at least one validation engine;</claim-text>
+<claim-text>filtering by the at least one curation engine the first parameter and the second parameter based in part on at least one property and/or sub-property before storing the first parameter and the second parameter;</claim-text>
+<claim-text>fusing the first parameter and the second parameter;</claim-text>
+<claim-text>creating via the at least one fusion engine at least one new data set; and</claim-text>
+<claim-text>instructing modification of the machine by the at least one computer processor based in part on the at least one new data set, and</claim-text>
+<claim-text>wherein the modification of the machine includes adjusting an orientation of a satellite.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, further comprising conducting pattern recognition via the at least one curation engine to calculate a statistical probability that the at least one property and/or sub-property of the first parameter and the second parameter are correlated.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, further comprising categorizing via the at least one curation engine using artificial intelligence the at least one property and/or sub-property of the first parameter and the second parameter based in part on historical accuracy of previous categorizations by the at least one curation engine.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the at least one first sensor and/or the at least one second sensor includes an accelerometer, a gyroscope, a force/torque sensor, a proximity sensor, a gear sensor, a magnetic sensor, a humidity sensor, an angle sensor, a temperature sensor, a 6-axis combo inertial sensor, a current sensor, a Light Detection and Ranging (LiDAR) sensor, radar sensor, ultrasonic sensor, visible spectrum camera, Global Positioning System (GPS) sensor, inertial measurement unit, infrared sensor, depth camera, load sensor, a thermal power sensor, a diode detector, and/or a spectrometer.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, further comprising curating the first parameter and the second parameter in real-time.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the at least one property and/or sub-property includes a timestamp and/or a measurement over a common period of time.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the at least one new data set includes an accuracy value for the at least one first sensor and the at least one second sensor.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the first parameter and the second parameter are heterogeneous, partially heterogeneous, or homogeneous.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. A system for sensor data fusion for sensor management and utilization, comprising:
+<claim-text>at least one computer processor including a memory;</claim-text>
+<claim-text>at least one curation engine, at least one link engine, at least one fusion engine, at least one inference engine, and at least one validation engine;</claim-text>
+<claim-text>at least one first sensor, being of a first sensor type, operable to measure a first parameter of a machine; and</claim-text>
+<claim-text>at least one second sensor, being of a second sensor type, operable to measure a second parameter of the machine;</claim-text>
+<claim-text>wherein the at least one computer processor is operable to analyze the first parameter and the second parameter;</claim-text>
+<claim-text>wherein the at least one curation engine is operable to curate the first parameter and the second parameter, the at least one link engine is operable to link the first parameter and the second parameter via calculating a conditional entropy between the first parameter and the second parameter, the at least one fusion engine is operable to fuse the first parameter and the second parameter, the at least one inference engine is operable to determine an inference from the first parameter and the second parameter, and the at least one validation engine is operable to validate the first parameter and the second parameter;</claim-text>
+<claim-text>wherein the at least one curation engine is operable to filter the first parameter and the second parameter based in part on at least one common property and/or common sub-property before storing the first parameter and the second parameter;</claim-text>
+<claim-text>wherein the at least one fusion engine is operable to fuse the first parameter and the second parameter, wherein the at least one fusion engine creates at least one new data set;</claim-text>
+<claim-text>wherein the at least one computer processor is operable to modify the machine based in part on the at least one new data set; and</claim-text>
+<claim-text>wherein the modification of the machine includes adjusting an orientation of a satellite.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. The system of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the at least one common property and/or common sub-property includes a timestamp and/or a measurement over a common period of time.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text>17. The system of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the at least one first sensor and/or the at least one second sensor includes an accelerometer, a gyroscope, a force/torque sensor, a proximity sensor, a gear sensor, a magnetic sensor, a humidity sensor, an angle sensor, a temperature sensor, a 6-axis combo inertial sensor, a current sensor, a Light Detection and Ranging (LiDAR) sensor, radar sensor, ultrasonic sensor, visible spectrum camera, Global Positioning System (GPS) sensor, inertial measurement unit, infrared sensor, depth camera, load sensor, a thermal power sensor, a diode detector, and/or a spectrometer.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text>18. The system of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the curation engine is operable to curate the first parameter and the second parameter in real-time.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text>19. The system of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the at least one first sensor and the at least one second sensor are operable to measure heterogeneous, partially heterogeneous, or homogeneous machines.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text>20. The system of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the at least one curation engine is operable to use an artificial intelligence engine to automatically categorize the first parameter and the second parameter into the at least one common property and/or common sub-property based in part on historical accuracy of previous categorizations by the at least one curation engine.</claim-text>
+</claim>
+</claims>

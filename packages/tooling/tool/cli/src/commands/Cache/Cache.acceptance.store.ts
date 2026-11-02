@@ -22,7 +22,39 @@ import { inspectCacheProducerDirectory, inspectCacheProducerFile } from "./Cache
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheProducerTrustLocations } from "./Cache.acceptance.schemas.ts";
 
-const limit = 8 * 1024 * 1024;
+/**
+ * Maximum UTF-8 transfer size of one complete channel observation.
+ *
+ * **Example** (Display the channel transfer budget)
+ * ```ts
+ * import { cacheProducerObservationMaxBytes } from "@beep/repo-cli/commands/Cache/Cache.acceptance.store"
+ * console.log(`${cacheProducerObservationMaxBytes / 1024 / 1024} MiB per channel`)
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
+export const cacheProducerObservationMaxBytes = 8 * 1024 * 1024;
+
+/**
+ * Shared request and persisted-record budget for both complete channel observations.
+ *
+ * **Details**
+ * The additional four MiB accommodate two one-MiB ZIPs encoded as base64 and
+ * their JSON framing. All import, persistence and reread boundaries use this budget.
+ *
+ * **Example** (Display the aggregate transfer budget)
+ * ```ts
+ * import { cacheProducerImportMaxBytes } from "@beep/repo-cli/commands/Cache/Cache.acceptance.store"
+ * console.log(`${cacheProducerImportMaxBytes / 1024 / 1024} MiB for the complete import`)
+ * ```
+ *
+ * @internal
+ * @category constants
+ * @since 0.0.0
+ */
+export const cacheProducerImportMaxBytes = 2 * cacheProducerObservationMaxBytes + 4 * 1024 * 1024;
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const encodeRequest = S.encodeEffect(S.fromJsonString(CacheProducerImportRequest));
 const decodeRequest = S.decodeUnknownEffect(S.fromJsonString(CacheProducerImportRequest));
@@ -54,9 +86,9 @@ export const readCacheProducerAcceptance = Effect.fn("Producer.readAcceptance")(
   const file = path.join(directory, `${reference.sha256}.json`);
   const diagnostic = "Acceptance record must be a bounded private single-link file.";
   const info = yield* inspectCacheProducerFile(file, uid, diagnostic);
-  if (info.size <= BigInt(0) || info.size > BigInt(limit))
+  if (info.size <= BigInt(0) || info.size > BigInt(cacheProducerImportMaxBytes))
     return yield* CacheCommandError.new("Acceptance record must be a bounded private single-link file.");
-  const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(limit));
+  const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(cacheProducerImportMaxBytes));
   const bytes = yield* read.contents.pipe(
     Effect.fromOption(() => CacheCommandError.new("Acceptance record is missing."))
   );
@@ -91,7 +123,8 @@ export const persistCacheProducerAcceptance = Effect.fn("Producer.persistAccepta
     const path = yield* Path.Path;
     const contents = yield* encodeRequest(submitted);
     const bytes = new TextEncoder().encode(contents);
-    if (bytes.byteLength > limit) return yield* CacheCommandError.new("Acceptance request exceeds its bound.");
+    if (bytes.byteLength > cacheProducerImportMaxBytes)
+      return yield* CacheCommandError.new("Acceptance request exceeds its bound.");
     const request = yield* decodeRequest(contents);
     yield* validateCacheProducerImport(request, trust);
     yield* inspectCacheProducerDirectory(directory);

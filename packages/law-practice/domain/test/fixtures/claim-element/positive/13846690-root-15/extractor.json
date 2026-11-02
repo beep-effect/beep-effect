@@ -1,0 +1,55 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13846690-root-15",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "said membrane",
+      "reason": "Root15 introduces at least two adjacent membranes; singular said membrane does not select a particular member. No single-member antecedent edge is fabricated. Mutual each other is connecting text around explicit membranes."
+    },
+    {
+      "quote": "said coupling",
+      "reason": "Root15 contains no coupling introduction. Claim19 follows18->17->15 and cannot borrow coupling from independent1;23/24 likewise lack a coupling donor. Component identities are not repaired by substituting membrane system."
+    },
+    {
+      "quote": "at least one sensor",
+      "reason": "Explicit minimum permits a sensor group; later said sensors22 refers to that claimed sensor collection, not an arbitrarily selected member. Singular said sensor refers to the same recited sensor limitation. Source cardinality wording remains exact for critic review."
+    },
+    {
+      "quote": "an external power source",
+      "reason": "Claim20 introduces an indefinite external power source for reader use after17 external power source for sensor operation. Do not collapse those source introductions or infer identity."
+    },
+    {
+      "quote": "different PVs",
+      "reason": "Different-PV population22 is not forcibly equated with one pressure vessel in22.a. Likewise measurement/conditions/failure properties and conduits retain exact terms without invented introductions or individual membrane identities."
+    },
+    {
+      "quote": "a wireless manner",
+      "reason": "Determiner-bearing manner phrase retained as a full term under entity-mentions/v1. Pronominal its operation head removes only outer its, retaining full source anchor; unsupported minimum two and selector one remain in bare heads."
+    },
+    {
+      "quote": "claims 1-44",
+      "reason": "Selected15-24 exact family only; independent1/25/35 and other method/system roots remain context. Source critic accepted despite dangling coupling; examiner main frame versus native mainframe recorded as typography, canonical text unchanged."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation from canonical claims and native XML. Exact manually selected quote locations only; no decomposer, implementation, predictions, synthetic fixtures or prior conformance references read. Complete lexical noun heads, nested enumeration and explicit function represented; inferred introductions omitted. Functional parts preserve intervening source text. Confidence is an extractor assessment, not attorney agreement. Independent critic review remains required."
+}

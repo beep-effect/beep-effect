@@ -1,15 +1,23 @@
 import { CacheCensusWorkspace, CacheDependencyMaterialization } from "@beep/repo-cli/commands/Cache";
-import { inspectCacheDependencyTree } from "@beep/repo-cli/test/Cache";
+import { inspectCacheDependencyTree, readCacheDependencyMaterialization } from "@beep/repo-cli/test/Cache";
+import { CacheEvidenceReference } from "@beep/repo-configs/cache";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const materializationJson = S.fromJsonString(CacheDependencyMaterialization);
+const encodeMaterialization = S.encodeEffect(materializationJson);
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 const fixture = Effect.fn("CacheDependenciesTest.fixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -22,7 +30,7 @@ const fixture = Effect.fn("CacheDependenciesTest.fixture")(function* () {
   return { root, modules, source, fs, path };
 });
 
-it.layer(NodeServices.layer)("installed cache dependency integrity", (it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("installed cache dependency integrity", (it) => {
   it.prop(
     "roundtrips materialization evidence through its schema",
     { value: Arbitrary.schema(CacheDependencyMaterialization) },
@@ -32,6 +40,31 @@ it.layer(NodeServices.layer)("installed cache dependency integrity", (it) => {
       const decoded = Result.getOrThrow(S.decodeResult(codec)(encoded));
       expect(S.toEquivalence(CacheDependencyMaterialization)(value, decoded)).toBe(true);
     },
+    { arbitrary: fcRuns(20) }
+  );
+
+  it.effect.prop(
+    "loads schema-generated descriptors and rejects valid replacement bytes under the old digest",
+    { value: CacheDependencyMaterialization },
+    ({ value }) =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const materialization = CacheDependencyMaterialization.make(value);
+        const text = yield* encodeMaterialization(materialization);
+        const reference = CacheEvidenceReference.make({
+          path: "dependencies.json",
+          sha256: yield* hashBytes(new TextEncoder().encode(text)),
+        });
+        const file = f.path.join(f.root, reference.path);
+        yield* f.fs.writeFileString(file, text);
+        expect(yield* readCacheDependencyMaterialization(f.root, reference)).toEqual(materialization);
+        const changed = CacheDependencyMaterialization.make({
+          ...materialization,
+          directory: `${materialization.directory}-changed`,
+        });
+        yield* f.fs.writeFileString(file, yield* encodeMaterialization(changed));
+        assertTrue(yield* readCacheDependencyMaterialization(f.root, reference).pipe(Effect.isFailure));
+      }),
     { arbitrary: fcRuns(20) }
   );
 

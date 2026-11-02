@@ -17,7 +17,7 @@ import * as Str from "effect/String";
 import { SkillsCommandError, SkillsLockWriteRefusal } from "../Skills.errors.ts";
 import { decodeSkillsLockDocumentJson } from "../SkillsLock.schemas.ts";
 import type { Sha256Hex } from "@beep/schema";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { SkillsLockEntry, VendoredSkillLockEntry } from "../SkillsLock.schemas.ts";
 
 const textEncoder = new TextEncoder();
@@ -68,7 +68,7 @@ export const readSkillsLockText = Effect.fn("SkillsLock.readSkillsLockText")(fun
 export const skillsLockTextSha256 = Effect.fn("SkillsLock.skillsLockTextSha256")(function* (
   text: string,
   label: string
-): Effect.fn.Return<Sha256Hex, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<Sha256Hex, SkillsCommandError, Digest.Digest> {
   return yield* decodeSha256HexFromBytes(textEncoder.encode(text)).pipe(
     SkillsCommandError.mapError(`Failed to compute SHA-256 for ${label}.`, label)
   );
@@ -128,7 +128,7 @@ export const requireVendoredEntry = Effect.fnUntraced(function* <E>(
 export const requireSkillsLockUnchanged = Effect.fn("SkillsLock.requireLockUnchanged")(function* (
   lockPath: string,
   expected: Sha256Hex
-): Effect.fn.Return<void, SkillsCommandError | SkillsLockWriteRefusal, FileSystem.FileSystem | Crypto.Crypto> {
+): Effect.fn.Return<void, SkillsCommandError | SkillsLockWriteRefusal, FileSystem.FileSystem | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs
     .readFileString(lockPath)
@@ -164,7 +164,7 @@ export const publishSkillsLockText = Effect.fn("SkillsLock.publishSkillsLockText
 ): Effect.fn.Return<
   void,
   SkillsCommandError | SkillsLockWriteRefusal,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

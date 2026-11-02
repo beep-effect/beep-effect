@@ -2,9 +2,9 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `superseded`
 
-**PAUSED - final local reconciliation verified; replacement delivery PR needed**
+**SUPERSEDED - continued by [`goals/beep-cli-composition`](../beep-cli-composition/README.md) (2026-10-28)**
 
 ## Owner
 

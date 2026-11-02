@@ -1,10 +1,10 @@
 /**
  * Schemas for what a rendered systemd user unit may carry.
  *
- * Both timer installers in the repo CLI (`beep graft deep install-timer` and
- * `beep research install-timers`) write `Exec*` lines into
+ * Both timer installers in the repo CLI (`beep research install-timers` and
+ * `beep refs install-timer`) write `Exec*` lines into
  * `~/.config/systemd/user/`. The Bun candidates and the path rule live here so
- * the two units resolve and quote their executables the same way.
+ * their units resolve and quote their executables the same way.
  *
  * @packageDocumentation
  * @since 0.0.0

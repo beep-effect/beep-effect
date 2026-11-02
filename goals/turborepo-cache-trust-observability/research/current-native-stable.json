@@ -1,0 +1,492 @@
+{
+  "schemaVersion": "cache-protocol-execution/v2",
+  "authority": "synthetic-native-observation-only",
+  "network": "private-loopback-nested-readers/v1",
+  "observation": {
+    "schemaVersion": "cache-protocol-observation/v1",
+    "authority": "synthetic-native-observation-only",
+    "channel": "stable",
+    "client": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+      "namespace": "team_trust_refresh_20261028_stable"
+    },
+    "runs": [
+      {
+        "case": "producer",
+        "taskHash": "9fb80c9b50b642cf",
+        "client": {
+          "version": "2.11.10",
+          "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+          "namespace": "team_trust_refresh_20261028_stable"
+        },
+        "summary": "da4a0bb8100002838a654478948a06d95b1be83c9552bc1c55f24af6719639af",
+        "outcome": {
+          "_tag": "Produced",
+          "output": {
+            "sha256": "c38dcd8ad39a8419b6fc2c6998e0034f4a6dc91bba098e82ab2dab298ae87359",
+            "bytes": 28
+          }
+        }
+      },
+      {
+        "case": "replay",
+        "taskHash": "9fb80c9b50b642cf",
+        "client": {
+          "version": "2.11.10",
+          "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+          "namespace": "team_trust_refresh_20261028_stable"
+        },
+        "summary": "421d007208df65d787b4bd69e77a5775613367abb8e5f52e23aca155bbec9da7",
+        "outcome": {
+          "_tag": "Replayed",
+          "output": {
+            "sha256": "c38dcd8ad39a8419b6fc2c6998e0034f4a6dc91bba098e82ab2dab298ae87359",
+            "bytes": 28
+          }
+        }
+      },
+      {
+        "case": "missing-tag",
+        "taskHash": "9fb80c9b50b642cf",
+        "client": {
+          "version": "2.11.10",
+          "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+          "namespace": "team_trust_refresh_20261028_stable"
+        },
+        "summary": "0477f883616f26549e02237196d7ff43cf6b65b7fd13fbb3f8ade8e1272516cc",
+        "outcome": { "_tag": "Rejected", "exitCode": 42, "restoredOutputs": 0 }
+      },
+      {
+        "case": "invalid-tag",
+        "taskHash": "9fb80c9b50b642cf",
+        "client": {
+          "version": "2.11.10",
+          "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+          "namespace": "team_trust_refresh_20261028_stable"
+        },
+        "summary": "a6d55dd7e040991aba148abb11ca7903e6d6f49abb0a402e332781eda6766e12",
+        "outcome": { "_tag": "Rejected", "exitCode": 42, "restoredOutputs": 0 }
+      },
+      {
+        "case": "corrupt-body",
+        "taskHash": "9fb80c9b50b642cf",
+        "client": {
+          "version": "2.11.10",
+          "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+          "namespace": "team_trust_refresh_20261028_stable"
+        },
+        "summary": "e5df51201f639b5b6b6a61967068f64dbfe96d5dba013f03121f926dc241ddc0",
+        "outcome": { "_tag": "Rejected", "exitCode": 42, "restoredOutputs": 0 }
+      },
+      {
+        "case": "wrong-key",
+        "taskHash": "9fb80c9b50b642cf",
+        "client": {
+          "version": "2.11.10",
+          "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+          "namespace": "team_trust_refresh_20261028_stable"
+        },
+        "summary": "3baa8d0183d265da5a29030a0d88d5ff3f051cc28a4d6264a6b0a64d757ce471",
+        "outcome": { "_tag": "Rejected", "exitCode": 42, "restoredOutputs": 0 }
+      }
+    ],
+    "exchanges": [
+      {
+        "case": "producer",
+        "requestId": "wire-4",
+        "taskHash": "9fb80c9b50b642cf",
+        "method": "PUT",
+        "role": "writer",
+        "status": 200,
+        "tag": "present",
+        "artifact": {
+          "sha256": "ff3f6e7de7b03586b250e334a774628c4c27d6e62f260908bc78b4077a17874b",
+          "bytes": 188
+        }
+      },
+      {
+        "case": "replay",
+        "requestId": "wire-6",
+        "taskHash": "9fb80c9b50b642cf",
+        "method": "GET",
+        "role": "reader",
+        "status": 200,
+        "tag": "present",
+        "artifact": {
+          "sha256": "ff3f6e7de7b03586b250e334a774628c4c27d6e62f260908bc78b4077a17874b",
+          "bytes": 188
+        }
+      },
+      {
+        "case": "missing-tag",
+        "requestId": "wire-9",
+        "taskHash": "9fb80c9b50b642cf",
+        "method": "GET",
+        "role": "reader",
+        "status": 200,
+        "tag": "absent",
+        "artifact": {
+          "sha256": "ff3f6e7de7b03586b250e334a774628c4c27d6e62f260908bc78b4077a17874b",
+          "bytes": 188
+        }
+      },
+      {
+        "case": "invalid-tag",
+        "requestId": "wire-11",
+        "taskHash": "9fb80c9b50b642cf",
+        "method": "GET",
+        "role": "reader",
+        "status": 200,
+        "tag": "present",
+        "artifact": {
+          "sha256": "ff3f6e7de7b03586b250e334a774628c4c27d6e62f260908bc78b4077a17874b",
+          "bytes": 188
+        }
+      },
+      {
+        "case": "corrupt-body",
+        "requestId": "wire-13",
+        "taskHash": "9fb80c9b50b642cf",
+        "method": "GET",
+        "role": "reader",
+        "status": 200,
+        "tag": "present",
+        "artifact": {
+          "sha256": "fb3ba2d2ed6cc762fe0fbf84224bc8d5a983d34f0e4288f921d896655b62020b",
+          "bytes": 188
+        }
+      },
+      {
+        "case": "wrong-key",
+        "requestId": "wire-15",
+        "taskHash": "9fb80c9b50b642cf",
+        "method": "GET",
+        "role": "reader",
+        "status": 200,
+        "tag": "present",
+        "artifact": {
+          "sha256": "ff3f6e7de7b03586b250e334a774628c4c27d6e62f260908bc78b4077a17874b",
+          "bytes": 188
+        }
+      }
+    ]
+  },
+  "roots": [
+    {
+      "case": "producer",
+      "sha256": "9602e575178781ed3a64866e97131ff6e52a6c17bfc92ffae294a67b1bff6376"
+    },
+    {
+      "case": "replay",
+      "sha256": "58744d70b6d24d211d46eff14b5bbb0b3909faf2877e8605f25ebab713fabf7d"
+    },
+    {
+      "case": "missing-tag",
+      "sha256": "32d3a10e71be6024a474953f9121918b8d8ed73f84f0729f778f9688affcb0c9"
+    },
+    {
+      "case": "invalid-tag",
+      "sha256": "46f9c54ea170204bc1ec668d8fc02724bdcad068690bb87596d077fb9c24c7ff"
+    },
+    {
+      "case": "corrupt-body",
+      "sha256": "43862ca9d76a0cf4ca358c82d8bde90e380e43ceecaba84112918857ed55c799"
+    },
+    {
+      "case": "wrong-key",
+      "sha256": "66524fc112c4617260b3a91d92033faa9c014a12e75e0d588f444b5210b13579"
+    },
+    {
+      "case": "truncated-body",
+      "sha256": "88366178ae2597b502e8a50793144cb478add4d5b696d52775146d4efd2c9dd6"
+    },
+    {
+      "case": "unavailable",
+      "sha256": "c29f5f06e38f478c5d4240cd50af4cfd3f871cd01ebdaa0c48dccb31a9889407"
+    },
+    {
+      "case": "throttled",
+      "sha256": "fe377dea7cdf738c187c12adefa522b526ff33053fd92094d6d8a874e17cacfa"
+    }
+  ],
+  "failures": [
+    {
+      "case": "truncated-body",
+      "taskHash": "9fb80c9b50b642cf",
+      "summary": "5b9dd8881a4d7fa0fdb9933927acded224029bcabf020c21adf0d6e1a74415c2",
+      "exitCode": 42,
+      "restoredOutputs": 0
+    },
+    {
+      "case": "unavailable",
+      "taskHash": "9fb80c9b50b642cf",
+      "summary": "2ada5745a8350d4f5967952a58d5ff5a93dda05cbeaf19b233d0cc54faeed2f0",
+      "exitCode": 42,
+      "restoredOutputs": 0
+    },
+    {
+      "case": "throttled",
+      "taskHash": "9fb80c9b50b642cf",
+      "summary": "6cf35d260d3b95677475fa1aebdca1871990f97fe770742a5390e1c455d3dec8",
+      "exitCode": 42,
+      "restoredOutputs": 0
+    }
+  ],
+  "events": [
+    {
+      "sequence": 1,
+      "scenario": { "id": "producer", "fault": "none" },
+      "operation": "status",
+      "role": "writer",
+      "status": 200,
+      "artifact": null,
+      "digest": null,
+      "bytes": 20,
+      "tagPresent": false
+    },
+    {
+      "sequence": 2,
+      "scenario": { "id": "producer", "fault": "none" },
+      "operation": "get",
+      "role": "writer",
+      "status": 404,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": null,
+      "bytes": 0,
+      "tagPresent": false
+    },
+    {
+      "sequence": 3,
+      "scenario": { "id": "producer", "fault": "none" },
+      "operation": "events",
+      "role": "writer",
+      "status": 404,
+      "artifact": null,
+      "digest": null,
+      "bytes": 0,
+      "tagPresent": false
+    },
+    {
+      "sequence": 4,
+      "scenario": { "id": "producer", "fault": "none" },
+      "operation": "put",
+      "role": "writer",
+      "status": 200,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": "ff3f6e7de7b03586b250e334a774628c4c27d6e62f260908bc78b4077a17874b",
+      "bytes": 188,
+      "tagPresent": true
+    },
+    {
+      "sequence": 5,
+      "scenario": { "id": "replay", "fault": "none" },
+      "operation": "status",
+      "role": "reader",
+      "status": 200,
+      "artifact": null,
+      "digest": null,
+      "bytes": 20,
+      "tagPresent": false
+    },
+    {
+      "sequence": 6,
+      "scenario": { "id": "replay", "fault": "none" },
+      "operation": "get",
+      "role": "reader",
+      "status": 200,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": "ff3f6e7de7b03586b250e334a774628c4c27d6e62f260908bc78b4077a17874b",
+      "bytes": 188,
+      "tagPresent": true
+    },
+    {
+      "sequence": 7,
+      "scenario": { "id": "replay", "fault": "none" },
+      "operation": "events",
+      "role": "reader",
+      "status": 404,
+      "artifact": null,
+      "digest": null,
+      "bytes": 0,
+      "tagPresent": false
+    },
+    {
+      "sequence": 8,
+      "scenario": { "id": "missing-tag", "fault": "missing-tag" },
+      "operation": "status",
+      "role": "reader",
+      "status": 200,
+      "artifact": null,
+      "digest": null,
+      "bytes": 20,
+      "tagPresent": false
+    },
+    {
+      "sequence": 9,
+      "scenario": { "id": "missing-tag", "fault": "missing-tag" },
+      "operation": "get",
+      "role": "reader",
+      "status": 200,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": "ff3f6e7de7b03586b250e334a774628c4c27d6e62f260908bc78b4077a17874b",
+      "bytes": 188,
+      "tagPresent": false
+    },
+    {
+      "sequence": 10,
+      "scenario": { "id": "invalid-tag", "fault": "invalid-tag" },
+      "operation": "status",
+      "role": "reader",
+      "status": 200,
+      "artifact": null,
+      "digest": null,
+      "bytes": 20,
+      "tagPresent": false
+    },
+    {
+      "sequence": 11,
+      "scenario": { "id": "invalid-tag", "fault": "invalid-tag" },
+      "operation": "get",
+      "role": "reader",
+      "status": 200,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": "ff3f6e7de7b03586b250e334a774628c4c27d6e62f260908bc78b4077a17874b",
+      "bytes": 188,
+      "tagPresent": true
+    },
+    {
+      "sequence": 12,
+      "scenario": { "id": "corrupt-body", "fault": "corrupt-body" },
+      "operation": "status",
+      "role": "reader",
+      "status": 200,
+      "artifact": null,
+      "digest": null,
+      "bytes": 20,
+      "tagPresent": false
+    },
+    {
+      "sequence": 13,
+      "scenario": { "id": "corrupt-body", "fault": "corrupt-body" },
+      "operation": "get",
+      "role": "reader",
+      "status": 200,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": "fb3ba2d2ed6cc762fe0fbf84224bc8d5a983d34f0e4288f921d896655b62020b",
+      "bytes": 188,
+      "tagPresent": true
+    },
+    {
+      "sequence": 14,
+      "scenario": { "id": "wrong-key", "fault": "none" },
+      "operation": "status",
+      "role": "reader",
+      "status": 200,
+      "artifact": null,
+      "digest": null,
+      "bytes": 20,
+      "tagPresent": false
+    },
+    {
+      "sequence": 15,
+      "scenario": { "id": "wrong-key", "fault": "none" },
+      "operation": "get",
+      "role": "reader",
+      "status": 200,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": "ff3f6e7de7b03586b250e334a774628c4c27d6e62f260908bc78b4077a17874b",
+      "bytes": 188,
+      "tagPresent": true
+    },
+    {
+      "sequence": 16,
+      "scenario": { "id": "truncated-body", "fault": "truncated-body" },
+      "operation": "status",
+      "role": "reader",
+      "status": 200,
+      "artifact": null,
+      "digest": null,
+      "bytes": 20,
+      "tagPresent": false
+    },
+    {
+      "sequence": 17,
+      "scenario": { "id": "truncated-body", "fault": "truncated-body" },
+      "operation": "get",
+      "role": "reader",
+      "status": 200,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": "c829cc15b7281956f399a8d0ff4249b10a31a59e54f679843ebdcbb8b5c1414f",
+      "bytes": 187,
+      "tagPresent": true
+    },
+    {
+      "sequence": 18,
+      "scenario": { "id": "unavailable", "fault": "unavailable" },
+      "operation": "status",
+      "role": "reader",
+      "status": 200,
+      "artifact": null,
+      "digest": null,
+      "bytes": 20,
+      "tagPresent": false
+    },
+    {
+      "sequence": 19,
+      "scenario": { "id": "unavailable", "fault": "unavailable" },
+      "operation": "get",
+      "role": "reader",
+      "status": 503,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": null,
+      "bytes": 0,
+      "tagPresent": false
+    },
+    {
+      "sequence": 20,
+      "scenario": { "id": "unavailable", "fault": "unavailable" },
+      "operation": "get",
+      "role": "reader",
+      "status": 503,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": null,
+      "bytes": 0,
+      "tagPresent": false
+    },
+    {
+      "sequence": 21,
+      "scenario": { "id": "throttled", "fault": "throttled" },
+      "operation": "status",
+      "role": "reader",
+      "status": 200,
+      "artifact": null,
+      "digest": null,
+      "bytes": 20,
+      "tagPresent": false
+    },
+    {
+      "sequence": 22,
+      "scenario": { "id": "throttled", "fault": "throttled" },
+      "operation": "get",
+      "role": "reader",
+      "status": 429,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": null,
+      "bytes": 0,
+      "tagPresent": false
+    },
+    {
+      "sequence": 23,
+      "scenario": { "id": "throttled", "fault": "throttled" },
+      "operation": "get",
+      "role": "reader",
+      "status": 429,
+      "artifact": "9fb80c9b50b642cf",
+      "digest": null,
+      "bytes": 0,
+      "tagPresent": false
+    }
+  ],
+  "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235"
+}

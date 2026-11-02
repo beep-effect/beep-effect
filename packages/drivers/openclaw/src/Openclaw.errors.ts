@@ -1,6 +1,8 @@
 /**
  * Typed failures emitted by the OpenClaw CLI driver.
  *
+ * **Details**
+ *
  * Redaction is a design invariant: errors carry output lengths, never raw
  * output; trimmed capped diagnostics are attached only for operations
  * declared secret-free (version, validate, doctor). Environment contents and

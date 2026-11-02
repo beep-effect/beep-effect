@@ -1,0 +1,113 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18409554-root-16",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.96,
+  "reviewedClaimNumbers": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22
+  ],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "claimCount": 7,
+    "elementCount": 19,
+    "termCount": 66,
+    "functionalRelationCount": 11
+  },
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental proposed references only; no goal completion or active sample acceptance claimed.",
+  "round": 2,
+  "verdict": "accepted",
+  "findings": [],
+  "annotationConvention": "entity-mentions/v1",
+  "resolvedFindings": [
+    {
+      "priorRound": 1,
+      "findingId": "C1",
+      "disposition": "resolved",
+      "evidence": {
+        "claimNumber": 16,
+        "path": "16.e",
+        "anchor": {
+          "startChar": 608,
+          "endChar": 625,
+          "quote": "one or more zones"
+        },
+        "oldDeterminer": "bare",
+        "currentDeterminer": "at-least-one",
+        "head": "zones"
+      },
+      "verification": "Independent recursive comparison of round-1 expected retained in extractor.previousRounds against current expected finds exactly one changed value: /0/elements/5/terms/1/determiner. All element/term anchors, heads and edges are identical."
+    }
+  ],
+  "reviewNotes": [
+    "Read updated semantic-reference/v2 including entity-mentions/v1, prior critic round 1, retained round-1 expected, current expected/extractor and current selected claim context. The sole determiner correction matches the schema surface and the literal introducing grammar; no semantic structure was simplified.",
+    "Rechecked exact canonical UTF-16 geometry, ordered nonoverlapping owned terms, antecedent endpoints, and functional-part order/ownership for all seven current trees. Native claims XML SHA256 still matches provenance. The parent separately reports successful current runtime schema decoding; this receipt does not misattribute that runtime execution to the critic.",
+    "The prior semantic review remains applicable because the exact expected-tree diff is the single required determiner value. Existing missing/ambiguous map, lesion, projection and regression references remain explicit without fabricated introductions or sibling borrowing. No actionable critic finding remains.",
+    "Applied entity-mentions/v1: relative clause linkers and reciprocal relation operators need no blanket additional entity nodes; standalone lexical/referential phrases remain source-specific. No pronoun expansion was requested or introduced."
+  ],
+  "independence": "Independent bounded round-2 semantic critic. Only 18409554-root-16 reviewed and critic.json written. No expected/source/code edits, rules, production policy/decomposer, predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers compare the two authorized reference snapshots and check exact source/schema geometry.",
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "18409554-root-16",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.96,
+      "verdict": "changes-required",
+      "reviewedClaimNumbers": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22
+      ],
+      "findings": [
+        {
+          "id": "C1",
+          "category": "determiner-schema",
+          "actionable": true,
+          "evidence": [
+            {
+              "claimNumber": 16,
+              "path": "16.e",
+              "anchor": {
+                "startChar": 608,
+                "endChar": 625,
+                "quote": "one or more zones"
+              }
+            }
+          ],
+          "reason": "The introducing surface one or more zones is encoded as bare, contrary to the schema determiner surface and its actual introducing grammar. The parent independently reported a ClaimElementTree decode failure at expected[0].elements[5].terms[1]; I independently checked the exact source anchor.",
+          "correction": "Set this term determiner to at-least-one; retain head zones, anchor [608,625), and its functional term reference. Revalidate the trees. Do not fabricate an antecedent for the later differently qualified determined ablation zones."
+        }
+      ],
+      "sourceConcerns": [],
+      "reviewScope": {
+        "claimCount": 7,
+        "elementCount": 19,
+        "termCount": 66,
+        "functionalRelationCount": 11
+      },
+      "reviewNotes": [
+        "Read canonical claims including context, native claims XML, provenance, source audit and independent source critic, extractor rationale, and all expected elements/terms/edges. Source eligibility remains the separate accepted source-critic conclusion; this semantic review does not repeat or supersede its original-document/PDF authentication.",
+        "Audited subject/transition grammar, explicit and nested lists, complete lexical heads, true natural dependency ancestry, missing and ambiguous introductions, local/cross-claim antecedents, term ownership, and ordered typed functional parts. No sibling claim was treated as an ancestor.",
+        "Manual schema/geometry helper checked exact UTF-16 spans for elements, terms, functional parts and antecedent references; terms are ordered/nonoverlapping inside owners, functional term parts name their owner terms, and part spans are ordered inside owners. Geometry alone is not semantic approval."
+      ],
+      "independence": "Independent bounded semantic critic session. Read only task-authorized source/reference/schema material. No P2-DESIGN, production decomposer/policy, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Only critic.json written; helpers locate manually selected quotations, serialize these findings and check schema/span geometry.",
+      "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+      "corpusStatus": "Incremental proposed references only; no goal completion or active sample acceptance claimed."
+    }
+  ]
+}

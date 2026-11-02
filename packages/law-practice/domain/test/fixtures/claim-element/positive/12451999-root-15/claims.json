@@ -1,0 +1,112 @@
+{
+  "familyId": "12451999-root-15",
+  "rootClaimNumber": 15,
+  "labelClaimNumbers": [15, 16, 17, 18, 19, 20, 21],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "The cooling device (100) for cooling of a metal strip (200) after forming in a cold rolling stand (200), comprising: at least one nozzle (112) for spraying a cooling medium (400) onto the metal strip (200); wherein a plate (500) is provided, which is arranged in an operation position parallel to a surface of the metal strip (200) in the run-out of the cold rolling stand (300); and that the nozzle is arranged for spraying the cooling medium (400) at an acute spray angle (α) into a cavity (H) between the surface of the metal strip (200) and the opposing plate (500), with a spray direction (R) opposite to the running direction (L) of the metal strip (200).",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "A cooling device (100) according to claim 1, wherein the nozzle or a plurality of the nozzles (112) is/are arranged in the plate (500).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "A cooling device (100) according to claim 2, wherein the plurality of nozzles is arranged in the plate in the form of at least on nozzle beam (110) transverse to the running direction (L) of the metal strip (200).",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "A cooling device (110) according to claim 1, wherein the nozzles (112) or the nozzle beam (110) in the operation position is arranged spaced apart from the cold rolling stand in at least a distance Kmin.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "A cooling device (100) according to claim 1, comprising a control or regulation device (120) for controlling or regulating of the cooling capacity of the cooling device (100) by means of suitable individual varying of the pressure or the flow velocity, with which the coolant (400) exits the individual nozzles (112), of the amount of cooling medium sprayed into the cavity (H), and/or of the spray direction (R), depending on predetermined process parameters, such as e.g. the strip speed.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "A cooling device (100) according to claim 1, wherein the spray direction (R) of the nozzle (112) can variably be set three-dimensional, but always with a component I>0 opposite to the running direction (L) of the metal strip (200).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "A cooling device (100) according to claim 1, comprising a positioning device (600) for variable positioning of the plate (500) in the operation position or in a maintenance position outside of the strip run.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "A cooling device (100) according to claim 7, wherein the positioning device is formed to variably set, in the operation position, the distance (S) between the surface of the metal strip and the opposing surface of the plate depending on certain process parameters.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "A cooling device (100) according to claim 1, wherein on at least one side of the plate an edge (510) projects, which is formed parallel to the rolling direction (L), and encompasses, in the operation position, the borders of the metal strip (200) in a predetermined distance, at least to a certain extent.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A cooling device (100) according to claim 1, wherein a first plate (500-I) is provided, which is positionable in the operation position opposite to the upper side of the metal strip (200), and that a second plate (500-II) is provided, which is positionable in the operation position opposite to the lower side of the metal strip.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "A cooling device according to claim 9, wherein in the operation position at least on one side of the metal strip (200), the opposing edges (510-I, 510-II) of the first and the second plate are sealed against each other by means of a seal (520).",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "A cooling device (100) according to claim 10, wherein the second plate is a transfer table for the metal strip.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "A cooling device (100) according to any claim 1, wherein the cold rolling stand (300) is a reversing stand or a one-way cold rolling stand or a sizing stand.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The use of the cooling device (100) according to claim 1, as an intermediate stand cooling between two adjacent cold rolling stands of a rolling line.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The method for operating a cooling device (100) for cooling of a metal strip (200) after a forming in a cold rolling stand (300), comprising the following steps: Spraying a cooling medium (400) onto the surface of the metal strip (200); wherein the cooling medium (400) is sprayed opposite to the running direction (L) of the metal strip (200) into a cavity (H) between the surface of the metal strip and an opposing plate (500) with an acute spray angle (α).",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "A method according to claim 15, wherein the cooling capacity of the cooling device (100) is controlled or regulated by means of suitably varying of the pressure or the flow velocity with which the cooling medium (400) is sprayed into the cavity, of the amount of cooling medium sprayed into the cavity (H), and/or of the spray angle (α).",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "A method according to claim 16, wherein the pressure or the flow velocity is set depending on each actual speed of the metal strip.",
+      "sourceXmlParentClaimNumbers": [16]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "A method according to claim 16, wherein pressure or flow velocity is predetermined by a process model, depending on measured or calculated process parameters.",
+      "sourceXmlParentClaimNumbers": [16]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "A method according to claim 15, wherein the cooling medium is sprayed near the borders of the metal strip, with a component of the spray direction (R) transverse to the running direction of the metal strip, that is, towards the middle of the metal strip, onto the surface thereof.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "A method according to claim 15, wherein the cooling medium (400) can be sprayed onto the upper side and/or the lower side of the metal strip, wherein the cooling capacity for the upper side and the lower side is settable or controllable independent from each other.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "A method according to claim 15, wherein the plate together with the nozzle, in case of a strip breakage, is automatically pulled out of the strip run.",
+      "sourceXmlParentClaimNumbers": [15]
+    }
+  ]
+}

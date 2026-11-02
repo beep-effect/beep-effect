@@ -411,12 +411,27 @@ const cases: ReadonlyArray<Case> = [
   {
     name: "open a directory for reading",
     run: (fs, p) => fs.open(p("dir"), { flag: "r" }),
-    expect: { memory: fail("BadResource", "open", "EISDIR"), node: "success" },
+    expect: "success",
+  },
+  {
+    name: "sync a directory opened for reading",
+    run: (fs, p) => withHandle(fs, p("dir"), "r", (h) => h.sync),
+    expect: "success",
+  },
+  {
+    name: "read from a directory opened for reading",
+    run: (fs, p) => withHandle(fs, p("dir"), "r", (h) => h.readAlloc(4)),
+    expect: fail("BadResource", "readAlloc", "EISDIR"),
+  },
+  {
+    name: "open a directory for writing",
+    run: (fs, p) => fs.open(p("dir"), { flag: "r+" }),
+    expect: fail("BadResource", "open", "EISDIR"),
   },
   {
     name: "stream a directory",
     run: (fs, p) => Stream.runDrain(fs.stream(p("dir"))),
-    expect: { memory: fail("BadResource", "open", "EISDIR"), node: fail("BadResource", "readAlloc", "EISDIR") },
+    expect: fail("BadResource", "readAlloc", "EISDIR"),
   },
   {
     name: "read from a write-only handle",

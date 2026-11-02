@@ -1,0 +1,159 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A data processing system comprising:
+<claim-text>a processor;</claim-text>
+<claim-text>a memory hierarchy coupled to the processor and having at least one lower level storage device;</claim-text>
+<claim-text>a prefetch engine (PE) associated with the processor and which includes:
+<claim-text>a plurality of history tables, each of which is utilized to track a set of different patterns for received requests; and</claim-text>
+<claim-text>logic for enabling simultaneous tracking of multiple different patterns for accessing the storage device via the plurality of history tables.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The data processing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>said plurality of history tables are ordered for sequential access based on a check of simple patterns at a first table and another set of more complicated patterns at subsequent tables in the sequence, wherein each table is accessed via an associated index found within an address, such that said PE simultaneously supports multiple patterns; and</claim-text>
+<claim-text>said logic further comprises logic for:
+<claim-text>parsing a received address for a first index corresponding to the first history table, wherein an index for each of the plurality of history tables can be provided by a different set of bits or the same set of bits within the address, and multiple indices are provided within the address each corresponding to one of the plurality of history tables; and</claim-text>
+<claim-text>enabling ordered access to said plurality of history tables utilizing said indices, wherein said plurality of history tables are accessed in a preset order to substantially eliminate interference between the different patterns.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The data processing system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, said logic for enabling ordered access further comprising logic for:
+<claim-text>determining at a first history table among the plurality of history tables whether a received address fits a first pattern of the first history table; and</claim-text>
+<claim-text>when the address fits the first pattern of the first history table, identifying the address as belonging to a stream having that first pattern and initiating a prefetch stream.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The data processing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein when an address does not fit the first pattern of the first history table, said logic further comprises logic for:
+<claim-text>forwarding the address to a next sequential history table within the preset order;</claim-text>
+<claim-text>checking the second history table for a match of its second pattern to the address; and</claim-text>
+<claim-text>when no match of the second pattern is found at the second sequential table, iteratively forwarding the address to the next sequential table(s) to be checked against the pattern(s) of the next sequential table(s) until a last table is reached within the preset order.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The data processing system of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein:
+<claim-text>said first history table and each subsequent history table is identified by the corresponding index within the plurality of indices;</claim-text>
+<claim-text>when the address does not fit the pattern of a current history table to which the current index corresponds, parsing the address for a next index corresponding to the next history table in the preset order; and</claim-text>
+<claim-text>when the address does not fit the pattern of the next history table, sequentially parsing said address for subsequent indices corresponding to subsequent history tables supported within the PE until either a last history table is checked or a match of the pattern is found for the address.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The data processing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein each PE includes a reference prediction unit and a prefetch request issue unit, said reference prediction unit further comprising:
+<claim-text>at least one reference prediction table having associated therewith a reference/stream prediction logic, which predicts future references based on issued references; and</claim-text>
+<claim-text>at least one active streams table, each table providing one or more entries of for active streams, wherein each of said at least one active streams table includes prefetch request issue logic, which sends out prefetch requests at calculated times;</claim-text>
+<claim-text>wherein when the stream detection logic detects that the address is part of a stream within the first table, a pre-fetch stream is initiated and the address is not forwarded to the second table.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The data processing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>said logic within said PE comprises a two-table stride prediction algorithm, wherein a first “simple-pattern” history table is utilized to detect simple streams and a second “complicated-pattern” history table is utilized to detect other hard-to-detect streams;</claim-text>
+<claim-text>wherein said first table and said second table are organized as set-associative caches and indexed by specific bits of an address within a received request, wherein a respective value of each set of index bits determines how large a region to check for access patterns, and wherein using different bits enables the PE to look into small regions for simple patterns, such as unit and small non-unit strides and large regions for other strides, such as large strides and avoid an interferences among small strides, and between small strides and large strides.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The data processing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>each set of index bits correspond to a specific stride history table, and when said processor executes according to a big endian addressing scheme/configuration and said system includes two history tables, a large stride history table is indexed by more significant bits within the address while a smaller stride history table is indexed by less significant bits within the address; and</claim-text>
+<claim-text>when the PE receives an address, said logic further comprises logic for:
+<claim-text>first selecting a set of bits providing a smallest value index to index into a corresponding table with a smallest stride;</claim-text>
+<claim-text>accessing the corresponding table having the smallest stride via the smallest value index; and</claim-text>
+<claim-text>when the prefetch logic does not detect a stride within the corresponding table, forwarding the address to the second table with a next highest value index and initiating a check of the second table to detect a larger stride, wherein a stride detected at the second table is larger than another stride detected at the first table.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The data processing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said logic further comprising logic for:
+<claim-text>automatically determining a stride pattern associated with a received prefetch request having an address.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The data processing system of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein said logic for automatically determining a stride pattern comprises:
+<claim-text>a stride evaluation component, said component having a plurality of registers each having at least three updateable entries utilized for analyzing a single stride pattern;
+<claim-text>wherein a first entry provides a current state of the corresponding register, a second entry tracks the previous address received, and a third entry is utilized to store a stride pattern/length determined as the difference between the previous address and a subsequent address;</claim-text>
+</claim-text>
+<claim-text>logic for storing a first address received as the previous address within a first register;</claim-text>
+<claim-text>logic for computing a first stride length by subtracting the previous address from a subsequently received second address and recording the first stride length within the third entry of the second register;</claim-text>
+<claim-text>logic, when a third address is received, for computing a second stride length by subtracting the second address from the third address;</claim-text>
+<claim-text>logic for comparing the second stride length with the first stride length; and</claim-text>
+<claim-text>when the second stride length matches the first stride length, signaling detection of a presence of a stream and initiating a stream prefetch with a stride pattern equivalent to one of the second and the first stride lengths.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A method for enabling a prefetch engine (PE) to detect and support hardware prefetching with streams of different patterns in accesses, said method comprising:
+<claim-text>providing a plurality of history tables associated with the PE, wherein each of the plurality of history tables are utilized to detect different access patterns;</claim-text>
+<claim-text>providing a separate index for each of the plurality of history tables within the address of a prefetch request, wherein each of said separate index is provided by a different set of bits of the address;</claim-text>
+<claim-text>dynamically determining a stride pattern of a received prefetch request via ordered access to one or more of said plurality of history tables, wherein said plurality of history tables are accessed in a preset sequential order to reduce interference between different access patterns; and</claim-text>
+<claim-text>enabling simultaneous tracking of multiple different stride patterns for accessing the storage device via the plurality of history tables.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein said dynamically determining a stride pattern comprises:
+<claim-text>accessing a first history table among the plurality of history tables to determine whether the address fits the stride pattern of the first history table; and</claim-text>
+<claim-text>when the address fits the stride pattern of the first history table, identifying the address as belonging to a stream and initiating a corresponding prefetch stream.</claim-text>
+<claim-text>when the stride pattern does not fits that of the first history table:
+<claim-text>forwarding the address to a next sequential history table within the preset order;</claim-text>
+<claim-text>checking the next sequential table for a match of its stride pattern to the address; and</claim-text>
+<claim-text>when the stride pattern of the next sequential table does not match the address, iteratively forwarding the address to the next sequential table(s) to be checked against the stride pattern of each table in sequence until a last table is reached within the preset order.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the index for each of the plurality of history tables is derived from sets of bits within the address, said method further comprising:
+<claim-text>parsing a received address for a first index corresponding to the first history table; and</claim-text>
+<claim-text>when the address does not fit the pattern of the first history table to which the first index corresponds, parsing the address for a second index corresponding to the second history table and when the address does not fit the pattern of the second history table; and</claim-text>
+<claim-text>sequentially parsing said address for subsequent indices corresponding to subsequent history tables supported within the PE until either a last history table is checked or a match of the pattern is found for the address.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein:
+<claim-text>said plurality of history tables are ordered for sequential access based on a check of unit and small stride patterns at a first table and larger stride patterns at subsequent tables in the sequence, wherein each table is accessed via an associated index found within a prefetch address, such that said PE simultaneously supports multiple patterns; and</claim-text>
+<claim-text>said method further comprises:
+<claim-text>parsing a received address for a first index corresponding to the first history table, wherein an index for each of the plurality of history tables is provided by a different set of bits within the address, and multiple indices are provided within the address each corresponding to one of the plurality of history tables; and</claim-text>
+<claim-text>enabling ordered access to said plurality of history tables utilizing said indices, wherein said plurality of history tables are accessed in a preset order to substantially eliminate interference between the multiple different stride patterns.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein said first history table and each subsequent history table is identified by the corresponding index within the plurality of indices, said method for enabling ordered access further comprises:
+<claim-text>determining at a first history table among the plurality of history tables whether a received address fits a first stride pattern of the first history table; and</claim-text>
+<claim-text>when the address fits the first stride pattern of the first history table, identifying the address as belonging to a stream having that first stride pattern and initiating a prefetch stream;</claim-text>
+<claim-text>when the address does not fit the pattern of a current history table to which the current index corresponds, such that the address does not fit the first stride pattern of the first history table, parsing the address for a next index corresponding to the next history table in the preset order; and</claim-text>
+<claim-text>forwarding the address to a next sequential history table within the preset order;</claim-text>
+<claim-text>checking the second history table for a match of its second stride pattern to the address; and</claim-text>
+<claim-text>when no match of the second stride pattern is found at the second sequential table, iteratively forwarding the address to the next sequential table(s) to be checked against the stride pattern(s) of the next sequential table(s) until a last table is reached within the preset order;</claim-text>
+<claim-text>wherein, when the address does not fit the pattern of the next history table, sequentially parsing said address for subsequent indices corresponding to subsequent history tables supported within the PE until either a last history table is checked or a match of the stride pattern is found for the address, wherein when a stream detection logic detects that the physical address is part of a stream within the small stride table, a pre-fetch stream is initiated and the address is not forwarded to the large stride table.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein:
+<claim-text>said logic within said PE comprises a two-table stride prediction algorithm, wherein a first “small stride” history table is utilized to detect unit and small, non-unit stride streams and a second “large stride” history table is utilized to detect large, non-unit stride streams;</claim-text>
+<claim-text>wherein said first table and said second table are organized as set-associative caches and indexed by specific bits of an address within a prefetch request, wherein a respective value of each set of index bits determines how large a region to check for access patterns, and wherein using different bits enables the PE to look into small regions for unit and small non-unit strides and large regions for large strides and avoid an interferences among small strides, and between small strides and large strides.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein:
+<claim-text>each set of index bits correspond to a specific stride history table, and when said processor executes according to a big endian addressing scheme/configuration and said system includes two history tables, a large stride history table is indexed by more significant bits within the address while a smaller stride history table is indexed by less significant bits within the address; and</claim-text>
+<claim-text>when the PE receives an address, said method further comprises:
+<claim-text>first selecting a set of bits providing a smallest value index to index into a corresponding table with a smallest stride;</claim-text>
+<claim-text>accessing the corresponding table having the smallest stride via the smallest value index; and</claim-text>
+<claim-text>when the prefetch logic does not detect a stride within the corresponding table, forwarding the address to the second table with a next highest value index and initiating a check of the second table to detect a larger stride, wherein a stride detected at the second table is larger than another stride detected at the first table.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>automatically determining a stride pattern associated with a received prefetch request having an address, wherein said automatically determining a stride pattern utilizes a stride evaluation component, said component having a plurality of registers each having at least three updatable entries utilized for analyzing a single stride pattern, wherein a first entry provides a current state of the corresponding register, a second entry tracks the previous address received, and a third entry is utilized to store a stride pattern/length determined as the difference between the previous address and a subsequent address;</claim-text>
+<claim-text>storing a first address received as the previous address within a first register;</claim-text>
+<claim-text>computing a first stride length by subtracting the previous address from a subsequently received second address and recording the first stride length within the third entry of the second register;</claim-text>
+<claim-text>when a third address is received, computing a second stride length by subtracting the second address from the third address;</claim-text>
+<claim-text>comparing the second stride length with the first stride length; and</claim-text>
+<claim-text>when the second stride length matches the first stride length, signaling detection of a presence of a stream and initiating a stream prefetch with a stride pattern equivalent to one of the second and the first stride lengths.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. A computer program product comprising a computer readable medium and program code on the computer readable medium that when executed provides the functions of <claim-ref idref="CLM-00018">claim 18</claim-ref>.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A computer program product comprising a computer readable medium and program code on the computer readable medium that when executed provides the functions of <claim-ref idref="CLM-00011">claim 11</claim-ref>.</claim-text>
+</claim>
+</claims>

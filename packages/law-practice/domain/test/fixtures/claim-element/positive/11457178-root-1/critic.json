@@ -1,0 +1,50 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "11457178-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "findings": [],
+  "reviewScope": {
+    "claimCount": 10,
+    "elementCount": 50,
+    "termCount": 262,
+    "edgeCount": 172,
+    "functionalRelationCount": 39
+  },
+  "referenceSha256": "339d32da4009eafd67616d401fc73f6e37de9a514ce6a1892f8c8ef5c0a9d631",
+  "extractorSha256": "cb51b6342394f39b91753a3d70a7ad230c10d519b038b32951d4d66d7501e016",
+  "verification": [
+    "Read every selected canonical claim, expected element/term/typed edge and extractor rationale; reviewed native XML, provenance and source-critic eligibility evidence. Source verification remains separately accepted at confidence 0.98; no fresh original-PDF or full-inventory authentication claimed.",
+    "Independent checks passed exact UTF-16 element/term/functional/antecedent source anchors, normalized head shape, ordered nonoverlapping owned terms, contiguous complete functional reconstruction, exact functional term participation, unique paths and absence of duplicate edges. All referenced endpoints exist, and cross-claim endpoints lie in the actual natural dependency ancestry. Native claims XML SHA-256 matches provenance and every canonical/native claim matches after permitted printed-number removal and whitespace normalization. These checks supplement semantic review; no decomposer was called."
+  ],
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json files written. Read source and ClaimElement model/tree/edge schemas; no production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference review only; no active sample admission, goal completion, accuracy result or human agreement claimed.",
+  "reviewNotes": [
+    "Root processor, memory hierarchy and prefetch-engine limitations remain distinct, with history-table/logic limitations nested under the engine. Claims 2, 3, 4, 6, 7, 8, 9 and 10 preserve their actual functional groups and nested logic lists; all 39 functional relations retain complete conditional, iterative and action wording.",
+    "Natural dependency chains are 3→2→1, 5→4→1 and 10→9→1; the other selected dependent claims refer directly to 1. Claim 4 therefore cannot borrow first-pattern/table/order introductions from siblings 2/3. Claim 5 cannot borrow sibling 2 indices. Missing table-order identities and the differing stream/prefetch logic names remain explicit localized concerns, not forced exact-head matches.",
+    "A prefetch engine (PE) explicitly supports later PE references without treating the parenthetical abbreviation as a distinct introduction. Quoted first “simple-pattern” and second “complicated-pattern” table heads preserve their complete quoted compound names. Bare at least three updateable entries and two history tables retain their counts, and that first pattern removes only its outer demonstrative in the normalized head.",
+    "Claim 6 therewith resolves to the just-introduced prediction table; each table and said at least one active streams table resolve to the explicitly recited active-streams table. Which clauses are functional connectors with explicit participants. Source of for typo remains intact.",
+    "Claim 10 describes entries distributively for each register of an explicit register plurality, supporting the corresponding-register reference to that quantified introduction without selecting a particular numbered register. The second register remains unlinked because no unique second register has been introduced. Previous-address references retain their first definite mention; no introduction is invented before it.",
+    "The final the second and the first stride lengths is source ellipsis: the second is anchored without inserting omitted stride length words, head second, and resolves to the explicit second stride length. The first stride lengths preserves its actual plural surface while resolving to the earlier first stride length. Heads and edges do not repair source wording."
+  ],
+  "referenceConcernsDisposition": "Reviewed all localized missing-introduction and ordinal-table/logic ambiguity concerns. Kept uncertain references unlinked; exact source terms remain represented. No actionable correction remains."
+}

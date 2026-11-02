@@ -1,0 +1,28 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A low pressure shaft for interconnecting a fan or low pressure compressor of a gas turbine engine with a low pressure turbine of the engine, the shaft having an aft section whose diameter expands progressively with distance along the rearward direction of the engine, and an annular joint portion at the rear end of the aft section for joining the shaft to a drive arm of the low pressure turbine;
+<claim-text>wherein the rate of expansion of the diameter of the aft section decreases with distance along the rearward direction of the engine.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. A low pressure shaft according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein on a longitudinal cross-section through the shaft the aft section has an elliptical section profile.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. A low pressure shaft according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the aft section is formed as an axial row of two or more frustoconical sub-sections, for each pair of adjacent frustoconical sub-sections the cone angle of the rearward sub-section being less than the cone angle of the forward sub-section.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. A low pressure shaft according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the annular joint portion is configured to form a curvic coupling with the drive arm.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. A low pressure shaft according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the wall thickness of the aft section decreases with distance along the rearward direction of the engine.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. A low pressure shaft according to <claim-ref idref="CLM-00001">claim 1</claim-ref> further comprising an annular stiffening formation which bridges the rear end of the aft section and the joint portion, the wall thickness of the stiffening formation being greater than the wall thickness of the aft section at its rear end.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. A low pressure shaft according to <claim-ref idref="CLM-00001">claim 1</claim-ref> further comprising an annular stiffening formation which bridges the rear end of the aft section and the joint portion, the stiffening formation curving radially outwardly from the rear end of the aft section.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A gas turbine engine having the low pressure shaft of <claim-ref idref="CLM-00001">claim 1</claim-ref> interconnecting a fan or low pressure compressor of the engine with a low pressure turbine of the engine.</claim-text>
+</claim>
+</claims>

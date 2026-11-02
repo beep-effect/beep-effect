@@ -1,0 +1,27 @@
+{
+  "kind": "canonical-jsdoc-regeneration",
+  "incomingMain": "3fbb6e614b",
+  "command": "quality jsdoc-inventory",
+  "packages": 183,
+  "openExports": 97,
+  "noOpenExportGrowth": true,
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-pr2364-main-jsdoc2-20261031.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 40098320384,
+    "peakObservedBytes": 5407563776,
+    "minimumAvailableBytes": 19481563136,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 118,
+    "pidsLimitEvents": 0,
+    "observedPhases": [],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "resolution": "Generated both conflicted inventory files from combined source; no hand-merged rows.",
+  "qualification": "Local generated artifact proof; final-head hosted policy remains required."
+}

@@ -1,0 +1,37 @@
+{
+  "familyId": "16052309-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "System for quick mounting applied to a cabinet body characterized in that the backside section (1) is bipartite, composed by upper part (1a) and lower part (1b), provided with slots (1c) at the lower and upper ends, with mounting sequence by fitting the upper part (1a) to the lower part (1b) in one piece, the bend angled in 180° (1d) being fitted to the bend angled in 180° (1e).",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "System for quick mounting applied to a cabinet body, according to the claim 1, characterized in that each side section (2) contains two tabs (2a) at the corners of its L-shaped lower bend angled in 90° (2c), and two main slots (2b) on the corners of its upper bend having an U-shaped bend (2d).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "System for quick mounting applied to a cabinet body, according to claim 1, characterized in that the side part (2) is positioned under the backside section (1), and the tab (2a) is positioned under the slot (1c) on the four coincident corners.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "System for quick mounting applied to a cabinet body, according to claim 1, characterized in that the top and/or bottom part (3) of the cabinet presents L-shaped side bends and lower bend angled in 90° (3a) and U-shaped upper bend (3b); the top/bottom part (3) is fitted to the upper section (1d) through its lower bend (3a) and to the side parts (2b) through its side bends (3b).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "System for quick mounting applied to a cabinet body, according to claim 1, characterized in that the sequence of the mounting of the cabinet box takes place by fitting the pieces still without the shelf and doors, these pieces already fitted being not locked yet, the lower bend (3a) of the top and bottom parts being fitted to the bends angled in 180° (1d) of the backside section (1) and of the side parts (2), as well as the side bends (3b) of the top and bottom parts will be fitted to the main slots (2b) of the side parts (2), the side parts (2) being fitted under the backside section (1), which also receives the top and bottom parts (3), resulting in the cabinet box.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "System for quick mounting applied to a cabinet body, according to claim 1, characterized in that the pieces of the box are locked in the four corners where the the backside section (1) and the side part (2), and the top or bottom part (3) are fitted one to another, the locking that is started by manually bending the tab (2a) being performed by bending the steel, thus forming the cabinet box to receive the shelf and doors (not shown).",
+      "sourceXmlParentClaimNumbers": [1]
+    }
+  ]
+}

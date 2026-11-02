@@ -32,7 +32,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as HashSet from "effect/HashSet";
@@ -146,8 +146,8 @@ const goalManifestText = (id: string): string =>
   `{"initiative":{"id":"${id}","status":"active"},"completionGate":{"operator":"yeet","requiresPullRequest":true,"requiresMergeable":true,"statement":"Ship via yeet.","grandfathered":false}}`;
 
 const independentDigestEffect = Effect.fn("KnowledgeRefsTest.independentDigest")(function* (text: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto.digest("SHA-256", textEncoder.encode(text));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, textEncoder.encode(text));
   return Hex.encode(digest);
 });
 

@@ -1,0 +1,41 @@
+{
+  "result": "passed after red/green domain, pinned disposable backend and bounded tailnet proof",
+  "failedInstalledReceipt": "surface-label-live-incomplete-verification.json",
+  "cause": "Phoenix rounded native source nanoseconds to microseconds; reader incorrectly required truncation",
+  "backendSource": "Pinned Phoenix image phoenix/trace/otel.py:166 uses datetime.fromtimestamp(time_unix_nano / 1e9, tz=timezone.utc)",
+  "originalExactNs": "1793258010837194870",
+  "observedStandardTime": "2026-10-29T07:13:30.837195+00:00",
+  "storedSyntheticRecords": 2,
+  "localVisibleReceipts": 0,
+  "ownedUnitsRemoved": true,
+  "oldIdsNotResent": true,
+  "focusedRed": {
+    "fixtureKeysAndRoundingFailed": 3,
+    "pointShapeFailed": 2
+  },
+  "focusedGreen": {
+    "tests": 8,
+    "guard": {
+      "unit": "foundation-review-readback-shape-green.service",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 41201983488,
+      "peakObservedBytes": 361811968,
+      "minimumAvailableBytes": 40326995968,
+      "stoppedFor": null,
+      "exitCode": 0
+    }
+  },
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/native-readback.ts": "a813c80509f30727e0776d60df24a3dd00ab514b91290a0fdde7517d65307b79",
+    "packages/tooling/library/ai-metrics/test/native-readback.test.ts": "6efcd6105cc17702a32d14b72e46b1ddbaef79ce1cac89ba2d9e5b0886e77472"
+  },
+  "goalComplete": false,
+  "passingLiveReceipt": "surface-label-live-verification.json",
+  "shapeRegression": {
+    "failedBeforeRepair": 2,
+    "passedAfterRepair": 8,
+    "pointRemainsPoint": true,
+    "invertedEndpointsRefused": true
+  }
+}

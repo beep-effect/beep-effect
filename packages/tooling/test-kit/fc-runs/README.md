@@ -34,6 +34,17 @@ It no longer returns `numRuns`. For `Arbitrary.checkEffect`, pass `fcRuns(40)`
 directly as its third argument and assert that the returned result has `_tag: "Passed"`.
 The names and `BEEP_FC_NUM_RUNS` environment contract are retained.
 
+For a property whose every run does real I/O or service work over a small input
+space, use `fcRunsCapped(n)`: a fixed run count that the `BEEP_FC_NUM_RUNS`
+floor cannot raise, with the `BEEP_FC_SEED` pin kept so seeded reruns stay
+reproducible. Comment at the call site why `n` covers the arbitrary.
+
+```ts
+import { fcRunsCapped } from "@beep/fc-runs"
+
+const options = fcRunsCapped(10) // { runs: 10 } even when BEEP_FC_NUM_RUNS=1000
+```
+
 ## Development
 
 ```bash

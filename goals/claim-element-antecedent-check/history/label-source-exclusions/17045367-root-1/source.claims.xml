@@ -1,0 +1,32 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An anemometer for wind speed and direction comprising a tail, axle, cups, mounting rod, pointer arm and nose cone, wherein the electronics in the tail are hermetically sealed inside a lightweight plastic shell and the battery is a counterweight in the nose cone.</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The anemometer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the pointer arm for the wind direction arrow comprises a hollow tube extending from the circuit board in the tail to the nose cone with a wire inside.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The anemometer of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the wire has a small plug on the end that can plug into a shrink-wrapped battery with a wire and plug on it.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The anemometer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a hole in the base of the nose cone is attached to the hollow pointer arm with adhesive, through which the battery wire comes into the nose cone.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The anemometer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the nose cone has a space up the side of the battery for the wire to avoid chafing of the wire, and a space inside the cap for the plug on the end of the wire to plug into the battery wire.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The anemometer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the cap for the nose cone turns on threads onto the nose cone, with an O-ring around the base of the threads to ensure a waterproof seal.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The anemometer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the hollow pointer arm attaches to the circuit board in the tail using a hollow clevis fastener, with adhesive joining the clevis to the pointer arm, and the clevis attached onto one side of the circuit board with a small pair of nuts and bolts, and the battery wire exiting from the tube on the other side of the circuit board.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The anemometer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the electronics in the tail are hermetically sealed inside a lightweight shell using adhesive or ultrasonic welding to join the two sides of the case.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The anemometer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the tail is comprised of the solar panels and circuit board, and the solar panels are attached with double-sided tape to the outside of the plastic shell encapsulating the electronics, to provide clearer sunlight to the solar cells.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The anemometer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the hermetically sealed shell around the tail electronics provides an air gap over the radio antenna, allowing the air molecules to vibrate and transmit out in radio waves, with no need for an additional box around the antenna to keep resin away and form an air gap.</claim-text>
+</claim>
+</claims>

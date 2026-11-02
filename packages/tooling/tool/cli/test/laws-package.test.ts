@@ -9,7 +9,7 @@ import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { TSMorphService, TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -21,7 +21,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
-const platform = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const platform = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const write = Effect.fn("LawsPackageTest.write")(function* (root: string, name: string, text: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "claim-antecedent-implementation-freeze/v11",
+  "date": "2026-10-31",
+  "purpose": "Contextual purpose participle, infinitive embedding verb and in-response-to connector repair. Same frozen references, scorer and all 538 claims; require retention of all 29 v10 complete matches.",
+  "baselineCommit": "eec7f5f2d1",
+  "positiveBenchmarkPredictionsRun": false,
+  "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+  "referenceSelectionDigest": "ffcffd914a33dbabbe6f878e375bf6d9d41f9f30487e835d7061760b1593b8ff",
+  "digestRecipe": "SHA256 over files array encoded as sorted-key compact UTF-8 JSON, preserve path order",
+  "implementationDigest": "2f83f2c4be4efb87fe1624f560e70f07b8afd1c2a42496b68a60769972ca4908",
+  "files": [
+    {
+      "path": "packages/drivers/uspto/src/Uspto.models.ts",
+      "sha256": "b28cf8437c21e316c3823ff2af4e46743806e74b50e9bca8f6ef3912913768ef"
+    },
+    {
+      "path": "packages/drivers/uspto/src/Uspto.service.ts",
+      "sha256": "2c49c231b07688a3b88feafb280aab5e879558aa4387cc4be5cebda019e49470"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/Antecedent.policy.ts",
+      "sha256": "275403edfb2ee85518f2c80fb42a71c5c4c1a9488725dd2809425e5566fe984e"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/AntecedentFinding.model.ts",
+      "sha256": "29400ec4b0bed3f8f02e511f6ffe0cd8fa2f53b6eaf8e20226bacb8886f17e54"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
+      "sha256": "6db5e8d03c64f969c7c749bfc8d50200fce240f8eca9231e619a537690364513"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts",
+      "sha256": "7a3ad126fbeaf384971268b9dd75c1ff3ae520451232f1ade13a47755be1a550"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.errors.ts",
+      "sha256": "ba708a78c744ad6f7723b547962552b1c4417620c61cdf9fb9708ecd27602290"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts",
+      "sha256": "71a1c5c72b55dd973effeb277d4eda5f80ce349961440080fdac25d4beef9101"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
+      "sha256": "4f2935d1f082ff5ab3082755d1de914bceb0e65afbee1dfbd9d73df61612973d"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+      "sha256": "26142f731553e88cd14dd36e10229b68cc7646b33080b29e24eb4afcb94fd72c"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/index.ts",
+      "sha256": "38e7eb4ecbeeceb8389ce5247b26a1571300c717a8ed3a8fb99a2ca38c52a4e4"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.model.ts",
+      "sha256": "7c900fee01dd099d456c6d5803a6eb9a0521c18f7b89d6c9c43dbb3a779ba820"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
+      "sha256": "75dcd6b2e31eeba2891e3293bdba3978c5d3d1cc7d669886a99fbdaa933b411e"
+    },
+    {
+      "path": "packages/law-practice/server/src/UsptoClaims/UsptoClaims.layer.ts",
+      "sha256": "15f73a2b34f2a4bab84107d3f1ac5b4340de7cb8f022dd89c726bb9cc797563f"
+    },
+    {
+      "path": "packages/law-practice/server/src/UsptoClaims/index.ts",
+      "sha256": "369d810dc182a216fa7739825d72b2fa1e730bd5bf2ea7a2a81a27bc7ea7c0d9"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.errors.ts",
+      "sha256": "52e55d262098ab916738e38a3aab7f073f444604a369c63ccf5b8aca17ea255e"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.ports.ts",
+      "sha256": "fc0f9a280d2bcf08fa7832123893bf186493dcd44559323469f631338adae976"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.schemas.ts",
+      "sha256": "d18f7fb1a4f82bd5df9c964177df8a6cd6d6836a74d1e88766078ca69f04477f"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.service.ts",
+      "sha256": "1b5fb834d978754345b39e7cab8ea0eb747977e8e3132606f11eb036a2eeddea"
+    },
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck/index.ts",
+      "sha256": "2c376e93d07d113c3d04a85b9af1d3012aaaad37ebcff9b7b1e6c02530d44f08"
+    }
+  ]
+}

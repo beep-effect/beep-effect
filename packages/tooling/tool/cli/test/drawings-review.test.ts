@@ -39,7 +39,7 @@ import {
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertFailure, assertInstanceOf, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -637,7 +637,7 @@ const TestLayer = Layer.mergeAll(
   DrawingReview.layer.pipe(Layer.provide(PdfTools.makeLayer())),
   PdfTools.makeLayer(),
   TestConsole.layer
-).pipe(Layer.provideMerge(NodeServices.layer));
+).pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 
 describe("beep drawings review", () => {
   it.layer(TestLayer, { timeout: "180 seconds" })((it) => {

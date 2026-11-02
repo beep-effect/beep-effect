@@ -21,7 +21,8 @@ import * as Str from "effect/String";
 import { OutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import { AccountsError } from "./Accounts.errors.ts";
 import { AccountsSecretField, AccountsSecretsItem } from "./AccountsSecretsLayout.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Accounts/AccountsSecretsLayout.service");
@@ -186,7 +187,9 @@ export class AccountsSecretsLayout extends Context.Service<AccountsSecretsLayout
 ) {}
 
 const make = Effect.fn("AccountsSecretsLayout.make")(function* () {
-  const runtime = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
+  const runtime = yield* Effect.context<
+    Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  >();
   return AccountsSecretsLayout.of({
     run: Effect.fn("AccountsSecretsLayout.run")(
       function* (apply) {

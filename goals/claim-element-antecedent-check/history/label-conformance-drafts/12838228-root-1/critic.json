@@ -1,0 +1,58 @@
+{
+  "familyId": "12838228-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "resolvedLabelSetVerdict": "accepted",
+  "familyCoverage": "structural-labels-accepted",
+  "findings": [],
+  "unresolved": [],
+  "audit": {
+    "resolvedTrees": 10,
+    "elements": 31,
+    "terms": 88,
+    "typedEdges": 50,
+    "allProposedElementAndTermUtf16SlicesVerified": true,
+    "allSelectedClaimsMatchNativeXml": true,
+    "claimsXmlSha256Matches": true,
+    "headsDeterminersEdgesAndMembershipManuallyReviewed": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  },
+  "rationale": [
+    "All 119 element/term anchors, heads and determiners are correct. Root1 has seven semicolon limitations; claim3 colon header has three absorbed children and claim6 header two. Other selected claims have one limitation. According, erasing, feeding, conveying and lifting are correctly truncated when encountered after an initial head token; source typos are preserved.",
+    "All 50 typed edges are correct and complete: root1 seven part-of and eighteen unique local exact-head antecedents; claim3 four part-of, one dependency and two roller antecedents; claim6 three part-of plus dependency; remaining children one part-of plus dependency. No functional or cross-claim antecedent edges are fabricated.",
+    "Natural-language membership verified:2->1,3->2,4/5->3,6->2,7/8/9/10->5. The unusual reference of7-10 to5 is explicit in source and must not be silently changed to6. All ten selected claims belong to root1.",
+    "Office action H2KCNOYDPXXIFW4 of2012-05-25 rejects selected6-10 and quotes movable-plate and brush-roller terms; selected1-5 are dependency context rather than separately stated positives. Publication2011-03-31 predates rejection. Original comparison extracted zero claims, so exact original corroboration is absent; in-force association remains qualified."
+  ],
+  "sourceQualification": "Native publication provides every labelled character. Retained hashes, dates, document-inventory counts and rejection passages were checked for internal consistency, without independent retrieval of original office-action pages or underlying inventory. Original extracted-zero comparison is not exact-text corroboration. Attorney in-force confirmation remains pending.",
+  "independence": "No decomposer/policy implementation, rule fixtures, baseline predictions or live reports read/run. Helpers verify prescribed source normalization, selected spans and hashes only. No invalid replacement family was used.",
+  "acceptanceScope": "Structural contract acceptance is subject to root schema/span checks and separate attorney sampling. Changes-required blocks resolved-label acceptance until correction/re-review. No full semantic recall or legal definiteness is asserted."
+}

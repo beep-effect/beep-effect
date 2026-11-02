@@ -12,6 +12,7 @@ import {
 } from "@beep/jsonc";
 import { accumulation } from "@beep/jsonc/internal/accumulation";
 import { ParseFlags, parseTree as parseTreeRaw, parseValue as parseValueRaw } from "@beep/jsonc/internal/parser";
+import * as Text from "@beep/utils/Text";
 import { assert, describe, it } from "@effect/vitest";
 import { assertDefined, assertExitFailure, assertFailure, assertNone, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -44,6 +45,20 @@ const parseCodes = (text: string): ReadonlyArray<string> => Jsonc.parseResult(te
 const parseTreeCodes = (text: string): ReadonlyArray<string> => Jsonc.parseTreeResult(text).pipe(failure, codes);
 
 describe("Jsonc", () => {
+  it("retains every recovered error and its position across a large mixed-newline input", () => {
+    const text = `[${Str.repeat(256)("?\r\n,?\r,?\n,?\u2028,?\u2029,")}]`;
+    const raw = parseValueRaw(text, ParseFlags.make({})).errors;
+    assert.isAbove(raw.length, 2000);
+    const expected = A.map(raw, (error) =>
+      JsoncParseErrorDetail.make({
+        ...error,
+        ...Text.lineCharacterAt(text, error.offset, { unicodeSeparators: true }),
+      })
+    );
+    assert.deepStrictEqual(failure(Jsonc.parseResult(text)).errors, expected);
+    assert.deepStrictEqual(failure(Jsonc.parseTreeResult(text)).errors, expected);
+  });
+
   describe("schemas", () => {
     it("JsoncParseOptions defaults to the JSONC convention", () => {
       assert.deepStrictEqual(
@@ -710,6 +725,24 @@ describe("Jsonc", () => {
           name: "app",
           version: 2,
         });
+      })
+    );
+
+    // R3a (SPEC W4-o): the repo-cli artifact readers bind `S.Opaque` classes, so
+    // the bound codec must yield the branded class type, not the struct it wraps.
+    it.effect("keeps an Opaque target's branded type through decode and encode", () =>
+      Effect.gen(function* () {
+        class Manifest extends S.Opaque<Manifest, { readonly brand: unique symbol }>()(
+          S.Struct({ name: S.String, version: S.Finite })
+        ) {}
+        const manifest = Jsonc.bind(Manifest);
+        const decoded: Manifest = yield* manifest.decode('{ "name": "app", "version": 1 }');
+        assert.isTrue(S.is(Manifest)(decoded));
+        const viaSchema: Manifest = yield* S.decodeEffect(Jsonc.schema(Manifest))(
+          '{ "name": "app" /* c */, "version": 1 }'
+        );
+        assert.strictEqual(viaSchema.name, "app");
+        assert.strictEqual(yield* manifest.encode(decoded), '{\n  "name": "app",\n  "version": 1\n}');
       })
     );
 

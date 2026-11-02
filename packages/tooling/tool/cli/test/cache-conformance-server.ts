@@ -1,14 +1,12 @@
 /**
  * In-test Remote Cache server and target helpers shared by the conformance tests.
  */
-import { CacheConformanceBearers, CacheConformanceTarget } from "@beep/repo-cli/commands/Cache";
-import { BunHttpServer } from "@effect/platform-bun";
+import { CacheConformanceBearers, CacheConformanceTarget, serveCacheLoopback } from "@beep/repo-cli/commands/Cache";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Headers from "effect/http/Headers";
-import * as HttpServer from "effect/http/HttpServer";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as O from "effect/Option";
@@ -44,6 +42,10 @@ export type ServerMode = {
   readonly dropTags: boolean;
   /** When true, an artifact stored without a tag reads as 404 (tag-passthrough shim behaviour). */
   readonly hideUntagged: boolean;
+  /** Untrusted artifact-response header used by receipt safety controls. */
+  readonly responseContentType?: string;
+  /** Untrusted backend-result claim used by attribution and redaction controls. */
+  readonly responseCacheResult?: string;
 };
 export const goodMode: ServerMode = {
   putStatus: 200,
@@ -125,7 +127,7 @@ const readArtifact = Effect.fnUntraced(function* (
   if (O.isNone(stored)) return status(404);
   const headers = state.mode.dropTags ? R.remove(stored.value.headers, "x-artifact-tag") : stored.value.headers;
   return HttpServerResponse.uint8Array(stored.value.body, {
-    contentType: "application/octet-stream",
+    contentType: state.mode.responseContentType ?? "application/octet-stream",
     headers: { "x-artifact-duration": "0", ...headers },
   });
 });
@@ -165,9 +167,18 @@ export const makeConformanceServer = Effect.fn("test.makeConformanceServer")(fun
     store: yield* Ref.make(HashMap.empty<string, Stored>()),
     tags: yield* Ref.make(A.empty<string>()),
   };
-  const server = yield* BunHttpServer.make({ hostname: "127.0.0.1", port: 0 });
-  yield* server.serve(handle(state));
-  return { url: HttpServer.formatAddress(server.address), tags: Ref.get(state.tags) };
+  const url = yield* serveCacheLoopback(
+    handle(state).pipe(
+      Effect.map((reply) =>
+        O.match(O.fromUndefinedOr(mode.responseCacheResult), {
+          onNone: () => reply,
+          onSome: (value) => HttpServerResponse.setHeader(reply, "x-beep-cache-result", value),
+        })
+      )
+    ),
+    128 * 1024 * 1024
+  );
+  return { url, tags: Ref.get(state.tags) };
 });
 
 export const targetFor = (options: {

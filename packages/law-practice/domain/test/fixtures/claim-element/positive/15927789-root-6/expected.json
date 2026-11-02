@@ -1,0 +1,2065 @@
+[
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 38,
+          "quote": "Driving control device of carrier unit"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 22,
+              "quote": "Driving control device"
+            },
+            "determiner": "bare",
+            "head": "driving control device"
+          },
+          {
+            "anchor": {
+              "startChar": 26,
+              "endChar": 38,
+              "quote": "carrier unit"
+            },
+            "determiner": "bare",
+            "head": "carrier unit"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 68,
+          "endChar": 413,
+          "quote": "an operator, which is designed to be detachable from the distal end of the wire and the transport unit equipped with a location measurement module comprising: a wire which is unwound by external force; a length calculation unit calculating an unwinding length of the wire; and an angle calculation unit calculating an unwinding angle of the wire"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 68,
+              "endChar": 79,
+              "quote": "an operator"
+            },
+            "determiner": "an",
+            "head": "operator"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 135,
+              "quote": "the distal end"
+            },
+            "determiner": "the",
+            "head": "distal end"
+          },
+          {
+            "anchor": {
+              "startChar": 139,
+              "endChar": 147,
+              "quote": "the wire"
+            },
+            "determiner": "the",
+            "head": "wire"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 170,
+              "quote": "the transport unit"
+            },
+            "determiner": "the",
+            "head": "transport unit"
+          },
+          {
+            "anchor": {
+              "startChar": 185,
+              "endChar": 214,
+              "quote": "a location measurement module"
+            },
+            "determiner": "a",
+            "head": "location measurement module"
+          }
+        ]
+      },
+      {
+        "path": "6.a.i",
+        "anchor": {
+          "startChar": 227,
+          "endChar": 268,
+          "quote": "a wire which is unwound by external force"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 227,
+              "endChar": 233,
+              "quote": "a wire"
+            },
+            "determiner": "a",
+            "head": "wire"
+          },
+          {
+            "anchor": {
+              "startChar": 254,
+              "endChar": 268,
+              "quote": "external force"
+            },
+            "determiner": "bare",
+            "head": "external force"
+          }
+        ]
+      },
+      {
+        "path": "6.a.ii",
+        "anchor": {
+          "startChar": 270,
+          "endChar": 339,
+          "quote": "a length calculation unit calculating an unwinding length of the wire"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 270,
+              "endChar": 295,
+              "quote": "a length calculation unit"
+            },
+            "determiner": "a",
+            "head": "length calculation unit"
+          },
+          {
+            "anchor": {
+              "startChar": 308,
+              "endChar": 327,
+              "quote": "an unwinding length"
+            },
+            "determiner": "an",
+            "head": "unwinding length"
+          },
+          {
+            "anchor": {
+              "startChar": 331,
+              "endChar": 339,
+              "quote": "the wire"
+            },
+            "determiner": "the",
+            "head": "wire"
+          }
+        ]
+      },
+      {
+        "path": "6.a.iii",
+        "anchor": {
+          "startChar": 345,
+          "endChar": 413,
+          "quote": "an angle calculation unit calculating an unwinding angle of the wire"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 345,
+              "endChar": 370,
+              "quote": "an angle calculation unit"
+            },
+            "determiner": "an",
+            "head": "angle calculation unit"
+          },
+          {
+            "anchor": {
+              "startChar": 383,
+              "endChar": 401,
+              "quote": "an unwinding angle"
+            },
+            "determiner": "an",
+            "head": "unwinding angle"
+          },
+          {
+            "anchor": {
+              "startChar": 405,
+              "endChar": 413,
+              "quote": "the wire"
+            },
+            "determiner": "the",
+            "head": "wire"
+          }
+        ]
+      },
+      {
+        "path": "6.b",
+        "anchor": {
+          "startChar": 415,
+          "endChar": 471,
+          "quote": "and controls the travelling motion of the transport unit"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 428,
+              "endChar": 449,
+              "quote": "the travelling motion"
+            },
+            "determiner": "the",
+            "head": "travelling motion"
+          },
+          {
+            "anchor": {
+              "startChar": 453,
+              "endChar": 471,
+              "quote": "the transport unit"
+            },
+            "determiner": "the",
+            "head": "transport unit"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a.i",
+        "parent": "6.a"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.i",
+              "anchor": {
+                "startChar": 227,
+                "endChar": 233,
+                "quote": "a wire"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 233,
+              "endChar": 254,
+              "quote": " which is unwound by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.i",
+              "anchor": {
+                "startChar": 254,
+                "endChar": 268,
+                "quote": "external force"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a.ii",
+          "anchor": {
+            "startChar": 331,
+            "endChar": 339,
+            "quote": "the wire"
+          }
+        },
+        "introducing": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 233,
+            "quote": "a wire"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a.ii",
+        "parent": "6.a"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.ii",
+              "anchor": {
+                "startChar": 270,
+                "endChar": 295,
+                "quote": "a length calculation unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 295,
+              "endChar": 308,
+              "quote": " calculating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.ii",
+              "anchor": {
+                "startChar": 308,
+                "endChar": 327,
+                "quote": "an unwinding length"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 327,
+              "endChar": 331,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.ii",
+              "anchor": {
+                "startChar": 331,
+                "endChar": 339,
+                "quote": "the wire"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a.iii",
+          "anchor": {
+            "startChar": 405,
+            "endChar": 413,
+            "quote": "the wire"
+          }
+        },
+        "introducing": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 233,
+            "quote": "a wire"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a.iii",
+        "parent": "6.a"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a.iii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.iii",
+              "anchor": {
+                "startChar": 345,
+                "endChar": 370,
+                "quote": "an angle calculation unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 370,
+              "endChar": 383,
+              "quote": " calculating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.iii",
+              "anchor": {
+                "startChar": 383,
+                "endChar": 401,
+                "quote": "an unwinding angle"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 401,
+              "endChar": 405,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.iii",
+              "anchor": {
+                "startChar": 405,
+                "endChar": 413,
+                "quote": "the wire"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "6.b",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 415,
+              "endChar": 428,
+              "quote": "and controls "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 428,
+                "endChar": 449,
+                "quote": "the travelling motion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 449,
+              "endChar": 453,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 453,
+                "endChar": 471,
+                "quote": "the transport unit"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 68,
+                "endChar": 79,
+                "quote": "an operator"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 79,
+              "endChar": 121,
+              "quote": ", which is designed to be detachable from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 121,
+                "endChar": 135,
+                "quote": "the distal end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 135,
+              "endChar": 139,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 139,
+                "endChar": 147,
+                "quote": "the wire"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 147,
+              "endChar": 152,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 152,
+                "endChar": 170,
+                "quote": "the transport unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 170,
+              "endChar": 185,
+              "quote": " equipped with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 185,
+                "endChar": 214,
+                "quote": "a location measurement module"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 214,
+              "endChar": 413,
+              "quote": " comprising: a wire which is unwound by external force; a length calculation unit calculating an unwinding length of the wire; and an angle calculation unit calculating an unwinding angle of the wire"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 49,
+          "quote": "Driving control device of carrier unit of claim 6"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 22,
+              "quote": "Driving control device"
+            },
+            "determiner": "bare",
+            "head": "driving control device"
+          },
+          {
+            "anchor": {
+              "startChar": 26,
+              "endChar": 38,
+              "quote": "carrier unit"
+            },
+            "determiner": "bare",
+            "head": "carrier unit"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 74,
+          "endChar": 319,
+          "quote": "the positioning module acquire the location information of distal end point of the wire based on the unwinding length and unwinding angle of the wire, indicate and save the location information in a time-ordered sequence in the coordinate system"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 74,
+              "endChar": 96,
+              "quote": "the positioning module"
+            },
+            "determiner": "the",
+            "head": "positioning module"
+          },
+          {
+            "anchor": {
+              "startChar": 105,
+              "endChar": 129,
+              "quote": "the location information"
+            },
+            "determiner": "the",
+            "head": "location information"
+          },
+          {
+            "anchor": {
+              "startChar": 133,
+              "endChar": 149,
+              "quote": "distal end point"
+            },
+            "determiner": "bare",
+            "head": "distal end point"
+          },
+          {
+            "anchor": {
+              "startChar": 153,
+              "endChar": 161,
+              "quote": "the wire"
+            },
+            "determiner": "the",
+            "head": "wire"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 191,
+              "quote": "the unwinding length"
+            },
+            "determiner": "the",
+            "head": "unwinding length"
+          },
+          {
+            "anchor": {
+              "startChar": 196,
+              "endChar": 211,
+              "quote": "unwinding angle"
+            },
+            "determiner": "bare",
+            "head": "unwinding angle"
+          },
+          {
+            "anchor": {
+              "startChar": 215,
+              "endChar": 223,
+              "quote": "the wire"
+            },
+            "determiner": "the",
+            "head": "wire"
+          },
+          {
+            "anchor": {
+              "startChar": 243,
+              "endChar": 267,
+              "quote": "the location information"
+            },
+            "determiner": "the",
+            "head": "location information"
+          },
+          {
+            "anchor": {
+              "startChar": 271,
+              "endChar": 294,
+              "quote": "a time-ordered sequence"
+            },
+            "determiner": "a",
+            "head": "time-ordered sequence"
+          },
+          {
+            "anchor": {
+              "startChar": 298,
+              "endChar": 319,
+              "quote": "the coordinate system"
+            },
+            "determiner": "the",
+            "head": "coordinate system"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "Driving control device"
+          }
+        },
+        "introducing": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "Driving control device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 153,
+            "endChar": 161,
+            "quote": "the wire"
+          }
+        },
+        "introducing": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 233,
+            "quote": "a wire"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 171,
+            "endChar": 191,
+            "quote": "the unwinding length"
+          }
+        },
+        "introducing": {
+          "path": "6.a.ii",
+          "anchor": {
+            "startChar": 308,
+            "endChar": 327,
+            "quote": "an unwinding length"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 196,
+            "endChar": 211,
+            "quote": "unwinding angle"
+          }
+        },
+        "introducing": {
+          "path": "6.a.iii",
+          "anchor": {
+            "startChar": 383,
+            "endChar": 401,
+            "quote": "an unwinding angle"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 215,
+            "endChar": 223,
+            "quote": "the wire"
+          }
+        },
+        "introducing": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 233,
+            "quote": "a wire"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 74,
+                "endChar": 96,
+                "quote": "the positioning module"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 96,
+              "endChar": 105,
+              "quote": " acquire "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 105,
+                "endChar": 129,
+                "quote": "the location information"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 129,
+              "endChar": 133,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 133,
+                "endChar": 149,
+                "quote": "distal end point"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 149,
+              "endChar": 153,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 153,
+                "endChar": 161,
+                "quote": "the wire"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 161,
+              "endChar": 171,
+              "quote": " based on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 171,
+                "endChar": 191,
+                "quote": "the unwinding length"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 191,
+              "endChar": 196,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 196,
+                "endChar": 211,
+                "quote": "unwinding angle"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 211,
+              "endChar": 215,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 215,
+                "endChar": 223,
+                "quote": "the wire"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 223,
+              "endChar": 243,
+              "quote": ", indicate and save "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 243,
+                "endChar": 267,
+                "quote": "the location information"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 267,
+              "endChar": 271,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 271,
+                "endChar": 294,
+                "quote": "a time-ordered sequence"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 294,
+              "endChar": 298,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 298,
+                "endChar": 319,
+                "quote": "the coordinate system"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "6"
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 49,
+          "quote": "Driving control device of carrier unit of claim 6"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 22,
+              "quote": "Driving control device"
+            },
+            "determiner": "bare",
+            "head": "driving control device"
+          },
+          {
+            "anchor": {
+              "startChar": 26,
+              "endChar": 38,
+              "quote": "carrier unit"
+            },
+            "determiner": "bare",
+            "head": "carrier unit"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 74,
+          "endChar": 109,
+          "quote": "the wire is electrically conductive"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 74,
+              "endChar": 82,
+              "quote": "the wire"
+            },
+            "determiner": "the",
+            "head": "wire"
+          }
+        ]
+      },
+      {
+        "path": "8.b",
+        "anchor": {
+          "startChar": 111,
+          "endChar": 269,
+          "quote": "the positioning module supplies power to the operator through the electrically conductive wire, and then the operator can control the travel of transport unit"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 133,
+              "quote": "the positioning module"
+            },
+            "determiner": "the",
+            "head": "positioning module"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 148,
+              "quote": "power"
+            },
+            "determiner": "bare",
+            "head": "power"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 164,
+              "quote": "the operator"
+            },
+            "determiner": "the",
+            "head": "operator"
+          },
+          {
+            "anchor": {
+              "startChar": 173,
+              "endChar": 205,
+              "quote": "the electrically conductive wire"
+            },
+            "determiner": "the",
+            "head": "electrically conductive wire"
+          },
+          {
+            "anchor": {
+              "startChar": 216,
+              "endChar": 228,
+              "quote": "the operator"
+            },
+            "determiner": "the",
+            "head": "operator"
+          },
+          {
+            "anchor": {
+              "startChar": 241,
+              "endChar": 251,
+              "quote": "the travel"
+            },
+            "determiner": "the",
+            "head": "travel"
+          },
+          {
+            "anchor": {
+              "startChar": 255,
+              "endChar": 269,
+              "quote": "transport unit"
+            },
+            "determiner": "bare",
+            "head": "transport unit"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "Driving control device"
+          }
+        },
+        "introducing": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "Driving control device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 82,
+            "quote": "the wire"
+          }
+        },
+        "introducing": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 233,
+            "quote": "a wire"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 152,
+            "endChar": 164,
+            "quote": "the operator"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 68,
+            "endChar": 79,
+            "quote": "an operator"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 173,
+            "endChar": 205,
+            "quote": "the electrically conductive wire"
+          }
+        },
+        "introducing": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 233,
+            "quote": "a wire"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 216,
+            "endChar": 228,
+            "quote": "the operator"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 68,
+            "endChar": 79,
+            "quote": "an operator"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.b",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 111,
+                "endChar": 133,
+                "quote": "the positioning module"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 133,
+              "endChar": 143,
+              "quote": " supplies "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 148,
+                "quote": "power"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 148,
+              "endChar": 152,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 152,
+                "endChar": 164,
+                "quote": "the operator"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 164,
+              "endChar": 173,
+              "quote": " through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 173,
+                "endChar": 205,
+                "quote": "the electrically conductive wire"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 205,
+              "endChar": 216,
+              "quote": ", and then "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 216,
+                "endChar": 228,
+                "quote": "the operator"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 228,
+              "endChar": 241,
+              "quote": " can control "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 241,
+                "endChar": 251,
+                "quote": "the travel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 251,
+              "endChar": 255,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 255,
+                "endChar": 269,
+                "quote": "transport unit"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "6"
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 49,
+          "quote": "Driving control device of carrier unit of claim 6"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 22,
+              "quote": "Driving control device"
+            },
+            "determiner": "bare",
+            "head": "driving control device"
+          },
+          {
+            "anchor": {
+              "startChar": 26,
+              "endChar": 38,
+              "quote": "carrier unit"
+            },
+            "determiner": "bare",
+            "head": "carrier unit"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 73,
+          "endChar": 257,
+          "quote": "the transport unit is induced to move to the distal end point of one side of the wire which is calculated by the positioning module, under the first travelling mode set by the operator"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 73,
+              "endChar": 91,
+              "quote": "the transport unit"
+            },
+            "determiner": "the",
+            "head": "transport unit"
+          },
+          {
+            "anchor": {
+              "startChar": 114,
+              "endChar": 134,
+              "quote": "the distal end point"
+            },
+            "determiner": "the",
+            "head": "distal end point"
+          },
+          {
+            "anchor": {
+              "startChar": 138,
+              "endChar": 146,
+              "quote": "one side"
+            },
+            "determiner": "bare",
+            "head": "one side"
+          },
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 158,
+              "quote": "the wire"
+            },
+            "determiner": "the",
+            "head": "wire"
+          },
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 204,
+              "quote": "the positioning module"
+            },
+            "determiner": "the",
+            "head": "positioning module"
+          },
+          {
+            "anchor": {
+              "startChar": 212,
+              "endChar": 237,
+              "quote": "the first travelling mode"
+            },
+            "determiner": "the",
+            "head": "first travelling mode"
+          },
+          {
+            "anchor": {
+              "startChar": 245,
+              "endChar": 257,
+              "quote": "the operator"
+            },
+            "determiner": "the",
+            "head": "operator"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "Driving control device"
+          }
+        },
+        "introducing": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "Driving control device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 150,
+            "endChar": 158,
+            "quote": "the wire"
+          }
+        },
+        "introducing": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 233,
+            "quote": "a wire"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 245,
+            "endChar": 257,
+            "quote": "the operator"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 68,
+            "endChar": 79,
+            "quote": "an operator"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 73,
+                "endChar": 91,
+                "quote": "the transport unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 91,
+              "endChar": 114,
+              "quote": " is induced to move to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 114,
+                "endChar": 134,
+                "quote": "the distal end point"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 134,
+              "endChar": 138,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 138,
+                "endChar": 146,
+                "quote": "one side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 146,
+              "endChar": 150,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 150,
+                "endChar": 158,
+                "quote": "the wire"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 158,
+              "endChar": 182,
+              "quote": " which is calculated by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 182,
+                "endChar": 204,
+                "quote": "the positioning module"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 204,
+              "endChar": 212,
+              "quote": ", under "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 212,
+                "endChar": 237,
+                "quote": "the first travelling mode"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 237,
+              "endChar": 245,
+              "quote": " set by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 245,
+                "endChar": 257,
+                "quote": "the operator"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "6"
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 49,
+          "quote": "Driving control device of carrier unit of claim 6"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 22,
+              "quote": "Driving control device"
+            },
+            "determiner": "bare",
+            "head": "driving control device"
+          },
+          {
+            "anchor": {
+              "startChar": 26,
+              "endChar": 38,
+              "quote": "carrier unit"
+            },
+            "determiner": "bare",
+            "head": "carrier unit"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 73,
+          "endChar": 183,
+          "quote": "the transport unit receives the user's operation signal which is input to a controller module through the wire"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 73,
+              "endChar": 91,
+              "quote": "the transport unit"
+            },
+            "determiner": "the",
+            "head": "transport unit"
+          },
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 128,
+              "quote": "the user's operation signal"
+            },
+            "determiner": "the",
+            "head": "user's operation signal"
+          },
+          {
+            "anchor": {
+              "startChar": 147,
+              "endChar": 166,
+              "quote": "a controller module"
+            },
+            "determiner": "a",
+            "head": "controller module"
+          },
+          {
+            "anchor": {
+              "startChar": 175,
+              "endChar": 183,
+              "quote": "the wire"
+            },
+            "determiner": "the",
+            "head": "wire"
+          }
+        ]
+      },
+      {
+        "path": "10.b",
+        "anchor": {
+          "startChar": 185,
+          "endChar": 297,
+          "quote": "travelling direction is controlled by the operation signal; under the second travelling mode set by the operator"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 185,
+              "endChar": 205,
+              "quote": "travelling direction"
+            },
+            "determiner": "bare",
+            "head": "travelling direction"
+          },
+          {
+            "anchor": {
+              "startChar": 223,
+              "endChar": 243,
+              "quote": "the operation signal"
+            },
+            "determiner": "the",
+            "head": "operation signal"
+          },
+          {
+            "anchor": {
+              "startChar": 251,
+              "endChar": 277,
+              "quote": "the second travelling mode"
+            },
+            "determiner": "the",
+            "head": "second travelling mode"
+          },
+          {
+            "anchor": {
+              "startChar": 285,
+              "endChar": 297,
+              "quote": "the operator"
+            },
+            "determiner": "the",
+            "head": "operator"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "Driving control device"
+          }
+        },
+        "introducing": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "Driving control device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 175,
+            "endChar": 183,
+            "quote": "the wire"
+          }
+        },
+        "introducing": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 233,
+            "quote": "a wire"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 73,
+                "endChar": 91,
+                "quote": "the transport unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 91,
+              "endChar": 101,
+              "quote": " receives "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 128,
+                "quote": "the user's operation signal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 128,
+              "endChar": 147,
+              "quote": " which is input to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 147,
+                "endChar": 166,
+                "quote": "a controller module"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 166,
+              "endChar": 175,
+              "quote": " through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 175,
+                "endChar": 183,
+                "quote": "the wire"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.b",
+          "anchor": {
+            "startChar": 223,
+            "endChar": 243,
+            "quote": "the operation signal"
+          }
+        },
+        "introducing": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 101,
+            "endChar": 128,
+            "quote": "the user's operation signal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.b",
+          "anchor": {
+            "startChar": 285,
+            "endChar": 297,
+            "quote": "the operator"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 68,
+            "endChar": 79,
+            "quote": "an operator"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "10.b",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.b",
+              "anchor": {
+                "startChar": 185,
+                "endChar": 205,
+                "quote": "travelling direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 205,
+              "endChar": 223,
+              "quote": " is controlled by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.b",
+              "anchor": {
+                "startChar": 223,
+                "endChar": 243,
+                "quote": "the operation signal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 243,
+              "endChar": 251,
+              "quote": "; under "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.b",
+              "anchor": {
+                "startChar": 251,
+                "endChar": 277,
+                "quote": "the second travelling mode"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 277,
+              "endChar": 285,
+              "quote": " set by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.b",
+              "anchor": {
+                "startChar": 285,
+                "endChar": 297,
+                "quote": "the operator"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "6"
+      }
+    ]
+  }
+]

@@ -114,13 +114,14 @@ const readPriorIds = Effect.fnUntraced(function* (packetDir: string) {
   const entries = yield* fs.readFileString(ledgerPath).pipe(
     Effect.flatMap(parseJsonText),
     Effect.flatMap(decodeCodexTriageLedger),
-    Effect.map((ledger) => A.map(ledger.findings, (finding) => ({ id: finding.id, codexId: finding.codexId }))),
-    Effect.mapError(() =>
-      CodexFindingsIngestError.make({
-        reason: "ledger-unreadable",
-        message: `${ledgerPath} exists but does not decode as a codex-triage/v1 ledger. Repair or remove it before re-ingesting; continuing would renumber every CSF-NNN and break the closeout allowlist.`,
-      })
-    )
+    Effect.mapBoth({
+      onFailure: () =>
+        CodexFindingsIngestError.make({
+          reason: "ledger-unreadable",
+          message: `${ledgerPath} exists but does not decode as a codex-triage/v1 ledger. Repair or remove it before re-ingesting; continuing would renumber every CSF-NNN and break the closeout allowlist.`,
+        }),
+      onSuccess: (ledger) => A.map(ledger.findings, (finding) => ({ id: finding.id, codexId: finding.codexId })),
+    })
   );
 
   return priorIdsOfEntries(entries);

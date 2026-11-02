@@ -1,0 +1,16 @@
+{
+  "extends": "../../../packages/tooling/tool/cli/test/tsconfig.json",
+  "files": [],
+  "include": [
+    "../../../packages/tooling/tool/cli/test/AgentMessage.observation.test.ts",
+    "../../../packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.runtime.ts",
+    "../../../packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts",
+    "../../../packages/tooling/tool/cli/test/ai-metrics-inventory.test.ts",
+    "../../../packages/tooling/tool/cli/test/ai-metrics-observation-deployment.test.ts",
+    "../../../packages/tooling/tool/cli/src/commands/AIMetrics/ObservationWorker.entry.ts"
+  ],
+  "exclude": [],
+  "compilerOptions": {
+    "typeRoots": ["../../../node_modules/@types"]
+  }
+}

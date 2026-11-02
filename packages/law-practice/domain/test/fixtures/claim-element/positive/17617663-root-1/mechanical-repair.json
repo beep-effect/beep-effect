@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-28",
+  "role": "orchestrator deterministic validation repair",
+  "annotationRound": 3,
+  "reason": "Remove one identical duplicate edge during unfinished round3; no semantic interpretation or extra annotation round",
+  "claimNumber": 10,
+  "edge": {
+    "kind": "depends-on-element",
+    "dependent": "10.a",
+    "ancestor": "9.a.ii"
+  },
+  "beforeClaimEdgeCount": 25,
+  "afterClaimEdgeCount": 24,
+  "beforeFileSha256": "721899bc3f66e94a0a07bbf12eb703160101995208e78f7c419c9a6e3c09f2d7",
+  "afterFileSha256": "6077b7c4c31dcdb2ac1f867cea149174e35f555f82742805c27f2e467b98df11",
+  "priorArtifact": "expected.round3-pre-dedupe.json",
+  "independentCriticVerification": "pending"
+}

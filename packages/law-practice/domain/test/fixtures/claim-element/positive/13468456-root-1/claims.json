@@ -1,0 +1,212 @@
+{
+  "familyId": "13468456-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A bird feeder comprising: a. A silo; b. A plurality of free spinning plates, each located a set distance from the surface of said silo, roughly parallel to said surface, attached so that each spins freely in a roughly vertical plane; c. A fill hole in the silo; d. A seed trough with at least one feeding portal; e. One or more perches located to allow birds to reach the feeding portals.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "A bird feeder of claim 1, further comprising a hanging loop flexible tension element that is adjustable in length.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "A bird feeder of claim 1, where said seed trough is removably attached to the lower portion of said silo.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "A bird feeder of claim 1, where said perches are made of flexible materials of sufficient flexibility to support no greater than the weight of the birds intended for the feeder.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "A bird feeder of claim 1, where said perches are removably attached to said seed trough.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "A bird feeder of claim 1, where said bird feeder is removably attached to a post or post-like structure.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "A bird feeder of claim 1, where said fill hole is located at the bottom of the silo and enclosed by the seed trough.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "A bird feeder of claim 1, where said fill hole further comprises a seed funneling attachment piece.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "A bird feeder of claim 1, where said fill hole is located on the upper rim of the silo.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A bird feeder of claim 1, where said spinning plates are spaced sufficiently apart so that a wire hanger or post support may be attached between the edges of the plates.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "A bird feeder of claim 1, where said spinning plates are independently attached to the silo without an axle between them.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "A bird feeder of claim 1, further comprising at least one seed port shield over said feed portals.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "A bird feeder comprising: a. A silo; b. A plurality of free spinning plates, each located a set distance from the surface of said silo, roughly parallel to said surface, attached to each other by an axle passing through the silo; c. A fill hole in the silo; d. A seed trough with at least one feeding portal; e. At least one or more perches located on said trough to allow birds to reach the feeding portals. f. At least one type of aversive agent applied to the external surface area of said bird feeder.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "A bird feeder of claim 13, further comprising of a hanging loop that is adjustable in length.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "A bird feeder of claim 13, where said seed trough is removably attached to the lower portion of said silo.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "A bird feeder of claim 13, where said perches are made of flexible materials of sufficient rigidity to support no greater than the weight of the birds intended for the feeder.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "A bird feeder of claim 13, where said perches are removably attached to said seed trough.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "A bird feeder of claim 13, where said bird feeder is removably attached to a post or post-like structure.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "A bird feeder of claim 13, where said fill hole is located at the bottom of the silo and enclosed by the seed trough.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "A bird feeder of claim 13, where said fill hole further comprises a seed funneling attachment piece.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "A bird feeder of claim 13, where said fill hole is located on the upper rim of the silo.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "A bird feeder of claim 13, where said spinning plates are vertically oriented so that the attach cord or post attachment is between the plates.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "A bird feeder of claim 13, where said spinning plates are independently attached to the silo without an axle between them.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "A bird feeder of claim 13, further comprising at least one seed port shield over said feed portals.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "A bird feeder of claim 13, where said aversive agent is applied by painting said aversive agent to the external surface of said bird feeder.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 26,
+      "claimText": "A bird feeder of claim 13, where said aversive agent is infused to the external surface of said bird feeder.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 27,
+      "claimText": "A bird feeder of claim 13, where said aversive agent further comprises bitterants.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 28,
+      "claimText": "A bird feeder of claim 13, where said aversive agent further comprises capsaicin based agents.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    }
+  ]
+}

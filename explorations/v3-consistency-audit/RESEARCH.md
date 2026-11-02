@@ -99,8 +99,9 @@ zones). NET-NEW: the audit rule set, the report/baseline schemas, the lane.
 - Capability gate (2026-08-30, 19-agent Workflow: 9 cite verifiers, 5
   NET-NEW refuters, 5 definition-of-ready critics): 8/9 cites confirmed, the
   `TemplateRetarget.ts` range corrected; four NET-NEW marks downgraded to
-  existing bricks — package discovery is `@beep/repo-utils`
-  `resolveWorkspaceDirs` (`Workspaces.ts`), the ratchet is
+  existing bricks — package discovery was the `@beep/repo-utils`
+  workspace reader (`Workspaces.ts`; since effected-promotion 4-A3
+  repo-cli `internal/RepoWorkspaces.ts` `workspaceDirectories`), the ratchet is
   `cli/src/internal/ratchet` (`diffMembership`/`diffTotals`/`enforceRatchet`),
   the lane is a row in `CiLane.ts`'s closed registry, and the `Contract` kit
   extends `@beep/schema/Fn`'s statics + `implement*` construction (with

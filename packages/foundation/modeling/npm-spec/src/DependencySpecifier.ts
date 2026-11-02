@@ -1,5 +1,5 @@
 /**
- * The single dependency-specifier concept, shared with `@beep/scratchpad/effected/package-json`.
+ * The single dependency-specifier concept, shared with `@beep/package-json`.
  *
  * **Details**
  *
@@ -382,7 +382,7 @@ const resolveWorkspace: {
 
 // The target package name of an alias-form `workspace:` specifier, `None` for
 // the plain form and for non-workspace input. Shared by `Manifest.resolve`
-// and `@beep/scratchpad/effected/package-json`'s `Package.resolve`, which must look up the
+// and `@beep/package-json`'s `Package.resolve`, which must look up the
 // TARGET's version before projecting.
 const workspaceTargetOf = (specifier: string): O.Option<string> => {
   if (!isWorkspace(specifier)) return O.none();
@@ -666,10 +666,11 @@ const fromString: S.Codec<ClassifiedSpecifier, string> = S.String.pipe(
     SchemaTransformation.transformEffect<(typeof Classified)["Encoded"], string>({
       decode: (input) =>
         S.decodeEffect(DependencySpecifier)(input).pipe(
-          Effect.map(classify),
-          Effect.mapError(
-            () => new SchemaIssue.InvalidValue({ message: `Invalid dependency specifier: "${input}"` }, input)
-          )
+          Effect.mapBoth({
+            onFailure: () =>
+              new SchemaIssue.InvalidValue({ message: `Invalid dependency specifier: "${input}"` }, input),
+            onSuccess: classify,
+          })
         ),
       encode: (classified) => Effect.succeed(classified.raw),
     })

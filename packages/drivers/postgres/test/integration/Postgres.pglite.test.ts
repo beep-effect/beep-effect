@@ -14,11 +14,12 @@ import {
 import { it } from "@beep/test-runner";
 import { makePgliteIntegrationGate, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect } from "@effect/vitest";
 import { formatToMillis } from "drizzle-orm/migrator.utils";
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -31,8 +32,8 @@ import * as SqlClient from "effect/sql/SqlClient";
 import * as Statement from "effect/sql/Statement";
 
 const sha256Hex = Effect.fnUntraced(function* (text: string) {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
+  const crypto = yield* Digest.Digest;
+  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text)));
 });
 
 const { shouldRunPgliteIntegration, makePgliteLayer } = makePgliteIntegrationGate();
@@ -193,210 +194,211 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    it.layer(Layer.merge(makePgliteLayer(), NodeServices.layer), { timeout: "2 minutes" })((it) => {
-      it.effect(
-        "continues a folder-migrated journal from an in-memory bundle",
-        Effect.fnUntraced(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const info = yield* TestDatabaseInfo;
-          const path = yield* Path.Path;
-          const db = yield* makeDrizzle();
-          const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-          const fixtureMigrationSql = yield* fs.readFileString(
-            path.join(migrationsFolder, fixtureMigrationName, "migration.sql")
-          );
-          const fixtureMigrationHash = yield* sha256Hex(fixtureMigrationSql);
-          const migrationsSchema = pipe(
-            info.schema,
-            O.getOrElse(() => "drizzle")
-          );
+    it.layer(Layer.mergeAll(makePgliteLayer(), NodeServices.layer, NodeCrypto.layerDigest), { timeout: "2 minutes" })(
+      (it) => {
+        it.effect(
+          "continues a folder-migrated journal from an in-memory bundle",
+          Effect.fnUntraced(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const info = yield* TestDatabaseInfo;
+            const path = yield* Path.Path;
+            const db = yield* makeDrizzle();
+            const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+            const fixtureMigrationSql = yield* fs.readFileString(
+              path.join(migrationsFolder, fixtureMigrationName, "migration.sql")
+            );
+            const fixtureMigrationHash = yield* sha256Hex(fixtureMigrationSql);
+            const migrationsSchema = pipe(
+              info.schema,
+              O.getOrElse(() => "drizzle")
+            );
 
-          // Journal seeded by the folder path, exactly like a deployed database.
-          yield* migrate(db, { migrationsFolder, migrationsSchema });
+            // Journal seeded by the folder path, exactly like a deployed database.
+            yield* migrate(db, { migrationsFolder, migrationsSchema });
 
-          // Handoff: the same migration delivered as an in-memory bundle must
-          // be a no-op (name-keyed journal) rather than a re-application.
-          yield* migrateBundle(
-            db,
-            MigrationBundleConfig.make({
-              migrations: [MigrationBundleEntry.make({ name: fixtureMigrationName, sql: fixtureMigrationSql })],
-              migrationsSchema,
-            })
-          );
+            // Handoff: the same migration delivered as an in-memory bundle must
+            // be a no-op (name-keyed journal) rather than a re-application.
+            yield* migrateBundle(
+              db,
+              MigrationBundleConfig.make({
+                migrations: [MigrationBundleEntry.make({ name: fixtureMigrationName, sql: fixtureMigrationSql })],
+                migrationsSchema,
+              })
+            );
 
-          const journalAfterHandoff = yield* sql<{ readonly hash: string; readonly name: string }>`
+            const journalAfterHandoff = yield* sql<{ readonly hash: string; readonly name: string }>`
             SELECT hash, name FROM ${Statement.identifier(migrationsSchema)}.__drizzle_migrations ORDER BY id
           `;
 
-          expect(
-            pipe(
-              journalAfterHandoff,
-              A.map(({ hash, name }) => ({ hash, name }))
-            )
-          ).toEqual([
-            {
-              hash: fixtureMigrationHash,
-              name: fixtureMigrationName,
-            },
-          ]);
+            expect(
+              pipe(
+                journalAfterHandoff,
+                A.map(({ hash, name }) => ({ hash, name }))
+              )
+            ).toEqual([
+              {
+                hash: fixtureMigrationHash,
+                name: fixtureMigrationName,
+              },
+            ]);
 
-          // A genuinely new bundle migration applies and journals normally.
-          yield* migrateBundle(
-            db,
-            MigrationBundleConfig.make({
-              migrations: [
-                MigrationBundleEntry.make({ name: fixtureMigrationName, sql: fixtureMigrationSql }),
-                MigrationBundleEntry.make(bundleNotesMigration),
-              ],
-              migrationsSchema,
-            })
-          );
+            // A genuinely new bundle migration applies and journals normally.
+            yield* migrateBundle(
+              db,
+              MigrationBundleConfig.make({
+                migrations: [
+                  MigrationBundleEntry.make({ name: fixtureMigrationName, sql: fixtureMigrationSql }),
+                  MigrationBundleEntry.make(bundleNotesMigration),
+                ],
+                migrationsSchema,
+              })
+            );
 
-          yield* db.insert(bundleNotes).values({ body: "from bundle" });
-          const rows = yield* db.select({ body: bundleNotes.body }).from(bundleNotes);
-          const journalNames = yield* sql<{ readonly name: string }>`
+            yield* db.insert(bundleNotes).values({ body: "from bundle" });
+            const rows = yield* db.select({ body: bundleNotes.body }).from(bundleNotes);
+            const journalNames = yield* sql<{ readonly name: string }>`
             SELECT name FROM ${Statement.identifier(migrationsSchema)}.__drizzle_migrations ORDER BY id
           `;
 
-          expect(
-            pipe(
-              rows,
-              A.map((row) => row.body)
-            )
-          ).toEqual(["from bundle"]);
-          expect(
-            pipe(
-              journalNames,
-              A.map((row) => row.name)
-            )
-          ).toEqual([fixtureMigrationName, bundleNotesMigration.name]);
+            expect(
+              pipe(
+                rows,
+                A.map((row) => row.body)
+              )
+            ).toEqual(["from bundle"]);
+            expect(
+              pipe(
+                journalNames,
+                A.map((row) => row.name)
+              )
+            ).toEqual([fixtureMigrationName, bundleNotesMigration.name]);
 
-          // Entries without a timestamped name fail fast instead of silently
-          // re-applying on every boot (v1 journal matching is name-keyed). `make`
-          // validates, so the invalid input is built with checks disabled: the point is
-          // that migrateBundle's own decode rejects an unvalidated config.
-          const invalidNameError = yield* migrateBundle(
-            db,
-            MigrationBundleConfig.make(
-              {
-                migrations: [MigrationBundleEntry.make({ name: "", sql: "SELECT 1;\n" }, { disableChecks: true })],
+            // Entries without a timestamped name fail fast instead of silently
+            // re-applying on every boot (v1 journal matching is name-keyed). `make`
+            // validates, so the invalid input is built with checks disabled: the point is
+            // that migrateBundle's own decode rejects an unvalidated config.
+            const invalidNameError = yield* migrateBundle(
+              db,
+              MigrationBundleConfig.make(
+                {
+                  migrations: [MigrationBundleEntry.make({ name: "", sql: "SELECT 1;\n" }, { disableChecks: true })],
+                  migrationsSchema,
+                },
+                { disableChecks: true }
+              )
+            ).pipe(Effect.flip);
+
+            expect(invalidNameError._tag).toBe("PostgresError");
+          }),
+          120_000
+        );
+
+        it.effect(
+          "skips a re-baseline only after the complete legacy journal is present",
+          Effect.fnUntraced(function* () {
+            const info = yield* TestDatabaseInfo;
+            const db = yield* makeDrizzle();
+            const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+            const migrationsSchema = pipe(
+              info.schema,
+              O.getOrElse(() => "drizzle")
+            );
+            const firstLegacy = {
+              name: "20260101000000_legacy_first",
+              sql: "CREATE TABLE legacy_rebaseline_probe (id integer PRIMARY KEY);\n",
+            };
+            const secondLegacy = {
+              name: "20260101000001_legacy_second",
+              sql: "ALTER TABLE legacy_rebaseline_probe ADD COLUMN prior_value text;\n",
+            };
+            const canonicalBaseline = {
+              name: "20260101000002_canonical_baseline",
+              sql: "CREATE TABLE legacy_rebaseline_probe (id integer PRIMARY KEY, prior_value text);\n",
+            };
+            const compatibility = MigrationBundleLegacyNameSet.make({
+              canonicalName: canonicalBaseline.name,
+              legacyNames: [firstLegacy.name, secondLegacy.name],
+            });
+
+            yield* migrateBundle(
+              db,
+              MigrationBundleConfig.make({
+                migrations: [MigrationBundleEntry.make(firstLegacy), MigrationBundleEntry.make(secondLegacy)],
                 migrationsSchema,
-              },
-              { disableChecks: true }
-            )
-          ).pipe(Effect.flip);
+              })
+            );
+            yield* migrateBundle(
+              db,
+              MigrationBundleConfig.make({
+                legacyNameSets: [compatibility],
+                migrations: [
+                  MigrationBundleEntry.make(canonicalBaseline),
+                  MigrationBundleEntry.make({
+                    name: "20260101000003_after_rebaseline",
+                    sql: "ALTER TABLE legacy_rebaseline_probe ADD COLUMN current_value text;\n",
+                  }),
+                ],
+                migrationsSchema,
+              })
+            );
 
-          expect(invalidNameError._tag).toBe("PostgresError");
-        }),
-        120_000
-      );
-
-      it.effect(
-        "skips a re-baseline only after the complete legacy journal is present",
-        Effect.fnUntraced(function* () {
-          const info = yield* TestDatabaseInfo;
-          const db = yield* makeDrizzle();
-          const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-          const migrationsSchema = pipe(
-            info.schema,
-            O.getOrElse(() => "drizzle")
-          );
-          const firstLegacy = {
-            name: "20260101000000_legacy_first",
-            sql: "CREATE TABLE legacy_rebaseline_probe (id integer PRIMARY KEY);\n",
-          };
-          const secondLegacy = {
-            name: "20260101000001_legacy_second",
-            sql: "ALTER TABLE legacy_rebaseline_probe ADD COLUMN prior_value text;\n",
-          };
-          const canonicalBaseline = {
-            name: "20260101000002_canonical_baseline",
-            sql: "CREATE TABLE legacy_rebaseline_probe (id integer PRIMARY KEY, prior_value text);\n",
-          };
-          const compatibility = MigrationBundleLegacyNameSet.make({
-            canonicalName: canonicalBaseline.name,
-            legacyNames: [firstLegacy.name, secondLegacy.name],
-          });
-
-          yield* migrateBundle(
-            db,
-            MigrationBundleConfig.make({
-              migrations: [MigrationBundleEntry.make(firstLegacy), MigrationBundleEntry.make(secondLegacy)],
-              migrationsSchema,
-            })
-          );
-          yield* migrateBundle(
-            db,
-            MigrationBundleConfig.make({
-              legacyNameSets: [compatibility],
-              migrations: [
-                MigrationBundleEntry.make(canonicalBaseline),
-                MigrationBundleEntry.make({
-                  name: "20260101000003_after_rebaseline",
-                  sql: "ALTER TABLE legacy_rebaseline_probe ADD COLUMN current_value text;\n",
-                }),
-              ],
-              migrationsSchema,
-            })
-          );
-
-          const columns = yield* sql<{ readonly column_name: string }>`
+            const columns = yield* sql<{ readonly column_name: string }>`
             SELECT column_name
             FROM information_schema.columns
             WHERE table_name = 'legacy_rebaseline_probe'
             ORDER BY ordinal_position
           `;
-          expect(A.map(columns, (row) => row.column_name)).toEqual(["id", "prior_value", "current_value"]);
-          const journalNames = yield* sql<{ readonly name: string }>`
+            expect(A.map(columns, (row) => row.column_name)).toEqual(["id", "prior_value", "current_value"]);
+            const journalNames = yield* sql<{ readonly name: string }>`
             SELECT name FROM ${Statement.identifier(migrationsSchema)}.__drizzle_migrations ORDER BY id
           `;
-          expect(
-            A.takeRight(
-              A.map(journalNames, (row) => row.name),
-              3
-            )
-          ).toEqual([firstLegacy.name, secondLegacy.name, "20260101000003_after_rebaseline"]);
-        }),
-        120_000
-      );
+            expect(
+              A.takeRight(
+                A.map(journalNames, (row) => row.name),
+                3
+              )
+            ).toEqual([firstLegacy.name, secondLegacy.name, "20260101000003_after_rebaseline"]);
+          }),
+          120_000
+        );
 
-      it.effect(
-        "upgrades a complete version-zero legacy journal before skipping a re-baseline",
-        Effect.fnUntraced(function* () {
-          const info = yield* TestDatabaseInfo;
-          const db = yield* makeDrizzle();
-          const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-          const migrationsSchema = pipe(
-            info.schema,
-            O.getOrElse(() => "drizzle")
-          );
-          const migrationsTable = "__drizzle_migrations_v0_rebaseline";
-          const firstLegacy = {
-            name: "20260103000000_legacy_first",
-            sql: "CREATE TABLE legacy_v0_rebaseline_probe (id integer PRIMARY KEY);\n",
-          };
-          const secondLegacy = {
-            name: "20260103000001_legacy_second",
-            sql: "ALTER TABLE legacy_v0_rebaseline_probe ADD COLUMN prior_value text;\n",
-          };
-          const canonicalBaseline = {
-            name: "20260103000002_canonical_baseline",
-            sql: "CREATE TABLE legacy_v0_rebaseline_probe (id integer PRIMARY KEY, prior_value text);\n",
-          };
+        it.effect(
+          "upgrades a complete version-zero legacy journal before skipping a re-baseline",
+          Effect.fnUntraced(function* () {
+            const info = yield* TestDatabaseInfo;
+            const db = yield* makeDrizzle();
+            const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+            const migrationsSchema = pipe(
+              info.schema,
+              O.getOrElse(() => "drizzle")
+            );
+            const migrationsTable = "__drizzle_migrations_v0_rebaseline";
+            const firstLegacy = {
+              name: "20260103000000_legacy_first",
+              sql: "CREATE TABLE legacy_v0_rebaseline_probe (id integer PRIMARY KEY);\n",
+            };
+            const secondLegacy = {
+              name: "20260103000001_legacy_second",
+              sql: "ALTER TABLE legacy_v0_rebaseline_probe ADD COLUMN prior_value text;\n",
+            };
+            const canonicalBaseline = {
+              name: "20260103000002_canonical_baseline",
+              sql: "CREATE TABLE legacy_v0_rebaseline_probe (id integer PRIMARY KEY, prior_value text);\n",
+            };
 
-          yield* sql`CREATE SCHEMA IF NOT EXISTS ${Statement.identifier(migrationsSchema)}`;
-          yield* sql`
+            yield* sql`CREATE SCHEMA IF NOT EXISTS ${Statement.identifier(migrationsSchema)}`;
+            yield* sql`
             CREATE TABLE ${Statement.identifier(migrationsSchema)}.${Statement.identifier(migrationsTable)} (
               id serial PRIMARY KEY,
               hash text NOT NULL,
               created_at bigint
             )
           `;
-          yield* sql`CREATE TABLE legacy_v0_rebaseline_probe (id integer PRIMARY KEY)`;
-          yield* sql`ALTER TABLE legacy_v0_rebaseline_probe ADD COLUMN prior_value text`;
-          const firstLegacyHash = yield* sha256Hex(firstLegacy.sql);
-          const secondLegacyHash = yield* sha256Hex(secondLegacy.sql);
-          yield* sql`
+            yield* sql`CREATE TABLE legacy_v0_rebaseline_probe (id integer PRIMARY KEY)`;
+            yield* sql`ALTER TABLE legacy_v0_rebaseline_probe ADD COLUMN prior_value text`;
+            const firstLegacyHash = yield* sha256Hex(firstLegacy.sql);
+            const secondLegacyHash = yield* sha256Hex(secondLegacy.sql);
+            yield* sql`
             INSERT INTO ${Statement.identifier(migrationsSchema)}.${Statement.identifier(migrationsTable)}
               (hash, created_at)
             VALUES
@@ -410,82 +412,83 @@ if (!shouldRunPgliteIntegration) {
               )
           `;
 
-          yield* migrateBundle(
-            db,
-            MigrationBundleConfig.make({
-              legacyNameSets: [
-                MigrationBundleLegacyNameSet.make({
-                  canonicalName: canonicalBaseline.name,
-                  legacyNames: [firstLegacy.name, secondLegacy.name],
-                }),
-              ],
-              migrations: [
-                MigrationBundleEntry.make(canonicalBaseline),
-                MigrationBundleEntry.make({
-                  name: "20260103000003_after_rebaseline",
-                  sql: "ALTER TABLE legacy_v0_rebaseline_probe ADD COLUMN current_value text;\n",
-                }),
-              ],
-              migrationsSchema,
-              migrationsTable,
-            })
-          );
+            yield* migrateBundle(
+              db,
+              MigrationBundleConfig.make({
+                legacyNameSets: [
+                  MigrationBundleLegacyNameSet.make({
+                    canonicalName: canonicalBaseline.name,
+                    legacyNames: [firstLegacy.name, secondLegacy.name],
+                  }),
+                ],
+                migrations: [
+                  MigrationBundleEntry.make(canonicalBaseline),
+                  MigrationBundleEntry.make({
+                    name: "20260103000003_after_rebaseline",
+                    sql: "ALTER TABLE legacy_v0_rebaseline_probe ADD COLUMN current_value text;\n",
+                  }),
+                ],
+                migrationsSchema,
+                migrationsTable,
+              })
+            );
 
-          const journalNames = yield* sql<{ readonly name: string }>`
+            const journalNames = yield* sql<{ readonly name: string }>`
             SELECT name
             FROM ${Statement.identifier(migrationsSchema)}.${Statement.identifier(migrationsTable)}
             ORDER BY id
           `;
-          expect(A.map(journalNames, (row) => row.name)).toEqual([
-            firstLegacy.name,
-            secondLegacy.name,
-            "20260103000003_after_rebaseline",
-          ]);
-        }),
-        120_000
-      );
+            expect(A.map(journalNames, (row) => row.name)).toEqual([
+              firstLegacy.name,
+              secondLegacy.name,
+              "20260103000003_after_rebaseline",
+            ]);
+          }),
+          120_000
+        );
 
-      it.effect(
-        "refuses a partial legacy journal instead of applying a conflicting baseline",
-        Effect.fnUntraced(function* () {
-          const info = yield* TestDatabaseInfo;
-          const db = yield* makeDrizzle();
-          const migrationsSchema = pipe(
-            info.schema,
-            O.getOrElse(() => "drizzle")
-          );
-          const firstLegacy = {
-            name: "20260102000000_legacy_first",
-            sql: "CREATE TABLE partial_rebaseline_probe (id integer PRIMARY KEY);\n",
-          };
-          const canonicalBaseline = {
-            name: "20260102000002_canonical_baseline",
-            sql: "CREATE TABLE partial_rebaseline_probe (id integer PRIMARY KEY);\n",
-          };
-          yield* migrateBundle(
-            db,
-            MigrationBundleConfig.make({ migrations: [MigrationBundleEntry.make(firstLegacy)], migrationsSchema })
-          );
+        it.effect(
+          "refuses a partial legacy journal instead of applying a conflicting baseline",
+          Effect.fnUntraced(function* () {
+            const info = yield* TestDatabaseInfo;
+            const db = yield* makeDrizzle();
+            const migrationsSchema = pipe(
+              info.schema,
+              O.getOrElse(() => "drizzle")
+            );
+            const firstLegacy = {
+              name: "20260102000000_legacy_first",
+              sql: "CREATE TABLE partial_rebaseline_probe (id integer PRIMARY KEY);\n",
+            };
+            const canonicalBaseline = {
+              name: "20260102000002_canonical_baseline",
+              sql: "CREATE TABLE partial_rebaseline_probe (id integer PRIMARY KEY);\n",
+            };
+            yield* migrateBundle(
+              db,
+              MigrationBundleConfig.make({ migrations: [MigrationBundleEntry.make(firstLegacy)], migrationsSchema })
+            );
 
-          const failure = yield* migrateBundle(
-            db,
-            MigrationBundleConfig.make({
-              legacyNameSets: [
-                MigrationBundleLegacyNameSet.make({
-                  canonicalName: canonicalBaseline.name,
-                  legacyNames: [firstLegacy.name, "20260102000001_legacy_second"],
-                }),
-              ],
-              migrations: [MigrationBundleEntry.make(canonicalBaseline)],
-              migrationsSchema,
-            })
-          ).pipe(Effect.flip);
+            const failure = yield* migrateBundle(
+              db,
+              MigrationBundleConfig.make({
+                legacyNameSets: [
+                  MigrationBundleLegacyNameSet.make({
+                    canonicalName: canonicalBaseline.name,
+                    legacyNames: [firstLegacy.name, "20260102000001_legacy_second"],
+                  }),
+                ],
+                migrations: [MigrationBundleEntry.make(canonicalBaseline)],
+                migrationsSchema,
+              })
+            ).pipe(Effect.flip);
 
-          expect(failure._tag).toBe("PostgresError");
-          expect(O.getOrElse(failure.message, () => "")).toContain("partial legacy migration history");
-        }),
-        120_000
-      );
-    });
+            expect(failure._tag).toBe("PostgresError");
+            expect(O.getOrElse(failure.message, () => "")).toContain("partial legacy migration history");
+          }),
+          120_000
+        );
+      }
+    );
   });
 }

@@ -1,0 +1,74 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12536794-root-19",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "confidenceScope": "Source-grounded semantic annotation, including explicit unresolved referential concerns; source eligibility and attorney agreement separately governed.",
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "findings": [],
+  "acceptanceBlockers": [],
+  "priorRounds": [],
+  "sourceEligibility": "accepted separately by source critic; not re-certified in structural lane",
+  "attorneyAdjudication": "pending",
+  "rationale": [
+    "Reviewed all32 elements,89 complete lexical terms and83 typed edges against source grammar;17 explicit functional relations preserve the operative actions and tolerance condition. The long preamble retains the true main method boundary; nested blade features and robotic hardware have owned terms without duplication.",
+    "Actual dependencies20/21->19,22->21,23->22,24->23 are preserved. Claim20 additionally depends on the specific19.i determining-step element, a source-supported refinement rather than an invented whole-claim parent. Independent roots1/25 do not supply any reference targets.",
+    "Expected versus actual locations, first/second measurement positions, first/second surface locations and iterative center series remain distinct. Last/previous center selections in20 are not mapped to an arbitrary first or additional center. The unique blade is source-clearly the operated workpiece, while elongated work surface in21 is not silently renamed or equated to it. No actionable semantic finding remains."
+  ],
+  "ambiguityResolution": [
+    {
+      "claimNumber": 20,
+      "quote": "the last estimated root end center",
+      "span": [
+        138,
+        172
+      ],
+      "resolution": "Last/previous are order-qualified selections from the iterative center series, not a uniquely named single previously anchored center. No arbitrary single-target antecedent is added; source condition remains fully represented."
+    },
+    {
+      "claimNumber": 21,
+      "quote": "the elongated work surface",
+      "span": [
+        124,
+        150
+      ],
+      "resolution": "Native surface differs from workpiece. A blade is the unique operated workpiece, but no introduced elongated work surface provides a clear identity; preserve term and recorded uncertainty without automatic alias."
+    }
+  ],
+  "audit": {
+    "treesReviewed": 6,
+    "elementsReviewed": 32,
+    "termsReviewed": 89,
+    "elementAndTermAnchorsVerified": 121,
+    "functionalTextAnchorsVerified": 63,
+    "typedEdgesReviewed": 83,
+    "edgeKinds": {
+      "part-of": 26,
+      "functional": 17,
+      "antecedent": 34,
+      "depends-on-element": 6
+    },
+    "allElementAndTermUtf16SlicesVerified": true,
+    "allFunctionalTextSlicesVerified": true,
+    "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+    "allLocalAndCrossClaimTermEndpointsVerified": true,
+    "nestedListContainmentVerified": true,
+    "uniqueTermOwnershipVerified": true,
+    "selectedNativeClaimTextAndClaimsXmlDigestVerified": true,
+    "schemaDecode": "separate-root-validation",
+    "selectedScopeComplete": true
+  },
+  "independence": "Independent critic, not producer. Read exact canonical native source/context, fresh semantic proposals, protocol and schemas; no implementation/rules/predictions/synthetic/conformance archives/network/secrets/git/delegation. Helpers verified supplied source normalization,digest,spans,ordered functional parts and reference geometry only. No decomposer was run or reimplemented.",
+  "acceptanceScope": "Both extractor0.95 and critic0.96 meet threshold with no actionable semantic finding. Clear functional structure is accepted while missing or genuinely ambiguous identities remain explicitly recorded. No claim construction, attorney verdict, unrestricted semantic accuracy or corpus completion is asserted."
+}

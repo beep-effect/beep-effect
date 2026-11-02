@@ -4,8 +4,9 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { AST as OracleAST } from "minimatch";
+import { legacyFragment, legacyOracle } from "../legacyOracle.ts";
 
 const runs = { arbitrary: fcRuns(100) };
 const atoms = Arbitrary.schema(
@@ -62,16 +63,22 @@ describe("AST property floor", () => {
     runs
   );
   it.effect.prop(
-    "compiled matching preserves minimatch dialect fidelity",
-    [patterns, S.Literals(["a", "b", "c", "."]).pipe(S.Array, Arbitrary.schema), Arbitrary.schema(S.Boolean)],
+    "independent legacy fragment corpus agrees for fresh arbitrary candidates",
+    [
+      Arbitrary.schema(S.Literals(legacyOracle.patterns)),
+      S.Array(S.Literals(["a", "b", "c", "."]))
+        .check(S.isBetweenLength(0, 12))
+        .pipe(Arbitrary.schema),
+      Arbitrary.schema(S.Boolean),
+    ],
     ([text, chars, dot]) =>
       Effect.sync(() => {
         const candidate = A.join(chars, "");
         const actual = AST.fromGlob(text, { dot }).toMMPattern();
-        const expected = OracleAST.fromGlob(text, { dot }).toMMPattern();
+        const expected = legacyFragment(text, { dot });
         assert.strictEqual(
-          typeof actual === "string" ? actual === candidate : actual.test(candidate),
-          typeof expected === "string" ? expected === candidate : expected.test(candidate)
+          P.isString(actual) ? actual === candidate : actual.test(candidate),
+          P.isString(expected) ? expected === candidate : expected.test(candidate)
         );
       }),
     runs

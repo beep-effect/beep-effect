@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "agent-outcome-experiments",
+    "title": "Useful agent outcomes and Phoenix experiments",
+    "status": "paused",
+    "created": "2026-10-27",
+    "updated": "2026-10-27",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/agent-outcome-experiments",
+  "lifecycle": "paused",
+  "mission": "Turn qualified telemetry into understandable task outcomes, calibrated annotations and repeatable experiments that improve harness experience and accepted work.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-observability-rebuild",
+    "graduated": "2026-10-27"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agent-outcome-experiments/README.md",
+    "goals/agent-outcome-experiments/SPEC.md",
+    "goals/agent-outcome-experiments/PLAN.md",
+    "goals/agent-outcome-experiments/GOAL.md",
+    "goals/agent-outcome-experiments/research/SOURCES.md",
+    "explorations/agent-observability-rebuild/BRIEF.md",
+    "explorations/agent-observability-rebuild/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agent-outcome-experiments/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/agent-outcome-experiments/GOAL.md)\" -le 4000",
+    "jq . goals/agent-outcome-experiments/ops/manifest.json",
+    "rg -n \"agent-outcome-experiments|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/agent-outcome-experiments",
+    "git diff --check -- goals/agent-outcome-experiments",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Authored but not started; operator requested implementation-packet preparation, not execution.",
+  "resumeConditions": [
+    "Explicit launch of this packet after dependency proof; refresh live state before changes."
+  ],
+  "dependencies": [
+    "goals/agent-observability-foundation",
+    "goals/harness-telemetry-enrollment"
+  ]
+}

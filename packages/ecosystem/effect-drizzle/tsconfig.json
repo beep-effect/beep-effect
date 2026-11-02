@@ -98,7 +98,9 @@
           "errorPayloadShadowsName": "error",
           "experimentalApiUsage": "off",
           "extendsNativeError": "error",
+          "failCauseToConstructor": "error",
           "flatMapConditionalToFilterOrFail": "error",
+          "flatMapIdentityToFlatten": "error",
           "flatMapIgnoredParamToAndThen": "error",
           "flatMapToMap": "error",
           "flatMapToTap": "error",
@@ -122,10 +124,13 @@
           "lazyEffect": "error",
           "lazyPromiseInEffectSync": "error",
           "leakingRequirements": "error",
+          "manualMetricTapToTrack": "error",
+          "mapConstToAs": "error",
+          "mapMapErrorToMapBoth": "error",
           "mapSomeToAsSome": "error",
           "matchEffectToMapBoth": "error",
           "matchEffectToMatch": "error",
-          "missedPipeableOpportunity": "off",
+          "missedPipeableOpportunity": "error",
           "missingEffectContext": "error",
           "missingEffectError": "error",
           "missingEffectServiceDependency": "error",
@@ -199,6 +204,9 @@
   "references": [
     {
       "path": "../../drivers/pglite/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/markdown/tsconfig.json"
     },
     {
       "path": "../../tooling/library/repo-utils/tsconfig.json"

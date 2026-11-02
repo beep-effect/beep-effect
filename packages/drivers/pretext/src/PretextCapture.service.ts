@@ -1,6 +1,8 @@
 /**
  * Font-metrics capture service contract.
  *
+ * **Details**
+ *
  * The service tag and request contract are pure and browser-safe: consumers
  * program against `PretextCapture` without touching the DOM. The live layer
  * lives at `@beep/pretext/browser`; the fixture-backed test layer lives in

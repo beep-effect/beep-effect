@@ -19,7 +19,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Arr from "effect/Array";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -871,8 +871,8 @@ const decodeConversation = S.decodeUnknownEffect(Conversation);
 const backfillSegmentIds = (
   conversationId: string,
   segments: ReadonlyArray<unknown>,
-): Effect.Effect<ReadonlyArray<unknown>, PlatformError, Crypto.Crypto> =>
-  Effect.forEach(segments, (segment, index): Effect.Effect<unknown, PlatformError, Crypto.Crypto> => {
+): Effect.Effect<ReadonlyArray<unknown>, PlatformError, Digest.Digest> =>
+  Effect.forEach(segments, (segment, index): Effect.Effect<unknown, PlatformError, Digest.Digest> => {
     if (!isRecord(segment)) return Effect.succeed(segment);
     const id = segment.id;
     if (P.isString(id) && id.length > 0) return Effect.succeed(segment);
@@ -915,10 +915,10 @@ const backfillSegmentIds = (
  */
 export const initializeConversation = (
   input: unknown,
-): Effect.Effect<Conversation, S.SchemaError | PlatformError, Crypto.Crypto> => {
+): Effect.Effect<Conversation, S.SchemaError | PlatformError, Digest.Digest> => {
   if (!isRecord(input)) return decodeConversation(input);
   const prepared: { [key: string]: unknown } = { ...input };
-  const backfilled: Effect.Effect<{ readonly [key: string]: unknown }, PlatformError, Crypto.Crypto> =
+  const backfilled: Effect.Effect<{ readonly [key: string]: unknown }, PlatformError, Digest.Digest> =
     P.isString(prepared.id) && Arr.isArray(prepared.transcriptSegments)
       ? Effect.map(backfillSegmentIds(prepared.id, prepared.transcriptSegments), (transcriptSegments) => ({
           ...prepared,

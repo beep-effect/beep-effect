@@ -1,4 +1,4 @@
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 /**
  * CLI: Ingest Command
  *
@@ -40,7 +40,6 @@ import type { ManifestDocument } from "../../Domain/Schema/Batch.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { ConfigService } from "../../Service/Config.ts";
 import { StorageService } from "../../Service/Storage.ts";
-import type { HashingError } from "../../Utils/Hash.ts";
 import { sha256SyncFull } from "../../Utils/Hash.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
 
@@ -96,8 +95,8 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   prefix: O.Option<string>
 ): Effect.fn.Return<
   void,
-  KeyValueStore.KeyValueStoreError | PlatformError.PlatformError | S.SchemaError | HashingError,
-  ConfigService | FileSystem.FileSystem | Path.Path | StorageService | Crypto.Crypto
+  KeyValueStore.KeyValueStoreError | PlatformError.PlatformError | S.SchemaError,
+  ConfigService | FileSystem.FileSystem | Path.Path | StorageService | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

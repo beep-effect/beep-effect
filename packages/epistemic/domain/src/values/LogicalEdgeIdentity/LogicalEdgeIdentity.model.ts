@@ -1,6 +1,8 @@
 /**
  * Logical edge identity value object and digest.
  *
+ * **Details**
+ *
  * The identity is the application-side canonicalization whose digest becomes the
  * `logical_key` column every bitemporal backstop partitions on. It exists because
  * a multi-column key cannot carry the partition: SQL treats NULL components as

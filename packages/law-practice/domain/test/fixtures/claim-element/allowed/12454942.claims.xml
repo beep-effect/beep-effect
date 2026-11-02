@@ -1,0 +1,67 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A wind turbine comprising blades which extend outwardly from and sweep around a horizontal axis of rotation; a nacelle comprising at least a horizontal shaft driven by the blades and a drive train; an upright structure supporting the nacelle and blades, the upright structure extending below the sweep of the blades, and a generally horizontal floating base supporting the upright structure, wherein,
+<claim-text>the upright structure comprises a pivot supporting the nacelle, and</claim-text>
+<claim-text>the wind turbine further comprises an elongate vertical element supported by the pivot, the elongate vertical element being connected to the nacelle for movement with the nacelle, the elongate vertical element carrying a weight, the weight maintaining the axis of rotation of the blades in a horizontal position as the floating base pitches, the pivot being located downwind of the blades and upwind of the elongate vertical element.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The wind turbine of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the pivot is above a center of gravity of the nacelle.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The wind turbine of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the upright structure comprises two generally vertical legs spaced behind the blades and a cross-bar connecting upper parts of the two generally vertical legs, the cross-bar carrying the pivot.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The wind turbine of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the pivot is a revolute joint positioned behind the blades and wherein the elongate vertical element is positioned behind the pivot.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The wind turbine of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the elongate vertical element is rigid and wherein the rotatable support comprises restraining walls limiting lateral motion of the elongate vertical element when the rotatable support rolls.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The wind turbine of <claim-ref idref="CLM-00005">claim 5</claim-ref> further comprising rollers mounted to the elongate vertical element, the rollers engaging the restraining walls when the rotatable support rolls.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The wind turbine of <claim-ref idref="CLM-00001">claim 1</claim-ref> further comprising at least one magnet attached to one of the elongate vertical element and the rotatable support, and at least one coil attached to the other of the elongate vertical element and the rotatable support, the magnet and coil cooperating to generate an electric current when the rotatable support pitches.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The wind turbine of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the elongate vertical element and the weight are entirely above the surface of water on which the wind turbine is floating.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The wind turbine of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the weight is mounted on a lower portion of the elongate vertical element.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The wind turbine of <claim-ref idref="CLM-00009">claim 9</claim-ref> wherein the elongate vertical element is rigid and wherein the floating base comprises restraining walls limiting lateral motion of the elongate vertical element when the floating base rolls.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The wind turbine of <claim-ref idref="CLM-00010">claim 10</claim-ref> further comprising rollers mounted to the elongate vertical element, the rollers engaging the restraining walls when the floating base rolls.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. The wind turbine of <claim-ref idref="CLM-00010">claim 10</claim-ref> wherein the weight extends below the floating base and into water on which the wind turbine is floating.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The wind turbine of <claim-ref idref="CLM-00010">claim 10</claim-ref> wherein the weight is entirely above the surface of water on which the wind turbine is floating.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. The wind turbine of <claim-ref idref="CLM-00010">claim 10</claim-ref> further comprising at least one magnet attached to one of the elongate vertical element and the rotatable support, and at least one coil attached to the other of the elongate vertical element and the rotatable support, the magnet and coil cooperating to generate an electric current when the rotatable support pitches.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. A wind turbine comprising blades which extend outwardly from and sweep around a horizontal axis of rotation; a nacelle comprising at least a horizontal shaft driven by the blades and a drive train; an upright structure supporting the nacelle and blades, the upright structure extending below the sweep of the blades, and a generally horizontal floating base supporting the upright structure, wherein,
+<claim-text>the upright structure is mounted to a rotatable support carried by the base, so that the upright structure, the nacelle, and the blades rotate together about a vertical axis with respect to the base,</claim-text>
+<claim-text>the upright structure, the nacelle, and the blades have a collective center of gravity that is positioned behind the vertical axis,</claim-text>
+<claim-text>the upright structure comprises a pivot supporting the nacelle, and</claim-text>
+<claim-text>the wind turbine further comprises an elongate vertical element connected to the nacelle for movement with the nacelle, the elongate vertical element carrying a weight, the weight maintaining the axis of rotation of the blades in a horizontal position as the floating base pitches.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. The wind turbine of <claim-ref idref="CLM-00015">claim 15</claim-ref> wherein the pivot is above a center of gravity of the nacelle.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text>17. The wind turbine of <claim-ref idref="CLM-00015">claim 15</claim-ref> wherein the upright structure comprises two generally vertical legs spaced behind the blades and a cross-bar connecting upper parts of the two generally vertical legs, the cross-bar carrying the pivot.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text>18. The wind turbine of <claim-ref idref="CLM-00015">claim 15</claim-ref> wherein the pivot is a revolute joint positioned behind the blades and wherein the elongate vertical element is positioned behind the pivot.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text>19. The wind turbine of <claim-ref idref="CLM-00015">claim 15</claim-ref> further comprising at least one magnet attached to one of the elongate vertical element and the rotatable support, and at least one coil attached to the other of the elongate vertical element and the rotatable support, the magnet and coil cooperating to generate an electric current when the rotatable support pitches.</claim-text>
+</claim>
+</claims>

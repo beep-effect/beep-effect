@@ -25,7 +25,7 @@ import type {
   MatterFolderDirectory,
   TagLedger,
 } from "@beep/law-practice-use-cases/MailTagging";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 /**
  * Layer providing the attachment filer.
@@ -46,7 +46,7 @@ import type * as Crypto from "effect/Crypto";
 export const AttachmentFilerLive: Layer.Layer<
   AttachmentFiler,
   never,
-  Mailbox | MatterFolderDirectory | DocumentStore | KnownDocuments | FilingLedger | Crypto.Crypto
+  Mailbox | MatterFolderDirectory | DocumentStore | KnownDocuments | FilingLedger | Digest.Digest
 > = Layer.effect(AttachmentFiler, makeAttachmentFiler);
 
 /**
@@ -100,7 +100,7 @@ export const MailTaggingUndoLive: Layer.Layer<MailTaggingUndo, never, Mailbox | 
  *
  * What remains to provide is every port: the mailbox, the matter and
  * matter-folder directories, the document store, the known-documents index,
- * both ledgers, the checkpoint store, and `Crypto` for content hashes.
+ * both ledgers, the checkpoint store, and `Digest` for content hashes.
  *
  * **Example** (Wire every mail-tagging use-case)
  *
@@ -125,5 +125,5 @@ export const MailTaggingUseCasesLive: Layer.Layer<
   | TagLedger
   | FilingLedger
   | BackfillCheckpointStore
-  | Crypto.Crypto
+  | Digest.Digest
 > = Layer.merge(MailTaggingUndoLive, Layer.provideMerge(MailTaggingJobLive, AttachmentFilerLive));

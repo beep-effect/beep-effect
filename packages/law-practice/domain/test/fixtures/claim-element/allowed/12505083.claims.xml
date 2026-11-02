@@ -1,0 +1,81 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A mobile device computer-based tracking system, comprising:
+<claim-text>at least one non-transitory computer readable memory storing at least one location indexed notarized ledger and software instructions;</claim-text>
+<claim-text>at least one processor coupled with the at least one memory, which upon execution of the software instructions, performs operations comprising:
+<claim-text>receiving, from a mobile device, a set of location data points, each location data point including geographic data and associated metadata;</claim-text>
+<claim-text>for each respective location data point in the set of location data points:
+<claim-text>generating a location index as a function of at least the geographic data of the respective location data point;</claim-text>
+<claim-text>identifying a corresponding notarized ledger from the at least one location indexed notarized ledger stored in the at least one memory based on the location index;</claim-text>
+<claim-text>creating a record of the respective location data point from the mobile device, wherein the record includes the associated metadata including at least a timestamp and a device identifier of the mobile device associated with the respective location data point; and</claim-text>
+<claim-text>recording a transaction representing the record on the identified notarized ledger;</claim-text>
+</claim-text>
+<claim-text>generating a movement history of the mobile device by accessing the records of the location data points from multiple notarized ledgers, wherein the records of the location data points represent movement; and</claim-text>
+<claim-text>storing at least a summary of the movement history as a second transaction on a parent ledger corresponding to a first geographic area encompassing multiple location indices.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the associated metadata includes at least one of: the timestamp, a speed of the mobile device, a direction of the mobile device, or a duration of time the mobile device remained at a location.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one location indexed notarized ledger comprises a plurality of notarized ledgers arranged in a hierarchical relationship comprising at least one parent ledger and one or more child ledgers.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein each child ledger corresponds to a second geographic area that is a subset of the first geographic area that corresponds to parent ledger of the child ledger.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein generating the location index comprises generating a hash from the geographic data.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the location index comprises at least one of: an S2 cell identifier, a postal code, a geofence identifier, a plus code, or a building identifier.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations further comprise:
+<claim-text>detecting when the mobile device crosses from a second geographic area corresponding to a first notarized ledger to a third geographic area corresponding to a second notarized ledger; and</claim-text>
+<claim-text>recording a transition record on at least one of the first notarized ledger or the second notarized ledger.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations further comprise:
+<claim-text>minting a non-fungible token (NFT) when the mobile device enters a specified geographic area; and</claim-text>
+<claim-text>burning the NFT when the mobile device leaves the specified geographic area.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations further comprise granting the mobile device access to a particular notarized ledger after verifying that the movement history includes a record of the mobile device having previously been present at one or more prerequisite geographic locations.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations further comprise implementing a multi-factor authentication for accessing a particular notarized ledger, wherein at least one authentication factor comprises verification that the mobile device is currently located within a geographic area corresponding to the particular notarized ledger.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the movement history is accessible to authorized entities having ownership of a non-fungible token (NFT) stored on at least one notarized ledger.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations further comprise generating a visual presentation of the movement history.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the mobile device is associated with a gaming application, and wherein the records of the location data points include game state information corresponding to virtual locations within the gaming application.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the mobile device is associated with a medical application, and wherein the records of the location data points include biological tracking.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations further comprise generating the location index based on image-based descriptors.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations further comprise allocating a digital asset to an account associated with the mobile device based on the location data points received from the mobile device.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations further comprise generating notifications when the mobile device enters or exits specified geographic areas.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the records of the location data points are stored with different levels of detail across multiple ones of the at least one location indexed notarized ledger, with child ledgers storing more detailed movement information and parent ledgers storing summarized movement information.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations further comprise providing access to unlocked content based on specific movements determined from the movement history of the mobile device.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one location indexed notarized ledger includes at least two notarized ledgers of different types, and wherein the at least two of the notarized ledgers are configured according to different protocols.</claim-text>
+</claim>
+</claims>

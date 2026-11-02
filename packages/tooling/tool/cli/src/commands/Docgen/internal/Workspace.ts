@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { DomainError, FsUtils, findRepoRoot, GlobOptions, resolveWorkspaceDirs } from "@beep/repo-utils";
+import { DomainError, FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import {
   CanonicalDocgenConfigInput,
   createCanonicalDocgenConfig,
@@ -23,6 +23,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { isLabsWorkspacePath, LABS_PATH_IGNORE_GLOB } from "../../../internal/cli/Labs/index.ts";
+import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { byRelativePathAscending, DocgenConfigDocument, DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 import type { NoSuchFileError } from "@beep/repo-utils";
 import type { DocgenPackageStatus, ResolveDocgenWorkspacePackageOptions } from "../Docgen.schemas.ts";
@@ -99,7 +100,9 @@ export const discoverOrphanDocgenConfigPaths: (
     const fsUtils = yield* FsUtils;
     const path = yield* Path.Path;
     const repoRoot = rootDir ?? (yield* findRepoRoot());
-    const workspaceDirs = yield* resolveWorkspaceDirs(repoRoot);
+    const workspaceDirs = yield* workspaceDirectories(repoRoot).pipe(
+      Effect.mapError(DomainError.newCause("Failed to discover workspace packages"))
+    );
     const canonicalWorkspaceDirs = MutableHashSet.empty<string>();
 
     for (const [, absolutePath] of workspaceDirs) {
@@ -337,7 +340,9 @@ export const discoverDocgenWorkspacePackages: (
 > = Effect.fn("DocgenOperations.discoverDocgenWorkspacePackages")(function* (rootDir?: string) {
   const path = yield* Path.Path;
   const repoRoot = rootDir ?? (yield* findRepoRoot());
-  const workspaceDirs = yield* resolveWorkspaceDirs(repoRoot);
+  const workspaceDirs = yield* workspaceDirectories(repoRoot).pipe(
+    Effect.mapError(DomainError.newCause("Failed to discover workspace packages"))
+  );
   // Labs are ceremony-exempt (goals/lab-apps-lifecycle D2): lab workspaces are
   // never docgen participants, so a stray docgen.json below apps/labs must not
   // turn one into a generation, aggregation, or local-plan target.

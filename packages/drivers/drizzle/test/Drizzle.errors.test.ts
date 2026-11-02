@@ -378,7 +378,7 @@ describe("DrizzleError", () => {
 
         expect(decoded._tag).toBe(error._tag);
         expect(decoded.operation).toBe(error.operation);
-        expect(O.isSome(decoded.cause)).toBe(O.isSome(error.cause));
+        assert.strictEqual(O.isSome(decoded.cause), O.isSome(error.cause));
         expect(Eq.equals(decoded.query, error.query)).toBe(true);
         expect(Eq.equals(decoded.params, error.params)).toBe(true);
       }),

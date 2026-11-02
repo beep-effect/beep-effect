@@ -259,6 +259,36 @@ const resolveSpec = Effect.fnUntraced(function* (
 });
 
 /**
+ * Flatten an already-decoded config document at `abs` and its full `extends`
+ * chain into base-most-first layers. `chain` is the visited stack on THIS
+ * branch, `abs` included (copied per branch, so a diamond is legal).
+ *
+ * @param doc - The decoded, not yet absolutized document at `abs`.
+ * @param abs - The normalized absolute path of `doc`.
+ * @param chain - The visited stack on this branch, `abs` included.
+ * @returns The config layers in fold order, own config last.
+ */
+const collectLayers = Effect.fnUntraced(function* (
+  doc: TsconfigJson.Type,
+  abs: string,
+  chain: ReadonlyArray<string>
+): Effect.fn.Return<
+  ReadonlyArray<ConfigLayer>,
+  TsconfigParseError | TsconfigExtendsError | PlatformError.PlatformError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const path = yield* Path.Path;
+  // Parse phase: absolutize this config's path options against its own dir.
+  const absolutized = ResolvedTsconfig.absolutize(doc, path.dirname(abs), path.resolve);
+  // Depth-first and sequential: fully flatten each entry's nested chain before the sibling.
+  const nested = yield* Effect.forEach(extendsSpecs(absolutized), (spec) =>
+    Effect.flatMap(resolveSpec(spec, abs, chain), (target) => collect(target, chain))
+  );
+  // Own config last: it wins over everything it extends.
+  return A.append(A.flatten(nested), { doc: absolutized, path: abs });
+});
+
+/**
  * Collect the flattened, base-most-first list of absolutized config documents
  * for `configPath` and its full `extends` chain. `chain` is the stack of
  * already-visited normalized absolute paths on THIS branch (copied per branch,
@@ -286,21 +316,21 @@ const collect = Effect.fnUntraced(function* (
   }
 
   const doc = yield* loadAbs(abs);
-  // Parse phase: absolutize this config's path options against its own dir.
-  const absolutized = ResolvedTsconfig.absolutize(doc, path.dirname(abs), path.resolve);
-  // Depth-first and sequential: fully flatten each entry's nested chain before the sibling.
-  const nested = yield* Effect.forEach(extendsSpecs(absolutized), (spec) =>
-    Effect.flatMap(resolveSpec(spec, abs, newChain), (target) => collect(target, newChain))
-  );
-  // Own config last: it wins over everything it extends.
-  return A.append(A.flatten(nested), { doc: absolutized, path: abs });
+  return yield* collectLayers(doc, abs, newChain);
 });
 
-// Implementation of TsconfigLoader.resolve; the public contract lives on the static.
-const resolve = Effect.fn("TsconfigLoader.resolve")(function* (configPath: string) {
+/**
+ * Fold the layers of an already-decoded top document at `topAbs` into one
+ * `ResolvedTsconfig`: base-most first onto an empty seed, then the single
+ * `${configDir}` substitution against the TOP config's directory.
+ *
+ * @param doc - The decoded top document.
+ * @param topAbs - Its normalized absolute path.
+ * @returns The resolved record.
+ */
+const resolveFrom = Effect.fnUntraced(function* (doc: TsconfigJson.Type, topAbs: string) {
   const path = yield* Path.Path;
-  const topAbs = normalizeSlashes(path.resolve(configPath));
-  const layers = yield* collect(topAbs, []);
+  const layers = yield* collectLayers(doc, topAbs, [topAbs]);
 
   // Fold base-most first onto an empty seed; each merge sets the accumulated
   // configPath to the derived config, so the seed's is immediately overwritten.
@@ -312,6 +342,23 @@ const resolve = Effect.fn("TsconfigLoader.resolve")(function* (configPath: strin
 
   // Final phase: ${configDir} resolves against the TOP config's directory.
   return ResolvedTsconfig.substituteConfigDir(acc, path.dirname(topAbs));
+});
+
+// Implementation of TsconfigLoader.resolve; the public contract lives on the static.
+const resolve = Effect.fn("TsconfigLoader.resolve")(function* (configPath: string) {
+  const path = yield* Path.Path;
+  const topAbs = normalizeSlashes(path.resolve(configPath));
+  const doc = yield* loadAbs(topAbs);
+  return yield* resolveFrom(doc, topAbs);
+});
+
+// Implementation of TsconfigLoader.resolveDocument; the public contract lives on the static.
+const resolveDocument = Effect.fn("TsconfigLoader.resolveDocument")(function* (
+  document: TsconfigJson.Type,
+  configPath: string
+) {
+  const path = yield* Path.Path;
+  return yield* resolveFrom(document, normalizeSlashes(path.resolve(configPath)));
 });
 
 // Implementation of TsconfigLoader.compilerOptions; the public contract lives on the static.
@@ -402,6 +449,37 @@ export abstract class TsconfigLoader {
    *
    */
   static readonly resolve = resolve;
+
+  /**
+   * Resolve a tsconfig.json whose own document is already in hand (read and
+   * decoded through {@link TsconfigLoader.load}, or built in memory) at
+   * `configPath`: the same `extends` pipeline as {@link TsconfigLoader.resolve}
+   * without reading the named file again. Only the configs it extends are
+   * read from disk.
+   *
+   * **Details**
+   *
+   * `document` is taken as the config at `configPath` verbatim, so a caller
+   * that validated the own document first (`TsconfigValidator.compilerOptions`)
+   * pays one read for the file. Same typed failures as `resolve`.
+   *
+   * **Example** (Resolve a document the caller already decoded)
+   *
+   * ```ts
+   * import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const document = yield* TsconfigLoader.load("./tsconfig.json");
+   *   return yield* TsconfigLoader.resolveDocument(document, "./tsconfig.json");
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category parsing
+   * @since 0.0.0
+   */
+  static readonly resolveDocument = resolveDocument;
 
   /**
    * Resolve a tsconfig.json's full `extends` chain and project out the

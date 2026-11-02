@@ -11,7 +11,6 @@ import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { SystemdUnitPath } from "../../internal/systemd/index.ts";
-import { GraftDeepCoverage } from "../Graft/Graft.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Refs/Refs.schemas");
 const MemberName = S.NonEmptyString.check(S.isPattern(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/u));
@@ -22,43 +21,13 @@ const MemberBranch = S.NonEmptyString.check(
     description: "Reference branch with safe slash-separated alphanumeric, dash, and underscore components.",
   })
 );
-const RelativeDirectory = S.NonEmptyString.check(
-  S.isPattern(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[^\p{Cc}]+$/u, {
-    arbitraryConstraint: { patterns: [{ source: "^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*$", flags: "" }] },
-  })
-);
-
-/**
- * Indexing cost selected for an upstream member.
- *
- * **Example** (Select structural indexing)
- * ```ts
- * import { ReferenceTier } from "@beep/repo-cli/commands/Refs"
- * ReferenceTier.is.structural("structural") // => true
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ReferenceTier = LiteralKit(["deep", "structural"]).pipe(
-  $I.annoteSchema("ReferenceTier", { description: "Paid meaning tier or structural-only indexing." })
-);
-/**
- * Indexing tier of a reference member.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ReferenceTier = typeof ReferenceTier.Type;
-
 /**
  * One pull-only upstream on its configured branch, defaulting to main.
  *
  * **Example** (Describe a member)
  * ```ts
  * import { ReferenceMember } from "@beep/repo-cli/commands/Refs"
- * import * as O from "effect/Option"
- * ReferenceMember.make({ name: "effect", url: "git@github.com:Effect-TS/effect.git", tier: "deep", onlyDir: O.none() }).name // => "effect"
+ * ReferenceMember.make({ name: "effect", url: "git@github.com:Effect-TS/effect.git" }).name // => "effect"
  * ```
  *
  * @category models
@@ -72,8 +41,6 @@ export class ReferenceMember extends S.Opaque<ReferenceMember, { readonly brand:
       S.withDecodingDefaultKey(Effect.succeed("main")),
       S.withConstructorDefault(Effect.succeed("main"))
     ),
-    tier: ReferenceTier,
-    onlyDir: RelativeDirectory.pipe(S.Array, S.OptionFromOptionalKey),
   }).pipe(
     $I.annoteSchema("ReferenceMember", {
       description: "Manifest member refreshed only when clean and on its configured branch.",
@@ -87,7 +54,7 @@ export class ReferenceMember extends S.Opaque<ReferenceMember, { readonly brand:
    * ```ts
    * import { ReferenceMember } from "@beep/repo-cli/commands/Refs"
    * import * as Effect from "effect/Effect";
-   * Effect.isEffect(ReferenceMember.decode({ name: "effect", url: "upstream", tier: "deep" })) // => true
+   * Effect.isEffect(ReferenceMember.decode({ name: "effect", url: "upstream" })) // => true
    * ```
    *
    * @category decoding
@@ -187,7 +154,7 @@ export class ReferenceWorkspaceManifest extends S.Opaque<
 }
 
 /**
- * Terminal outcome of one member's pull and build.
+ * Terminal outcome of one member's pull.
  *
  * **Example** (Recognize a skipped member)
  * ```ts
@@ -204,9 +171,6 @@ export const MemberRefreshOutcome = LiteralKit([
   "skipped-dirty",
   "skipped-off-branch",
   "pull-failed",
-  "build-failed",
-  "skipped-cooldown",
-  "skipped-preflight",
 ]).pipe($I.annoteSchema("MemberRefreshOutcome", { description: "Result of refreshing one upstream member." }));
 /**
  * Terminal member outcome.
@@ -234,15 +198,13 @@ export const MEMBER_REFRESH_DETAIL_MAX_CHARS = 2000;
  * Tail of the failing step's output, bounded so receipts stay small.
  *
  * **Details**
- * Holds the last characters of a failed pull or build, the cooldown
- * preflight's status summary, or the patch-kit preflight's result. It never carries a model response body or an
- * API key.
+ * Holds the last characters of a failed pull or of the missing-checkout notice.
  *
  * **Example** (Accept a bounded detail)
  * ```ts
  * import { MemberRefreshDetail } from "@beep/repo-cli/commands/Refs"
  * import * as S from "effect/Schema"
- * S.is(MemberRefreshDetail)("graft exited 8") // => true
+ * S.is(MemberRefreshDetail)("git pull --ff-only origin main exited 1") // => true
  * ```
  *
  * @category schemas
@@ -260,18 +222,16 @@ export const MemberRefreshDetail = S.String.check(S.isMaxLength(MEMBER_REFRESH_D
 export type MemberRefreshDetail = typeof MemberRefreshDetail.Type;
 
 /**
- * A member receipt, retaining deep-build coverage and failure detail when available.
+ * A member receipt, retaining failure detail when available.
  *
  * **Details**
- * `detail` is present for `pull-failed`, `build-failed`, `skipped-cooldown`,
- * and `skipped-preflight` and absent otherwise. The key is optional, so older `beep-refs-refresh/v1`
- * receipts still decode.
+ * `detail` is present for `pull-failed` and absent otherwise.
  *
  * **Example** (Record a skipped member)
  * ```ts
  * import { MemberRefreshReport } from "@beep/repo-cli/commands/Refs"
  * import * as O from "effect/Option"
- * MemberRefreshReport.make({ name: "effect", outcome: "skipped-dirty", coverage: O.none(), detail: O.none() }).outcome // => "skipped-dirty"
+ * MemberRefreshReport.make({ name: "effect", outcome: "skipped-dirty", detail: O.none() }).outcome // => "skipped-dirty"
  * ```
  *
  * @category models
@@ -281,93 +241,16 @@ export class MemberRefreshReport extends S.Opaque<MemberRefreshReport, { readonl
   S.Struct({
     name: MemberName,
     outcome: MemberRefreshOutcome,
-    coverage: S.OptionFromOptionalKey(GraftDeepCoverage),
     detail: S.OptionFromOptionalKey(MemberRefreshDetail),
   }).pipe(
     $I.annoteSchema("MemberRefreshReport", {
-      description: "Member outcome, optional deep coverage, and failure detail.",
+      description: "Member outcome and optional failure detail.",
     })
   )
 ) {}
 
 /**
- * Workspace build and check results, including bounded diagnostics.
- *
- * **Example** (Record a passing check)
- * ```ts
- * import { ReferenceWorkspaceCheck } from "@beep/repo-cli/commands/Refs"
- * ReferenceWorkspaceCheck.make({ buildExitCode: 0, exitCode: 0, output: "fresh" }).exitCode // => 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ReferenceWorkspaceCheck extends S.Opaque<ReferenceWorkspaceCheck, { readonly brand: unique symbol }>()(
-  S.Struct({ buildExitCode: S.Int, exitCode: S.Int, output: S.String }).pipe(
-    $I.annoteSchema("ReferenceWorkspaceCheck", { description: "Parent structural build and graft check results." })
-  )
-) {}
-
-/**
- * Result of the Graft dist patch-kit check that gates every deep build.
- *
- * **Details**
- * `ok` means `scripts/graft/apply-dist-patches.sh --check` exited 0. `missing`
- * means it exited 1: the installed Graft lacks at least one recorded patch.
- * `unavailable` means the script is absent, could not run, or exited with any
- * other status. Anything but `ok` downgrades every deep member to a structural
- * build.
- *
- * **Example** (Recognize a missing patch kit)
- * ```ts
- * import { PatchKitStatus } from "@beep/repo-cli/commands/Refs"
- * PatchKitStatus.is.missing("missing") // => true
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const PatchKitStatus = LiteralKit(["ok", "missing", "unavailable"]).pipe(
-  $I.annoteSchema("PatchKitStatus", { description: "Outcome of the Graft dist patch-kit check." })
-);
-/**
- * Graft dist patch-kit check outcome.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type PatchKitStatus = typeof PatchKitStatus.Type;
-
-/**
- * Checks a refresh runs once before any member work.
- *
- * **Details**
- * `detail` holds the bounded tail of the patch-kit check output when the
- * status is not `ok`, and is absent otherwise.
- *
- * **Example** (Record a passing preflight)
- * ```ts
- * import { RefsRefreshPreflight } from "@beep/repo-cli/commands/Refs"
- * import * as O from "effect/Option"
- * RefsRefreshPreflight.make({ patchKit: "ok", detail: O.none() }).patchKit // => "ok"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class RefsRefreshPreflight extends S.Opaque<RefsRefreshPreflight, { readonly brand: unique symbol }>()(
-  S.Struct({
-    patchKit: PatchKitStatus,
-    detail: S.OptionFromOptionalKey(MemberRefreshDetail),
-  }).pipe($I.annoteSchema("RefsRefreshPreflight", { description: "Run-level checks recorded before member work." }))
-) {}
-
-/**
  * Durable receipt written after a reference refresh.
- *
- * **Details**
- * `preflight` is an optional key, so receipts written before the patch-kit
- * check existed still decode under `beep-refs-refresh/v1`.
  *
  * **Example** (Inspect the receipt schema)
  * ```ts
@@ -381,15 +264,13 @@ export class RefsRefreshPreflight extends S.Opaque<RefsRefreshPreflight, { reado
  */
 export class RefsRefreshStatus extends S.Opaque<RefsRefreshStatus, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.tag("beep-refs-refresh/v1"),
+    schemaVersion: S.tag("beep-refs-refresh/v2"),
     timestamp: S.String,
     root: S.NonEmptyString,
     members: S.Array(MemberRefreshReport),
-    workspaceCheck: ReferenceWorkspaceCheck,
-    preflight: S.OptionFromOptionalKey(RefsRefreshPreflight),
   }).pipe(
     $I.annoteSchema("RefsRefreshStatus", {
-      description: "One report per manifest member, the workspace check, and the run preflight.",
+      description: "One pull report per manifest member.",
     })
   )
 ) {

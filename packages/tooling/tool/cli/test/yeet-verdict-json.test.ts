@@ -7,6 +7,7 @@ import {
   YeetVerdictJson,
   YeetVerdictLane,
 } from "@beep/repo-cli/test/Yeet";
+import { GitObjectId } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -89,6 +90,7 @@ describe("YeetVerdictJson", () => {
     Effect.gen(function* () {
       const text = yield* YeetVerdictJson.encode(verdict);
       expect(text).not.toContain("mergeReady");
+      expect(text).not.toContain("publishedHeadSha");
     })
   );
 
@@ -123,11 +125,22 @@ describe("YeetVerdictJson", () => {
     })
   );
 
+  it.effect("round-trips the publication commit without replacing the starting head", () =>
+    Effect.gen(function* () {
+      const publishedHeadSha = O.some(GitObjectId.make("1111111111111111111111111111111111111111"));
+      const recorded = YeetVerdict.make({ ...verdict, publishedHeadSha });
+      const decoded = yield* YeetVerdictJson.encode(recorded).pipe(Effect.flatMap(YeetVerdictJson.decode));
+      expect(decoded.head).toBe(verdict.head);
+      expect(decoded.publishedHeadSha).toEqual(publishedHeadSha);
+    })
+  );
+
   it.effect("decodes a verdict written before mergeReady existed", () =>
     Effect.gen(function* () {
       const decoded = yield* YeetVerdictJson.decode(priorVersionVerdictJson);
       assertNone(decoded.mergeReady);
       assertNone(decoded.attemptId);
+      assertNone(decoded.publishedHeadSha);
       expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
     })
   );

@@ -70,7 +70,7 @@ and the timer are slices 2 and 3.
   (`router-for-me`, `codex-cache`, `grok-cache`, `cursor-agent`, `proxy-v1-models`). Zero
   `missing-file`, `invalid-effort`, or `unknown-model`. All four predicted conflicts surfaced:
   - `defaultJSDocMigrateTitlesModel = "grok-4.5"` in
-    `packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts` — `stale`.
+    [`JSDocMigrateTitles.ts` at f16d82e9f1](https://github.com/beep-effect/beep-effect/blob/f16d82e9f16d72f64d42b40284bf2867566e796b/packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts) — `stale` (retired in beep-cli-composition W0).
   - `$HOME/.zshrc` claudex `gpt-6-astra(xhigh)` against the ratified `medium` — `stale`.
   - `gpt-5.6-sol` and the `Extra High` effort label in both
     `$HOME/.config/JetBrains/WebStorm2026.{2,3}/options/CodexLauncher.xml` — `stale`.

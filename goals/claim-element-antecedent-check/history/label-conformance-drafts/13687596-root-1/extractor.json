@@ -1,0 +1,45 @@
+{
+  "familyId": "13687596-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    "Natural language membership:2→1,3→2,4→1,5→4,6→1,7/8/11/12→6,9/10→8. Assembly6 and sub-assembly12 retain explicit method/assembly references rather than being silently reclassified as independent.",
+    "Office action expressly rejects1–12 with matching quoted passages including claims1,3,4,5,6,9,12. Publication predates rejection.",
+    "Provenance reports complete inventory/no intervening CLM; original comparison extracted0 claims, so native in-force corroboration is indirect.",
+    "Possessive its/their spans retained as bare terms; one-metal constituent phrases lack supported determiners and do not create fabricated introductions.",
+    "Round2 claim1 main method boundary is explicit said method comprising at154–164; earlier assembly comprising modifies the object elaborated. Root0–153 and limitation166–1420 retain exact wording. Claim6/12 original boundaries retained after independent critic review."
+  ],
+  "rationale": "Round2 source and independent critic verified: claim1 intended method boundary replaces first incidental assembly comprising; quantified composite-part and said-method terms now belong to root, former sub-limitation terms belong to1.a. Existing seven exact-head antecedent relations retain their anchors and have corrected owners; no new relation needed. Round1 rationale retained.",
+  "priorRounds": [
+    {
+      "round": 1,
+      "confidence": 0.95,
+      "rationale": "Manually selected all elements/terms and exact-head intra-claim edges under P2 lexical rules, using helpers only for chosen quote location. No implementation/predictions read.",
+      "sourceFamilyConcerns": [
+        "Natural language membership:2→1,3→2,4→1,5→4,6→1,7/8/11/12→6,9/10→8. Assembly6 and sub-assembly12 retain explicit method/assembly references rather than being silently reclassified as independent.",
+        "Office action expressly rejects1–12 with matching quoted passages including claims1,3,4,5,6,9,12. Publication predates rejection.",
+        "Provenance reports complete inventory/no intervening CLM; original comparison extracted0 claims, so native in-force corroboration is indirect.",
+        "First canonical comprising selected for1,6,12, and wherein for others. Claim1 initial comprising opens assembly constituents and a later said method comprising colon creates one sub-limitation; this P2 contract choice needs critic review.",
+        "Possessive its/their spans retained as bare terms; one-metal constituent phrases lack supported determiners and do not create fabricated introductions."
+      ]
+    }
+  ]
+}

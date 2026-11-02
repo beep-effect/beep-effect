@@ -23,7 +23,8 @@ import { OutboxAuditIds, OutboxAuditLog } from "./OutboxAuditLog.ts";
 import { makeOutboxToolkitHandlers, OutboxHandlerSettings } from "./OutboxHandlers.ts";
 import { OutboxToolkit } from "./OutboxTools.ts";
 import type { M365Error } from "@beep/m365";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { Stdio } from "effect/Stdio";
@@ -88,7 +89,7 @@ export type OutboxServices = M365 | OutboxAttachmentSource | OutboxAuditLog;
  */
 export const makeOutboxRegistrations = (
   settings: OutboxHandlerSettings
-): Layer.Layer<never, never, OutboxServices | Crypto.Crypto> =>
+): Layer.Layer<never, never, OutboxServices | Digest.Digest> =>
   sanitizedToolkit(OutboxToolkit).pipe(Layer.provide(makeOutboxToolkitHandlers(settings)), Layer.orDie);
 
 /**
@@ -123,17 +124,17 @@ export const makeOutboxRegistrations = (
 export const makeOutboxServerLayer: {
   (
     settings: OutboxHandlerSettings
-  ): (config: M365McpServerConfig) => Layer.Layer<never, never, OutboxServices | Crypto.Crypto | Stdio>;
+  ): (config: M365McpServerConfig) => Layer.Layer<never, never, OutboxServices | Digest.Digest | Stdio>;
   (
     config: M365McpServerConfig,
     settings: OutboxHandlerSettings
-  ): Layer.Layer<never, never, OutboxServices | Crypto.Crypto | Stdio>;
+  ): Layer.Layer<never, never, OutboxServices | Digest.Digest | Stdio>;
 } = dual(
   2,
   (
     config: M365McpServerConfig,
     settings: OutboxHandlerSettings
-  ): Layer.Layer<never, never, OutboxServices | Crypto.Crypto | Stdio> =>
+  ): Layer.Layer<never, never, OutboxServices | Digest.Digest | Stdio> =>
     makeOutboxRegistrations(settings).pipe(
       Layer.provide(
         McpServer.layerStdio({
@@ -196,7 +197,7 @@ export const makeOutboxLiveServices = (
 ): Layer.Layer<
   OutboxServices,
   M365Error | OutboxAttachmentError | OutboxAuditError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest | SecureRandom.SecureRandom
 > =>
   Layer.mergeAll(
     M365.makeAppOnlyLiveLayer(M365AppOnlyConfigInput.make(config.appOnly)),

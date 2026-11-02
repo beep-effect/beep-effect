@@ -1,0 +1,46 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "11341804-root-1",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "previousRound": 1,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 1,
+      "path": "1.c",
+      "anchor": {
+        "startChar": 374,
+        "endChar": 423,
+        "quote": "its desired, predetermined expansion and/or shape"
+      },
+      "determiner": "bare",
+      "beforeHead": "its desired, predetermined expansion and/or shape",
+      "afterHead": "desired, predetermined expansion and/or shape",
+      "action": "changed",
+      "reason": "Its is the outer pronominal determiner of the quoted noun phrase. Remove only its from the head; keep substantive direction, disposition, desired/predetermined modifiers and complete anchor.",
+      "sourceContext": " and/or during the dispensing is treated with heat, thereby obtaining its desired, predetermined expansion and/or shape.",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round1.json",
+      "sha256": "4a323d0a2424fddd3158a3b55f140de7881d7d0aba54b054e1288dc92cf48890"
+    },
+    {
+      "file": "extractor.round1.json",
+      "sha256": "2337379c783a59f3f7efd9ca819fd724e7b1b59e8ad03a5e5033bc3904987dbd"
+    }
+  ],
+  "missingPriorCritic": "critic.json absent at review start; no critic receipt invented",
+  "structureInvariant": "Expected trees are byte-for-byte semantically equal after replacing only audited head fields with their prior values. No anchors, determiners, edges, element structure, source or claim scope changed.",
+  "independence": "Targeted extractor correction from manually reviewed exact canonical/native source context and lexical-head/v1 only. Literal audit flags were checked individually; no generic parser/decomposer, production rules, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "unchanged; pending human review where already required"
+}

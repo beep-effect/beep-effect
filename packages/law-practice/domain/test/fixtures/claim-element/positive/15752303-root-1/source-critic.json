@@ -1,0 +1,78 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "15752303-root-1",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+  ],
+  "findings": [],
+  "evidence": [
+    "Direct XML review confirms explicit ST96 Del/Ins in currently-amended3 and15: claims1and2→claim1 and any1to14→claim1. These are structured proposed amendment semantics, not guessed strike OCR.",
+    "Full pre-OA inventory includes filed Preliminary Amendment JDLUKJQ1 and corresponding marked CLM JDLUKJQ2 plus remarks, no subsequent CLM or non-entry notice before rejection. Native matches surviving wording; examiner numbered1–16 correspondence supports operative form. Acceptance remains source qualification, not attorney construction."
+  ],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "nativePublicationSha256": "2a2f1f4d403354098d494d0863c90301a029dce4764ef98721d926decb180edd",
+    "nativePublicationHashMatches": true,
+    "sourceClaimsXmlSha256": "cc7de7a785421b3f8a313731bc996d26256d6117cfee4eed38676b7d9bc272fb",
+    "sourceClaimsHashMatches": true,
+    "fullInventorySha256": "326791d743a2be7f444126a5244d19ee30ced04c57c30835a546419877970d58",
+    "inventoryReportedCount": 63,
+    "inventoryActualRows": 63,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "JDLUKJQ1RXEAPX0",
+        "documentCode": "A.PE",
+        "officialDate": "2018-02-13T11:13:41.000-0500",
+        "description": "Preliminary Amendment"
+      },
+      {
+        "documentIdentifier": "JDLUKJQ2RXEAPX0",
+        "documentCode": "CLM",
+        "officialDate": "2018-02-13T11:13:41.000-0500",
+        "description": "Claims"
+      },
+      {
+        "documentIdentifier": "JDLUKJQ3RXEAPX0",
+        "documentCode": "REM",
+        "officialDate": "2018-02-13T11:13:41.000-0500",
+        "description": "Applicant Arguments/Remarks Made in an Amendment"
+      },
+      {
+        "documentIdentifier": "JNZFXYCSPXXIFW2",
+        "documentCode": "CLM",
+        "officialDate": "2018-02-13T11:13:41.000-0500",
+        "description": "Claims"
+      }
+    ],
+    "citedOfficeActionInventoryRows": [
+      {
+        "documentIdentifier": "K6ASPVFPRXEAPX2",
+        "documentCode": "CTNF",
+        "officialDate": "2020-02-06T08:47:52.000-0500"
+      }
+    ],
+    "originalCachedHashes": [
+      {
+        "documentIdentifier": "JDLUKJQ2RXEAPX0",
+        "exists": true,
+        "sha256": "d46cbcfd3e05d3080f603c8b9b8124e9d26da1ce67afc9521d5aa597cdb73086",
+        "sha256Matches": true
+      },
+      {
+        "documentIdentifier": "JNZFXYCSPXXIFW2",
+        "exists": true,
+        "sha256": "95851bad9ef9b25a3ad0f91340a50cecefab1e0f1fdb1b0f1a6fd248ea9f3cc4",
+        "sha256Matches": true
+      }
+    ]
+  },
+  "extractorVerdictReviewed": "eligible",
+  "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+  "rationale": "Numbered ground, actual family membership and operative source versions assessed separately. Full inventory chronology is supporting evidence only; unreadable/missing/dependency-conflicting originals remain unresolved."
+}

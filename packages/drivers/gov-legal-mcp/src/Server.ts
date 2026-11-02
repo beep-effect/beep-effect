@@ -1,6 +1,8 @@
 /**
  * MCP server wiring for the thin GovInfo and eCFR stdio host.
  *
+ * **Details**
+ *
  * Both source toolkits register through `sanitizedToolkit`, retain the shipped
  * source-auth gate enum through `gatedLayer`/`composeGatedLayers`, and share one
  * `McpServer.layerStdio` server.

@@ -11,7 +11,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, Html, R, thunkEmptyStr } from "@beep/utils";
 import { replaceAllWith } from "@beep/utils/Str";
 import * as Effect from "effect/Effect";
-import { cast, constant, dual, flow, identity, pipe } from "effect/Function";
+import { cast, constant, dual, flow, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -1259,7 +1259,7 @@ export const renderEffectWith: {
         try: () => renderEffectWithUnsafe(adapter, document),
         catch: toRenderError(adapterName(adapter)),
       })
-    ).pipe(Effect.flatMap(identity))
+    ).pipe(Effect.flatten)
 );
 
 /**

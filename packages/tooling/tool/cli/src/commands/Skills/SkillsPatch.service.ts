@@ -60,7 +60,7 @@ import {
   SkillPatchLabelReceipt,
 } from "./SkillsPatch.schemas.ts";
 import type { Sha256Hex } from "@beep/schema";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { ComputedSkillTree } from "./internal/SkillTree.ts";
 import type { SkillMaterializeRefusal, SkillPatchApplyError, SkillUpstreamContentError } from "./Skills.errors.ts";
 import type { SkillPatchOwnerSource } from "./Skills.patches.ts";
@@ -85,7 +85,7 @@ type PatchRequirements =
   | SkillPatchOwnerSource
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto;
+  | Digest.Digest;
 
 /**
  * Every failure `skills patch add` and `skills patch label` can raise.
@@ -186,7 +186,7 @@ const requireReplayReproduces = Effect.fn("SkillsPatch.requireReplayReproduces")
   effectiveFiles: ReadonlyArray<SkillUpstreamContentFile>,
   files: ReadonlyArray<SkillPatchFile>,
   installed: ComputedSkillTree
-): Effect.fn.Return<void, SkillsCommandError | SkillPatchRefusal | SkillPatchApplyError, Crypto.Crypto> {
+): Effect.fn.Return<void, SkillsCommandError | SkillPatchRefusal | SkillPatchApplyError, Digest.Digest> {
   let tree = effectiveFiles;
   for (const file of files) {
     const text = yield* decodePatchText(skill, PatchSeriesFile.make({ path: file.path, bytes: file.bytes }));

@@ -37,6 +37,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import * as SchemaStatics from "./internal/schemaStatics.ts";
 import type { TString } from "@beep/types";
 import type { PayloadEncoding } from "effect/http-api/HttpApiSchema";
 import type { Get, Paths } from "type-fest";
@@ -86,37 +87,6 @@ const beepBase = BeepBase.make("beep");
 const MODULE_CHARACTERS = /^[A-Za-z0-9_-]+$/;
 const MODULE_LEADING_ALPHA = /^[A-Za-z]/;
 const BASE_CHARACTERS = /^[A-Za-z0-9](?:[A-Za-z0-9_-]*[A-Za-z0-9])?$/;
-const SCHEMA_PROTOCOL_KEYS: ReadonlyArray<PropertyKey> = [
-  "~effect/Schema/Schema",
-  "annotate",
-  "annotateKey",
-  "ast",
-  "check",
-  "make",
-  "makeEffect",
-  "makeOption",
-  "pipe",
-  "rebuild",
-];
-
-const preserveSchemaStatics = <Schema extends S.Top>(
-  source: Schema,
-  annotated: Schema["Rebuild"]
-): AnnotatedSchema<Schema> => {
-  for (const key of Reflect.ownKeys(source)) {
-    if (A.contains(SCHEMA_PROTOCOL_KEYS, key) || Reflect.getOwnPropertyDescriptor(annotated, key) !== undefined) {
-      continue;
-    }
-
-    const descriptor = Reflect.getOwnPropertyDescriptor(source, key);
-
-    if (descriptor !== undefined) {
-      Reflect.defineProperty(annotated, key, descriptor);
-    }
-  }
-
-  return annotated as AnnotatedSchema<Schema>;
-};
 
 /**
  * Bootstrap identity annotation helper for schemas defined before `make` exists.
@@ -943,24 +913,22 @@ type StrictKeyIdentifier<Struct extends object, Identifier extends TString.NonEm
 
 type KeyIdentifierValue<Struct extends object, Identifier extends string> = Get<Struct, KeyIdentifierPath<Identifier>>;
 
-type SchemaStatics<Schema extends S.Top> = Omit<Schema, keyof Schema["Rebuild"] | keyof S.Top>;
-
 /**
  * Rebuilt schema type that retains custom statics after annotations are applied.
  *
  * **Example** (Describe an annotated string schema)
  *
- * ```ts import.meta.vitest name="Describe an annotated string schema"
+ * ```ts
  * import type { AnnotatedSchema } from "@beep/identity/Id"
  * import * as S from "effect/Schema"
  *
  * type AnnotatedString = AnnotatedSchema<typeof S.String>
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
-export type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<Schema>;
+export type AnnotatedSchema<Schema extends S.Top> = SchemaStatics.Preserved<Schema>;
 
 /**
  * Record mapping `$`-prefixed accessor keys to child {@link IdentityComposer} instances,
@@ -968,14 +936,14 @@ export type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaSt
  *
  * **Example** (Name the record `compose` returns)
  *
- * ```ts import.meta.vitest name="Name the record compose returns"
+ * ```ts
  * import type { TaggedModuleRecord } from "@beep/identity/Id"
  *
  * type Modules = TaggedModuleRecord<"@beep/pkg", readonly ["auth", "billing"]>
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TaggedModuleRecord<
   Value extends string,
@@ -1172,8 +1140,10 @@ export interface IdentityComposer<
    * Returns a function that annotates an Effect schema with identity metadata
    * plus optional `httpApiStatus` and encoding fields.
    *
-   * @since 0.0.0
+   * @throws A tagged invariant defect when the rebuilt schema rejects a custom static descriptor.
+   *
    * @category combinators
+   * @since 0.0.0
    */
   annoteHttp<Schema extends S.Top, const Next extends TString.NonEmpty = TString.NonEmpty>(
     identifier: SegmentValue<Next>,
@@ -1236,8 +1206,10 @@ export interface IdentityComposer<
    * Returns a function that calls `self.annotate(...)` with identity metadata
    * merged with any caller-supplied extras.
    *
-   * @since 0.0.0
+   * @throws A tagged invariant defect when the rebuilt schema rejects a custom static descriptor.
+   *
    * @category combinators
+   * @since 0.0.0
    */
   annoteSchema<Schema extends S.Top, const Next extends TString.NonEmpty = TString.NonEmpty>(
     identifier: SegmentValue<Next>,
@@ -1940,7 +1912,7 @@ const createComposer = <
   ): ((self: Schema) => AnnotatedSchema<Schema>) => {
     const annotation = annote(identifier, extras);
 
-    return (self: Schema): AnnotatedSchema<Schema> => preserveSchemaStatics(self, self.annotate(annotation));
+    return (self: Schema): AnnotatedSchema<Schema> => SchemaStatics.preserve(self, self.annotate(annotation));
   };
 
   function annoteKey<Parent extends object>(): <
@@ -1978,7 +1950,7 @@ const createComposer = <
   ): ((self: Schema) => AnnotatedSchema<Schema>) => {
     const annotation = annote(identifier, extras);
 
-    return (self: Schema): AnnotatedSchema<Schema> => preserveSchemaStatics(self, self.annotate(annotation));
+    return (self: Schema): AnnotatedSchema<Schema> => SchemaStatics.preserve(self, self.annotate(annotation));
   };
 
   type LooseOntologyKeyOptions = KeyAnnotationExtras<unknown> & {

@@ -62,7 +62,8 @@ thesis to ourselves is the honest move.
 
 **Handoff contents (spec'd, not implemented):**
 
-1. `lefthook.yml` gains a `pre-push` stage running `bun run beep yeet pre-push-hook`.
+1. `lefthook.yml` gains a `pre-push` stage running the `yeet pre-push-hook` command (retired in beep-cli-composition W0;
+   [`Yeet.command.ts` at f16d82e9f1](https://github.com/beep-effect/beep-effect/blob/f16d82e9f16d72f64d42b40284bf2867566e796b/packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts)).
 2. `runPrePushHookMode` must honor `BEEP_YEET_REUSE_PRE_PUSH_PROOF=1` as
    passthrough. The marker is planted on `pushStep` (`Planner.ts:442`) and **no
    consumer reads it**; a test asserts only that the plan emits it. Without this,

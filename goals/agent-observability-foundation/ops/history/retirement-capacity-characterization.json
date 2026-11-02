@@ -1,0 +1,30 @@
+{
+  "recordedAt": "2026-10-29T07:55:43.149807+00:00",
+  "result": "defect-reproduced",
+  "fixed": false,
+  "fixture": "two accepted native pages, one delivery-event slot; first enrolls and expires, second cannot enroll or expire",
+  "expectedObservedRefusals": {
+    "registration": "capacity",
+    "expiry": "storage"
+  },
+  "remainingPages": 1,
+  "log": "/tmp/foundation-review-retirement-capacity-characterization.log",
+  "testsPassed": 14,
+  "guard": {
+    "unit": "foundation-review-retirement-capacity-characterization.service",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 8589934592,
+    "initialAvailableBytes": 60918554624,
+    "peakObservedBytes": 426676224,
+    "minimumAvailableBytes": 60513267712,
+    "stoppedFor": null,
+    "exitCode": 0
+  },
+  "sourceHashes": {
+    "packages/tooling/library/ai-metrics/test/payload-reclamation.test.ts": "fec1241a83534a8efa6eeed6f2491c5466adaae33ce6312710c3b319e69bab2d",
+    "packages/tooling/library/ai-metrics/src/payload-reclamation.ts": "7ca0b1863b278cbad69496b2730f7539c60e5e6fd06c2e7ead2fb2b014aa17b3",
+    "packages/tooling/library/ai-metrics/src/delivery-ledger.ts": "f8dd09886a330dc60a810ae0d24077080e43fdcb79c6b766bce9e42a6ccd6c17",
+    "packages/tooling/library/ai-metrics/src/evidence-retention.ts": "a8f4dd6caafe29e603883634660c9e0639db5f251b8399156872263f582646bf"
+  },
+  "next": "Explicit validated never-enrolled expiry accounting, preserving registered states and retirement recovery; do not catch integrity conflicts as capacity"
+}

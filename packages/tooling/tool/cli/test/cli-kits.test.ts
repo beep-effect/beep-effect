@@ -4,6 +4,7 @@ import {
   asRecord,
   boundedText,
   bytesEqual,
+  CliReportedExit,
   csvValues,
   errorMessage,
   firstLine,
@@ -17,6 +18,7 @@ import {
   RunMode,
   RunModeIs,
   renameOrFail,
+  renderCliFailure,
   renderProgressBar,
   resolveRunMode,
   runModeFlagsConflict,
@@ -26,15 +28,17 @@ import {
   validateDirectory,
   validatePathSegment,
   variadicStrings,
+  writeContainedFileString,
 } from "@beep/repo-cli/test/Cli";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Cause from "effect/Cause";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -112,6 +116,27 @@ describe("internal/cli/FailureRendering", () => {
     // Trailing `--log-level` with no value must not read past the end of argv.
     expect(shouldRenderFailureCause(["run", "--log-level"])).toBe(false);
     expect(shouldRenderFailureCause(["--log-levels=debug"])).toBe(false);
+  });
+
+  it("renders no line for an already-reported failure, so CliReportedExit exits silently", () => {
+    const reported = CliReportedExit.make({ message: "already printed", exitCode: 2 });
+    expect(renderCliFailure([])(reported, { cause: Cause.fail(reported) })).toEqual([]);
+    expect(renderCliFailure(["--verbose"])(reported, { cause: Cause.fail(reported) })).toEqual([]);
+  });
+
+  it("leads with the message and appends the cause only on a verbose argv", () => {
+    const error = new Error("Failed to read transcript input.");
+    const cause = Cause.fail(error);
+    expect(renderCliFailure([])(error, { cause })).toEqual(["Failed to read transcript input."]);
+    expect(renderCliFailure(["--log-level", "debug"])(error, { cause })).toEqual([
+      "Failed to read transcript input.",
+      Cause.pretty(cause),
+    ]);
+  });
+
+  it("renders the whole cause for a failure with no string message", () => {
+    const cause = Cause.fail({ code: 7 });
+    expect(renderCliFailure([])({ code: 7 }, { cause })).toEqual([Cause.pretty(cause)]);
   });
 });
 
@@ -214,6 +239,28 @@ describe("internal/cli/Flags coercions", () => {
 
 describe("internal/cli/FsGuards", () => {
   it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seconds" })((it) => {
+    it.effect("preserves a directory-creation failure and refuses the contained write", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const cause = yield* fs.makeDirectory(root).pipe(Effect.flip);
+        const directory = path.join(root, "nested");
+        const target = path.join(directory, "value.txt");
+        const create = vi.spyOn(fs, "makeDirectory").mockReturnValueOnce(Effect.fail(cause));
+        yield* Effect.addFinalizer(() => Effect.sync(() => create.mockRestore()));
+
+        const error = yield* writeContainedFileString(root, "nested/value.txt", "fixture").pipe(Effect.flip);
+        expect(error.reason).toBe("filesystem-failure");
+        expect(error.root).toBe(root);
+        expect(error.path).toBe(directory);
+        expect(error.target).toBe(target);
+        assertSome(error.cause, cause);
+        expect(create).toHaveBeenCalledWith(directory);
+        expect(yield* fs.exists(target)).toBe(false);
+      })
+    );
+
     it.effect("reports missing directory and rename paths through their typed error adapters", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -374,61 +421,64 @@ describe("internal/cli/FsGuards", () => {
 
   // Real streaming over a multi-chunk file: the in-memory filesystem appends are quadratic here,
   // so this case stays on the platform filesystem it is meant to exercise.
-  it.layer(NodeServices.layer, { timeout: "120 seconds" })("hashFileSha256 over the platform filesystem", (it) => {
-    it.effect(
-      "hashes a file far larger than one chunk without reading it whole",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const crypto = yield* Crypto.Crypto;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-large-" });
-        const filePath = path.join(root, "large.bin");
-        const chunkCount = 64;
-        const totalBytes = chunkCount * hashFileChunkBytes;
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "120 seconds" })(
+    "hashFileSha256 over the platform filesystem",
+    (it) => {
+      it.effect(
+        "hashes a file far larger than one chunk without reading it whole",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const crypto = yield* Digest.Digest;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-large-" });
+          const filePath = path.join(root, "large.bin");
+          const chunkCount = 64;
+          const totalBytes = chunkCount * hashFileChunkBytes;
 
-        // Independent oracle: the platform digest over the same bytes, built
-        // here once so the code under test never sees a whole-file buffer.
-        const whole = new Uint8Array(totalBytes);
-        yield* Effect.forEach(
-          A.range(0, chunkCount - 1),
-          (index) => {
-            const chunk = patternedBytes(hashFileChunkBytes, index);
-            whole.set(chunk, index * hashFileChunkBytes);
-            return fs.writeFile(filePath, chunk, { flag: "a" });
-          },
-          { discard: true }
-        );
-        const expected = Hex.encode(yield* crypto.digest("SHA-256", whole));
+          // Independent oracle: the platform digest over the same bytes, built
+          // here once so the code under test never sees a whole-file buffer.
+          const whole = new Uint8Array(totalBytes);
+          yield* Effect.forEach(
+            A.range(0, chunkCount - 1),
+            (index) => {
+              const chunk = patternedBytes(hashFileChunkBytes, index);
+              whole.set(chunk, index * hashFileChunkBytes);
+              return fs.writeFile(filePath, chunk, { flag: "a" });
+            },
+            { discard: true }
+          );
+          const expected = Hex.encode(yield* crypto.digest(Digest.sha256, whole));
 
-        const chunkSizes = MutableList.make<number>();
-        const requestedChunkSizes = MutableList.make<number | undefined>();
-        const wholeFileReads = yield* Ref.make(0);
-        const observedFs: FileSystem.FileSystem = {
-          ...fs,
-          readFile: (target) =>
-            Ref.update(wholeFileReads, (count) => count + 1).pipe(Effect.andThen(fs.readFile(target))),
-          stream: (target, options) => {
-            MutableList.append(requestedChunkSizes, Number(options?.chunkSize));
-            return fs
-              .stream(target, options)
-              .pipe(Stream.tap((chunk) => Effect.sync(() => MutableList.append(chunkSizes, chunk.byteLength))));
-          },
-        };
+          const chunkSizes = MutableList.make<number>();
+          const requestedChunkSizes = MutableList.make<number | undefined>();
+          const wholeFileReads = yield* Ref.make(0);
+          const observedFs: FileSystem.FileSystem = {
+            ...fs,
+            readFile: (target) =>
+              Ref.update(wholeFileReads, (count) => count + 1).pipe(Effect.andThen(fs.readFile(target))),
+            stream: (target, options) => {
+              MutableList.append(requestedChunkSizes, Number(options?.chunkSize));
+              return fs
+                .stream(target, options)
+                .pipe(Stream.tap((chunk) => Effect.sync(() => MutableList.append(chunkSizes, chunk.byteLength))));
+            },
+          };
 
-        const digest = yield* hashFileSha256(filePath, hashTestError).pipe(
-          Effect.provideService(FileSystem.FileSystem, observedFs)
-        );
-        const observedSizes = MutableList.toArray(chunkSizes);
+          const digest = yield* hashFileSha256(filePath, hashTestError).pipe(
+            Effect.provideService(FileSystem.FileSystem, observedFs)
+          );
+          const observedSizes = MutableList.toArray(chunkSizes);
 
-        expect(digest).toBe(expected);
-        expect(yield* Ref.get(wholeFileReads)).toBe(0);
-        expect(MutableList.toArray(requestedChunkSizes)).toEqual([hashFileChunkBytes]);
-        expect(A.length(observedSizes)).toBeGreaterThanOrEqual(chunkCount);
-        expect(Math.max(...observedSizes)).toBeLessThanOrEqual(hashFileChunkBytes);
-        expect(A.reduce(observedSizes, 0, (total, size) => total + size)).toBe(totalBytes);
-      })
-    );
-  });
+          expect(digest).toBe(expected);
+          expect(yield* Ref.get(wholeFileReads)).toBe(0);
+          expect(MutableList.toArray(requestedChunkSizes)).toEqual([hashFileChunkBytes]);
+          expect(A.length(observedSizes)).toBeGreaterThanOrEqual(chunkCount);
+          expect(Math.max(...observedSizes)).toBeLessThanOrEqual(hashFileChunkBytes);
+          expect(A.reduce(observedSizes, 0, (total, size) => total + size)).toBe(totalBytes);
+        })
+      );
+    }
+  );
 });
 
 describe("internal/cli/Timing text helpers", () => {

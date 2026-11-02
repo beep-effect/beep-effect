@@ -1,6 +1,6 @@
 # @beep/git
 
-Typed git introspection as an Effect service. A read tier answers the questions monorepo tooling actually asks — `Git.show` reads a file's content at any ref without checking it out, `Git.nameStatus` types each changed path as added, renamed, deleted and so on, `Git.workingChanges` gathers the full working-tree delta, `Git.commitInfo` returns a commit's sha, signature verdict and raw message — and a clearly-marked mutating tier (`checkout`, `fetch`, the submodule pair, `sparseCheckoutSet`, `configSet`, `add`) changes repository state on purpose. Subprocesses run through Effect core's `ChildProcessSpawner` contract, required in `R` and provided once at your application's edge, so this package has zero runtime dependencies and zero `node:` imports.
+Typed git introspection as an Effect service. A read tier answers the questions monorepo tooling actually asks — `Git.show` reads a file's content at any ref without checking it out, `Git.nameStatus` types each changed path as added, renamed, deleted and so on, `Git.workingChanges` gathers the full working-tree delta, `Git.commitInfo` returns a commit's sha, signature verdict and raw message — and a clearly-marked mutating tier (`checkout`, `fetch`, the submodule pair, `sparseCheckoutSet`, `configSet`, `add`) changes repository state on purpose. Subprocesses run through Effect core's `ChildProcessSpawner` contract, required in `R` and provided once at your application's edge, so the service has no `node:` imports and the application selects its process runtime.
 
 ## Usage
 
@@ -50,13 +50,13 @@ console.log(Effect.isEffect(contentAt("/repo", "HEAD", "package.json"))); // tru
 
 Shelling out to git looks easy until you have to interpret the answers. git speaks through exit codes and stderr prose, and the prose changes with the question: an unknown ref, a directory that is not a repository, a path absent at a ref, and a genuinely failed command all come back as "non-zero exit plus a sentence". Code that string-matches stderr at every call site gets this wrong somewhere, eventually, in a different way each time.
 
-This package reads git's exit codes and stderr in exactly one classification step and hands you typed answers instead: a path absent at a valid ref is `Option.none` from `show` (a fact about the ref, not an error), a ref that does not resolve is `false` from `refExists` and a typed `UnknownRefError` elsewhere, a directory outside any work tree is `NotARepositoryError`, and everything else is a `GitCommandError` carrying the exit code and stderr intact. Spawn-level platform failures and the 30-second per-run ceiling are absorbed into that same taxonomy — no `PlatformError` and no timeout defect ever leaks from a `Git` method. Every command the service spawns pins `LC_ALL=C`, so the classification is stable across locales, plus a set of non-interactive pins (`GIT_TERMINAL_PROMPT=0` and an empty `GIT_ASKPASS`), and a member that reaches a remote adds `-o BatchMode=yes` to the ssh command git would otherwise have used — so a credential-requiring remote, over https or ssh, fails fast instead of blocking on a prompt, a passphrase, or a host-key confirmation. Tree listings use NUL-terminated output, so a path containing a space — or a newline — survives parsing.
+This package reads git's exit codes and stderr in exactly one classification step and hands you typed answers instead: a path absent at a valid ref is `Option.none` from `show` (a fact about the ref, not an error), a ref that does not resolve is `false` from `refExists` and a typed `UnknownRefError` elsewhere, a directory outside any work tree is `NotARepositoryError`, and recognized non-fast-forward, merge-conflict and dirty-worktree failures have dedicated error variants. Other failures are `GitCommandError` values carrying the exit code and stderr intact. Spawn-level platform failures and the 30-second per-run ceiling are absorbed into that same taxonomy — no `PlatformError` and no timeout defect ever leaks from a `Git` method. Every command the service spawns pins `LC_ALL=C`, so the classification is stable across locales, plus a set of non-interactive pins (`GIT_TERMINAL_PROMPT=0` and an empty `GIT_ASKPASS`), and a member that reaches a remote adds `-o BatchMode=yes` to the ssh command git would otherwise have used — so a credential-requiring remote, over https or ssh, fails fast instead of blocking on a prompt, a passphrase, or a host-key confirmation. Tree listings use NUL-terminated output, so a path containing a space — or a newline — survives parsing.
 
-There is no opt-out through the service, and the pins win: `extendEnv: true` merges the parent environment, but a pinned key beats it, so `GIT_TERMINAL_PROMPT=1` in your environment does not re-enable prompting. A caller who genuinely wants git to prompt runs a `GitCommand` value themselves — those are pure and carry no environment at all, so they inherit yours untouched.
+There is no opt-out through the service, and the pins win: `extendEnv: true` merges the parent environment, but a pinned key beats it, so `GIT_TERMINAL_PROMPT=1` in your environment does not re-enable prompting. A caller who wants git to prompt runs a `GitCommand` invocation's `command` themselves. Those commands carry no environment, so they inherit the caller's environment.
 
 The ssh pin is the one that adapts to you rather than overriding you. Before a member that reaches a remote spawns, the service resolves the ssh command git would have used on its own — your `GIT_SSH_COMMAND`, else your `core.sshCommand`, else plain `ssh` — and appends `-o BatchMode=yes` to *that*, so a custom identity file, jump host or port survives. It leaves your setup strictly alone in four cases: when `GIT_SSH` is what decides (it names a program and takes no arguments, so there is nothing to append to and pinning anything would displace it); when the program is not OpenSSH (`plink` has no `-o KEY=VALUE` form, so appending would break it rather than degrade it); when `ssh.variant` or `GIT_SSH_VARIANT` tells git the command is not OpenSSH regardless of its name; and when you already set `BatchMode` yourself — OpenSSH honors the first value given for a repeated option, so your choice stands either way. In every one of those, the other pins still apply; only the ssh-level one is skipped.
 
-`GitCommand` is exported alongside the service: 24 pure constructors producing Effect core `Command` values you can inspect, log, or test against without spawning anything.
+`GitCommand` is exported alongside the service. Its pure constructors return a `GitInvocation` containing an Effect core command and `redactedArgs`, without spawning anything. Use `redactedArgs` for diagnostics: the command itself retains the raw arguments needed by Git, including any supplied credentials.
 
 The subprocess spawner comes from Effect core's `ChildProcessSpawner` contract, not from a platform package. A consumer provides it once at the edge — `NodeServices.layer` from `@effect/platform-node` on Node — and a test provides a scripted spawner built with `ChildProcessSpawner.make`, no processes involved.
 
@@ -64,7 +64,7 @@ The subprocess spawner comes from Effect core's `ChildProcessSpawner` contract, 
 
 ## Features
 
-Twenty-six service methods: eighteen that read repository state and eight that mutate it, all funneled through the same one-step classification.
+The service exposes repository reads and explicitly marked mutations, all funneled through the same classification step. The complete contracts live in [`GitShape`](src/Git.ts) and [`GitCommand`](src/GitCommand.ts); the groups below are a navigation guide.
 
 - Content and trees: `Git.show(cwd, ref, path)` — file content at a ref, `Option.none` when the path is absent there — and `Git.lsTree(cwd, ref)` with an optional pathspec, returning typed `LsTreeEntry` values (mode, type, oid, path), NUL-parsed.
 - Diffs: `Git.changedFiles(cwd, { base, head })` — paths changed across a range — and `Git.nameStatus`, which types each change as added, modified, deleted, renamed, copied and more, carries `oldPath` on renames, and takes either a `base...head` range or the working tree versus a single ref.
@@ -73,9 +73,10 @@ Twenty-six service methods: eighteen that read repository state and eight that m
 - Configuration reads: `Git.configGet`, `Git.configGetAll` and `Git.configList` take an optional `scope` (`"local" | "global" | "system" | "worktree"`, the `GitConfigScope` type). **Omitted still means the MERGED read** — the value git itself would use, which includes whatever the machine's `~/.gitconfig` sets — so pass `{ scope: "local" }` to ask what this checkout alone declares. `configList` accepts `file` or `scope`, never both: git takes one source.
 - Commits: `Git.commitInfo(cwd, ref?)` — a typed `CommitInfo` with the sha, the `%G?` signature verdict and the raw, untrimmed message.
 - History: `Git.log(cwd, { paths?, follow?, limit?, firstParentDiffMerges? })` — the commit walk as typed `CommitLogEntry` values, each carrying the sha, both dates decoded to `DateTime.Utc`, the author identity and the paths that commit touched. Scope it with a pathspec, walk a single path across renames with `follow: true`, and give merge commits a path listing with `firstParentDiffMerges`. An unborn `HEAD` and a pathspec no commit touched are both the empty listing, never a failure.
-- Mutating tier, each method marked as such: `Git.checkout` (with a detach option), `Git.fetch` (remote, ref, depth, tag), `Git.fetchAny` (tries the tag form first, falls back to the plain form on `UnknownRefError` or `GitCommandError`), `Git.submoduleUpdate`, `Git.submoduleAdd`, `Git.sparseCheckoutSet` (explicit cone flag), `Git.configSet` (the write is repository-local, always: a bare `git config` writes the checkout's own `.git/config`, and no global or system scope is offered — a write has no defensible "effective value" default the way a read does) and `Git.add`. Nothing here serializes concurrent access — the caller owns that, per working tree.
-- `GitCommand.*` — all 24 invocations as pure, inspectable `Command` values.
-- Errors: `GitCommandError`, `NotARepositoryError`, `UnknownRefError` — classification happens once, inside the service. A ref the remote does not have surfaces as `UnknownRefError` too, the typed signal a tag-then-branch fetch fallback branches on with `Effect.orElse`.
+- Mutating tier, each method marked as such; examples include: `Git.checkout` (with a detach option), `Git.fetch` (remote, ref, depth, tag), `Git.fetchAny` (tries the tag form first, falls back to the plain form on `UnknownRefError` or `GitCommandError`), `Git.submoduleUpdate`, `Git.submoduleAdd`, `Git.sparseCheckoutSet` (explicit cone flag), `Git.configSet` (the write is repository-local, always: a bare `git config` writes the checkout's own `.git/config`, and no global or system scope is offered — a write has no defensible "effective value" default the way a read does) and `Git.add`. Nothing here serializes concurrent access — the caller owns that, per working tree.
+- Additional reads include branch, tag, stash and worktree listings; remote refs; tracked-file details; ignored-path checks; revision walks; and shallow-repository status. Additional mutations cover branch and tag management, commits, push/pull, reset/restore/clean, stash operations, remote configuration, file moves/removals, worktree management and submodule configuration. Each mutating method documents its effect and retains caller-owned concurrency.
+- `GitCommand.*` — pure, inspectable invocations without runtime environment or validation.
+- Errors: `GitCommandError`, `NotARepositoryError`, `UnknownRefError`, `NonFastForwardError`, `MergeConflictError`, and `DirtyWorktreeError` — classification happens once, inside the service. A ref the remote does not have surfaces as `UnknownRefError` too, the typed signal a tag-then-branch fetch fallback branches on with `Effect.orElse`.
 
 ## Need a git command this package does not have?
 
@@ -140,6 +141,34 @@ the effected port and promoted into this workspace package by `goals/effected-pr
 package [LICENSE](./LICENSE) carries both the beep-effect and the upstream copyright notices.
 [KNOWLEDGE.md](./KNOWLEDGE.md) holds the upstream knowledge bundle verbatim; its relative links
 point into the upstream checkout.
+
+## Runtime implementation map
+
+- [`Git.ts`](src/Git.ts) owns repository operations and service/test-double construction.
+  It re-exports the model contracts.
+- [`internal/execution.ts`](src/internal/execution.ts) binds the process spawner and
+  captures ambient SSH settings once, then resolves repository config per network call.
+- [`Git.models.ts`](src/Git.models.ts) owns parsed repository models and their pure
+  formatting helpers, retaining the original Git schema identity scope.
+- [`internal/parsers.ts`](src/internal/parsers.ts) decodes command output using each
+  command's framing rules. It imports models directly and never imports the service.
+- [`Git.errors.ts`](src/Git.errors.ts) owns the failure contracts. The service module
+  re-exports the same constructors, with their original schema identifiers.
+- [`internal/classification.ts`](src/internal/classification.ts) applies the ordered
+  exit/stderr taxonomy, redacted error arguments, environment pins, and timeout handling.
+- [`GitCommand.ts`](src/GitCommand.ts) owns pure invocation construction and redaction masks.
+- [`internal/sshEnvironment.ts`](src/internal/sshEnvironment.ts) owns the fixed environment
+  pins and the conservative decision to append SSH BatchMode. It performs no config reads.
+- [`internal/run.ts`](src/internal/run.ts) owns scoped, concurrent stdout/stderr collection.
+
+A network call resolves repository config through the execution module before applying the pure
+SSH policy. Local commands use only the base environment. The internal modules are
+implementation details; consumers use the public service and command constructors.
+Classification depends on the error contracts and process collector; neither depends
+on the service implementation. Shared failures take precedence over mode-specific
+degradation, except for a recognized `show` path-absence diagnostic: a missing filename
+such as `not a git repository` must still produce `Option.none`. That exception requires
+Git's `fatal: path '` prefix, so absence wording inside an invalid ref remains an error.
 
 ## Port notes
 

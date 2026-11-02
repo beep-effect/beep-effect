@@ -1,0 +1,35 @@
+{
+  "applicationNumber": "11575704",
+  "publicationNumber": "US20080062712A1",
+  "publicationDate": "2008-03-13",
+  "nativeXmlSha256": "d87ef3757fd376f66b95f294a4d452e3ce7b92dd3d2ad2fbcd8e6c2250722e5f",
+  "claimsXmlSha256": "d665ccb73c27b7abde1d3d13fb5a273146402c7a39a55378d38d912c70ac9937",
+  "officeActionDocumentIdentifiers": [
+    "FY3QPPF4PPOPPY5"
+  ],
+  "officeActionMailDate": "2009-08-10",
+  "officeActionSection112Text": [
+    "claims 1-12 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\nin claim 1, line 3, “the pattern of illumination” lacks antecedent basis.\r\nin claim 1, line 6, “the horizontal direction” lacks antecedent basis.\r\nin claim 1, line 6, “the vertical” lacks antecedent basis.\r\nin claim 1, line 6, “the first lens” lacks antecedent basis.\r\nin claim 1, line 7, “the received light” lacks antecedent basis.\r\nin claim 2, lines 3-4, “the other end” lacks antecedent basis.\r\nin claim 2, line 5, “the light emitted by the led light sources” lacks antecedent basis.\r\nin claim 3, line 5, “the spread pattern” lacks antecedent basis.\r\nin claim 3, lines 5-6, the superimposition lacks antecedent basis.\r\nin claim 4, line 3, “the respective arrays” lacks antecedent basis.\r\nin claim 4, line 4, “the respective array” lacks antecedent basis.\r\nin claim 4, line 7, “the first lens” lacks antecedent basis.\r\nin claim 4, line 9, “the light projected” lacks antecedent basis.\r\nin claim 7, line 1, “the optical coupling” lacks antecedent basis.\r\nin claim 7, lines 1-2, “the each respective one end” lacks antecedent basis.\r\nin claim 12, line 3, “the other end” lacks antecedent basis.\r\nin claim 12, lines 3-4, “the general shape” lacks antecedent basis.\r\nin claim 12, line 5, “the ends lacks antecedent basis.\r\nin claim 12, lines 5-6, the fiber optic cables” lacks antecedent basis.\r\nin claim 12, line 6, “the desired illumination beam pattern” lacks antecedent basis.\r\nclaims recite numerous limitations with insufficient antecedent basis. the claims are replete with such errors and each claim should be checked to insure that they particularly point out and distinctly claim the subject matter the applicant regards as his invention."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "EZQX8A9PPPOPPY1",
+      "officialDate": "2007-03-21T00:00:00.000-0400"
+    },
+    {
+      "documentIdentifier": "F0C6TJNMPPOPPY5",
+      "officialDate": "2007-03-21T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [],
+  "documentInventoryCount": 48,
+  "documentInventoryRows": 48,
+  "primaryCpc": "F21S  41/663",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/11575704",
+    "https://api.uspto.gov/api/v1/patent/applications/11575704/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

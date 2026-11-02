@@ -1,0 +1,62 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A panoramic recording device for a panoramic X-ray machine, with a cartridge unit which has a recording slit, and with an X-ray detection device which is arranged behind the recording slit, and with means to capture the position of the cartridge unit, wherein the detection device includes at least one detector row which is shaped according to the shape of the recording slit, and which is provided with a readout circuit, that the position acquisition means provides an electrical output signal which corresponds to the rotary position, and that the output signals of the detector row and position acquisition means are transmitted wirelessly to a processing unit.</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The recording device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the processing unit includes a memory, the memory cells of which store the image signals which the detector row provides, being addressed by a signal which is derived from the output signal of the position acquisition means.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The recording device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the position acquisition means is provided on the cartridge unit, and the output signals of the detector row and position acquisition means are combined via a concatenation circuit into a data packet, which is transmitted via a single data transmission channel of the processing unit.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The recording device of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the cartridge unit movably carries a first cradle, on which in its turn a second cradle which carries the detector row, and which is movable parallel to the first cradle, and which can be blocked by the recording slit, is arranged.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The recording device of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the position acquisition means includes a ruled grating which is supported by the cartridge unit, and a line reading head which is connected to the second cradle.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The recording device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the position acquisition means is spatially separated from the cartridge unit, and the output signals of the detector row and position acquisition means are fed via separate transmission channels to the processing unit.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The recording device of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the cartridge unit has a film holder, which can be connected to or disconnected from the shaft which carries the cartridge unit, according to choice.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The recording device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detector row is connected to a fibre optic, the axis of which is inclined at a small angle to the axis of the recording slit, and which has an end surface which is essentially perpendicular to its axis, on which end surface the detector row is arranged essentially transversely to the longitudinal axis of the slit.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The recording device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The recording device of <claim-ref idref="CLM-00002">claim 2</claim-ref> wherein the position acquisition means is provided on the cartridge unit, and the output signals of the detector row and position acquisition means are combined via a concatenation circuit into a data packet, which is transmitted via a single data transmission channel of the processing unit.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The recording device of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the position acquisition means is spatially separated from the cartridge unit, and the output signals of the detector row and position acquisition means are fed via separate transmission channels to the processing unit.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The recording device of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the detector row is connected to a fibre optic, the axis of which is inclined at a small angle to the axis of the recording slit, and which has an end surface which is essentially perpendicular to its axis, on which end surface the detector row is arranged essentially transversely to the longitudinal axis of the slit.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The recording device of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the detector row is connected to a fibre optic, the axis of which is inclined at a small angle to the axis of the recording slit, and which has an end surface which is essentially perpendicular to its axis, on which end surface the detector row is arranged essentially transversely to the longitudinal axis of the slit.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The recording device of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the detector row is connected to a fibre optic, the axis of which is inclined at a small angle to the axis of the recording slit, and which has an end surface which is essentially perpendicular to its axis, on which end surface the detector row is arranged essentially transversely to the longitudinal axis of the slit.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The recording device of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the detector row is connected to a fibre optic, the axis of which is inclined at a small angle to the axis of the recording slit, and which has an end surface which is essentially perpendicular to its axis, on which end surface the detector row is arranged essentially transversely to the longitudinal axis of the slit.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The recording device of <claim-ref idref="CLM-00002">claim 2</claim-ref> wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The recording device of <claim-ref idref="CLM-00003">claim 3</claim-ref> wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The recording device of <claim-ref idref="CLM-00004">claim 4</claim-ref> wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The recording device of <claim-ref idref="CLM-00006">claim 6</claim-ref> wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The recording device of <claim-ref idref="CLM-00008">claim 8</claim-ref> wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means. </claim-text>
+</claim>
+</claims>

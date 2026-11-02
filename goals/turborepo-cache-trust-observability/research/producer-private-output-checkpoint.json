@@ -1,0 +1,192 @@
+{
+  "schemaVersion": "cache-producer-private-output-checkpoint/v1",
+  "recordedAt": "2026-10-30T22:20:19.965748+00:00",
+  "authority": "Unpublished producer file-output repair with real local filesystem tests and controlled producer execution. No real R2/protected run, credential change, publication or qualification.",
+  "sourceParent": "7863374cd8800cf65c94216441c04bbc433eb44f",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "0f873dedf677b2815a3f3c7778e1cab50beaf99b7ff6f0347a52cd23ac10c8f6",
+    "packages/tooling/tool/cli/test/cache-dispatch.test.ts": "a686581c8e4a976e5131de4279ca13e155999af42f659437f2a7cb7e228133bd"
+  },
+  "attribution": "Introduced in the prior unpublished producer publication command: generic Bun.write inherited caller creation permissions and could replace existing output paths. A child-only022 umask reproduced0644 instead of0600 for both observation-only and hosted modes.",
+  "implementation": [
+    "Extend the existing encoded-report writer with an explicit private-file option; only producer-run file outputs select it. Preserve ordinary report callers.",
+    "Reuse the existing Effect FileSystem exclusive-create pattern with flag wx and mode0600; no new writer service, store, trust authority or wire schema.",
+    "Keep encoding and byte bounds before file writes, missing-upload report preparation before either output is touched, and no observation/publication body on stdout when file output was requested.",
+    "Create both private observation and compact publication files anew. Refuse pre-existing files, final symlinks including dangling ones and hardlinked peers; never repair them by truncating or chmod-ing another inode.",
+    "Keep the filesystem dependency at the producer command boundary. Passing its optional concrete capability preserves ordinary writer and public warming Effect environments."
+  ],
+  "tests": {
+    "suiteCasesPerRuntime": 96,
+    "files": 4,
+    "producerVariants": ["observation-only", "hosted-publication"],
+    "physicalRefusalChecksAcrossVariants": 9,
+    "checks": [
+      "New observation and publication file permissions under child-only umask022.",
+      "Existing observation contents preserved.",
+      "Existing symlink target preserved.",
+      "Dangling symlink target never created.",
+      "Hardlink peer contents preserved.",
+      "Existing compact publication preserved; a failed second output may leave a new private observation.",
+      "Missing owned upload still refuses before either existing output changes."
+    ],
+    "executionScope": "Only the producer runtime boundary is controlled. Paths, modes, links, reads, writes and refusals use the real local filesystem; no credential or actual cache backend is read."
+  },
+  "causalControls": {
+    "oldWriter": {
+      "result": {
+        "exit": 1,
+        "elapsedSeconds": 1.878,
+        "finishedAt": "2026-10-30T21:31:21.532146+00:00"
+      },
+      "intendedFailure": "Both selected producer variants fail actual mode assertion:420/0644 received instead of384/0600."
+    },
+    "overwriteGuard": {
+      "exit": 1,
+      "change": "Change only exclusive-create wx to w; permission600 retained.",
+      "expectedFailure": "existing observation output was overwritten; intended failure assertion expected false to be true",
+      "exactSourceRestored": true,
+      "sourceBeforeSha256": "ee48363cf197dc58d39df9eea8b4df619b170273e13c0642acb3d0d55e224d33",
+      "rawOutputSha256": "e19744c583ad9b5e2d5956bbc292e0280482c0ef304c48e72465a5d55fb7b21c"
+    }
+  },
+  "verification": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 10.542,
+      "finishedAt": "2026-10-30T22:34:03.616458+00:00"
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 9.16,
+      "finishedAt": "2026-10-30T22:34:01.632154+00:00"
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 15.304,
+      "finishedAt": "2026-10-30T22:34:08.722702+00:00"
+    },
+    "canonical": {
+      "exit": 0,
+      "elapsedSeconds": 386.306,
+      "finishedAt": "2026-10-30T22:26:47.020121+00:00",
+      "effectFindings": 556,
+      "newEffectFindings": 0,
+      "fallowIntroduced": 0,
+      "fallowInheritedAdjacent": 1,
+      "thresholdChanges": false
+    },
+    "defaultPackage": {
+      "status": "passed-current-unpublished-implementation",
+      "sourceRevision": "a0c32d79e741fb3a4eb9e78851a7386fdd7a59d2",
+      "exit": 0,
+      "elapsedSeconds": 1068.313,
+      "finishedAt": "2026-10-30T23:50:20.065929+00:00",
+      "audit": {
+        "exit": 0,
+        "seconds": 1028.3
+      },
+      "docgen": {
+        "exit": 0,
+        "seconds": 38.4
+      },
+      "implementationChangedForRetry": false,
+      "qualityFloorsChanged": false,
+      "scope": "Current unpublished producer implementation only; accepted-parent combined local/hosted proof and actual protected execution remain required."
+    }
+  },
+  "limits": [
+    "The two output writes are sequential, not a transaction. A second-path refusal may leave only the new private observation; the command fails and the existing publication is preserved. Use a fresh caller-owned directory and paths per run.",
+    "Parent directory provisioning and private evidence transport remain deployment responsibilities; exclusive final-component creation does not grant trust to an arbitrary parent directory.",
+    "A private file alone is not immutable GitHub publication, independent approval, acceptance or current source qualification.",
+    "The earlier implementation1395 default package pass is historical; this changed source needs its own complete package and combined final/hosted proof."
+  ],
+  "credentialsChanged": false,
+  "qualityFloorsChanged": false,
+  "allGoalAcceptanceUnproven": true,
+  "priorVerificationAtPrivateOutputRepair": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 8.595,
+      "finishedAt": "2026-10-30T21:46:56.588060+00:00"
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 7.522,
+      "finishedAt": "2026-10-30T21:46:55.061710+00:00"
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 12.911,
+      "finishedAt": "2026-10-30T21:46:59.919546+00:00"
+    },
+    "defaultPackage": {
+      "exit": 0,
+      "elapsedSeconds": 1068.659,
+      "finishedAt": "2026-10-30T22:11:02.167568+00:00",
+      "sourceRevision": "c99a60cb499887d072191b52efa474afe4ef278c",
+      "auditSeconds": 1030.0,
+      "docgenSeconds": 36.8
+    },
+    "canonical": {
+      "exit": 0,
+      "elapsedSeconds": 369.443,
+      "finishedAt": "2026-10-30T21:44:09.589786+00:00",
+      "effectFindings": 556,
+      "newEffectFindings": 0,
+      "fallowIntroduced": 0,
+      "fallowInheritedAdjacent": 1,
+      "fallowResolution": "Unchanged raw filesystem-presence idiom already source-reviewed as a non-defect in producer-command-publication-checkpoint.json. No ignore, suppression, baseline or threshold changed."
+    }
+  },
+  "apiCompatibility": {
+    "reason": "The first private-file branch added FileSystem to the generic writer Effect environment, unintentionally widening the public warming API.",
+    "before": {
+      "exit": 1,
+      "elapsedSeconds": 40.768,
+      "finishedAt": "2026-10-30T22:15:48.995845+00:00",
+      "intendedDiagnostic": "TS2375: Effect<CacheWarmReceipt, CacheCommandError, FileSystem> cannot satisfy the existing service-free warming contract."
+    },
+    "change": "Read the existing FileSystem service only at the producer boundary and pass an optional concrete capability to the shared writer; ordinary callers retain their previous environment. No new service or public API dependency.",
+    "after": {
+      "exit": 0,
+      "elapsedSeconds": 42.281,
+      "finishedAt": "2026-10-30T22:17:12.842311+00:00"
+    },
+    "retainedControls": "Both warming examples assert Effect<CacheWarmReceipt, CacheCommandError> with no required service.",
+    "exclusiveCreateControl": {
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 1.954,
+        "finishedAt": "2026-10-30T22:31:16.889263+00:00"
+      },
+      "recordedAt": "2026-10-30T22:31:16.885118+00:00",
+      "control": "Change only exclusive-create wx to w; permission600 retained.",
+      "expectedFailure": "existing observation output was overwritten; intended failure assertion expected false to be true",
+      "exit": 1,
+      "outputSha256": "1c1a61e9b6cd6c11d678b627b4037dfbd497cffda829bbe54f33d6f1507ca7d1",
+      "sourceBeforeSha256": "0f873dedf677b2815a3f3c7778e1cab50beaf99b7ff6f0347a52cd23ac10c8f6",
+      "mutatedSourceSha256": "9c7757ce2ec017c6c5214f22db705db9c9f94d0fdf9eb532d1a8d805677d6696",
+      "exactSourceRestored": true
+    }
+  },
+  "productionRuntimeOrInfrastructureChanges": false,
+  "writerServiceRefinementParent": "c99a60cb499887d072191b52efa474afe4ef278c",
+  "priorInterruptedDefaultPackage": {
+    "status": "incomplete-environment-interruption",
+    "sourceRevision": "f1ec51b74e51eb7da37626c4e265e3a75ac045b1",
+    "exit": 1,
+    "elapsedSeconds": 1012.575,
+    "finishedAt": "2026-10-30T23:08:46.381335+00:00",
+    "audit": {
+      "exit": 143,
+      "seconds": 969.8,
+      "attribution": "System earlyoom journal records SIGTERM of this checkout's Vitest process at 23:08:04 UTC during low-memory/swap exhaustion. The audit did not complete."
+    },
+    "docgen": {
+      "exit": 0,
+      "seconds": 41.2
+    },
+    "retry": "Required on unchanged implementation after active heavy proofs settle. Narrow focused passes do not substitute for this complete package audit.",
+    "sourceOrQualityThresholdsChangedForFailure": false
+  }
+}

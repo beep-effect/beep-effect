@@ -1,0 +1,179 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A substrate processing apparatus for performing a predetermined process on a substrate, comprising:
+<claim-text>a holding plate having a holding surface configured to be opposed a back surface of a substrate;</claim-text>
+<claim-text>at least one vacuum suction port formed in said holding surface and configured to attract said substrate to said holding surface by vacuum suction; and</claim-text>
+<claim-text>a plurality of Bernoulli suction ports formed in said holding surface and configured to attract said substrate to said holding surface by Bernoulli suction,</claim-text>
+<claim-text>said holding surface including a circular region disposed concentrically with the center of said holding surface, and an annular region disposed concentrically with said circular region,</claim-text>
+<claim-text>at least one of said Bernoulli suction ports being disposed in said circular region,</claim-text>
+<claim-text>at least one of said Bernoulli suction ports being disposed in said annular region.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The substrate processing apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>an embankment provided upright along the outer edge of said holding surface; and</claim-text>
+<claim-text>a plurality of protrusions provided upright in a region of said holding surface surrounded by said embankment,</claim-text>
+<claim-text>the tops of the respective protrusions being flush with the top of said embankment.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The substrate processing apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein
+<claim-text>at least two of said Bernoulli suction ports are disposed in said annular region, and</claim-text>
+<claim-text>said at least two Bernoulli suction ports disposed in said annular region are arranged in a circumferential direction of said annular region.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The substrate processing apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>an embankment provided upright so as to surround each of said circular region and a plurality of arcuate regions defined by dividing said annular region in a circumferential direction of said annular region; and</claim-text>
+<claim-text>a plurality of protrusions provided upright in each of the regions of said holding surface surrounded by said embankment,</claim-text>
+<claim-text>the tops of the respective protrusions being flush with the top of said embankment,</claim-text>
+<claim-text>said at least one vacuum suction port including a plurality of vacuum suction ports,</claim-text>
+<claim-text>at least one of said vacuum suction ports and at least one of said Bernoulli suction ports being disposed in each of said arcuate regions,</claim-text>
+<claim-text>at least one of said vacuum suction ports and at least one of said Bernoulli suction ports being disposed in said circular region.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The substrate processing apparatus according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein
+<claim-text>said arcuate regions are equal in area to each other.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The substrate processing apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising
+<claim-text>a pressure sensor for detecting the pressure on said holding surface,</claim-text>
+<claim-text>wherein suction through said at least one vacuum suction port is started after the substrate is placed on said holding surface, and</claim-text>
+<claim-text>wherein suction through said Bernoulli suction ports is started, when said pressure sensor does not detect that the suction pressure on said holding surface becomes a lower pressure than a predetermined value after a lapse of a determined time period since the start of the suction through said at least one vacuum suction port.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The substrate processing apparatus according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein
+<claim-text>the suction through said Bernoulli suction ports is stopped, when said pressure sensor detects that the suction pressure on said holding surface becomes a lower pressure than the predetermined value after the start of the suction through said Bernoulli suction ports.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The substrate processing apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a recess provided in the back surface of said holding plate and communicating with each of said Bernoulli suction ports at the bottom surface as seen in the depth direction; and</claim-text>
+<claim-text>a Bernoulli suction unit disposed inside said recesses,</claim-text>
+<claim-text>said Bernoulli suction unit including</claim-text>
+<claim-text>a body part having a cylindrical recessed space formed therein, said body part being fixedly supported inside said recess, with a slight gap produced between said body part and the bottom and wall surfaces of said recess as seen in the depth direction, and</claim-text>
+<claim-text>an ejection nozzle for ejecting a gas into said cylindrical recessed space to produce a swirl flow in said cylindrical recessed space.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The substrate processing apparatus according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein
+<claim-text>each of said Bernoulli suction ports has a diameter less than the diameter of said cylindrical recessed space.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A substrate holding apparatus for holding a substrate, comprising:
+<claim-text>a holding plate having a holding surface configured to be opposed a back surface of a substrate;</claim-text>
+<claim-text>at least one vacuum suction port formed in said holding surface and configured to attract said substrate to said holding surface by vacuum suction; and</claim-text>
+<claim-text>a plurality of Bernoulli suction ports formed in said holding surface and configured to attract said substrate to said holding surface by Bernoulli suction,</claim-text>
+<claim-text>said holding surface including a circular region disposed concentrically with the center of said holding surface, and an annular region disposed concentrically with said circular region,</claim-text>
+<claim-text>at least one of said Bernoulli suction ports being disposed in said circular region,</claim-text>
+<claim-text>at least one of said Bernoulli suction ports being disposed in said annular region.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The substrate holding apparatus according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising:
+<claim-text>an embankment provided upright along the outer edge of said holding surface; and</claim-text>
+<claim-text>a plurality of protrusions provided upright in a region of said holding surface surrounded by said embankment,</claim-text>
+<claim-text>the tops of the respective protrusions being flush with the top of said embankment.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The substrate holding apparatus according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein
+<claim-text>at least two of said Bernoulli suction ports are disposed in said annular region, and</claim-text>
+<claim-text>said at least two Bernoulli suction ports disposed in said annular region are arranged in a circumferential direction of said annular region.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The substrate holding apparatus according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising:
+<claim-text>an embankment provided upright so as to surround each of said circular region and a plurality of arcuate regions defined by dividing said annular region in a circumferential direction of said annular region; and</claim-text>
+<claim-text>a plurality of protrusions provided upright in each of the regions of said holding surface surrounded by said embankment,</claim-text>
+<claim-text>the tops of the respective protrusions being flush with the top of said embankment,</claim-text>
+<claim-text>said at least one vacuum suction port including a plurality of vacuum suction ports,</claim-text>
+<claim-text>at least one of said vacuum suction ports and at least one of said Bernoulli suction ports being disposed in each of said arcuate regions,</claim-text>
+<claim-text>at least one of said vacuum suction ports and at least one of said Bernoulli suction ports being disposed in said circular region.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The substrate holding apparatus according to <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein
+<claim-text>said arcuate regions are equal in area to each other.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The substrate holding apparatus according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising
+<claim-text>a pressure sensor for detecting the pressure on said holding surface,</claim-text>
+<claim-text>wherein suction through said at least one vacuum suction port is started after the substrate is placed on said holding surface, and</claim-text>
+<claim-text>wherein suction through said Bernoulli suction ports is started, when said pressure sensor does not detect that the suction pressure on said holding surface becomes a lower pressure than a predetermined value after a lapse of a determined time period since the start of the suction through said at least one vacuum suction port.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The substrate holding apparatus according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein
+<claim-text>the suction through said Bernoulli suction ports is stopped, when said pressure sensor detects that the suction pressure on said holding surface becomes a lower pressure than the predetermined value after the start of the suction through said Bernoulli suction ports.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The substrate holding apparatus according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising:
+<claim-text>a recess provided in the back surface of said holding plate and communicating with each of said Bernoulli suction ports at the bottom surface as seen in the depth direction; and</claim-text>
+<claim-text>a Bernoulli suction unit disposed inside said recesses,</claim-text>
+<claim-text>said Bernoulli suction unit including</claim-text>
+<claim-text>a body part having a cylindrical recessed space formed therein, said body part being fixedly supported inside said recess, with a slight gap produced between said body part and the bottom and wall surfaces of said recess as seen in the depth direction, and</claim-text>
+<claim-text>an ejection nozzle for ejecting a gas into said cylindrical recessed space to produce a swirl flow in said cylindrical recessed space.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The substrate holding apparatus according to <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein
+<claim-text>each of said Bernoulli suction ports has a diameter less than the diameter of said cylindrical recessed space.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. A method of holding a substrate, comprising the steps of:
+<claim-text>a) placing a substrate on a holding surface formed on a holding plate, with a back surface of said substrate opposed to said holding surface;</claim-text>
+<claim-text>b) forming a suction pressure in at least one vacuum suction port formed in said holding surface by vacuum suction; and</claim-text>
+<claim-text>c) forming a suction pressure in at least one of a plurality of Bernoulli suction ports formed in said holding surface by Bernoulli suction,</claim-text>
+<claim-text>said holding surface including a circular region disposed concentrically with the center of said holding surface, and an annular region disposed concentrically with said circular region,</claim-text>
+<claim-text>at least one of said Bernoulli suction ports being disposed in said circular region,</claim-text>
+<claim-text>at least one of said Bernoulli suction ports being disposed in said annular region.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method according to <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein:
+<claim-text>an embankment is provided upright along the outer edge of said holding surface;</claim-text>
+<claim-text>a plurality of protrusions are provided upright in a region of said holding surface surrounded by said embankment; and</claim-text>
+<claim-text>the tops of the respective protrusions are flush with the top of said embankment.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The method according to <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein:
+<claim-text>at least two of said Bernoulli suction ports are disposed in said annular region; and</claim-text>
+<claim-text>said at least two Bernoulli suction ports disposed in said annular region are arranged in a circumferential direction of said annular region.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The method according to <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein:
+<claim-text>an embankment is provided upright so as to surround each of said circular region and a plurality of arcuate regions defined by dividing said annular region in a circumferential direction of said annular region;</claim-text>
+<claim-text>a plurality of protrusions are provided upright in each of the regions of said holding surface surrounded by said embankment;</claim-text>
+<claim-text>the tops of the respective protrusions are flush with the top of said embankment;</claim-text>
+<claim-text>said at least one vacuum suction port includes a plurality of vacuum suction ports;</claim-text>
+<claim-text>at least one of said vacuum suction ports and at least one of said Bernoulli suction ports are disposed in each of said arcuate regions; and</claim-text>
+<claim-text>at least one of said vacuum suction ports and at least one of said Bernoulli suction ports are disposed in said circular region.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The method according to <claim-ref idref="CLM-00022">claim 22</claim-ref>, wherein
+<claim-text>said arcuate regions are equal in area to each other.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. The method according to <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein:
+<claim-text>said step b) is started after the substrate is placed on said holding surface; and</claim-text>
+<claim-text>said step c) is started, when a suction pressure on said holding surface does not become a lower pressure than a predetermined value after a lapse of a determined time period since the start of said step b).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text><b>25</b>. The method according to <claim-ref idref="CLM-00024">claim 24</claim-ref>, wherein
+<claim-text>said Bernoulli suction is stopped, when the suction pressure on said holding surface becomes a lower pressure than the predetermined value after the start of said step c). </claim-text>
+</claim-text>
+</claim>
+</claims>

@@ -1,0 +1,774 @@
+{
+  "schemaVersion": "agent-observation-inventory/v1",
+  "observedAt": "2026-10-29T04:03:12.826Z",
+  "populationWindowStart": "2026-10-28T04:03:11.160Z",
+  "populationWindowEnd": "2026-10-29T04:03:11.160Z",
+  "boundaryEvidenceId": "cb63464c73283652637721c56bcb07fe4884cac319a2b5c78993fe0fabde751e",
+  "hosts": [
+    {
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "identityNamespaceId": "d8a2deff993421c1cca651957dd17064f02c4deb8bf3eaa150116b9f58a83cc4"
+    }
+  ],
+  "roots": [
+    {
+      "rootId": "root-aac575785a820135a5c1e852686e75ad9589120c36ad224c4f3e414b03aa5270",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "4bb3720a4ba6ee7c4727f9305c8433da69322a2ae225fcc8bc6be31eb14eecf8"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "d0ec2da1b4dde6743a301e652c33406f042735f4fed5a8801cb1877c082bb867",
+        "evidenceId": "4bb3720a4ba6ee7c4727f9305c8433da69322a2ae225fcc8bc6be31eb14eecf8"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "3ca8e755bd181abf306518469bec947268e32d65be21d34568a13c8019db6e80",
+        "evidenceId": "4bb3720a4ba6ee7c4727f9305c8433da69322a2ae225fcc8bc6be31eb14eecf8"
+      },
+      "availability": "present",
+      "evidenceId": "4bb3720a4ba6ee7c4727f9305c8433da69322a2ae225fcc8bc6be31eb14eecf8"
+    },
+    {
+      "rootId": "root-2dcb864e4efca59e46df42e38ab247f36281e1bed744dcabf427a5899174b695",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "31a7f46ecb155d64f8a7c8709bf53be8ac72540ac827e49918c43333da88f1f3"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "c3fdef80cb27537a62e707fac19d6774bb36d32d9401f238049b4a61a0e64818",
+        "evidenceId": "31a7f46ecb155d64f8a7c8709bf53be8ac72540ac827e49918c43333da88f1f3"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "f78cacac4eba0446eaa5405621652b879af3f2acb5f822c0d1b33356fb3851b9",
+        "evidenceId": "31a7f46ecb155d64f8a7c8709bf53be8ac72540ac827e49918c43333da88f1f3"
+      },
+      "availability": "present",
+      "evidenceId": "31a7f46ecb155d64f8a7c8709bf53be8ac72540ac827e49918c43333da88f1f3"
+    },
+    {
+      "rootId": "root-85572416f5a510f9c8aedadc3eb33f17e2f9d0d67d726443210936f6e12047a0",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Unknown"
+      },
+      "cloneId": {
+        "_tag": "Unknown"
+      },
+      "worktreeId": {
+        "_tag": "Unknown"
+      },
+      "availability": "unreachable",
+      "evidenceId": "38b475a9da89778ecd1b392f531410db43740252429c15f12989187c00cd677c"
+    },
+    {
+      "rootId": "root-d337e5ca3dd614be695b93555b55bfd0ab5e3dff58576524e184e5506a2bdefe",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "562d11b87dcb643e226582c22edefd23f243c008162f998d55d1fe7598540ad6"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "a6e91c3ce9a5fda8762e745ad6e3127db890cb35ec9aed2f089829914f3dbc6d",
+        "evidenceId": "562d11b87dcb643e226582c22edefd23f243c008162f998d55d1fe7598540ad6"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "ceb3dbbf5977bd2640666b95b40a085ee8c127dfdd1ff545b604fb056e17db15",
+        "evidenceId": "562d11b87dcb643e226582c22edefd23f243c008162f998d55d1fe7598540ad6"
+      },
+      "availability": "present",
+      "evidenceId": "562d11b87dcb643e226582c22edefd23f243c008162f998d55d1fe7598540ad6"
+    },
+    {
+      "rootId": "root-9345880f639809d20cfa97f1eb135b56e061ffe5b463bd27a1641b55a16aeaa4",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "558ac03baebb6d92429b27857579676a076e62cf1b906a96b1c63af2850f3135"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "4c9b01ccebd249b420ac5fd467e4d3f7962df54e24e4a7948db99a844d7e3502",
+        "evidenceId": "558ac03baebb6d92429b27857579676a076e62cf1b906a96b1c63af2850f3135"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "7581720b5d12b552348f3f0c9ba805a93f998ac9f445671071e29798c8ee60c5",
+        "evidenceId": "558ac03baebb6d92429b27857579676a076e62cf1b906a96b1c63af2850f3135"
+      },
+      "availability": "present",
+      "evidenceId": "558ac03baebb6d92429b27857579676a076e62cf1b906a96b1c63af2850f3135"
+    },
+    {
+      "rootId": "root-9452e1a1c2650c2c6cddae76aea3e694432b2d38d87d2746a47f38d1a1bab846",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "6afd9c4b39414e2041fc0ba794750c961aed8294416ae62bf739c76c22ca7d50"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "c548e4a58262cde4dd767945d4f6f37f333534e9074b72ae9b5dd043cdb1a07e",
+        "evidenceId": "6afd9c4b39414e2041fc0ba794750c961aed8294416ae62bf739c76c22ca7d50"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "1dafe372d4645ecb0fca0fbbd9017fbb8074da5e0bab11cf1373f8f64a508bb5",
+        "evidenceId": "6afd9c4b39414e2041fc0ba794750c961aed8294416ae62bf739c76c22ca7d50"
+      },
+      "availability": "present",
+      "evidenceId": "6afd9c4b39414e2041fc0ba794750c961aed8294416ae62bf739c76c22ca7d50"
+    },
+    {
+      "rootId": "root-7679a24e4f713ee98fca1b9ecf1eb16c776051bc9125e9fcae8e3d83a141399f",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "5f0d13d38d4c56757f0919ed726e1c6255813be0da0b78a49443a22d31e684e6"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "e5556b735220c9b245570ef128b6c4541bd55bba9990ec86431f3c7d70ac790d",
+        "evidenceId": "5f0d13d38d4c56757f0919ed726e1c6255813be0da0b78a49443a22d31e684e6"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "8a01f299362498ed8552e66230b87c21d9711790177f4a75d4bdc8a656abcc21",
+        "evidenceId": "5f0d13d38d4c56757f0919ed726e1c6255813be0da0b78a49443a22d31e684e6"
+      },
+      "availability": "present",
+      "evidenceId": "5f0d13d38d4c56757f0919ed726e1c6255813be0da0b78a49443a22d31e684e6"
+    },
+    {
+      "rootId": "root-c0282d9e19b8136c5cd65dd3c18e3d50a1c1581dc1db2346775571bc893cd512",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "ebc33e915f077a5c343ec677b247410162bad48ac39ec6b491cd50c6833f86f0"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "e453ba81aada348616c54f35598a361d1bc0b92236a7ffebc71d2245a1ddc441",
+        "evidenceId": "ebc33e915f077a5c343ec677b247410162bad48ac39ec6b491cd50c6833f86f0"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "2ef15e04f20450d2894c1f71d7dc03525d5f068cce0049c3bd1c5376e7712c7d",
+        "evidenceId": "ebc33e915f077a5c343ec677b247410162bad48ac39ec6b491cd50c6833f86f0"
+      },
+      "availability": "present",
+      "evidenceId": "ebc33e915f077a5c343ec677b247410162bad48ac39ec6b491cd50c6833f86f0"
+    },
+    {
+      "rootId": "root-5c7aa5a78a7299728e4e2c55472c2a4cf2b81e7356d20f9c930c57e64d0c51e0",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "bcd663d2156fcb525d5c25de59c2c2349923984bd67044b5591e3a98e8925fea"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "9d9b29b91b689fd8b03252b8b7cd152e4d35a7d470a35755fef3f18ce64a1856",
+        "evidenceId": "bcd663d2156fcb525d5c25de59c2c2349923984bd67044b5591e3a98e8925fea"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "3ad71f58fdb6c5a202e76242a2e087894fc3ac0f80dc82bf8e6ea610190dc621",
+        "evidenceId": "bcd663d2156fcb525d5c25de59c2c2349923984bd67044b5591e3a98e8925fea"
+      },
+      "availability": "present",
+      "evidenceId": "bcd663d2156fcb525d5c25de59c2c2349923984bd67044b5591e3a98e8925fea"
+    },
+    {
+      "rootId": "root-3aff1290dcdc8d506f5cdd9b7a6484d3076a00b7352897de2bf3312fc4dd756b",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "be29ec3d3cf3135d4ef08c4bdd63ab7941c47e6b2fc537066a84bb33a1174e4b"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "75e50312db811d8a45e56e3a852bbb4153d3db4485442425badae8e8db20ce4f",
+        "evidenceId": "be29ec3d3cf3135d4ef08c4bdd63ab7941c47e6b2fc537066a84bb33a1174e4b"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "46b97f2e718f7f804e340b509081ee83424dd9fbfb63751dca8d4e8aa873c844",
+        "evidenceId": "be29ec3d3cf3135d4ef08c4bdd63ab7941c47e6b2fc537066a84bb33a1174e4b"
+      },
+      "availability": "present",
+      "evidenceId": "be29ec3d3cf3135d4ef08c4bdd63ab7941c47e6b2fc537066a84bb33a1174e4b"
+    },
+    {
+      "rootId": "root-57203f9cc5954436f578c514b1de4428c3f07fc413dc02b45f40439cb2206d10",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "4972d11aecbed87f4c42f612e81d287d044ae0458bd2674727eff5bd879ff06b"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "f6b529773d91d97c2df826af5f068682a4e4c3bbf1ef8306b358c534c4f9d1f2",
+        "evidenceId": "4972d11aecbed87f4c42f612e81d287d044ae0458bd2674727eff5bd879ff06b"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "19346f79138b22733a79e2417042f99e290c701837b538c662c62730184e61e2",
+        "evidenceId": "4972d11aecbed87f4c42f612e81d287d044ae0458bd2674727eff5bd879ff06b"
+      },
+      "availability": "present",
+      "evidenceId": "4972d11aecbed87f4c42f612e81d287d044ae0458bd2674727eff5bd879ff06b"
+    },
+    {
+      "rootId": "root-ddf79a6368a26cb9467f531fd8d520ee47f939a6fdb47ae0747e1a928bbea94a",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "6ed7caa999d034a304e022dab94c2de477472a156c2c07ab682cd6af168c836f"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "3dd971847fab2c7cef384ecdbff1260eaf60f89f888367da96a3445ac14df741",
+        "evidenceId": "6ed7caa999d034a304e022dab94c2de477472a156c2c07ab682cd6af168c836f"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "ce594a1ba478a4f12b7bf6a68b019739a618f7fa46fb86e2ac49ed00caa67077",
+        "evidenceId": "6ed7caa999d034a304e022dab94c2de477472a156c2c07ab682cd6af168c836f"
+      },
+      "availability": "present",
+      "evidenceId": "6ed7caa999d034a304e022dab94c2de477472a156c2c07ab682cd6af168c836f"
+    },
+    {
+      "rootId": "root-c298573fb26a6983cbddfc5d166c4b4f54548f2a4c89a7733526692ade5c9fea",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "fdf7ff1e2a13589e9e498bec81f229ddb4cdc5822054f42a47bd338bf5b752bf"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "58e51809eb6b53511f184ab0fdece637db1df48191a4807ce3d0468a40b18dc6",
+        "evidenceId": "fdf7ff1e2a13589e9e498bec81f229ddb4cdc5822054f42a47bd338bf5b752bf"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "253973a6b7cb0521112824e9659f7f7776f3ab55c154af5c8ea0f8c5349f34eb",
+        "evidenceId": "fdf7ff1e2a13589e9e498bec81f229ddb4cdc5822054f42a47bd338bf5b752bf"
+      },
+      "availability": "present",
+      "evidenceId": "fdf7ff1e2a13589e9e498bec81f229ddb4cdc5822054f42a47bd338bf5b752bf"
+    },
+    {
+      "rootId": "root-0c1348e0ea9f1e45c44e1518b992c85629a3324d00e48bc1964711ef87676f91",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "6f50a3f7f7727ebb5e647d3d1ee811dca99c0f14b44032d1f0b9bc50c7d6eb0d"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "ba483e513612cc0640a3d7f992954d72d9d93e51595d1ce4388fced45dfd301f",
+        "evidenceId": "6f50a3f7f7727ebb5e647d3d1ee811dca99c0f14b44032d1f0b9bc50c7d6eb0d"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "03534ddeeccea08b30d6c918dd16f77b36d75cda520d8e765950be065d6d0630",
+        "evidenceId": "6f50a3f7f7727ebb5e647d3d1ee811dca99c0f14b44032d1f0b9bc50c7d6eb0d"
+      },
+      "availability": "present",
+      "evidenceId": "6f50a3f7f7727ebb5e647d3d1ee811dca99c0f14b44032d1f0b9bc50c7d6eb0d"
+    },
+    {
+      "rootId": "root-d744c8c599ed1f0adb2d911a2d8344fad873cf973830f2135a1bbca32f0bb501",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "b004de199b2f174151391dd8dab58226126480bcec0692ece94baa1b6225ba39"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "b9950f98afd04888fbf02df0ed5fc91f9db5892fd25d0994beb65d81a6bc519f",
+        "evidenceId": "b004de199b2f174151391dd8dab58226126480bcec0692ece94baa1b6225ba39"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "009a09ba13f367fe6478583229a2e3a9fdd9632e7b0f21e920601fbf55ef164d",
+        "evidenceId": "b004de199b2f174151391dd8dab58226126480bcec0692ece94baa1b6225ba39"
+      },
+      "availability": "present",
+      "evidenceId": "b004de199b2f174151391dd8dab58226126480bcec0692ece94baa1b6225ba39"
+    },
+    {
+      "rootId": "root-3496aebf4a478ba133a4a362a6a5411f53d25efb1eb2324c138ffb60e7ecb6e9",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "8deb337cb5699fb3884bd08aff7d3e2edd0416f4db16bf72fbf8be88a2a8dd5e"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "56eba4ef65a8fb7492e5d767b6c2a9695e371bd098a9ad837715b84811bc4250",
+        "evidenceId": "8deb337cb5699fb3884bd08aff7d3e2edd0416f4db16bf72fbf8be88a2a8dd5e"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "8f979c30ce5c7e62d5300b8855520699587798dadbe645d08782c3634a4aaf2e",
+        "evidenceId": "8deb337cb5699fb3884bd08aff7d3e2edd0416f4db16bf72fbf8be88a2a8dd5e"
+      },
+      "availability": "present",
+      "evidenceId": "8deb337cb5699fb3884bd08aff7d3e2edd0416f4db16bf72fbf8be88a2a8dd5e"
+    },
+    {
+      "rootId": "root-c5f51e5d49ae1ad0be9804391d1acd95f2c41e5558a10afacd9a347135237f87",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "a7cb7f0c7eb940f87f39a7857978bd7bc747853b85a08f53e0f8fe43f6486baa"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "c1af6fe5d68adcbcb4b158b4a581f7ff757dcfcdc92442cdc8409cb726107a87",
+        "evidenceId": "a7cb7f0c7eb940f87f39a7857978bd7bc747853b85a08f53e0f8fe43f6486baa"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "6f7feab032fda692fd316bc21ca7ca2bcb5ffcfe8eb1216ee960e19ce1901dbc",
+        "evidenceId": "a7cb7f0c7eb940f87f39a7857978bd7bc747853b85a08f53e0f8fe43f6486baa"
+      },
+      "availability": "present",
+      "evidenceId": "a7cb7f0c7eb940f87f39a7857978bd7bc747853b85a08f53e0f8fe43f6486baa"
+    },
+    {
+      "rootId": "root-ba71812c373ee24ab1c505dfa58b4d4983bf35c5ed31cb20d4f822ee4999cfb4",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "ce33c0272f20dd15af7ce30492a319ae9c3a42a7f5844829656aaf39c7816217"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "14d1c88ca26fa0d1394d3e91adb98a004f8d3b532f8b50b02b0baa25e78ced5a",
+        "evidenceId": "ce33c0272f20dd15af7ce30492a319ae9c3a42a7f5844829656aaf39c7816217"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "b8313e00dd512672ae15e9cecacc2d86fe29040a45a8676e366c1502087b4d38",
+        "evidenceId": "ce33c0272f20dd15af7ce30492a319ae9c3a42a7f5844829656aaf39c7816217"
+      },
+      "availability": "present",
+      "evidenceId": "ce33c0272f20dd15af7ce30492a319ae9c3a42a7f5844829656aaf39c7816217"
+    },
+    {
+      "rootId": "root-4e196cc285e0db3805b35d3e33cf081b4bd2bebb7e3c5420bf6a44f5fc54251d",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "81a44f54cde6514de4407d7a5a370840fe988129715cfd942d954e0c80e44857"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "b22d5a5cc98dac32a0bc9a8bd53348960d9e097b92668dcf3d2181407911d366",
+        "evidenceId": "81a44f54cde6514de4407d7a5a370840fe988129715cfd942d954e0c80e44857"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "4d6a4499bb6a7d75259e598382e079d02d054fc8d181f0e19412859dfa12478d",
+        "evidenceId": "81a44f54cde6514de4407d7a5a370840fe988129715cfd942d954e0c80e44857"
+      },
+      "availability": "present",
+      "evidenceId": "81a44f54cde6514de4407d7a5a370840fe988129715cfd942d954e0c80e44857"
+    },
+    {
+      "rootId": "root-1d13a9b289fc2543c3cf575d3a255c7c2895c3823a3875b11f6e38e788252346",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "dc579ff2a9d6e995328b142d3489792d9f1e83403c23364051f34c5308994272"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "3f938332925300be54ba10c5fbd3131bb513e7415c811d5f268de350dcc1848f",
+        "evidenceId": "dc579ff2a9d6e995328b142d3489792d9f1e83403c23364051f34c5308994272"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "317aa8de09bf8dc0fc2a4845e7324070014aece788316200fcc9c038778fc7b9",
+        "evidenceId": "dc579ff2a9d6e995328b142d3489792d9f1e83403c23364051f34c5308994272"
+      },
+      "availability": "present",
+      "evidenceId": "dc579ff2a9d6e995328b142d3489792d9f1e83403c23364051f34c5308994272"
+    },
+    {
+      "rootId": "root-177885c6515e6292448f0ff5a0a451cdbba26d61dc57613d163ced62be5a678d",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "4ab1660229ab5d5e6f4d0992d29cf96195ebf74f75efc8fb9108de97a2032762"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "7cd171ecd00940bedb942a4727dba06e094fd5f5f269bb219fa5143221c7e359",
+        "evidenceId": "4ab1660229ab5d5e6f4d0992d29cf96195ebf74f75efc8fb9108de97a2032762"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "2b847058a4e8cf51a62746abd189bb18677d9efe0f6398c3a8f948891218e05d",
+        "evidenceId": "4ab1660229ab5d5e6f4d0992d29cf96195ebf74f75efc8fb9108de97a2032762"
+      },
+      "availability": "present",
+      "evidenceId": "4ab1660229ab5d5e6f4d0992d29cf96195ebf74f75efc8fb9108de97a2032762"
+    },
+    {
+      "rootId": "root-af2099a66b836646cdb85a5686dcf8b8fcabe76f1800964e30df1931c499f2f7",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "8373b9abc8adedfcbf93de7838525ac422055c49b4bfc643f0481d762543c9d2"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "35a5d153c6aea935c1e84be9c26aeaf9439690780abfd8b0e50319c6a504ec49",
+        "evidenceId": "8373b9abc8adedfcbf93de7838525ac422055c49b4bfc643f0481d762543c9d2"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "b2a94929df822c4bd996cbf66ad35e8a3177830151de695fbf1d962085b657aa",
+        "evidenceId": "8373b9abc8adedfcbf93de7838525ac422055c49b4bfc643f0481d762543c9d2"
+      },
+      "availability": "present",
+      "evidenceId": "8373b9abc8adedfcbf93de7838525ac422055c49b4bfc643f0481d762543c9d2"
+    },
+    {
+      "rootId": "root-480dc71f5e40473d48c0d7eb2472a982c434bacbece28ff0a51902715cc88d5f",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "a926f0491e3704bd650f4cb36a9211523d442eba556ab025bffef606471d403d"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "b3902175d8b70416c5b7ee7de453a954b0bb3b09ab491afd6facf15685754999",
+        "evidenceId": "a926f0491e3704bd650f4cb36a9211523d442eba556ab025bffef606471d403d"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "22b95530587159c082395c9a643544e5ee2f9e84cc4a4640d9faf45937b0fcea",
+        "evidenceId": "a926f0491e3704bd650f4cb36a9211523d442eba556ab025bffef606471d403d"
+      },
+      "availability": "present",
+      "evidenceId": "a926f0491e3704bd650f4cb36a9211523d442eba556ab025bffef606471d403d"
+    },
+    {
+      "rootId": "root-1c1cf6b0ab40c280d51760672630563bfe7ca0d547b96f2c28faed202b61e7bd",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "dc74d85739b3f152728ef2d41e4305195d09f2a90735322cc1fbe191a8484aa2"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "a25f0aed1603bda01a11d9838cce72ab5ce52c13d50451c377e84b0b879cae9d",
+        "evidenceId": "dc74d85739b3f152728ef2d41e4305195d09f2a90735322cc1fbe191a8484aa2"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "61f201991f60f675caac40e78eea1d45c5ea991d8de952c64dbe34f0a1d04a19",
+        "evidenceId": "dc74d85739b3f152728ef2d41e4305195d09f2a90735322cc1fbe191a8484aa2"
+      },
+      "availability": "present",
+      "evidenceId": "dc74d85739b3f152728ef2d41e4305195d09f2a90735322cc1fbe191a8484aa2"
+    },
+    {
+      "rootId": "root-1ce04cf9dbce002e461a40de83b89b42fef770af579605ddde9c7bed53abf3e1",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "2838f4f65c3c80a25f8efd0b35f160421fab77f7b7e4282064d2f3acc889e280",
+        "evidenceId": "739b83e7f094ecead79c2466d58f571ce1b36a0f440048c7a360603cd99e92b6"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "16adb294364b2a12c46351c1b67a0d05df478e77363f4c094bfae331bd268c82",
+        "evidenceId": "739b83e7f094ecead79c2466d58f571ce1b36a0f440048c7a360603cd99e92b6"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "75885f62dfec79713922a46202c9b4fbb1540cebfe2633f8dc75145811a8b963",
+        "evidenceId": "739b83e7f094ecead79c2466d58f571ce1b36a0f440048c7a360603cd99e92b6"
+      },
+      "availability": "present",
+      "evidenceId": "739b83e7f094ecead79c2466d58f571ce1b36a0f440048c7a360603cd99e92b6"
+    },
+    {
+      "rootId": "root-1d43dc9debfd19c1195003a1f51656fd2ac5aa1703f4c41bc01c7504b82bc33c",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "aabadd1fb05d428f0d5e2789a97ed90933b50dc10ae9f3228fc9f2b352361db6",
+        "evidenceId": "2bea6279e190334be5137913462e099e7d2830c6eb87c3f43f9d8869624a3b75"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "d0ec2da1b4dde6743a301e652c33406f042735f4fed5a8801cb1877c082bb867",
+        "evidenceId": "2bea6279e190334be5137913462e099e7d2830c6eb87c3f43f9d8869624a3b75"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "505107a0d50c39d644739c22d2188f4676423406dcb7ff5bbc63f369eab138d6",
+        "evidenceId": "2bea6279e190334be5137913462e099e7d2830c6eb87c3f43f9d8869624a3b75"
+      },
+      "availability": "present",
+      "evidenceId": "2bea6279e190334be5137913462e099e7d2830c6eb87c3f43f9d8869624a3b75"
+    },
+    {
+      "rootId": "root-f8be0db64b4cea1c25f320212849e411d2b1f412959c9683ff59575dd39a8eb5",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "03524d855d0e8349d23ba998d8d5dbfb96b929d4ae4dff38fdb86c143612b2f0",
+        "evidenceId": "72d8aa01463b6b90e277ae4b5e1a6c121c15070afdbf4f232e0ddc551181c529"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "0a99831cf6f3c10a42701121f3d6f3fa5b1f61c5cb853ca6ce64cc01f815f913",
+        "evidenceId": "72d8aa01463b6b90e277ae4b5e1a6c121c15070afdbf4f232e0ddc551181c529"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "1b675d2338179125ca4391c38ced11bcc8850721c5ea0e07f48a2d8f7417dbc2",
+        "evidenceId": "72d8aa01463b6b90e277ae4b5e1a6c121c15070afdbf4f232e0ddc551181c529"
+      },
+      "availability": "present",
+      "evidenceId": "72d8aa01463b6b90e277ae4b5e1a6c121c15070afdbf4f232e0ddc551181c529"
+    },
+    {
+      "rootId": "root-211b4acf14c9dd52ec08cb38c007dfa3258982b7a862d0909850d0920ea59957",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "repositoryId": {
+        "_tag": "Verified",
+        "id": "03524d855d0e8349d23ba998d8d5dbfb96b929d4ae4dff38fdb86c143612b2f0",
+        "evidenceId": "454126a38298d34c97c1c8e665260511a156d95a7dae025c32205b8042205984"
+      },
+      "cloneId": {
+        "_tag": "Verified",
+        "id": "0a99831cf6f3c10a42701121f3d6f3fa5b1f61c5cb853ca6ce64cc01f815f913",
+        "evidenceId": "454126a38298d34c97c1c8e665260511a156d95a7dae025c32205b8042205984"
+      },
+      "worktreeId": {
+        "_tag": "Verified",
+        "id": "b4c7a5e57ac271f519ecd32d86db47d8fb6928e5601b5e88dbd4d7de26b7f302",
+        "evidenceId": "454126a38298d34c97c1c8e665260511a156d95a7dae025c32205b8042205984"
+      },
+      "availability": "present",
+      "evidenceId": "454126a38298d34c97c1c8e665260511a156d95a7dae025c32205b8042205984"
+    }
+  ],
+  "routes": [
+    {
+      "routeId": "db765ff23c7042b847a908785899524c3fdef715bc629999ccb46c3715e7374c",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "harness": "grok",
+      "surface": "unknown",
+      "transport": "unknown",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "05aafd4d6df9c7b26811a701812b9b1613f20ca1a9f4322bdc16db0ed8fefbd4",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "harness": "claude-code",
+      "surface": "unknown",
+      "transport": "unknown",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "e9824631391df74df28adc9bc461476df9abd4170ee4e1a36e1d5daf2454cb19",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "harness": "claude-desktop",
+      "surface": "unknown",
+      "transport": "unknown",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "9a52fe07c6d9dcce0db911c46245a25d48368aae3b81b44d78375bf855255ebe",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "harness": "codex-cli",
+      "surface": "unknown",
+      "transport": "unknown",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "6965210bd7542587f1a290e95ffe38990ea842c3e2f4919bba9b8cf56ea326d9",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "harness": "chatgpt-desktop",
+      "surface": "unknown",
+      "transport": "unknown",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "aadaf14bfe619238ff80f325827b32480e1e6a634666a452b952a7ba910e58d2",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "harness": "muse",
+      "surface": "unknown",
+      "transport": "unknown",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "d9893819615ea8540e810e0931175e66f6e867b0ee611d01dfab86c67cfc2e06",
+      "hostId": "210f21ccd3f7a62f614a74cfb161f8b6101919feff88bc217ddb2c312e96c3a6",
+      "harness": "cursor-agent",
+      "surface": "unknown",
+      "transport": "unknown",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    }
+  ]
+}

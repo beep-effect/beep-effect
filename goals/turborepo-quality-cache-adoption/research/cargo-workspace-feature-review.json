@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "cache-cargo-workspace-feature-review/v1",
+  "recordedAt": "2026-10-31T02:48:51.131065+00:00",
+  "authority": "Final current-tree no-change feature disposition from source and exact-client controls; no real Rust task qualification, activation or whole-goal acceptance.",
+  "sourceBaseRevision": "0e601a3d55f88d875ca49d47931e216a5a328aa2",
+  "feature": "futureFlag:experimentalCargoWorkspaces",
+  "owner": "turborepo-quality-cache-adoption",
+  "disposition": "accepted-retain-current-absence",
+  "rationale": "The two Tauri crates are standalone and the repository has no root Cargo workspace. Exact stable/canary discovery contrasts preserve the complete90-node current Bun build graph and add no native crate nodes. Retain the absent experimental flag and existing explicit native ownership. This does not classify Rust work as absent, ineligible or cache-qualified.",
+  "sourceEvidence": {
+    "rootCargoManifestPresent": false,
+    "rootCargoManifestTracked": false,
+    "rootFlagConfigured": "absent",
+    "cargoManifests": [
+      "apps/labs/semantica/src-tauri/Cargo.toml",
+      "apps/professional-desktop/src-tauri/Cargo.toml",
+      "vendor/rust/glib-0.18.5/Cargo.toml"
+    ],
+    "rustSources": {
+      "total": 114,
+      "owned": 6,
+      "vendor": 108
+    },
+    "boundFiles": 354,
+    "currentSourceReport": "native-cargo-applicability.json",
+    "currentSourceReportSha256": "c2d9044f92b7c4edc706cd323351942208e84e970f0830a1b0a7d5d2695fd23e",
+    "existingOwners": {
+      "@beep/semantica": "Standalone Tauri crate, explicit dev:tauri; ordinary build is the Vite frontend.",
+      "@beep/professional-desktop": "Standalone Tauri crate, explicit sidecar build plus frontend before native bundle. CI runs sidecar IPC, then locked Cargo check/clippy with required Linux system libraries.",
+      "vendor/rust/glib-0.18.5": "Existing patched GTK dependency; not another approved workspace."
+    }
+  },
+  "nativeEvidence": {
+    "report": "native-cargo-controls.json",
+    "sha256": "3bc6edc3ff7b8eece7ed82eaa93897402c6134f758497e9ea03f626d98dce24f",
+    "driver": "native-cargo-controls.py",
+    "driverSha256": "5889f99563176e94cdbf9e474c8fcf2bdc3e0dee1128cbdc23cd589a108d2039",
+    "channels": ["stable", "canary"],
+    "syntheticGraphCases": 8,
+    "syntheticRuntimeCases": 16,
+    "assertedCases": [
+      "Nested standalone crates are not discovered; a root Cargo workspace is discovered with the flag.",
+      "Explicit per-crate cache/output configuration restores a removed executable with identical bytes and executable mode.",
+      "Transitive library mutation invalidates the cache.",
+      "An undeclared external include_str input deliberately reproduces stale reuse; declaring it restores invalidation.",
+      "Restoring the declared source/input state reuses the corresponding earlier exact artifact."
+    ],
+    "limit": "Isolated offline Linux x64 synthetic fixtures; no Beep Rust build execution, platform portability or shared-target-directory qualification."
+  },
+  "currentGraphEvidence": {
+    "driver": "native-cargo-applicability.py",
+    "driverSha256": "11ff72065a1ffb8bbbfbb48bce787c99e37b818af2361fc8bb87cbe1a55642c6",
+    "calls": 4,
+    "selectedPackages": ["@beep/professional-desktop", "@beep/semantica"],
+    "prerequisiteNodes": 90,
+    "sameCompleteGraphPerChannel": true,
+    "captureBoundBytes": 8388608,
+    "observedBytes": [1194393, 1194401],
+    "sourceUnchanged": true,
+    "taskExecution": false
+  },
+  "assertionModeControls": [
+    {
+      "driver": "native-cargo-controls.py",
+      "exit": 64,
+      "refusedOptimizedMode": true,
+      "driverSha256": "5889f99563176e94cdbf9e474c8fcf2bdc3e0dee1128cbdc23cd589a108d2039"
+    },
+    {
+      "driver": "native-cargo-applicability.py",
+      "exit": 1,
+      "refusedOptimizedMode": true,
+      "driverSha256": "11ff72065a1ffb8bbbfbb48bce787c99e37b818af2361fc8bb87cbe1a55642c6"
+    }
+  ],
+  "currentFeatureMatrixPriorSha256": "e38231c62a3f6f90e23543183439bbb996e5fdc970d9f7413653a50264d60167",
+  "priorFeatureRow": {
+    "feature": "futureFlag:experimentalCargoWorkspaces",
+    "owner": "turborepo-quality-cache-adoption",
+    "stableSchemaDescription": "Treat the crates of a Cargo workspace as Turborepo packages.\n\nWhen enabled, Rust crates are discovered via `cargo metadata` and participate in the package graph: they resolve in `--filter` expressions, propagate `--affected`, and appear in `turbo query`. Filtered builds execute each selected crate. Unfiltered builds prefer entrypoints, falling back to libraries when no entrypoints exist. Entrypoints also expose `run` and `dev`. The `test`, `check`, `lint`, and `format` tasks are selectable per crate with `--filter`. An unfiltered run executes one workspace-wide Cargo verification command; filtered runs use the selected crates, or the workspace command when the workspace package is selected directly.\n\nAll crates implicitly register `build` and the verification tasks; entrypoints with one binary also register `run` and `dev`. The workspace package registers the verification tasks. Normal task definitions configure or override these defaults, and package configuration can exclude them with `extends: false`.\n\nTask caching uses Cargo-derived inputs and caches entrypoint build deliverables. Library builds and formatting default to uncached. This feature is experimental.",
+    "enabledInObservedRoot": false,
+    "canaryDocumentationObserved": false,
+    "prerequisites": [
+      "Exact-client regression evidence",
+      "Change only one experimental flag at a time"
+    ],
+    "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+    "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+    "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+    "disposition": "disabled; determine applicability before proposing activation",
+    "acceptanceStatus": "pending",
+    "nativeConfigurationObservation": {
+      "report": "native-future-flag-availability.json",
+      "stable": {
+        "false": "dry-run-accepted",
+        "true": "dry-run-accepted"
+      },
+      "canary": {
+        "false": "dry-run-accepted",
+        "true": "dry-run-accepted"
+      },
+      "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+    }
+  },
+  "expectedBenefit": "No measured benefit is claimed for enabling root Cargo discovery in the current topology. Existing Rust quality computations remain in scope for their own input/output review and qualification.",
+  "correctnessCase": "Both exact-client current graph contrasts plus synthetic root/nested discovery, output restoration, dependency/external mutation, unsafe undeclared-input and restored-state controls. No real native acceptance is inferred.",
+  "reopenWhen": [
+    "A root Cargo workspace or direct Turbo Rust consumer is proposed.",
+    "The pinned discovery/client contract changes.",
+    "Tauri/sidecar/native task ownership or supported target profiles change."
+  ],
+  "remainingRustQualityWork": [
+    "Review Cargo check, clippy, native build and sidecar computations separately, including lockfiles, vendored ABI patch, build.rs, C sources, external inputs and actual toolchain/target/system-library identity.",
+    "Qualify every eligible pure computation, exact owned outputs, safe logs, concurrency and supported portability before adopting its reuse.",
+    "Preserve fresh release/signing/provenance and hosted acceptance; the discovery flag grants no external or signing-verdict reuse."
+  ],
+  "runtimeOrConfigurationChanges": false,
+  "populationDispositionsChanged": 0,
+  "goalAcceptanceCriteriaCompleted": 0,
+  "verification": {
+    "nativeCases": "passed8 synthetic graphs,16 synthetic runtime cases and4 current-source graphs",
+    "optimizedMode": "both drivers refuse Python -O before native execution",
+    "packet": "goals doctor and explore --check pass on this prepared packet; publication/final/hosted/thread/window gates remain required"
+  }
+}

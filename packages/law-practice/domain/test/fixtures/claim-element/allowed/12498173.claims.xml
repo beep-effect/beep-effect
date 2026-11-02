@@ -1,0 +1,57 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A rapid drying and differential pressure measuring device for an exhaust gas reducer, comprising:
+<claim-text>a main body (<b>10</b>) which includes a lower support (<b>11</b>) and an upper support (<b>12</b>) located on the lower support (<b>11</b>) and in which a concave portion (<b>11</b><i>b</i>) concave downward is formed in an upper surface of the lower support (<b>11</b>) and an exhaust pipe (<b>11</b><i>c</i>) is provided at one side of the concave portion (<b>11</b><i>b</i>);</claim-text>
+<claim-text>a lifting barrel (<b>21</b>) which is formed in a cylindrical shape, of which a lower surface is open and an upper surface is provided with a plurality of through holes (<b>21</b><i>a</i>) formed therein, and airtightly coupled to the concave portion (<b>11</b><i>b</i>) and of which the upper surface allows the exhaust gas reducer (<b>1</b>) for a commercial vehicle to be loaded thereon;</claim-text>
+<claim-text>a lifting cylinder (<b>22</b>) connected to the lifting barrel (<b>21</b>) to raise or lower the lifting barrel (<b>21</b>);</claim-text>
+<claim-text>an upper adapter (<b>23</b>) which is provided on a lower surface of the upper support (<b>12</b>) and airtightly coupled to the exhaust gas reducer (<b>1</b>) for the commercial vehicle when the lifting barrel (<b>21</b>) is raised;</claim-text>
+<claim-text>a ring blower (<b>24</b>) provided in the lower support (<b>11</b>) and connected to the upper adapter (<b>23</b>) through an air supply pipe (<b>25</b>) to supply air to the upper adapter (<b>23</b>);</claim-text>
+<claim-text>a heater (<b>26</b>) which is provided in a middle portion of the air supply pipe (<b>25</b>) to divide the air supply pipe (<b>25</b>) into a first air supply part (<b>25</b><i>a</i>) connected to the ring blower (<b>24</b>) and a second air supply part (<b>25</b><i>b</i>) connected to the upper adapter (<b>23</b>) and heats air supplied through the air supply pipe (<b>25</b>);</claim-text>
+<claim-text>an entrance temperature sensor (<b>31</b>) provided in the second air supply part (<b>25</b><i>b</i>) to measure a temperature of air supplied to the upper adapter (<b>23</b>);</claim-text>
+<claim-text>an exit temperature sensor (<b>32</b>) provided in the concave portion (<b>11</b><i>b</i>) to measure an internal temperature of the concave portion (<b>11</b><i>b</i>);</claim-text>
+<claim-text>a humidity sensor (<b>33</b>) provided in the concave portion (<b>11</b><i>b</i>); and</claim-text>
+<claim-text>a controller (<b>34</b>) which receives signals of the entrance temperature sensor (<b>31</b>), the exit temperature sensor (<b>32</b>), and the humidity sensor (<b>33</b>) to control operation of the ring blower (<b>24</b>) and the heater (<b>26</b>),</claim-text>
+<claim-text>wherein, when the exhaust gas reducer (<b>1</b>) for the commercial vehicle is disposed on the upper surface of the lifting barrel (<b>21</b>), and the lifting cylinder (<b>22</b>) raises the lifting barrel (<b>21</b>), an upper end of the exhaust gas reducer (<b>1</b>) for the commercial vehicle is airtightly coupled to the upper adapter (<b>23</b>), and</claim-text>
+<claim-text>when the ring blower (<b>24</b>) is turned on, the air is supplied to the upper adapter (<b>23</b>) and discharged to the concave portion (<b>11</b><i>b</i>) through the exhaust gas reducer (<b>1</b>) for the commercial vehicle and the through hole (<b>21</b><i>a</i>) of the lifting barrel (<b>21</b>).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The rapid drying and differential pressure measuring device for the exhaust gas reducer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the upper adapter (<b>23</b>) is formed in a funnel shape of which the inner diameter increases downward;</claim-text>
+<claim-text>an air supply hole (<b>23</b><i>a</i>) is formed at one side of the upper adapter (<b>23</b>);</claim-text>
+<claim-text>a lifting pipe body (<b>23</b><i>b</i>) extending upward, coupled to the upper support (<b>12</b>) to be raised and lowered, and connected to the second air supply part (<b>25</b><i>b</i>) is provided in the air supply hole (<b>23</b><i>a</i>);</claim-text>
+<claim-text>the rapid drying and differential pressure measuring device for the exhaust gas reducer further includes a pressure spring (<b>23</b><i>e</i>) connected to the upper adapter (<b>23</b>) to press the upper adapter (<b>23</b>) downward and a raising detector (<b>15</b>) provided on the upper support (<b>12</b>) to detect raising of the upper adapter (<b>23</b>);</claim-text>
+<claim-text>an input unit (<b>34</b><i>a</i>) which is manipulated by a worker to input a control command is provided on the controller (<b>34</b>);</claim-text>
+<claim-text>when the worker arranges the exhaust gas reducer (<b>1</b>) for the commercial vehicle on the upper surface of the lifting barrel (<b>21</b>) and manipulates the input unit (<b>34</b><i>a</i>) to input a dry command, the controller (<b>34</b>) raises the lifting barrel (<b>21</b>) using the lifting cylinder (<b>22</b>);</claim-text>
+<claim-text>when the raising detector detects the raising of the upper adapter (<b>23</b>), the controller (<b>34</b>) stops the lifting cylinder (<b>22</b>) and turns the ring blower (<b>24</b>) and the heater (<b>26</b>) on to supply high temperature air to the upper adapter (<b>23</b>) and the exhaust gas reducer (<b>1</b>) for the commercial vehicle;</claim-text>
+<claim-text>when an internal humidity of the concave portion (<b>11</b><i>b</i>) measured by the humidity sensor (<b>33</b>) decreases to a preset reference humidity or less, the controller (<b>34</b>) turns the heater (<b>26</b>) off; and</claim-text>
+<claim-text>when an internal temperature of the concave portion (<b>11</b><i>b</i>) measured by the exit temperature sensor (<b>32</b>) decreases to a preset cooling temperature or less, the controller (<b>34</b>) turns the ring blower (<b>24</b>) off.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The rapid drying and differential pressure measuring device for the exhaust gas reducer of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>a support (<b>11</b><i>a</i>) extending upward is provided on a rear surface of the lower support (<b>11</b>);</claim-text>
+<claim-text>the upper support (<b>12</b>) is provided on an upper end of the support (<b>11</b><i>a</i>);</claim-text>
+<claim-text>a discharge hole (<b>11</b><i>d</i>) is formed in a front surface of the support (<b>11</b><i>a</i>);</claim-text>
+<claim-text>an exhaust pipe (<b>11</b><i>e</i>) extending rearward is provided in the discharge hole (<b>11</b><i>d</i>);</claim-text>
+<claim-text>the rapid drying and differential pressure measuring device for the exhaust gas reducer further includes left and right rotation panels (<b>41</b>, <b>42</b>) which extend forward and rearward and of which rear end portions are coupled to both sides of the front surface of the support (<b>11</b><i>a</i>) to be rotated in a lateral direction, rotation driving units (<b>43</b>) connected to the left and right rotation panels (<b>41</b>, <b>42</b>) to rotate the left and right rotation panels (<b>41</b>, <b>42</b>) in the lateral direction, and a discharge fan (<b>44</b>) provided in the exhaust pipe (<b>11</b><i>e</i>);</claim-text>
+<claim-text>extension portions (<b>41</b><i>a</i>, <b>42</b><i>a</i>) extending toward each other are formed on front end portions of the left and right rotation panels (<b>41</b>, <b>42</b>);</claim-text>
+<claim-text>when the left and right rotation panels (<b>41</b>, <b>42</b>) rotate forward, the left and right rotation panels (<b>41</b>, <b>42</b>) are disposed to surround an outer portion of the exhaust gas reducer (<b>1</b>) for the commercial vehicle loaded on the lifting barrel (<b>21</b>); and</claim-text>
+<claim-text>when the discharge fan (<b>44</b>) is driven, air is suctioned inside the left and right rotation panels (<b>41</b>, <b>42</b>) to cool the exhaust gas reducer for the commercial vehicle loaded on the lifting barrel (<b>21</b>) and is discharged to the outside through the exhaust pipe (<b>11</b><i>e</i>).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The rapid drying and differential pressure measuring device for the exhaust gas reducer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a 3-way valve (<b>27</b>) provided in the first air supply part (<b>25</b><i>a</i>);</claim-text>
+<claim-text>a branched pipe (<b>28</b>) connected to the 3-way valve (<b>27</b>); and</claim-text>
+<claim-text>an end portion differential air pressure sensor (<b>29</b>) connected to the branched pipe (<b>28</b>) to measure a differential pressure of the exhaust gas reducer (<b>1</b>) for the commercial vehicle.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The rapid drying and differential pressure measuring device for the exhaust gas reducer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a coupling pipe body (<b>36</b>) coupled to an air supply hole (<b>23</b><i>a</i>) of the upper adapter (<b>23</b>);</claim-text>
+<claim-text>a connection pipe (<b>37</b>) connected to the coupling pipe body (<b>36</b>); and</claim-text>
+<claim-text>a differential pressure measurement adapter (<b>38</b>) coupled to the connection pipe (<b>37</b>) to be connected to an air supply pipe (<b>6</b><i>a</i>) or exhaust pipe (<b>6</b><i>b</i>) of the exhaust gas reducer (<b>5</b>) for a passenger vehicle.</claim-text>
+</claim-text>
+</claim>
+</claims>

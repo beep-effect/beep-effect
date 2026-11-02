@@ -1,6 +1,8 @@
 /**
  * Epistemic server layer.
  *
+ * **Details**
+ *
  * Composes the slice's live service surface: the claim gate (wired over the
  * bounded SHACL engine), the lifecycle transition, and the gate-outcome resolver
  * that gives a rejected verdict somewhere durable to land. The shared
@@ -49,7 +51,7 @@ import type {
 } from "@beep/epistemic-use-cases/server";
 import type { SourceTextResolver } from "@beep/file-processing/SourceText";
 import type { PostgresDrizzle } from "@beep/postgres";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const ClaimGateLayer = Layer.effect(
   ClaimGate,
@@ -156,7 +158,7 @@ const ContradictionRpcLive = ContradictionHandlersLive.pipe(Layer.provide(Contra
 export const EpistemicServerRpcLive: Layer.Layer<
   Layer.Success<typeof ContradictionHandlersLive>,
   never,
-  ContradictionReviewer | ContradictionReviewScope | Crypto.Crypto | SourceTextResolver
+  ContradictionReviewer | ContradictionReviewScope | Digest.Digest | SourceTextResolver
 > = ContradictionRpcLive.pipe(Layer.provide(EpistemicServerLive));
 
 /**
@@ -182,7 +184,7 @@ export const EpistemicServerRpcLive: Layer.Layer<
 export const EpistemicServerDrizzleRpcLive: Layer.Layer<
   Layer.Success<typeof ContradictionHandlersLive>,
   never,
-  ContradictionReviewer | ContradictionReviewScope | Crypto.Crypto | PostgresDrizzle | SourceTextResolver
+  ContradictionReviewer | ContradictionReviewScope | Digest.Digest | PostgresDrizzle | SourceTextResolver
 > = ContradictionRpcLive.pipe(Layer.provide(EpistemicServerDrizzleLive));
 
 /**

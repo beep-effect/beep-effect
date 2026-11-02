@@ -1,0 +1,196 @@
+{
+  "familyId": "15958729-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.97,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the attachment",
+      "nativeQuote": "the attachment",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the piercing body",
+      "nativeQuote": "the piercing body",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the fore",
+      "nativeQuote": "the fore",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the hole",
+      "nativeQuote": "the hole",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the cross-sectional shape",
+      "nativeQuote": "the cross-sectional shape",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the material",
+      "nativeQuote": "the material",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the sheet metal part",
+      "nativeQuote": "the sheet metal part",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "optionally",
+      "nativeQuote": "optionally",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the latter",
+      "nativeQuote": "the latter",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "optionally",
+      "nativeQuote": "optionally",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the piercing head",
+      "nativeQuote": "the piercing head",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the separating",
+      "nativeQuote": "the separating",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the coiling up",
+      "nativeQuote": "the coiling up",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the progressive tool",
+      "nativeQuote": "the progressive tool",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the press",
+      "nativeQuote": "the press",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the piercing head",
+      "nativeQuote": "the piercing head",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the same stroke",
+      "nativeQuote": "the same stroke",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the piercing head",
+      "nativeQuote": "the piercing head",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "i.e.",
+      "nativeQuote": "i.e.",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    }
+  ],
+  "concerns": [
+    "All selected numbered phrases match.Original count10 agrees;2–10 exact,1 formatting difference remains for critic.",
+    "Original1 manually inspected: duplicate at at before least one versus native at least one; otherwise same substantive wording. Explicit typing duplication, not a substantive version change."
+  ],
+  "rationale": "Read actual112(b)/second-paragraph indefiniteness ground; natural language selected dependencies manually checked and all connect to selected root. Original/date/inventory evidence retained; identity checks follow before handoff. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "15958729",
+    "nativePublicationNumber": "US20180238379A1",
+    "nativePublicationDate": "20180823",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "fdc26fc14026064d65ec3c8cfae65ee5939af72acd5ce7280c081a1f00dbf26c",
+    "sourceClaimsXmlSha256": "742cec6506f580056ddf47b067b3d7e421747abef13394d22bb3aec611a3ef10"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 37,
+    "retainedInventoryCount": 37,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "JG8F0NEARXEAPX5",
+        "officialDate": "2018-04-20T16:36:27.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2019-10-24",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "JG8F0NEARXEAPX5",
+      "officialDate": "2018-04-20T16:36:27.000-0400",
+      "sha256": "7239b1a00f71abdbda2d6f08cbc1fae480b1c489df77639f563a9437a3679629",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "sourceClaimCount": 10
+    }
+  ],
+  "nativeContextClaimCount": 10,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "JG8F0NEARXEAPX5",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 10
+    }
+  ]
+}

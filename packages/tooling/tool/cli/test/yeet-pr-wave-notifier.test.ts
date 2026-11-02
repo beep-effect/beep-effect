@@ -56,6 +56,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const workerPath = `${repoRoot}.claude/hooks/yeet-pr-wave-notifier.sh`;
@@ -156,7 +157,7 @@ const handle = (output: string, code = 0) =>
 const recordingSpawner = (launched: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
   ChildProcessSpawner.make((command) =>
     ChildProcess.isStandardCommand(command)
-      ? Ref.update(launched, A.append([command.command, ...command.args])).pipe(Effect.as(handle("")))
+      ? Ref.update(launched, A.append([command.command, ...commandArgs(command)])).pipe(Effect.as(handle("")))
       : Effect.die("unexpected pipe")
   );
 
@@ -650,14 +651,14 @@ const snapshot = (root: string, checks: ReadonlyArray<YeetWatchCheck>, state = "
 const monitorRunner = ChildProcessSpawner.make(
   Effect.fnUntraced(function* (command) {
     if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("unexpected pipe");
-    const [first, second] = command.args;
+    const [first, second] = commandArgs(command);
     if (first === "run" && second === "list")
       return handle(
         yield* encodeJson([
           { databaseId: 7, headSha: head, status: "completed", conclusion: "failure", name: "CI" },
         ]).pipe(Effect.orDie)
       );
-    if (A.contains(command.args, "--log-failed")) return handle("Assertion failed");
+    if (A.contains(commandArgs(command), "--log-failed")) return handle("Assertion failed");
     return handle(
       yield* encodeJson({
         jobs: [

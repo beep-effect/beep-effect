@@ -10,7 +10,7 @@ import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -30,8 +30,9 @@ const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Resu
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 
 const IDENTITY_REGISTRY_PATH = "packages/identity/src/packages.ts";

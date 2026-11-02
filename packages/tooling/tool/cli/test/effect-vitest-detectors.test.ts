@@ -774,6 +774,27 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import * as BunPath from "@effect/platform-bun/BunPath"; it.layer(L.merge(BunPath.layer, L.succeed(A, {})))("x", it => {});',
       ])
         assertFalse(yield* hasRule(body, "EV014"));
+    })
+  );
+
+  it.effect("permits the per-family crypto layers effect 4.1 ships and keeps impostors judged", () =>
+    Effect.gen(function* () {
+      for (const body of [
+        'import { NodeCrypto, NodeServices } from "@effect/platform-node"; it.layer(L.mergeAll(NodeServices.layer, NodeCrypto.layerDigest))("x", it => {});',
+        'import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"; it.layer(NodeCrypto.layer)("x", it => {});',
+        'import * as BunCrypto from "@effect/platform-bun/BunCrypto"; it.layer(L.merge(BunCrypto.layerSecureRandom, BunCrypto.layerMac))("x", it => {});',
+        'import * as Platform from "@effect/platform-node"; it.layer(Platform.NodeCrypto.layerKdf)("x", it => {});',
+        'import * as Digest from "effect/crypto/Digest"; import * as SecureRandom from "effect/crypto/SecureRandom"; const WebCrypto = L.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto); it.layer(WebCrypto)("x", it => {});',
+      ])
+        assertFalse(yield* hasRule(body, "EV014"));
+      for (const body of [
+        'import * as NodeCrypto from "@effect/platform-node/NodeCrypto"; it.layer(NodeCrypto.layerOther)("x", it => {});',
+        'import * as NodeCrypto from "@beep/fake/NodeCrypto"; it.layer(NodeCrypto.layerDigest)("x", it => {});',
+        'import * as Digest from "effect/crypto/Digest"; it.layer(Digest.layer)("x", it => {});',
+        'import * as Digest from "@beep/fake/Digest"; it.layer(Digest.layerWebCrypto)("x", it => {});',
+        'import * as Digest from "effect/crypto/Digest"; it.layer(L.mergeAll(Digest.layerWebCrypto, ImportedLive))("x", it => {});',
+      ])
+        assertTrue(A.some(yield* findings(body), (row) => row.ruleId === "EV014" && row.mechanization === "judgment"));
       for (const body of [
         'it.layer(L.scoped(Service, acquire))("x", it => {});',
         'it.layer(NodeServices.layer)("x", it => {});',
@@ -2084,6 +2105,68 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${harness} import { NodeServices } from "@effect/platform-node"; const platform = NodeServices.layer;`,
         `${harness} import { NodeServices } from "@effect/platform-node"; layer(NodeServices.layer)(suite);`,
         `${harness} import * as Platform from "@effect/platform-node"; use(Platform); layer(Platform.NodeServices.layer)${consume('yield* fs.symlink("a", "b");')}`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
+    })
+  );
+
+  it.effect("treats a spawned process the test kills as the native subject of a platform bundle", () =>
+    Effect.gen(function* () {
+      const imports =
+        'import { layer } from "@effect/vitest"; import { NodeServices } from "@effect/platform-node"; import * as ChildProcess from "effect/process/ChildProcess"; import * as FileSystem from "effect/FileSystem";';
+      const suite = (statements: string) =>
+        `layer(NodeServices.layer)((it) => { it.effect("x", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); ${statements} })); });`;
+      const reviewClasses = Effect.fnUntraced(function* (body: string) {
+        return A.map(
+          A.filter(yield* findings(body), (row) => row.ruleId === "EV010"),
+          (row) => row.class
+        );
+      });
+      for (const body of [
+        `${imports} ${suite('const child = yield* ChildProcess.make("bun", ["fixture.ts"]); yield* child.kill({ killSignal: "SIGKILL" });')}`,
+        `${imports} const run = Fx.fnUntraced(function* () { const child = yield* ChildProcess.make("bun", []); yield* child.kill(); }); ${suite("yield* run();")}`,
+        `${imports} ${suite('const spawn = (mode) => ChildProcess.make("bun", [mode]); const child = yield* spawn("crash"); yield* child.kill();')}`,
+        `${imports} layer(NodeServices.layer)((it) => { it.effect("a", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); }); layer(NodeServices.layer)((it) => { it.effect("b", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); });`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), [], body);
+      for (const body of [
+        `${imports} ${suite('const child = yield* ChildProcess.make("bun", []); expect(yield* child.exitCode).toBe(0);')}`,
+        `${imports} ${suite('const child = yield* Fake.make("bun", []); yield* child.kill();')}`,
+        `${imports} ${suite("const other = makeFake(); yield* other.kill();")}`,
+        `${imports} ${suite('let child = yield* ChildProcess.make("bun", []); yield* child.kill();')}`,
+        `${imports} ${suite('const spawn = (mode) => Fake.make("bun", [mode]); const child = yield* spawn("crash"); yield* child.kill();')}`,
+        `${imports} layer(NodeServices.layer)((it) => { it.effect("a", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); }); layer(NodeServices.layer)((it) => { it.effect("b", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); yield* ChildProcess.make("bun", []); })); });`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
+    })
+  );
+
+  it.effect("treats a SQLite database file the test opens as the native subject of a platform bundle", () =>
+    Effect.gen(function* () {
+      const imports =
+        'import { layer } from "@effect/vitest"; import { NodeServices } from "@effect/platform-node"; import * as FileSystem from "effect/FileSystem"; import * as SqliteClient from "@effect/sql-sqlite-node/SqliteClient";';
+      const suite = (statements: string) =>
+        `layer(NodeServices.layer)((it) => { it.effect("x", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; const dir = yield* fs.makeTempDirectoryScoped(); ${statements} })); });`;
+      const reviewClasses = Effect.fnUntraced(function* (body: string) {
+        return A.map(
+          A.filter(yield* findings(body), (row) => row.ruleId === "EV010"),
+          (row) => row.class
+        );
+      });
+      for (const body of [
+        `${imports} ${suite("const sql = yield* SqliteClient.make({ filename: `${dir}/journal.sqlite` });")}`,
+        `${imports} ${suite("const file = `${dir}/journal.sqlite`; yield* Fx.provide(program, SqliteClient.layer({ filename: file }));")}`,
+        `${imports} const reopen = Fx.fnUntraced(function* (file) { return yield* SqliteClient.make({ filename: file }); }); ${suite("yield* reopen(`${dir}/a.sqlite`);")}`,
+        `${Str.replace("sql-sqlite-node", "sql-sqlite-bun")(imports)} ${suite("yield* SqliteClient.make({ filename: `${dir}/a.sqlite` });")}`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), [], body);
+      for (const body of [
+        `${imports} ${suite('yield* SqliteClient.make({ filename: ":memory:" });')}`,
+        `${imports} ${suite("yield* SqliteClient.make(options);")}`,
+        `${imports} ${suite("yield* SqliteClient.make({ ...options });")}`,
+        `${imports} import * as Fake from "@beep/fake/SqliteClient"; ${suite("yield* Fake.make({ filename: `${dir}/a.sqlite` });")}`,
+        `${imports} ${suite("yield* SqliteClient.other({ filename: `${dir}/a.sqlite` });")}`,
+        `${imports} ${suite("yield* SqliteClient.make({ filename: `${dir}/a.sqlite` });")} ${suite('yield* fs.readFileString("a");')}`,
       ])
         deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
     })
@@ -3693,6 +3776,70 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
           ["judgment"]
         );
         assertFalse(A.some(rows, (row) => row.class === "redundant-whole-body-scope"));
+      }
+    })
+  );
+
+  it.effect("accepts shorter scopes whose close a later assertion observes", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'it.effect("call", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }));',
+        'it.effect("pipe", () => Fx.gen(function* () { const error = yield* serve.pipe(Fx.flip, Fx.scoped); expect(error.closed).toBe(true); }));',
+        'const helper = Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped); expect(closed).toBe(true); }); it.effect("helper", helper);',
+        'it.effect("negated matcher", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(open).not.toBe(true); }));',
+        'it.effect("root return", () => { return Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }); });',
+        'it.effect("in-place generator", Fx.fnUntraced(function* () { yield* Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }); }));',
+        'it.effect("staged", Fx.fnUntraced(function* () { yield* Fx.succeed(1).pipe(Fx.tap(acquire), Fx.scoped); expect(released).toBe(true); }));',
+        'import { deepStrictEqual } from "@effect/vitest/utils"; it.effect("utils", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); deepStrictEqual(released, true); }));',
+        'import { assert } from "@effect/vitest"; it.effect("assert", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); assert.strictEqual(released, true); }));',
+      ]) {
+        assertFalse(yield* hasRule(source, "EV004"));
+      }
+    })
+  );
+
+  it.effect("keeps shorter scopes no later assertion observes as judgments", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'it.effect("before", Fx.fnUntraced(function* () { expect(ready).toBe(true); yield* Fx.scoped(acquire); yield* after; }));',
+        'it.effect("closure", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); yield* Fx.sync(() => expect(released).toBe(true)); }));',
+        'it.effect("deferred", Fx.fnUntraced(function* () { const later = () => Fx.scoped(acquire); expect(ready).toBe(true); yield* later(); }));',
+        'it.effect("fork", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire).pipe(Fx.forkChild); expect(running).toBe(true); }));',
+        'it.effect("pure", Fx.fnUntraced(function* () { const value = yield* Fx.scoped(Fx.succeed(1)); expect(value).toBe(1); }));',
+        'it.effect("inner", Fx.fnUntraced(function* () { yield* Fx.scoped(Fx.gen(function* () { yield* acquire; expect(open).toBe(true); })); }));',
+        'it.effect("built", Fx.fnUntraced(function* () { const work = Fx.scoped(acquire); expect(ready).toBe(true); yield* work; }));',
+        'it.effect("built pipe", Fx.fnUntraced(function* () { const later = acquire.pipe(Fx.scoped); expect(ready).toBe(true); yield* later; }));',
+        'it.effect("if false", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); if (false) { expect(released).toBe(true); } }));',
+        'it.effect("bare", Fx.fnUntraced(function* () { Fx.scoped(acquire); expect(ready).toBe(true); }));',
+        'it.effect("pure stage", Fx.fnUntraced(function* () { yield* Fx.succeed(1).pipe(Fx.scoped); expect(ready).toBe(true); }));',
+        'it.effect("method", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); const observer = { check() { expect(released).toBe(true); } }; yield* use(observer); }));',
+        'it.effect("accessor", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); const observer = { get closed() { return expect(released).toBe(true); } }; yield* use(observer); }));',
+        'it.effect("class", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); class Probe { run() { expect(released).toBe(true); } } yield* use(Probe); }));',
+        'import { pipe } from "effect/Function"; it.effect("pipe fork", Fx.fnUntraced(function* () { yield* pipe(Fx.scoped(acquire), Fx.forkChild); expect(running).toBe(true); }));',
+        'it.effect("scope in if", Fx.fnUntraced(function* () { if (ready) { yield* Fx.scoped(acquire); } expect(released).toBe(true); }));',
+        'it.effect("scope in callback", () => Fx.flatMap(root, () => Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); })));',
+        'it.effect("scope in returned callback", () => Fx.flatMap(root, () => { return Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }); }));',
+        'it.effect("uninvoked generator", Fx.fnUntraced(function* () { const later = Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }); yield* use(later); }));',
+        'it.effect("if", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); if (released) { expect(released).toBe(true); } }));',
+        'it.effect("else", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); if (ready) { yield* after; } else expect(released).toBe(true); }));',
+        'it.effect("switch", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); switch (mode) { case "a": expect(released).toBe(true); } }));',
+        'it.effect("for", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); for (let i = 0; i < n; i++) expect(released).toBe(true); }));',
+        'it.effect("for of", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); for (const item of items) expect(item).toBe(true); }));',
+        'it.effect("while", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); while (pending) expect(released).toBe(true); }));',
+        'it.effect("do", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); do { expect(released).toBe(true); } while (pending); }));',
+        'it.effect("try", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); try { expect(released).toBe(true); } catch { yield* after; } }));',
+        'it.effect("ternary", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); ready ? expect(released).toBe(true) : undefined; }));',
+        'it.effect("and", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); ready && expect(released).toBe(true); }));',
+        'it.effect("nullish", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); value ?? expect(released).toBe(true); }));',
+        'it.effect("block", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); { expect(released).toBe(true); } }));',
+        'it.effect("bare expect", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released); }));',
+        'it.effect("unapplied matcher", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released).toBe; }));',
+      ]) {
+        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+        deepStrictEqual(
+          A.map(rows, (row) => row.mechanization),
+          ["judgment"]
+        );
       }
     })
   );

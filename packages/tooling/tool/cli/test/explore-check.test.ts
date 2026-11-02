@@ -11,7 +11,7 @@ import {
   StoredPacketEvent,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -28,7 +28,7 @@ import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTes
 
 const runExploreCommand = Command.runWith(exploreCommand, { version: "0.0.0" });
 
-const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer);
 
 const writeEvent = Effect.fnUntraced(function* (packetPath: string, event: PacketEvent) {
   const id = yield* packetEventDigest(event);

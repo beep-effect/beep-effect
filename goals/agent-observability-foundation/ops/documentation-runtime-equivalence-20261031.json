@@ -1,0 +1,57 @@
+{
+  "observedAt": "2026-10-31T07:45:30.857Z",
+  "base": "fcb2c70946c45267fc7102977b7c81b0ad14ed2f",
+  "scope": "Comments only: identical JavaScript emitted by Bun.Transpiler. Historical execution receipts remain bound to their original source bytes; this is not a fresh canary run.",
+  "files": [
+    {
+      "path": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.lifecycle.ts",
+      "sourceSha256": "b7729cc15249a5fb12ccd7a7263596afc8c193c40ebf265a19758020c032feec",
+      "equalEmittedJavaScript": true
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/native-http.ts",
+      "sourceSha256": "18ba00f4b1251f9cf70b7cdedbebe4cbbed75e93f5620511362056708ac4cdd5",
+      "equalEmittedJavaScript": true
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/native-trace.ts",
+      "sourceSha256": "f2d34e19d98be56681c2479d901a066da98c101c0cd282d121cbd144e4897a38",
+      "equalEmittedJavaScript": true
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/observation-control.ts",
+      "sourceSha256": "eda240d525ff68241be439b2c141d2c1a3f6d4d6006413569955518792c92500",
+      "equalEmittedJavaScript": true
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/observation-coverage.ts",
+      "sourceSha256": "d3c775110fe332d9acb18d32a6aeabb16b295bf1f30f759eda2c70dacc39eea7",
+      "equalEmittedJavaScript": true
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/observation-inventory.ts",
+      "sourceSha256": "f9071b0b8c7e2105fa9c17765eb9f8c4fa831fec566cd97f64d42e0e6e8812b9",
+      "equalEmittedJavaScript": true
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+      "sourceSha256": "4ffcb20bb82fa7c7a0e11c4563130660beb5551944d897952f58e3eae0194d6b",
+      "equalEmittedJavaScript": true
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/observation-source-health.ts",
+      "sourceSha256": "45f6289dc7f516fa79f5b39a9545e2ebe46f94e8eb3236872fc22dadbc598c88",
+      "equalEmittedJavaScript": true
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/transcript-intake.ts",
+      "sourceSha256": "4c2ce752462746fcefebb5886d3444b79d6e9a7bbbf1b1318e960220fc16030d",
+      "equalEmittedJavaScript": true
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/transcript-page.ts",
+      "sourceSha256": "026c597e01956a9df243e7d84bb2de92f148614da165b111a637c72bd8fcb064",
+      "equalEmittedJavaScript": true
+    }
+  ]
+}

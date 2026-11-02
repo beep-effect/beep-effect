@@ -1,0 +1,190 @@
+{
+  "schemaVersion": "cache-markdown-coverage-isolation-checkpoint/v1",
+  "recordedAt": "2026-10-30T18:53:24.109807+00:00",
+  "authority": "Local package verification and test-resource isolation component only; no cache qualification or complete-goal acceptance.",
+  "sourceBaseRevision": "60f2567fb77195df69764c4b426e3f0e9475b988",
+  "file": "packages/foundation/modeling/markdown/vitest.config.ts",
+  "sourceSha256": "2fb7d1abf410f9ab494598dfa79b72c39dd2db39f5c01c102ddce1aefd634461",
+  "trigger": {
+    "pullRequest": 2371,
+    "head": "1d03c0ed4542e8c0bf025e683d4f8556f458d139",
+    "failedGate": "local final-check coverage",
+    "productionSource": "packages/foundation/modeling/markdown/src/internal/inlineParser.ts",
+    "missingBranchLines": [276, 277],
+    "observedBranchPercent": 98.55,
+    "requiredBranchPercent": 100,
+    "markdownSourceAndTestsChangedByTrigger": false
+  },
+  "attribution": "All Markdown tests passed in the failing root run. The existing direct default-metadata case and standalone full-package replays cover both branches. The measurement failure was not reproduced by standalone replays; a parser behavior regression and an exact V8 internal cause are not established.",
+  "decision": "Follow the shared harness contract for packages that replace module behavior: registry spies use one fresh module context per file in coverage and unit profiles. Preserve all tests and all coverage floors.",
+  "configuration": {
+    "before": "Coverage inherited isolate:false; ordinary unit runs inherited isolate:true.",
+    "after": "Package explicitly uses isolate:true in both profiles.",
+    "reversal": "Remove the package override after equivalent module-mock isolation and reliable branch evidence are demonstrated."
+  },
+  "verification": {
+    "node": {
+      "run": {
+        "exit": 0,
+        "elapsedSeconds": 78.153,
+        "finishedAt": "2026-10-30T18:46:28.488032+00:00"
+      },
+      "tests": 4501,
+      "files": 152,
+      "coverage": {
+        "defaultBranches": [
+          {
+            "line": 276,
+            "counts": [10083, 1]
+          },
+          {
+            "line": 277,
+            "counts": [10083, 1]
+          }
+        ],
+        "statements": {
+          "hit": 241,
+          "total": 241,
+          "percent": 100.0
+        },
+        "functions": {
+          "hit": 56,
+          "total": 56,
+          "percent": 100.0
+        },
+        "branches": {
+          "hit": 138,
+          "total": 138,
+          "percent": 100.0
+        }
+      }
+    },
+    "bun": {
+      "run": {
+        "exit": 0,
+        "elapsedSeconds": 48.63,
+        "finishedAt": "2026-10-30T18:45:59.963787+00:00"
+      },
+      "tests": 4501,
+      "files": 152,
+      "coverage": {
+        "defaultBranches": [
+          {
+            "line": 276,
+            "counts": [10083, 1]
+          },
+          {
+            "line": 277,
+            "counts": [10083, 1]
+          }
+        ],
+        "statements": {
+          "hit": 241,
+          "total": 241,
+          "percent": 100.0
+        },
+        "functions": {
+          "hit": 56,
+          "total": 56,
+          "percent": 100.0
+        },
+        "branches": {
+          "hit": 138,
+          "total": 138,
+          "percent": 100.0
+        }
+      }
+    },
+    "defaultPackage": {
+      "exit": 0,
+      "elapsedSeconds": 20.021,
+      "finishedAt": "2026-10-30T18:48:35.349304+00:00"
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 4.882,
+      "finishedAt": "2026-10-30T18:45:16.212525+00:00"
+    }
+  },
+  "comparison": {
+    "beforeNode": {
+      "run": {
+        "exit": 0,
+        "elapsedSeconds": 33.524,
+        "finishedAt": "2026-10-30T18:41:51.941975+00:00"
+      },
+      "coverage": {
+        "defaultBranches": [
+          {
+            "line": 276,
+            "counts": [10083, 1]
+          },
+          {
+            "line": 277,
+            "counts": [10083, 1]
+          }
+        ],
+        "statements": {
+          "hit": 241,
+          "total": 241,
+          "percent": 100.0
+        },
+        "functions": {
+          "hit": 56,
+          "total": 56,
+          "percent": 100.0
+        },
+        "branches": {
+          "hit": 138,
+          "total": 138,
+          "percent": 100.0
+        }
+      }
+    },
+    "beforeBun": {
+      "run": {
+        "exit": 0,
+        "elapsedSeconds": 20.154,
+        "finishedAt": "2026-10-30T18:39:33.694914+00:00"
+      },
+      "coverage": {
+        "defaultBranches": [
+          {
+            "line": 276,
+            "counts": [1088084, 133]
+          },
+          {
+            "line": 277,
+            "counts": [1088084, 133]
+          }
+        ],
+        "statements": {
+          "hit": 241,
+          "total": 241,
+          "percent": 100.0
+        },
+        "functions": {
+          "hit": 56,
+          "total": 56,
+          "percent": 100.0
+        },
+        "branches": {
+          "hit": 138,
+          "total": 138,
+          "percent": 100.0
+        }
+      }
+    },
+    "timingLimit": "Single local observations; after profiles overlapped and can be affected by other work. Node was about34s shared and78s isolated, Bun about20s shared and49s isolated. This is a known isolation cost, not a claimed speedup."
+  },
+  "limits": [
+    "The original root measurement is retained privately; a standalone pass does not erase that failure.",
+    "The existing tests already exercise the default fields; no duplicate assertion or reduced coverage baseline is introduced.",
+    "Current-head publication, final/hosted proof, review and accepted-parent replay remain required.",
+    "Both full Turbo goals remain active; real protected publication, every eligible computation and feature review, role/epoch/rollback and representative observation requirements remain open."
+  ],
+  "coverageFloorsChanged": false,
+  "runtimeParserBehaviorChanged": false,
+  "cacheQualificationOrProductionChanged": false,
+  "allAcceptanceUnproven": true
+}

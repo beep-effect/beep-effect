@@ -1,0 +1,274 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16068637-root-11",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.96,
+  "resolvedClaimNumbers": [11, 12, 13, 14, 15, 16],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Independent source critic round2 accepted source after visual original PDF corroboration (JJAKGNS1RXEAPX3, SHA256 ba1bf94df37c4613c3e7346296ca95032c642087818a10db7b5c541338b50cae, pages2\u20134). Earlier round1 source hold is preserved below. Native XML remains annotation text.",
+    "PDF resolves the missing image-backed numbered11 preamble and rivet introduction. Original12 wedge-sahped/native wedge-shaped and circled-number serialization are documented source differences, not silently repaired reference text.",
+    "All selected claims11\u201316 are rejected-family members; dependency11 root,12\u201314->11,15->14,16->11 follows natural wording. Agent source/semantic confidence is not attorney agreement."
+  ],
+  "annotationRationale": [
+    "Fresh annotation after source resolution. Root11 is system subject before main comprising, not nested rivet comprising. Root16 is the method with its actual system dependency and includes transition.",
+    "Nested rivet list, circled matching cases and explicit method steps retain substantive grammatical ownership. Functional predicates receive ordered source-anchored term/text parts; no unstated function or section112(f) interpretation.",
+    "Complete heads preserve semi-tubed rivet shank, wedge shaped cone tip, central symmetric surface modifiers, positioning protruding as literally written, and through hole. Singular/plural aliases are linked only for clear references.",
+    "Initial the rivet in11 precedes its introduction and has no forward edge. Missing introductions are not invented. Claim13 cannot borrow wedge-shaped entities from sibling12;14/15 use actual11/14 ancestry."
+  ],
+  "referenceConcerns": [
+    {
+      "claimNumber": 11,
+      "quote": "the rivet",
+      "reason": "First reference in spindle clause precedes a rivet introduction. No forward antecedent."
+    },
+    {
+      "claimNumber": 11,
+      "quote": "the bottom end",
+      "reason": "No explicit introduction of bottom end; positional relation is retained without invented entity."
+    },
+    {
+      "claimNumber": 11,
+      "quote": "the workpieces",
+      "reason": "No preceding workpieces introduction."
+    },
+    {
+      "claimNumber": 12,
+      "quote": "the rotatory driving system",
+      "reason": "No unambiguous introduction of a rotatory driving system in11; do not silently equate entire system with rotary driving structure."
+    },
+    {
+      "claimNumber": 12,
+      "quote": "a positioning protruding",
+      "reason": "Literal malformed noun phrase retained; following positioning protrusion is treated as referring to this sole introduced protruding positioning entity, without correcting native wording.",
+      "status": "resolved-semantic-reference; literal source defect/variation preserved"
+    },
+    {
+      "claimNumber": 12,
+      "quote": "the positioning grooves",
+      "reason": "The sole cone-shaped groove in the second circled case receives the paired taper/depth predicates. Plural/singular source variation is preserved; no competing groove introduction exists in the case. Independent extractor and critic agree on the existing reference identity.",
+      "status": "resolved-semantic-reference; literal source defect/variation preserved"
+    },
+    {
+      "claimNumber": 13,
+      "quote": "the wedge-shaped notch and wedge-shaped protrusion",
+      "reason": "No such introduction in actual ancestor11. Sibling12 is not imported."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the central positioning structures",
+      "reason": "Spindle central positioning structures have no clear introduction; rivet positioning structure belongs to a different claimed component."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the rotary driving structures on the bottom of the driving spindle",
+      "reason": "Spindle-side structures are not the rivet-head structures introduced in11. No spindle-side antecedent edge; following driving structures on top of the rivet head do point to the head structures."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "The mating surfaces",
+      "reason": "Surface group and each other refer to head/spindle contact, but no single explicit introduction of the group; no invented group edge."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the matting",
+      "reason": "Native spelling retained; denotes matching event rather than an introduced determiner entity; no edge."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the speed and rate",
+      "reason": "Coordinated referential speed/rate split into nonoverlapping surface phrases; no speed introduction or fabricated determiner."
+    }
+  ],
+  "independence": "Fresh manual source annotation. Read protocol, schemas for shape/coherence, native source claims, provenance and source audits only; no decomposer, policy, synthetic fixtures, archived labels or predictions. Helpers locate manually selected quotes and serialize/check span geometry only.",
+  "attorneyAdjudication": "pending",
+  "criticReview": "Round2 independent critic confidence0.96 found no structural correction; round3 independent extractor response supplied. Final critic disposition is separate.",
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "16068637-root-11",
+      "role": "extractor",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.99,
+      "resolvedClaimNumbers": [],
+      "unresolved": [
+        {
+          "claimNumber": 11,
+          "quote": "A friction self-piercing riveting (F-SPR) system comprising: a driving spindle that is capable of driving the rivet for axial translational motion and radial rotational motion; a rivet comprising:",
+          "reason": "Operative source version unresolved: orchestrator relay of independent source critic finds original Claim10 embeds missing SVG images at native11 preamble and rivet introduction. Numbered original claim11 header and exact introduction wording are not established by accessible authoritative source. Native publication alone is clear enough to annotate provisionally but cannot establish the in-force root at rejection."
+        },
+        {
+          "claimNumber": 12,
+          "quote": "The F-SPR system of claim 11",
+          "reason": "Actual dependency inherits source-unresolved claim11. Independent source critic has not established exact operative original claim11 header/preamble and rivet introduction; native12 also retains rotatory versus examiner rotary and circle-number OCR caveats. This is source-version uncertainty, not a parser/decomposition abstention."
+        },
+        {
+          "claimNumber": 13,
+          "quote": "The F-SPR system of claim 11",
+          "reason": "Actual dependency inherits source-unresolved claim11; cannot resolve selected operative family membership/text until authoritative original header and introduction are verified. Native13 text itself is not ambiguous."
+        },
+        {
+          "claimNumber": 14,
+          "quote": "The F-SPR system of claim 11",
+          "reason": "Actual dependency inherits source-unresolved claim11; cannot resolve selected operative family membership/text until authoritative original header and introduction are verified. Native14 text itself is not ambiguous."
+        },
+        {
+          "claimNumber": 15,
+          "quote": "The F-SPR system of claim 14",
+          "reason": "Actual chain15 ->14 ->11 inherits source-unresolved claim11; exact operative family root is unverified. Native15 grammar and a through hole are readable and not grounds for decomposition uncertainty."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "A rivet rotational feeding method of the F-SPR system of claim 11 for joining workpieces, includes:",
+          "reason": "Actual natural dependency incorporates source-unresolved claim11. Authoritative original image/header verification is needed before this family can become score-eligible; includes transition and method steps are not inherently unlabelable."
+        }
+      ],
+      "sourceConcerns": [
+        "Extractor-source-audit proposes eligibility, but later independent critic evidence relayed by orchestrator holds it unresolved. Original JJAKGNS1RXEAPX3 Claim10 embeds absent SVG images at native11 preamble and rivet introduction; exact operative original header is not established.",
+        "No source was fetched, repaired or substituted. Native source claims remain untouched. Authoritative PDF/image review and independent source critic adjudication are pending.",
+        "Chronology and native publication body/examiner matches do not establish the missing original operative root wording. Attorney adjudication remains pending."
+      ],
+      "annotationRationale": [
+        "All six selected claims are source-unresolved once each; expected.json has no score-eligible trees. This records an upstream version/family eligibility issue, not a semantic decomposition failure.",
+        "Native claim16 has an includes transition and explicit step structure that can be represented after source resolution. Native claim15 contains the complete lexical term a through hole. No implementation coverage limitation was used to simplify or withhold otherwise eligible gold."
+      ],
+      "referenceConcerns": [],
+      "independence": "Fresh manual source annotation. Read protocol, schemas for shape/coherence, native source claims, provenance and source audit only; no decomposer, policy, synthetic fixtures, archived labels or predictions. Helpers locate manually selected quotes and serialize/check span geometry only.",
+      "attorneyAdjudication": "pending",
+      "criticReview": "pending"
+    },
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "16068637-root-11",
+      "role": "extractor",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 2,
+      "confidence": 0.93,
+      "resolvedClaimNumbers": [11, 12, 13, 14, 15, 16],
+      "unresolved": [],
+      "sourceConcerns": [
+        "Independent source critic round2 accepted source after visual original PDF corroboration (JJAKGNS1RXEAPX3, SHA256 ba1bf94df37c4613c3e7346296ca95032c642087818a10db7b5c541338b50cae, pages2\u20134). Earlier round1 source hold is preserved below. Native XML remains annotation text.",
+        "PDF resolves the missing image-backed numbered11 preamble and rivet introduction. Original12 wedge-sahped/native wedge-shaped and circled-number serialization are documented source differences, not silently repaired reference text.",
+        "All selected claims11\u201316 are rejected-family members; dependency11 root,12\u201314->11,15->14,16->11 follows natural wording. Agent source/semantic confidence is not attorney agreement."
+      ],
+      "annotationRationale": [
+        "Fresh annotation after source resolution. Root11 is system subject before main comprising, not nested rivet comprising. Root16 is the method with its actual system dependency and includes transition.",
+        "Nested rivet list, circled matching cases and explicit method steps retain substantive grammatical ownership. Functional predicates receive ordered source-anchored term/text parts; no unstated function or section112(f) interpretation.",
+        "Complete heads preserve semi-tubed rivet shank, wedge shaped cone tip, central symmetric surface modifiers, positioning protruding as literally written, and through hole. Singular/plural aliases are linked only for clear references.",
+        "Initial the rivet in11 precedes its introduction and has no forward edge. Missing introductions are not invented. Claim13 cannot borrow wedge-shaped entities from sibling12;14/15 use actual11/14 ancestry."
+      ],
+      "referenceConcerns": [
+        {
+          "claimNumber": 11,
+          "quote": "the rivet",
+          "reason": "First reference in spindle clause precedes a rivet introduction. No forward antecedent."
+        },
+        {
+          "claimNumber": 11,
+          "quote": "the bottom end",
+          "reason": "No explicit introduction of bottom end; positional relation is retained without invented entity."
+        },
+        {
+          "claimNumber": 11,
+          "quote": "the workpieces",
+          "reason": "No preceding workpieces introduction."
+        },
+        {
+          "claimNumber": 12,
+          "quote": "the rotatory driving system",
+          "reason": "No unambiguous introduction of a rotatory driving system in11; do not silently equate entire system with rotary driving structure."
+        },
+        {
+          "claimNumber": 12,
+          "quote": "a positioning protruding",
+          "reason": "Literal malformed noun phrase retained; following positioning protrusion is treated as referring to this sole introduced protruding positioning entity, without correcting native wording."
+        },
+        {
+          "claimNumber": 12,
+          "quote": "the positioning grooves",
+          "reason": "Singular/plural and lexical alias points to sole cone-shaped groove in same circled case; requires critic scrutiny."
+        },
+        {
+          "claimNumber": 13,
+          "quote": "the wedge-shaped notch and wedge-shaped protrusion",
+          "reason": "No such introduction in actual ancestor11. Sibling12 is not imported."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "the central positioning structures",
+          "reason": "Spindle central positioning structures have no clear introduction; rivet positioning structure belongs to a different claimed component."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "the rotary driving structures on the bottom of the driving spindle",
+          "reason": "Spindle-side structures are not the rivet-head structures introduced in11. No spindle-side antecedent edge; following driving structures on top of the rivet head do point to the head structures."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "The mating surfaces",
+          "reason": "Surface group and each other refer to head/spindle contact, but no single explicit introduction of the group; no invented group edge."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "the matting",
+          "reason": "Native spelling retained; denotes matching event rather than an introduced determiner entity; no edge."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "the speed and rate",
+          "reason": "Coordinated referential speed/rate split into nonoverlapping surface phrases; no speed introduction or fabricated determiner."
+        }
+      ],
+      "independence": "Fresh manual source annotation. Read protocol, schemas for shape/coherence, native source claims, provenance and source audits only; no decomposer, policy, synthetic fixtures, archived labels or predictions. Helpers locate manually selected quotes and serialize/check span geometry only.",
+      "attorneyAdjudication": "pending",
+      "criticReview": "pending",
+      "confidenceScope": "Fresh semantic native-source proposals; independent critic scrutiny needed for component-specific aliases and malformed noun phrase."
+    }
+  ],
+  "confidenceScope": "Semantic reference structure of the exact native claims11\u201316 following independently accepted source qualification; not legal sufficiency, claim construction, or attorney agreement.",
+  "roundResponse": [
+    {
+      "claimNumber": 12,
+      "quote": "a positioning protruding",
+      "span": [596, 620],
+      "independentAssessment": "The exact second circled case says the driving spindle has a positioning protruding on the bottom, followed immediately by the positioning protrusion has the same taper and then the positioning protrusion has a height. The introduced spindle entity is the sole positioning projection in this case; neither the first circled wedge-shaped projections nor the rivet-head positioning structure competes for these two immediately following spindle-projection predicates. The malformed participial spelling does not create a second introduced object. Retain the literal head positioning protruding and both existing reference edges; no textual repair or inferred structure is needed."
+    },
+    {
+      "claimNumber": 12,
+      "quote": "the positioning grooves",
+      "span": [695, 718],
+      "independentAssessment": "The same second circled case starts when the positioning structure is cone-shaped groove. It then compares the projection taper with the positioning grooves and projection height with the depth of the positioning groove. This paired taper/depth description uses the sole groove identified in that case. Case1 names notches, not grooves; claim11 names positioning surfaces but introduces no competing groove. The local plural/singular variation therefore does not leave two plausible groove introductions. Existing references to cone-shaped groove remain justified while all source number/spelling variation is preserved."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the central positioning structures",
+      "independentAssessment": "Following of the driving spindle fixes component ownership. The ancestor positioning structure belongs to the rivet head, so withholding a spindle-side antecedent is determinate rather than uncertain."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the driving structures",
+      "span": [733, 755],
+      "independentAssessment": "The following on the top of the rivet head fixes these as the head-side rotary driving structures introduced in11. The earlier rotary driving structures on the bottom of the driving spindle are a different component-side referent and remain unlinked."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the bottom surface",
+      "span": [887, 905],
+      "independentAssessment": "Of the driving spindle fixes the same spindle lower surface introduced in11.c. Bottom/lower is a directional alias with the same explicit component owner, so its current edge is justified."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the external resistance",
+      "span": [1149, 1172],
+      "independentAssessment": "Step1 expressly applies appropriate resistance to restrain rivet motion; the Step3 force condition exceeds the resistance applied to that rivet. No alternative applied resistance is introduced. The existing edge is justified by the process grammar."
+    }
+  ],
+  "confidenceRationale": "Round2 confidence0.93 reserved uncertainty about malformed projection wording and groove-number variation plus component-specific aliases. Independent reread resolves those questions by the second circled case ownership, repeated paired projection predicates, sole local groove, and explicit spindle/head qualifiers. This reasoning agrees with the separate critic audit finding no structural correction across38 elements,138 terms,118 edges and21 functional relationships; supplied schema/anchor/ownership checks also passed. Convergent semantic and geometric evidence supports0.96. The number is not raised on the basis of a threshold, and does not claim that source drafting defects disappear or that an attorney agrees.",
+  "remainingAnnotationUncertainty": []
+}

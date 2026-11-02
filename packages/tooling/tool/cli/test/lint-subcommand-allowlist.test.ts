@@ -5,7 +5,7 @@ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -22,9 +22,10 @@ import type { CallExpression, Project, SourceFile } from "ts-morph";
 
 const CommandTestLayer = Layer.mergeAll(
   NodeServices.layer,
+  NodeCrypto.layer,
   TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 const sortedNames = (names: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(names, Order.String);
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
@@ -162,12 +163,11 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
 });
 
 // Every module bin-main.ts imports eagerly is paid on every `beep` invocation
-// before the fast paths run, so each one is held to the same zero-import
+// before dispatch picks a route, so each one is held to the same zero-import
 // contract as LintRouting.ts and enumerated in the allowlist below.
-const PRE_FAST_PATH_MODULES: ReadonlyArray<string> = [
-  "internal/cli/FailureRendering.ts",
-  "internal/cli/LintRouting.ts",
-];
+// FailureRendering.ts left this list in 4-C-A: it now holds the
+// `CliRuntime.main` render hook and loads lazily beside `@beep/cli-kit`.
+const PRE_FAST_PATH_MODULES: ReadonlyArray<string> = ["internal/cli/LintRouting.ts"];
 
 it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
   describe("internal/cli dependency-free boundary", () => {
@@ -190,6 +190,7 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
           Effect.map(fs.readFileString(path.join(sourceDir, module)), (source) => ({ module, source }))
         );
         const binMainSource = yield* fs.readFileString(path.join(sourceDir, "bin-main.ts"));
+        const manifestSource = yield* fs.readFileString(path.join(sourceDir, "internal/dispatch/Dispatch.manifest.ts"));
         const request = yield* decodeProjectInspectionRequest({
           entrypoint: {
             _tag: "tsconfig",
@@ -222,15 +223,13 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
 
           expect(inspectModuleLoads(project, binMainSource, true)).toEqual([
             "import:effect/Result",
-            "import:./internal/cli/FailureRendering.ts",
-            "import:./internal/cli/LintRouting.ts",
             "import():@beep/utils",
           ]);
 
           const beforeFastPath = (mutation: string): string =>
             Str.replace(
-              "const LINT_POLICY_SUBCOMMAND_NAMES",
-              `${mutation}\nconst LINT_POLICY_SUBCOMMAND_NAMES`
+              "const { A, Str } = await import",
+              `${mutation}\nconst { A, Str } = await import`
             )(binMainSource);
           expect(
             inspectModuleLoads(
@@ -242,6 +241,14 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
           expect(inspectModuleLoads(project, beforeFastPath('require("heavy");'), true)).not.toEqual(
             inspectModuleLoads(project, binMainSource, true)
           );
+
+          // The dispatch manifest is read on every invocation to pick the one group to import, so at
+          // load time it may reach only its schemas; every group facade stays behind a dynamic import.
+          const manifestLoads = inspectModuleLoads(project, manifestSource, false);
+          expect(A.filter(manifestLoads, (load) => !Str.startsWith("import():../../commands/")(load))).toEqual([
+            "import:./Dispatch.schemas.ts",
+          ]);
+          expect(A.length(manifestLoads)).toBeGreaterThan(40);
         });
       })
     );

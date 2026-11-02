@@ -1,0 +1,11 @@
+[
+  "@biomejs/biome",
+  "@effect/tsgo",
+  "@lexical/**",
+  "detailed-xml-validator",
+  "fallow",
+  "fast-xml-validator",
+  "lexical",
+  "tsrs",
+  "tstyche"
+]

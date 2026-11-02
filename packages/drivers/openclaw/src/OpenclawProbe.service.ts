@@ -1,6 +1,8 @@
 /**
  * HTTP liveness and readiness probes for the OpenClaw gateway.
  *
+ * **Details**
+ *
  * Probes never fail: any 2xx response maps to `healthy` while non-2xx
  * responses, transport failures, and timeouts collapse to `unreachable`.
  *

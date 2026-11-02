@@ -1,0 +1,67 @@
+{
+  "familyId": "11575704-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A headlamp projecting at least one illumination beam pattern, comprising: a first array of illumination light sources, the light sources arranged within the first array in a pattern which substantially corresponds to the pattern of illumination which is desired to be produced by the headlamp; and a first converging lens having a substantially uniform spread, the uniform spread being larger in the horizontal direction than the vertical, the first lens receiving light produced by the first array of illumination sources and projecting the received light to form the at least one illumination beam pattern.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The headlamp of claim 1 wherein the first array of illumination light sources comprises a plurality of fiber optic cables, one end of each respective fiber optic cable being optically coupled to a respective one of a plurality of LED light sources, the other end of each respective fiber optic cable being substantially arranged corresponding to the illumination beam pattern, whereby the light emitted by the LED light sources is transferred by the fiber optic cables to the first lens in substantially the illumination beam pattern.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The headlamp of claim 2 further comprising a second array of illumination light sources and a second converging lens, the first array and first lens forming a spread portion of the at least one illumination beam pattern and the second array of illumination light sources and second lens forming at least one area of increased illumination superimposed onto the spread pattern formed by the first array and lens, the superimposition producing the at least one illumination beam pattern.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The headlamp of claim 3 wherein the first and second arrays of illumination light sources each comprise a plurality of fiber optic cables, one end of each respective fiber optic cable the respective arrays being optically coupled to a respective one of a plurality of LED light sources in the respective array, the other end of each respective fiber optic cable in each respective array being substantially arranged corresponding to a portion of the at least one illumination beam pattern, whereby the light emitted by the LED light sources in the first array is transferred by the fiber optic cables to the first lens and the light emitted by the LED sources in the second array is transferred by the fiber optic cables to the second lens and the light projected by the first and second lenses is superimposed to form the at least one illumination beam pattern.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The headlamp of claim 2 wherein the first array of illumination light sources further comprises a set of LED light sources which can be illuminated sequentially to provide a steerable light pattern superimposed upon the at least one illumination beam pattern.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The headlamp of claim 3 wherein the first and second arrays of illumination light sources farther comprise a set of LED light sources which can be illuminated sequentially to provide a steerable light pattern superimposed upon the at least one illumination pattern.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The headlamp of claim 2 wherein the optical coupling of the LED light sources to the each respective one end of the fiber optic cable includes a microreflector located on a substrate to which the LED is mounted, the microreflector surrounding the LED to reflect a substantial portion of the light produced by the LED into the fiber optic cable.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The headlamp of claim 2 wherein one wherein different ones of the light sources in light source array can be illuminated to form different illumination beam patterns.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The headlamp of claim 8 wherein the different illumination beam patterns include a low beam pattern and a high beam pattern.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The headlamp of claim 9 wherein the different illumination beam patterns further include a fog lamp pattern.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The headlamp of claim 9 wherein the different illumination beam patterns further include a day time running light pattern.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "A headlamp employing a plurality of LED light sources as illumination sources, each respective LED light source being optically coupled to one end of a respective fiber optic cable, the other end of each fiber optic cable being arranged in an array having the general shape of a desired pattern of illumination to be output from the headlamp, the headlamp further including a lens to receive the light emitted from the ends of the fiber optic cables and to project that light into the desired illumination beam pattern.",
+      "sourceXmlParentClaimNumbers": []
+    }
+  ]
+}

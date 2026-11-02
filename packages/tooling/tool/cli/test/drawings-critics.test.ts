@@ -73,6 +73,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 const encodeJson = S.encodeUnknownEffect(UnknownJson);
@@ -769,12 +770,12 @@ const spawnedForceKill = MutableHashMap.empty<string, ChildProcess.CommandOption
 const seatOutput = (command: ChildProcess.StandardCommand): SeatOutput =>
   Match.value(command.command).pipe(
     Match.when("grok", () =>
-      O.contains(flagValue(command.args, "-m"), "grok-sandbox-refused")
+      O.contains(flagValue(commandArgs(command), "-m"), "grok-sandbox-refused")
         ? { stdout: "", stderr: sandboxRefusal(" /run/example/runtime.sock"), exitCode: 1 }
         : { stdout: "", stderr: "Error: 401 Unauthorized: run grok login again\n", exitCode: 1 }
     ),
     Match.when("claude", () =>
-      O.contains(flagValue(command.args, "--model"), "claude-output-capped")
+      O.contains(flagValue(commandArgs(command), "--model"), "claude-output-capped")
         ? { stdout: JSON.stringify(outputCapEnvelope(OUTPUT_CAP_MESSAGE)), stderr: "", exitCode: 1 }
         : {
             stdout: JSON.stringify({ type: "result", subtype: "success", is_error: false, result: opusReport }),
@@ -788,7 +789,7 @@ const seatOutput = (command: ChildProcess.StandardCommand): SeatOutput =>
 // The handle a fake seat runs as, by the model it is spawned with: a seat that never exits, one that prints and
 // then stalls, one that reports after four of its five minutes, or the output its route and model pick.
 const fakeSeatHandle = (command: ChildProcess.StandardCommand) =>
-  Match.value(O.getOrElse(flagValue(command.args, "--model"), () => "")).pipe(
+  Match.value(O.getOrElse(flagValue(commandArgs(command), "--model"), () => "")).pipe(
     Match.when("claude-stuck", () => stuckHandle),
     Match.when("claude-stalled", () => stalledHandle),
     Match.when("claude-slow", () => seatHandle(seatOutput(command), Effect.sleep("4 minutes"))),
@@ -799,7 +800,7 @@ const fakeSeats = ChildProcessSpawner.make((command) =>
   ChildProcess.isStandardCommand(command)
     ? Effect.sync(() => {
         const key = `${command.options.cwd ?? ""} ${command.command}`;
-        MutableHashMap.set(spawned, key, command.args);
+        MutableHashMap.set(spawned, key, commandArgs(command));
         MutableHashMap.set(spawnedEnv, key, command.options.env ?? {});
         MutableHashMap.set(spawnedForceKill, key, command.options.forceKillAfter);
         return fakeSeatHandle(command);

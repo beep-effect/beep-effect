@@ -24,8 +24,8 @@
  */
 
 import * as NodeURL from "node:url";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { Lockfile } from "@beep/lockfiles/Lockfile";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -95,7 +95,7 @@ const repoRoot = NodeURL.fileURLToPath(new URL("../../..", import.meta.url));
 const LegacyLockfile = S.Struct({
   packages: S.Record(S.String, S.Array(S.Unknown)).pipe(S.withDecodingDefaultKey(Effect.succeed({}))),
 });
-const decodeLegacyLockfile = decodeJsoncTextAs(LegacyLockfile);
+const decodeLegacyLockfile = Jsonc.bind(LegacyLockfile).decode;
 
 // CatalogUsage `packageNameFromSpecifier`: split at the last `@` past index 0.
 const packageNameFromSpecifier = (specifier: string): string =>

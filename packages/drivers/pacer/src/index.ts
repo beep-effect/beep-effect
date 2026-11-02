@@ -1,6 +1,8 @@
 /**
  * Offline-safe PACER API driver primitives.
  *
+ * **Details**
+ *
  * The package intentionally exposes the PACER Authentication API service and the
  * PACER Case Locator service separately. Authentication failures are body-code
  * driven (`loginResult`), while PCL failures are HTTP-status driven, so keeping

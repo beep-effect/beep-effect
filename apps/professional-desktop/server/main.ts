@@ -34,6 +34,7 @@ import { ExecutionLedgerDrizzle } from "@beep/epistemic-server/ExecutionLedger";
 import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server";
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -121,7 +122,8 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
     // tail of a turn (no bytes flow while the kernel thinks); 255s is Bun's max
     // and covers the turn budget. Mirrors the POC.
     Layer.provide(BunHttpServer.layer({ hostname: "127.0.0.1", port: PORT, idleTimeout: 255 })),
-    Layer.provide(RpcSerialization.layerNdjson)
+    Layer.provide(RpcSerialization.layerNdjson),
+    Layer.provide(BunCrypto.layer)
   );
 };
 

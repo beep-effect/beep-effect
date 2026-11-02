@@ -3,6 +3,9 @@
   "extends": "./tsconfig.json",
   "references": [
     {
+      "path": "../../../drivers/ai-provider-cli/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/duckdb/tsconfig.json"
     },
     {
@@ -24,10 +27,16 @@
       "path": "../../../foundation/modeling/identity/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/jsonl/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/schema/tsconfig.json"
     },
     {
       "path": "../../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/yaml/tsconfig.json"
     },
     {
       "path": "../../test-kit/fc-runs/tsconfig.json"

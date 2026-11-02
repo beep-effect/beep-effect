@@ -27,12 +27,13 @@ import {
   readTurboCacheEnvironment,
   resolveTurboCachePlan,
   turboCachePlanArgs,
+  workspaceManifests,
 } from "@beep/repo-cli/test/SharedInternals";
-import { FsUtilsLive, findRepoRoot, resolveWorkspacePackages } from "@beep/repo-utils";
+import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -54,7 +55,8 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { parseDocument } from "yaml";
+import { commandArgs, commandEnv } from "./support/commandArgs.ts";
+import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 
 const REPO_ROOT = "/repo";
 const coverageDispatchIdentity = CoverageProducerIdentity.make({
@@ -130,10 +132,10 @@ const ciExecutionLayer = (
       if (!ChildProcess.isStandardCommand(command)) {
         return Effect.die("the CI lane test never spawns a piped command");
       }
-      spawned.push(A.join([command.command, ...command.args], " "));
+      spawned.push(A.join([command.command, ...commandArgs(command)], " "));
       const output = command.command === "git" ? A.join(changedFiles, "\n") : "";
       return Effect.succeed(
-        commandHandle(output, failedTask !== undefined && A.contains(command.args, failedTask) ? 1 : 0)
+        commandHandle(output, failedTask !== undefined && A.contains(commandArgs(command), failedTask) ? 1 : 0)
       );
     })
   );
@@ -188,7 +190,11 @@ const branchProtectionContextSnapshotUrl = new URL(
   import.meta.url
 );
 const checkWorkflowUrl = new URL("../../../../../.github/workflows/check.yml", import.meta.url);
-const LiveRepoLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const LiveRepoLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 const PartitionLaneLayer = Layer.merge(LiveRepoLayer, TestConsole.layer);
 
 const withEnvVarEffect = <A, E, R>(
@@ -310,7 +316,7 @@ const lanePackages = (laneId: "lint" | "test-unit"): ReadonlyArray<string> =>
 const liveTaskPackages = Effect.fn(function* (task: "lint" | "test") {
   const repoRoot = yield* findRepoRoot();
   const path = yield* Path.Path;
-  const workspaces = yield* resolveWorkspacePackages(repoRoot);
+  const workspaces = yield* workspaceManifests(repoRoot);
   return pipe(
     A.fromIterable(HashMap.entries(workspaces)),
     A.filter(([, workspace]) => {
@@ -450,8 +456,10 @@ describe("CI lane partitions", () => {
     ).toEqual([
       { id: "lint-a", packages: 72, weightSeconds: 1132 },
       { id: "lint-b", packages: 67, weightSeconds: 1134 },
-      { id: "repo-cli-1", packages: 1, weightSeconds: 440 },
-      { id: "repo-cli-2", packages: 1, weightSeconds: 440 },
+      { id: "repo-cli-1", packages: 1, weightSeconds: 603 },
+      { id: "repo-cli-2", packages: 1, weightSeconds: 603 },
+      { id: "repo-cli-3", packages: 1, weightSeconds: 603 },
+      { id: "repo-cli-4", packages: 1, weightSeconds: 603 },
       { id: "unit-a", packages: 71, weightSeconds: 1214 },
       { id: "unit-b", packages: 67, weightSeconds: 1214 },
     ]);
@@ -461,13 +469,17 @@ describe("CI lane partitions", () => {
     expect(A.map(CI_LANE_PARTITIONS, (partition) => ({ id: partition.id, shard: partition.shard }))).toEqual([
       { id: "lint-a", shard: undefined },
       { id: "lint-b", shard: undefined },
-      { id: "repo-cli-1", shard: CiLanePartitionShard.make({ index: 1, total: 2 }) },
-      { id: "repo-cli-2", shard: CiLanePartitionShard.make({ index: 2, total: 2 }) },
+      { id: "repo-cli-1", shard: CiLanePartitionShard.make({ index: 1, total: 4 }) },
+      { id: "repo-cli-2", shard: CiLanePartitionShard.make({ index: 2, total: 4 }) },
+      { id: "repo-cli-3", shard: CiLanePartitionShard.make({ index: 3, total: 4 }) },
+      { id: "repo-cli-4", shard: CiLanePartitionShard.make({ index: 4, total: 4 }) },
       { id: "unit-a", shard: undefined },
       { id: "unit-b", shard: undefined },
     ]);
     expect(partitionPackages("repo-cli-1")).toEqual(["@beep/repo-cli"]);
     expect(partitionPackages("repo-cli-2")).toEqual(["@beep/repo-cli"]);
+    expect(partitionPackages("repo-cli-3")).toEqual(["@beep/repo-cli"]);
+    expect(partitionPackages("repo-cli-4")).toEqual(["@beep/repo-cli"]);
   });
 
   it("rejects a shard whose index exceeds its total or whose total is below two", () => {
@@ -535,7 +547,7 @@ describe("CI lane partitions", () => {
       "--filter=@beep/repo-cli",
       "--summarize",
       "--",
-      "--shard=1/2",
+      "--shard=1/4",
     ];
     expect([...sharded.execution]).toEqual([
       "turbo",
@@ -544,8 +556,8 @@ describe("CI lane partitions", () => {
       ...expectedTurboCacheArgs(shardedShape),
       ...shardedShape,
     ]);
-    expect(A.takeRight(sharded.execution, 2)).toEqual(["--", "--shard=1/2"]);
-    expect(sharded.selection).not.toContain("--shard=1/2");
+    expect(A.takeRight(sharded.execution, 2)).toEqual(["--", "--shard=1/4"]);
+    expect(sharded.selection).not.toContain("--shard=1/4");
 
     const unitA = O.getOrThrow(A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === "unit-a"));
     const unsharded = ciLanePartitionArgsForTesting(
@@ -834,7 +846,7 @@ describe("CI lane partitions", () => {
       Effect.gen(function* () {
         const repoRoot = yield* findRepoRoot();
         const path = yield* Path.Path;
-        const workspaces = yield* resolveWorkspacePackages(repoRoot);
+        const workspaces = yield* workspaceManifests(repoRoot);
         const workspaceEntries = A.fromIterable(HashMap.entries(workspaces));
         const workspacePackageNames = A.map(workspaceEntries, ([name]) => name);
 
@@ -889,18 +901,17 @@ describe("CI lane partitions", () => {
   it.effect("keeps literal required aggregators and fails every non-success shard result", () =>
     Effect.gen(function* () {
       const workflowText = yield* Effect.tryPromise(() => Bun.file(checkWorkflowUrl).text());
-      const workflow = parseDocument(workflowText);
-      expect(workflow.errors).toHaveLength(0);
+      const workflow = parseWorkflowYaml(workflowText);
       expect(workflowText).not.toMatch(/ci lane (?:lint|test-unit)[^\n]*--force/u);
-      expect(workflow.getIn(["jobs", "lint", "name"])).toBe("Lint");
-      expect(workflow.getIn(["jobs", "lint", "if"])).toBe("${{ always() }}");
-      expect(workflow.getIn(["jobs", "test-unit", "name"])).toBe("Test Unit");
-      expect(workflow.getIn(["jobs", "test-unit", "if"])).toBe("${{ always() }}");
-      expect(workflow.getIn(["jobs", "lint-shard", "strategy", "fail-fast"])).toBe(false);
-      expect(workflow.getIn(["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
+      expect(yamlAt(workflow, ["jobs", "lint", "name"])).toBe("Lint");
+      expect(yamlAt(workflow, ["jobs", "lint", "if"])).toBe("${{ always() }}");
+      expect(yamlAt(workflow, ["jobs", "test-unit", "name"])).toBe("Test Unit");
+      expect(yamlAt(workflow, ["jobs", "test-unit", "if"])).toBe("${{ always() }}");
+      expect(yamlAt(workflow, ["jobs", "lint-shard", "strategy", "fail-fast"])).toBe(false);
+      expect(yamlAt(workflow, ["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
 
-      const lintGate = String(workflow.getIn(["jobs", "lint", "steps", 0, "run"]));
-      const unitGate = String(workflow.getIn(["jobs", "test-unit", "steps", 0, "run"]));
+      const lintGate = String(yamlAt(workflow, ["jobs", "lint", "steps", 0, "run"]));
+      const unitGate = String(yamlAt(workflow, ["jobs", "test-unit", "steps", 0, "run"]));
       expect(lintGate).toContain('needs.lint-shard.result }}" != "success"');
       expect(unitGate).toContain('needs.test-unit-shard.result }}" != "success"');
       expect(lintGate).toContain("exit 1");
@@ -1054,7 +1065,7 @@ describe("partitioned CI lane execution", () => {
             expect(commands).toHaveLength(1);
             const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
             expect(output).toContain("test-unit repo-cli-1: planned execution: bunx turbo run @beep/repo-cli#test");
-            expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/2");
+            expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/4");
             expect(output).toContain("test-unit repo-cli-1: dry-run proof complete; no tasks executed");
           })
         )
@@ -1630,7 +1641,7 @@ describe("ciLaneStepsForTesting", () => {
 
   // The workflow gates only on goals_only and hands the affected decision to
   // the lane (Turbo dry-run probe); no path profile survives anywhere.
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect("leaves the storybook affected decision to the lane instead of a workflow path profile", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -1681,9 +1692,11 @@ const storybookCiLayer = (dryRunOutput: string, spawned: Array<StorybookSpawn>, 
       if (!ChildProcess.isStandardCommand(command)) {
         return Effect.die("the Storybook lane test never spawns a piped command");
       }
-      spawned.push({ line: A.join([command.command, ...command.args], " "), env: command.options.env ?? {} });
+      spawned.push({ line: A.join([command.command, ...commandArgs(command)], " "), env: commandEnv(command) ?? {} });
       return Effect.succeed(
-        A.contains(command.args, "--dry-run=json") ? commandHandle(dryRunOutput, dryRunExitCode) : commandHandle()
+        A.contains(commandArgs(command), "--dry-run=json")
+          ? commandHandle(dryRunOutput, dryRunExitCode)
+          : commandHandle()
       );
     })
   );
@@ -2152,7 +2165,7 @@ describe("public CI coverage lane dispatch", () => {
       Effect.gen(function* () {
         const repoRoot = yield* findRepoRoot();
         const path = yield* Path.Path;
-        const workspaces = yield* resolveWorkspacePackages(repoRoot);
+        const workspaces = yield* workspaceManifests(repoRoot);
         const packageName = firstOf(partitionPackages("unit-a"));
         const workspace = O.getOrThrow(HashMap.get(workspaces, packageName));
         const selectedOwner = CoverageScopeOwner.make({

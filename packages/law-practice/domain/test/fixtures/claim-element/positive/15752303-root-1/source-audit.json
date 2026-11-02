@@ -1,0 +1,95 @@
+{
+  "familyId": "15752303-root-1",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the preparation",
+      "nativeQuote": "the preparation",
+      "literalMatch": true,
+      "explanation": "Exact1."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the height",
+      "nativeQuote": "the height",
+      "literalMatch": true,
+      "explanation": "Exact9."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the interior surface",
+      "nativeQuote": "the interior surface",
+      "literalMatch": true,
+      "explanation": "Exact13."
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the membrane filter",
+      "nativeQuote": "the membrane filter",
+      "literalMatch": true,
+      "explanation": "Exact16."
+    }
+  ],
+  "concerns": [
+    "Original JDLUKJQ2RXEAPX0 has Del/Ins changes:3 dependency1and2 becomes1,15 any1-14 becomes1. Removing only explicit Del elements yields all selected1-16 native matches. Unamended original JNZFXYCSPXXIFW2 differs in those references, so differences are specifically reconciled as tracked amendment rather than typography.",
+    "Original counts16 agree; publication identity/digest and63/63 inventory original2018-02-13 before OA2020-02-06 verified. Natural refs2-13->1,14->13,15->1,16->15 agree with amended original."
+  ],
+  "rationale": "Actual112(b) selected numbered grounds and exact accepted amended wording establish eligible association.",
+  "sourceIdentity": {
+    "applicationNumber": "15752303",
+    "publicationNumber": "US20190047783A1",
+    "publicationDate": "2019-02-14",
+    "officeActionMailDate": "2020-02-06",
+    "officeActionDocumentIdentifiers": ["K6ASPVFPRXEAPX2"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20190047783 A1 20190214",
+      "application-reference": "US 15752303 20160812",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "JDLUKJQ2RXEAPX0",
+        "officialDate": "2018-02-13T11:13:41.000-0500"
+      },
+      {
+        "documentIdentifier": "JNZFXYCSPXXIFW2",
+        "officialDate": "2018-02-13T11:13:41.000-0500"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "JDLUKJQ2RXEAPX0",
+        "officialDate": "2018-02-13T11:13:41.000-0500",
+        "sha256": "d46cbcfd3e05d3080f603c8b9b8124e9d26da1ce67afc9521d5aa597cdb73086",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [
+          2, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 16
+        ],
+        "sourceClaimCount": 16
+      },
+      {
+        "documentIdentifier": "JNZFXYCSPXXIFW2",
+        "officialDate": "2018-02-13T11:13:41.000-0500",
+        "sha256": "95851bad9ef9b25a3ad0f91340a50cecefab1e0f1fdb1b0f1a6fd248ea9f3cc4",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [
+          2, 4, 5, 6, 7, 8, 10, 11, 12, 13, 16
+        ],
+        "sourceClaimCount": 16
+      }
+    ],
+    "documentInventoryCount": 63,
+    "documentInventoryRows": 63,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

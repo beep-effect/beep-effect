@@ -1,0 +1,76 @@
+{
+  "familyId": "14971439-root-17",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the threaded socket interior surface",
+      "nativeQuote": "the threaded socket interior surface",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the connected tube sections",
+      "nativeQuote": "the connected tube sections",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    }
+  ],
+  "concerns": [
+    "Original17 manually inspected: same substantive wording; OCR inserts page12 and trailing13 Independent.17-claim count agrees; partial exact original list is not a version conflict."
+  ],
+  "rationale": "Read actual112(b)/second-paragraph indefiniteness ground; natural language selected dependencies manually checked and all connect to selected root. Original/date/inventory evidence retained; identity checks follow before handoff. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "14971439",
+    "nativePublicationNumber": "US20160102789A1",
+    "nativePublicationDate": "20160414",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "a59a3650a5fabb773fb3967b9bcd02446d6812ad75b08bff208c9f5b0e712b37",
+    "sourceClaimsXmlSha256": "15257b174ff30cb7484cdb56e84beb5931acd39a5ce92261e2a908b3373d8ebf"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 39,
+    "retainedInventoryCount": 39,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "II9BVJ8LPXXIFW3",
+        "officialDate": "2015-12-16T00:00:00.000-0500"
+      }
+    ],
+    "officeActionMailDate": "2017-01-11",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "II9BVJ8LPXXIFW3",
+      "officialDate": "2015-12-16T00:00:00.000-0500",
+      "sha256": "aed2453977b21fb76e886ebf5d60387fcf51e402ec2bef716888db22d7168e24",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [1],
+      "sourceClaimCount": 17
+    }
+  ],
+  "nativeContextClaimCount": 17,
+  "selectedClaimNumbers": [17],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "II9BVJ8LPXXIFW3",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": ["14971439"],
+      "headerMailRoomDates": ["2015-12-16"],
+      "applicationMatches": true,
+      "claimNodeCount": 17
+    }
+  ]
+}

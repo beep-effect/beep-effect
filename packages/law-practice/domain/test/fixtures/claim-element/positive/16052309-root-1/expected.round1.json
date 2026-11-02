@@ -1,0 +1,2190 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 51,
+          "quote": "System for quick mounting applied to a cabinet body"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "System"
+            },
+            "determiner": "bare",
+            "head": "system"
+          },
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 51,
+              "quote": "a cabinet body"
+            },
+            "determiner": "a",
+            "head": "cabinet body"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 74,
+          "endChar": 214,
+          "quote": "the backside section (1) is bipartite, composed by upper part (1a) and lower part (1b), provided with slots (1c) at the lower and upper ends"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 74,
+              "endChar": 94,
+              "quote": "the backside section"
+            },
+            "determiner": "the",
+            "head": "backside section"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 135,
+              "quote": "upper part"
+            },
+            "determiner": "bare",
+            "head": "upper part"
+          },
+          {
+            "anchor": {
+              "startChar": 145,
+              "endChar": 155,
+              "quote": "lower part"
+            },
+            "determiner": "bare",
+            "head": "lower part"
+          },
+          {
+            "anchor": {
+              "startChar": 176,
+              "endChar": 181,
+              "quote": "slots"
+            },
+            "determiner": "bare",
+            "head": "slots"
+          },
+          {
+            "anchor": {
+              "startChar": 190,
+              "endChar": 214,
+              "quote": "the lower and upper ends"
+            },
+            "determiner": "the",
+            "head": "lower and upper ends"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 216,
+          "endChar": 305,
+          "quote": "with mounting sequence by fitting the upper part (1a) to the lower part (1b) in one piece"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 221,
+              "endChar": 238,
+              "quote": "mounting sequence"
+            },
+            "determiner": "bare",
+            "head": "mounting sequence"
+          },
+          {
+            "anchor": {
+              "startChar": 250,
+              "endChar": 264,
+              "quote": "the upper part"
+            },
+            "determiner": "the",
+            "head": "upper part"
+          },
+          {
+            "anchor": {
+              "startChar": 273,
+              "endChar": 287,
+              "quote": "the lower part"
+            },
+            "determiner": "the",
+            "head": "lower part"
+          },
+          {
+            "anchor": {
+              "startChar": 296,
+              "endChar": 305,
+              "quote": "one piece"
+            },
+            "determiner": "bare",
+            "head": "one piece"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 307,
+          "endChar": 380,
+          "quote": "the bend angled in 180° (1d) being fitted to the bend angled in 180° (1e)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 307,
+              "endChar": 315,
+              "quote": "the bend"
+            },
+            "determiner": "the",
+            "head": "bend"
+          },
+          {
+            "anchor": {
+              "startChar": 352,
+              "endChar": 360,
+              "quote": "the bend"
+            },
+            "determiner": "the",
+            "head": "bend"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 250,
+            "endChar": 264,
+            "quote": "the upper part"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 125,
+            "endChar": 135,
+            "quote": "upper part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 273,
+            "endChar": 287,
+            "quote": "the lower part"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 145,
+            "endChar": 155,
+            "quote": "lower part"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 216,
+              "endChar": 221,
+              "quote": "with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 221,
+                "endChar": 238,
+                "quote": "mounting sequence"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 238,
+              "endChar": 250,
+              "quote": " by fitting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 250,
+                "endChar": 264,
+                "quote": "the upper part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 264,
+              "endChar": 273,
+              "quote": " (1a) to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 273,
+                "endChar": 287,
+                "quote": "the lower part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 287,
+              "endChar": 296,
+              "quote": " (1b) in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 296,
+                "endChar": 305,
+                "quote": "one piece"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 307,
+                "endChar": 315,
+                "quote": "the bend"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 315,
+              "endChar": 352,
+              "quote": " angled in 180° (1d) being fitted to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 352,
+                "endChar": 360,
+                "quote": "the bend"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 360,
+              "endChar": 380,
+              "quote": " angled in 180° (1e)"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 77,
+          "quote": "System for quick mounting applied to a cabinet body, according to the claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "System"
+            },
+            "determiner": "bare",
+            "head": "system"
+          },
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 51,
+              "quote": "a cabinet body"
+            },
+            "determiner": "a",
+            "head": "cabinet body"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 101,
+          "endChar": 293,
+          "quote": "each side section (2) contains two tabs (2a) at the corners of its L-shaped lower bend angled in 90° (2c), and two main slots (2b) on the corners of its upper bend having an U-shaped bend (2d)"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 118,
+              "quote": "each side section"
+            },
+            "determiner": "bare",
+            "head": "side section"
+          },
+          {
+            "anchor": {
+              "startChar": 132,
+              "endChar": 140,
+              "quote": "two tabs"
+            },
+            "determiner": "bare",
+            "head": "tabs"
+          },
+          {
+            "anchor": {
+              "startChar": 149,
+              "endChar": 160,
+              "quote": "the corners"
+            },
+            "determiner": "the",
+            "head": "corners"
+          },
+          {
+            "anchor": {
+              "startChar": 164,
+              "endChar": 187,
+              "quote": "its L-shaped lower bend"
+            },
+            "determiner": "bare",
+            "head": "l-shaped lower bend"
+          },
+          {
+            "anchor": {
+              "startChar": 212,
+              "endChar": 226,
+              "quote": "two main slots"
+            },
+            "determiner": "bare",
+            "head": "main slots"
+          },
+          {
+            "anchor": {
+              "startChar": 235,
+              "endChar": 246,
+              "quote": "the corners"
+            },
+            "determiner": "the",
+            "head": "corners"
+          },
+          {
+            "anchor": {
+              "startChar": 250,
+              "endChar": 264,
+              "quote": "its upper bend"
+            },
+            "determiner": "bare",
+            "head": "upper bend"
+          },
+          {
+            "anchor": {
+              "startChar": 272,
+              "endChar": 288,
+              "quote": "an U-shaped bend"
+            },
+            "determiner": "an",
+            "head": "u-shaped bend"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "System"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "System"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 73,
+          "quote": "System for quick mounting applied to a cabinet body, according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "System"
+            },
+            "determiner": "bare",
+            "head": "system"
+          },
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 51,
+              "quote": "a cabinet body"
+            },
+            "determiner": "a",
+            "head": "cabinet body"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 97,
+          "endChar": 159,
+          "quote": "the side part (2) is positioned under the backside section (1)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 110,
+              "quote": "the side part"
+            },
+            "determiner": "the",
+            "head": "side part"
+          },
+          {
+            "anchor": {
+              "startChar": 135,
+              "endChar": 155,
+              "quote": "the backside section"
+            },
+            "determiner": "the",
+            "head": "backside section"
+          }
+        ]
+      },
+      {
+        "path": "3.b",
+        "anchor": {
+          "startChar": 165,
+          "endChar": 242,
+          "quote": "the tab (2a) is positioned under the slot (1c) on the four coincident corners"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 165,
+              "endChar": 172,
+              "quote": "the tab"
+            },
+            "determiner": "the",
+            "head": "tab"
+          },
+          {
+            "anchor": {
+              "startChar": 198,
+              "endChar": 206,
+              "quote": "the slot"
+            },
+            "determiner": "the",
+            "head": "slot"
+          },
+          {
+            "anchor": {
+              "startChar": 215,
+              "endChar": 242,
+              "quote": "the four coincident corners"
+            },
+            "determiner": "the",
+            "head": "four coincident corners"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "System"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "System"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 110,
+                "quote": "the side part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 110,
+              "endChar": 135,
+              "quote": " (2) is positioned under "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 135,
+                "endChar": 155,
+                "quote": "the backside section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 155,
+              "endChar": 159,
+              "quote": " (1)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 198,
+            "endChar": 206,
+            "quote": "the slot"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 176,
+            "endChar": 181,
+            "quote": "slots"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.b",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 165,
+                "endChar": 172,
+                "quote": "the tab"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 172,
+              "endChar": 198,
+              "quote": " (2a) is positioned under "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 198,
+                "endChar": 206,
+                "quote": "the slot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 206,
+              "endChar": 215,
+              "quote": " (1c) on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 215,
+                "endChar": 242,
+                "quote": "the four coincident corners"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 73,
+          "quote": "System for quick mounting applied to a cabinet body, according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "System"
+            },
+            "determiner": "bare",
+            "head": "system"
+          },
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 51,
+              "quote": "a cabinet body"
+            },
+            "determiner": "a",
+            "head": "cabinet body"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 97,
+          "endChar": 234,
+          "quote": "the top and/or bottom part (3) of the cabinet presents L-shaped side bends and lower bend angled in 90° (3a) and U-shaped upper bend (3b)"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 123,
+              "quote": "the top and/or bottom part"
+            },
+            "determiner": "the",
+            "head": "top and/or bottom part"
+          },
+          {
+            "anchor": {
+              "startChar": 131,
+              "endChar": 142,
+              "quote": "the cabinet"
+            },
+            "determiner": "the",
+            "head": "cabinet"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 171,
+              "quote": "L-shaped side bends"
+            },
+            "determiner": "bare",
+            "head": "l-shaped side bends"
+          },
+          {
+            "anchor": {
+              "startChar": 176,
+              "endChar": 186,
+              "quote": "lower bend"
+            },
+            "determiner": "bare",
+            "head": "lower bend"
+          },
+          {
+            "anchor": {
+              "startChar": 210,
+              "endChar": 229,
+              "quote": "U-shaped upper bend"
+            },
+            "determiner": "bare",
+            "head": "u-shaped upper bend"
+          }
+        ]
+      },
+      {
+        "path": "4.b",
+        "anchor": {
+          "startChar": 236,
+          "endChar": 378,
+          "quote": "the top/bottom part (3) is fitted to the upper section (1d) through its lower bend (3a) and to the side parts (2b) through its side bends (3b)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 236,
+              "endChar": 255,
+              "quote": "the top/bottom part"
+            },
+            "determiner": "the",
+            "head": "top/bottom part"
+          },
+          {
+            "anchor": {
+              "startChar": 273,
+              "endChar": 290,
+              "quote": "the upper section"
+            },
+            "determiner": "the",
+            "head": "upper section"
+          },
+          {
+            "anchor": {
+              "startChar": 304,
+              "endChar": 318,
+              "quote": "its lower bend"
+            },
+            "determiner": "bare",
+            "head": "lower bend"
+          },
+          {
+            "anchor": {
+              "startChar": 331,
+              "endChar": 345,
+              "quote": "the side parts"
+            },
+            "determiner": "the",
+            "head": "side parts"
+          },
+          {
+            "anchor": {
+              "startChar": 359,
+              "endChar": 373,
+              "quote": "its side bends"
+            },
+            "determiner": "bare",
+            "head": "side bends"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "System"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "System"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 131,
+            "endChar": 142,
+            "quote": "the cabinet"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 37,
+            "endChar": 51,
+            "quote": "a cabinet body"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.b",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 255,
+            "quote": "the top/bottom part"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 97,
+            "endChar": 123,
+            "quote": "the top and/or bottom part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.b",
+          "anchor": {
+            "startChar": 304,
+            "endChar": 318,
+            "quote": "its lower bend"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 176,
+            "endChar": 186,
+            "quote": "lower bend"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.b",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 236,
+                "endChar": 255,
+                "quote": "the top/bottom part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 255,
+              "endChar": 273,
+              "quote": " (3) is fitted to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 273,
+                "endChar": 290,
+                "quote": "the upper section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 290,
+              "endChar": 304,
+              "quote": " (1d) through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 304,
+                "endChar": 318,
+                "quote": "its lower bend"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 318,
+              "endChar": 331,
+              "quote": " (3a) and to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 331,
+                "endChar": 345,
+                "quote": "the side parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 345,
+              "endChar": 359,
+              "quote": " (2b) through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 359,
+                "endChar": 373,
+                "quote": "its side bends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 373,
+              "endChar": 378,
+              "quote": " (3b)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 73,
+          "quote": "System for quick mounting applied to a cabinet body, according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "System"
+            },
+            "determiner": "bare",
+            "head": "system"
+          },
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 51,
+              "quote": "a cabinet body"
+            },
+            "determiner": "a",
+            "head": "cabinet body"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 97,
+          "endChar": 262,
+          "quote": "the sequence of the mounting of the cabinet box takes place by fitting the pieces still without the shelf and doors, these pieces already fitted being not locked yet"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 109,
+              "quote": "the sequence"
+            },
+            "determiner": "the",
+            "head": "sequence"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 125,
+              "quote": "the mounting"
+            },
+            "determiner": "the",
+            "head": "mounting"
+          },
+          {
+            "anchor": {
+              "startChar": 129,
+              "endChar": 144,
+              "quote": "the cabinet box"
+            },
+            "determiner": "the",
+            "head": "cabinet box"
+          },
+          {
+            "anchor": {
+              "startChar": 168,
+              "endChar": 178,
+              "quote": "the pieces"
+            },
+            "determiner": "the",
+            "head": "pieces"
+          },
+          {
+            "anchor": {
+              "startChar": 193,
+              "endChar": 212,
+              "quote": "the shelf and doors"
+            },
+            "determiner": "the",
+            "head": "shelf and doors"
+          },
+          {
+            "anchor": {
+              "startChar": 214,
+              "endChar": 226,
+              "quote": "these pieces"
+            },
+            "determiner": "bare",
+            "head": "pieces"
+          }
+        ]
+      },
+      {
+        "path": "5.b",
+        "anchor": {
+          "startChar": 264,
+          "endChar": 411,
+          "quote": "the lower bend (3a) of the top and bottom parts being fitted to the bends angled in 180° (1d) of the backside section (1) and of the side parts (2)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 264,
+              "endChar": 278,
+              "quote": "the lower bend"
+            },
+            "determiner": "the",
+            "head": "lower bend"
+          },
+          {
+            "anchor": {
+              "startChar": 287,
+              "endChar": 311,
+              "quote": "the top and bottom parts"
+            },
+            "determiner": "the",
+            "head": "top and bottom parts"
+          },
+          {
+            "anchor": {
+              "startChar": 328,
+              "endChar": 337,
+              "quote": "the bends"
+            },
+            "determiner": "the",
+            "head": "bends"
+          },
+          {
+            "anchor": {
+              "startChar": 361,
+              "endChar": 381,
+              "quote": "the backside section"
+            },
+            "determiner": "the",
+            "head": "backside section"
+          },
+          {
+            "anchor": {
+              "startChar": 393,
+              "endChar": 407,
+              "quote": "the side parts"
+            },
+            "determiner": "the",
+            "head": "side parts"
+          }
+        ]
+      },
+      {
+        "path": "5.c",
+        "anchor": {
+          "startChar": 413,
+          "endChar": 531,
+          "quote": "as well as the side bends (3b) of the top and bottom parts will be fitted to the main slots (2b) of the side parts (2)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 424,
+              "endChar": 438,
+              "quote": "the side bends"
+            },
+            "determiner": "the",
+            "head": "side bends"
+          },
+          {
+            "anchor": {
+              "startChar": 447,
+              "endChar": 471,
+              "quote": "the top and bottom parts"
+            },
+            "determiner": "the",
+            "head": "top and bottom parts"
+          },
+          {
+            "anchor": {
+              "startChar": 490,
+              "endChar": 504,
+              "quote": "the main slots"
+            },
+            "determiner": "the",
+            "head": "main slots"
+          },
+          {
+            "anchor": {
+              "startChar": 513,
+              "endChar": 527,
+              "quote": "the side parts"
+            },
+            "determiner": "the",
+            "head": "side parts"
+          }
+        ]
+      },
+      {
+        "path": "5.d",
+        "anchor": {
+          "startChar": 533,
+          "endChar": 675,
+          "quote": "the side parts (2) being fitted under the backside section (1), which also receives the top and bottom parts (3), resulting in the cabinet box"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 533,
+              "endChar": 547,
+              "quote": "the side parts"
+            },
+            "determiner": "the",
+            "head": "side parts"
+          },
+          {
+            "anchor": {
+              "startChar": 571,
+              "endChar": 591,
+              "quote": "the backside section"
+            },
+            "determiner": "the",
+            "head": "backside section"
+          },
+          {
+            "anchor": {
+              "startChar": 617,
+              "endChar": 641,
+              "quote": "the top and bottom parts"
+            },
+            "determiner": "the",
+            "head": "top and bottom parts"
+          },
+          {
+            "anchor": {
+              "startChar": 660,
+              "endChar": 675,
+              "quote": "the cabinet box"
+            },
+            "determiner": "the",
+            "head": "cabinet box"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "System"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "System"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 109,
+                "quote": "the sequence"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 109,
+              "endChar": 113,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 113,
+                "endChar": 125,
+                "quote": "the mounting"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 125,
+              "endChar": 129,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 129,
+                "endChar": 144,
+                "quote": "the cabinet box"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 144,
+              "endChar": 168,
+              "quote": " takes place by fitting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 168,
+                "endChar": 178,
+                "quote": "the pieces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 178,
+              "endChar": 193,
+              "quote": " still without "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 193,
+                "endChar": 212,
+                "quote": "the shelf and doors"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 212,
+              "endChar": 214,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 214,
+                "endChar": 226,
+                "quote": "these pieces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 226,
+              "endChar": 262,
+              "quote": " already fitted being not locked yet"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "5.b",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 264,
+                "endChar": 278,
+                "quote": "the lower bend"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 278,
+              "endChar": 287,
+              "quote": " (3a) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 287,
+                "endChar": 311,
+                "quote": "the top and bottom parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 311,
+              "endChar": 328,
+              "quote": " being fitted to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 328,
+                "endChar": 337,
+                "quote": "the bends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 337,
+              "endChar": 361,
+              "quote": " angled in 180° (1d) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 361,
+                "endChar": 381,
+                "quote": "the backside section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 381,
+              "endChar": 393,
+              "quote": " (1) and of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 393,
+                "endChar": 407,
+                "quote": "the side parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 407,
+              "endChar": 411,
+              "quote": " (2)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "5.c",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 413,
+              "endChar": 424,
+              "quote": "as well as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 424,
+                "endChar": 438,
+                "quote": "the side bends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 438,
+              "endChar": 447,
+              "quote": " (3b) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 447,
+                "endChar": 471,
+                "quote": "the top and bottom parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 471,
+              "endChar": 490,
+              "quote": " will be fitted to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 490,
+                "endChar": 504,
+                "quote": "the main slots"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 504,
+              "endChar": 513,
+              "quote": " (2b) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 513,
+                "endChar": 527,
+                "quote": "the side parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 527,
+              "endChar": 531,
+              "quote": " (2)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "5.d",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.d",
+              "anchor": {
+                "startChar": 533,
+                "endChar": 547,
+                "quote": "the side parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 547,
+              "endChar": 571,
+              "quote": " (2) being fitted under "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.d",
+              "anchor": {
+                "startChar": 571,
+                "endChar": 591,
+                "quote": "the backside section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 591,
+              "endChar": 617,
+              "quote": " (1), which also receives "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.d",
+              "anchor": {
+                "startChar": 617,
+                "endChar": 641,
+                "quote": "the top and bottom parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 641,
+              "endChar": 660,
+              "quote": " (3), resulting in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.d",
+              "anchor": {
+                "startChar": 660,
+                "endChar": 675,
+                "quote": "the cabinet box"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 73,
+          "quote": "System for quick mounting applied to a cabinet body, according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "System"
+            },
+            "determiner": "bare",
+            "head": "system"
+          },
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 51,
+              "quote": "a cabinet body"
+            },
+            "determiner": "a",
+            "head": "cabinet body"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 97,
+          "endChar": 264,
+          "quote": "the pieces of the box are locked in the four corners where the the backside section (1) and the side part (2), and the top or bottom part (3) are fitted one to another"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 107,
+              "quote": "the pieces"
+            },
+            "determiner": "the",
+            "head": "pieces"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 118,
+              "quote": "the box"
+            },
+            "determiner": "the",
+            "head": "box"
+          },
+          {
+            "anchor": {
+              "startChar": 133,
+              "endChar": 149,
+              "quote": "the four corners"
+            },
+            "determiner": "the",
+            "head": "four corners"
+          },
+          {
+            "anchor": {
+              "startChar": 160,
+              "endChar": 180,
+              "quote": "the backside section"
+            },
+            "determiner": "the",
+            "head": "backside section"
+          },
+          {
+            "anchor": {
+              "startChar": 189,
+              "endChar": 202,
+              "quote": "the side part"
+            },
+            "determiner": "the",
+            "head": "side part"
+          },
+          {
+            "anchor": {
+              "startChar": 212,
+              "endChar": 234,
+              "quote": "the top or bottom part"
+            },
+            "determiner": "the",
+            "head": "top or bottom part"
+          }
+        ]
+      },
+      {
+        "path": "6.b",
+        "anchor": {
+          "startChar": 266,
+          "endChar": 436,
+          "quote": "the locking that is started by manually bending the tab (2a) being performed by bending the steel, thus forming the cabinet box to receive the shelf and doors (not shown)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 266,
+              "endChar": 277,
+              "quote": "the locking"
+            },
+            "determiner": "the",
+            "head": "locking"
+          },
+          {
+            "anchor": {
+              "startChar": 314,
+              "endChar": 321,
+              "quote": "the tab"
+            },
+            "determiner": "the",
+            "head": "tab"
+          },
+          {
+            "anchor": {
+              "startChar": 354,
+              "endChar": 363,
+              "quote": "the steel"
+            },
+            "determiner": "the",
+            "head": "steel"
+          },
+          {
+            "anchor": {
+              "startChar": 378,
+              "endChar": 393,
+              "quote": "the cabinet box"
+            },
+            "determiner": "the",
+            "head": "cabinet box"
+          },
+          {
+            "anchor": {
+              "startChar": 405,
+              "endChar": 424,
+              "quote": "the shelf and doors"
+            },
+            "determiner": "the",
+            "head": "shelf and doors"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "System"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "System"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 107,
+                "quote": "the pieces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 107,
+              "endChar": 111,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 111,
+                "endChar": 118,
+                "quote": "the box"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 133,
+              "quote": " are locked in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 133,
+                "endChar": 149,
+                "quote": "the four corners"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 149,
+              "endChar": 160,
+              "quote": " where the "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 160,
+                "endChar": 180,
+                "quote": "the backside section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 180,
+              "endChar": 189,
+              "quote": " (1) and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 189,
+                "endChar": 202,
+                "quote": "the side part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 202,
+              "endChar": 212,
+              "quote": " (2), and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 212,
+                "endChar": 234,
+                "quote": "the top or bottom part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 234,
+              "endChar": 264,
+              "quote": " (3) are fitted one to another"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "6.b",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 266,
+                "endChar": 277,
+                "quote": "the locking"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 277,
+              "endChar": 314,
+              "quote": " that is started by manually bending "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 314,
+                "endChar": 321,
+                "quote": "the tab"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 321,
+              "endChar": 354,
+              "quote": " (2a) being performed by bending "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 354,
+                "endChar": 363,
+                "quote": "the steel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 363,
+              "endChar": 378,
+              "quote": ", thus forming "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 378,
+                "endChar": 393,
+                "quote": "the cabinet box"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 393,
+              "endChar": 405,
+              "quote": " to receive "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 405,
+                "endChar": 424,
+                "quote": "the shelf and doors"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 424,
+              "endChar": 436,
+              "quote": " (not shown)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      }
+    ]
+  }
+]

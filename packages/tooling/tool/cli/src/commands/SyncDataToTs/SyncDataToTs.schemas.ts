@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { RunMode } from "../../internal/cli/RunMode.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as Effect from "effect/Effect";
 import type * as FileSystem from "effect/FileSystem";
 import type * as HttpClient from "effect/http/HttpClient";
@@ -279,7 +279,7 @@ export class SyncDataTargetProjection extends S.Opaque<SyncDataTargetProjection,
  * @category models
  * @since 0.0.0
  */
-export type SyncDataTargetServices = HttpClient.HttpClient | Crypto.Crypto | FileSystem.FileSystem | Path.Path;
+export type SyncDataTargetServices = HttpClient.HttpClient | Digest.Digest | FileSystem.FileSystem | Path.Path;
 
 /**
  * Checked-in sync target definition.

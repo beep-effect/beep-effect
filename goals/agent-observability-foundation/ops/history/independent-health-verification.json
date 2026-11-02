@@ -1,0 +1,92 @@
+{
+  "recordedAt": "2026-10-29T05:38:00.204933+00:00",
+  "result": "passed",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "goalComplete": false,
+  "artifactRoot": "/tmp/obs-deploy-5kf8m3um",
+  "deliberateMemoryExhaustion": false,
+  "registeredPlanCommand": true,
+  "bundledEntrypoint": true,
+  "actualInstalledUserUnits": true,
+  "sharedCaddyAutosaveUnchanged": true,
+  "frontendAutosaveDisabled": true,
+  "caddyConfigurationValidated": true,
+  "systemdUnitsVerified": true,
+  "startsPaused": true,
+  "privateRoutesDenied": {
+    "GET /health": 404,
+    "GET /metrics": 404,
+    "POST /control/resume": 404,
+    "POST /control/pause": 404,
+    "GET /v1/traces": 404,
+    "POST /v1/traces/": 404,
+    "POST /v1/launches": 404
+  },
+  "pausedIntakeStatus": 503,
+  "oversizedStatus": 413,
+  "incompleteHeaderSeconds": 2.001,
+  "unrelatedSecretsAbsent": true,
+  "limits": {
+    "worker": {
+      "memory.max": "536870912",
+      "memory.swap.max": "0",
+      "cpu.max": "50000 100000",
+      "pids.max": "64"
+    },
+    "intake": {
+      "memory.max": "134217728",
+      "memory.swap.max": "0",
+      "cpu.max": "25000 100000",
+      "pids.max": "64"
+    }
+  },
+  "dependentIntakeStopped": true,
+  "changedBundleRefused": true,
+  "journalPreservedOnRefusal": true,
+  "verifiedBundleSha256": "8dcf6dc6b2adb8caade0217bcfb24548e0dc523af3abe2c35b1928f0884a5e3c",
+  "artifactSha256": {
+    "worker.sha256": "b4aa9ea4296a48ea0f77a570d075e0c1d3d5729e88f96271f2d0a0fca9541f5a",
+    "caddy": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+    "intake.json": "6455421aa05ec3894b53296cf912db130fc1ffb21a4fb80d4ae8c6ee1c99e911",
+    "intake.sha256": "7b6825d18967149a29f34c525a12cf930a550acbe5d0ae87e396e478b417d36e"
+  },
+  "independentHealth": {
+    "syntheticOnly": true,
+    "productionConfigurationChanged": false,
+    "receiver": "disposable local Alertmanager v2 API receiver; no human notification",
+    "scriptSha256": "0d00370d3e510cd9a18e8ad2b80422c5b2d82e30f8cc941f785dd9a66044ff6b",
+    "rulesSha256": "8391aa8164ea4f225f3604841dea4710cc7fb913382b9f06fc52653e8f6a5e56",
+    "actualWorkerScraped": true,
+    "metricsOnlyPrivateAccess": true,
+    "prometheusVersion": "prometheus, version 3.15.1 (branch: tarball, revision: 3.15.1)",
+    "stoppedWorkerObserved": true,
+    "alertDeliveredToLocalReceiver": true,
+    "alerts": [
+      {
+        "alertname": "BeepObservationWorkerUnavailable",
+        "receivedAt": 1793252356.576358
+      }
+    ],
+    "ownedMonitorStopped": true
+  },
+  "cleanup": [
+    {
+      "unit": "beep-observation-deploy-e3d67e825a4f.service",
+      "mainPid": 0,
+      "ownedUnitFileRemoved": true
+    },
+    {
+      "unit": "beep-observation-deploy-e3d67e825a4f-intake.service",
+      "mainPid": 0,
+      "ownedUnitFileRemoved": true
+    }
+  ],
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/ObservationWorker.entry.ts": "c91549ab1020bea7eab50f2751a9470bef43b43a32bd4b205fbfbd8b2263ee5e",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts": "b4220e80d0dbe2b41982228d2a6379dc0343acf0bc52e351130fb41bbea72762",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts": "bddd3e906afe6cf7a49a2526af5990c76e40b22ec8c05bd4a935803bd7cfce1c",
+    "goals/agent-observability-foundation/ops/verify-observation-deployment.py": "dbce5520674c28c0281042854af96a297709a389e27419c267fadee3d18bf1ac",
+    "goals/agent-observability-foundation/ops/observation_health_support.py": "5d1f0528f57076b383db82a131fdcbe27897c9c79a72de033ba8a5439e1948d1"
+  }
+}

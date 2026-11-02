@@ -1,0 +1,2606 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 13,
+          "quote": "A bird feeder"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 29,
+          "endChar": 35,
+          "quote": "A silo"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 29,
+              "endChar": 35,
+              "quote": "A silo"
+            },
+            "determiner": "a",
+            "head": "silo"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 232,
+          "quote": "A plurality of free spinning plates, each located a set distance from the surface of said silo, roughly parallel to said surface, attached so that each spins freely in a roughly vertical plane"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 75,
+              "quote": "A plurality of free spinning plates"
+            },
+            "determiner": "plurality-of",
+            "head": "free spinning plates"
+          },
+          {
+            "anchor": {
+              "startChar": 90,
+              "endChar": 104,
+              "quote": "a set distance"
+            },
+            "determiner": "a",
+            "head": "set distance"
+          },
+          {
+            "anchor": {
+              "startChar": 110,
+              "endChar": 121,
+              "quote": "the surface"
+            },
+            "determiner": "the",
+            "head": "surface"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 134,
+              "quote": "said silo"
+            },
+            "determiner": "said",
+            "head": "silo"
+          },
+          {
+            "anchor": {
+              "startChar": 156,
+              "endChar": 168,
+              "quote": "said surface"
+            },
+            "determiner": "said",
+            "head": "surface"
+          },
+          {
+            "anchor": {
+              "startChar": 208,
+              "endChar": 232,
+              "quote": "a roughly vertical plane"
+            },
+            "determiner": "a",
+            "head": "roughly vertical plane"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 237,
+          "endChar": 260,
+          "quote": "A fill hole in the silo"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 237,
+              "endChar": 248,
+              "quote": "A fill hole"
+            },
+            "determiner": "a",
+            "head": "fill hole"
+          },
+          {
+            "anchor": {
+              "startChar": 252,
+              "endChar": 260,
+              "quote": "the silo"
+            },
+            "determiner": "the",
+            "head": "silo"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 265,
+          "endChar": 311,
+          "quote": "A seed trough with at least one feeding portal"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 265,
+              "endChar": 278,
+              "quote": "A seed trough"
+            },
+            "determiner": "a",
+            "head": "seed trough"
+          },
+          {
+            "anchor": {
+              "startChar": 284,
+              "endChar": 311,
+              "quote": "at least one feeding portal"
+            },
+            "determiner": "at-least-one",
+            "head": "feeding portal"
+          }
+        ]
+      },
+      {
+        "path": "1.e",
+        "anchor": {
+          "startChar": 316,
+          "endChar": 387,
+          "quote": "One or more perches located to allow birds to reach the feeding portals"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 316,
+              "endChar": 335,
+              "quote": "One or more perches"
+            },
+            "determiner": "at-least-one",
+            "head": "perches"
+          },
+          {
+            "anchor": {
+              "startChar": 353,
+              "endChar": 358,
+              "quote": "birds"
+            },
+            "determiner": "bare",
+            "head": "birds"
+          },
+          {
+            "anchor": {
+              "startChar": 368,
+              "endChar": 387,
+              "quote": "the feeding portals"
+            },
+            "determiner": "the",
+            "head": "feeding portals"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 125,
+            "endChar": 134,
+            "quote": "said silo"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 29,
+            "endChar": 35,
+            "quote": "A silo"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 156,
+            "endChar": 168,
+            "quote": "said surface"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 110,
+            "endChar": 121,
+            "quote": "the surface"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 40,
+                "endChar": 75,
+                "quote": "A plurality of free spinning plates"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 75,
+              "endChar": 90,
+              "quote": ", each located "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 90,
+                "endChar": 104,
+                "quote": "a set distance"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 104,
+              "endChar": 110,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 110,
+                "endChar": 121,
+                "quote": "the surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 121,
+              "endChar": 125,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 125,
+                "endChar": 134,
+                "quote": "said silo"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 134,
+              "endChar": 156,
+              "quote": ", roughly parallel to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 156,
+                "endChar": 168,
+                "quote": "said surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 168,
+              "endChar": 208,
+              "quote": ", attached so that each spins freely in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 208,
+                "endChar": 232,
+                "quote": "a roughly vertical plane"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 252,
+            "endChar": 260,
+            "quote": "the silo"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 29,
+            "endChar": 35,
+            "quote": "A silo"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 237,
+                "endChar": 248,
+                "quote": "A fill hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 248,
+              "endChar": 252,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 252,
+                "endChar": 260,
+                "quote": "the silo"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 265,
+                "endChar": 278,
+                "quote": "A seed trough"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 278,
+              "endChar": 284,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 284,
+                "endChar": 311,
+                "quote": "at least one feeding portal"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 368,
+            "endChar": 387,
+            "quote": "the feeding portals"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 284,
+            "endChar": 311,
+            "quote": "at least one feeding portal"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.e",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 316,
+                "endChar": 335,
+                "quote": "One or more perches"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 335,
+              "endChar": 353,
+              "quote": " located to allow "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 353,
+                "endChar": 358,
+                "quote": "birds"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 358,
+              "endChar": 368,
+              "quote": " to reach "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 368,
+                "endChar": 387,
+                "quote": "the feeding portals"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 24,
+          "quote": "A bird feeder of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 26,
+          "endChar": 113,
+          "quote": "further comprising a hanging loop flexible tension element that is adjustable in length"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 84,
+              "quote": "a hanging loop flexible tension element"
+            },
+            "determiner": "a",
+            "head": "hanging loop flexible tension element"
+          },
+          {
+            "anchor": {
+              "startChar": 107,
+              "endChar": 113,
+              "quote": "length"
+            },
+            "determiner": "bare",
+            "head": "length"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 26,
+              "endChar": 45,
+              "quote": "further comprising "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 84,
+                "quote": "a hanging loop flexible tension element"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 84,
+              "endChar": 107,
+              "quote": " that is adjustable in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 107,
+                "endChar": 113,
+                "quote": "length"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 24,
+          "quote": "A bird feeder of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 104,
+          "quote": "said seed trough is removably attached to the lower portion of said silo"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 48,
+              "quote": "said seed trough"
+            },
+            "determiner": "said",
+            "head": "seed trough"
+          },
+          {
+            "anchor": {
+              "startChar": 74,
+              "endChar": 91,
+              "quote": "the lower portion"
+            },
+            "determiner": "the",
+            "head": "lower portion"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 104,
+              "quote": "said silo"
+            },
+            "determiner": "said",
+            "head": "silo"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 48,
+            "quote": "said seed trough"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 265,
+            "endChar": 278,
+            "quote": "A seed trough"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 95,
+            "endChar": 104,
+            "quote": "said silo"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 29,
+            "endChar": 35,
+            "quote": "A silo"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 48,
+                "quote": "said seed trough"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 48,
+              "endChar": 74,
+              "quote": " is removably attached to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 74,
+                "endChar": 91,
+                "quote": "the lower portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 91,
+              "endChar": 95,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 95,
+                "endChar": 104,
+                "quote": "said silo"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 24,
+          "quote": "A bird feeder of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 176,
+          "quote": "said perches are made of flexible materials of sufficient flexibility to support no greater than the weight of the birds intended for the feeder"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 44,
+              "quote": "said perches"
+            },
+            "determiner": "said",
+            "head": "perches"
+          },
+          {
+            "anchor": {
+              "startChar": 57,
+              "endChar": 75,
+              "quote": "flexible materials"
+            },
+            "determiner": "bare",
+            "head": "flexible materials"
+          },
+          {
+            "anchor": {
+              "startChar": 79,
+              "endChar": 101,
+              "quote": "sufficient flexibility"
+            },
+            "determiner": "bare",
+            "head": "sufficient flexibility"
+          },
+          {
+            "anchor": {
+              "startChar": 129,
+              "endChar": 139,
+              "quote": "the weight"
+            },
+            "determiner": "the",
+            "head": "weight"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 152,
+              "quote": "the birds"
+            },
+            "determiner": "the",
+            "head": "birds"
+          },
+          {
+            "anchor": {
+              "startChar": 166,
+              "endChar": 176,
+              "quote": "the feeder"
+            },
+            "determiner": "the",
+            "head": "feeder"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 44,
+            "quote": "said perches"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 316,
+            "endChar": 335,
+            "quote": "One or more perches"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 166,
+            "endChar": 176,
+            "quote": "the feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 44,
+                "quote": "said perches"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 44,
+              "endChar": 57,
+              "quote": " are made of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 75,
+                "quote": "flexible materials"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 75,
+              "endChar": 79,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 79,
+                "endChar": 101,
+                "quote": "sufficient flexibility"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 101,
+              "endChar": 129,
+              "quote": " to support no greater than "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 129,
+                "endChar": 139,
+                "quote": "the weight"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 139,
+              "endChar": 143,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 152,
+                "quote": "the birds"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 152,
+              "endChar": 166,
+              "quote": " intended for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 166,
+                "endChar": 176,
+                "quote": "the feeder"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 24,
+          "quote": "A bird feeder of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 87,
+          "quote": "said perches are removably attached to said seed trough"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 44,
+              "quote": "said perches"
+            },
+            "determiner": "said",
+            "head": "perches"
+          },
+          {
+            "anchor": {
+              "startChar": 71,
+              "endChar": 87,
+              "quote": "said seed trough"
+            },
+            "determiner": "said",
+            "head": "seed trough"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 44,
+            "quote": "said perches"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 316,
+            "endChar": 335,
+            "quote": "One or more perches"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 71,
+            "endChar": 87,
+            "quote": "said seed trough"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 265,
+            "endChar": 278,
+            "quote": "A seed trough"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 44,
+                "quote": "said perches"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 44,
+              "endChar": 71,
+              "quote": " are removably attached to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 71,
+                "endChar": 87,
+                "quote": "said seed trough"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 24,
+          "quote": "A bird feeder of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 103,
+          "quote": "said bird feeder is removably attached to a post or post-like structure"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 48,
+              "quote": "said bird feeder"
+            },
+            "determiner": "said",
+            "head": "bird feeder"
+          },
+          {
+            "anchor": {
+              "startChar": 74,
+              "endChar": 103,
+              "quote": "a post or post-like structure"
+            },
+            "determiner": "a",
+            "head": "post or post-like structure"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 48,
+            "quote": "said bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 48,
+                "quote": "said bird feeder"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 48,
+              "endChar": 74,
+              "quote": " is removably attached to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 74,
+                "endChar": 103,
+                "quote": "a post or post-like structure"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 24,
+          "quote": "A bird feeder of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 115,
+          "quote": "said fill hole is located at the bottom of the silo and enclosed by the seed trough"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 46,
+              "quote": "said fill hole"
+            },
+            "determiner": "said",
+            "head": "fill hole"
+          },
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 71,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 75,
+              "endChar": 83,
+              "quote": "the silo"
+            },
+            "determiner": "the",
+            "head": "silo"
+          },
+          {
+            "anchor": {
+              "startChar": 100,
+              "endChar": 115,
+              "quote": "the seed trough"
+            },
+            "determiner": "the",
+            "head": "seed trough"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 46,
+            "quote": "said fill hole"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 237,
+            "endChar": 248,
+            "quote": "A fill hole"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 75,
+            "endChar": 83,
+            "quote": "the silo"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 29,
+            "endChar": 35,
+            "quote": "A silo"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 100,
+            "endChar": 115,
+            "quote": "the seed trough"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 265,
+            "endChar": 278,
+            "quote": "A seed trough"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 46,
+                "quote": "said fill hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 46,
+              "endChar": 61,
+              "quote": " is located at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 61,
+                "endChar": 71,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 71,
+              "endChar": 75,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 75,
+                "endChar": 83,
+                "quote": "the silo"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 83,
+              "endChar": 100,
+              "quote": " and enclosed by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 100,
+                "endChar": 115,
+                "quote": "the seed trough"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 24,
+          "quote": "A bird feeder of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 98,
+          "quote": "said fill hole further comprises a seed funneling attachment piece"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 46,
+              "quote": "said fill hole"
+            },
+            "determiner": "said",
+            "head": "fill hole"
+          },
+          {
+            "anchor": {
+              "startChar": 65,
+              "endChar": 98,
+              "quote": "a seed funneling attachment piece"
+            },
+            "determiner": "a",
+            "head": "seed funneling attachment piece"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 46,
+            "quote": "said fill hole"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 237,
+            "endChar": 248,
+            "quote": "A fill hole"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 46,
+                "quote": "said fill hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 46,
+              "endChar": 65,
+              "quote": " further comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 65,
+                "endChar": 98,
+                "quote": "a seed funneling attachment piece"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 24,
+          "quote": "A bird feeder of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 86,
+          "quote": "said fill hole is located on the upper rim of the silo"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 46,
+              "quote": "said fill hole"
+            },
+            "determiner": "said",
+            "head": "fill hole"
+          },
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 74,
+              "quote": "the upper rim"
+            },
+            "determiner": "the",
+            "head": "upper rim"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 86,
+              "quote": "the silo"
+            },
+            "determiner": "the",
+            "head": "silo"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 46,
+            "quote": "said fill hole"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 237,
+            "endChar": 248,
+            "quote": "A fill hole"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 78,
+            "endChar": 86,
+            "quote": "the silo"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 29,
+            "endChar": 35,
+            "quote": "A silo"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 46,
+                "quote": "said fill hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 46,
+              "endChar": 61,
+              "quote": " is located on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 61,
+                "endChar": 74,
+                "quote": "the upper rim"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 74,
+              "endChar": 78,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 78,
+                "endChar": 86,
+                "quote": "the silo"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 24,
+          "quote": "A bird feeder of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 168,
+          "quote": "said spinning plates are spaced sufficiently apart so that a wire hanger or post support may be attached between the edges of the plates"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 52,
+              "quote": "said spinning plates"
+            },
+            "determiner": "said",
+            "head": "spinning plates"
+          },
+          {
+            "anchor": {
+              "startChar": 91,
+              "endChar": 120,
+              "quote": "a wire hanger or post support"
+            },
+            "determiner": "a",
+            "head": "wire hanger or post support"
+          },
+          {
+            "anchor": {
+              "startChar": 145,
+              "endChar": 154,
+              "quote": "the edges"
+            },
+            "determiner": "the",
+            "head": "edges"
+          },
+          {
+            "anchor": {
+              "startChar": 158,
+              "endChar": 168,
+              "quote": "the plates"
+            },
+            "determiner": "the",
+            "head": "plates"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 52,
+            "quote": "said spinning plates"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 40,
+            "endChar": 75,
+            "quote": "A plurality of free spinning plates"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 168,
+            "quote": "the plates"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 40,
+            "endChar": 75,
+            "quote": "A plurality of free spinning plates"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 52,
+                "quote": "said spinning plates"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 52,
+              "endChar": 91,
+              "quote": " are spaced sufficiently apart so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 91,
+                "endChar": 120,
+                "quote": "a wire hanger or post support"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 120,
+              "endChar": 145,
+              "quote": " may be attached between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 145,
+                "endChar": 154,
+                "quote": "the edges"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 154,
+              "endChar": 158,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 158,
+                "endChar": 168,
+                "quote": "the plates"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 11,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "11",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 24,
+          "quote": "A bird feeder of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 120,
+          "quote": "said spinning plates are independently attached to the silo without an axle between them"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 52,
+              "quote": "said spinning plates"
+            },
+            "determiner": "said",
+            "head": "spinning plates"
+          },
+          {
+            "anchor": {
+              "startChar": 83,
+              "endChar": 91,
+              "quote": "the silo"
+            },
+            "determiner": "the",
+            "head": "silo"
+          },
+          {
+            "anchor": {
+              "startChar": 100,
+              "endChar": 107,
+              "quote": "an axle"
+            },
+            "determiner": "an",
+            "head": "axle"
+          },
+          {
+            "anchor": {
+              "startChar": 116,
+              "endChar": 120,
+              "quote": "them"
+            },
+            "determiner": "bare",
+            "head": "them"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "11",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 52,
+            "quote": "said spinning plates"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 40,
+            "endChar": 75,
+            "quote": "A plurality of free spinning plates"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 83,
+            "endChar": 91,
+            "quote": "the silo"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 29,
+            "endChar": 35,
+            "quote": "A silo"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 116,
+            "endChar": 120,
+            "quote": "them"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 40,
+            "endChar": 75,
+            "quote": "A plurality of free spinning plates"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "functional",
+        "element": "11.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 52,
+                "quote": "said spinning plates"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 52,
+              "endChar": 83,
+              "quote": " are independently attached to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 83,
+                "endChar": 91,
+                "quote": "the silo"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 91,
+              "endChar": 100,
+              "quote": " without "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 100,
+                "endChar": 107,
+                "quote": "an axle"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 107,
+              "endChar": 116,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 116,
+                "endChar": 120,
+                "quote": "them"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 12,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "12",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 24,
+          "quote": "A bird feeder of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "A bird feeder"
+            },
+            "determiner": "a",
+            "head": "bird feeder"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "anchor": {
+          "startChar": 26,
+          "endChar": 97,
+          "quote": "further comprising at least one seed port shield over said feed portals"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 74,
+              "quote": "at least one seed port shield"
+            },
+            "determiner": "at-least-one",
+            "head": "seed port shield"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 97,
+              "quote": "said feed portals"
+            },
+            "determiner": "said",
+            "head": "feed portals"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "A bird feeder"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "12",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 97,
+            "quote": "said feed portals"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 284,
+            "endChar": 311,
+            "quote": "at least one feeding portal"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "functional",
+        "element": "12.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 26,
+              "endChar": 45,
+              "quote": "further comprising "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 74,
+                "quote": "at least one seed port shield"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 74,
+              "endChar": 80,
+              "quote": " over "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 97,
+                "quote": "said feed portals"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

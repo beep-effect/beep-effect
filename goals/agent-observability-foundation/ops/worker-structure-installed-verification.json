@@ -1,0 +1,48 @@
+{
+  "sourceHead": "ae89646bded05f2a249a2a91896e27ad8c0c9a2e",
+  "workerSha256": "f99d612951187247f79a498adacd49172b2bbc52db06ba6e3547c820828737de",
+  "archive": "~/.local/state/beep/observation-proof-archive/obs-deploy-xkmt07uy",
+  "sourceStableDuringRun": true,
+  "result": "passed",
+  "lintAndTypeChecks": "passed",
+  "installedProof": {
+    "privateMaintenance": "passed",
+    "invalidCredentialsRefusedBeforeJournalMutation": [
+      "empty",
+      "oversized",
+      "invalid-utf8",
+      "newline"
+    ],
+    "startsPaused": true,
+    "changedBundleRefused": true,
+    "journalPreservedOnRefusal": true,
+    "ownedUnitsStopped": true,
+    "currentHealthRulesSha256": "adc0e9b1113c4a0ae3798b504fefa30d283324f0d21f9f107e94111c1a6952ab",
+    "stoppedWorkerAlertDelivered": true,
+    "ownedMonitorStopped": true,
+    "syntheticBackendRecords": 2,
+    "sourceEventSetsReconciled": true,
+    "privateContentAbsentFromBackend": true
+  },
+  "limits": [
+    "Only synthetic records; no claim of actual harness coverage",
+    "Production collector unchanged; historical hold preserved",
+    "Optional query-credential branch not exercised by this live canary; previous proof is separate",
+    "Outer guard does not aggregate separately installed fixture units; each has its own verified limits"
+  ],
+  "artifactHashes": {
+    "evidence.json": "f47e1285faf8417e6c6947e511e5a4dba4db72cb4a747e2c2d78ad7a74936994",
+    "worker-health.prom": "b4706917a04c2f6b3fa96979153719baed7af076a6f443cb596e0e943fd8ab41",
+    "worker-health-prometheus.yml": "9a46a6faf8549ac18832bd44f70c689c3db45d06ab52d7c501a684428fc19657",
+    "worker-health-rules.yml": "4b8e483a4e265effb5777a88f770574ee166e39404ee46ca6e1cfb9fbdd4d661",
+    "synthetic-input.json": "392e35bdaf3cd721f21bea9f0c97f9e6a5246eb7d4cb9f062e9df005f4498d4d",
+    "deployment-request.json": "4a692e866e5dfad21622e70f75e7b74ecacbbc498a647cb3d36d081fdcf6305d",
+    "synthetic-salt": "befd250f1495be62bb8fec4e1f3e2801266253fb1849140ec0e9ebb9351c54d8",
+    "bundle-build.log": "5b32202571fde907de9c209b708ca4e680b1f4c6c0e8e2db9e99d39828eb6556",
+    "collector.yaml": "bae3235f86417d7f8aad63e705a6221c22dc6e91323d91f07cb6c04df7e54935",
+    "foundation-worker-structure-quick.log": "d20a7bcf9836ad6b81f9a003aeed38ab4198d0602aed55df1fa7d3856ad872e5",
+    "foundation-worker-structure-quick-guard.json": "24d8717577efcb28c247d30627e9a8f4cd032925114e34327683fa06472f7eac",
+    "foundation-worker-structure-installed.log": "5c4b3a90e0d98fdff8ba53a5eda22b3d3da8883e07dcbcc3dff78ddc8990dbab",
+    "foundation-worker-structure-installed-guard.json": "ff35eacb86b628b60eb06c547a7400f9920865f9aae504f1241ac0052407de31"
+  }
+}

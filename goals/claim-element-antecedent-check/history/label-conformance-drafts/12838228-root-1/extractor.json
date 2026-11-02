@@ -1,0 +1,28 @@
+{
+  "familyId": "12838228-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    "Natural language membership matches XML:2→1,3→2,4/5→3,6→2,7–10→5. The unusual dependency of7–10 on5 is preserved, not repaired to6.",
+    "Office action expressly rejects6–10, all within this family;1–5 are required dependency context and are not individually rejected by quoted section.",
+    "Publication predates rejection. Complete-inventory/no-intervening-CLM evidence is retained provenance; original comparison extracted0 claims, so no exact corroboration is established.",
+    "P2 lexical terms intentionally truncate paper feeding to paper, recording-medium conveying to recording-medium, roller lifting to roller."
+  ],
+  "rationale": "Manually selected all element/term quotes and exact-head antecedent matches. Claims3/6 colon headers absorb subsequent clauses as sub-limitations. No implementation/prediction access."
+}

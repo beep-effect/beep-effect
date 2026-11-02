@@ -122,6 +122,11 @@ export {
 } from "./WorkspaceDiscovery.ts";
 export { type DependencyDiff, PublishConfig, WorkspaceManifestError, WorkspacePackage } from "./WorkspacePackage.ts";
 export {
+  WorkspacePatternReadError,
+  WorkspacePatternReadFailureKind,
+  WorkspacePatterns,
+} from "./WorkspacePatterns.ts";
+export {
   type FindWorkspaceRootOptions,
   WORKSPACE_MARKERS,
   WorkspaceRoot,

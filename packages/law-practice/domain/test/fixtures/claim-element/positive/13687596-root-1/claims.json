@@ -1,0 +1,67 @@
+{
+  "familyId": "13687596-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for elaborating an assembly comprising at least one composite structure part, one metal interface part and one metal structure part, said method comprising: a step for assembling the composite structure part to the metal interface part in order to form a sub-assembly and a step for assembling by welding the metal interface part of said sub-assembly to the metal structure part in order to form said assembly, wherein, as the composite structure and metal interface parts are pre-equipped with assembling mating connectors of the male/female type and with connection locks locking said connection, said method comprises, during the step for assembling the composite structure part to the metal interface part in order to form a sub-assembly, pre-assembling the composite structure part and the metal interface part by interlocking the assembling male/female mating connectors and locking said interlock by deformation by pressing at least one portion of the connection locks pre-equipping the metal interface part, said connection locks being a mating connection of the male/female type, distinct from the assembling male/female mating connectors and being capable, in the assembled condition of said parts by their assembling connectors, of passing by deformation by simple pressing from a simple press stroke, from the uncoupled condition to the coupled condition corresponding to the active locking position.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method according to claim 1, wherein as at least one portion of the connection locks is formed, for the metal interface part with a locking tab, and for the composite structure part, with at least one of an aperture or lumen, said aperture or lumen being able to be positioned matching a tab, said method further comprises, during locking said interlock, deformation by pressing the locking tab of the metal interface part in the direction for introducing said or each tab into the corresponding aperture or lumen of the composite structure part.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method according to claim 2, wherein said locking tab has a V-shaped cross-section, and during the locking phase, said tab is deformed by flattening the V.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method according to claim 1, wherein the assembling connectors assembling the composite structure and metal interface parts comprise at least two series of connectors, during the pre-assembling phase, the first series of assembling male/female connectors is assembled together and then the second series of assembling male/female connectors is assembled together.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method according to claim 4, wherein, the first series of assembling connectors being of the tab/aperture type and in that the second series of connectors being of the stud/aperture type, said apertures being preferably borne by the metal interface part, during the pre-assembling phase, the tab of the first series of connectors of the composite structure part is introduced inside the corresponding aperture of the metal interface part and then, by angular displacement of the parts one relative to the other around said connections, the parts are brought closer to each other until studs of the second series of connectors of the composite structure part are positioned inside the matching apertures of the metal interface part and in that during the locking phase, at least one portion of the connection locks is deformed by pressing, for having said locking means pass from an inactive configuration to an active configuration, wherein any angular displacement of the parts, in the direction for having the studs emerge from the apertures, is limited or prevented.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "An assembly capable of being elaborated by applying a method according to claim 1, said assembly comprising: at least one composite structure part, one metal interface part and one metal structure part, the composite structure part and the metal interface part forming a sub-assembly welded via the metal interface part, to the metal structure part, the composite structure part and the metal interface part being, for maintaining them in the assembled condition, provided with assembling mating connectors of the male/female type and with connection locks pre-equipping said parts, at least one portion of said connection locks pre-equipping the metal interface part being a deformable portion, wherein the connection locks are mating connectors of the male/female type distinct from the assembling male/female mating connectors and in that at least one portion of the connection locks capable of passing under the effect of pressure, from an inactive configuration to an active configuration, in the assembled condition of said parts by their assembling mating connection means, is formed, for the metal interface part, with a locking tab, and for the composite structure part, with an aperture or lumen, each aperture or lumen being able to be positioned matching a tab in the pre-assembled condition of said parts by their assembling connector, said locking tab being a deformable tab capable, under the effect of pressing, of deforming in the direction for introducing the tab into the matching aperture or lumen of the composite structure part, in the pre-assembled condition of said parts by their assembling connectors.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The assembly according to claim 6, wherein said locking tab of the metal interface part before deformation has a V-shaped cross section.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The assembly according to claim 6, wherein the connectors assembling the composite structure metal interface part are connectors comprising at least two series of connectors.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The assembly according to claim 8, wherein the first series of assembling connectors is of the tab/aperture type and in that the second series of assembling connectors is of the stud/aperture type, said apertures being preferably borne every time by the metal interface part.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The assembly according to claim 8, wherein the assembling connector of each of the series and the connection locks are each organized as a row of connecting or locking members, said rows being on a same part parallel with each other.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The assembly according to claim 6, wherein the composite structure part is a basin-shaped part capable of forming a spare wheel bin, in that the metal structure part is a chassis of rolling stock and in that the metal interface part appears as an elongated body able to be positioned along an edge of said basin.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "A sub-assembly of the type comprising a composite structure part and a metal interface part, said sub-assembly being intended, via its metal interface part, to be welded to a metal structure part in order to form an assembly according to claim 6, wherein the composite structure part and the metal interface part are, for maintaining them in the assembled condition, provided with assembling male/female type mating connectors and with connection locks pre-equipping said parts, at least one portion of said connection locks being a deformable part capable of passing, under the effect of pressure and in the assembled condition of said parts by their assembling connectors, from an inactive configuration to an active configuration, at least one portion of these connection locks being formed, for the metal interface part, with a locking tab and for the composite structure part, with an aperture or lumen, each aperture or lumen being able to be positioned matching a tab, said tab being a deformable tab capable, under the effect of pressing, of deforming in the direction for introducing the tab into the matching aperture or the lumen of the composite structure part in the pre-assembled condition of said part by their assembling connectors.",
+      "sourceXmlParentClaimNumbers": [6]
+    }
+  ]
+}

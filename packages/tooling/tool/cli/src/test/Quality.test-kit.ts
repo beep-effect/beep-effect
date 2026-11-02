@@ -62,6 +62,7 @@ export { effectDiagnosticsAffectedPackages, effectDiagnosticsProjects } from "..
 export {
   inheritedCodemodDuplicationCountForTesting,
   reportInvariantDiagnosticsForTesting,
+  workflowYamlValueForTesting,
 } from "../commands/Quality/FallowQuality.command.ts";
 export * from "../commands/Quality/internal/CheckCensusOutput.ts";
 export * from "../commands/Quality/internal/CoverageArtifacts.schemas.ts";
@@ -80,11 +81,6 @@ export {
   githubCheckTierConcurrency,
 } from "../commands/Quality/internal/GithubChecks.ts";
 export * from "../commands/Quality/internal/JSDocDocumentationInventory.ts";
-export * from "../commands/Quality/internal/JSDocMigrate.schemas.ts";
-export * from "../commands/Quality/internal/JSDocMigrateApply.ts";
-export * from "../commands/Quality/internal/JSDocMigrateExtract.ts";
-export * from "../commands/Quality/internal/JSDocMigrateRewrite.ts";
-export * from "../commands/Quality/internal/JSDocMigrateTitles.ts";
 export * from "../commands/Quality/internal/JSDocRatchet.ts";
 export * from "../commands/Quality/internal/LaneProofReuse.ts";
 export * from "../commands/Quality/internal/PackageVerify.ts";
@@ -96,7 +92,6 @@ export {
   listSourceFiles,
   readWorkspacePackageText,
   tagsFromComment,
-  workspacePatternsFrom,
 } from "../commands/Quality/internal/QualityArtifactSupport.ts";
 export * from "../commands/Quality/internal/ResidueTerminalLaneLive.ts";
 export { testTsgoPrograms } from "../commands/Quality/internal/TestTsgoPrograms.ts";

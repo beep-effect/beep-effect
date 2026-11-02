@@ -1,0 +1,51 @@
+{
+  "applicationNumber": "16628033",
+  "publicationNumber": "US20200383794A1",
+  "publicationDate": "2020-12-10",
+  "nativeXmlSha256": "b94f9c6730b1a0315e41417d8fc67fc3ecd6508cb9872dc1ea22a93a98fa6899",
+  "claimsXmlSha256": "3f25838288dfa6cf3656be299299729ee233baceb2da782e7cd62846f4f825d4",
+  "officeActionDocumentIdentifiers": [
+    "KMUHYPEFLDFLYX7"
+  ],
+  "officeActionMailDate": "2021-03-29",
+  "officeActionSection112Text": [
+    "claims 1, 3-4, and 8-10 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention.\r\n“the tibial plateau intercondylar eminence” lacks proper antecedent basis\r\nclaim 3\r\nline 4: “the upper end” lacks proper antecedent basis. this element is also indefinite because it is unclear to what structure this is referring.\r\nline 5: “the lower surface” lacks proper antecedent basis\r\nlines 3-4: “the lower end” lacks proper antecedent basis\r\nline 4: “the upper end” lacks proper antecedent basis\r\nline 6: “the bottom end” lacks proper antecedent basis\r\nline 7: “the cavity” lacks proper antecedent basis\r\nline 3: “the upper portion” lacks proper antecedent basis\r\nline 4: “the other end” lacks proper antecedent basis\r\nline 3: “the bottom” lacks proper antecedent basis\r\nline 8: “the locating pin” lacks proper antecedent basis\r\nline 10: “the sleeve” lacks proper antecedent basis\r\nline 11: “the prosthetic notch” lacks proper antecedent basis\r\nline 15: “the locating pin” lacks proper antecedent basis\r\nline 18: “the spring” lacks proper antecedent basis\r\nline 18: “the bolt” lacks proper antecedent basis"
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "K674EBBMRXEAPX3",
+      "officialDate": "2020-02-03T19:03:43.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "K674EBBMRXEAPX3",
+      "officialDate": "2020-02-03T19:03:43.000-0500",
+      "sha256": "d3abe390b7bf08a1f9a03078c1a04a85bba61dd1cc2a13a539170ebdd5d91c15",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "sourceClaimCount": 10
+    }
+  ],
+  "documentInventoryCount": 52,
+  "documentInventoryRows": 52,
+  "primaryCpc": "A61F   2/3836",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/16628033",
+    "https://api.uspto.gov/api/v1/patent/applications/16628033/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

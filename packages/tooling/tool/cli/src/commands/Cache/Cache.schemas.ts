@@ -72,6 +72,107 @@ export const CacheRunMode = LiteralKit(["remote-eligible", "local-only", "forced
 export type CacheRunMode = typeof CacheRunMode.Type;
 
 /**
+ * Capability role whose signed-cache key requirement is being evaluated.
+ *
+ * **Example** (Select the reader role)
+ * ```ts
+ * import { CacheSigningRole } from "@beep/repo-cli/commands/Cache"
+ * console.assert(CacheSigningRole.is.reader("reader"))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CacheSigningRole = LiteralKit(["reader", "writer", "canary"]).pipe(
+  $I.annoteSchema("CacheSigningRole", { description: "Reader, upload-capable writer, or mandatory signing canary." })
+);
+
+/**
+ * Capability role for signed-cache posture.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheSigningRole = typeof CacheSigningRole.Type;
+
+/**
+ * Safe classification of an artifact key; key bytes are never represented.
+ *
+ * **Example** (Recognize an unresolved reference)
+ * ```ts
+ * import { CacheSigningKeyState } from "@beep/repo-cli/commands/Cache"
+ * console.assert(CacheSigningKeyState.is.unresolved("unresolved"))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CacheSigningKeyState = LiteralKit(["missing", "unresolved", "resolved"]).pipe(
+  $I.annoteSchema("CacheSigningKeyState", {
+    description: "Whether the final child environment has a usable key value.",
+  })
+);
+
+/**
+ * Safe key availability classification.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheSigningKeyState = typeof CacheSigningKeyState.Type;
+
+/**
+ * Metadata needed to enforce signed-cache posture independently of bearer access.
+ *
+ * **Example** (Describe a reader without its key)
+ * ```ts
+ * import { CacheSigningRequest } from "@beep/repo-cli/commands/Cache"
+ * console.assert(CacheSigningRequest.make({ required: true, role: "reader", key: "missing" }).required)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CacheSigningRequest extends S.Opaque<CacheSigningRequest, { readonly brand: unique symbol }>()(
+  S.Struct({ required: S.Boolean, role: CacheSigningRole, key: CacheSigningKeyState }).pipe(
+    $I.annoteSchema("CacheSigningRequest", {
+      description: "Nonsecret signed-cache policy inputs at the native spawn boundary.",
+    })
+  )
+) {}
+
+/**
+ * Safe signing decision, distinct from a cache hit or hosted proof.
+ *
+ * **Example** (Record an attributable local fallback)
+ * ```ts
+ * import { CacheSigningPosture } from "@beep/repo-cli/commands/Cache"
+ * const local = CacheSigningPosture.cases.LocalOnly.make({ reason: "missing" })
+ * console.assert(local._tag === "LocalOnly")
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CacheSigningPosture = S.TaggedUnion({
+  Disabled: {},
+  Ready: {},
+  LocalOnly: { reason: CacheSigningKeyState.pick(["missing", "unresolved"]) },
+}).pipe(
+  $I.annoteSchema("CacheSigningPosture", {
+    description: "Signing disabled, required and ready, or an attributable reader-only fallback.",
+  })
+);
+
+/**
+ * Safe signing posture without secret material.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheSigningPosture = typeof CacheSigningPosture.Type;
+
+/**
  * Wall-clock distribution for one cache posture.
  *
  * **Example** (Validate a wall-time row)
@@ -680,7 +781,7 @@ export class CacheRuntimeLinkerSnapshot extends S.Opaque<
  */
 export class CacheToolchainSnapshot extends S.Opaque<CacheToolchainSnapshot, { readonly brand: unique symbol }>()(
   S.Struct({
-    profile: LiteralKit(["local-linux-x64-bun1.4.1", "local-linux-x64-bun1.4.2"]),
+    profile: LiteralKit(["local-linux-x64-bun1.4.1", "local-linux-x64-bun1.4.2", "local-linux-x64-bun1.4.4"]),
     kernel: S.NonEmptyString,
     libc: S.NonEmptyString,
     bun: CacheExecutablePin,

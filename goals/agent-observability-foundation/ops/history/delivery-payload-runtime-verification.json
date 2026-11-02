@@ -1,0 +1,135 @@
+{
+  "observedAt": "2026-10-29T16:30:06.420733+00:00",
+  "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-payload-runtime-0a5ec20p",
+  "artifacts": [
+    {
+      "file": "foundation-bounded-job.py",
+      "bytes": 7421,
+      "sha256": "e7d72f286ed9cbb662eceaab93df404f8ecee8462f3998e320b6557eb828c4ee"
+    },
+    {
+      "file": "foundation-payload-reclamation-before.ts",
+      "bytes": 21170,
+      "sha256": "60c9620fbee9454c0c20d002fe8a31ef8eff54a19e8de5306b4491f7fad9ceb6"
+    },
+    {
+      "file": "foundation-runtime-before.ts",
+      "bytes": 22073,
+      "sha256": "9f9f5244056adc50200da08d123ce91103a212eb7156ed15c9af247f3457bc93"
+    },
+    {
+      "file": "delivery-fallow-worklist.json",
+      "bytes": 19296,
+      "sha256": "d646feadbf4f76df1c244bb1c2d5b54247892fa1a5b3c96cf590fe6eeb974cb3"
+    },
+    {
+      "file": "PAYLOAD-RUNTIME-REFACTOR-REVIEW.md",
+      "bytes": 2769,
+      "sha256": "39b78ec848069dbae3ecc0d5e6c61abd22930402acc4eb27e285a70b156126d1"
+    },
+    {
+      "file": "foundation-payload-verification-v1.log",
+      "bytes": 2048,
+      "sha256": "99905e36559c96e890485820c4d5479899e6e5f81c7e30486d9ac44e495022bc"
+    },
+    {
+      "file": "foundation-payload-verification-v1-guard.json",
+      "bytes": 355,
+      "sha256": "958dedc65a615e830d59281796e7a6b8bc196e2e307353c87ed8b3d025800c0a"
+    },
+    {
+      "file": "foundation-payload-health-v1.log",
+      "bytes": 949,
+      "sha256": "3c4c821b7ee2201c6a790d081e8d41ba484ac9a2546493c72e709ee93a188c87"
+    },
+    {
+      "file": "foundation-payload-health-v1-guard.json",
+      "bytes": 349,
+      "sha256": "8b0c50f9bb3595a41a34a5cb3af31a02f6b56468267b76c5bc7bd2ee884b6988"
+    },
+    {
+      "file": "foundation-payload-runtime-verification-v2.log",
+      "bytes": 2868,
+      "sha256": "1dc2f310a8826f211d3c31b96da84aba43068d61d9c774baacf5aa091557e953"
+    },
+    {
+      "file": "foundation-payload-runtime-verification-v2-guard.json",
+      "bytes": 363,
+      "sha256": "fa246fc1bb5deab64caf54431f5ba5d476a94605b9e4ca4345116728d1e911df"
+    },
+    {
+      "file": "foundation-payload-runtime-verification-v3.log",
+      "bytes": 2286,
+      "sha256": "b77a553d83fd1a41f1a9ed39e1d2de4e6103a337b4ff6984e0a0f40b7f273f39"
+    },
+    {
+      "file": "foundation-payload-runtime-verification-v3-guard.json",
+      "bytes": 363,
+      "sha256": "695d11d88161fcf01a26eb0dfa9e1685daf74961d04cc085509986cb98ae7d91"
+    },
+    {
+      "file": "foundation-fallow-repair-audit-v5.log",
+      "bytes": 15751,
+      "sha256": "ddc8b49b7ad8d7bd950c6c72041e481b7b0d0d56ef8a6efdb97f935b19b79726"
+    },
+    {
+      "file": "foundation-fallow-repair-audit-v5-guard.json",
+      "bytes": 354,
+      "sha256": "fef68686d766479fbacc8085ba6b7e603a2f20b7cf26ded72e24a37505d7b018"
+    },
+    {
+      "file": "foundation-payload-health-v1.json",
+      "bytes": 8556,
+      "sha256": "66f7085c1c8c1293466b90d3e0601418c3d9e929c9ffa3229b8bc323c417c92b"
+    },
+    {
+      "file": "foundation-payload-runtime-health-v2.json",
+      "bytes": 54895,
+      "sha256": "83ea2b9ca461a37da9c8e99d993015379585a6664e32046fb7398888d84552e1"
+    },
+    {
+      "file": "audit.repair-v5.json",
+      "bytes": 15236,
+      "sha256": "4cfdea26a7dc46b0514a423df8e2e5c5d09f6a077703f834613cd4de327457a9"
+    },
+    {
+      "file": "audit.repair-v5.combined.txt",
+      "bytes": 136175,
+      "sha256": "955d37ce7eeb219bb768ebc51da0b46aefbfe0154af15f05f429f607f6a5cbcb"
+    }
+  ],
+  "currentSourceSha256": {
+    "packages/tooling/library/ai-metrics/src/observation-runtime.ts": "b310f4abc1e1e5267eb9d480f8cb8c669ffec909726509e7c6da5bfef97775d9",
+    "packages/tooling/library/ai-metrics/src/payload-reclamation.ts": "84b6c559057a7fae9e04ecb829123889657fc696ffcd184fec9e06a69aa439fb",
+    "packages/tooling/library/ai-metrics/test/observation-runtime.test.ts": "f58a7e0ead0cb8991efd8365d41e92aae21441a4f2602c3e5ca0a537038c4fc5"
+  },
+  "verification": {
+    "focusedTests": 57,
+    "aiMetricsAudit": "passed",
+    "aiMetricsDocgen": "passed",
+    "scopedOxlint": "passed; zero warnings/errors",
+    "independentReview": "bounded acceptance at exact current hashes",
+    "fallowAudit": "failed: 52 introduced complexity, 8 introduced duplication, 4 inherited-adjacent duplication, zero dead-code issues",
+    "touchedModuleComplexity": 0
+  },
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-payload-runtime-verification-v3.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 8589934592,
+    "initialAvailableBytes": 47120560128,
+    "peakObservedBytes": 5322661888,
+    "minimumAvailableBytes": 38238064640,
+    "stoppedFor": null,
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "limitations": [
+    "Repository-wide delivery gates remain open. No Fallow thresholds or allowances changed.",
+    "Whole CLI Bun abort remains unclosed; current-source installed/canary proof and final hosted review/merge remain pending.",
+    "Historical forwarder remains masked/inactive; no production rollout or new raw content collection."
+  ],
+  "intermediateEvidence": "v1 payload health found two helper complexity issues; v2 focused tests and quick package checks passed, but package health remained red. Final v3 package verification passed; v5 audit confirms both touched modules have zero complexity findings."
+}

@@ -1,0 +1,92 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "15752303-root-1",
+  "role": "extractor-granularity-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "reviewedAnchors": [
+    {
+      "claimNumber": 8,
+      "path": "8.a",
+      "anchor": {
+        "startChar": 178,
+        "endChar": 183,
+        "quote": "which"
+      },
+      "action": "remove-redundant-relative-term-retain-source-clause",
+      "reason": "Of which introduces the modifying faces/film clause for explicit an aluminum (AL) or (EVOH) foil in this same relation. Retain foil, two faces and film terms plus complete covering relation. This existing limitation has no functional edge; preserve its exact complete source anchor and unrelated structure rather than inventing a new functional edge in this targeted pass.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "8.a",
+            "anchor": {
+              "startChar": 178,
+              "endChar": 183,
+              "quote": "which"
+            }
+          },
+          "introducing": {
+            "path": "8.a",
+            "anchor": {
+              "startChar": 143,
+              "endChar": 174,
+              "quote": "an aluminum (AL) or (EVOH) foil"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claimNumber": 15,
+      "path": "15.a",
+      "anchor": {
+        "startChar": 253,
+        "endChar": 258,
+        "quote": "which"
+      },
+      "action": "term-to-functional-text",
+      "reason": "Of which introduces the modifying flat-summit/bottom clause for explicit a capsule, also repeated as the capsule in this function. Retain capsule, bottom, summit, ring and opening participants and complete relation.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "15.a",
+            "anchor": {
+              "startChar": 253,
+              "endChar": 258,
+              "quote": "which"
+            }
+          },
+          "introducing": {
+            "path": "15.a",
+            "anchor": {
+              "startChar": 123,
+              "endChar": 132,
+              "quote": "a capsule"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "before": {
+    "claims": 16,
+    "elements": 46,
+    "terms": 172,
+    "edges": 144
+  },
+  "after": {
+    "claims": 16,
+    "elements": 46,
+    "terms": 170,
+    "edges": 142
+  },
+  "remainingUncertainty": [],
+  "existingConcerns": "All prior source/referent concerns retained in extractor receipt. This is a bounded consistency correction, not source eligibility or attorney acceptance.",
+  "independence": "Read clarified v2/entity-mentions convention and decision entry, exact canonical source and reviewed annotations. No implementation/rules/predictions/synthetic/conformance artifacts/network/secrets/git/delegation. Helpers transform only the manually reviewed listed anchors, merge contiguous source text, and verify geometry.",
+  "validation": "Exact source spans; unchanged element anchors/kinds/paths; unrelated terms retained; ordered nonoverlapping terms; local/foreign reference coherence; full contiguous functional reconstruction; runtime ClaimElementTree decode all passed."
+}

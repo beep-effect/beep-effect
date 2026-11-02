@@ -5,15 +5,16 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { MimeType, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Hex from "effect/encoding/Hex";
+import { dual, flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
@@ -28,11 +29,13 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import {
+  CacheConformanceBackendResult,
   CacheConformanceExchange,
   CacheConformanceMeasurement,
   CacheConformanceTarget,
 } from "./Cache.conformance.schemas.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
+import type * as Digest from "effect/crypto/Digest";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type {
   CacheConformanceBearers,
@@ -204,6 +207,118 @@ export const classifyCacheConformanceStatus = (neverWritten: boolean) =>
     Match.orElse((): CacheConformanceOutcome => "unexpected-status")
   );
 
+const ReceiptMediaType = MimeType.check(S.isMaxLength(128)).pipe(
+  $I.annoteSchema("ReceiptMediaType", { description: "Registered media type within the exchange receipt bound." })
+);
+const isReceiptMediaType = S.is(ReceiptMediaType);
+
+/**
+ * Retain a registered media type while dropping untrusted response parameters.
+ *
+ * **Details**
+ * Unknown subtypes are omitted. Response parameters and invented media types
+ * may contain credentials, private paths or artifact content; truncating their
+ * raw text does not make them safe evidence. Historical receipt decoding is
+ * unchanged; both current wire capture paths use this projection.
+ *
+ * **Example** (Discard response parameters)
+ * ```ts
+ * import { classifyCacheConformanceMediaType } from "@beep/repo-cli/commands/Cache"
+ * import * as O from "effect/Option"
+ * console.assert(O.contains(classifyCacheConformanceMediaType(O.some("application/json; charset=utf-8")), "application/json"))
+ * ```
+ *
+ * @param header - Optional untrusted response Content-Type field.
+ * @returns Only the bounded registered media type, without parameters.
+ * @category validation
+ * @since 0.0.0
+ */
+export const classifyCacheConformanceMediaType = (header: O.Option<string>): O.Option<string> =>
+  header.pipe(
+    O.flatMap(flow(Str.split(";"), A.head)),
+    O.map(flow(Str.trim, Str.toLowerCase)),
+    O.filter(isReceiptMediaType)
+  );
+
+const isBackendResult = S.is(CacheConformanceBackendResult);
+const backendResultCompatible = (
+  result: CacheConformanceBackendResult,
+  method: CacheConformanceMethod,
+  status: number
+): boolean =>
+  Match.value(result).pipe(
+    Match.when("allowed", () => status >= 200 && status <= 299),
+    Match.when("authentication-denied", () => status === 401),
+    Match.when("write-denied", () => method === "PUT" && status === 403),
+    Match.when("tenant-denied", () => status === 403),
+    Match.when("selector-invalid", () => status === 400),
+    Match.when("route-invalid", () => status === 404),
+    Match.when("method-denied", () => status === 405),
+    Match.when("signature-missing", () => method === "PUT" && status === 400),
+    Match.when("metadata-invalid", () => status === 400),
+    Match.when("not-found", () => status === 404),
+    Match.when("throttled", () => status === 429),
+    Match.when("backend-unavailable", () => method !== "PUT" && status >= 500 && status <= 599),
+    Match.when("write-ambiguous", () => method === "PUT" && status >= 500 && status <= 599),
+    Match.when("payload-rejected", () => status === 400 || status === 413),
+    Match.when(
+      "unexpected-status",
+      () => status === 502 || (status >= 300 && status <= 499 && !A.contains([400, 401, 404, 413, 429], status))
+    ),
+    Match.when("invalid-evidence", () => false),
+    Match.exhaustive
+  );
+
+/**
+ * Project an untrusted adapter claim into a finite, method/status-checked label.
+ *
+ * **Details**
+ * Missing headers remain absent. Unknown, duplicate or inconsistent claims become
+ * a static invalid-evidence label. This preserves an observation alongside the
+ * independent transport outcome; it proves neither HMAC validity nor protected
+ * producer identity. A reported not-found never establishes a genuine miss.
+ *
+ * **Example** (Retain a read-side backend failure)
+ * ```ts
+ * import { classifyCacheConformanceBackendResult } from "@beep/repo-cli/commands/Cache"
+ * import * as O from "effect/Option"
+ * const result = O.some("backend-unavailable").pipe(classifyCacheConformanceBackendResult("GET", O.some(503)))
+ * console.assert(O.contains(result, "backend-unavailable"))
+ * ```
+ *
+ * @param method - Observed request method.
+ * @param status - Observed HTTP response status, when available.
+ * @param header - Optional untrusted backend-result header.
+ * @returns A bounded observation; no raw header text is retained.
+ * @category validation
+ * @since 0.0.0
+ */
+export const classifyCacheConformanceBackendResult: {
+  (
+    method: CacheConformanceMethod,
+    status: O.Option<number>
+  ): (header: O.Option<string>) => O.Option<CacheConformanceBackendResult>;
+  (
+    header: O.Option<string>,
+    method: CacheConformanceMethod,
+    status: O.Option<number>
+  ): O.Option<CacheConformanceBackendResult>;
+} = dual(
+  3,
+  (
+    header: O.Option<string>,
+    method: CacheConformanceMethod,
+    status: O.Option<number>
+  ): O.Option<CacheConformanceBackendResult> =>
+    O.map(header, (value) =>
+      O.some(value).pipe(
+        O.filter(isBackendResult),
+        O.filter((result) => O.exists(status, (code) => backendResultCompatible(result, method, code))),
+        O.getOrElse((): CacheConformanceBackendResult => "invalid-evidence")
+      )
+    )
+);
+
 const authorization = (bearers: CacheConformanceBearers, role: CacheConformanceCredentialRole) =>
   Match.value(role).pipe(
     Match.when("missing", O.none<string>),
@@ -270,18 +385,39 @@ const withWriterTag = Effect.fnUntraced(function* (step: WireStep) {
  *
  * @internal
  * @param response - Client response to drain.
+ * @param maximumBodyBytes - Maximum complete body retained; callers may lower the 64 MiB default.
  * @returns An effect yielding the status, headers and complete body bytes.
  * @category utilities
  * @since 0.0.0
  */
-export const readCacheConformanceReply = (response: HttpClientResponse.HttpClientResponse) =>
-  response.arrayBuffer.pipe(
-    Effect.map((buffer) => ({
-      status: O.some(response.status),
-      headers: response.headers,
-      body: new Uint8Array(buffer),
-    }))
+export const readCacheConformanceReply = Effect.fnUntraced(function* (
+  response: HttpClientResponse.HttpClientResponse,
+  maximumBodyBytes = 64 * 1024 * 1024
+) {
+  let size = 0;
+  const chunks = yield* response.stream.pipe(
+    Stream.catchTag("HttpClientError", (error) =>
+      Match.value(error.reason).pipe(
+        Match.tag("EmptyBodyError", () => Stream.empty),
+        Match.orElse(() => Stream.fail(error))
+      )
+    ),
+    Stream.tap((chunk) => {
+      if (chunk.byteLength > maximumBodyBytes - size)
+        return CacheCommandError.new("Conformance response body exceeded its byte bound.");
+      size += chunk.byteLength;
+      return Effect.void;
+    }),
+    Stream.runCollect
   );
+  const body = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return { status: O.some(response.status), headers: response.headers, body };
+});
 
 const send = Effect.fnUntraced(function* (context: WireContext, unsigned: WireStep) {
   const client = yield* HttpClient.HttpClient;
@@ -292,6 +428,14 @@ const send = Effect.fnUntraced(function* (context: WireContext, unsigned: WireSt
     Effect.flatMap((response) =>
       readCacheConformanceReply(response).pipe(
         Effect.map((reply) => ({ ...reply, fault: O.none<CacheConformanceOutcome>() })),
+        Effect.catchTag("CacheCommandError", () =>
+          Effect.succeed({
+            status: O.some(response.status),
+            headers: response.headers,
+            body: empty,
+            fault: O.some<CacheConformanceOutcome>("payload-rejected"),
+          })
+        ),
         Effect.orElseSucceed(() => ({
           status: O.some(response.status),
           headers: response.headers,
@@ -335,7 +479,12 @@ const send = Effect.fnUntraced(function* (context: WireContext, unsigned: WireSt
       })
     ),
     status: observed.status,
-    contentType: Headers.get(observed.headers, "content-type").pipe(O.map(Str.slice(0, 128))),
+    backendResult: classifyCacheConformanceBackendResult(
+      Headers.get(observed.headers, "x-beep-cache-result"),
+      step.method,
+      observed.status
+    ),
+    contentType: classifyCacheConformanceMediaType(Headers.get(observed.headers, "content-type")),
     requestBytes: S.Natural.make(
       O.match(requestBody, {
         onNone: () => 0,
@@ -402,7 +551,7 @@ const header = (reply: WireReply, name: string) => Headers.get(reply.headers, na
 const text = (reply: WireReply) => new TextDecoder().decode(reply.body);
 
 const randomBytes = (bytes: number) =>
-  Crypto.Crypto.use((crypto) => crypto.randomBytes(bytes)).pipe(
+  SecureRandom.SecureRandom.use((crypto) => crypto.randomBytes(bytes)).pipe(
     CacheCommandError.mapError("Cannot draw conformance randomness.")
   );
 const randomHex = (bytes: number) => randomBytes(bytes).pipe(Effect.map(Hex.encode));
@@ -417,7 +566,11 @@ const claimNote = (claimed: boolean, claim: string) =>
 type WireCase = (
   context: WireContext,
   recorder: Recorder
-) => Effect.Effect<void, CacheCommandError | S.SchemaError, HttpClient.HttpClient | Crypto.Crypto>;
+) => Effect.Effect<
+  void,
+  CacheCommandError | S.SchemaError,
+  HttpClient.HttpClient | Digest.Digest | SecureRandom.SecureRandom
+>;
 
 const putStep = (
   label: string,
@@ -594,7 +747,10 @@ const metadata: WireCase = Effect.fnUntraced(function* (context: WireContext, re
 const optionalRoute = (
   label: string,
   route: "/v8/artifacts" | "/v8/artifacts/events",
-  payload: (written: string, unwritten: string) => Effect.Effect<string, never, Crypto.Crypto>,
+  payload: (
+    written: string,
+    unwritten: string
+  ) => Effect.Effect<string, never, Digest.Digest | SecureRandom.SecureRandom>,
   verify: (
     recorder: Recorder,
     reply: WireReply,
@@ -663,7 +819,7 @@ const cacheEvents = optionalRoute(
   "reader-post-events",
   "/v8/artifacts/events",
   (written) =>
-    Crypto.Crypto.use((crypto) => crypto.randomUUIDv4()).pipe(
+    SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4()).pipe(
       Effect.orDie,
       Effect.flatMap((sessionId) =>
         S.encodeEffect(EventsRequest)([{ sessionId, source: "REMOTE", event: "HIT", hash: written, duration: 10 }])
@@ -1091,8 +1247,8 @@ const outcomeOf = (recorder: Recorder) =>
 
 type FaultProxy = {
   readonly url: string;
-  readonly events: Effect.Effect<ReadonlyArray<CacheConformanceProxyEvent>>;
-  readonly setScenario: (id: string, fault: CacheConformanceFault) => Effect.Effect<void>;
+  readonly events: Effect.Effect<ReadonlyArray<CacheConformanceProxyEvent>, CacheCommandError>;
+  readonly setScenario: (id: string, fault: CacheConformanceFault) => Effect.Effect<void, CacheCommandError>;
 };
 
 type LabCase = (
@@ -1100,7 +1256,11 @@ type LabCase = (
   recorder: Recorder,
   proxy: FaultProxy,
   envelope: CacheConformanceLoadEnvelope
-) => Effect.Effect<void, CacheCommandError | S.SchemaError, HttpClient.HttpClient | Crypto.Crypto>;
+) => Effect.Effect<
+  void,
+  CacheCommandError | S.SchemaError,
+  HttpClient.HttpClient | Digest.Digest | SecureRandom.SecureRandom
+>;
 
 const expectObservable = (recorder: Recorder, id: string, ok: boolean, detail: string) =>
   recorder.observability.push(CacheConformanceWireCheck.make({ id, ok, detail }));

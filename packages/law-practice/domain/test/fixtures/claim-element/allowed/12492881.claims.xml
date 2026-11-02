@@ -1,0 +1,105 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A gas cylinder piercing mechanism for an airgun, comprising:
+<claim-text>a housing comprising a gas supply channel, an expansion channel in fluid communication with the gas supply channel, and a receiving space in which a cylinder of a compressed gas is receivable in fluid communication with the expansion channel;</claim-text>
+<claim-text>a piercing needle movably disposed in the expansion channel and defining an internal gas passage configured to direct the compressed gas from the cylinder into the expansion channel such that the compressed gas flows to the gas supply channel when the piercing needle pierces the cylinder; and</claim-text>
+<claim-text>a trigger assembly rotatably connected to the housing and configured to drive the piercing needle to pierce the cylinder when the trigger assembly is operated and the cylinder is received in the receiving space.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the piercing needle is configured to retract from the cylinder when the trigger assembly is released after being operated.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the compressed gas initially flows from the cylinder to the expansion channel through the piercing needle upon piercing.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the compressed gas flows from the cylinder to the expansion channel around the piercing needle after piercing when the trigger assembly is released.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>the piercing needle comprises a head portion configured to pierce the cylinder; and</claim-text>
+<claim-text>the internal gas passage extends at least partially through the head portion.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein:
+<claim-text>the head portion defines an oblique cutting surface; and</claim-text>
+<claim-text>the internal gas passage comprises a gas inlet defined through the oblique cutting surface and a gas outlet defined through an outer surface of the head portion spaced from the oblique cutting surface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein:
+<claim-text>the head portion comprises a non-circular cross section.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein:
+<claim-text>the head portion is a triangular column.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>the piercing needle comprises a main body and a head portion;</claim-text>
+<claim-text>the main body comprises an outer peripheral surface;</claim-text>
+<claim-text>the head portion is a triangular column with an isosceles triangular cross-section, and comprises a bottom face and two side faces; and</claim-text>
+<claim-text>the bottom face and the two side faces are all recessed from the outer peripheral surface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein:
+<claim-text>the internal gas passage extends at least partially through the head portion and comprises a gas outlet defined through the bottom face.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein:
+<claim-text>the piercing needle defines an adjacent edge disposed between the two side faces; and</claim-text>
+<claim-text>the adjacent edge is flush with the outer peripheral surface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>the piercing needle defines a longitudinal axis;</claim-text>
+<claim-text>the internal gas passage extends axially through at least a portion of the piercing needle from a gas inlet toward a gas outlet spaced from the gas inlet; and</claim-text>
+<claim-text>the gas outlet extends through the piercing needle radially away from the longitudinal axis.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>the piercing needle comprises a head portion, a main body, and a base; and</claim-text>
+<claim-text>a diameter of the base is greater than a diameter of the head portion and a diameter of the main body.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>the trigger assembly comprises a part configured to push against the piercing needle when the trigger assembly is operated.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>the trigger assembly comprises a part configured to push against a rear end of the piercing needle when the trigger assembly is operated.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein:
+<claim-text>the part comprises a roller having a circumferential surface configured to push against the rear end of the piercing needle.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein:
+<claim-text>the part is configured to limit rearward movement of the piercing needle when the piercing needle is retracted from the from the cylinder.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. A gas cylinder piercing mechanism for an airgun, comprising:
+<claim-text>a housing comprising a gas supply channel, an expansion channel in fluid communication with the gas supply channel, and a receiving space in which a cylinder of a compressed gas is receivable in fluid communication with the expansion channel;</claim-text>
+<claim-text>a piercing needle movably disposed in the expansion channel and defining an internal gas passage configured to direct the compressed gas from the cylinder into the expansion channel such that the compressed gas flows to the gas supply channel when the piercing needle pierces the cylinder; and</claim-text>
+<claim-text>a trigger assembly rotatably connected to the housing and configured to drive the piercing needle to pierce the cylinder when the trigger assembly is operated and the cylinder is received in the receiving space;</claim-text>
+<claim-text>wherein the piercing needle is configured to retract from the cylinder when the trigger assembly is released after being operated.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The gas cylinder piercing mechanism of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein:
+<claim-text>the piercing needle is a triangular column movably disposed in the expansion channel and defines an internal gas passage configured to direct the compressed gas from the cylinder into the expansion channel such that the compressed gas flows to the gas supply channel when the piercing needle pierces the cylinder.</claim-text>
+</claim-text>
+</claim>
+</claims>

@@ -1,10 +1,11 @@
 import { lintCommand } from "@beep/repo-cli";
+import { reflectionFrontmatterIsValid } from "@beep/repo-cli/commands/Lint/ReflectionArtifact";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -34,8 +35,9 @@ const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 
 const writeCompletedGoal = Effect.fn("writeCompletedGoal")(function* (slug: string, reflectionRequired?: boolean) {
@@ -148,6 +150,21 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           yield* writeReflection("example", "2026-06-09-claude.md", VALID_REFLECTION);
           const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
           expect(exit._tag).toBe("Success");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("blocks a goal whose manifest does not parse instead of skipping its reflection gate", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.makeDirectory("goals/example/ops", { recursive: true });
+          yield* fs.writeFileString(
+            "goals/example/ops/manifest.json",
+            `${encodeJson({ initiative: { id: "example", status: "completed-retained" } })} trailing\n`
+          );
+          expectReportedFailure(yield* Effect.exit(runLintCommand(["reflection-artifacts"])));
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -319,4 +336,25 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       20_000
     );
   });
+});
+
+describe("reflectionFrontmatterIsValid", () => {
+  it.effect("decodes the closed YAML block through the @beep/markdown YAML codec, LF or CRLF", () =>
+    Effect.gen(function* () {
+      assertTrue(yield* reflectionFrontmatterIsValid(VALID_REFLECTION));
+      assertTrue(yield* reflectionFrontmatterIsValid(VALID_REFLECTION_CRLF));
+    })
+  );
+
+  it.effect("rejects a missing, unclosed, non-YAML, duplicate-key or schema-invalid block", () =>
+    Effect.gen(function* () {
+      const body = "goal: example\nagent: claude\ndate: 2026-06-09\ntrigger: closeout\nconfidence: high\n";
+      assertTrue(yield* reflectionFrontmatterIsValid(`---\n${body}---\n`));
+      assertFalse(yield* reflectionFrontmatterIsValid("# Reflection\n"));
+      assertFalse(yield* reflectionFrontmatterIsValid(`---\n${body}# Reflection\n`));
+      assertFalse(yield* reflectionFrontmatterIsValid('---json\n{"goal":"example"}\n---\n'));
+      assertFalse(yield* reflectionFrontmatterIsValid(`---\n${body}goal: other\n---\n`));
+      assertFalse(yield* reflectionFrontmatterIsValid("---\ngoal: example\n---\n"));
+    })
+  );
 });

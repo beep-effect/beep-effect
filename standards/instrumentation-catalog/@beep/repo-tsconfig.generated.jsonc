@@ -9,6 +9,11 @@
     {"name":"TsconfigDiscovery.findNearest","owner":"@beep/repo-tsconfig","family":"tooling","conforms":true},
     {"name":"TsconfigLoader.compilerOptions","owner":"@beep/repo-tsconfig","family":"tooling","conforms":true},
     {"name":"TsconfigLoader.load","owner":"@beep/repo-tsconfig","family":"tooling","conforms":true},
-    {"name":"TsconfigLoader.resolve","owner":"@beep/repo-tsconfig","family":"tooling","conforms":true}
+    {"name":"TsconfigLoader.resolve","owner":"@beep/repo-tsconfig","family":"tooling","conforms":true},
+    {"name":"TsconfigLoader.resolveDocument","owner":"@beep/repo-tsconfig","family":"tooling","conforms":true},
+    {"name":"TsconfigValidator.compilerOptions","owner":"@beep/repo-tsconfig","family":"tooling","conforms":true},
+    {"name":"TsconfigValidator.load","owner":"@beep/repo-tsconfig","family":"tooling","conforms":true},
+    {"name":"TsconfigValidator.validate","owner":"@beep/repo-tsconfig","family":"tooling","conforms":true},
+    {"name":"TsconfigValidator.validateCompilerOptions","owner":"@beep/repo-tsconfig","family":"tooling","conforms":true}
   ]
 }

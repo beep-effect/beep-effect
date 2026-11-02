@@ -41,16 +41,12 @@ import {
   decodeSchemaFirstPolicyFindingLine,
   encodeSchemaFirstPolicyFinding,
   envValue,
-  escapeRegexChar,
   GhPageInfo,
   GhPrView,
-  globMatches,
-  globPatternToRegExp,
   intEnvValue,
   isUnresolvedSecretReference,
   JsoncModification,
   JsonStringCodec,
-  jsonText,
   localOnlyTurboCacheArgs,
   nextCursor,
   RemoteReadTurboCache,
@@ -58,7 +54,7 @@ import {
   readOptionalRedactedConfigString,
   readTurboCacheEnvironment,
   renderSchemaFirstPolicyFindingLine,
-  renderTurboEnvironmentHealthWarning,
+  renderTurboEnvironmentHealthWarnings,
   resolveTurboCachePlan,
   resolveTurboCacheStep,
   SchemaFirstPolicyFinding,
@@ -66,6 +62,7 @@ import {
   SchemaFirstPolicySeverity,
   TurboCacheEnvironment,
   TurboCacheMode,
+  TurboEnvironmentHealthWarning,
   turboCachePlanArgs,
   turboCacheSecretSessionEnvironment,
   turboEnvExtendsAmbient,
@@ -83,6 +80,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs, commandEnv } from "./support/commandArgs.ts";
 
 class SharedInternalsTestError extends S.TaggedError<SharedInternalsTestError, { readonly brand: unique symbol }>()(
   "SharedInternalsTestError",
@@ -217,34 +215,6 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     );
   });
 
-  describe("GlobPattern", { concurrent: false }, () => {
-    it("compiles ** across segments and * within a segment", () => {
-      const re = globPatternToRegExp("src/**/*.ts");
-      expect(re.test("src/a/b/c.ts")).toBe(true);
-      expect(re.test("src/a.ts")).toBe(true);
-      expect(re.test("src/a/b.tsx")).toBe(false);
-      expect(re.test("other/a.ts")).toBe(false);
-    });
-
-    it("matches a single segment wildcard without crossing slashes", () => {
-      const re = globPatternToRegExp("src/*.ts");
-      expect(re.test("src/a.ts")).toBe(true);
-      expect(re.test("src/a/b.ts")).toBe(false);
-    });
-
-    it("escapes regex metacharacters literally", () => {
-      expect(escapeRegexChar(".")).toBe("\\.");
-      expect(globPatternToRegExp("a.b").test("a.b")).toBe(true);
-      expect(globPatternToRegExp("a.b").test("axb")).toBe(false);
-    });
-
-    it("globMatches curries a predicate", () => {
-      const matchesTests = globMatches("**/*.test.ts");
-      expect(matchesTests("src/a.test.ts")).toBe(true);
-      expect(matchesTests("src/a.ts")).toBe(false);
-    });
-  });
-
   describe("Jsonc editing", { concurrent: false }, () => {
     it("modifies a value while preserving comments and formatting", () => {
       const source = '{\n  // keep me\n  "a": 1,\n  "b": 2\n}';
@@ -254,10 +224,21 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       expect(Str.includes('"b": 2')(next)).toBe(true);
     });
 
-    it("formats with 2-space indentation", () => {
-      const formatted = jsonText('{"a":1,"b":{"c":2}}');
-      expect(Str.includes('  "a": 1')(formatted)).toBe(true);
-      expect(Str.includes('    "c": 2')(formatted)).toBe(true);
+    // Parity pins: the bytes jsonc-parser 3.3.1 `modify` + `applyEdits` produced for the same
+    // requests before R3b moved the facade onto @beep/jsonc.
+    it("appends, deletes and creates exactly as jsonc-parser did", () => {
+      const source = '{\n  "workspaces": ["a"], // keep\n  "b": {}\n}\n';
+      expect(
+        applyJsoncModification(
+          JsoncModification.make({ content: source, path: ["workspaces", 1], value: "c", isArrayInsertion: true })
+        )
+      ).toBe('{\n  "workspaces": [\n    "a",\n    "c"\n  ], // keep\n  "b": {}\n}\n');
+      expect(applyJsoncModification(JsoncModification.make({ content: source, path: ["b"], value: undefined }))).toBe(
+        '{\n  "workspaces": [\n    "a"\n  ]\n}\n'
+      );
+      expect(
+        applyJsoncModification(JsoncModification.make({ content: source, path: ["b", "x"], value: { y: [] } }))
+      ).toBe('{\n  "workspaces": ["a"], // keep\n  "b": {\n    "x": {\n      "y": []\n    }\n  }\n}\n');
     });
   });
 
@@ -425,6 +406,17 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(yield* overridesFor({}, "bunx", ["vitest", "run"])).toEqual({});
         expect(yield* overridesFor({}, "op", ["run", "--", "bun", "run", "build"])).toEqual({});
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("resolves signing references only through the cache secret session", () =>
+      Effect.gen(function* () {
+        const environment = { TURBO_REMOTE_CACHE_SIGNATURE_KEY: OP_REFERENCE, APPLICATION_TOKEN: OP_REFERENCE };
+        const direct = yield* overridesFor(environment, "bunx", ["turbo", "run", "check"]);
+        expect(direct).toHaveProperty("TURBO_REMOTE_CACHE_SIGNATURE_KEY", undefined);
+        const wrapped = yield* overridesFor(environment, "op", ["run", "--", "bunx", "turbo", "run", "check"]);
+        expect(wrapped).toHaveProperty("TURBO_REMOTE_CACHE_SIGNATURE_KEY", OP_REFERENCE);
+        expect(wrapped).not.toHaveProperty("APPLICATION_TOKEN");
+      })
     );
 
     it.effect("guards the TUI on a direct turbo spawn with resolved credentials", () =>
@@ -769,13 +761,14 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           if (!ChildProcess.isStandardCommand(command)) {
             return Effect.die("the cache reference fixture never spawns a piped command");
           }
-          const childEnvironment = command.options.env ?? {};
+          const childEnvironment = commandEnv(command) ?? {};
           const fails =
-            A.some(command.args, Str.startsWith("--env-file=")) ||
+            A.some(commandArgs(command), Str.startsWith("--env-file=")) ||
             childEnvironment.STALE_DATABASE_URL === staleReference;
-          return Ref.update(spawnedCommands, A.append({ args: command.args, environment: childEnvironment })).pipe(
-            Effect.as(stubHandle(fails ? 1 : 0))
-          );
+          return Ref.update(
+            spawnedCommands,
+            A.append({ args: commandArgs(command), environment: childEnvironment })
+          ).pipe(Effect.as(stubHandle(fails ? 1 : 0)));
         });
 
         clearTurboCacheSecretSessionVerdictsForTesting();
@@ -802,7 +795,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(result.cachedWarnings).toBe(result.warnings);
         expect(turboCachePlanArgs(result.plan)).toEqual(["--cache=local:rw,remote:r"]);
         expect(A.map(result.warnings, (warning) => warning.variableName)).toEqual(["STALE_DATABASE_URL"]);
-        const warningText = renderTurboEnvironmentHealthWarning(A.head(result.warnings).pipe(O.getOrThrow));
+        const warningText = renderTurboEnvironmentHealthWarnings(result.warnings).pipe(O.getOrThrow);
         expect(warningText).toContain("STALE_DATABASE_URL");
         expect(warningText).not.toContain(staleReference);
 
@@ -816,6 +809,23 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(wholeFileProbe.args).toEqual(["run", "--env-file=/repo/correct-quad/.env", "--", "true"]);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
+
+    it("summarizes many environment-health warnings on one value-free line", () => {
+      const warningsFor = A.map((variableName: string) => TurboEnvironmentHealthWarning.make({ variableName }));
+      const names = ["ONE_KEY", "TWO_KEY", "THREE_KEY", "FOUR_KEY", "FIVE_KEY", "SIX_KEY", "SEVEN_KEY"];
+
+      assertNone(renderTurboEnvironmentHealthWarnings([]));
+
+      const many = renderTurboEnvironmentHealthWarnings(warningsFor(names)).pipe(O.getOrThrow);
+      expect(Str.split(many, "\n")).toHaveLength(1);
+      expect(many).toContain("7 .env variables have unavailable 1Password references");
+      expect(many).toContain("ONE_KEY, TWO_KEY, THREE_KEY, FOUR_KEY, FIVE_KEY, and 2 more");
+      expect(many).not.toContain("SIX_KEY");
+      expect(many).toContain("TURBO_API, TURBO_TOKEN, TURBO_TEAM, and TURBO_CACHE");
+
+      const few = renderTurboEnvironmentHealthWarnings(warningsFor(A.take(names, 2))).pipe(O.getOrThrow);
+      expect(few).toContain("2 .env variables have unavailable 1Password references (ONE_KEY, TWO_KEY)");
+    });
 
     it.effect("keeps environment-health file fallbacks and healthy references non-blocking", () =>
       Effect.gen(function* () {

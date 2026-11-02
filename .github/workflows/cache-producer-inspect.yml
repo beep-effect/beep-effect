@@ -1,0 +1,81 @@
+name: Cache Producer Inspection
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: cache-producer-inspection-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    name: Inspect producer sources and tools
+    if: github.ref == 'refs/heads/main'
+    runs-on: beep-ec2-heavy
+    timeout-minutes: 10
+    environment: turbo-cache-write
+    steps:
+      - name: Checkout exact main source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup pinned toolchain without cache capabilities
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+          turbo-remote-cache: "false"
+          r2-enabled: "false"
+          app-secrets: "false"
+
+      - name: Ensure native sandbox inspection dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -x /usr/bin/bwrap ]]; then
+            privilege=()
+            if [[ "$EUID" -ne 0 ]]; then
+              privilege=(sudo -n)
+            fi
+            if command -v dnf >/dev/null 2>&1; then
+              "${privilege[@]}" dnf install -y bubblewrap
+            elif command -v apt-get >/dev/null 2>&1; then
+              bash scripts/ci-prune-apt-sources.sh
+              "${privilege[@]}" apt-get update
+              "${privilege[@]}" apt-get install -y --no-install-recommends bubblewrap
+            else
+              echo "::error::Producer inspection requires /usr/bin/bwrap; no supported package manager."
+              exit 1
+            fi
+          fi
+          test -x /usr/bin/bwrap
+          /usr/bin/bwrap --version
+
+      - name: Write bounded source inspection
+        id: inspection
+        shell: bash
+        env:
+          BEEP_TURBO_HOST_CACHE_DISABLED: "true"
+        run: |
+          umask 077
+          inspection_dir="$(mktemp -d "$RUNNER_TEMP/beep-cache-producer-inspection.XXXXXX")"
+          report="$inspection_dir/report.json"
+          bun --no-env-file run beep cache producer-inspect --output "$report"
+          test -s "$report"
+          printf 'report=%s\n' "$report" >> "$GITHUB_OUTPUT"
+
+      - name: Retain inspection for at most one day
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cache-producer-inspection-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.inspection.outputs.report }}
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0

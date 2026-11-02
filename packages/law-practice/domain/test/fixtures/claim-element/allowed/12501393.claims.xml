@@ -1,0 +1,27 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system for spectrum management, comprising:
+<claim-text>a radiofrequency (RF) receiver, a signal processor, and a database connected to the signal processor;</claim-text>
+<claim-text>wherein the RF receiver is operable to measure RF energy and output RF energy measurements to the signal processor;</claim-text>
+<claim-text>wherein the signal processor is operable to:
+<claim-text>generate signal data based on the RF energy measurements received from the RF receiver;</claim-text>
+<claim-text>compare the generated signal data with at least one signal parameter stored in the database to identify at least one signal, the at least one signal parameter including hardware parameters;</claim-text>
+<claim-text>determine if the at least one signal is moving using a frequency-locked loop by determining if there is a Doppler change in the at least one signal;</claim-text>
+<claim-text>provide signal optimization parameters for signal optimization of the at least one signal based on measured terrain data stored in the database;</claim-text>
+<claim-text>create a channel plan based on user input, external databases, or feature extraction from an RF environment using a Temporal Feature Extraction (TFE) function;</claim-text>
+<claim-text>produce a settled percent using the TFE function based on the RF environment; and</claim-text>
+<claim-text>determine that the at least one signal violates the channel plan;</claim-text>
+</claim-text>
+<claim-text>wherein the identification of the at least one signal includes signal detection based on a calibration vector, a gradient detection algorithm, a first smoothing filter, a second smoothing filter;</claim-text>
+<claim-text>wherein the second smoothing filter is performed only on frequencies outside a frequency range of the at least one signal;</claim-text>
+<claim-text>wherein the hardware parameters include antenna position, antenna type, orientation, azimuth, gain, and/or equivalent isotropically radiated power (EIRP) for a transmitter associated with the at least one signal; and</claim-text>
+<claim-text>wherein the at least one signal parameter stored in the database includes noise figure parameters.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the signal processor is operable to determine environment parameters, wherein the environment parameters are based on a delta correction factor table stored in the database and a provided precipitation rate.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the signal processor is operable to determine a spectral density, a center frequency, a bandwidth, a baud rate, a modulation type, a protocol, and a carrier using licensed spectrum of the at least one signal using information stored in the database.</claim-text>
+</claim>
+</claims>

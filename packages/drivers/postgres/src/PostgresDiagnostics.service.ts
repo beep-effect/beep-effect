@@ -354,7 +354,7 @@ export type PostgresErrorFormatter = (error: unknown) => string;
  * **Example** (Render without ANSI color)
  *
  * ```ts
- * import { createColors } from "@beep/colors"
+ * import { createColors } from "@beep/colors/Colors"
  * import { formatPostgresErrorWith, PostgresError } from "@beep/postgres"
  *
  * const renderPlain = formatPostgresErrorWith(createColors(false))

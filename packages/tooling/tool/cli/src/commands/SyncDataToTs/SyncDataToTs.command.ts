@@ -32,7 +32,7 @@ import {
   SyncDataToTsError,
 } from "./SyncDataToTs.schemas.ts";
 import { syncDataTargets } from "./targets/index.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as JsonPatch from "effect/JsonPatch";
 import type { SyncDataTarget } from "./SyncDataToTs.schemas.ts";
@@ -283,7 +283,7 @@ const syncTarget = Effect.fn("syncTarget")(function* (
 ): Effect.fn.Return<
   SyncDataTargetResult,
   SyncDataToTsError,
-  FileSystem.FileSystem | HttpClient.HttpClient | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | HttpClient.HttpClient | Path.Path | Digest.Digest
 > {
   const projection = yield* target.acquire;
   const canonicalPatch = yield* diffCanonical(repoRoot, target.id, projection.canonicalPath, projection.canonical);

@@ -30,6 +30,7 @@
  */
 
 export {
+  ClosedCompilerOptions,
   CompilerOptions,
   Jsx,
   Lib,
@@ -44,6 +45,7 @@ export { JsxConfig } from "./JsxConfig.ts";
 export { PortableTsconfig, PortableTsconfigOptions } from "./PortableTsconfig.ts";
 export { ResolvedTsconfig } from "./ResolvedTsconfig.ts";
 export {
+  ClosedTsconfigJson,
   FallbackPolling,
   Reference,
   TsconfigJson,

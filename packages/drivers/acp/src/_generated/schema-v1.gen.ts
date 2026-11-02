@@ -7350,7 +7350,10 @@ export const CreateElicitationResponse = S.Union([
           "Custom or future elicitation action.\n\nValues beginning with `_` are reserved for implementation-specific\nextensions. Unknown values that do not begin with `_` are reserved for\nfuture ACP variants.",
       }).check(
         S.isPattern(
-          new RegExp("^(?!(?:accept|decline|cancel)$)[\\s\\S]*$", "u"),
+          new globalThis.RegExp(
+            "^(?!(?:accept|decline|cancel)$)[\\s\\S]*$",
+            "u",
+          ),
         ).annotate({
           expected:
             "a string matching the RegExp ^(?!(?:accept|decline|cancel)$)[\\s\\S]*$",
@@ -8385,7 +8388,7 @@ export const StateUpdate = S.Union([
           description: "Unrecognized stop reason.",
         }).check(
           S.isPattern(
-            new RegExp(
+            new globalThis.RegExp(
               "^(?!(?:end_turn|max_tokens|max_turn_requests|refusal|cancelled|error)$)[\\s\\S]*$",
               "u",
             ),
@@ -8477,7 +8480,7 @@ export const StateUpdate = S.Union([
         description: "Unrecognized state discriminator.",
       }).check(
         S.isPattern(
-          new RegExp(
+          new globalThis.RegExp(
             "^(?!(?:running|idle|requires_action|unknown)$)[\\s\\S]*$",
             "u",
           ),
@@ -8754,7 +8757,9 @@ export const MultiSelectItems = S.Union([
         description:
           "Custom or future multi-select item type.\n\nValues beginning with `_` are reserved for implementation-specific\nextensions. Unknown values that do not begin with `_` are reserved for\nfuture ACP variants.",
       }).check(
-        S.isPattern(new RegExp("^(?!(?:string)$)[\\s\\S]*$", "u")).annotate({
+        S.isPattern(
+          new globalThis.RegExp("^(?!(?:string)$)[\\s\\S]*$", "u"),
+        ).annotate({
           expected: "a string matching the RegExp ^(?!(?:string)$)[\\s\\S]*$",
         }),
       ),
@@ -9807,7 +9812,7 @@ export const ElicitationPropertySchema = S.Union([
           "Custom or future elicitation property schema type.\n\nValues beginning with `_` are reserved for implementation-specific\nextensions. Unknown values that do not begin with `_` are reserved for\nfuture ACP variants.",
       }).check(
         S.isPattern(
-          new RegExp(
+          new globalThis.RegExp(
             "^(?!(?:string|number|integer|boolean|array)$)[\\s\\S]*$",
             "u",
           ),
@@ -12296,12 +12301,12 @@ export const CreateElicitationRequest = S.Union([
           description:
             "Custom or future elicitation mode.\n\nValues beginning with `_` are reserved for implementation-specific\nextensions. Unknown values that do not begin with `_` are reserved for\nfuture ACP variants.",
         }).check(
-          S.isPattern(new RegExp("^(?!(?:form|url)$)[\\s\\S]*$", "u")).annotate(
-            {
-              expected:
-                "a string matching the RegExp ^(?!(?:form|url)$)[\\s\\S]*$",
-            },
-          ),
+          S.isPattern(
+            new globalThis.RegExp("^(?!(?:form|url)$)[\\s\\S]*$", "u"),
+          ).annotate({
+            expected:
+              "a string matching the RegExp ^(?!(?:form|url)$)[\\s\\S]*$",
+          }),
         ),
         sessionId: S.suspend((): S.Codec<SessionId> => SessionId).annotateKey({
           description: "The session this elicitation is tied to.",
@@ -12341,12 +12346,12 @@ export const CreateElicitationRequest = S.Union([
           description:
             "Custom or future elicitation mode.\n\nValues beginning with `_` are reserved for implementation-specific\nextensions. Unknown values that do not begin with `_` are reserved for\nfuture ACP variants.",
         }).check(
-          S.isPattern(new RegExp("^(?!(?:form|url)$)[\\s\\S]*$", "u")).annotate(
-            {
-              expected:
-                "a string matching the RegExp ^(?!(?:form|url)$)[\\s\\S]*$",
-            },
-          ),
+          S.isPattern(
+            new globalThis.RegExp("^(?!(?:form|url)$)[\\s\\S]*$", "u"),
+          ).annotate({
+            expected:
+              "a string matching the RegExp ^(?!(?:form|url)$)[\\s\\S]*$",
+          }),
         ),
         requestId: S.suspend((): S.Codec<RequestId> => RequestId).annotateKey({
           description: "The request this elicitation is tied to.",
@@ -14638,7 +14643,7 @@ export const IdleStateUpdate = S.Union([
         description: "Unrecognized stop reason.",
       }).check(
         S.isPattern(
-          new RegExp(
+          new globalThis.RegExp(
             "^(?!(?:end_turn|max_tokens|max_turn_requests|refusal|cancelled|error)$)[\\s\\S]*$",
             "u",
           ),

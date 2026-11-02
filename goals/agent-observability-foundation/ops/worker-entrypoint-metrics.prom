@@ -1,0 +1,45 @@
+# HELP beep_observation_runtime_running Whether this observation reports an owned runtime loop.
+# TYPE beep_observation_runtime_running gauge
+beep_observation_runtime_running 1
+# HELP beep_observation_health_observed_timestamp_seconds Wall clock when this health observation was read.
+# TYPE beep_observation_health_observed_timestamp_seconds gauge
+beep_observation_health_observed_timestamp_seconds 1793225852.241
+# HELP beep_observation_source_coverage_known Whether this runtime establishes fleet source coverage.
+# TYPE beep_observation_source_coverage_known gauge
+beep_observation_source_coverage_known 0
+# HELP beep_observation_runtime_phase Current native loop phase, not fleet delivery health.
+# TYPE beep_observation_runtime_phase gauge
+beep_observation_runtime_phase{phase="degraded"} 1
+# HELP beep_observation_cycle_completed_timestamp_seconds Completion time of the latest cycle, including failure.
+# TYPE beep_observation_cycle_completed_timestamp_seconds gauge
+beep_observation_cycle_completed_timestamp_seconds 1793225852.157
+# HELP beep_observation_retained_pages Pages retained at the start of this completed pass, not undelivered events.
+# TYPE beep_observation_retained_pages gauge
+beep_observation_retained_pages 1
+# HELP beep_observation_retained_payload_bytes Metadata payload bytes retained at the start of this completed pass.
+# TYPE beep_observation_retained_payload_bytes gauge
+beep_observation_retained_payload_bytes 882
+# HELP beep_observation_retained_occurrences Retained occurrences including duplicates, not unique events.
+# TYPE beep_observation_retained_occurrences gauge
+beep_observation_retained_occurrences 1
+# HELP beep_observation_native_pass_examined Events examined in the latest completed pass.
+# TYPE beep_observation_native_pass_examined gauge
+beep_observation_native_pass_examined 1
+# HELP beep_observation_native_pass_send_calls Send calls observed in the latest pass, not confirmed deliveries.
+# TYPE beep_observation_native_pass_send_calls gauge
+beep_observation_native_pass_send_calls 0
+# HELP beep_observation_native_pass_visible Positive read-back results in the latest pass.
+# TYPE beep_observation_native_pass_visible gauge
+beep_observation_native_pass_visible 0
+# HELP beep_observation_native_pass_missing Missing read-back results in the latest pass.
+# TYPE beep_observation_native_pass_missing gauge
+beep_observation_native_pass_missing 1
+# HELP beep_observation_native_pass_mismatch Mismatched read-back results in the latest pass.
+# TYPE beep_observation_native_pass_mismatch gauge
+beep_observation_native_pass_mismatch 0
+# HELP beep_observation_native_pass_held Held events observed in the latest pass.
+# TYPE beep_observation_native_pass_held gauge
+beep_observation_native_pass_held 0
+# HELP beep_observation_native_pass_failed Failed operations observed in the latest pass.
+# TYPE beep_observation_native_pass_failed gauge
+beep_observation_native_pass_failed 0

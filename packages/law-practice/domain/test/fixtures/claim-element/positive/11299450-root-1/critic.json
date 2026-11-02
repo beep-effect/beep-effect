@@ -1,0 +1,167 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "entityMentionConvention": "entity-mentions/v1",
+  "familyId": "11299450-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "findings": [],
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "entityMentionConvention": "entity-mentions/v1",
+      "familyId": "11299450-root-1",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.96,
+      "verdict": "changes-required",
+      "reviewedClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "findings": [
+        {
+          "id": "C1",
+          "category": "withheld-clear-changed-name-reference",
+          "actionable": true,
+          "evidence": [
+            {
+              "claimNumber": 3,
+              "path": "3.a",
+              "anchor": {
+                "startChar": 161,
+                "endChar": 188,
+                "quote": "said delta navigation state"
+              }
+            },
+            {
+              "claimNumber": 1,
+              "path": "1.i",
+              "anchor": {
+                "startChar": 1395,
+                "endChar": 1435,
+                "quote": "an URL specific delta navigational state"
+              }
+            }
+          ],
+          "reason": "In claim 3 the request contains the base state and the delta navigation state; the immediately following de-serializing/merging steps use said delta navigational state for that same delta state. Claim 2 already links its said delta navigational state to the uniquely introduced URL-specific delta state in 1.i. The isolated navigation/navigational wording change supplies no alternative delta-state entity on the actual 3->2->1 ancestry. Treating the spelling variation as unresolved withholds a source-clear semantic reference.",
+          "correction": "Add the antecedent for said delta navigation state [161,188) in 3.a to an URL specific delta navigational state [1395,1435) in 1.i, retaining its actual navigation surface and head. Do not alter claim text or borrow any sibling state."
+        },
+        {
+          "id": "C2",
+          "category": "withheld-clear-claim-local-page-references",
+          "actionable": true,
+          "evidence": [
+            {
+              "claimNumber": 3,
+              "path": "3.a",
+              "anchor": {
+                "startChar": 95,
+                "endChar": 112,
+                "quote": "a new Portal page"
+              }
+            },
+            {
+              "claimNumber": 3,
+              "path": "3.e",
+              "anchor": {
+                "startChar": 601,
+                "endChar": 617,
+                "quote": "said Portal page"
+              }
+            },
+            {
+              "claimNumber": 3,
+              "path": "3.f",
+              "anchor": {
+                "startChar": 714,
+                "endChar": 730,
+                "quote": "said Portal page"
+              }
+            }
+          ],
+          "reason": "Claim 3 introduces its requested new Portal page in the receiving step. After merging the received states it pre-serializes the resulting state before rendering said Portal page, then includes that state in the HTML base tag of said Portal page. Both references identify that locally requested page in the explicit ordered workflow. No other page is introduced inside claim 3. Earlier general page/URL context in claim 1 does not make these claim-local workflow references ambiguous.",
+          "correction": "Add antecedents from said Portal page [601,617) in 3.e and [714,730) in 3.f to a new Portal page [95,112) in 3.a. Keep unresolved earlier page identities and the sibling-3/sibling-4 restrictions separately; do not use claim 3 as a donor to claim 4 or 7."
+        }
+      ],
+      "priorRounds": [],
+      "sourceConcerns": [],
+      "reviewScope": {
+        "selectedClaimCount": 10,
+        "resolvedTreesReviewed": 10,
+        "unresolvedClaimNumbers": [],
+        "elementCount": 36,
+        "termCount": 130,
+        "edgeCount": 119,
+        "functionalRelationCount": 26
+      },
+      "reviewNotes": [
+        "Root 1 correctly reaches the resumptive said method [1076,1087) before is characterized by the steps of, retaining its lengthy Portal context as anchored functional children and five ordered substantive creation/encoding/response steps. Long lexical state/representation names and explicit possessive browsers remain represented.",
+        "Actual ancestry 3->2,4->2,5->4,6->5,7->2,8->2,9->8,10->9 is preserved. Claim 3 latest state/representation and claim 4 serialization-method introductions are not borrowed by siblings. Original-PDF corroboration in the accepted source critic supersedes older source-audit absence of comparisons; this critic does not rerun that PDF authentication.",
+        "Read full canonical family/context, native claims text, provenance/source audit, accepted source critic, extractor receipt, protocol and ClaimElement schema contracts. Source eligibility and the semantic verdict are separate. Every submitted tree decoded through the actual ClaimElementTree schema. Exact UTF-16 element/term anchors, nonoverlap, actual term-reference endpoints, actual natural ancestry and complete ordered functional partitions checked; these passing checks do not remove the listed semantic/boundary findings.",
+        "Frozen attorney-sample membership does not change the review bar. Preserve this receipt, correct findings through an independent extractor round and obtain the next critic review before representing these labels as stabilized. No attorney acceptance or overall corpus accuracy is claimed."
+      ],
+      "independence": "Independent semantic critic only. No production/P2-DESIGN/implementation rules, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helpers only locate/check manually reviewed source anchors and structure, decode schema contracts, and serialize this receipt. Only this family current critic.json written; source/expected/extractor/code unchanged.",
+      "attorneyAdjudication": "pending actual attorney review; agent confidence is not attorney agreement"
+    }
+  ],
+  "findingDispositions": [
+    {
+      "findingId": "C1",
+      "status": "addressed",
+      "reason": "Current 3.a said delta navigation state [161,188) points to the unique 1.i an URL specific delta navigational state [1395,1435), preserving the source navigation spelling. The receiving/de-serializing/merging sequence independently supports this same-state identification on 3->2->1."
+    },
+    {
+      "findingId": "C2",
+      "status": "addressed",
+      "reason": "Current 3.e said Portal page [601,617) and 3.f [714,730) point to locally requested a new Portal page [95,112) in 3.a. The ordered local rendering/base-tag workflow supports both links. No claim-3 introduction has been donated to siblings 4 or 7."
+    }
+  ],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 10,
+    "resolvedTreesReviewed": 10,
+    "unresolvedClaimNumbers": [],
+    "elementCount": 36,
+    "termCount": 130,
+    "edgeCount": 122,
+    "functionalRelationCount": 26
+  },
+  "extractorConfidence": 0.96,
+  "reviewNotes": [
+    "Root 1 correctly reaches the resumptive said method [1076,1087) before is characterized by the steps of, retaining its lengthy Portal context as anchored functional children and five ordered substantive creation/encoding/response steps. Long lexical state/representation names and explicit possessive browsers remain represented.",
+    "Actual ancestry 3->2,4->2,5->4,6->5,7->2,8->2,9->8,10->9 is preserved. Claim 3 latest state/representation and claim 4 serialization-method introductions are not borrowed by siblings. Original-PDF corroboration in the accepted source critic supersedes older source-audit absence of comparisons; this critic does not rerun that PDF authentication.",
+    "Independent round-2 semantic reassessment of the exact current source, round-1 findings, retained prior trees/receipts and current changed structure. The only tree changes are the listed correction(s); no scope, source, sibling ancestry, extra member introduction or functional granularity change was introduced. Residual literal structure and local reference concerns were rechecked under unchanged semantic-reference/v2 and entity-mentions/v1.",
+    "Every current tree decoded through ClaimElementTree. Native/canonical bodies agree modulo permitted printed-number removal/whitespace; source XML digest matches provenance. Exact UTF-16 element/term/functional-text anchors, term ownership/order/nonoverlap, actual term endpoints, actual natural dependency ancestry and complete functional partitions pass. Passing geometry/schema checks are supporting evidence, separate from the semantic reading.",
+    "No remaining actionable critic finding. Explicit unresolved identities/missing introductions retained in extractor source-family concerns do not force whole-claim abstention or an invented edge. The frozen attorney sample and pending packet did not change the acceptance bar. Source qualification remains separately accepted; original-document/PDF authentication was not newly rerun."
+  ],
+  "priorReceiptPreservation": "Complete round-1 critic retained in this previousRounds; round-1 expected/extractor/critic also retained in extractor.previousRounds. No separate history files or source labels were mutated by this critic.",
+  "independence": "Independent round-2 semantic critic. No production/P2-DESIGN/implementation rules, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helpers only checked manually reviewed source anchors/reference geometry, decoded schema contracts and serialized this receipt. Only current critic.json written; expected/extractor/source/code unchanged.",
+  "attorneyAdjudication": "pending actual attorney review; agent acceptance/confidence is not attorney agreement",
+  "corpusStatus": "This family reference is accepted by agents under the stated protocol. No attorney agreement, system accuracy, full-corpus acceptance or full-goal completion claimed."
+}

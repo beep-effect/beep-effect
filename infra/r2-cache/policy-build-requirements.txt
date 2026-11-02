@@ -1,0 +1,2 @@
+cargo-zigbuild==0.20.1
+ziglang==0.14.1

@@ -1,0 +1,1552 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 108,
+          "quote": "A method for component carrier (CC) deactivation in a user equipment (UE) of a wireless communication system"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 13,
+              "endChar": 48,
+              "quote": "component carrier (CC) deactivation"
+            },
+            "determiner": "bare",
+            "head": "component carrier (cc) deactivation"
+          },
+          {
+            "anchor": {
+              "startChar": 52,
+              "endChar": 73,
+              "quote": "a user equipment (UE)"
+            },
+            "determiner": "a",
+            "head": "user equipment (ue)"
+          },
+          {
+            "anchor": {
+              "startChar": 77,
+              "endChar": 108,
+              "quote": "a wireless communication system"
+            },
+            "determiner": "a",
+            "head": "wireless communication system"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 122,
+          "endChar": 221,
+          "quote": "receiving a Radio Resource Control (RRC) message for configuring carrier aggregation (CA) to the UE"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 132,
+              "endChar": 170,
+              "quote": "a Radio Resource Control (RRC) message"
+            },
+            "determiner": "a",
+            "head": "radio resource control (rrc) message"
+          },
+          {
+            "anchor": {
+              "startChar": 187,
+              "endChar": 211,
+              "quote": "carrier aggregation (CA)"
+            },
+            "determiner": "bare",
+            "head": "carrier aggregation (ca)"
+          },
+          {
+            "anchor": {
+              "startChar": 215,
+              "endChar": 221,
+              "quote": "the UE"
+            },
+            "determiner": "the",
+            "head": "ue"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 227,
+          "endChar": 477,
+          "quote": "flushing all uplink hybrid automatic repeat-request (HARQ) buffers of the HARQ entity corresponding to an uplink (UL) CC when a linked downlink (DL) CC which provides a physical downlink control channel (PDCCH) scheduling for the UL CC is deactivated"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 236,
+              "endChar": 293,
+              "quote": "all uplink hybrid automatic repeat-request (HARQ) buffers"
+            },
+            "determiner": "bare",
+            "head": "all uplink hybrid automatic repeat-request (harq) buffers"
+          },
+          {
+            "anchor": {
+              "startChar": 297,
+              "endChar": 312,
+              "quote": "the HARQ entity"
+            },
+            "determiner": "the",
+            "head": "harq entity"
+          },
+          {
+            "anchor": {
+              "startChar": 330,
+              "endChar": 347,
+              "quote": "an uplink (UL) CC"
+            },
+            "determiner": "an",
+            "head": "uplink (ul) cc"
+          },
+          {
+            "anchor": {
+              "startChar": 353,
+              "endChar": 378,
+              "quote": "a linked downlink (DL) CC"
+            },
+            "determiner": "a",
+            "head": "linked downlink (dl) cc"
+          },
+          {
+            "anchor": {
+              "startChar": 394,
+              "endChar": 448,
+              "quote": "a physical downlink control channel (PDCCH) scheduling"
+            },
+            "determiner": "a",
+            "head": "physical downlink control channel (pdcch) scheduling"
+          },
+          {
+            "anchor": {
+              "startChar": 453,
+              "endChar": 462,
+              "quote": "the UL CC"
+            },
+            "determiner": "the",
+            "head": "ul cc"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 122,
+              "endChar": 132,
+              "quote": "receiving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 132,
+                "endChar": 170,
+                "quote": "a Radio Resource Control (RRC) message"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 170,
+              "endChar": 187,
+              "quote": " for configuring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 187,
+                "endChar": 211,
+                "quote": "carrier aggregation (CA)"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 211,
+              "endChar": 215,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 215,
+                "endChar": 221,
+                "quote": "the UE"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 227,
+              "endChar": 236,
+              "quote": "flushing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 236,
+                "endChar": 293,
+                "quote": "all uplink hybrid automatic repeat-request (HARQ) buffers"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 293,
+              "endChar": 297,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 297,
+                "endChar": 312,
+                "quote": "the HARQ entity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 312,
+              "endChar": 330,
+              "quote": " corresponding to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 330,
+                "endChar": 347,
+                "quote": "an uplink (UL) CC"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 347,
+              "endChar": 353,
+              "quote": " when "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 353,
+                "endChar": 378,
+                "quote": "a linked downlink (DL) CC"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 378,
+              "endChar": 394,
+              "quote": " which provides "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 394,
+                "endChar": 448,
+                "quote": "a physical downlink control channel (PDCCH) scheduling"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 448,
+              "endChar": 453,
+              "quote": " for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 453,
+                "endChar": 462,
+                "quote": "the UL CC"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 462,
+              "endChar": 477,
+              "quote": " is deactivated"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 215,
+            "endChar": 221,
+            "quote": "the UE"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 52,
+            "endChar": 73,
+            "quote": "a user equipment (UE)"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 453,
+            "endChar": 462,
+            "quote": "the UL CC"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 330,
+            "endChar": 347,
+            "quote": "an uplink (UL) CC"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 118,
+          "quote": "indicating in the RRC message a linkage between the DL CC and the said UL CC"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 56,
+              "endChar": 71,
+              "quote": "the RRC message"
+            },
+            "determiner": "the",
+            "head": "rrc message"
+          },
+          {
+            "anchor": {
+              "startChar": 72,
+              "endChar": 81,
+              "quote": "a linkage"
+            },
+            "determiner": "a",
+            "head": "linkage"
+          },
+          {
+            "anchor": {
+              "startChar": 90,
+              "endChar": 99,
+              "quote": "the DL CC"
+            },
+            "determiner": "the",
+            "head": "dl cc"
+          },
+          {
+            "anchor": {
+              "startChar": 104,
+              "endChar": 118,
+              "quote": "the said UL CC"
+            },
+            "determiner": "the",
+            "head": "said ul cc"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 42,
+              "endChar": 56,
+              "quote": "indicating in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 56,
+                "endChar": 71,
+                "quote": "the RRC message"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 71,
+              "endChar": 72,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 72,
+                "endChar": 81,
+                "quote": "a linkage"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 81,
+              "endChar": 90,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 90,
+                "endChar": 99,
+                "quote": "the DL CC"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 99,
+              "endChar": 104,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 104,
+                "endChar": 118,
+                "quote": "the said UL CC"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 56,
+            "endChar": 71,
+            "quote": "the RRC message"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 132,
+            "endChar": 170,
+            "quote": "a Radio Resource Control (RRC) message"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 104,
+            "endChar": 118,
+            "quote": "the said UL CC"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 330,
+            "endChar": 347,
+            "quote": "an uplink (UL) CC"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 90,
+            "endChar": 99,
+            "quote": "the DL CC"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 353,
+            "endChar": 378,
+            "quote": "a linked downlink (DL) CC"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 170,
+          "quote": "receiving on the DL CC a physical HARQ Indicator Channel (PHICH) used for HARQ feedback in response to transmission on the UL CC"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 55,
+              "endChar": 64,
+              "quote": "the DL CC"
+            },
+            "determiner": "the",
+            "head": "dl cc"
+          },
+          {
+            "anchor": {
+              "startChar": 65,
+              "endChar": 106,
+              "quote": "a physical HARQ Indicator Channel (PHICH)"
+            },
+            "determiner": "a",
+            "head": "physical harq indicator channel (phich)"
+          },
+          {
+            "anchor": {
+              "startChar": 116,
+              "endChar": 129,
+              "quote": "HARQ feedback"
+            },
+            "determiner": "bare",
+            "head": "harq feedback"
+          },
+          {
+            "anchor": {
+              "startChar": 145,
+              "endChar": 157,
+              "quote": "transmission"
+            },
+            "determiner": "bare",
+            "head": "transmission"
+          },
+          {
+            "anchor": {
+              "startChar": 161,
+              "endChar": 170,
+              "quote": "the UL CC"
+            },
+            "determiner": "the",
+            "head": "ul cc"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 42,
+              "endChar": 55,
+              "quote": "receiving on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 55,
+                "endChar": 64,
+                "quote": "the DL CC"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 64,
+              "endChar": 65,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 65,
+                "endChar": 106,
+                "quote": "a physical HARQ Indicator Channel (PHICH)"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 106,
+              "endChar": 116,
+              "quote": " used for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 116,
+                "endChar": 129,
+                "quote": "HARQ feedback"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 129,
+              "endChar": 145,
+              "quote": " in response to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 145,
+                "endChar": 157,
+                "quote": "transmission"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 157,
+              "endChar": 161,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 161,
+                "endChar": 170,
+                "quote": "the UL CC"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 55,
+            "endChar": 64,
+            "quote": "the DL CC"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 353,
+            "endChar": 378,
+            "quote": "a linked downlink (DL) CC"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 161,
+            "endChar": 170,
+            "quote": "the UL CC"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 330,
+            "endChar": 347,
+            "quote": "an uplink (UL) CC"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 172,
+          "quote": "deactivating the DL CC due to reception of a Medium Access Control (MAC) control element or a timer-based implicit CC deactivation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 55,
+              "endChar": 64,
+              "quote": "the DL CC"
+            },
+            "determiner": "the",
+            "head": "dl cc"
+          },
+          {
+            "anchor": {
+              "startChar": 72,
+              "endChar": 81,
+              "quote": "reception"
+            },
+            "determiner": "bare",
+            "head": "reception"
+          },
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 130,
+              "quote": "a Medium Access Control (MAC) control element"
+            },
+            "determiner": "a",
+            "head": "medium access control (mac) control element"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 172,
+              "quote": "a timer-based implicit CC deactivation"
+            },
+            "determiner": "a",
+            "head": "timer-based implicit cc deactivation"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 42,
+              "endChar": 55,
+              "quote": "deactivating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 55,
+                "endChar": 64,
+                "quote": "the DL CC"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 64,
+              "endChar": 72,
+              "quote": " due to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 72,
+                "endChar": 81,
+                "quote": "reception"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 81,
+              "endChar": 85,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 85,
+                "endChar": 130,
+                "quote": "a Medium Access Control (MAC) control element"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 130,
+              "endChar": 134,
+              "quote": " or "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 172,
+                "quote": "a timer-based implicit CC deactivation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 55,
+            "endChar": 64,
+            "quote": "the DL CC"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 353,
+            "endChar": 378,
+            "quote": "a linked downlink (DL) CC"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 31,
+          "endChar": 61,
+          "quote": "the DL CC is a DL Secondary CC"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 31,
+              "endChar": 40,
+              "quote": "the DL CC"
+            },
+            "determiner": "the",
+            "head": "dl cc"
+          },
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 61,
+              "quote": "a DL Secondary CC"
+            },
+            "determiner": "a",
+            "head": "dl secondary cc"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "5"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 40,
+                "quote": "the DL CC"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 40,
+              "endChar": 44,
+              "quote": " is "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 61,
+                "quote": "a DL Secondary CC"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 31,
+            "endChar": 40,
+            "quote": "the DL CC"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 353,
+            "endChar": 378,
+            "quote": "a linked downlink (DL) CC"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The method of any of claims 1 to 4"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 75,
+          "quote": "the UL CC is an UL Secondary CC"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 53,
+              "quote": "the UL CC"
+            },
+            "determiner": "the",
+            "head": "ul cc"
+          },
+          {
+            "anchor": {
+              "startChar": 57,
+              "endChar": 75,
+              "quote": "an UL Secondary CC"
+            },
+            "determiner": "an",
+            "head": "ul secondary cc"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "4"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 53,
+                "quote": "the UL CC"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 53,
+              "endChar": 57,
+              "quote": " is "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 75,
+                "quote": "an UL Secondary CC"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 44,
+            "endChar": 53,
+            "quote": "the UL CC"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 330,
+            "endChar": 347,
+            "quote": "an uplink (UL) CC"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The method of any of claims 1 to 4"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 74,
+          "quote": "the DL CC is a DL Secondary CC"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 53,
+              "quote": "the DL CC"
+            },
+            "determiner": "the",
+            "head": "dl cc"
+          },
+          {
+            "anchor": {
+              "startChar": 57,
+              "endChar": 74,
+              "quote": "a DL Secondary CC"
+            },
+            "determiner": "a",
+            "head": "dl secondary cc"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "4"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 53,
+                "quote": "the DL CC"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 53,
+              "endChar": 57,
+              "quote": " is "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 74,
+                "quote": "a DL Secondary CC"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 44,
+            "endChar": 53,
+            "quote": "the DL CC"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 353,
+            "endChar": 378,
+            "quote": "a linked downlink (DL) CC"
+          }
+        }
+      }
+    ]
+  }
+]

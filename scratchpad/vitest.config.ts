@@ -8,7 +8,7 @@ export default defineConfig({
     includeSource: ["packages/foundation/modeling/jsonl/src/**/*.ts"],
     passWithNoTests: true,
     coverage: {
-      // The @effected/jsonc port is held at full coverage; enable with
+      // @beep/jsonc is held at full coverage; enable with
       // `--coverage.enabled` to enforce it.
       include: ["packages/foundation/modeling/jsonc/src/**/*.ts"],
       thresholds: {

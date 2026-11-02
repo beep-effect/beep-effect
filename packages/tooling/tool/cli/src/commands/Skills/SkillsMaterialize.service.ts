@@ -43,7 +43,7 @@ import {
 import { decodeSkillsLockDocumentJson } from "./SkillsLock.schemas.ts";
 import { SkillMaterializeReport, SkillMaterializeRow, SkillMaterializeTarget } from "./SkillsMaterialize.schemas.ts";
 import type { Sha256Hex } from "@beep/schema";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { SkillPatchApplyError, SkillUpstreamContentError } from "./Skills.errors.ts";
@@ -53,7 +53,7 @@ import type { SkillMaterializeMode, SkillMaterializeTargetState } from "./Skills
 
 const $I = $RepoCliId.create("commands/Skills/SkillsMaterialize.service");
 
-type MaterializeRequirements = SkillUpstreamContentSource | FileSystem.FileSystem | Path.Path | Crypto.Crypto;
+type MaterializeRequirements = SkillUpstreamContentSource | FileSystem.FileSystem | Path.Path | Digest.Digest;
 
 /**
  * Every failure `materialize` can raise.
@@ -127,7 +127,7 @@ const readTargets = Effect.fn("SkillsMaterialize.readTargets")(function* (
 ): Effect.fn.Return<
   ReadonlyArray<TargetReading>,
   SkillsCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   return yield* Effect.forEach(targets, (target) =>
     Effect.map(readTargetTree(repoRoot, target, skill), (tree) => ({
@@ -142,7 +142,7 @@ const installMatches = Effect.fn("SkillsMaterialize.installMatches")(function* (
   readings: ReadonlyArray<TargetReading>,
   skill: string,
   expected: Sha256Hex
-): Effect.fn.Return<boolean, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<boolean, SkillsCommandError, Digest.Digest> {
   const present = A.getSomes(
     A.map(readings, (reading) => O.map(reading.treeHash, (treeHash) => [reading.target, treeHash] as const))
   );
@@ -282,7 +282,7 @@ const verifyLocal = Effect.fn("SkillsMaterialize.verifyLocal")(function* (
 ): Effect.fn.Return<
   SkillMaterializeRow,
   SkillsCommandError | SkillMaterializeRefusal,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const targets = yield* requireSafeTargets(skill, entry.installedTargets);
   const readings = yield* readTargets(repoRoot, skill, targets);

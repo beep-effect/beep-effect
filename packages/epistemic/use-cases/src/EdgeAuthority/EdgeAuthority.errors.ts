@@ -1,6 +1,8 @@
 /**
  * Edge authority typed errors.
  *
+ * **Details**
+ *
  * Every refusal the bitemporal edge repository can issue is one of three shapes:
  * a supersession that lost its race or named a version that is no longer the
  * head, a named database constraint that rejected the write, or a driver that

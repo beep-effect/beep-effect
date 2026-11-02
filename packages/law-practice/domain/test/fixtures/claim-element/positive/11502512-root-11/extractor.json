@@ -1,0 +1,66 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "11502512-root-11",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "The system and operation process ... claim 11",
+      "reason": "All selected12–17 naturally depend directly on operation process11, despite changed system-and-process subject. Source subject mismatch is preserved. A combined system/process term is not forced to be identical to process alone."
+    },
+    {
+      "quote": "the uncompression domain / the compression domain",
+      "reason": "Claims13/15 depend directly on11, not12 or14; root11 only introduces a generic domain. The source does not uniquely establish whether that same domain is uncompression or compression. No domain-mode identity or sibling donor is fabricated."
+    },
+    {
+      "quote": "the accumulation circuit MUX / the original memory unit / the storage address",
+      "reason": "Claim17 depends directly on11, not16, and cannot borrow the address/MUX introduced by16. Exact17 definite circuit/storage/property phrases remain without an invented earlier introduction. MUX and DEMUX collective selection is not equated with only one member."
+    },
+    {
+      "quote": "the primary PAN1, PAN2, TILT1, and TILT2 / the final PAN, TILT, and ZOOM values",
+      "reason": "Full explicitly named collections retained with quoted case normalization only. Native MathML defines formula variables but does not supply a single anchored prose term naming the exact four-variable group before16/17; no numeric result, physical parameter value or subset equality is inferred."
+    },
+    {
+      "quote": "the following equations",
+      "reason": "Canonical11 contains flattened native mathematical notation/private-use glyphs. Complete supplied formula sequence remains anchored functional text without reconstructing operators, indices or unstated formulas. Any MathML layout loss is representation coverage, not unresolved source eligibility."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation of exact canonical/native claims. Explicit manually selected element and noun-phrase spans are serialized; no source decomposition algorithm, production rules, predictions, synthetic fixtures or prior conformance labels used. Complete lexical heads, nested determiner terms, natural dependency and source-supported entity identities retained. Functional edges preserve complete source text and ordered participants. Independent critic pending; agent confidence is not attorney agreement.",
+  "referenceNotes": [
+    "Explicit a/b/c steps11 remain source ordered. Camera-motion detection method and parameter aliases preserve lexical names; repeated definite property references do not imply a fabricated circuit/storage introduction.",
+    "Chemical/means-plus-function or technical correctness interpretation is not performed. Source uncompression, singular parameter and compound system-and-process wording remain exact."
+  ],
+  "sourceValidation": {
+    "claimsXmlSha256": "9caf45b70f19cdf2d0809c67183878b1c008bc3ac668349d7cc001748cc84e91",
+    "sourceEligibility": "Retained independent source critic accepted. No fresh original-PDF/inventory authentication claimed."
+  },
+  "counts": {
+    "trees": 7,
+    "elements": 20,
+    "terms": 52,
+    "edges": 44
+  },
+  "independence": "Extractor did not read production implementation, decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or prior structural labels for this family. Helpers locate only manually chosen exact source quotes, serialize annotations and validate spans. Only assigned expected.json/extractor.json written.",
+  "attorneyAdjudication": "pending",
+  "validation": {
+    "schema": "All trees decode through declared ClaimElementTree schema; no production decomposer invoked.",
+    "anchors": "Exact UTF-16 spans, ordered nonoverlapping term ownership, source order, antecedent endpoints and complete contiguous functional reconstruction checked.",
+    "native": "All canonical/context claims match native XML under permitted normalization; source XML digest matches provenance.",
+    "independentSemanticCritic": "Pending; extractor validation is not independent semantic acceptance."
+  }
+}

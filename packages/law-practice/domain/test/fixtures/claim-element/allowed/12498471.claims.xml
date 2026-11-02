@@ -1,0 +1,99 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A laser ranging apparatus, comprising a processor, a first pulse generator, a second pulse generator, a mixer, and a laser transceiver module;
+<claim-text>the processor, configured to control the first pulse generator to output a first pulse signal and to control the second pulse generator to output a second pulse signal;</claim-text>
+<claim-text>the mixer, configured to combine the first pulse signal and the second pulse signal to generate a reference intermediate frequency signal;</claim-text>
+<claim-text>the laser transceiver module, configured to emit a laser pulse toward a measured object based on the first pulse signal, and obtain a target intermediate frequency signal for distance calculation based on the first pulse signal, the second pulse signal, and a measurement pulse signal returned from the measured object; and</claim-text>
+<claim-text>the processor, further configured to verify the target intermediate frequency signal according to the reference intermediate frequency signal; to control the first pulse generator to output a new first pulse signal and the second pulse generator to output a new second pulse signal when the target intermediate frequency signal is determined to overlap in phase with the reference intermediate frequency signal and fails a verification, updating the target intermediate frequency signal until the verification passes; to calculate a distance to the measured object by using verified the target intermediate frequency signal when the updated target intermediate frequency signal passes the verification.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a frequency range of the first pulse signal and the second pulse signal is 1 MHz to 250 MHz.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein there is a frequency difference between the first pulse signal and the second pulse signal.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein a range of the frequency difference between the first pulse signal and the second pulse signal is 500 Hz to 100 KHz.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a frequency of the new first pulse signal is different from that of an immediately preceding first pulse signal, or, a frequency of the new second pulse signal is different from that of an immediately preceding second pulse signal.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the laser transceiver module comprises a laser, an optical splitter, and a light-receiving sensor;
+<claim-text>the laser, configured to generate a laser pulse based on the first pulse signal;</claim-text>
+<claim-text>the optical splitter, configured to split the laser pulse into two paths, wherein one path is transmitted to the light-receiving sensor, and the other path is emitted toward the measured object; and</claim-text>
+<claim-text>the light-receiving sensor, configured to generate a reference pulse signal based on one path of split laser pulses, generate a measurement pulse signal based on a reflected laser pulse of the other path, and superimpose the reference pulse signal and the measurement pulse signal to obtain a target pulse signal; the light-receiving sensor is further configured to apply a reverse bias to the second pulse signal to obtain a local oscillator pulse signal, and mix the local oscillator pulse signal with the target pulse signal to obtain the target intermediate frequency signal.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein a pulse peak voltage of the local oscillator pulse signal is greater than an avalanche breakdown voltage of the light-receiving sensor;
+<claim-text>a range of voltage differences between the pulse peak voltage and the avalanche breakdown voltage is 1V to 20V; or</claim-text>
+<claim-text>for each peak of the local oscillator pulse signal, a time range during which a corresponding voltage of the local oscillator pulse signal is greater than the avalanche breakdown voltage is 10 picoseconds to 10 nanoseconds.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the light-receiving sensor is a single light-receiving sensor or a light-receiving sensor array.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the light-receiving sensor is an Avalanche Photodiode sensor, a single Single-photon Avalanche Photodiode sensor, a Single-photon Avalanche Photodiode sensor array, a Silicon Photomultiplier sensor, or a Multi-pixel Photon Counter sensor.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>an intermediate frequency amplifier, configured to amplify the target intermediate frequency signal and then output the amplified target intermediate frequency signal to the processor.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising:
+<claim-text>a DC removal module, configured to output a target electrical signal to the intermediate frequency amplifier, wherein the target electrical signal is used to eliminate a DC component in the intermediate frequency amplifier;</claim-text>
+<claim-text>the intermediate frequency amplifier, configured to amplify the target intermediate frequency signal and then output the amplified target intermediate frequency signal to the processor under a condition of eliminating the DC component.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the processor is connected to the DC removal module, the processor is configured to obtain a DC component information of the intermediate frequency amplifier and control the DC removal module to output the target electrical signal based on the DC component information.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. A laser ranging apparatus according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>a signal detection unit, connected to the intermediate frequency amplifier and configured to detect a DC component information of the intermediate frequency amplifier.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. A rangefinder, comprising:
+<claim-text>a laser ranging apparatus, configured to measure a distance between the rangefinder and a measured object;</claim-text>
+<claim-text>an information output apparatus, connected to the laser ranging apparatus, and configured to output the distance between the rangefinder and the measured object;</claim-text>
+<claim-text>wherein the laser ranging apparatus comprises a processor, a first pulse generator, a second pulse generator, a mixer, and a laser transceiver module;</claim-text>
+<claim-text>the processor, configured to control the first pulse generator to output a first pulse signal and to control the second pulse generator to output a second pulse signal;</claim-text>
+<claim-text>the mixer, configured to combine the first pulse signal and the second pulse signal to generate a reference intermediate frequency signal;</claim-text>
+<claim-text>the laser transceiver module, configured to emit a laser pulse toward the measured object based on the first pulse signal, and obtain a target intermediate frequency signal for distance calculation based on the first pulse signal, the second pulse signal, and a measurement pulse signal returned from the measured object; and</claim-text>
+<claim-text>the processor, further configured to verify the target intermediate frequency signal according to the reference intermediate frequency signal; to control the first pulse generator to output a new first pulse signal and the second pulse generator to output a new second pulse signal when the target intermediate frequency signal is determined to overlap in phase with the reference intermediate frequency signal and fails a verification, updating the target intermediate frequency signal until the verification passes; to calculate a distance to the measured object by using the verified target intermediate frequency signal when the updated target intermediate frequency signal passes the verification.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. A ranging method, applied to a laser ranging apparatus, the laser ranging apparatus comprises a first pulse generator, a second pulse generator, a mixer, and a laser transceiver module, and the method comprises:
+<claim-text>controlling the first pulse generator to output a first pulse signal, and controlling the second pulse generator to output a second pulse signal;</claim-text>
+<claim-text>controlling the mixer to combine the first pulse signal and the second pulse signal to obtain a reference intermediate frequency signal;</claim-text>
+<claim-text>controlling the laser transceiver module to emit a laser pulse toward a measured object based on the first pulse signal, and obtaining a target intermediate frequency signal for distance calculation based on the first pulse signal, the second pulse signal, and a measurement pulse signal returned from the measured object; and</claim-text>
+<claim-text>verifying the target intermediate frequency signal according overlap in phase with to the reference intermediate frequency signal, controlling the first pulse generator to output a new first pulse signal and controlling the second pulse generator to output a new second pulse signal when the target intermediate frequency signal fails the verification, updating the target intermediate frequency signal until the verification passes; calculating a distance to the measured object by using the verified target intermediate frequency signal when the updated target intermediate frequency signal passes the verification.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. A ranging method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the controlling the mixer to combine the first pulse signal and the second pulse signal to obtain a reference intermediate frequency signal comprises:
+<claim-text>controlling the mixer to perform nonlinear mixing on the first pulse signal and the second pulse signal to obtain a reference intermediate frequency signal.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. A ranging method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the obtaining a target intermediate frequency signal for distance calculation based on the first pulse signal, the second pulse signal, and a measurement pulse signal returned from the measured object comprises:
+<claim-text>generating a reference pulse signal based on one path of split laser pulses, generating a measurement pulse signal based on a reflected laser pulse of the other path, and superimposing the reference pulse signal and the measurement pulse signal to obtain a target pulse signal; and</claim-text>
+<claim-text>applying a reverse bias to the second pulse signal to obtain a local oscillator pulse signal, and mixing the local oscillator pulse signal with the target pulse signal to obtain a target intermediate frequency signal.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. A ranging method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein a frequency range of the first pulse signal and the second pulse signal is 1 MHz to 250 MHz.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. A ranging method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein there is a frequency difference between the first pulse signal and the second pulse signal.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A ranging method according to <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein a range of the frequency difference between the first pulse signal and the second pulse signal is 500 Hz to 100 KHz.</claim-text>
+</claim>
+</claims>

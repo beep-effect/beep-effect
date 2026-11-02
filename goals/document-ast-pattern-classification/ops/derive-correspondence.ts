@@ -32,7 +32,7 @@ const { collectPoTaggedConstructors, getPoPattern, poConservation, poPatternAxes
 const SAMPLES = 40;
 
 const patternOf = (schema: S.Top): string => O.getOrElse(getPoPattern(schema), () => "?");
-const sample = <T>(schema: S.Codec<T, unknown>): ReadonlyArray<T> =>
+const sample = <Schema extends S.Constraint>(schema: Schema): ReadonlyArray<Schema["Type"]> =>
   Effect.runSync(Effect.orDie(Arbitrary.sampleEffect(Arbitrary.schema(schema), { count: SAMPLES, seed: 2026 })));
 
 type Edge = {

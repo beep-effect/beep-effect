@@ -85,7 +85,7 @@ export interface ConformanceHost<E> {
         readonly arguments?: Readonly<Record<string, string>> | undefined;
       }
     | undefined;
-  readonly registrations: Layer.Layer<never, E>;
+  readonly registrations: Layer.Layer<never, E, McpServer.McpServer>;
   readonly tester?: Vitest.MethodsNonLive | undefined;
   readonly tool: {
     readonly name: string;

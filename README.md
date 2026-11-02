@@ -286,15 +286,12 @@ Effect v4, so existing relative source links stay valid. `.repos/effect-tsgo`
 points to the tsgo child; `.repos/effect-workspace` points to the parent.
 Nothing under `.repos/` is part of the tracked tree.
 
-Use `graft ask "<q>" .repos/effect-workspace` to query across members, or
-`graft ask "<q>" .repos/effect` to narrow to Effect. The nightly 03:30
-`beep-refs-refresh` timer, installed by `beep refs install-timer`, refreshes
-the workspace with the `claude-opus-5` deep tier through CLIProxyAPI, reusing
-`$HOME/.config/beep-graft/env`. See the [timer runbook](docs/runbooks/systemd-timers.md).
+The nightly 03:30 `beep-refs-refresh` timer, installed by
+`beep refs install-timer`, fast-forwards each clean member on its configured
+branch. See the [timer runbook](docs/runbooks/systemd-timers.md).
 Agents may run `beep refs plan` and `beep refs install-timer --refresh` to
 inspect the plan or re-render an installed timer. Agents never run
-`beep refs refresh`, a fresh `beep refs install-timer`, `graft init`, or
-`graft build --deep`.
+`beep refs refresh` or a fresh `beep refs install-timer`.
 
 Do **not** add git subtrees under `.repos/`. Historical subtree imports
 still sit in git objects and poison naive `git log` author counts — those

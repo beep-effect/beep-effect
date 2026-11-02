@@ -1,0 +1,68 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A floating atomizer light speaker device, comprising:
+<claim-text>a housing configured to float on a water surface and comprising a spray nozzle oriented upward;</claim-text>
+<claim-text>an atomization assembly disposed in the housing and configured to convert liquid into mist, wherein the mist discharges through the spray nozzle;</claim-text>
+<claim-text>a sound-producing device disposed in the housing and configured to play audio;</claim-text>
+<claim-text>a power supply system disposed in the housing and electrically connected to the atomization assembly and the sound-producing device to supply power to the atomization assembly and the sound-producing device; and</claim-text>
+<claim-text>a control circuit board electrically connected to the power supply system and the sound-producing device, wherein the control circuit board comprises a wireless communication module, and the control circuit board is configured to receive wireless signals via the wireless communication module and control the sound-producing device to play audio based on received wireless signals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the housing comprises an upper shell, a middle shell, and a lower shell, wherein the lower shell is configured to float on water, and the upper shell, the middle shell, and the lower shell are connected sequentially.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the middle shell and the lower shell are connected to form a first accommodation chamber, the bottom of the lower shell comprises a plurality of first water inlets, the first water inlets are in communication with the first accommodation chamber, and the first water inlets are configured to allow water to flow into the first accommodation chamber.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, further comprising an inner shell disposed between the upper shell and the middle shell, wherein the inner shell and the middle shell are connected to form a second accommodation chamber; and the atomization assembly, the sound-producing device, and the power supply system are disposed in the second accommodation chamber.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the inner shell further comprises a first clamping groove, and the middle shell comprises a first connection part, the first connection part is configured to engage with the first clamping groove to connect the inner shell with the middle shell to form the second accommodation chamber.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein a first sealing member is disposed in the first clamping groove, and the first connection part is configured to engage with the first clamping groove and compress the first sealing member to enhance the sealing of the second accommodation chamber.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the inner shell comprises an atomization channel, the atomization assembly is disposed in the atomization channel, the middle shell comprises a fixing groove, one end of the atomization channel is inserted in the fixing groove to fixedly connect the atomization channel and the middle shell; a second sealing member is disposed in the fixing groove, and one end of the atomization channel is inserted in the fixing groove and compresses the second sealing member to enhance the sealing of the second accommodation chamber.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the atomization channel comprises a transverse plate, the transverse plate comprises a first mounting hole, and the atomization assembly is inserted in the first mounting hole to fixedly connect the atomization assembly and the middle shell.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the inner shell further comprises an atomization chamber, one end of the atomization assembly is disposed in the atomization chamber, the transverse plate further comprises a second water inlet, the second water inlet is in communication with the atomization chamber, and the second water inlet is configured to allow water to enter the atomization chamber for atomization by the atomization assembly into a mist state.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising a fan electrically connected to the power supply system, wherein a fan housing is disposed in the atomization chamber, the fan housing is connected to the inner shell, and the fan is disposed in the fan housing.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the spray nozzle is in communication with the atomization chamber, the fan housing comprises an air outlet, and the air outlet is inclined toward the inner wall of the atomization chamber to make wind driven by the fan generate a flowing airflow in the atomization chamber to drive mist discharge through the spray nozzle quickly.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the fan housing further comprises a first air inlet, the upper shell comprises a second air inlet, and the second air inlet is positioned corresponding to and in communication with the first air inlet to allow air to enter the fan housing.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the inner shell comprises a second mounting hole, the sound-producing device is disposed in the second mounting hole, and the second mounting hole is configured to allow sound from the sound-producing device to diffuse outward.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein a baffle is disposed on the inner wall of the upper shell, a fastener is disposed on the inner wall of the atomization chamber, and the baffle is configured to engage with the fastener to abut against the inner wall of the atomization chamber, thereby preventing mist in the atomization chamber from diffusing toward the sound-producing device.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein a second clamping groove is disposed around the periphery of the second mounting hole, the sound-producing device comprises a second connection part, and the second connection part is configured to engage with the second clamping groove to fixedly connect the sound-producing device and the second mounting hole.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the upper shell further comprises a plurality of sound holes, and the sound holes are positioned corresponding to the sound-producing device to protect the sound-producing device.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the power supply system comprises a battery, a charging port, and a control button, the middle shell comprises a mounting groove, the battery is disposed in the mounting groove, the battery, the charging port, and the control button are electrically connected to the control circuit board, the control button is disposed on the housing to control the floating atomizer light speaker device, and the charging port is configured to charge the battery; the floating atomizer light speaker device further comprises a waterproof plug covering the charging port to enhance sealing of the charging port.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, further comprising a first light-emitting assembly disposed in the second accommodation chamber, wherein the first light-emitting assembly is oriented downward and connected to the middle shell; the middle shell further comprises a plurality of first light-transmitting parts, the light-emitting position of the first light-emitting assembly corresponds to the positions of the first light-transmitting parts, the lower shell is made of transparent material, and light from the first light-emitting assembly is projected into water through the first light-transmitting parts and the lower shell.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising a second light-emitting assembly disposed in the atomization chamber and corresponding to the position of the spray nozzle, wherein the second light-emitting assembly is oriented upward, the floating atomizer light speaker device further comprises a second light-transmitting part covering the second light-emitting assembly.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The floating atomizer light speaker device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the control circuit board comprises a storage module, and the storage module is configured to store settings of the floating atomizer light speaker device before shutdown.</claim-text>
+</claim>
+</claims>

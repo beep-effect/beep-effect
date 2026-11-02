@@ -1,0 +1,102 @@
+{
+  "familyId": "14260199-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A fuel cell system with a cathode subsystem, said cathode subsystem comprising: a fuel cell stack; a cathode inlet line that provides cathode air to the fuel cell stack; a cathode exhaust line that exhausts a cathode exhaust gas out of the fuel cell stack; and a backpressure valve in the cathode exhaust line, said backpressure valve located downstream of a drip rail of the cathode exhaust line, wherein the drip rail includes a protrusion that prevents condensed water from building up near the backpressure valve, said drip rail further including a sump that collects drips of condensed water from the protrusion of the drip rail.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The system according to claim 1 further comprising a controller that is programmed to determine the temperature of the backpressure valve and to estimate the liquid water near the backpressure valve, said controller performing a freeze purge strategy if the temperature and liquid water near the backpressure valve reach predetermined threshold values.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The system according to claim 1 further comprising a by-pass line that selectively directs cathode inlet air to the cathode exhaust line using a by-pass valve, said by-pass valve located near the cathode inlet line in the by-pass line, said by-pass line including at least one turn downstream of the by-pass valve that prevents water in the cathode exhaust line from back splashing against the by-pass valve.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The system according to claim 1 further comprising a charge air cooler and a water vapor transfer unit in the cathode inlet line, wherein the charge air cooler is located in the cathode inlet line and feeds into the water vapor transfer unit in the cathode inlet line, said charge air cooler being cooled by a coolant loop, wherein a pressure sensor is positioned on the charge air cooler such that the pressure of the cathode inlet air is measured after the air is cooled by the charge air cooler and the pressure of the cathode inlet air is measured before the water vapor transfer unit adds water to the cathode inlet air.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The system according to claim 4 further comprising a drain that is directly below the water vapor transfer unit, said drain including a sump that drains liquid water from the water vapor transfer unit into the cathode exhaust line through an orifice.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The system according to claim 1 further comprising a screen that sits in the drain directly above the orifice, wherein a portion of the drain that includes the orifice and the screen extends into the cathode exhaust line such that heat from the cathode exhaust line is able to melt ice that may accumulate at the orifice of the drain.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The system according to claim 6 wherein the portion of the drain that is near the screen and the orifice is made of a thermally conductive material.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The system according to claim 1 wherein the backpressure valve is an inverted P-valve that is located in a hill region of the cathode exhaust line.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "A fuel cell system with a cathode subsystem, said cathode subsystem comprising: a fuel cell stack; a cathode inlet line that provides cathode inlet air to the fuel cell stack; a cathode exhaust line that exhausts a cathode exhaust gas out of the fuel cell stack; a water vapor transfer unit that transfers humidity from the cathode exhaust gas to the cathode inlet air; and a charge air cooler that is located in the cathode inlet line and that feeds into the water vapor transfer unit, said charge air cooler being cooled by a coolant loop, wherein a pressure sensor is positioned on the charge air cooler such that the pressure of the cathode inlet air is measured after the air is cooled by the charge air cooler and the pressure of the cathode inlet air is measured before the water vapor transfer unit adds water to the cathode inlet air.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The system according to claim 9 further comprising a drain that is directly below the water vapor transfer unit, said drain including a sump that drains liquid water from the water vapor transfer unit into the cathode exhaust line through an orifice.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The system according to claim 9 further comprising a screen that sits in the drain directly above the orifice, wherein a portion of the drain that includes the orifice and the screen extends into the cathode exhaust line such that heat from the cathode exhaust line is able to melt ice that may accumulate at the orifice of the drain.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The system according to claim 9 wherein at least the portion of the drain that includes the orifice and the screen is made of a thermally conductive material.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The system according to claim 9 further comprising a backpressure valve in the cathode exhaust line, said cathode backpressure valve being an inverted P-valve that is located in a hill region of the cathode exhaust line.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The system according to claim 9 further comprising a backpressure valve in the cathode exhaust line, said backpressure valve located downstream of a drip rail of the cathode exhaust line, said drip rail including a protrusion that prevents condensed water from building up near the backpressure valve, said drip rail further including a sump that collects drips of condensed water from the protrusion of the drip rail.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The system according to claim 9 further comprising a controller that is programmed to determine the temperature of a location of the cathode subsystem and that is programmed to estimate liquid water at the location of the cathode subsystem, said controller performing a freeze purge strategy if the temperature and the estimated liquid water at the location reach predetermined threshold values.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "A fuel cell system with a cathode subsystem, said cathode subsystem comprising: a fuel cell stack; a cathode inlet line that provides cathode inlet air to the fuel cell stack; a cathode exhaust line that exhausts a cathode exhaust gas out of the fuel cell stack; and a by-pass line that selectively directs cathode inlet air to the cathode exhaust line using a by-pass valve, said by-pass valve located near the cathode inlet line in the by-pass line, said by-pass line including at least one turn downstream of the by-pass valve that prevents water in the cathode exhaust line from back splashing against the by-pass valve.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The system according to claim 16 further comprising a backpressure valve in the cathode exhaust line, said backpressure valve being an inverted P-valve that is located in a hill region of the cathode exhaust line.",
+      "sourceXmlParentClaimNumbers": [16]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The system according to claim 16 further comprising a backpressure valve in the cathode exhaust line, said backpressure valve located downstream of a drip rail of the cathode exhaust line, said drip rail including a protrusion that prevents condensed water from building up near the backpressure valve, said drip rail further comprising a sump that collects drips of water from the protrusion of the drip rail.",
+      "sourceXmlParentClaimNumbers": [16]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The system according to claim 16 further comprising a controller that is programmed to determine the temperature of a location of the cathode subsystem and to estimate water at the location of the cathode subsystem, said controller performing a freeze purge strategy if the temperature and the estimated water at the location reach predetermined threshold values.",
+      "sourceXmlParentClaimNumbers": [16]
+    }
+  ]
+}

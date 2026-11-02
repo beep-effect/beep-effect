@@ -1,0 +1,96 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An object discrimination method using an ultra-low magnetic field nuclear magnetic resonance (NMR), the method comprising:
+<claim-text>measuring the respective spin-lattice relaxation times T<sub>1 </sub>at a plurality of strengths of prepolarization magnetic fields with respect to a measurement target; and</claim-text>
+<claim-text>classifying the measurement target using the spin-lattice relaxation times.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method as set forth in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein measuring the respective spin-lattice relaxation times comprises:
+<claim-text>setting a pulse sequence suitable for individual relaxation time characteristics of the measurement target;</claim-text>
+<claim-text>applying a prepolarization magnetic field and a readout magnetic field;</claim-text>
+<claim-text>measuring a free induction decay (FID) signal;</claim-text>
+<claim-text>measuring the signal intensity or line width of the resonance frequency of a nucleus by Fourier-transform of the FID signal;</claim-text>
+<claim-text>changing the time interval of applying the prepolarization magnetic field;</claim-text>
+<claim-text>obtaining the spin-lattice relaxation time by fitting the signal intensity variation depending on the time interval of applying the prepolarization magnetic field; and</claim-text>
+<claim-text>constructing the first parameter vector with obtaining the respective spin-lattice relaxation times by repeatedly performing the above operations on a plurality of changed strengths of prepolarization magnetic fields,</claim-text>
+<claim-text>wherein the variety of the measurement target is identified using the first parameter vector.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method as set forth in <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>measuring the spin-spin relaxation time T<sub>2 </sub>of the measurement target using a gradient echo signal; and</claim-text>
+<claim-text>classifying the measurement target using the spin-spin relaxation time.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method as set forth in <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein measuring the spin-spin relaxation time of the measurement target comprises:
+<claim-text>setting a pulse sequence suitable for individual relaxation time characteristics of the measurement target;</claim-text>
+<claim-text>applying a prepolarization magnetic field and a readout magnetic field;</claim-text>
+<claim-text>successively applying a positive gradient magnetic field and a negative gradient magnetic field;</claim-text>
+<claim-text>measuring a gradient echo signal;</claim-text>
+<claim-text>measuring the signal intensity or line width of the resonance frequency of a nucleus by Fourier-transform of the gradient echo signal; and</claim-text>
+<claim-text>constructing the second parameter vector with a line width or a reciprocal of the line width depending on the resonance frequency of a nucleus,</claim-text>
+<claim-text>wherein the variety of the measurement target is identified using the second parameter vector.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. An object discrimination method using an ultra-low magnetic field nuclear magnetic resonance (NMR), the method comprising:
+<claim-text>measuring the signal line width of the resonance frequency of a nucleus by Fourier-transforming the measured free induction decay (FID) signal while changing the strength of a readout magnetic field to a measurement target; and</claim-text>
+<claim-text>classifying the measurement target using the signal line width of the resonance frequency of a nucleus.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method as set forth in <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein measuring the signal line width comprises:
+<claim-text>setting a pulse sequence suitable for individual relaxation time characteristics of the measurement target;</claim-text>
+<claim-text>applying a prepolarization magnetic field;</claim-text>
+<claim-text>applying the readout magnetic field;</claim-text>
+<claim-text>measuring a free induction decay (FID) signal;</claim-text>
+<claim-text>measuring the signal line width of the resonance frequency of a nucleus by Fourier-transform of the FID signal;</claim-text>
+<claim-text>changing the strength of the readout magnetic field; and</claim-text>
+<claim-text>constructing the third parameter vector with the signal line width of the resonance frequency of a nucleus depending on the strength of the readout magnetic field by repeatedly measuring the above operations,</claim-text>
+<claim-text>wherein the variety of the measurement target is identified using the third parameter vector.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. An object discrimination method using an ultra-low magnetic field nuclear magnetic resonance (NMR), the method comprising:
+<claim-text>constructing the first parameter vector with obtaining the respective spin-lattice relaxation time with respect to a plurality of strengths of prepolarization magnetic fields;</claim-text>
+<claim-text>constructing the second parameter vector with a line width or a reciprocal of the line width depending on the resonance frequency of a nucleus by using a gradient echo signal;</claim-text>
+<claim-text>constructing the third parameter vector with values of the signal line width of the resonance frequency of a nucleus depending on the strength of a readout magnetic field;</claim-text>
+<claim-text>constructing a new parameter vector with combining components of the first to third parameter vectors; and</claim-text>
+<claim-text>identifying the variety of a measurement target using the new parameter vector.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. An object discrimination method using an ultra-low magnetic field nuclear magnetic resonance (NMR), the method comprising:
+<claim-text>constructing the first parameter vector with obtaining the respective spin-lattice relaxation times with respect to a plurality of strengths of prepolarization magnetic fields;</claim-text>
+<claim-text>constructing the second parameter vector with a line width or a reciprocal of the line width depending on the resonance frequency of a nucleus by using a gradient echo signal;</claim-text>
+<claim-text>constructing the third parameter vector with values of the signal line width of the resonance frequency of a nucleus depending on the strength of a readout magnetic field;</claim-text>
+<claim-text>constructing a new parameter vector with combining components of the first to third parameter vectors;</claim-text>
+<claim-text>collecting new parameter vectors for respective materials from repeating measurements for various materials desired to be discriminated;</claim-text>
+<claim-text>reducing a parameter vector dimension by</claim-text>
+<claim-text>finding out an effective principal vector component for classification with applying support vector machine (SVM) or principal component analysis (PCA) to the collected new parameter vectors and</claim-text>
+<claim-text>projecting the new parameter vector into the principal vector component; and</claim-text>
+<claim-text>identifying the variety of the material using the component of the reduced parameter vector dimension.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. An object discrimination apparatus using an ultra-low magnetic field nuclear magnetic resonance (NMR), comprising:
+<claim-text>a Dewar containing a low-temperature liquid refrigerant;</claim-text>
+<claim-text>a prepolarization coil prepolarizing a measurement target;</claim-text>
+<claim-text>a prepolarization coil driver generating a prepolarization magnetic field Bp by intermittently applying current to the prepolarization coil;</claim-text>
+<claim-text>a sensor unit measuring a nuclear magnetic resonance (NMR) signal of the measurement target to which the prepolarization magnetic field Bp is applied by the prepolarization coil;</claim-text>
+<claim-text>a readout coil applying a readout magnetic field to the measurement target; and</claim-text>
+<claim-text>a readout magnetic field power source unit applying the readout magnetic field to the measurement target by applying current to the readout coil, and</claim-text>
+</claim-text>
+<claim-text>wherein the sensor unit measures the respective spin-lattice relaxation times T<sub>1 </sub>of the measurement target at a plurality of strengths of prepolarization magnetic fields and classifies the measurement target using the spin-lattice relaxation times T1.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The apparatus as set forth in <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising:
+<claim-text>a gradient magnetic field coil applying a gradient magnetic field to the measurement target;</claim-text>
+<claim-text>a gradient magnetic field driving unit supplying current to the gradient magnetic field coil;</claim-text>
+<claim-text>a gradient magnetic field power source unit supplying a power source to the gradient magnetic field driving unit; and</claim-text>
+<claim-text>a pulse sequence generator providing a pulse sequence to the prepolarization magnetic field driving unit, the readout magnetic field power source unit, and the gradient magnetic field power source unit. </claim-text>
+</claim-text>
+</claim>
+</claims>

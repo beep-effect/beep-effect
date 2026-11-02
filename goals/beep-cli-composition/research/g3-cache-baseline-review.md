@@ -1,0 +1,29 @@
+# Cache baseline review: G3 lazy dispatch reseal (2026-10-31)
+
+Reviewer: Claude Opus 5.5 (G3 lane, `claude/beep-lazy-dispatch-369e54`).
+
+`beep lint policy-fingerprint --write` resealed seven generated tasks under
+subject `//`. These are the only configuration-drift BLOCKs in
+`beep cache audit`. Each input change, compared with `main` at `3fbb6e614b`
+(after #2376 retired Graft):
+
+| Task | Inputs added | Inputs removed | Cause |
+| --- | --- | --- | --- |
+| `//#lint:policy-fingerprint:shared` | `packages/tooling/tool/cli/src/internal/dispatch/Dispatch.manifest.ts`, `Dispatch.schemas.ts`, `Dispatch.ts` | none | This PR: `bin-main.ts` now imports the lazy dispatch modules, which are part of the shared root seal. |
+| `//#lint:policy-fingerprint:goals-doctor` | none | `packages/tooling/tool/cli/src/internal/GlobPattern.ts` | Inherited: #2381 (`0cb11741db`) deleted the file before #2390 sealed. |
+| `//#lint:policy-fingerprint:goals-index` | none | same | same |
+| `//#lint:policy-fingerprint:knowledge` | none | same | same |
+| `//#lint:policy-fingerprint:lint-deprecated-apis` | none | same | same |
+| `//#lint:policy-fingerprint:lint-roadmap-refs` | none | same | same |
+| `//#lint:policy-fingerprint:quality` | `packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocNodes.ts` | `GlobPattern.ts`, `packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts`, `packages/foundation/modeling/schema/src/UnitInterval.ts` | Inherited: #2381 moved the docgen quality subjects onto `JsDocNodes.ts`. #2376 deleted the Graft group; `UnitInterval.ts` was reached only through `Graft.schemas.ts`. |
+
+No task, flag or edge outside these input lists changed. No qualification is
+granted, and no exception row or standards debt is added. Scope is unchanged.
+
+The header does change from `main`. Before #2376 (`3fbb6e614b`), `main`
+recorded `profile: local-linux-x64-bun1.4.4` and `epoch: qualification-v3`.
+#2376 re-recorded the file with `local-linux-x64-bun1.4.2` and
+`qualification-v2`, which do not match the repository's pinned runtime
+(`packageManager: bun@1.4.4`, `.bun-version` `1.4.4`). This request records
+`bun1.4.4` / `qualification-v3` again, as it was before #2376 and as every
+other lane on this host measures it.

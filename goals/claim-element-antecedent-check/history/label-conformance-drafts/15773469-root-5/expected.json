@@ -1,0 +1,1574 @@
+[
+  {
+    "claimNumber": 5,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "5",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 199,
+          "quote": "Sub-module and device for varying/adjusting the height of the injector support plate of vaccine/nutrients for suitability of the needle course/egg size ratio applied in a substance application module"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 54,
+              "quote": "the height"
+            },
+            "determiner": "the",
+            "head": "height"
+          },
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 84,
+              "quote": "the injector support plate"
+            },
+            "determiner": "the",
+            "head": "injector support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 157,
+              "quote": "the needle course/egg size ratio"
+            },
+            "determiner": "the",
+            "head": "needle course egg size ratio"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 199,
+              "quote": "a substance application module"
+            },
+            "determiner": "a",
+            "head": "substance application module"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 209,
+          "endChar": 293,
+          "quote": "the improved substance application process is characterized by the sequential steps:"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 209,
+              "endChar": 251,
+              "quote": "the improved substance application process"
+            },
+            "determiner": "the",
+            "head": "improved substance application process"
+          },
+          {
+            "anchor": {
+              "startChar": 272,
+              "endChar": 292,
+              "quote": "the sequential steps"
+            },
+            "determiner": "the",
+            "head": "sequential steps"
+          }
+        ]
+      },
+      {
+        "path": "5.a.i",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 294,
+          "endChar": 747,
+          "quote": "Step 1, the locking device [4] present on the support plate [2] is not actuated, creating a condition wherein the plurality of injectors [3] with needle [3a] is released, wherein the management module [m1] sends a signal for the vertical downward displacement of the support plate [2] assembly with locking device [4] and plurality of injectors [3], this downward movement being managed by the application software/PLC [d2] of the management module [m2]"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 302,
+              "endChar": 320,
+              "quote": "the locking device"
+            },
+            "determiner": "the",
+            "head": "locking device"
+          },
+          {
+            "anchor": {
+              "startChar": 336,
+              "endChar": 353,
+              "quote": "the support plate"
+            },
+            "determiner": "the",
+            "head": "support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 384,
+              "endChar": 395,
+              "quote": "a condition"
+            },
+            "determiner": "a",
+            "head": "condition"
+          },
+          {
+            "anchor": {
+              "startChar": 404,
+              "endChar": 430,
+              "quote": "the plurality of injectors"
+            },
+            "determiner": "the",
+            "head": "injectors"
+          },
+          {
+            "anchor": {
+              "startChar": 473,
+              "endChar": 494,
+              "quote": "the management module"
+            },
+            "determiner": "the",
+            "head": "management module"
+          },
+          {
+            "anchor": {
+              "startChar": 506,
+              "endChar": 514,
+              "quote": "a signal"
+            },
+            "determiner": "a",
+            "head": "signal"
+          },
+          {
+            "anchor": {
+              "startChar": 519,
+              "endChar": 553,
+              "quote": "the vertical downward displacement"
+            },
+            "determiner": "the",
+            "head": "vertical downward displacement"
+          },
+          {
+            "anchor": {
+              "startChar": 557,
+              "endChar": 574,
+              "quote": "the support plate"
+            },
+            "determiner": "the",
+            "head": "support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 616,
+              "endChar": 638,
+              "quote": "plurality of injectors"
+            },
+            "determiner": "plurality-of",
+            "head": "injectors"
+          },
+          {
+            "anchor": {
+              "startChar": 684,
+              "endChar": 712,
+              "quote": "the application software/PLC"
+            },
+            "determiner": "the",
+            "head": "application software plc"
+          },
+          {
+            "anchor": {
+              "startChar": 721,
+              "endChar": 742,
+              "quote": "the management module"
+            },
+            "determiner": "the",
+            "head": "management module"
+          }
+        ]
+      },
+      {
+        "path": "5.a.ii",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 749,
+          "endChar": 1276,
+          "quote": "Step 2, the vertical downward displacement of the support plate [2] assembly with locking device [4] and plurality of injectors [3], managed by the application software/PLC [d2] of the management module [m2] occurs until the contact moment is established between the injector [3]/eggs [Ov], once this contact is established, a signal is sent to the application software/PLC [d2] of the management module [m1], which, in turn, ceases the displacement of the support plate [2] and, consequently, of the plurality of injectors [3]"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 757,
+              "endChar": 791,
+              "quote": "the vertical downward displacement"
+            },
+            "determiner": "the",
+            "head": "vertical downward displacement"
+          },
+          {
+            "anchor": {
+              "startChar": 795,
+              "endChar": 812,
+              "quote": "the support plate"
+            },
+            "determiner": "the",
+            "head": "support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 854,
+              "endChar": 876,
+              "quote": "plurality of injectors"
+            },
+            "determiner": "plurality-of",
+            "head": "injectors"
+          },
+          {
+            "anchor": {
+              "startChar": 893,
+              "endChar": 921,
+              "quote": "the application software/PLC"
+            },
+            "determiner": "the",
+            "head": "application software plc"
+          },
+          {
+            "anchor": {
+              "startChar": 930,
+              "endChar": 951,
+              "quote": "the management module"
+            },
+            "determiner": "the",
+            "head": "management module"
+          },
+          {
+            "anchor": {
+              "startChar": 970,
+              "endChar": 988,
+              "quote": "the contact moment"
+            },
+            "determiner": "the",
+            "head": "contact moment"
+          },
+          {
+            "anchor": {
+              "startChar": 1012,
+              "endChar": 1024,
+              "quote": "the injector"
+            },
+            "determiner": "the",
+            "head": "injector"
+          },
+          {
+            "anchor": {
+              "startChar": 1074,
+              "endChar": 1082,
+              "quote": "a signal"
+            },
+            "determiner": "a",
+            "head": "signal"
+          },
+          {
+            "anchor": {
+              "startChar": 1094,
+              "endChar": 1122,
+              "quote": "the application software/PLC"
+            },
+            "determiner": "the",
+            "head": "application software plc"
+          },
+          {
+            "anchor": {
+              "startChar": 1131,
+              "endChar": 1152,
+              "quote": "the management module"
+            },
+            "determiner": "the",
+            "head": "management module"
+          },
+          {
+            "anchor": {
+              "startChar": 1182,
+              "endChar": 1198,
+              "quote": "the displacement"
+            },
+            "determiner": "the",
+            "head": "displacement"
+          },
+          {
+            "anchor": {
+              "startChar": 1202,
+              "endChar": 1219,
+              "quote": "the support plate"
+            },
+            "determiner": "the",
+            "head": "support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 1246,
+              "endChar": 1272,
+              "quote": "the plurality of injectors"
+            },
+            "determiner": "the",
+            "head": "injectors"
+          }
+        ]
+      },
+      {
+        "path": "5.a.iii",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 1278,
+          "endChar": 1613,
+          "quote": "Step 3, upon cessation of the downward movement of the support plate [2] assembly and injectors [3], the same application software/PLC [d2] of the management module [m2] sends a signal by actuating the locking device [4], where the inflatable elements are inflated so that each injector [3] is fixed in the previously obtained position"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1304,
+              "endChar": 1325,
+              "quote": "the downward movement"
+            },
+            "determiner": "the",
+            "head": "downward movement"
+          },
+          {
+            "anchor": {
+              "startChar": 1329,
+              "endChar": 1346,
+              "quote": "the support plate"
+            },
+            "determiner": "the",
+            "head": "support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 1379,
+              "endChar": 1412,
+              "quote": "the same application software/PLC"
+            },
+            "determiner": "the",
+            "head": "same application software plc"
+          },
+          {
+            "anchor": {
+              "startChar": 1421,
+              "endChar": 1442,
+              "quote": "the management module"
+            },
+            "determiner": "the",
+            "head": "management module"
+          },
+          {
+            "anchor": {
+              "startChar": 1454,
+              "endChar": 1462,
+              "quote": "a signal"
+            },
+            "determiner": "a",
+            "head": "signal"
+          },
+          {
+            "anchor": {
+              "startChar": 1476,
+              "endChar": 1494,
+              "quote": "the locking device"
+            },
+            "determiner": "the",
+            "head": "locking device"
+          },
+          {
+            "anchor": {
+              "startChar": 1506,
+              "endChar": 1529,
+              "quote": "the inflatable elements"
+            },
+            "determiner": "the",
+            "head": "inflatable elements"
+          },
+          {
+            "anchor": {
+              "startChar": 1581,
+              "endChar": 1595,
+              "quote": "the previously"
+            },
+            "determiner": "the",
+            "head": "previously"
+          }
+        ]
+      },
+      {
+        "path": "5.a.iv",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 1615,
+          "endChar": 1834,
+          "quote": "Step 4, once the injectors [3] are locked, the application software/PLC [d2] of the management module [m2] receives a zero offset height signal [Hz] and calculates the vertical displacement [ΔH] of the support plate [2]"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1628,
+              "endChar": 1641,
+              "quote": "the injectors"
+            },
+            "determiner": "the",
+            "head": "injectors"
+          },
+          {
+            "anchor": {
+              "startChar": 1658,
+              "endChar": 1686,
+              "quote": "the application software/PLC"
+            },
+            "determiner": "the",
+            "head": "application software plc"
+          },
+          {
+            "anchor": {
+              "startChar": 1695,
+              "endChar": 1716,
+              "quote": "the management module"
+            },
+            "determiner": "the",
+            "head": "management module"
+          },
+          {
+            "anchor": {
+              "startChar": 1731,
+              "endChar": 1758,
+              "quote": "a zero offset height signal"
+            },
+            "determiner": "a",
+            "head": "zero offset height signal"
+          },
+          {
+            "anchor": {
+              "startChar": 1779,
+              "endChar": 1804,
+              "quote": "the vertical displacement"
+            },
+            "determiner": "the",
+            "head": "vertical displacement"
+          },
+          {
+            "anchor": {
+              "startChar": 1813,
+              "endChar": 1830,
+              "quote": "the support plate"
+            },
+            "determiner": "the",
+            "head": "support plate"
+          }
+        ]
+      },
+      {
+        "path": "5.a.v",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 1836,
+          "endChar": 2157,
+          "quote": "Step 5, the support plate [2] by means of the actuator component [6] is moved upwards to the end position of the plate [H], where the displacements of the support plate [2], converge to a ratio of distance from the lower end of the injectors [3] to the upper end of the outer surface of the eggshell [Ov], defined as [ΔD]"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1844,
+              "endChar": 1861,
+              "quote": "the support plate"
+            },
+            "determiner": "the",
+            "head": "support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 1878,
+              "endChar": 1900,
+              "quote": "the actuator component"
+            },
+            "determiner": "the",
+            "head": "actuator component"
+          },
+          {
+            "anchor": {
+              "startChar": 1925,
+              "endChar": 1941,
+              "quote": "the end position"
+            },
+            "determiner": "the",
+            "head": "end position"
+          },
+          {
+            "anchor": {
+              "startChar": 1945,
+              "endChar": 1954,
+              "quote": "the plate"
+            },
+            "determiner": "the",
+            "head": "plate"
+          },
+          {
+            "anchor": {
+              "startChar": 1966,
+              "endChar": 1983,
+              "quote": "the displacements"
+            },
+            "determiner": "the",
+            "head": "displacements"
+          },
+          {
+            "anchor": {
+              "startChar": 1987,
+              "endChar": 2004,
+              "quote": "the support plate"
+            },
+            "determiner": "the",
+            "head": "support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 2022,
+              "endChar": 2029,
+              "quote": "a ratio"
+            },
+            "determiner": "a",
+            "head": "ratio"
+          },
+          {
+            "anchor": {
+              "startChar": 2047,
+              "endChar": 2060,
+              "quote": "the lower end"
+            },
+            "determiner": "the",
+            "head": "lower end"
+          },
+          {
+            "anchor": {
+              "startChar": 2064,
+              "endChar": 2077,
+              "quote": "the injectors"
+            },
+            "determiner": "the",
+            "head": "injectors"
+          },
+          {
+            "anchor": {
+              "startChar": 2085,
+              "endChar": 2098,
+              "quote": "the upper end"
+            },
+            "determiner": "the",
+            "head": "upper end"
+          },
+          {
+            "anchor": {
+              "startChar": 2102,
+              "endChar": 2119,
+              "quote": "the outer surface"
+            },
+            "determiner": "the",
+            "head": "outer surface"
+          },
+          {
+            "anchor": {
+              "startChar": 2123,
+              "endChar": 2135,
+              "quote": "the eggshell"
+            },
+            "determiner": "the",
+            "head": "eggshell"
+          }
+        ]
+      },
+      {
+        "path": "5.a.vi",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 2159,
+          "endChar": 2495,
+          "quote": "Step 6, the application module/PLC [d2] of the management module [m2] sends a signal to the injector needle feed sub-module [m33], the needles [3a] of each injector [3] advancing to the interior of the egg [Ov], always in full course [Xt] the particularity of this procedure being that the advance of the needles [3a] is in total course"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 2167,
+              "endChar": 2193,
+              "quote": "the application module/PLC"
+            },
+            "determiner": "the",
+            "head": "application module plc"
+          },
+          {
+            "anchor": {
+              "startChar": 2202,
+              "endChar": 2223,
+              "quote": "the management module"
+            },
+            "determiner": "the",
+            "head": "management module"
+          },
+          {
+            "anchor": {
+              "startChar": 2235,
+              "endChar": 2243,
+              "quote": "a signal"
+            },
+            "determiner": "a",
+            "head": "signal"
+          },
+          {
+            "anchor": {
+              "startChar": 2247,
+              "endChar": 2282,
+              "quote": "the injector needle feed sub-module"
+            },
+            "determiner": "the",
+            "head": "injector needle feed sub-module"
+          },
+          {
+            "anchor": {
+              "startChar": 2290,
+              "endChar": 2301,
+              "quote": "the needles"
+            },
+            "determiner": "the",
+            "head": "needles"
+          },
+          {
+            "anchor": {
+              "startChar": 2341,
+              "endChar": 2353,
+              "quote": "the interior"
+            },
+            "determiner": "the",
+            "head": "interior"
+          },
+          {
+            "anchor": {
+              "startChar": 2357,
+              "endChar": 2364,
+              "quote": "the egg"
+            },
+            "determiner": "the",
+            "head": "egg"
+          },
+          {
+            "anchor": {
+              "startChar": 2398,
+              "endChar": 2415,
+              "quote": "the particularity"
+            },
+            "determiner": "the",
+            "head": "particularity"
+          },
+          {
+            "anchor": {
+              "startChar": 2445,
+              "endChar": 2456,
+              "quote": "the advance"
+            },
+            "determiner": "the",
+            "head": "advance"
+          },
+          {
+            "anchor": {
+              "startChar": 2460,
+              "endChar": 2471,
+              "quote": "the needles"
+            },
+            "determiner": "the",
+            "head": "needles"
+          }
+        ]
+      },
+      {
+        "path": "5.a.vii",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 2497,
+          "endChar": 2873,
+          "quote": "Step 7 as soon as the needles [3a] of the injectors [3] reach their end course, a “end of needles course” signal is sent to the application software/PLC [d2] of the management module [m2] which releases the activation signal of the substance injection sub-module [m34], the substance being released in the region of the amniotic fluid [O 4], especially in the useful area [Au]"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 2515,
+              "endChar": 2526,
+              "quote": "the needles"
+            },
+            "determiner": "the",
+            "head": "needles"
+          },
+          {
+            "anchor": {
+              "startChar": 2535,
+              "endChar": 2548,
+              "quote": "the injectors"
+            },
+            "determiner": "the",
+            "head": "injectors"
+          },
+          {
+            "anchor": {
+              "startChar": 2559,
+              "endChar": 2575,
+              "quote": "their end course"
+            },
+            "determiner": "bare",
+            "head": "end course"
+          },
+          {
+            "anchor": {
+              "startChar": 2577,
+              "endChar": 2583,
+              "quote": "a “end"
+            },
+            "determiner": "a",
+            "head": "end"
+          },
+          {
+            "anchor": {
+              "startChar": 2621,
+              "endChar": 2649,
+              "quote": "the application software/PLC"
+            },
+            "determiner": "the",
+            "head": "application software plc"
+          },
+          {
+            "anchor": {
+              "startChar": 2658,
+              "endChar": 2679,
+              "quote": "the management module"
+            },
+            "determiner": "the",
+            "head": "management module"
+          },
+          {
+            "anchor": {
+              "startChar": 2700,
+              "endChar": 2721,
+              "quote": "the activation signal"
+            },
+            "determiner": "the",
+            "head": "activation signal"
+          },
+          {
+            "anchor": {
+              "startChar": 2725,
+              "endChar": 2759,
+              "quote": "the substance injection sub-module"
+            },
+            "determiner": "the",
+            "head": "substance injection sub-module"
+          },
+          {
+            "anchor": {
+              "startChar": 2767,
+              "endChar": 2780,
+              "quote": "the substance"
+            },
+            "determiner": "the",
+            "head": "substance"
+          },
+          {
+            "anchor": {
+              "startChar": 2799,
+              "endChar": 2809,
+              "quote": "the region"
+            },
+            "determiner": "the",
+            "head": "region"
+          },
+          {
+            "anchor": {
+              "startChar": 2813,
+              "endChar": 2831,
+              "quote": "the amniotic fluid"
+            },
+            "determiner": "the",
+            "head": "amniotic fluid"
+          },
+          {
+            "anchor": {
+              "startChar": 2853,
+              "endChar": 2868,
+              "quote": "the useful area"
+            },
+            "determiner": "the",
+            "head": "useful area"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.i",
+        "parent": "5.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.ii",
+        "parent": "5.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.iii",
+        "parent": "5.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.iv",
+        "parent": "5.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.v",
+        "parent": "5.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.vi",
+        "parent": "5.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.vii",
+        "parent": "5.a"
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "6",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 221,
+          "quote": "Sub-module and device for varying/adjusting the height of the injector support plate of vaccine/nutrients for suitability of the needle course/egg size ratio applied in a substance application module, according to claim 5"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 54,
+              "quote": "the height"
+            },
+            "determiner": "the",
+            "head": "height"
+          },
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 84,
+              "quote": "the injector support plate"
+            },
+            "determiner": "the",
+            "head": "injector support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 157,
+              "quote": "the needle course/egg size ratio"
+            },
+            "determiner": "the",
+            "head": "needle course egg size ratio"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 199,
+              "quote": "a substance application module"
+            },
+            "determiner": "a",
+            "head": "substance application module"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 231,
+          "endChar": 352,
+          "quote": "in Step 4, the zero point height [Hz] is characterized in that it is zero point height [Hzg] for batch of large eggs [Og]"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 242,
+              "endChar": 263,
+              "quote": "the zero point height"
+            },
+            "determiner": "the",
+            "head": "zero point height"
+          }
+        ]
+      },
+      {
+        "path": "6.b",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 354,
+          "endChar": 463,
+          "quote": "zero point height [Hzm] for batch of medium eggs [Om] or zero point height [Hzp] for batch of small eggs [Op]"
+        },
+        "terms": []
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.b",
+        "parent": "6"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "5"
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "7",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 220,
+          "quote": "Sub-module and device for varying/adjusting the height of the injector support plate of vaccine/nutrients for suitability of the needle course/egg size ratio applied in a substance application module according to claim 5"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 54,
+              "quote": "the height"
+            },
+            "determiner": "the",
+            "head": "height"
+          },
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 84,
+              "quote": "the injector support plate"
+            },
+            "determiner": "the",
+            "head": "injector support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 157,
+              "quote": "the needle course/egg size ratio"
+            },
+            "determiner": "the",
+            "head": "needle course egg size ratio"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 199,
+              "quote": "a substance application module"
+            },
+            "determiner": "a",
+            "head": "substance application module"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 230,
+          "endChar": 393,
+          "quote": "in Step 4, where the vertical displacement [ΔH] of the support plate [2], is characterized in that it is a vertical displacement [ΔHg] for batch of large eggs [Og]"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 247,
+              "endChar": 272,
+              "quote": "the vertical displacement"
+            },
+            "determiner": "the",
+            "head": "vertical displacement"
+          },
+          {
+            "anchor": {
+              "startChar": 281,
+              "endChar": 298,
+              "quote": "the support plate"
+            },
+            "determiner": "the",
+            "head": "support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 335,
+              "endChar": 358,
+              "quote": "a vertical displacement"
+            },
+            "determiner": "a",
+            "head": "vertical displacement"
+          }
+        ]
+      },
+      {
+        "path": "7.b",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 395,
+          "endChar": 512,
+          "quote": "vertical displacement [ΔHm] for batch of medium eggs [Om] or vertical displacement [ΔHp] for batch of small eggs [Op]"
+        },
+        "terms": []
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "part-of",
+        "child": "7.b",
+        "parent": "7"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "5"
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "8",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 220,
+          "quote": "Sub-module and device for varying/adjusting the height of the injector support plate of vaccine/nutrients for suitability of the needle course/egg size ratio applied in a substance application module according to claim 5"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 54,
+              "quote": "the height"
+            },
+            "determiner": "the",
+            "head": "height"
+          },
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 84,
+              "quote": "the injector support plate"
+            },
+            "determiner": "the",
+            "head": "injector support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 157,
+              "quote": "the needle course/egg size ratio"
+            },
+            "determiner": "the",
+            "head": "needle course egg size ratio"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 199,
+              "quote": "a substance application module"
+            },
+            "determiner": "a",
+            "head": "substance application module"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 230,
+          "endChar": 361,
+          "quote": "in Step 5, the end position of the plate [H] is characterized in that it is an end plate position [Hg] for batch of large eggs [Og]"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 241,
+              "endChar": 257,
+              "quote": "the end position"
+            },
+            "determiner": "the",
+            "head": "end position"
+          },
+          {
+            "anchor": {
+              "startChar": 261,
+              "endChar": 270,
+              "quote": "the plate"
+            },
+            "determiner": "the",
+            "head": "plate"
+          },
+          {
+            "anchor": {
+              "startChar": 306,
+              "endChar": 327,
+              "quote": "an end plate position"
+            },
+            "determiner": "an",
+            "head": "end plate position"
+          }
+        ]
+      },
+      {
+        "path": "8.b",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 363,
+          "endChar": 472,
+          "quote": "end plate position [Hm] for batch of medium eggs [Om] or end plate position [Hp] for batch of small eggs [Op]"
+        },
+        "terms": []
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "part-of",
+        "child": "8.b",
+        "parent": "8"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "5"
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "9",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 220,
+          "quote": "Sub-module and device for varying/adjusting the height of the injector support plate of vaccine/nutrients for suitability of the needle course/egg size ratio applied in a substance application module according to claim 5"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 54,
+              "quote": "the height"
+            },
+            "determiner": "the",
+            "head": "height"
+          },
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 84,
+              "quote": "the injector support plate"
+            },
+            "determiner": "the",
+            "head": "injector support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 157,
+              "quote": "the needle course/egg size ratio"
+            },
+            "determiner": "the",
+            "head": "needle course egg size ratio"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 199,
+              "quote": "a substance application module"
+            },
+            "determiner": "a",
+            "head": "substance application module"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 230,
+          "endChar": 446,
+          "quote": "in Step 5, where the distance ratio of the lower end of the injectors [3] to the upper end of the outer surface of the eggshell [Ov], defined as [ΔD] is characterized in that it is [ΔDg], for batch of large eggs [Og]"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 247,
+              "endChar": 265,
+              "quote": "the distance ratio"
+            },
+            "determiner": "the",
+            "head": "distance ratio"
+          },
+          {
+            "anchor": {
+              "startChar": 269,
+              "endChar": 282,
+              "quote": "the lower end"
+            },
+            "determiner": "the",
+            "head": "lower end"
+          },
+          {
+            "anchor": {
+              "startChar": 286,
+              "endChar": 299,
+              "quote": "the injectors"
+            },
+            "determiner": "the",
+            "head": "injectors"
+          },
+          {
+            "anchor": {
+              "startChar": 307,
+              "endChar": 320,
+              "quote": "the upper end"
+            },
+            "determiner": "the",
+            "head": "upper end"
+          },
+          {
+            "anchor": {
+              "startChar": 324,
+              "endChar": 341,
+              "quote": "the outer surface"
+            },
+            "determiner": "the",
+            "head": "outer surface"
+          },
+          {
+            "anchor": {
+              "startChar": 345,
+              "endChar": 357,
+              "quote": "the eggshell"
+            },
+            "determiner": "the",
+            "head": "eggshell"
+          }
+        ]
+      },
+      {
+        "path": "9.b",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 448,
+          "endChar": 560,
+          "quote": "end plate position [ΔDm] for batch of medium eggs [Om] and end plate position [ΔDp] for batch of small eggs [Op]"
+        },
+        "terms": []
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "part-of",
+        "child": "9.b",
+        "parent": "9"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "5"
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "10",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 220,
+          "quote": "Sub-module and device for varying/adjusting the height of the injector support plate of vaccine/nutrients for suitability of the needle course/egg size ratio applied in a substance application module according to claim 9"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 54,
+              "quote": "the height"
+            },
+            "determiner": "the",
+            "head": "height"
+          },
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 84,
+              "quote": "the injector support plate"
+            },
+            "determiner": "the",
+            "head": "injector support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 157,
+              "quote": "the needle course/egg size ratio"
+            },
+            "determiner": "the",
+            "head": "needle course egg size ratio"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 199,
+              "quote": "a substance application module"
+            },
+            "determiner": "a",
+            "head": "substance application module"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 230,
+          "endChar": 450,
+          "quote": "the distance from the lower end of the injectors [3] to the upper end of the outer surface of the eggshell [Ov], defined as [Δng] for batch of large eggs [Og] is characterized in that it is equal to or very close to zero"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 230,
+              "endChar": 242,
+              "quote": "the distance"
+            },
+            "determiner": "the",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 248,
+              "endChar": 261,
+              "quote": "the lower end"
+            },
+            "determiner": "the",
+            "head": "lower end"
+          },
+          {
+            "anchor": {
+              "startChar": 265,
+              "endChar": 278,
+              "quote": "the injectors"
+            },
+            "determiner": "the",
+            "head": "injectors"
+          },
+          {
+            "anchor": {
+              "startChar": 286,
+              "endChar": 299,
+              "quote": "the upper end"
+            },
+            "determiner": "the",
+            "head": "upper end"
+          },
+          {
+            "anchor": {
+              "startChar": 303,
+              "endChar": 320,
+              "quote": "the outer surface"
+            },
+            "determiner": "the",
+            "head": "outer surface"
+          },
+          {
+            "anchor": {
+              "startChar": 324,
+              "endChar": 336,
+              "quote": "the eggshell"
+            },
+            "determiner": "the",
+            "head": "eggshell"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "9"
+      }
+    ]
+  },
+  {
+    "claimNumber": 11,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "11",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 220,
+          "quote": "Sub-module and device for varying/adjusting the height of the injector support plate of vaccine/nutrients for suitability of the needle course/egg size ratio applied in a substance application module according to claim 9"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 54,
+              "quote": "the height"
+            },
+            "determiner": "the",
+            "head": "height"
+          },
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 84,
+              "quote": "the injector support plate"
+            },
+            "determiner": "the",
+            "head": "injector support plate"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 157,
+              "quote": "the needle course/egg size ratio"
+            },
+            "determiner": "the",
+            "head": "needle course egg size ratio"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 199,
+              "quote": "a substance application module"
+            },
+            "determiner": "a",
+            "head": "substance application module"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 230,
+          "endChar": 468,
+          "quote": "the distance [ΔD] is characterized in that the distance [Δng] for batch of large eggs [Og] is smaller than the distance [ΔDm] for batch of medium eggs [Om], which, in turn, is smaller than the distancing [ΔHp] for batch of small eggs [Op]"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 230,
+              "endChar": 242,
+              "quote": "the distance"
+            },
+            "determiner": "the",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 273,
+              "endChar": 285,
+              "quote": "the distance"
+            },
+            "determiner": "the",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 337,
+              "endChar": 349,
+              "quote": "the distance"
+            },
+            "determiner": "the",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 419,
+              "endChar": 433,
+              "quote": "the distancing"
+            },
+            "determiner": "the",
+            "head": "distancing"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "11",
+        "ancestor": "9"
+      }
+    ]
+  }
+]

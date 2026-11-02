@@ -9,7 +9,7 @@ import {
 import { CardPersistRow, catalogDbPath, persistCards, sha256HexOf } from "@beep/repo-cli/test/Research";
 import { decodeYamlTextWith } from "@beep/repo-cli/test/SharedInternals";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -38,9 +38,11 @@ const encodeCardFrontmatter = S.encodeEffect(KnowledgeCardFrontmatter);
 // notion-pull links-file seam or from the catalog writer directly.
 const testLayer = Layer.mergeAll(
   ResearchCommandServiceLive.pipe(
-    Layer.provideMerge(FetchHttpClient.layer.pipe(Layer.provideMerge(NodeServices.layer)))
+    Layer.provideMerge(
+      FetchHttpClient.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+    )
   ),
-  NodeServices.layer
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
 );
 
 const makeVault = Effect.gen(function* () {

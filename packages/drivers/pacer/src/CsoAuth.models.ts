@@ -2,6 +2,8 @@
  * Schema-first request/response models for the PACER Authentication API
  * (`/services/cso-auth` and `/services/cso-logout`).
  *
+ * **Details**
+ *
  * NOTE: the Authentication API returns failures as HTTP 200 with a body-level
  * `loginResult` code and an empty `nextGenCSO`, so these are decoded with the
  * lower-level `effect/http` client (not `httpapi`) and branched on in

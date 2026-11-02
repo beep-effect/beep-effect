@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // Compiler gate for every goals/*/ops script (packet oracles, differentials, benches and
+  // codemods), which no package project or tsconfig.configs.json reaches. Run by the
+  // repo-sanity:goals-ops-typecheck lane; packages/tooling/tool/cli/test/goals-ops-typecheck.test.ts
+  // fails when an opsScripts entry or any ops/**/*.ts file falls outside `include`.
+  "extends": "../tsconfig.configs.json",
+  "include": ["*/ops/**/*.ts", "ops-ambient.d.ts"],
+  "exclude": ["**/node_modules/**", "**/dist/**"],
+  "compilerOptions": {
+    "rootDir": "..",
+    // Playwright-driven exercise harnesses type browser globals inside page.evaluate bodies.
+    "lib": ["ESNext", "DOM"],
+    // Ops scripts are frozen evidence, not product code: they get the compiler's type errors,
+    // not the Effect style profile. `beep quality tsgo-rules` scans neither goals/ tsconfigs
+    // nor goals/ directives, so this is the only Effect-profile difference and it is explicit.
+    "plugins": []
+  }
+}

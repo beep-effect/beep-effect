@@ -1,0 +1,22 @@
+{
+  "basis": {
+    "report": ".beep/fallow/audit.repair-v23.json",
+    "rawArchive": "~/.local/state/beep/observation-proof-archive/terminal-classification-5rdyqadi/audit.repair-v23.combined.txt",
+    "observedAt": "2026-10-29T21:05:30.320164+00:00"
+  },
+  "complexity": [],
+  "attribution": {
+    "gate": "new-only",
+    "dead_code_introduced": 0,
+    "dead_code_inherited": 0,
+    "complexity_introduced": 0,
+    "complexity_inherited": 0,
+    "duplication_introduced": 0,
+    "duplication_inherited": 4,
+    "styling_introduced": 0,
+    "styling_inherited": 0,
+    "duplication_demoted": 0,
+    "diff_risk_introduced": 20
+  },
+  "result": "exit0; no introduced blocking findings; inherited adjacent duplication and descriptive diff risk retained"
+}

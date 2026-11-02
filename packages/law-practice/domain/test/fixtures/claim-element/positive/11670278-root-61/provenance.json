@@ -1,0 +1,44 @@
+{
+  "applicationNumber": "11670278",
+  "publicationNumber": "US20080186197A1",
+  "publicationDate": "2008-08-07",
+  "nativeXmlSha256": "35e7bd5cf2623e235b53d0ef08c048b24817e00354f6d46d085e4c18e2899971",
+  "claimsXmlSha256": "83fccdaba8704e1cac25d45f4f37d7ea2e9f02a3ec4cd32053d1bf646e4630f7",
+  "officeActionDocumentIdentifiers": [
+    "FUEAL66WPPOPPY5"
+  ],
+  "officeActionMailDate": "2009-05-07",
+  "officeActionSection112Text": [
+    "claims 1-164 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\nin claim 1, on line 2, “the location lacks antecedent basis and should be correct to “a location”. furthermore, on line 11, “the current location” lacks antecedent basis. on line 17, the contour lacks antecedent basis.\r\nin claim 2, on line 3, “the intensity” and “the polarity” lack antecedent basis.\r\nin claim 7, line 3, “the impact” lacks antecedent basis.\r\nin claim 16, line 3, the distance lacks antecedent basis.\r\nin claim 17, line 3, “the distance lacks antecedent basis.\r\nin claim 22, lines 1-2, “the principle axes” lacks antecedent basis. examiner recommends deleting the “the”. also on line 3, “the principle axes” lacks antecedent basis. again, examiner recommends deleting the word “the”.\r\nin claim 33, lines 2-3, “the precision” and “the effective number” lack antecedent basis.\r\nin claim 41, line 2, “the mode of operation” lacks antecedent basis.\r\nin claim 42, line 2, “the intensity” lacks antecedent basis.\r\nin claim 43, line 2, “the type” lacks antecedent basis.\r\nin claim 45, line 2, “the same side” lacks antecedent basis.\r\nin claim 53, line 2, “the speed” lacks antecedent basis.\r\nin claim 54, line 2, “the distance” lacks antecedent basis.\r\nin claim 61, line 2, “the location” lacks antecedent basis. also, on line 11, “the current location” lacks antecedent basis. also, on line 21, “the contour” lacks antecedent basis.\r\nin claim 62, line 3, “the intensity and “the polarity” lack antecedent basis.\r\nin claim 68, line 2, “the location” lacks antecedent basis. also, on line 24, “the contour” lacks antecedent basis. furthermore, on line 25, “the intensity” and “the polarity” lack antecedent basis.\r\nin claim 72, line 3, “the impact” lacks antecedent basis.\r\nin claim 74, lines 1-2, “the principle axes” lack antecedent basis. examiner recommends removing the word “the”. furthermore on line 3, “the principle axes” lacks antecedent basis. again, examiner recommends removing the word “the”.\r\nin claim 79, line 3, “the principal axes” lacks antecedent basis.\r\nin claim 81, lines 1-2, “the principal axes” lacks antecedent basis.\r\nin claim 83, line 2, “the angle between” lacks antecedent basis.\r\nin claim 91, line 2, “the preciseness” lacks antecedent basis. furthermore, on line 4, the effective number lacks antecedent basis.\r\nin claim 113, line 2, “the distance” lacks antecedent basis.\r\nin claim 121, line 2, “the location lacks antecedent basis.\r\nin claim 122, line 2, “the intensities” lacks antecedent basis.\r\nclaims 129-131 are indefinite because claim 129 is very confusing and because examiner is unsure what a variable of the calculated plurality of variables has a particular value exactly four times means? examiner cannot apply prior art to claims 129-131 because this claim is poorly worded and confusing.\r\nin claim 131, lines 3-4, the optimal angle lacks antecedent basis.\r\nin claim 137, line 2, “the radial components” lack antecedent basis.\r\nin claim 138, line 2, “the orientation” lacks antecedent basis.\r\nin claim 139, line 3, “the direction of motion” lacks antecedent basis.\r\nin claim 140, line 6, “the relative polarity” lacks antecedent basis.\r\nin claim 141, line 4, are these “radial components” the same radial components as claimed in claim 137 or different radial components? because of lack of clarity, this claim is indefinite. furthermore, on line 6, the relative polarity lacks antecedent basis.\r\nin claim 143, line 3, “the angle between” lacks antecedent basis. also, on line 5, “the presence lacks antecedent basis.\r\nin claim 162, line 2, “the location” lacks antecedent basis. furthermore, on line 10, “the current location” lacks antecedent basis. also, on lines 14-15, “the contour” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "EXNQQ9WGPPOPPY4",
+      "officialDate": "2007-02-01T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [],
+  "documentInventoryCount": 52,
+  "documentInventoryRows": 52,
+  "primaryCpc": "A01K  15/023",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/11670278",
+    "https://api.uspto.gov/api/v1/patent/applications/11670278/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending",
+  "originalPdfCorroboration": {
+    "documentIdentifier": "EXNQQ9WGPPOPPY4",
+    "sha256": "d3056140ed90a384f3b6aa275ff93d96777c0b94024cf02950d49c818d5c4f4a",
+    "format": "PDF",
+    "inspectedPdfPages": [
+      9,
+      10,
+      11
+    ],
+    "purpose": "Independent source critic visual corroboration of native selected claims, not source text for labeling",
+    "reviewReceipt": "source-critic.json",
+    "status": "critic accepted source after rendering; prior extractor uncertainty retained in source-audit.json"
+  }
+}

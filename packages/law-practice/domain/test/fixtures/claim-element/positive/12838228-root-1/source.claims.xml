@@ -1,0 +1,115 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An image erasing apparatus configured to erase an image on a recording medium, the apparatus comprising:
+<claim-text>a paper feeding tray configured to feed the recording medium;</claim-text>
+<claim-text>a sensor group including a double-feed detection sensor configured to detect double feed of the recording medium and a media sensor configured to detect thickness of the recording medium;</claim-text>
+<claim-text>a recording-medium conveying device configured to convey the recording medium;</claim-text>
+<claim-text>a collecting device provided in the recording-medium conveying device and configured to drop and collect the recording medium;</claim-text>
+<claim-text>a heating device configured to heat the recording medium to temperature equal to or higher than erasing temperature of a developer;</claim-text>
+<claim-text>a stacking device configured to stack the recording medium; and</claim-text>
+<claim-text>a control unit configured to cause, the recording-medium conveying device to collect the recording medium in the collecting device if the recording medium is judged non-conveyable on the basis of an output of the sensor group and cause the recording-medium conveying device to convey the recording medium in a direction of the heating device to erase an image if the recording medium is judged conveyable on the basis of an output of the sensor group.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein
+<claim-text>the collecting device is set downstream in a recording medium conveyance direction of the sensor group and upstream in the recording medium conveying direction of the heating device.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The apparatus according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the collecting device includes:
+<claim-text>a driving roller and a driven roller configured to nip the recording medium to thereby covey the recording medium;</claim-text>
+<claim-text>a roller lifting and lowering device configured to lift and lower the driving roller; and</claim-text>
+<claim-text>a movable plate configured to rotatably support the driven roller and open in a direction perpendicular to the recording medium conveying direction.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The apparatus according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the collecting device further includes, in a lower part of the collecting device, a collection box in which the recording medium is collected.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The apparatus according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein
+<claim-text>the movable plate has plural teeth on a side thereof, and</claim-text>
+<claim-text>the collecting device further includes a motor having a gear that meshes with the plural teeth.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The apparatus according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the collecting device further includes:
+<claim-text>a first brush roller set above the recording-medium conveying device; and</claim-text>
+<claim-text>a second brush roller set below the recording-medium conveying device and supported by the movable plate.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The apparatus according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the roller lifting and lowering device lifts and lowers the driving roller and the first brush roller.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The apparatus according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the brush roller rotates in a direction opposite to the recording medium conveying direction.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The apparatus according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the brush roller is formed of plastic.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The apparatus according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the brush roller is formed of animal hair.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A recording medium conveying method for an image erasing apparatus configured to erase an image on a recording medium, the method comprising:
+<claim-text>a paper feeding tray feeding the recording medium;</claim-text>
+<claim-text>a sensor group including a double-feed detection sensor and a media sensor detecting double feed of the recording medium and thickness of the recording medium;</claim-text>
+<claim-text>a recording-medium conveying device conveying the recording medium; and</claim-text>
+<claim-text>a control unit causing the recording-medium conveying device to collect the recording medium in the collecting device if the recording medium is judged non-conveyable on the basis of an output of the sensor group and causing the recording-medium conveying device to convey the recording medium in a direction of the heating device to erase an image if the recording medium is judged conveyable on the basis of an output of the sensor group.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein
+<claim-text>the collecting device is set downstream in a recording medium conveyance direction of the sensor group and upstream in the recording medium conveying direction of the heating device, and</claim-text>
+<claim-text>the method further comprises the collecting device dropping the recording medium in a vertical direction and collecting the recording medium.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein
+<claim-text>the collecting device includes:
+<claim-text>a driving roller and a driven roller configured to nip the recording medium to thereby covey the recording medium;</claim-text>
+<claim-text>a roller lifting and lowering device configured to lift and lower the driving roller; and</claim-text>
+<claim-text>a movable plate configured to rotatably support the driven roller and open in a direction perpendicular to the recording medium conveying direction, and</claim-text>
+</claim-text>
+<claim-text>the method further comprises the collecting device dropping the recording medium in the vertical direction and collecting the recording medium.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method according to <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein
+<claim-text>the collecting device further includes, in a lower part of the collecting device, a collection box in which the recording medium is collected, and</claim-text>
+<claim-text>the method further comprises the collecting device dropping the recording medium in the vertical direction and collecting the recording medium.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method according to <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein
+<claim-text>the movable plate has plural teeth on a side thereof,</claim-text>
+<claim-text>the collecting device further includes a motor having a gear that meshes with the plural teeth, and</claim-text>
+<claim-text>the method further comprises the movable plate opening in the direction perpendicular to the recording medium conveying direction.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein
+<claim-text>the collecting device further includes:</claim-text>
+<claim-text>a first brush roller set above the recording-medium conveying device; and</claim-text>
+<claim-text>a second brush roller set below the recording-medium conveying device and supported by the movable plate, and</claim-text>
+<claim-text>the method further comprising the first brush roller and the second brush roller removing, while rotating, foreign matters adhering to the recording medium.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, further comprising the roller lifting and lowering device lifting and lowering the driving roller and the first brush roller.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, further comprising the brush roller rotating in a direction opposite to the recording medium conveying direction.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein
+<claim-text>the brush roller is formed of plastic, and</claim-text>
+<claim-text>the method further comprising the brush roller removing, while rotating, foreign matters adhering to the recording medium.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein
+<claim-text>the brush roller is formed of animal hair, and</claim-text>
+<claim-text>the method further comprising the brush roller removing, while rotating, foreign matters adhering to the recording medium. </claim-text>
+</claim-text>
+</claim>
+</claims>

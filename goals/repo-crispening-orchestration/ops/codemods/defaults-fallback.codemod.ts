@@ -28,7 +28,7 @@
  * @since 0.0.0
  */
 import { TSMorphService, TSMorphServiceLive } from "@beep/repo-utils";
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -277,7 +277,7 @@ export const runDefaultsFallbackCodemod = (
 
 if (import.meta.main) {
   const filePaths = process.argv.slice(2);
-  const MainLayer = TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer));
+  const MainLayer = TSMorphServiceLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
   NodeRuntime.runMain(
     runDefaultsFallbackCodemod(filePaths).pipe(
       Effect.flatMap((results) =>

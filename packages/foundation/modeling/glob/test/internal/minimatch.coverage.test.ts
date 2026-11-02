@@ -1,7 +1,11 @@
 import { GLOBSTAR, Minimatch } from "@beep/glob/internal/minimatch";
+import { EngineOptions } from "@beep/glob/internal/types";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { Minimatch as Oracle } from "minimatch";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { legacyOracle } from "../legacyOracle.ts";
 import type { EngineOptionsInput } from "@beep/glob/internal/minimatch";
 
 const patterns = [
@@ -90,11 +94,6 @@ const options: Array<EngineOptionsInput> = [
   { nonegate: true },
 ];
 
-const oracleOptions = (opts: EngineOptionsInput) => ({
-  ...opts,
-  platform: opts.platform === "win32" ? ("win32" as const) : ("linux" as const),
-});
-
 const regexMatches = (re: RegExp | false, candidate: string) => (re === false ? false : re.test(candidate));
 
 const assertRegexParity = (pattern: string, re: RegExp | false, oracleRe: RegExp | false) => {
@@ -107,14 +106,25 @@ const assertRegexParity = (pattern: string, re: RegExp | false, oracleRe: RegExp
   }
 };
 
+const sameOptions = S.toEquivalence(EngineOptions);
+const sameParts = S.toEquivalence(S.Array(S.String));
+
 const assertPatternParity = (pattern: string, opts: EngineOptionsInput) => {
   const actual = new Minimatch(pattern, opts);
-  const expected = new Oracle(pattern, oracleOptions(opts));
-  assert.strictEqual(actual.hasMagic(), expected.hasMagic());
-  for (const candidate of candidates)
-    assert.strictEqual(actual.match(candidate), expected.match(candidate), `${pattern} against ${candidate}`);
+  const reference = A.findFirst(
+    legacyOracle.regexps,
+    ([text, recorded]) => text === pattern && sameOptions(recorded, EngineOptions.make(opts))
+  ).pipe(O.getOrElse(() => assert.fail(`Missing independent regex reference: ${pattern}`)));
+  assert.strictEqual(actual.hasMagic(), reference[4]);
+  assert.strictEqual(candidates.length, reference[5].length);
+  for (const [candidate, [recorded, expected]] of A.zip(candidates, reference[5])) {
+    assert.strictEqual(candidate, recorded);
+    assert.strictEqual(actual.match(candidate), expected, `${pattern} against ${candidate}`);
+  }
   const re = actual.makeRe();
-  const oracleRe = expected.makeRe();
+  const oracleRe = O.map(reference[2], (source) => new RegExp(source, reference[3])).pipe(
+    O.getOrElse((): false => false)
+  );
   assert.strictEqual(actual.makeRe(), re);
   // Partial-prefix regex support is a deliberate newer-upstream feature.
   if (opts.partial !== true) assertRegexParity(pattern, re, oracleRe);
@@ -150,40 +160,43 @@ const optimizerParts: Array<Array<string>> = [
   ["**", "..", "a"],
 ];
 
-const assertSingleSegmentParity = (actual: Minimatch, expected: Oracle, segments: Array<string>) => {
-  assert.deepStrictEqual(actual.levelTwoFileOptimize([...segments]), expected.levelTwoFileOptimize([...segments]));
-  assert.deepStrictEqual(actual.levelOneOptimize([[...segments]]), expected.levelOneOptimize([[...segments]]));
-  assert.deepStrictEqual(actual.firstPhasePreProcess([[...segments]]), expected.firstPhasePreProcess([[...segments]]));
-  assert.deepStrictEqual(
-    actual.adjascentGlobstarOptimize([[...segments]]),
-    expected.adjascentGlobstarOptimize([[...segments]])
-  );
+type OptimizerReference = (typeof legacyOracle.optimizer)[number];
+
+const assertSingleSegmentParity = (actual: Minimatch, segments: Array<string>, reference: OptimizerReference) => {
+  assert.deepStrictEqual(actual.levelTwoFileOptimize([...segments]), reference[2]);
+  assert.deepStrictEqual(actual.levelOneOptimize([[...segments]]), reference[3]);
+  assert.deepStrictEqual(actual.firstPhasePreProcess([[...segments]]), reference[4]);
+  assert.deepStrictEqual(actual.adjascentGlobstarOptimize([[...segments]]), reference[5]);
 };
 
 const assertSegmentPairParity = (
   actual: Minimatch,
-  expected: Oracle,
   segments: Array<string>,
-  other: Array<string>
+  other: Array<string>,
+  reference: OptimizerReference
 ) => {
   for (const empty of [false, true]) {
+    const pair = A.findFirst(
+      reference[6],
+      ([recorded, capturedEmpty]) => capturedEmpty === empty && sameParts(recorded, other)
+    ).pipe(O.getOrElse(() => assert.fail("Missing independent optimizer pair reference")));
     assert.deepStrictEqual(
       actual.partsMatch([...segments], [...other], empty),
-      expected.partsMatch([...segments], [...other], empty)
+      O.getOrElse(pair[2], (): false => false)
     );
-    assert.deepStrictEqual(
-      actual.secondPhasePreProcess([[...segments], [...other]]),
-      expected.secondPhasePreProcess([[...segments], [...other]])
-    );
+    assert.deepStrictEqual(actual.secondPhasePreProcess([[...segments], [...other]]), pair[3]);
   }
 };
 
 const assertOptimizerParity = (opts: EngineOptionsInput) => {
   const actual = new Minimatch("*", opts);
-  const expected = new Oracle("*", oracleOptions(opts));
   for (const segments of optimizerParts) {
-    assertSingleSegmentParity(actual, expected, segments);
-    for (const other of optimizerParts) assertSegmentPairParity(actual, expected, segments, other);
+    const reference = A.findFirst(
+      legacyOracle.optimizer,
+      ([options, parts]) => sameOptions(options, EngineOptions.make(opts)) && sameParts(parts, segments)
+    ).pipe(O.getOrElse(() => assert.fail("Missing independent optimizer reference")));
+    assertSingleSegmentParity(actual, segments, reference);
+    for (const other of optimizerParts) assertSegmentPairParity(actual, segments, other, reference);
   }
 };
 

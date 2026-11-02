@@ -9,7 +9,7 @@ import { $FileProcessingId } from "@beep/identity";
 import { A, O } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { FileProcessingFailureRecord, SourceProcessingRecord } from "../Extraction/Extraction.manifest.ts";
 import type { ArchiveExportResult, ExtractionResult, ProcessFileResult } from "../Extraction/Extraction.schema.ts";
 import type { FileProcessingOperationError } from "../Operation/Operation.errors.ts";
@@ -46,7 +46,7 @@ export type FileProcessingEngineShape = {
   readonly detect: (operation: DetectFileOperation) => Effect.Effect<DetectionResult, FileProcessingOperationError>;
   readonly exportArchive: (
     operation: ExportArchiveOperation
-  ) => Effect.Effect<ArchiveExportResult, FileProcessingOperationError, Crypto.Crypto>;
+  ) => Effect.Effect<ArchiveExportResult, FileProcessingOperationError, Digest.Digest>;
   readonly extract: (operation: ExtractFileOperation) => Effect.Effect<ExtractionResult, FileProcessingOperationError>;
 };
 

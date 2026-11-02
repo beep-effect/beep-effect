@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "cache-workflow-git-fixture-repair/v1",
+  "recordedAt": "2026-10-29T08:47:11.150815+00:00",
+  "authority": "local-test-setup-and-guard-observation-only",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "54c9526a0f56460d471b73b7af638ad4e9b45221594117a49cd4ae8093412e8c",
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "c602d80bbfede641b6f5a3065758265fc7ba629df4d93e5604683a1b77dffc71"
+  },
+  "priorWholePackage": {
+    "sourceHead": "22e5860538",
+    "result": "failed",
+    "auditSeconds": 1119.9,
+    "docgenSeconds": 36.3,
+    "passedTests": 8094,
+    "failedTests": 1,
+    "skippedTests": 3,
+    "testSeconds": 1106.89,
+    "logSha256": "91b5c6cacd9015246b4546119fe89848a7b653667680a8b68cea6c592ce4d64f",
+    "failure": "Negative inventory test setup could not remove a temporary .git directory because it was already absent. Cause of the unexpected absence is not claimed.",
+    "earlierModelsAndKnowledgeFailures": "Both passed in this full run."
+  },
+  "repair": "Start the negative case in an owned fresh non-repository directory; execute both real Git-backed checks and assert the specific Git-inventory failure. No permissive removal or fabricated subprocess failure.",
+  "verification": {
+    "bun": {
+      "passed": 20,
+      "files": 1,
+      "seconds": 2.41
+    },
+    "node": {
+      "passed": 20,
+      "files": 1,
+      "seconds": 5.0
+    },
+    "packageQuick": {
+      "lintSeconds": 5.4,
+      "checkSeconds": 12.0
+    },
+    "focusedEffectVitestFindings": 0,
+    "guardRemoval": {
+      "control": "removed actual Git exit/truncation rejection",
+      "test": "rejects an unreadable Git inventory instead of treating it as clean",
+      "exit": 1,
+      "sourceSha256": "54c9526a0f56460d471b73b7af638ad4e9b45221594117a49cd4ae8093412e8c",
+      "restoredSha256": "54c9526a0f56460d471b73b7af638ad4e9b45221594117a49cd4ae8093412e8c",
+      "testSha256": "c602d80bbfede641b6f5a3065758265fc7ba629df4d93e5604683a1b77dffc71",
+      "failedTests": 1
+    }
+  },
+  "productionCodeChanged": false,
+  "productionChanges": false,
+  "newWholePackageReplay": "pending after this prepared test/doc change is committed"
+}

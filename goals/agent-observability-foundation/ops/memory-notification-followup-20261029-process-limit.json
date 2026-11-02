@@ -1,0 +1,21 @@
+{
+  "observedAt": "2026-10-29T19:34:52.687055+00:00",
+  "memoryBytes": {
+    "MemTotal": 134352207872,
+    "MemAvailable": 36488552448,
+    "SwapTotal": 51539603456,
+    "SwapFree": 2522865664
+  },
+  "memoryPressure": [
+    "some avg10=0.14 avg60=0.14 avg300=0.32 total=592214438",
+    "full avg10=0.14 avg60=0.12 avg300=0.26 total=527723050"
+  ],
+  "retainedOomDecisions": 9,
+  "globalOomDecisions": 1,
+  "serviceLimitDecisions": 8,
+  "newOomSinceLatestFinalCheck": false,
+  "screenshotAttribution": "Exact service matched deliberate 512 MiB proof on October 28; routine proof requires explicit --exercise-oom",
+  "processLimitEvidence": "Kernel rejected forks in final-check-v2; same-service evidence also found for earlier whole-CLI abort",
+  "changes": "Temporary verification helper task limit 256 to 1024, added task counters; memory limits unchanged. No application stopped or notification preference changed.",
+  "limits": "Point-in-time pressure and swap occupancy do not prove a leak. Earlier Dolphin growth cause remains unconfirmed."
+}

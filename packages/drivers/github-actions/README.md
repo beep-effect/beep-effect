@@ -141,11 +141,10 @@ Two decisions make that safe for any segment value, with no prefix reasoning at 
 
 `CacheKey.hashFiles` is byte-compatible with `@actions/glob`'s `hashFiles`, and `OidcTokenIssuer.claims` decodes the runner's OIDC token for a SLSA provenance predicate without verifying its signature — the token arrived over TLS from the runner's own token service, so the transport is the trust boundary and nothing here branches on the claims for authorization.
 
-`ActionsProvenance.capture` turns those claims into a `@beep/sbom` `SlsaProvenance` predicate, and `ActionsIdentityToken.layer` serves that package's narrow `IdentityToken` contract from the same issuer — the inversion that keeps the Actions runtime out of every consumer that only wants to emit an SBOM:
+`ActionsProvenance.capture` turns those claims into a `@beep/sbom` `SlsaProvenance` predicate, and `ActionsIdentityToken.layer` serves that package's narrow `IdentityToken` contract from the same issuer — the inversion that keeps the Actions runtime out of every consumer that only wants to emit an SBOM. A signer (the deferred `@beep/sigstore`) takes `IdentityLayer` as its identity:
 
 ```ts
 import { ActionsIdentityToken, ActionsProvenance, OidcTokenIssuer } from "@beep/github-actions";
-import { SigstoreSigner } from "@beep/scratchpad/effected/sbom/index";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -155,11 +154,8 @@ const program = Effect.gen(function* () {
 });
 // the builder id, derived from the workflow ref in the runner's own claims
 
-const SigningLayer = SigstoreSigner.layer.pipe(
-  Layer.provide(ActionsIdentityToken.layer),
-  Layer.provide(OidcTokenIssuer.layer),
-);
-console.log(Effect.isEffect(program) && Layer.isLayer(SigningLayer)) // true
+const IdentityLayer = ActionsIdentityToken.layer.pipe(Layer.provide(OidcTokenIssuer.layer));
+console.log(Effect.isEffect(program) && Layer.isLayer(IdentityLayer)) // true
 ```
 
 An `OidcTokenError` passes through `capture` untouched: whether an unattested publish is allowed is the action's policy, not this package's. `reason: "unavailable"` almost always means the workflow is missing `permissions: id-token: write`.
@@ -265,13 +261,18 @@ The real-process suites (`ActionCache`, `Artifact`, `ToolInstaller`, `PackageMan
 
 ## Provenance
 
-Promoted from the effected lab (`scratchpad/effected/github-actions`, `scratchpad/test/github-actions`) in wave 5 of
-`goals/effected-promotion`. The lab suite was 957/957 under Node and Bun before the move (#2223); the package suite is
+Promoted from the effected lab (`scratchpad/effected/github-actions` and `scratchpad/test/github-actions`, last held at
+`0129fc7312803f833b3319d30fcc9646302c66f6`) in wave 5 of `goals/effected-promotion`. The lab suite was 957/957 under
+Node and Bun before the move (#2223); the package suite is
 971/971 under Node and Bun after it (the `unstubbed` test moved with its module to `@beep/utils/TestDouble` and the
 `IeeeNumber` tests to `@beep/schema`, and the property, schema and coverage tests below were added). The
 port reviews and the canon exceptions are archived under `goals/effected-promotion/history/`. The
-`github-actions` row of `scratchpad/effected/PORT_LEDGER.json` keeps the lab-era evidence under the pre-promotion
-`scratchpad/test/github-actions/` paths; the deviations below cite them as recorded there.
+`github-actions` row of the lab `PORT_LEDGER.json` (deleted when the packet closed; read it with
+`git show bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/effected/PORT_LEDGER.json`) keeps the lab-era evidence
+under the pre-promotion `scratchpad/test/github-actions/` paths; the lab-era deviations below cite them as recorded
+there. They resolve at `0129fc7312803f833b3319d30fcc9646302c66f6`, except the four reporting suites (`CheckDocument`,
+`CheckState`, `GitHubMarkdown`, `ManagedDocument`), which left in wave 3-1 and resolve at
+`6964eeb85b28da7cf38913b041242d0467e94abf`.
 
 ## Port notes
 
@@ -293,7 +294,7 @@ port reviews and the canon exceptions are archived under `goals/effected-promoti
 
 ### Deviations
 
-One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row (see Provenance).
 
 Wave 5 (the promotion itself), each pinned by tests in this package:
 

@@ -36,6 +36,8 @@
     {"name":"Epistemic.GovernedTierGate.make","owner":"@beep/epistemic-server","family":"slice","conforms":true},
     {"name":"Epistemic.GovernedTierGate.recordOutcome","owner":"@beep/epistemic-server","family":"slice","conforms":true},
     {"name":"Epistemic.GovernedTierGate.settlePending","owner":"@beep/epistemic-server","family":"slice","conforms":true},
+    {"name":"Retention.readAuthority","owner":"@beep/epistemic-server","family":"slice","conforms":true},
+    {"name":"Retention.rebuildStore","owner":"@beep/epistemic-server","family":"slice","conforms":true},
     {"name":"epistemic.contradiction.get_candidate","owner":"@beep/epistemic-server","family":"slice","conforms":false},
     {"name":"epistemic.contradiction.get_evidence_source_page","owner":"@beep/epistemic-server","family":"slice","conforms":false},
     {"name":"epistemic.contradiction.get_expanded","owner":"@beep/epistemic-server","family":"slice","conforms":false},

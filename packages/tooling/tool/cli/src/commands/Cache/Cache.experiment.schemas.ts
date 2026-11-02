@@ -5,58 +5,10 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { CacheClientChannel, CacheClientPin } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CacheExecutablePin } from "./Cache.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.experiment.schemas");
-
-/**
- * Native Bun binary and its independently observed version/content pin.
- *
- * **Example** (Inspect the runtime identity)
- *
- * ```ts
- * import { CacheFixtureRuntime } from "@beep/repo-cli/commands/Cache"
- * console.assert("pin" in CacheFixtureRuntime.fields)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class CacheFixtureRuntime extends S.Opaque<CacheFixtureRuntime, { readonly brand: unique symbol }>()(
-  S.Struct({ executable: S.NonEmptyString, pin: CacheExecutablePin }).pipe(
-    $I.annoteSchema("CacheFixtureRuntime", { description: "Explicit native runtime used by a disposable fixture." })
-  )
-) {}
-
-/**
- * Exact native client selected for a disposable local experiment.
- *
- * **Example** (Inspect the request fields)
- *
- * ```ts
- * import { CacheSyntheticRequest } from "@beep/repo-cli/commands/Cache"
- * console.assert("client" in CacheSyntheticRequest.fields)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class CacheSyntheticRequest extends S.Opaque<CacheSyntheticRequest, { readonly brand: unique symbol }>()(
-  S.Struct({
-    channel: CacheClientChannel,
-    client: CacheClientPin,
-    executable: S.NonEmptyString,
-    bun: CacheFixtureRuntime,
-    alternateBun: CacheFixtureRuntime,
-  }).pipe(
-    $I.annoteSchema("CacheSyntheticRequest", {
-      description: "Pinned native Turbo client for a network-isolated local fixture.",
-    })
-  )
-) {}
 
 /**
  * Local execution or artifact-replay origin observed in a Turbo summary.
@@ -155,77 +107,6 @@ export class CacheSyntheticCheck extends S.Opaque<CacheSyntheticCheck, { readonl
   S.Struct({ name: S.NonEmptyString, passed: S.Boolean }).pipe(
     $I.annoteSchema("CacheSyntheticCheck", {
       description: "A local fixture assertion derived by the experiment runner.",
-    })
-  )
-) {}
-
-/**
- * Bounded observations for a configured node whose script is absent.
- *
- * **Details**
- * Summary nodes and execution metadata are counted separately. This record
- * cannot enter the successful-run comparison population.
- *
- * **Example** (Inspect non-execution evidence)
- *
- * ```ts
- * import { CacheSyntheticNonExecution } from "@beep/repo-cli/commands/Cache"
- * console.assert("executionRecordCount" in CacheSyntheticNonExecution.fields)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class CacheSyntheticNonExecution extends S.Opaque<
-  CacheSyntheticNonExecution,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    id: S.NonEmptyString,
-    processExitCode: S.Int,
-    summaryTaskCount: S.Natural,
-    selectedTaskCount: S.Natural,
-    executionRecordCount: S.Natural,
-    commands: S.Array(S.String),
-    outputPresent: S.Boolean,
-    replayLogPresent: S.Boolean,
-    summarySha256: Sha256Hex,
-    processCaptureSha256: Sha256Hex,
-    violations: S.Array(CacheCaptureViolation),
-  }).pipe(
-    $I.annoteSchema("CacheSyntheticNonExecution", {
-      description: "Observed graph, process and absent-output facts that confer no execution credit.",
-    })
-  )
-) {}
-
-/**
- * Sanitized local experiment receipt; a local hit is never signed-remote proof.
- *
- * **Example** (Inspect the local receipt discriminator)
- *
- * ```ts
- * import { CacheSyntheticReceipt } from "@beep/repo-cli/commands/Cache"
- * console.assert("schema" in CacheSyntheticReceipt.fields)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class CacheSyntheticReceipt extends S.Opaque<CacheSyntheticReceipt, { readonly brand: unique symbol }>()(
-  S.Struct({
-    schema: S.tag("cache-synthetic-local/v3"),
-    channel: CacheClientChannel,
-    client: CacheClientPin,
-    bun: CacheExecutablePin,
-    alternateBun: CacheExecutablePin,
-    fixtureSha256: Sha256Hex,
-    runs: S.NonEmptyArray(CacheSyntheticRun),
-    nonExecutions: S.Array(CacheSyntheticNonExecution),
-    checks: S.NonEmptyArray(CacheSyntheticCheck),
-  }).pipe(
-    $I.annoteSchema("CacheSyntheticReceipt", {
-      description: "Versioned, bounded local fixture evidence without promotion authority.",
     })
   )
 ) {}

@@ -190,8 +190,7 @@ const present = flow(O.map(Str.trim), O.filter(Str.isNonEmpty));
 const optionalText = (name: string): Effect.Effect<O.Option<string>, M365EnvError> =>
   Config.String(name).pipe(
     Config.option,
-    Effect.map(present),
-    Effect.mapError(() => M365EnvError.of(name, "unreadable"))
+    Effect.mapBoth({ onFailure: () => M365EnvError.of(name, "unreadable"), onSuccess: present })
   );
 
 // An `op://` value means the process was started without `op run`: never authenticate with a reference.

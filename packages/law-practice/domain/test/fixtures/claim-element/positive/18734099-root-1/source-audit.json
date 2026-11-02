@@ -1,0 +1,76 @@
+{
+  "familyId": "18734099-root-1",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the lower end of the upper backrest",
+      "nativeQuote": "the lower end of the upper backrest",
+      "literalMatch": true,
+      "explanation": "Exact selected root1."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the lower end of the lower backrest",
+      "nativeQuote": "the lower end of the lower backrest",
+      "literalMatch": true,
+      "explanation": "Exact selected2."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "base seat member",
+      "nativeQuote": "base seat member",
+      "literalMatch": true,
+      "explanation": "Exact in selected10."
+    }
+  ],
+  "concerns": [
+    "Original LXCZ6P1NXBLUEX3 accepted numbered claims1-12 match all native wording after printed Claim n prefixes removed. sourceClaimCount12 matches. Extra inventory document UUID has no local original XML, but retained complete same-date original is exact for all selected claims.",
+    "Verified publication US20240398123A1/app18734099/date2024-12-05 and digest.52/52 inventory original2024-06-05 precedes2026-02-20 OA; no intervening CLM asserted."
+  ],
+  "rationale": "Actual112(b)/secondparagraph rejection explicitly names selected1-12, with matching numbered phrase evidence. Natural dependency memberships inspected and match references.",
+  "sourceIdentity": {
+    "applicationNumber": "18734099",
+    "publicationNumber": "US20240398123A1",
+    "publicationDate": "2024-12-05",
+    "officeActionMailDate": "2026-02-20",
+    "officeActionDocumentIdentifiers": ["MLTVF25AX117X14"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20240398123 A1 20241205",
+      "application-reference": "US 18734099 20240605",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "dc7a7667-3515-4642-87ca-f47ebbe2275a",
+        "officialDate": "2024-06-05T11:37:41.000-0400"
+      },
+      {
+        "documentIdentifier": "LXCZ6P1NXBLUEX3",
+        "officialDate": "2024-06-05T11:37:41.000-0400"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "LXCZ6P1NXBLUEX3",
+        "officialDate": "2024-06-05T11:37:41.000-0400",
+        "sha256": "2200493e924de653be5f433c63d733ed42ad5bed4fdb3eb22316d1984c90e41e",
+        "ocrCorroborationOnly": false,
+        "exactNonWhitespaceClaimNumbers": [],
+        "sourceClaimCount": 12
+      }
+    ],
+    "documentInventoryCount": 52,
+    "documentInventoryRows": 52,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

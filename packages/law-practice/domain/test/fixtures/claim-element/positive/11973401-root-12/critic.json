@@ -1,0 +1,42 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "11973401-root-12",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.97,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    12,
+    13,
+    14,
+    17
+  ],
+  "findings": [],
+  "reviewScope": {
+    "claimCount": 4,
+    "elementCount": 10,
+    "termCount": 35,
+    "edgeCount": 34,
+    "functionalRelationCount": 6
+  },
+  "reviewNotes": [
+    "Independently reviewed complete selected12/13/14/17, including distinct computer entities, intolerant application/replica, mirrored but distinct location sets, updating means, distributed interconnected first computers, cluster and execution-progress updating.",
+    "Those of said first computer explicitly supplies the first-computer location role. Corresponding first-computer locations link to that proform; second-computer memory locations link to their separately introduced location group. Replication does not equate physical locations across computers.",
+    "The source-specific nested a plurality of interconnected said first computers has nonoverlapping a plurality and said first computers terms, preserving of interconnected as anchored functional connecting text. Corresponding computer references retain distributed roles stated by each of which, without selecting a single global physical member. Claim17 each remains quantifying functional text before nested said second computer.",
+    "True ancestry17\u219214\u219213\u219212 retained. Context15/16 anomalous references to1 are outside selected scope and are neither repaired nor borrowed as donors."
+  ],
+  "verification": [
+    "Every tree independently decoded through ClaimElementTree. ExactUTF16 source anchors, normalized lexical-head shapes, complete noun phrases, nonoverlapping term ownership, full contiguous functional-source reconstruction, local/foreign term endpoints, actual natural ancestry, duplicate-edge absence and exact selected scope checked. Source grammar review supplies the semantic assessment; mechanical checks alone do not.",
+    "Native XML SHA256 matches provenance and all canonical/context claim strings agree with native under permitted printed-number/whitespace normalization. Retained independent source critic accepted source eligibility; no fresh originalPDF/inventory authentication or attorney agreement claimed."
+  ],
+  "referenceSha256": "4866502980abeb57dc79f8ec296e5211c3fd8bfd0d536273dc2def41ba1e9de3",
+  "extractorSha256": "8d7338b78cb0891529d8a6cae776c1a32f1b6d8878399c9a236fa18e38cf9651",
+  "sourceXmlSha256": "ee9d0020be3a26eb34fa37a96422bda7d8fce0180266ede3dfd7a809cef8bf5b",
+  "independence": "Separate GPT-6.1-Sol medium critic session; did not extract these families. Read canonical/native source/context, provenance/source critic, protocol/schema contracts and extractor annotations. No production behavior/decomposer/P2-DESIGN/predictions/synthetic/conformance inspection. Only assigned critic.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental reference acceptance only; no sample admission, accuracy result or human agreement claimed."
+}

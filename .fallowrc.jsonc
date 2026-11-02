@@ -5,8 +5,16 @@
   // files, Vite/Tauri main.tsx, proof-app index.ts, Storybook config) so app code is
   // reachable instead of invisible (goals/fallow-zero-dead-code).
   "entry": [
+    // Launched by verify-worker-entrypoint.py as a standalone synthetic process.
+    "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
     "packages/**/src/*.ts",
     "packages/**/src/*/index.ts",
+    // Standalone operator command invoked from the retention report runbook.
+    "packages/epistemic/server/scripts/retention-report.ts",
+    // Offline calibration command invoked by the frozen packet replay protocol.
+    "packages/epistemic/server/scripts/retention-calibrate.ts",
+    // Executable offline claim evaluation commands in the fixed replay protocol.
+    "packages/law-practice/server/test/evaluation/*.main.ts",
     "infra/src/internal/*-entry.ts",
     // Preloaded by every infra Pulumi.yaml (runtime.options.nodeargs).
     "infra/pulumi-typescript6.cjs",
@@ -119,9 +127,6 @@
     // Vendored upstream skill tree (shadcn showcase assets and scripts) pinned by
     // skills-lock.json; beep skills update rewrites it byte-for-byte from upstream.
     ".claude/skills/shadcn/**",
-    // Claude Code launches these by path from .claude/settings.json (the two
-    // graft shims and the repo-owned loader); no import graph reaches them.
-    ".claude/helpers/**",
     // Browser QA operators copy this documented harness template beside the app
     // under test; it is a distributed resource, not workspace-owned source.
     ".claude/skills/browser-qa-loop/resources/qa-capture-template.mjs",
@@ -137,6 +142,8 @@
     // so nothing in the workspace import graph reaches it.
     "infra/lambda/**",
     "**/test/fixtures/**",
+    // Preserve dependency ownership for this externally launched proof fixture.
+    "!packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
     "**/examples/**",
     "**/postcss.config.*",
     // tools/tsgo-shim provides the repo `tsgo` bin (consumed via node_modules/.bin,
@@ -194,7 +201,10 @@
     // Keep this package-specific so no authored source path is excluded.
     "packages/drivers/ecfr/src/_generated/**",
     "packages/drivers/govinfo/src/_generated/**",
-    "packages/drivers/runpod/src/_generated/**"
+    "packages/drivers/runpod/src/_generated/**",
+    // @beep/beep-effect-web: TanStack Router's generated route tree exports
+    // module-augmentation types the app never imports by name.
+    "apps/beep-effect-web/generated/**"
   ],
   // Exact compatibility list for authored `.ts` specifiers whose source file
   // is TSX. Do not broaden this to `**/*.ts`: real unresolved imports must keep
@@ -342,8 +352,7 @@
     { "file": "apps/*/src/app/**/*.tsx", "exports": ["instant"] }
   ],
   "duplicates": {
-    // The two graft shims are one-line delegations to the repo-owned loader.
-    "ignore": [".claude/skills/shadcn/**", ".claude/helpers/**"]
+    "ignore": [".claude/skills/shadcn/**"]
   },
   "health": {
     // Complexity ceilings — ratified 2026-07-30 (law in standards/effect-laws-v1.md;
@@ -356,18 +365,58 @@
     "maxCyclomatic": 20,
     "maxCrap": 30,
     "maxUnitSize": 60,
-    // The graft shims are generated; the loader's platform trust checks are
-    // security-boundary code kept whole rather than split for a ceiling.
     // The manual TS6-bridge tools (goal codemod, JSDoc census) entered discovery
     // only so dead-code analysis sees the bridge's consumers; complexity scope
     // stays as on main, where both paths were never health-scored.
     "ignore": [
       ".claude/skills/shadcn/**",
-      ".claude/helpers/**",
       "goals/schema-opaque-default/ops/codemod/**",
       "scratchpad/.jsdoc-loop/census.ts"
     ],
     "thresholdOverrides": [
+      // Fallow reports CRAP at or above the cutoff. The .01 cutoffs below
+      // admit the reviewed integer scores without admitting the next integer.
+      {
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts"
+        ],
+        "functions": ["read"],
+        "maxCrap": 156.01,
+        "reason": "Cohesive private credential refusal boundary, including systemd 0400 credentials; splitting risks changing pre-journal refusal order. Current installed and optional-credential proof: goals/agent-observability-foundation/ops/boundary-predicates-verification.json; independent adjudication: research/REMAINING-COMPLEXITY-ADJUDICATION.md in that packet. Fallow coverage is estimated, not measured. Review by 2026-11-30 or sooner on body/selector/ownership/protocol changes, measured coverage, or a simpler equivalent design; lower/remove when no longer needed."
+      },
+      {
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts"
+        ],
+        "functions": ["secrets"],
+        "maxCrap": 132.01,
+        "reason": "Cohesive credential-source selection and refusal ordering: an invalid present credential directory cannot fall back to ambient values. Current installed and optional-credential proof: goals/agent-observability-foundation/ops/boundary-predicates-verification.json; independent adjudication: research/REMAINING-COMPLEXITY-ADJUDICATION.md in that packet. Fallow coverage is estimated, not measured. Review by 2026-11-30 or sooner on body/selector/ownership/protocol changes, measured coverage, or a simpler equivalent design; lower/remove when no longer needed."
+      },
+      {
+        "files": [
+          "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts"
+        ],
+        "functions": ["program"],
+        "maxCrap": 56.01,
+        "reason": "External process fixture keeps initialize/retry, lost-ack recovery, restart reconciliation and no-relaunch lifecycle together. Actual entrypoint proof invokes this exact fixture: goals/agent-observability-foundation/ops/boundary-predicates-verification.json; independent adjudication: research/REMAINING-COMPLEXITY-ADJUDICATION.md in that packet. Fallow coverage is estimated, not measured. Review by 2026-11-30 or sooner on body/selector/ownership/protocol changes, measured coverage, or a simpler equivalent design; lower/remove when no longer needed."
+      },
+      {
+        "files": [
+          "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts"
+        ],
+        "functions": ["registerManagedSessionCases"],
+        "maxCognitive": 9,
+        "maxCrap": 32,
+        "reason": "This callback registers nine finite case matrices in one serial test-layer scope; it is not one long runtime scenario. Only the outer registration callback is named for this selector. Independent adjudication: goals/agent-observability-foundation/research/REMAINING-COMPLEXITY-ADJUDICATION.md. Fallow coverage is estimated, not measured. Review by 2026-11-30 or sooner on body/selector/scope/protocol changes, measured coverage, or a simpler equivalent design; lower/remove when no longer needed."
+      },
+      {
+        "files": [
+          "packages/tooling/library/ai-metrics/test/observation-root-probe.test.ts"
+        ],
+        "functions": ["observeCloneWorktreeEvidence"],
+        "maxCrap": 38,
+        "reason": "One actual Git clone/worktree scenario retains independent identity, unknown-population and privacy assertions. Full AI-metrics audit evidence: goals/agent-observability-foundation/ops/boundary-predicates-verification.json; independent adjudication: research/REMAINING-COMPLEXITY-ADJUDICATION.md in that packet. Fallow coverage is estimated, not measured. Review by 2026-11-30 or sooner on body/selector/identity changes, measured coverage, or a simpler equivalent design; lower/remove when no longer needed."
+      },
       {
         "files": [
           "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts"
@@ -475,7 +524,6 @@
         ],
         "functions": ["LiveWaveform"],
         "maxCognitive": 40,
-        "maxCrap": 31,
         "maxUnitSize": 465,
         "reason": "The component is the cohesive owner of its hook bindings and public waveform props; the microphone teardown and animation seams are extracted separately without fragmenting hook ownership. Review by 2026-12-03: re-measure after those extracted seams settle and lower this ceiling to the observed boundary."
       },
@@ -531,15 +579,8 @@
         "reason": "The public prop surface and hook integration account for the measured boundary; changing the prop contract is out of scope and helper extraction cannot reduce it honestly. Review by 2026-12-03: re-measure after any public component API redesign and remove the exception when the boundary naturally shrinks."
       },
       {
-        "files": ["packages/tooling/library/repo-utils/src/FsUtils.ts"],
-        "functions": ["visit"],
-        "maxCognitive": 22,
-        "maxCrap": 32,
-        "reason": "Symlink policy, cycle protection, directory exclusion, and recursion are one filesystem-safety transaction. Review by 2026-12-03: re-audit the safety invariants and lower or remove this ceiling only when an equivalent simpler transaction is proven."
-      },
-      {
         "files": [
-          "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts"
+          "packages/tooling/tool/cli/src/commands/Lint/ToolingSchemaFirst.command.ts"
         ],
         "functions": ["walk"],
         "maxCognitive": 19,

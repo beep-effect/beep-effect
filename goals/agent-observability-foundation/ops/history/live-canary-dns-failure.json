@@ -1,0 +1,52 @@
+{
+  "recordedAt": "2026-10-29T04:43:11.808455+00:00",
+  "result": "incomplete",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "goalComplete": false,
+  "artifactRoot": "/tmp/obs-deploy-avzi8ho2",
+  "deliberateMemoryExhaustion": false,
+  "liveCanary": {
+    "result": "incomplete",
+    "syntheticRecordsOnly": true,
+    "actualHarnessCoverage": false,
+    "productionCollectorChanged": false,
+    "backend": "https://dankserver.tailc7c348.ts.net:8447",
+    "project": "foundation-canary-ac0c72d6e55b",
+    "collectorImage": "otel/opentelemetry-collector-contrib@sha256:1175b03003053962012f5a231f5567f66a3e8fdb960c7835c0e48f7aa1555806",
+    "recordBudget": 2,
+    "producerAutomaticRetries": 0,
+    "initialHostAvailableBytes": 45794332672,
+    "templateSha256": "7546a1b24bb01a8d0c061054264e71d462f6f7643add2ed1c70151c20c0e51d6",
+    "renderedSha256": "51725a02638f7667f4032f893648c7a6a50b41401ed33a1106181ea1c4f8c6ea",
+    "onlyTemplateOverrides": ["project", "export endpoint", "30s retry window"],
+    "collectorLimitsVerified": true,
+    "localReceipt": {},
+    "queueFilesRetained": [
+      {
+        "bytes": 32768,
+        "sha256": "463cd8c99de619b6c08fd87574b38c25968d5a4cd018364f2c5c6f94198f4849"
+      }
+    ],
+    "cleanup": "owned collector stopped and removed; private queue retained"
+  },
+  "cleanup": [
+    {
+      "unit": "beep-observation-deploy-f23bbaaffa59.service",
+      "mainPid": 0,
+      "ownedUnitFileRemoved": true
+    },
+    {
+      "unit": "beep-observation-deploy-f23bbaaffa59-intake.service",
+      "mainPid": 0,
+      "ownedUnitFileRemoved": true
+    }
+  ],
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/ObservationWorker.entry.ts": "c91549ab1020bea7eab50f2751a9470bef43b43a32bd4b205fbfbd8b2263ee5e",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts": "b4220e80d0dbe2b41982228d2a6379dc0343acf0bc52e351130fb41bbea72762",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts": "bddd3e906afe6cf7a49a2526af5990c76e40b22ec8c05bd4a935803bd7cfce1c",
+    "goals/agent-observability-foundation/ops/verify-observation-deployment.py": "78c60c3a916ea432ef3598f0dac0f88e52caf8f1c04707c992090cc3dd9e08dd",
+    "goals/agent-observability-foundation/ops/live_canary_support.py": "200bffb2bace53776355ed3b29a091ad14bf831c7fd26db6058a75c29554f9d1"
+  }
+}

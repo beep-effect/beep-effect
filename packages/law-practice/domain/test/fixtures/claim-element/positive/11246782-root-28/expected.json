@@ -1,0 +1,2323 @@
+[
+  {
+    "claimNumber": 28,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "28",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 23,
+          "quote": "A juvenile vehicle seat"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 23,
+              "quote": "A juvenile vehicle seat"
+            },
+            "determiner": "a",
+            "head": "juvenile vehicle seat"
+          }
+        ]
+      },
+      {
+        "path": "28.a",
+        "anchor": {
+          "startChar": 35,
+          "endChar": 48,
+          "quote": "a seat bottom"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 35,
+              "endChar": 48,
+              "quote": "a seat bottom"
+            },
+            "determiner": "a",
+            "head": "seat bottom"
+          }
+        ]
+      },
+      {
+        "path": "28.b",
+        "anchor": {
+          "startChar": 50,
+          "endChar": 192,
+          "quote": "a seat back arranged to extend upwardly from the seat bottom and to cooperate with the seat bottom to provide a seating surface for a juvenile"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 50,
+              "endChar": 61,
+              "quote": "a seat back"
+            },
+            "determiner": "a",
+            "head": "seat back"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 110,
+              "quote": "the seat bottom"
+            },
+            "determiner": "the",
+            "head": "seat bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 133,
+              "endChar": 148,
+              "quote": "the seat bottom"
+            },
+            "determiner": "the",
+            "head": "seat bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 160,
+              "endChar": 177,
+              "quote": "a seating surface"
+            },
+            "determiner": "a",
+            "head": "seating surface"
+          },
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 192,
+              "quote": "a juvenile"
+            },
+            "determiner": "a",
+            "head": "juvenile"
+          }
+        ]
+      },
+      {
+        "path": "28.c",
+        "anchor": {
+          "startChar": 194,
+          "endChar": 752,
+          "quote": "wherein the upper shell further includes a downwardly extending left barrier post located in the hollow interior region in close proximity to the left swing arm, a downwardly extending right barrier post located in the hollow interior region in close proximity to the right swing arm and in laterally spaced-apart relation to the left barrier post, and an unsupported thin-walled section defining a laterally extending central portion of the top wall located in spaced-apart relation to the underlying lower shell and between the left and right barrier posts"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 202,
+              "endChar": 217,
+              "quote": "the upper shell"
+            },
+            "determiner": "the",
+            "head": "upper shell"
+          }
+        ]
+      },
+      {
+        "path": "28.c.i",
+        "anchor": {
+          "startChar": 235,
+          "endChar": 354,
+          "quote": "a downwardly extending left barrier post located in the hollow interior region in close proximity to the left swing arm"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 235,
+              "endChar": 275,
+              "quote": "a downwardly extending left barrier post"
+            },
+            "determiner": "a",
+            "head": "downwardly extending left barrier post"
+          },
+          {
+            "anchor": {
+              "startChar": 287,
+              "endChar": 313,
+              "quote": "the hollow interior region"
+            },
+            "determiner": "the",
+            "head": "hollow interior region"
+          },
+          {
+            "anchor": {
+              "startChar": 336,
+              "endChar": 354,
+              "quote": "the left swing arm"
+            },
+            "determiner": "the",
+            "head": "left swing arm"
+          }
+        ]
+      },
+      {
+        "path": "28.c.ii",
+        "anchor": {
+          "startChar": 356,
+          "endChar": 541,
+          "quote": "a downwardly extending right barrier post located in the hollow interior region in close proximity to the right swing arm and in laterally spaced-apart relation to the left barrier post"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 356,
+              "endChar": 397,
+              "quote": "a downwardly extending right barrier post"
+            },
+            "determiner": "a",
+            "head": "downwardly extending right barrier post"
+          },
+          {
+            "anchor": {
+              "startChar": 409,
+              "endChar": 435,
+              "quote": "the hollow interior region"
+            },
+            "determiner": "the",
+            "head": "hollow interior region"
+          },
+          {
+            "anchor": {
+              "startChar": 458,
+              "endChar": 477,
+              "quote": "the right swing arm"
+            },
+            "determiner": "the",
+            "head": "right swing arm"
+          },
+          {
+            "anchor": {
+              "startChar": 520,
+              "endChar": 541,
+              "quote": "the left barrier post"
+            },
+            "determiner": "the",
+            "head": "left barrier post"
+          }
+        ]
+      },
+      {
+        "path": "28.c.iii",
+        "anchor": {
+          "startChar": 547,
+          "endChar": 752,
+          "quote": "an unsupported thin-walled section defining a laterally extending central portion of the top wall located in spaced-apart relation to the underlying lower shell and between the left and right barrier posts"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 547,
+              "endChar": 581,
+              "quote": "an unsupported thin-walled section"
+            },
+            "determiner": "an",
+            "head": "unsupported thin-walled section"
+          },
+          {
+            "anchor": {
+              "startChar": 591,
+              "endChar": 628,
+              "quote": "a laterally extending central portion"
+            },
+            "determiner": "a",
+            "head": "laterally extending central portion"
+          },
+          {
+            "anchor": {
+              "startChar": 632,
+              "endChar": 644,
+              "quote": "the top wall"
+            },
+            "determiner": "the",
+            "head": "top wall"
+          },
+          {
+            "anchor": {
+              "startChar": 681,
+              "endChar": 707,
+              "quote": "the underlying lower shell"
+            },
+            "determiner": "the",
+            "head": "underlying lower shell"
+          },
+          {
+            "anchor": {
+              "startChar": 720,
+              "endChar": 752,
+              "quote": "the left and right barrier posts"
+            },
+            "determiner": "the",
+            "head": "left and right barrier posts"
+          }
+        ]
+      },
+      {
+        "path": "28.d",
+        "anchor": {
+          "startChar": 757,
+          "endChar": 889,
+          "quote": "the lower shell is coupled to the left and right barrier posts to retain the upper and lower shells in fixed relation to one another"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 757,
+              "endChar": 772,
+              "quote": "the lower shell"
+            },
+            "determiner": "the",
+            "head": "lower shell"
+          },
+          {
+            "anchor": {
+              "startChar": 787,
+              "endChar": 819,
+              "quote": "the left and right barrier posts"
+            },
+            "determiner": "the",
+            "head": "left and right barrier posts"
+          },
+          {
+            "anchor": {
+              "startChar": 830,
+              "endChar": 856,
+              "quote": "the upper and lower shells"
+            },
+            "determiner": "the",
+            "head": "upper and lower shells"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "28.a",
+        "parent": "28"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "28.b",
+          "anchor": {
+            "startChar": 95,
+            "endChar": 110,
+            "quote": "the seat bottom"
+          }
+        },
+        "introducing": {
+          "path": "28.a",
+          "anchor": {
+            "startChar": 35,
+            "endChar": 48,
+            "quote": "a seat bottom"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "28.b",
+          "anchor": {
+            "startChar": 133,
+            "endChar": 148,
+            "quote": "the seat bottom"
+          }
+        },
+        "introducing": {
+          "path": "28.a",
+          "anchor": {
+            "startChar": 35,
+            "endChar": 48,
+            "quote": "a seat bottom"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "28.b",
+        "parent": "28"
+      },
+      {
+        "kind": "functional",
+        "element": "28.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.b",
+              "anchor": {
+                "startChar": 50,
+                "endChar": 61,
+                "quote": "a seat back"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 61,
+              "endChar": 95,
+              "quote": " arranged to extend upwardly from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.b",
+              "anchor": {
+                "startChar": 95,
+                "endChar": 110,
+                "quote": "the seat bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 110,
+              "endChar": 133,
+              "quote": " and to cooperate with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.b",
+              "anchor": {
+                "startChar": 133,
+                "endChar": 148,
+                "quote": "the seat bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 148,
+              "endChar": 160,
+              "quote": " to provide "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.b",
+              "anchor": {
+                "startChar": 160,
+                "endChar": 177,
+                "quote": "a seating surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 177,
+              "endChar": 182,
+              "quote": " for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.b",
+              "anchor": {
+                "startChar": 182,
+                "endChar": 192,
+                "quote": "a juvenile"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "28.c",
+        "parent": "28"
+      },
+      {
+        "kind": "part-of",
+        "child": "28.c.i",
+        "parent": "28.c"
+      },
+      {
+        "kind": "functional",
+        "element": "28.c.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.i",
+              "anchor": {
+                "startChar": 235,
+                "endChar": 275,
+                "quote": "a downwardly extending left barrier post"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 275,
+              "endChar": 287,
+              "quote": " located in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.i",
+              "anchor": {
+                "startChar": 287,
+                "endChar": 313,
+                "quote": "the hollow interior region"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 313,
+              "endChar": 336,
+              "quote": " in close proximity to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.i",
+              "anchor": {
+                "startChar": 336,
+                "endChar": 354,
+                "quote": "the left swing arm"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "28.c.ii",
+          "anchor": {
+            "startChar": 520,
+            "endChar": 541,
+            "quote": "the left barrier post"
+          }
+        },
+        "introducing": {
+          "path": "28.c.i",
+          "anchor": {
+            "startChar": 235,
+            "endChar": 275,
+            "quote": "a downwardly extending left barrier post"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "28.c.ii",
+        "parent": "28.c"
+      },
+      {
+        "kind": "functional",
+        "element": "28.c.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.ii",
+              "anchor": {
+                "startChar": 356,
+                "endChar": 397,
+                "quote": "a downwardly extending right barrier post"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 397,
+              "endChar": 409,
+              "quote": " located in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.ii",
+              "anchor": {
+                "startChar": 409,
+                "endChar": 435,
+                "quote": "the hollow interior region"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 435,
+              "endChar": 458,
+              "quote": " in close proximity to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.ii",
+              "anchor": {
+                "startChar": 458,
+                "endChar": 477,
+                "quote": "the right swing arm"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 477,
+              "endChar": 520,
+              "quote": " and in laterally spaced-apart relation to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.ii",
+              "anchor": {
+                "startChar": 520,
+                "endChar": 541,
+                "quote": "the left barrier post"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "28.c.iii",
+        "parent": "28.c"
+      },
+      {
+        "kind": "functional",
+        "element": "28.c.iii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.iii",
+              "anchor": {
+                "startChar": 547,
+                "endChar": 581,
+                "quote": "an unsupported thin-walled section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 581,
+              "endChar": 591,
+              "quote": " defining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.iii",
+              "anchor": {
+                "startChar": 591,
+                "endChar": 628,
+                "quote": "a laterally extending central portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 628,
+              "endChar": 632,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.iii",
+              "anchor": {
+                "startChar": 632,
+                "endChar": 644,
+                "quote": "the top wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 644,
+              "endChar": 681,
+              "quote": " located in spaced-apart relation to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.iii",
+              "anchor": {
+                "startChar": 681,
+                "endChar": 707,
+                "quote": "the underlying lower shell"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 707,
+              "endChar": 720,
+              "quote": " and between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.c.iii",
+              "anchor": {
+                "startChar": 720,
+                "endChar": 752,
+                "quote": "the left and right barrier posts"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "28.d",
+        "parent": "28"
+      },
+      {
+        "kind": "functional",
+        "element": "28.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.d",
+              "anchor": {
+                "startChar": 757,
+                "endChar": 772,
+                "quote": "the lower shell"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 772,
+              "endChar": 787,
+              "quote": " is coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.d",
+              "anchor": {
+                "startChar": 787,
+                "endChar": 819,
+                "quote": "the left and right barrier posts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 819,
+              "endChar": 830,
+              "quote": " to retain "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.d",
+              "anchor": {
+                "startChar": 830,
+                "endChar": 856,
+                "quote": "the upper and lower shells"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 856,
+              "endChar": 889,
+              "quote": " in fixed relation to one another"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 29,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "29",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 20,
+          "quote": "The seat of claim 28"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "The seat"
+            },
+            "determiner": "the",
+            "head": "seat"
+          }
+        ]
+      },
+      {
+        "path": "29.a",
+        "anchor": {
+          "startChar": 22,
+          "endChar": 362,
+          "quote": "wherein the lower shell further includes an upwardly extending left barrier post located in the hollow interior region and arranged to mate with the downwardly extending left barrier post and an upwardly extending right barrier post located in the hollow interior region and arranged to mate with the downwardly extending right barrier post"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 45,
+              "quote": "the lower shell"
+            },
+            "determiner": "the",
+            "head": "lower shell"
+          }
+        ]
+      },
+      {
+        "path": "29.a.i",
+        "anchor": {
+          "startChar": 63,
+          "endChar": 209,
+          "quote": "an upwardly extending left barrier post located in the hollow interior region and arranged to mate with the downwardly extending left barrier post"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 63,
+              "endChar": 102,
+              "quote": "an upwardly extending left barrier post"
+            },
+            "determiner": "an",
+            "head": "upwardly extending left barrier post"
+          },
+          {
+            "anchor": {
+              "startChar": 114,
+              "endChar": 140,
+              "quote": "the hollow interior region"
+            },
+            "determiner": "the",
+            "head": "hollow interior region"
+          },
+          {
+            "anchor": {
+              "startChar": 167,
+              "endChar": 209,
+              "quote": "the downwardly extending left barrier post"
+            },
+            "determiner": "the",
+            "head": "downwardly extending left barrier post"
+          }
+        ]
+      },
+      {
+        "path": "29.a.ii",
+        "anchor": {
+          "startChar": 214,
+          "endChar": 362,
+          "quote": "an upwardly extending right barrier post located in the hollow interior region and arranged to mate with the downwardly extending right barrier post"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 214,
+              "endChar": 254,
+              "quote": "an upwardly extending right barrier post"
+            },
+            "determiner": "an",
+            "head": "upwardly extending right barrier post"
+          },
+          {
+            "anchor": {
+              "startChar": 266,
+              "endChar": 292,
+              "quote": "the hollow interior region"
+            },
+            "determiner": "the",
+            "head": "hollow interior region"
+          },
+          {
+            "anchor": {
+              "startChar": 319,
+              "endChar": 362,
+              "quote": "the downwardly extending right barrier post"
+            },
+            "determiner": "the",
+            "head": "downwardly extending right barrier post"
+          }
+        ]
+      },
+      {
+        "path": "29.b",
+        "anchor": {
+          "startChar": 368,
+          "endChar": 647,
+          "quote": "wherein the shield further includes a left fastener coupled to the upwardly and downwardly extending left barrier posts and a right fastener coupled to the upwardly and downwardly extending right barrier posts to retain the upper and lower shells in fixed relation to one another"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 376,
+              "endChar": 386,
+              "quote": "the shield"
+            },
+            "determiner": "the",
+            "head": "shield"
+          }
+        ]
+      },
+      {
+        "path": "29.b.i",
+        "anchor": {
+          "startChar": 404,
+          "endChar": 487,
+          "quote": "a left fastener coupled to the upwardly and downwardly extending left barrier posts"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 404,
+              "endChar": 419,
+              "quote": "a left fastener"
+            },
+            "determiner": "a",
+            "head": "left fastener"
+          },
+          {
+            "anchor": {
+              "startChar": 431,
+              "endChar": 487,
+              "quote": "the upwardly and downwardly extending left barrier posts"
+            },
+            "determiner": "the",
+            "head": "upwardly and downwardly extending left barrier posts"
+          }
+        ]
+      },
+      {
+        "path": "29.b.ii",
+        "anchor": {
+          "startChar": 492,
+          "endChar": 647,
+          "quote": "a right fastener coupled to the upwardly and downwardly extending right barrier posts to retain the upper and lower shells in fixed relation to one another"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 492,
+              "endChar": 508,
+              "quote": "a right fastener"
+            },
+            "determiner": "a",
+            "head": "right fastener"
+          },
+          {
+            "anchor": {
+              "startChar": 520,
+              "endChar": 577,
+              "quote": "the upwardly and downwardly extending right barrier posts"
+            },
+            "determiner": "the",
+            "head": "upwardly and downwardly extending right barrier posts"
+          },
+          {
+            "anchor": {
+              "startChar": 588,
+              "endChar": 614,
+              "quote": "the upper and lower shells"
+            },
+            "determiner": "the",
+            "head": "upper and lower shells"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "29",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "The seat"
+          }
+        },
+        "introducing": {
+          "path": "28",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 23,
+            "quote": "A juvenile vehicle seat"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "29.a",
+        "parent": "29"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "29.a.i",
+          "anchor": {
+            "startChar": 167,
+            "endChar": 209,
+            "quote": "the downwardly extending left barrier post"
+          }
+        },
+        "introducing": {
+          "path": "28.c.i",
+          "anchor": {
+            "startChar": 235,
+            "endChar": 275,
+            "quote": "a downwardly extending left barrier post"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "29.a.i",
+        "parent": "29.a"
+      },
+      {
+        "kind": "functional",
+        "element": "29.a.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.a.i",
+              "anchor": {
+                "startChar": 63,
+                "endChar": 102,
+                "quote": "an upwardly extending left barrier post"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 102,
+              "endChar": 114,
+              "quote": " located in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.a.i",
+              "anchor": {
+                "startChar": 114,
+                "endChar": 140,
+                "quote": "the hollow interior region"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 140,
+              "endChar": 167,
+              "quote": " and arranged to mate with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.a.i",
+              "anchor": {
+                "startChar": 167,
+                "endChar": 209,
+                "quote": "the downwardly extending left barrier post"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "29.a.ii",
+          "anchor": {
+            "startChar": 319,
+            "endChar": 362,
+            "quote": "the downwardly extending right barrier post"
+          }
+        },
+        "introducing": {
+          "path": "28.c.ii",
+          "anchor": {
+            "startChar": 356,
+            "endChar": 397,
+            "quote": "a downwardly extending right barrier post"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "29.a.ii",
+        "parent": "29.a"
+      },
+      {
+        "kind": "functional",
+        "element": "29.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.a.ii",
+              "anchor": {
+                "startChar": 214,
+                "endChar": 254,
+                "quote": "an upwardly extending right barrier post"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 254,
+              "endChar": 266,
+              "quote": " located in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.a.ii",
+              "anchor": {
+                "startChar": 266,
+                "endChar": 292,
+                "quote": "the hollow interior region"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 292,
+              "endChar": 319,
+              "quote": " and arranged to mate with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.a.ii",
+              "anchor": {
+                "startChar": 319,
+                "endChar": 362,
+                "quote": "the downwardly extending right barrier post"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "29.b",
+        "parent": "29"
+      },
+      {
+        "kind": "part-of",
+        "child": "29.b.i",
+        "parent": "29.b"
+      },
+      {
+        "kind": "functional",
+        "element": "29.b.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.b.i",
+              "anchor": {
+                "startChar": 404,
+                "endChar": 419,
+                "quote": "a left fastener"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 419,
+              "endChar": 431,
+              "quote": " coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.b.i",
+              "anchor": {
+                "startChar": 431,
+                "endChar": 487,
+                "quote": "the upwardly and downwardly extending left barrier posts"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "29.b.ii",
+        "parent": "29.b"
+      },
+      {
+        "kind": "functional",
+        "element": "29.b.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.b.ii",
+              "anchor": {
+                "startChar": 492,
+                "endChar": 508,
+                "quote": "a right fastener"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 508,
+              "endChar": 520,
+              "quote": " coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.b.ii",
+              "anchor": {
+                "startChar": 520,
+                "endChar": 577,
+                "quote": "the upwardly and downwardly extending right barrier posts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 577,
+              "endChar": 588,
+              "quote": " to retain "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.b.ii",
+              "anchor": {
+                "startChar": 588,
+                "endChar": 614,
+                "quote": "the upper and lower shells"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 614,
+              "endChar": 647,
+              "quote": " in fixed relation to one another"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "29",
+        "ancestor": "28"
+      }
+    ]
+  },
+  {
+    "claimNumber": 30,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "30",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 20,
+          "quote": "The seat of claim 28"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "The seat"
+            },
+            "determiner": "the",
+            "head": "seat"
+          }
+        ]
+      },
+      {
+        "path": "30.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 116,
+          "quote": "a crotch belt retainer located in the hollow interior region of the barrier"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 63,
+              "quote": "a crotch belt retainer"
+            },
+            "determiner": "a",
+            "head": "crotch belt retainer"
+          },
+          {
+            "anchor": {
+              "startChar": 75,
+              "endChar": 101,
+              "quote": "the hollow interior region"
+            },
+            "determiner": "the",
+            "head": "hollow interior region"
+          },
+          {
+            "anchor": {
+              "startChar": 105,
+              "endChar": 116,
+              "quote": "the barrier"
+            },
+            "determiner": "the",
+            "head": "barrier"
+          }
+        ]
+      },
+      {
+        "path": "30.b",
+        "anchor": {
+          "startChar": 118,
+          "endChar": 567,
+          "quote": "a juvenile-restraint harness including a pair of shoulder straps coupled-to the seat back and a crotch belt having a first end coupled to the seat bottom, an opposite second end coupled to the pair of shoulder straps, and a mid-portion configured to carry a buckle and located between the first and second ends and arranged to extend into the hollow interior region of the barrier through the belt-receiver slot to mate with the crotch belt retainer"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 118,
+              "endChar": 146,
+              "quote": "a juvenile-restraint harness"
+            },
+            "determiner": "a",
+            "head": "juvenile-restraint harness"
+          }
+        ]
+      },
+      {
+        "path": "30.b.i",
+        "anchor": {
+          "startChar": 157,
+          "endChar": 207,
+          "quote": "a pair of shoulder straps coupled-to the seat back"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 157,
+              "endChar": 163,
+              "quote": "a pair"
+            },
+            "determiner": "a",
+            "head": "pair"
+          },
+          {
+            "anchor": {
+              "startChar": 167,
+              "endChar": 182,
+              "quote": "shoulder straps"
+            },
+            "determiner": "bare",
+            "head": "shoulder straps"
+          },
+          {
+            "anchor": {
+              "startChar": 194,
+              "endChar": 207,
+              "quote": "the seat back"
+            },
+            "determiner": "the",
+            "head": "seat back"
+          }
+        ]
+      },
+      {
+        "path": "30.b.ii",
+        "anchor": {
+          "startChar": 212,
+          "endChar": 567,
+          "quote": "a crotch belt having a first end coupled to the seat bottom, an opposite second end coupled to the pair of shoulder straps, and a mid-portion configured to carry a buckle and located between the first and second ends and arranged to extend into the hollow interior region of the barrier through the belt-receiver slot to mate with the crotch belt retainer"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 212,
+              "endChar": 225,
+              "quote": "a crotch belt"
+            },
+            "determiner": "a",
+            "head": "crotch belt"
+          }
+        ]
+      },
+      {
+        "path": "30.b.ii.i",
+        "anchor": {
+          "startChar": 233,
+          "endChar": 271,
+          "quote": "a first end coupled to the seat bottom"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 233,
+              "endChar": 244,
+              "quote": "a first end"
+            },
+            "determiner": "a",
+            "head": "first end"
+          },
+          {
+            "anchor": {
+              "startChar": 256,
+              "endChar": 271,
+              "quote": "the seat bottom"
+            },
+            "determiner": "the",
+            "head": "seat bottom"
+          }
+        ]
+      },
+      {
+        "path": "30.b.ii.ii",
+        "anchor": {
+          "startChar": 273,
+          "endChar": 334,
+          "quote": "an opposite second end coupled to the pair of shoulder straps"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 273,
+              "endChar": 295,
+              "quote": "an opposite second end"
+            },
+            "determiner": "an",
+            "head": "opposite second end"
+          },
+          {
+            "anchor": {
+              "startChar": 307,
+              "endChar": 315,
+              "quote": "the pair"
+            },
+            "determiner": "the",
+            "head": "pair"
+          },
+          {
+            "anchor": {
+              "startChar": 319,
+              "endChar": 334,
+              "quote": "shoulder straps"
+            },
+            "determiner": "bare",
+            "head": "shoulder straps"
+          }
+        ]
+      },
+      {
+        "path": "30.b.ii.iii",
+        "anchor": {
+          "startChar": 340,
+          "endChar": 567,
+          "quote": "a mid-portion configured to carry a buckle and located between the first and second ends and arranged to extend into the hollow interior region of the barrier through the belt-receiver slot to mate with the crotch belt retainer"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 340,
+              "endChar": 353,
+              "quote": "a mid-portion"
+            },
+            "determiner": "a",
+            "head": "mid-portion"
+          },
+          {
+            "anchor": {
+              "startChar": 374,
+              "endChar": 382,
+              "quote": "a buckle"
+            },
+            "determiner": "a",
+            "head": "buckle"
+          },
+          {
+            "anchor": {
+              "startChar": 403,
+              "endChar": 428,
+              "quote": "the first and second ends"
+            },
+            "determiner": "the",
+            "head": "first and second ends"
+          },
+          {
+            "anchor": {
+              "startChar": 457,
+              "endChar": 483,
+              "quote": "the hollow interior region"
+            },
+            "determiner": "the",
+            "head": "hollow interior region"
+          },
+          {
+            "anchor": {
+              "startChar": 487,
+              "endChar": 498,
+              "quote": "the barrier"
+            },
+            "determiner": "the",
+            "head": "barrier"
+          },
+          {
+            "anchor": {
+              "startChar": 507,
+              "endChar": 529,
+              "quote": "the belt-receiver slot"
+            },
+            "determiner": "the",
+            "head": "belt-receiver slot"
+          },
+          {
+            "anchor": {
+              "startChar": 543,
+              "endChar": 567,
+              "quote": "the crotch belt retainer"
+            },
+            "determiner": "the",
+            "head": "crotch belt retainer"
+          }
+        ]
+      },
+      {
+        "path": "30.c",
+        "anchor": {
+          "startChar": 569,
+          "endChar": 789,
+          "quote": "wherein the belt-receiver slot is formed in a section of the bottom wall of the lower shell underlying the unsupported thin-walled section defining a laterally extending central portion of the top wall of the upper shell"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 577,
+              "endChar": 599,
+              "quote": "the belt-receiver slot"
+            },
+            "determiner": "the",
+            "head": "belt-receiver slot"
+          },
+          {
+            "anchor": {
+              "startChar": 613,
+              "endChar": 622,
+              "quote": "a section"
+            },
+            "determiner": "a",
+            "head": "section"
+          },
+          {
+            "anchor": {
+              "startChar": 626,
+              "endChar": 641,
+              "quote": "the bottom wall"
+            },
+            "determiner": "the",
+            "head": "bottom wall"
+          },
+          {
+            "anchor": {
+              "startChar": 645,
+              "endChar": 660,
+              "quote": "the lower shell"
+            },
+            "determiner": "the",
+            "head": "lower shell"
+          },
+          {
+            "anchor": {
+              "startChar": 672,
+              "endChar": 707,
+              "quote": "the unsupported thin-walled section"
+            },
+            "determiner": "the",
+            "head": "unsupported thin-walled section"
+          },
+          {
+            "anchor": {
+              "startChar": 717,
+              "endChar": 754,
+              "quote": "a laterally extending central portion"
+            },
+            "determiner": "a",
+            "head": "laterally extending central portion"
+          },
+          {
+            "anchor": {
+              "startChar": 758,
+              "endChar": 770,
+              "quote": "the top wall"
+            },
+            "determiner": "the",
+            "head": "top wall"
+          },
+          {
+            "anchor": {
+              "startChar": 774,
+              "endChar": 789,
+              "quote": "the upper shell"
+            },
+            "determiner": "the",
+            "head": "upper shell"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "30",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "The seat"
+          }
+        },
+        "introducing": {
+          "path": "28",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 23,
+            "quote": "A juvenile vehicle seat"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "30.a",
+        "parent": "30"
+      },
+      {
+        "kind": "functional",
+        "element": "30.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 63,
+                "quote": "a crotch belt retainer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 75,
+              "quote": " located in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.a",
+              "anchor": {
+                "startChar": 75,
+                "endChar": 101,
+                "quote": "the hollow interior region"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 101,
+              "endChar": 105,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.a",
+              "anchor": {
+                "startChar": 105,
+                "endChar": 116,
+                "quote": "the barrier"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "30.b",
+        "parent": "30"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "30.b.i",
+          "anchor": {
+            "startChar": 194,
+            "endChar": 207,
+            "quote": "the seat back"
+          }
+        },
+        "introducing": {
+          "path": "28.b",
+          "anchor": {
+            "startChar": 50,
+            "endChar": 61,
+            "quote": "a seat back"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "30.b.i",
+        "parent": "30.b"
+      },
+      {
+        "kind": "functional",
+        "element": "30.b.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.i",
+              "anchor": {
+                "startChar": 157,
+                "endChar": 163,
+                "quote": "a pair"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 163,
+              "endChar": 167,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.i",
+              "anchor": {
+                "startChar": 167,
+                "endChar": 182,
+                "quote": "shoulder straps"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 182,
+              "endChar": 194,
+              "quote": " coupled-to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.i",
+              "anchor": {
+                "startChar": 194,
+                "endChar": 207,
+                "quote": "the seat back"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "30.b.ii",
+        "parent": "30.b"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "30.b.ii.i",
+          "anchor": {
+            "startChar": 256,
+            "endChar": 271,
+            "quote": "the seat bottom"
+          }
+        },
+        "introducing": {
+          "path": "28.a",
+          "anchor": {
+            "startChar": 35,
+            "endChar": 48,
+            "quote": "a seat bottom"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "30.b.ii.i",
+        "parent": "30.b.ii"
+      },
+      {
+        "kind": "functional",
+        "element": "30.b.ii.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.i",
+              "anchor": {
+                "startChar": 233,
+                "endChar": 244,
+                "quote": "a first end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 244,
+              "endChar": 256,
+              "quote": " coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.i",
+              "anchor": {
+                "startChar": 256,
+                "endChar": 271,
+                "quote": "the seat bottom"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "30.b.ii.ii",
+          "anchor": {
+            "startChar": 307,
+            "endChar": 315,
+            "quote": "the pair"
+          }
+        },
+        "introducing": {
+          "path": "30.b.i",
+          "anchor": {
+            "startChar": 157,
+            "endChar": 163,
+            "quote": "a pair"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "30.b.ii.ii",
+          "anchor": {
+            "startChar": 319,
+            "endChar": 334,
+            "quote": "shoulder straps"
+          }
+        },
+        "introducing": {
+          "path": "30.b.i",
+          "anchor": {
+            "startChar": 167,
+            "endChar": 182,
+            "quote": "shoulder straps"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "30.b.ii.ii",
+        "parent": "30.b.ii"
+      },
+      {
+        "kind": "functional",
+        "element": "30.b.ii.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.ii",
+              "anchor": {
+                "startChar": 273,
+                "endChar": 295,
+                "quote": "an opposite second end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 295,
+              "endChar": 307,
+              "quote": " coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.ii",
+              "anchor": {
+                "startChar": 307,
+                "endChar": 315,
+                "quote": "the pair"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 315,
+              "endChar": 319,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.ii",
+              "anchor": {
+                "startChar": 319,
+                "endChar": 334,
+                "quote": "shoulder straps"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "30.b.ii.iii",
+          "anchor": {
+            "startChar": 543,
+            "endChar": 567,
+            "quote": "the crotch belt retainer"
+          }
+        },
+        "introducing": {
+          "path": "30.a",
+          "anchor": {
+            "startChar": 41,
+            "endChar": 63,
+            "quote": "a crotch belt retainer"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "30.b.ii.iii",
+        "parent": "30.b.ii"
+      },
+      {
+        "kind": "functional",
+        "element": "30.b.ii.iii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.iii",
+              "anchor": {
+                "startChar": 340,
+                "endChar": 353,
+                "quote": "a mid-portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 353,
+              "endChar": 374,
+              "quote": " configured to carry "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.iii",
+              "anchor": {
+                "startChar": 374,
+                "endChar": 382,
+                "quote": "a buckle"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 382,
+              "endChar": 403,
+              "quote": " and located between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.iii",
+              "anchor": {
+                "startChar": 403,
+                "endChar": 428,
+                "quote": "the first and second ends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 428,
+              "endChar": 457,
+              "quote": " and arranged to extend into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.iii",
+              "anchor": {
+                "startChar": 457,
+                "endChar": 483,
+                "quote": "the hollow interior region"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 483,
+              "endChar": 487,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.iii",
+              "anchor": {
+                "startChar": 487,
+                "endChar": 498,
+                "quote": "the barrier"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 498,
+              "endChar": 507,
+              "quote": " through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.iii",
+              "anchor": {
+                "startChar": 507,
+                "endChar": 529,
+                "quote": "the belt-receiver slot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 529,
+              "endChar": 543,
+              "quote": " to mate with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.b.ii.iii",
+              "anchor": {
+                "startChar": 543,
+                "endChar": 567,
+                "quote": "the crotch belt retainer"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "30.c",
+          "anchor": {
+            "startChar": 672,
+            "endChar": 707,
+            "quote": "the unsupported thin-walled section"
+          }
+        },
+        "introducing": {
+          "path": "28.c.iii",
+          "anchor": {
+            "startChar": 547,
+            "endChar": 581,
+            "quote": "an unsupported thin-walled section"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "30.c",
+        "parent": "30"
+      },
+      {
+        "kind": "functional",
+        "element": "30.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 569,
+              "endChar": 577,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.c",
+              "anchor": {
+                "startChar": 577,
+                "endChar": 599,
+                "quote": "the belt-receiver slot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 599,
+              "endChar": 613,
+              "quote": " is formed in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.c",
+              "anchor": {
+                "startChar": 613,
+                "endChar": 622,
+                "quote": "a section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 622,
+              "endChar": 626,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.c",
+              "anchor": {
+                "startChar": 626,
+                "endChar": 641,
+                "quote": "the bottom wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 641,
+              "endChar": 645,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.c",
+              "anchor": {
+                "startChar": 645,
+                "endChar": 660,
+                "quote": "the lower shell"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 660,
+              "endChar": 672,
+              "quote": " underlying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.c",
+              "anchor": {
+                "startChar": 672,
+                "endChar": 707,
+                "quote": "the unsupported thin-walled section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 707,
+              "endChar": 717,
+              "quote": " defining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.c",
+              "anchor": {
+                "startChar": 717,
+                "endChar": 754,
+                "quote": "a laterally extending central portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 754,
+              "endChar": 758,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.c",
+              "anchor": {
+                "startChar": 758,
+                "endChar": 770,
+                "quote": "the top wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 770,
+              "endChar": 774,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.c",
+              "anchor": {
+                "startChar": 774,
+                "endChar": 789,
+                "quote": "the upper shell"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "30",
+        "ancestor": "28"
+      }
+    ]
+  }
+]

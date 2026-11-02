@@ -54,7 +54,7 @@ import {
 import { VendoredSkillLockEntry } from "./SkillsLock.schemas.ts";
 import { publishSkillsLockEntry } from "./SkillsLock.write.ts";
 import { SkillHunkReport, SkillRelockReceipt, SkillReplayBatch, SkillReplayReport } from "./SkillsRelock.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { ComputedSkillTree } from "./internal/SkillTree.ts";
@@ -68,7 +68,7 @@ const $I = $RepoCliId.create("commands/Skills/SkillsRelock.service");
 
 const RELOCK_PLAN_SCHEMA_VERSION = "skills-relock-plan/v1";
 
-type TrainRequirements = SkillUpstreamContentSource | FileSystem.FileSystem | Path.Path | Crypto.Crypto;
+type TrainRequirements = SkillUpstreamContentSource | FileSystem.FileSystem | Path.Path | Digest.Digest;
 
 /**
  * Every failure `skills replay` and `skills relock` can raise.
@@ -121,7 +121,7 @@ const classifySeries = Effect.fn("SkillsRelock.classifySeries")(function* (
 ): Effect.fn.Return<
   { readonly rows: ReadonlyArray<SkillHunkReport>; readonly tree: ReadonlyArray<SkillUpstreamContentFile> },
   SkillsCommandError,
-  Crypto.Crypto
+  Digest.Digest
 > {
   let tree = files;
   let rows = A.empty<SkillHunkReport>();
@@ -148,7 +148,7 @@ const statusOf = (strictClean: boolean, rows: ReadonlyArray<SkillHunkReport>): S
 const withStrictRefusal = Effect.fn("SkillsRelock.withStrictRefusal")(function* (
   rows: ReadonlyArray<SkillHunkReport>,
   refusal: O.Option<{ readonly patch: string; readonly file: string; readonly message: string }>
-): Effect.fn.Return<ReadonlyArray<SkillHunkReport>, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<ReadonlyArray<SkillHunkReport>, SkillsCommandError, Digest.Digest> {
   if (O.isNone(refusal) || A.some(rows, (row) => row.status !== "applied")) {
     return rows;
   }
@@ -304,7 +304,7 @@ const planDigestOf = Effect.fn("SkillsRelock.planDigestOf")(function* (
   entry: VendoredSkillLockEntry,
   snapshot: SkillSnapshot,
   effective: SkillEffective
-): Effect.fn.Return<SkillRelockReceipt["planDigest"], SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<SkillRelockReceipt["planDigest"], SkillsCommandError, Digest.Digest> {
   const encoded = yield* Effect.all({
     snapshot: encodeSnapshot(snapshot),
     effective: encodeEffective(effective),

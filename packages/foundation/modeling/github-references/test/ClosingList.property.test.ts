@@ -13,7 +13,7 @@ const roundTrips = <T, E>(
   arbitrary: Arbitrary.Arbitrary<T> = Arbitrary.schema(schema)
 ): void => {
   it.effect.prop(
-    name + ": encode/decode preserves values and never fails",
+    `${name}: encode/decode preserves values and never fails`,
     [arbitrary],
     ([value]) =>
       Effect.gen(function* () {
@@ -57,14 +57,14 @@ const stringifyList = (value: G.ClosingList | G.ReferenceList): string =>
   value.keyword +
   " " +
   A.join(
-    A.map(value.issueNumbers, (issue) => "#" + issue),
+    A.map(value.issueNumbers, (issue) => `#${issue}`),
     ","
   );
 const stringifyHarvest = (values: ReadonlyArray<G.HarvestedReferenceList>): string => {
   let text = "";
   for (const value of values) {
     const items = A.join(
-      A.map(value.issueNumbers, (issue) => "#" + issue),
+      A.map(value.issueNumbers, (issue) => `#${issue}`),
       ","
     );
     text += Str.repeat(value.start - text.length)(" ");
@@ -78,7 +78,7 @@ const singleProperty = <T>(
   stringify: (value: T) => string
 ): void => {
   it.effect.prop(
-    name + ": canonicalization is idempotent and parse/stringify is faithful",
+    `${name}: canonicalization is idempotent and parse/stringify is faithful`,
     [Arbitrary.schema(Sample), Arbitrary.schema(S.String)],
     ([sample, noise]) =>
       Effect.sync(() => {
@@ -88,7 +88,7 @@ const singleProperty = <T>(
           (sample.colon ? ":" : "") +
           "\t" +
           A.join(
-            A.map(sample.issues, (issue) => "#00" + issue),
+            A.map(sample.issues, (issue) => `#00${issue}`),
             sample.separator
           ) +
           " ";
@@ -108,21 +108,16 @@ const arrayProperty = <T>(
   stringify: (values: ReadonlyArray<T>) => string
 ): void => {
   it.effect.prop(
-    name + ": canonicalization is idempotent and parse/stringify is faithful",
+    `${name}: canonicalization is idempotent and parse/stringify is faithful`,
     [Arbitrary.schema(Sample), Arbitrary.schema(S.String)],
     ([sample, noise]) =>
       Effect.sync(() => {
         const items = A.join(
-          A.map(sample.issues, (issue) => "#00" + issue),
+          A.map(sample.issues, (issue) => `#00${issue}`),
           sample.separator
         );
-        const line = Str.toUpperCase(sample.keyword) + (sample.colon ? ":" : "") + "\t" + items;
-        for (const text of [
-          line,
-          "ignored\n" + line + "\r\n" + line,
-          "prose " + sample.keyword + " " + items + ". fixes #7",
-          noise,
-        ]) {
+        const line = `${Str.toUpperCase(sample.keyword) + (sample.colon ? ":" : "")}\t${items}`;
+        for (const text of [line, `ignored\n${line}\r\n${line}`, `prose ${sample.keyword} ${items}. fixes #7`, noise]) {
           const parsed = parse(text);
           const canonical = stringify(parsed);
           assert.deepStrictEqual(parse(canonical), parsed);
@@ -167,7 +162,7 @@ describe("ClosingList property floor", () => {
           Str.toUpperCase(sample.keyword) +
           " " +
           A.join(
-            A.map(issues, (issue) => "#" + issue),
+            A.map(issues, (issue) => `#${issue}`),
             sample.separator
           );
         assert.deepStrictEqual(
@@ -180,9 +175,9 @@ describe("ClosingList property floor", () => {
             })
           )
         );
-        assert.deepStrictEqual(G.parseReferenceList(line + ", #9007199254740992"), O.none());
-        assert.deepStrictEqual(G.harvestReferenceLists(line + ", #9007199254740992"), []);
-        const prose = "prefix " + line + " suffix";
+        assert.deepStrictEqual(G.parseReferenceList(`${line}, #9007199254740992`), O.none());
+        assert.deepStrictEqual(G.harvestReferenceLists(`${line}, #9007199254740992`), []);
+        const prose = `prefix ${line} suffix`;
         for (const hit of G.harvestReferenceLists(prose)) {
           assert.deepStrictEqual(
             G.parseReferenceList(Str.slice(hit.start, hit.end)(prose)),

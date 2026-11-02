@@ -1,0 +1,97 @@
+{
+  "familyId": "11973401-root-12",
+  "rootClaimNumber": 12,
+  "labelClaimNumbers": [12, 13, 14, 17],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A multiple computer system comprising: a first plurality of computers each interconnected via a communications network and a second like plurality of computers interconnected therewith; at least one memory location in each said second computer being a replica of a corresponding memory location in the corresponding first computer; and updating means for transmitting changes to the contents or values of said memory locations in said first computers to the corresponding memory locations of said second computers.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The system as in claim 1, wherein said first computers each have a local memory which is accessible by each other first computer wherein said first computers form a distributed shared memory system.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The system as in claim 2, wherein said second computers each have a local memory which is updateable by the corresponding first computer.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The system as in claim 1, wherein said updating means transmits changes in said first computer memory locations to the corresponding second computer memory location via said communications network.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The system as in claim 1, wherein said updating means transmits changes in said first computer memory locations so the corresponding second computer memory locations by transmission directly from each said first computer to the corresponding second computer.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The system as in claims 1, including failure means to re-direct communications to and from any one of said first computers which fails to the corresponding second computer.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The system as in claim 6, wherein said failure means causes said second computer corresponding to said failed first computer to undertake the tasks previously undertaken by said failed first computer.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The system as in claim 1, wherein: each of said first computers executes a different portion of at least one application program each of which is written to execute on only a simple computer; each said second computer has a like application program portion as its corresponding first computer and all of said computers have an independent local memory; and at least one memory location in the independent memory of one of said first computers is replicated in each of said other first computers.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The system as in claim 7, wherein said updating means transmits changes in said first computer memory locations to the corresponding second computer memory location via said communications network.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The system as in claim 7, wherein said updating means transmits changes in said first computer memory locations to the corresponding second computer memory locations by transmission directly from each said first computer to the corresponding second computer.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The system as in claim 10, including failure means operable in the event of failure of any one or more of said first computers to cause the second computer corresponding to each said failed first computer to undertake the tasks previously undertaken by said failed first computer.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "A dual computer system comprising: a first computer having an application program which is intolerant of computer failure; a second computer connected thereto to mirror said first computer, said second computer having a replica of said application program and having memory locations which replicate those of said first computer; and said computer system having updating means for updating said second computer memory locations with changes to the contents or values of the corresponding memory locations of said first computer.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The system as in claim 12, and having a plurality of interconnected said first computers, each of which has a corresponding second computer connected thereto to mirror the corresponding first computer.",
+      "sourceXmlParentClaimNumbers": [12]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The system as in claim 13, wherein said plurality of first computers comprises a cluster.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The system as in claim 1, wherein said updating means transmits to each said second computer data relating to the progress of execution of instructions achieved by the corresponding first computer.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The system as in claim 1, wherein each of said first computers executes an application program, or a portion thereof, which is intolerant of failure of the executing first computer.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The system as in claim 14, wherein said updating means transmits to each said second computer data relating to the progress of execution of instructions achieved by the corresponding first computer.",
+      "sourceXmlParentClaimNumbers": [14]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The system as in claim 15, wherein each of said first computers executes an application program, or a portion thereof, which is intolerant of failure of the executing first computer.",
+      "sourceXmlParentClaimNumbers": [15]
+    }
+  ]
+}

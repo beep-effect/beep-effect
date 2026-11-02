@@ -15,7 +15,7 @@ import {
   sha256Hex,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -44,7 +44,9 @@ const listGoals = Effect.gen(function* () {
   return A.sort(yield* fs.readDirectory("goals"), (left: string, right: string) => (left < right ? -1 : 1));
 });
 
-const commandTestLayer = PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer));
+const commandTestLayer = PacketEventStoreLive.pipe(
+  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+);
 
 it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
   describe("goals bootstrap --write", { concurrent: false }, () => {

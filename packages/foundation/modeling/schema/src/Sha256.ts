@@ -6,12 +6,11 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
-import * as SchemaIssue from "effect/SchemaIssue";
 
 const $I = $SchemaId.create("Sha256");
 
@@ -32,16 +31,9 @@ const Sha256HexChecks = S.makeFilterGroup([
 
 const computeSha256Hex = Effect.fn("computeSha256Hex")(function* (
   input: Uint8Array
-): Effect.fn.Return<string, SchemaIssue.Issue, Crypto.Crypto> {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto.digest("SHA-256", Uint8Array.from(input)).pipe(
-    Effect.mapError(
-      (cause) =>
-        new SchemaIssue.InvalidValue({
-          message: cause.message,
-        })
-    )
-  );
+): Effect.fn.Return<string, never, Digest.Digest> {
+  const digestService = yield* Digest.Digest;
+  const digest = yield* digestService.digest(Digest.sha256, Uint8Array.from(input));
 
   return Hex.encode(digest);
 });

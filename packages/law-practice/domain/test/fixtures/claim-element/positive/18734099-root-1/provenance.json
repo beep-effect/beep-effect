@@ -1,0 +1,44 @@
+{
+  "applicationNumber": "18734099",
+  "publicationNumber": "US20240398123A1",
+  "publicationDate": "2024-12-05",
+  "nativeXmlSha256": "b99ac190dc8f6baffe70cbe040f221aa100bcbaae0a2e23325f8969f85240025",
+  "claimsXmlSha256": "8dce6843c712af3cc6de9a4baf17b490781df175ee76718645b675405cc27cbc",
+  "officeActionDocumentIdentifiers": [
+    "MLTVF25AX117X14"
+  ],
+  "officeActionMailDate": "2026-02-20",
+  "officeActionSection112Text": [
+    "claims 1-12 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention.\r\nin claims 1-12, applicant uses the language “characterized by” in claim 1 and “characterized in that” in claims 2-12, which is improper claim language.\r\nin claim 1, lines 13-14, “the lower end of the upper backrest” lacks antecedent basis. on line 14, “the angle between the upper backrest and the lower backrest” lacks antecedent basis.\r\nin claim 2, line 3, “the lower end of the upper backrest” lacks antecedent basis. on lines 4-5, “rotational connection point” (2 instances) lacks antecedent basis. on line 6, “the lower end of the lower backrest” lacks antecedent basis. on lines 6-7, “the upper end of the lower backrest” lacks antecedent basis. on line 7, “the lower end of the upper backrest” lacks antecedent basis. on line 9, “the lower end of the upper backrest” lacks antecedent basis. . on line 10, “the upper end of the lower backrest” lacks antecedent basis. on line 11, “the lower end of the lower backrest” lacks antecedent basis.\r\nin claim 3, line 3, “the upper end of the main rod” lacks antecedent basis. on line 4, “the lower end of the main rod” lacks antecedent basis. on line 7, “the upper end of the upper backrest” lacks antecedent basis. on line 8, “the lower end of the lower backrest” lacks antecedent basis.\r\nin claim 4, lines 4-5, “the rotational range of the second connecting rod” lacks antecedent basis. nowhere in claim 3 has applicant defined that “the second connecting rod” is “rotational” or that “the second connecting rod” rotates.\r\nin claim 6, line 5, “the upper end of the second connecting rod” lacks antecedent basis. on line 6, “the other end of the first connecting rod” ” lacks antecedent basis. on lines 6-7, “the lower end of the second connecting rod” lacks antecedent basis. on line 8, “the upper end of the second connecting rod” lacks antecedent basis. on line 9, “the front end of the rotating member” lacks antecedent basis. on line 10, “the rear end of the rotating member” lacks antecedent basis.\r\nin claim 9, lines 3-4, “the left and right sides of the rear part of the base” lacks antecedent basis. on line 4, “ the front end of the horizontal section” and “the rear end of the base” lack antecedent basis. on line 5“the left and right sides of the upper end of the middle position of the horizontal section;” lacks antecedent basis. on line 5, “the upper end of the middle position of the horizontal section” lacks antecedent basis. on line 5, “the middle position of the horizontal section” lacks antecedent basis.\r\nin claim 10, lines 2-5, “base seat member” (3 instances”) lacks antecedent basis.\r\nin claim 11, lines 4-5, “the lower end of the upper backrest frame” lacks antecedent basis. on line 5, “the upper end of the backrest bracket” lacks antecedent basis.\r\nin claim 12, “the upper end of the transfer rod” lacks antecedent basis.\r\nthe aforementioned problems render the claims vague and indefinite. clarification and/or correction is required."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "dc7a7667-3515-4642-87ca-f47ebbe2275a",
+      "officialDate": "2024-06-05T11:37:41.000-0400"
+    },
+    {
+      "documentIdentifier": "LXCZ6P1NXBLUEX3",
+      "officialDate": "2024-06-05T11:37:41.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "LXCZ6P1NXBLUEX3",
+      "officialDate": "2024-06-05T11:37:41.000-0400",
+      "sha256": "2200493e924de653be5f433c63d733ed42ad5bed4fdb3eb22316d1984c90e41e",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 12
+    }
+  ],
+  "documentInventoryCount": 52,
+  "documentInventoryRows": 52,
+  "primaryCpc": "A47C   7/40",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/18734099",
+    "https://api.uspto.gov/api/v1/patent/applications/18734099/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

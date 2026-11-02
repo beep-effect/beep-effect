@@ -1,0 +1,65 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. An insulation system for a container, the container comprising a lip, a top portion, and an outer region, the insulation system comprising: an outer insulation component configured to cover only a portion of the outer region of the container; and an inner insulation component comprising an insulated lid configured to be lowered to a position inside of the container to insulate contents of the container, when positioned inside of the container at least the top portion of the container comprising the lip and a portion of the outer region of the container remaining exposed and uninsulated, the positioning of the inner insulation component being aligned in a vertical direction with the portion of the outer region covered by the outer insulation component.</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the container comprises approximately a five gallon bucket.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising the container, the container having a container lid and container handle.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, the inner insulation component comprising a flexible sealing member, wherein the flexible sealing member comprises a rubber gasket.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The insulation system of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the flexible sealing member comprises a peripheral gasket configured to engage with an inner surface of the container.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the outer insulation component comprises a flexible insulation material configured to conform to the outer region of the container.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the outer insulation component extends from a bottom of the container to a first height, and the inner insulation component extends from the lip to a second height when positioned inside the container.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the inner insulation component comprises a compressible, rigid, flexible, or semi-flexible foam core surrounded by a moisture-resistant outer layer.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the outer insulation component comprises multiple layers of insulating material to keep contents of the container cold.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the inner insulation component comprises a handle configured to facilitate removal of the insulated lid from the container.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the inner insulation component comprises an image capture device or temperature sensor.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the inner insulation component is sized to fit different capacity containers having different internal diameters.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, the inner insulation component comprising a flexible sealing member, wherein the flexible sealing member is configured to expand or contract to maintain sealing engagement with inner surfaces of containers having different internal diameters.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. The insulation system of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the outer insulation component comprises elastic material configured to stretch to accommodate containers of different circumferences.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. The insulation system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a temperature monitoring system disposed within the inner insulation component.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. The insulation system of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the temperature monitoring system comprises:
+<claim-text>a temperature sensor configured to contact contents within the container; and</claim-text>
+<claim-text>a wireless communication device configured to transmit temperature data to a mobile device.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text>17. The insulation system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the wireless communication device is configured to transmit an alert in response to detecting that a measured temperature exceeds a predetermined threshold.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text>18. The insulation system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the temperature monitoring system comprises a display visible on an outer surface of the inner insulation component, the display presenting a current temperature reading received from the temperature sensor, the temperature monitoring system comprising an input component configured to receive user input specifying the predetermined threshold.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text>19. A method of insulating a container comprising: providing an outer insulation component; providing an inner insulation component comprising an insulated lid; covering only a portion of an outer region of the container with the outer insulation component; positioning the inner insulation component such that at least a top portion of the container comprising a lip and a portion of the outer region of the container remain exposed and uninsulated; and aligning in a vertical direction the position of the inner insulation component to correspond with the portion of the outer region covered by the outer insulation component.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text>20. A temperature control system for a container having a sidewall, a bottom wall, and an upper rim defining an opening, the temperature control system comprising: an outer insulation cover configured to surround only a portion of an exterior of the container, the outer insulation cover extending from proximate the bottom wall to a first height along the sidewall; and an insulated lid configured to be received within the opening of the container, the insulated lid extending downwardly within the container to a second height along the sidewall, the first height of the outer insulation cover and the second height of the insulated lid are configured to leave an exposed portion of the upper rim of the container.</claim-text>
+</claim>
+</claims>

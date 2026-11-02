@@ -1,0 +1,1120 @@
+{
+  "data": {
+    "t0": {
+      "name": "TimeRange",
+      "fields": null,
+      "inputFields": [
+        {
+          "name": "start",
+          "type": {
+            "kind": "SCALAR",
+            "name": "DateTime",
+            "ofType": null
+          }
+        },
+        {
+          "name": "end",
+          "type": {
+            "kind": "SCALAR",
+            "name": "DateTime",
+            "ofType": null
+          }
+        }
+      ]
+    },
+    "t1": {
+      "name": "ProjectTraceRetentionPolicy",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "ID"
+            }
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "String"
+            }
+          }
+        },
+        {
+          "name": "cronExpression",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "CronExpression"
+            }
+          }
+        },
+        {
+          "name": "rule",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "UNION",
+              "name": "TraceRetentionRule"
+            }
+          }
+        },
+        {
+          "name": "projects",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ProjectConnection"
+            }
+          }
+        }
+      ],
+      "inputFields": null
+    },
+    "t2": {
+      "name": "SpanCostSummary",
+      "fields": [
+        {
+          "name": "prompt",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "CostBreakdown"
+            }
+          }
+        },
+        {
+          "name": "completion",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "CostBreakdown"
+            }
+          }
+        },
+        {
+          "name": "total",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "CostBreakdown"
+            }
+          }
+        }
+      ],
+      "inputFields": null
+    },
+    "t3": {
+      "name": "Span",
+      "fields": [
+        {
+          "name": "id",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "ID"
+            }
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "String"
+            }
+          }
+        },
+        {
+          "name": "statusCode",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "ENUM",
+              "name": "SpanStatusCode"
+            }
+          }
+        },
+        {
+          "name": "statusMessage",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "String"
+            }
+          }
+        },
+        {
+          "name": "startTime",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "DateTime"
+            }
+          }
+        },
+        {
+          "name": "endTime",
+          "type": {
+            "kind": "SCALAR",
+            "name": "DateTime",
+            "ofType": null
+          }
+        },
+        {
+          "name": "latencyMs",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        },
+        {
+          "name": "parentId",
+          "type": {
+            "kind": "SCALAR",
+            "name": "ID",
+            "ofType": null
+          }
+        },
+        {
+          "name": "spanKind",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "ENUM",
+              "name": "SpanKind"
+            }
+          }
+        },
+        {
+          "name": "spanId",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "ID"
+            }
+          }
+        },
+        {
+          "name": "trace",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "Trace"
+            }
+          }
+        },
+        {
+          "name": "context",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "SpanContext"
+            }
+          }
+        },
+        {
+          "name": "attributes",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "String"
+            }
+          }
+        },
+        {
+          "name": "metadata",
+          "type": {
+            "kind": "SCALAR",
+            "name": "String",
+            "ofType": null
+          }
+        },
+        {
+          "name": "userId",
+          "type": {
+            "kind": "SCALAR",
+            "name": "String",
+            "ofType": null
+          }
+        },
+        {
+          "name": "numDocuments",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Int",
+            "ofType": null
+          }
+        },
+        {
+          "name": "tokenCountTotal",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Int",
+            "ofType": null
+          }
+        },
+        {
+          "name": "tokenCountPrompt",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Int",
+            "ofType": null
+          }
+        },
+        {
+          "name": "tokenCountCompletion",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Int",
+            "ofType": null
+          }
+        },
+        {
+          "name": "tokenPromptDetails",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "TokenCountPromptDetails"
+            }
+          }
+        },
+        {
+          "name": "input",
+          "type": {
+            "kind": "OBJECT",
+            "name": "SpanIOValue",
+            "ofType": null
+          }
+        },
+        {
+          "name": "output",
+          "type": {
+            "kind": "OBJECT",
+            "name": "SpanIOValue",
+            "ofType": null
+          }
+        },
+        {
+          "name": "events",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "cumulativeTokenCountTotal",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        },
+        {
+          "name": "cumulativeTokenCountPrompt",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        },
+        {
+          "name": "cumulativeTokenCountCompletion",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        },
+        {
+          "name": "propagatedStatusCode",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "ENUM",
+              "name": "SpanStatusCode"
+            }
+          }
+        },
+        {
+          "name": "spanAnnotations",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "spanNotes",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "spanAnnotationSummaries",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "documentEvaluations",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "documentRetrievalMetrics",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "numChildSpans",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "descendants",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "SpanConnection"
+            }
+          }
+        },
+        {
+          "name": "asExampleRevision",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "SpanAsExampleRevision"
+            }
+          }
+        },
+        {
+          "name": "project",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "Project"
+            }
+          }
+        },
+        {
+          "name": "containedInDataset",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Boolean"
+            }
+          }
+        },
+        {
+          "name": "costSummary",
+          "type": {
+            "kind": "OBJECT",
+            "name": "SpanCostSummary",
+            "ofType": null
+          }
+        },
+        {
+          "name": "costDetailSummaryEntries",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "cumulativeCostDetailSummaryEntries",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        }
+      ],
+      "inputFields": null
+    },
+    "t4": {
+      "name": "SpanSort",
+      "fields": null,
+      "inputFields": [
+        {
+          "name": "col",
+          "type": {
+            "kind": "ENUM",
+            "name": "SpanColumn",
+            "ofType": null
+          }
+        },
+        {
+          "name": "evalResultKey",
+          "type": {
+            "kind": "INPUT_OBJECT",
+            "name": "EvalResultKey",
+            "ofType": null
+          }
+        },
+        {
+          "name": "dir",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "ENUM",
+              "name": "SortDir"
+            }
+          }
+        }
+      ]
+    },
+    "t5": {
+      "name": "SpanCountTimeSeries",
+      "fields": [
+        {
+          "name": "data",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        }
+      ],
+      "inputFields": null
+    },
+    "t6": {
+      "name": "TimeSeriesDataPoint",
+      "fields": [
+        {
+          "name": "timestamp",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "DateTime"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        }
+      ],
+      "inputFields": null
+    },
+    "t7": {
+      "name": "Query",
+      "fields": [
+        {
+          "name": "modelProviders",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "generativeModelCustomProviders",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "GenerativeModelCustomProviderConnection"
+            }
+          }
+        },
+        {
+          "name": "secrets",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "SecretConnection"
+            }
+          }
+        },
+        {
+          "name": "generativeModels",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "GenerativeModelConnection"
+            }
+          }
+        },
+        {
+          "name": "playgroundModels",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "users",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "UserConnection"
+            }
+          }
+        },
+        {
+          "name": "userRoles",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "userApiKeys",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "oauth2Grants",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "systemApiKeys",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "projects",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ProjectConnection"
+            }
+          }
+        },
+        {
+          "name": "projectsLastUpdatedAt",
+          "type": {
+            "kind": "SCALAR",
+            "name": "DateTime",
+            "ofType": null
+          }
+        },
+        {
+          "name": "datasets",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "DatasetConnection"
+            }
+          }
+        },
+        {
+          "name": "datasetsLastUpdatedAt",
+          "type": {
+            "kind": "SCALAR",
+            "name": "DateTime",
+            "ofType": null
+          }
+        },
+        {
+          "name": "compareExperiments",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ExperimentComparisonConnection"
+            }
+          }
+        },
+        {
+          "name": "experimentRunMetricComparisons",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ExperimentRunMetricComparisons"
+            }
+          }
+        },
+        {
+          "name": "validateExperimentRunFilterCondition",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ValidationResult"
+            }
+          }
+        },
+        {
+          "name": "node",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "INTERFACE",
+              "name": "Node"
+            }
+          }
+        },
+        {
+          "name": "viewer",
+          "type": {
+            "kind": "OBJECT",
+            "name": "User",
+            "ofType": null
+          }
+        },
+        {
+          "name": "prompts",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "PromptConnection"
+            }
+          }
+        },
+        {
+          "name": "searchResources",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "promptLabels",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "PromptLabelConnection"
+            }
+          }
+        },
+        {
+          "name": "datasetLabels",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "DatasetLabelConnection"
+            }
+          }
+        },
+        {
+          "name": "datasetSplits",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "DatasetSplitConnection"
+            }
+          }
+        },
+        {
+          "name": "builtInEvaluators",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "evaluators",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "EvaluatorConnection"
+            }
+          }
+        },
+        {
+          "name": "annotationConfigs",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AnnotationConfigConnection"
+            }
+          }
+        },
+        {
+          "name": "classificationEvaluatorConfigs",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "defaultProjectTraceRetentionPolicy",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ProjectTraceRetentionPolicy"
+            }
+          }
+        },
+        {
+          "name": "projectTraceRetentionPolicies",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ProjectTraceRetentionPolicyConnection"
+            }
+          }
+        },
+        {
+          "name": "dbStorageCapacityBytes",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        },
+        {
+          "name": "dbTableStats",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "serverStatus",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ServerStatus"
+            }
+          }
+        },
+        {
+          "name": "agentSessions",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AgentSessionConnection"
+            }
+          }
+        },
+        {
+          "name": "agentsConfig",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AgentsConfig"
+            }
+          }
+        },
+        {
+          "name": "availableAgentSkills",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "validateRegularExpression",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ValidationResult"
+            }
+          }
+        },
+        {
+          "name": "getSpanByOtelId",
+          "type": {
+            "kind": "OBJECT",
+            "name": "Span",
+            "ofType": null
+          }
+        },
+        {
+          "name": "getTraceByOtelId",
+          "type": {
+            "kind": "OBJECT",
+            "name": "Trace",
+            "ofType": null
+          }
+        },
+        {
+          "name": "getProjectByName",
+          "type": {
+            "kind": "OBJECT",
+            "name": "Project",
+            "ofType": null
+          }
+        },
+        {
+          "name": "getProjectSessionById",
+          "type": {
+            "kind": "OBJECT",
+            "name": "ProjectSession",
+            "ofType": null
+          }
+        },
+        {
+          "name": "getDatasetExampleByExternalId",
+          "type": {
+            "kind": "OBJECT",
+            "name": "DatasetExample",
+            "ofType": null
+          }
+        },
+        {
+          "name": "applyChatTemplate",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "PromptChatTemplate"
+            }
+          }
+        },
+        {
+          "name": "projectCount",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "datasetCount",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "promptCount",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "evaluatorCount",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "sandboxBackends",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "sandboxProviders",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        }
+      ],
+      "inputFields": null
+    }
+  }
+}

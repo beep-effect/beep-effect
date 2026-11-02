@@ -1,0 +1,67 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "15803808-root-15",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "unresolved": [],
+  "referenceConcerns": [
+    {
+      "claimNumber": 15,
+      "quotes": [
+        "the data sources"
+      ],
+      "reason": "Main data sources and supplementary data sources are both introduced before this unqualified reference. No unique subset is selected merely by exact-head similarity."
+    },
+    {
+      "claimNumber": 15,
+      "quotes": [
+        "the image"
+      ],
+      "reason": "Source receives plural images and later co-registers each voxel of a singular definite image without selecting an image. Retained without an arbitrary member or sibling-system introduction."
+    },
+    {
+      "claimNumbers": [
+        15,
+        18,
+        19
+      ],
+      "quotes": [
+        "the merged dataset"
+      ],
+      "reason": "Source creates a multidimensional dataset, then merges it with supplementary sources to create a mapped image. Merged dataset is not explicitly identified with a unique prior term; neither mapped image nor unmerged dataset is chosen by assumption."
+    },
+    {
+      "claimNumber": 15,
+      "quotes": [
+        "the characterization"
+      ],
+      "reason": "Characterization is first recited as purpose in the instructions context and later as a definite nominal referring to characterize tissues. No distinct nominal introduction is fabricated from the characterize predicate."
+    },
+    {
+      "claimNumbers": [
+        18,
+        19
+      ],
+      "quotes": [
+        "the step"
+      ],
+      "reason": "Actual element dependencies identify the computing/signal-purification functions further limited. No new term for an unrecited nominal step is inserted into the ancestor."
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "Source audits and independent source critic accepted source identity/version and actual rejection association; this semantic pass relies on those retained qualifications and does not claim fresh PDF/inventory authentication. Examiner wording is evidence, not the semantic reference answer. All unselected claims were context only; no sibling-reference borrowing."
+  ],
+  "annotationRationale": "Fresh source grammar with actual outer method-comprising transition: root is A computer implemented method; stored/executed instructions are a functional limitation, then resumptive the method groups eight explicit step subelements. Embedded computing-device comprising remains in the instructions relation, not mistaken for the main method transition. Explicit18/19 further-comprises lists retain nested function structure. Complete noun phrases, abstract terms and bare data/material names retained without repairing a supplementary data sources or etc. Singular a data synthesis/analysis module supplies both uniquely qualified synthesis and analysis references semantically; this differs from imposing examiner allegations. TDD acronym resolves to the explicitly named tissue definition database in the actual parent, not sibling system1. Relative that remains exact anchored functional text.",
+  "independence": "Fresh manual semantic extractor. Only exact manually chosen source quote location, serialization, geometry and schema validation helpers used. No production decomposition/policy, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation. Agent confidence is not attorney agreement; independent semantic critic is pending."
+}

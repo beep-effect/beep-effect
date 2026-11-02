@@ -1,6 +1,6 @@
 # @beep/repo-tsconfig
 
-`tsconfig.json` loading for repo tooling, with tsc's semantics. `TsconfigLoader` reads and decodes one config, resolves its whole `extends` chain the way `tsc` does, and folds it into one `ResolvedTsconfig`. `TsconfigLoaderSync` runs the same pipeline synchronously over file and path operations the caller supplies. `TsconfigDiscovery.findNearest` finds the nearest config above a directory. All IO goes through `FileSystem` and `Path` from `effect` core, so the caller provides a platform once, at the edge.
+`tsconfig.json` loading for repo tooling, with tsc's semantics. `TsconfigLoader` reads and decodes one config, resolves its whole `extends` chain the way `tsc` does, and folds it into one `ResolvedTsconfig`. `TsconfigLoaderSync` runs the same pipeline synchronously over file and path operations the caller supplies. `TsconfigDiscovery.findNearest` finds the nearest config above a directory. `TsconfigValidator` is the strict door: the same document closed to the typed fields of `@beep/tsconfig` (an unknown key, a `null` option or a removed enum value is a failure) plus the uniqueness and cross-field rules tsc enforces, over an in-memory value or a file read through the loader. All IO goes through `FileSystem` and `Path` from `effect` core, so the caller provides a platform once, at the edge.
 
 ## Why this package
 
@@ -59,17 +59,35 @@ const options = TsconfigLoaderSync.compilerOptions("./tsconfig.json", {
 console.log(typeof options); // object
 ```
 
+Validate a config the user named, strictly, and take its effective options:
+
+```ts
+import { TsconfigValidator } from "@beep/repo-tsconfig/TsconfigValidator";
+import * as Effect from "effect/Effect";
+
+// The named file passes the strict closed check, its extends chain is merged with tsc semantics,
+// and the merged options pass the check too. Requires FileSystem and Path from a platform layer.
+const program = TsconfigValidator.compilerOptions("./tsconfig.json");
+console.log(Effect.isEffect(program)); // true
+
+// In memory: a typo, a null option or a duplicate lib entry fails typed as TsconfigValidationError.
+console.log(Effect.runSyncExit(TsconfigValidator.validate({ compilerOptions: { stirct: true } }))._tag); // Failure
+```
+
+`StrictTsconfig` and `StrictCompilerOptions` are the schemas behind it; encoding a validated value gives the on-disk JSON shape with every enum in its canonical lower-case spelling. docgen renders its examples `tsconfig.json` through them.
+
 `isFile` is optional and defaults to `exists`, preserving existing sync adapters. Supply it to distinguish files from directories (following symlinks) and return false for stat errors, including missing paths and paths through files (`ENOTDIR`). Directory targets then fall through to a `.json` sibling, later export candidate or ancestor package, as tsc does. The async loader uses the platform `stat` operation for this classification.
 
 `realPath` is optional. Without it, a package target reached through a `node_modules` symlink is used as found, so its own relative `extends` resolves from the link's directory. Failures are the async pipeline's typed errors thrown as themselves (`TsconfigParseError`, `TsconfigExtendsError`, or a `PlatformError` wrapping what your operation threw), never a fiber-failure wrapper.
 
 ## Features
 
-- `TsconfigLoader.load`, `.resolve`, `.compilerOptions`: read and decode one config; resolve its `extends` chain depth-first with per-branch cycle stacks (diamond chains are legal) and a depth guard; or project the result down to the merged options.
+- `TsconfigLoader.load`, `.resolve`, `.resolveDocument`, `.compilerOptions`: read and decode one config; resolve its `extends` chain depth-first with per-branch cycle stacks (diamond chains are legal) and a depth guard, from the named file or from a document already in hand; or project the result down to the merged options.
 - Target resolution as tsc does it. Relative and rooted targets try the exact file, then the `.json` retry. Bare specifiers walk the ancestor `node_modules` chain: `exports` maps with longest-prefix `*` patterns, conditions in insertion order, and `.d.ts`/`.ts`/`.js` targets read as their `.json` sibling, taking the first target that exists (a missing one falls through to the next condition or array entry; a `null` target stops the lookup); then the `tsconfig` manifest field and `<pkg>/tsconfig.json`. A package target is realpathed (`preserveSymlinks: false`).
 - `TsconfigLoaderSync`: the same pipeline under `Effect.runSyncExit` over `{ fileSystem, path }` operations the caller supplies, Windows-correct when the caller passes a win32 `path`.
 - `TsconfigDiscovery.findNearest`: the nearest `tsconfig.json` (or another file name through `FindNearestOptions.filename`) at or above a directory, over `@beep/walker`. An unreadable ancestor cannot hide a config above it.
-- Typed failures. A malformed file is a `TsconfigParseError` carrying its path. A broken chain is a `TsconfigExtendsError` with an `ExtendsFailureReason` (`not-found`, `cycle`, `depth`, `empty`) and the full chain. IO errors flow through as `PlatformError`. Hostile manifests never defect.
+- `TsconfigValidator.validate`, `.validateCompilerOptions`, `.load`, `.compilerOptions`: the strict closed check over `@beep/tsconfig`'s `ClosedTsconfigJson` / `ClosedCompilerOptions` views (one key universe with the passthrough model), with unique `files`/`include`/`exclude`/`references`/`lib`/`types`/`typeRoots`/`rootDirs`/`customConditions`/`moduleSuffixes`/`paths` lists, a non-negative integer `maxNodeModuleJsDepth`, and tsc's cross-field rules (`allowImportingTsExtensions` needs `noEmit`, `emitDeclarationOnly` or `rewriteRelativeImportExtensions`; `reactNamespace` needs `jsx: react`; `maxNodeModuleJsDepth` needs `allowJs`). Every issue names the rejected value and its path.
+- Typed failures. A malformed file is a `TsconfigParseError` carrying its path. A document the strict rules reject is a `TsconfigValidationError` carrying its path and the schema failure. A broken chain is a `TsconfigExtendsError` with an `ExtendsFailureReason` (`not-found`, `cycle`, `depth`, `empty`) and the full chain. IO errors flow through as `PlatformError`. Hostile manifests never defect.
 
 ## Development
 

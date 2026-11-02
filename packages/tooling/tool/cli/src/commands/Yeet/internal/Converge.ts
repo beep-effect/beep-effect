@@ -76,7 +76,8 @@ import {
 } from "./MonitorComments.ts";
 import { dispatchYeetCheckFailure } from "./Remediation.ts";
 import { YeetWatchCheck, YeetWatchThread, yeetWatchThreadOutstanding } from "./WatchStream.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -223,7 +224,7 @@ export const convergeYeetInbox = Effect.fn("Yeet.convergeInbox")(function* (
   context: Pick<RepoRunContext, "base" | "repoRoot">,
   observation: YeetConvergeObservation,
   at: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest> {
   yield* Effect.forEach(
     A.filter(observation.checks, (check) => YeetCheckOutcome.is.fail(check.outcome)),
     (check) => dispatchYeetCheckFailure(context.repoRoot, observation, check, at),
@@ -421,7 +422,7 @@ export const convergeYeetPrComments = Effect.fn("Yeet.convergePrComments")(funct
 ): Effect.fn.Return<
   ReadonlyArray<YeetPrCommentRow>,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const appended = yield* Effect.forEach(
     A.getSomes(A.map(comments, yeetPrCommentCapsule(window))),
@@ -489,7 +490,11 @@ export const pollYeetPrCommentRows = Effect.fn("Yeet.pollPrCommentRows")(functio
 ): Effect.fn.Return<
   ReadonlyArray<YeetPrCommentRow>,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const consumer = YeetMonitorCommentConsumer.Enum["until-ready"];
   const watermarkRef = yield* openYeetMonitorCommentStream(context, window.prNumber, consumer, O.some(window.since));

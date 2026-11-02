@@ -17,7 +17,7 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -47,8 +47,9 @@ import type { ProcessTableShape } from "@beep/repo-cli/test/RepoRun";
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
+  NodeCrypto.layer,
   TestConsole.layer,
-  WorktreeRemovalServiceLive.pipe(Layer.provide(NodeServices.layer))
+  WorktreeRemovalServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 
 const runGit = Effect.fn("WorktreeRemoveFenceTest.runGit")(function* (cwd: string, args: ReadonlyArray<string>) {
@@ -215,7 +216,8 @@ const desktopPanelTable = (holder: number) =>
 const walkingWatcherTable = Effect.fn("WorktreeRemoveFenceTest.walkingWatcherTable")(function* (
   walker: number,
   lane: string,
-  walkingScans: number
+  walkingScans: number,
+  firstWalkingScan = 1
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -237,7 +239,8 @@ const walkingWatcherTable = Effect.fn("WorktreeRemoveFenceTest.walkingWatcherTab
       pid === walker
         ? Effect.flatMap(
             Ref.updateAndGet(scans, (count) => count + 1),
-            (count) => (count <= walkingScans ? fencedCopy : Effect.succeed(A.empty<string>()))
+            (count) =>
+              count >= firstWalkingScan && count <= walkingScans ? fencedCopy : Effect.succeed(A.empty<string>())
           )
         : procProcessTable.descriptors(pid),
     // The fence asks about the renamed copy, which keeps the lane's inode.
@@ -397,6 +400,47 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         expect(output).toContain(`Worktree retirement complete: ${lane}`);
         expect(output).toContain(`warning: pid ${walker.pid} (sleep) held only an inotify watch on the worktree`);
         expect(yield* fs.exists(lane)).toBe(false);
+      })
+    )
+  );
+
+  it.effect("preserves a walker and its late write observed only after capture", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const walker = yield* spawnSleepIn(path.dirname(repoRoot));
+        // First fenced scan is quiet; only the post-capture scan sees the
+        // directory handle. A later quiet scan cannot prove archive completeness.
+        const table = yield* walkingWatcherTable(walker.pid, lane, 2, 2);
+        const writing: ProcessTableShape = {
+          ...table,
+          descriptors: (pid) =>
+            table.descriptors(pid).pipe(
+              Effect.tap((directories) =>
+                pid === walker.pid
+                  ? Effect.forEach(
+                      directories,
+                      (directory) => fs.writeFileString(path.join(directory, "late-data.txt"), "uncaptured data"),
+                      { discard: true }
+                    )
+                  : Effect.void
+              ),
+              Effect.orDie
+            ),
+        };
+        const error = yield* Effect.flip(remove(repoRoot)).pipe(
+          Effect.provideService(ProcessTable, writing),
+          Effect.provideService(WorktreeFenceSettle, quickSettle(5)),
+          Effect.ensuring(Effect.ignore(walker.kill()))
+        );
+        expect(failureMessage(error)).toContain("the fenced copy is preserved");
+        const fenced = O.getOrThrow(
+          A.findFirst(yield* fs.readDirectory(path.dirname(lane)), Str.startsWith(`${path.basename(lane)}.retiring-`))
+        );
+        expect(yield* fs.readFileString(path.join(path.dirname(lane), fenced, "late-data.txt"))).toBe(
+          "uncaptured data"
+        );
       })
     )
   );

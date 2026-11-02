@@ -5,12 +5,14 @@ import {
   failWithIssueArtifacts,
   firstRedLaneRun,
   INNER_LANE_REPORT_FILE_NAME,
+  knownSubLaneHintFromOutput,
   laneRunsForWrapper,
   QualityIssueIndex,
   qualityIssuesFromStepResult,
   RepoPlanStep,
   RepoRunContext,
   RepoStepRunResult,
+  routeForCategory,
   runArtifactPathForContext,
   TurboPlanSnapshot,
 } from "@beep/repo-cli/test/Yeet";
@@ -25,12 +27,11 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import type { QualityIssue } from "@beep/repo-cli/test/Yeet";
+import type { QualityIssue, QualityIssueCategory } from "@beep/repo-cli/test/Yeet";
 
 const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer, NodeCrypto.layer);
 
 const OSV_HINT = "Inspect the OSV finding and rerun `bun run beep quality github-checks security`.";
-const CHANGESET_HINT_PREFIX = "Run `bun run beep quality changeset-status --since origin/main`.";
 const GOALS_INDEX_HINT = "Run `bun run beep goals index`, inspect the update, then rerun the cheap-gates tier.";
 const TYPOS_HINT =
   "Run the typos checker on the flagged files and fix the spelling, or whitelist intentional terms in `_typos.toml`.";
@@ -160,18 +161,83 @@ const cheapGatesLanes: ReadonlyArray<QualityTaskLaneRun> = [
 ];
 
 describe("yeet packet issue lane record", () => {
-  it("documents the whole-output scan trap for wrappers without a lane-run record", () => {
-    expect(rawIssue(fullProofStep, fullProofOutput, [])).toMatchObject({
-      category: "security-audit",
-      subCategory: "security",
-      message: "full:pre-push failed in security with exit code 1.",
-      remediation: OSV_HINT,
+  it.each<readonly [QualityIssueCategory, string, string]>([
+    ["parser-error", "quality-review-fix-loop", "Issue parser failed to classify output"],
+    ["unknown-raw", "quality-review-fix-loop", "Raw quality output needs classification"],
+    ["build", "quality-review-fix-loop", "Build failure"],
+    ["repo-export-policy", "quality-review-fix-loop", "Stale repo-export workflow reference"],
+    ["security-audit", "quality-review-fix-loop", "Security audit failure"],
+    ["pr-review", "github:gh-address-comments", "Actionable PR review thread"],
+    ["greptile-review", "quality-review-fix-loop", "Greptile closeout gate failure"],
+    ["bot-review", "quality-review-fix-loop", "Hosted review bot finding"],
+  ])("routes %s to its remediation skill with an actionable reason", (category, skill, reason) => {
+    expect(routeForCategory(category)).toEqual([{ skill, reason }]);
+  });
+
+  it("keeps an absent diagnostic unknown instead of inventing a remediation", () => {
+    assertNone(knownSubLaneHintFromOutput(undefined));
+  });
+
+  it("uses diagnostic order rather than catalog order within an uncollected lane", () => {
+    const hint = knownSubLaneHintFromOutput("typos finished\nlint:schema-first failed");
+    expect(O.getOrThrow(hint)).toMatchObject({ category: "schema-first-policy", subCategory: "schema-first" });
+  });
+
+  it("does not infer a failed lane from passing siblings when the record is missing", () => {
+    const coverage = rawIssue(fullProofStep, fullProofOutput, []);
+    expect(coverage).toMatchObject({
+      category: "command-failure",
+      message: "full:pre-push failed with exit code 1.",
     });
-    const cheap = rawIssue(cheapGatesStep, cheapGatesOutput, []);
-    expect(cheap).toMatchObject({ category: "changeset-policy", subCategory: "changeset-status" });
-    expect(cheap.remediation).toContain(CHANGESET_HINT_PREFIX);
-    expect(cheap.remediation).toContain("publish-enabled");
-    expect(cheap.remediation).toContain("private workspaces");
+    expect(coverage.subCategory).toBeUndefined();
+    expect(coverage.remediation).toBeUndefined();
+    expect(rawIssue(cheapGatesStep, cheapGatesOutput, [])).toMatchObject({
+      category: "repo-law",
+      subCategory: "goals-index",
+      remediation: GOALS_INDEX_HINT,
+    });
+  });
+
+  it("keeps zero-error output generic and uses the first recorded failure", () => {
+    const output = A.join(
+      [
+        "[beep-cli] goals:doctor: ok in 1200ms",
+        "Found 5 warnings and 0 errors.",
+        "[beep-cli] lint:oxlint: ok in 300ms",
+        "[beep-cli] cheap-gates: failed 2 step(s)",
+        '[beep-quality-task-lane-run] {"lanes":[{"id":"observability:catalog-check","status":"failed"},{"id":"goals:doctor","status":"passed"}]}',
+      ],
+      "\n"
+    );
+    const unknown = rawIssue(cheapGatesStep, output, []);
+    expect(unknown.message).toBe("full:cheap-gates failed with exit code 1.");
+    expect(unknown.subCategory).toBeUndefined();
+    expect(unknown.remediation).toBeUndefined();
+    expect(
+      rawIssue(cheapGatesStep, output, [
+        laneRun("goals:doctor", "passed"),
+        laneRun("observability:catalog-check", "failed", O.some("bun run beep observability catalog --check")),
+        laneRun("lint:oxlint", "passed"),
+        laneRun("fallow:audit", "failed"),
+      ])
+    ).toMatchObject({
+      subCategory: "observability:catalog-check",
+      remediation: "bun run beep observability catalog --check",
+    });
+  });
+
+  it.each([
+    "[beep-cli] goals:doctor: exit 0",
+    '[beep-quality-task-lane-run] {"lanes":[{"id":"observability:catalog-check","status":"failed"},{"id":"goals:doctor","status":"passed"}]}',
+    '[beep-github-check-run] {"lanes":[{"id":"observability:catalog-check","status":"failed"},{"id":"goals:doctor","status":"passed"}]}',
+    "[beep-cli] observability:catalog-check: failed with exit code 1\n[beep-cli] goals:doctor: failed with exit code 2",
+    "[beep-cli]   observability:catalog-check: exit 1\n[beep-cli]   goals:doctor: exit 0",
+    "[beep-cli] observability:catalog-check: failed in 10ms\n[beep-cli] goals:doctor: failed in 20ms",
+  ])("does not guess a known lane after an unknown first failure: %s", (output) => {
+    const issue = rawIssue(cheapGatesStep, output, []);
+    expect(issue.message).toBe("full:cheap-gates failed with exit code 1.");
+    expect(issue.subCategory).toBeUndefined();
+    expect(issue.remediation).toBeUndefined();
   });
 
   it("names the red coverage lane instead of the passing OSV marker", () => {
@@ -279,15 +345,14 @@ describe("yeet packet issue lane record", () => {
     expect(issue.remediation).toBeUndefined();
   });
 
-  // Parity with the verdict: a record that names no red lane means the wrapper
-  // failed outside its lanes, and the whole-output scan is the only signal left.
-  it("falls back to the whole-output scan when the record names no red lane", () => {
+  // Without a recorded failed lane, successful siblings remain non-evidence.
+  it("keeps attribution generic when the record names no red lane", () => {
     expect(
       rawIssue(fullProofStep, fullProofOutput, [
         laneRun("quality:security", "passed", O.some("bun run beep quality github-checks security")),
         laneRun("quality:coverage", "passed", O.some("bun run beep ci lane coverage")),
       ])
-    ).toMatchObject({ category: "security-audit", subCategory: "security", remediation: OSV_HINT });
+    ).toMatchObject({ category: "command-failure", message: "full:pre-push failed with exit code 1." });
   });
 
   it("produces no issues for a passing wrapper even when the record has a red lane", () => {
@@ -394,7 +459,7 @@ describe("failWithIssueArtifacts", () => {
     )
   );
 
-  it.effect("keeps the whole-output scan for runs that recorded no lane-run report", () =>
+  it.effect("keeps the failure packet generic without a failed-lane record", () =>
     withTempRepo((repoRoot) =>
       Effect.gen(function* () {
         const repoContext = contextForRoot(repoRoot);
@@ -406,7 +471,10 @@ describe("failWithIssueArtifacts", () => {
         ).pipe(Effect.flip);
 
         const { index } = yield* readIssueIndex(repoContext);
-        expect(onlyIssue(index.issues)).toMatchObject({ subCategory: "security", remediation: OSV_HINT });
+        const issue = onlyIssue(index.issues);
+        expect(issue.message).toBe("full:pre-push failed with exit code 1.");
+        expect(issue.subCategory).toBeUndefined();
+        expect(issue.remediation).toBeUndefined();
       })
     )
   );

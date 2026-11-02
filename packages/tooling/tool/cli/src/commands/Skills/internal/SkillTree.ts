@@ -20,7 +20,7 @@ import * as Str from "effect/String";
 import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import { SkillsCommandError } from "../Skills.errors.ts";
 import { SkillSnapshotFile, SkillTreeMode, SkillUpstreamContentFile } from "../Skills.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $RepoCliId.create("commands/Skills/internal/SkillTree");
 
@@ -110,7 +110,7 @@ export const validateRelativePath = Effect.fn("SkillsProvenance.validateRelative
 export const hashBytes = Effect.fn("SkillsProvenance.hashBytes")(function* (
   bytes: Uint8Array,
   label: string
-): Effect.fn.Return<Sha256Hex, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<Sha256Hex, SkillsCommandError, Digest.Digest> {
   return yield* decodeSha256HexFromBytes(bytes).pipe(
     SkillsCommandError.mapError(`Failed to compute SHA-256 digest for ${label}.`, label)
   );
@@ -148,7 +148,7 @@ export const appendFramedText: {
 export const computeSkillTree = Effect.fn("SkillsProvenance.computeSkillTree")(function* (
   files: ReadonlyArray<SkillUpstreamContentFile>,
   label: string
-): Effect.fn.Return<ComputedSkillTree, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<ComputedSkillTree, SkillsCommandError, Digest.Digest> {
   const sorted = A.sortWith(files, (file) => file.path, Str.Order);
   let treeChunks: ReadonlyArray<Uint8Array> = A.empty<Uint8Array>();
   let manifestChunks: ReadonlyArray<Uint8Array> = A.empty<Uint8Array>();
@@ -305,7 +305,7 @@ export const readLocalSkillFiles = Effect.fn("SkillsProvenance.readLocalSkillFil
 export const installedTargetsHash = Effect.fn("SkillTree.installedTargetsHash")(function* (
   targets: ReadonlyArray<readonly [target: string, treeHash: Sha256Hex]>,
   skill: string
-): Effect.fn.Return<Sha256Hex, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<Sha256Hex, SkillsCommandError, Digest.Digest> {
   const empty: ReadonlyArray<Uint8Array> = A.empty();
   const chunks = A.reduce(targets, empty, (preimage, [target, treeHash]) =>
     appendFramedText(appendFramedText(preimage, target), treeHash)
@@ -327,7 +327,7 @@ export const readTargetTree = Effect.fn("SkillTree.readTargetTree")(function* (
 ): Effect.fn.Return<
   O.Option<ComputedSkillTree>,
   SkillsCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -358,7 +358,7 @@ export const readTargetTree = Effect.fn("SkillTree.readTargetTree")(function* (
 export const patchSetHashOf = Effect.fn("SkillTree.patchSetHashOf")(function* (
   patches: ReadonlyArray<{ readonly path: string; readonly bytes: Uint8Array }>,
   skill: string
-): Effect.fn.Return<Sha256Hex, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<Sha256Hex, SkillsCommandError, Digest.Digest> {
   const chunks = A.flatMap(patches, (patch) =>
     A.append(
       appendFramedText(appendFramedText(A.empty<Uint8Array>(), patch.path), `${patch.bytes.byteLength}`),

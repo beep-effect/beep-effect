@@ -1,0 +1,42 @@
+{
+  "familyId": "14432872-root-5",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "resolvedClaimNumbers": [
+    6,
+    7,
+    8
+  ],
+  "unresolved": [
+    {
+      "claimNumber": 5,
+      "reason": "Unsupported source transition: characterized in that it comprises is not one of the PatentClaimTransition literals; no invented comprising replacement.",
+      "sourceQuote": "characterized in that it comprises the following steps:"
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "Office action J2SZPL3ZRXEAPX2 dated 2017-05-19 explicitly rejects claims 1-8 and individually discusses claim 5 and children 6-8. Publication 2016-12-01 precedes rejection.",
+    "Claim 5 is independent on its face; device language does not create dependency on claim 1. Examiner expressly says dependency on claim 1 is unclear. Children 6-8 expressly depend on 5.",
+    "In-force association rests on retained complete-inventory assertion; native claim 5 is not an exact non-whitespace match in original OCR corroboration, which is not authoritative. Attorney confirmation pending.",
+    "This physio-chemical treatment family is labelled only against P2 text structure; chemical and treatment semantics are excluded.",
+    "Resolved descendants 6-8 retain depends-on-element edges to root 5, whose gold tree is unresolved. Missing-root coverage must be reported explicitly in evaluation; these descendants do not make the family complete."
+  ],
+  "rationale": "Claims 6-8 use explicit wherein and each has one limitation. Preamble heads are physio-chemical method and device. No matching same-claim introductions create antecedent edges. Claim 5 remains visible as unsupported source coverage, not omitted from denominator.",
+  "independence": "Manually selected element boundaries, phrases, heads and edges against P2. No decomposer/policy, rule fixtures or predictions read or executed. Helpers locate selected quotes and verify JavaScript UTF-16 slices only. Critic and attorney review pending.",
+  "confidenceScope": "Resolved contract labels and explicit unsupported-source classification; does not assert legal correctness or attorney agreement.",
+  "familyStatus": "unresolved",
+  "sourceChecks": {
+    "selectedClaimNumbersVerifiedAgainstNativeClaimXml": [
+      5,
+      6,
+      7,
+      8
+    ],
+    "allElementAndTermUtf16SlicesVerified": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  }
+}

@@ -26,11 +26,13 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
@@ -38,7 +40,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Tracer from "effect/Tracer";
 import * as TestClock from "effect/testing/TestClock";
-import { scripted } from "./fixtures.ts";
+import { commandArgs, scripted } from "./fixtures.ts";
 import type { ScriptResult } from "./fixtures.ts";
 
 const cwd = "/repo";
@@ -89,6 +91,8 @@ const SSH_PROBE_KEYS = ["core.sshCommand", "ssh.variant"];
  */
 const isSshProbe = (args: ReadonlyArray<string>): boolean =>
   args.length === 3 && args[0] === "config" && args[1] === "--get" && SSH_PROBE_KEYS.includes(args[2] ?? "");
+
+const isSshProbeCommand = flow(commandArgs, isSshProbe);
 
 /**
  * Answers the ssh probe as "unset" (a silent exit 1, the `quiet` shape) and
@@ -154,6 +158,34 @@ describe("Git", () => {
           exit: 128,
         }));
         assert.deepStrictEqual(result, O.none());
+      })
+    );
+
+    it.effect("classifies the first fatal path diagnostic after warnings", () =>
+      Effect.gen(function* () {
+        for (const diagnostic of [
+          "fatal: path 'missing.txt' does not exist in 'HEAD'\n",
+          "fatal: path 'unknown revision' exists on disk, but not in 'HEAD'\n",
+          "fatal: path 'prefix\nnot a git repository' does not exist in 'HEAD'\n",
+        ]) {
+          const result = yield* run(
+            Effect.flatMap(Git, (git) => git.show(cwd, "HEAD", "missing.txt")),
+            () => ({ stderr: `warning: core.fsyncObjectFiles is deprecated\n${diagnostic}`, exit: 128 })
+          );
+          assert.deepStrictEqual(result, O.none());
+        }
+      })
+    );
+
+    it.effect("keeps an invalid ref whose later lines imitate a missing path as an error", () =>
+      Effect.gen(function* () {
+        const stderr =
+          "warning: configuration warning\nfatal: invalid object name 'missing\nfatal: path 'spoof' does not exist in 'HEAD''\n";
+        const failure = yield* run(
+          Effect.flatMap(Git, (git) => git.show(cwd, "missing", "a.txt")),
+          () => ({ stderr, exit: 128 })
+        ).pipe(Effect.flip);
+        assert.instanceOf(failure, UnknownRefError);
       })
     );
   });
@@ -3232,9 +3264,10 @@ describe("Git — remaining tiers (round 2)", () => {
         ChildProcessSpawner.ChildProcessSpawner,
         ChildProcessSpawner.make((command) => {
           if (!ChildProcess.isStandardCommand(command)) return Effect.die("piped commands not scripted");
-          seen.push({ args: command.args, options: command.options });
-          const probe = isSshProbe(command.args);
-          const asked = command.args[2];
+          const args = commandArgs(command);
+          seen.push({ args, options: command.options });
+          const probe = isSshProbe(args);
+          const asked = args[2];
           const answer =
             asked === "core.sshCommand" ? options.configured : asked === "ssh.variant" ? options.variant : undefined;
           const unset = probe && answer === undefined;
@@ -3459,7 +3492,7 @@ describe("Git — remaining tiers (round 2)", () => {
             return Effect.succeed(
               ChildProcessSpawner.makeHandle({
                 pid: ChildProcessSpawner.ProcessId(1),
-                exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(isSshProbe(command.args) ? 1 : 0)),
+                exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(isSshProbeCommand(command) ? 1 : 0)),
                 isRunning: Effect.succeed(false),
                 kill: () => Effect.void,
                 stdin: Sink.drain,
@@ -3524,11 +3557,11 @@ describe("Git — remaining tiers (round 2)", () => {
             ChildProcessSpawner.ChildProcessSpawner,
             ChildProcessSpawner.make((command) => {
               if (!ChildProcess.isStandardCommand(command)) return Effect.die("piped commands not scripted");
-              seen.push({ args: command.args, options: command.options });
+              seen.push({ args: commandArgs(command), options: command.options });
               return Effect.succeed(
                 ChildProcessSpawner.makeHandle({
                   pid: ChildProcessSpawner.ProcessId(1),
-                  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(isSshProbe(command.args) ? 1 : 0)),
+                  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(isSshProbeCommand(command) ? 1 : 0)),
                   isRunning: Effect.succeed(false),
                   kill: () => Effect.void,
                   stdin: Sink.drain,
@@ -3555,6 +3588,40 @@ describe("Git — remaining tiers (round 2)", () => {
         })
       );
     }
+
+    it.effect("resolves each repository's current SSH config per network call on one service", () =>
+      Effect.gen(function* () {
+        let version = 1;
+        let probes = 0;
+        const network: Array<{ readonly cwd: string | undefined; readonly ssh: string | undefined }> = [];
+        const recording = scripted((args, options) => {
+          if (isSshProbe(args)) {
+            probes += 1;
+            return args[2] === "core.sshCommand" ? { stdout: `ssh -i ${options.cwd}/key-${version}\n` } : { exit: 1 };
+          }
+          if (args[0] === "ls-remote") {
+            const ssh = options.env?.GIT_SSH_COMMAND;
+            network.push({ cwd: options.cwd, ssh: Redacted.isRedacted(ssh) ? Redacted.value(ssh) : ssh });
+            return { stdout: "abc\trefs/heads/main\n" };
+          }
+          return { stdout: "abc\n" };
+        });
+        yield* Effect.gen(function* () {
+          const git = yield* Git;
+          yield* git.lsRemote("/repo/a", "ssh://git@example.invalid/a.git");
+          yield* git.lsRemote("/repo/b", "ssh://git@example.invalid/b.git");
+          version = 2;
+          yield* git.lsRemote("/repo/a", "ssh://git@example.invalid/a.git");
+          yield* git.revParse("/repo/a", "HEAD");
+        }).pipe(provideGit(recording));
+        assert.deepStrictEqual(network, [
+          { cwd: "/repo/a", ssh: "ssh -i /repo/a/key-1 -o BatchMode=yes" },
+          { cwd: "/repo/b", ssh: "ssh -i /repo/b/key-1 -o BatchMode=yes" },
+          { cwd: "/repo/a", ssh: "ssh -i /repo/a/key-2 -o BatchMode=yes" },
+        ]);
+        assert.strictEqual(probes, 6);
+      })
+    );
 
     it.effect("reads the ambient environment ONCE, at layer construction", () =>
       Effect.gen(function* () {

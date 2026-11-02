@@ -1,0 +1,143 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for determining an ablation lesion zone (width or depth) projected onto an electro-anatomical map, the method comprising:
+<claim-text>delivering pulsed energy between at least two electrodes in contact with biological tissues;</claim-text>
+<claim-text>storing a magnitude of a contact force as applied by the at least two electrodes to the biological tissues;</claim-text>
+<claim-text>calculating one or more ablation zone from the delivering step based on the magnitude of the contact force; and</claim-text>
+<claim-text>projecting the one or more ablation zones onto an electro-anatomical map.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the ablation zone comprises depth or width of an ablated region, the depth or width is calculated from</claim-text>
+<claim-text>
+<maths id="MATH-US-00006" num="00006">
+<math overflow="scroll">
+<mrow>
+<mi>V</mi>
+<mo>=</mo>
+<mrow>
+<mi>Vm</mi>
+<mo>-</mo>
+<mrow>
+<mrow>
+<mo>(</mo>
+<mrow>
+<mi>Vm</mi>
+<mo>-</mo>
+<mrow>
+<mi>V</mi>
+<mo>⁢</mo>
+<mn>0</mn>
+</mrow>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>*</mo>
+<mi>exp</mi>
+<mo>⁢</mo>
+<mtext>  </mtext>
+<mrow>
+<mo>(</mo>
+<mrow>
+<mrow>
+<mo>-</mo>
+<mrow>
+<mo>(</mo>
+<mrow>
+<mi>b</mi>
+<mo>⁢</mo>
+<mn>0</mn>
+<mo>*</mo>
+<mi>log</mi>
+<mo>⁢</mo>
+<mtext>  </mtext>
+<mrow>
+<mo>(</mo>
+<mi>n</mi>
+<mo>)</mo>
+</mrow>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+<mo>*</mo>
+<mi>x</mi>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<claim-text>where V is a depth or width of a lesion, x is contact force measured, n is the application number of ablations applied by the electrodes, Vm is the max value of V (of the depth or width) of a probable lesion, V0 is the initial value of the depth or width of the lesion, and b0 is a selectable parameter based on the number of n via a lookup table.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the determining of the ablation comprises a multi-parameter regression.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the determining of the ablation comprises a single-parameter regression.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the electroporation comprising irreversible.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the electro-anatomical map comprising three-dimensional representation of a heart on a display screen.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising presenting information about the ablation lesions.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ablation application parameter comprises tissue wall thickness, type of tissues nearby and orientation of myocardial fibers.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the type of nearby tissues comprises at least of myocardium and smooth muscle.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the projecting provides a viewer of the map with a visual of the ablation lesion including lesion width, lesion depth and cardiac tissue in the zone of electroporation.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the projecting further includes color coding of the ablation lesion.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the color-coding denotes at least one of irreversible electroporation and reversible electroporation.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the size of the visual of the ablation lesion correlates with the size of the lesion.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the performed regression includes pre-clinical work that relates the ablation parameters to the lesion depth and width.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising validating the performed regression pre-clinical work that relates the ablation parameters to at least one known lesion depth and width.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. A system for determining an ablation lesion zone (width or depth) projected onto an electro-anatomical map, the system comprising:
+<claim-text>an ablation catheter;</claim-text>
+<claim-text>at least one sensor operating in conjunction with the ablation catheter and communicatively connected via hardware including at least one processor; and</claim-text>
+<claim-text>a monitor communicatively coupled to the controller operating the ablation catheter and the at least one sensor,</claim-text>
+<claim-text>storage to store information representing contact force as applied by at least two electrodes on biological tissues and the number of times energy were delivered;</claim-text>
+<claim-text>a controller to calculate one or more zones of electroporation based on a magnitude of contact force and number of times energy were delivered;</claim-text>
+<claim-text>the monitor projecting the determined one or more ablation zones onto an electro-anatomical map.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the processor conducts a multi-parameter regression from predetermined pre-clinical data.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the processor conducts a single-parameter regression from predetermined pre-clinical data.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the projecting provides a viewer of the map with a visual of the ablation lesion including lesion width, lesion depth and cardiac tissue in the zone of electroporation.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The system of <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein the projecting further includes color coding of the ablation lesion.</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The system of <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein the size of the visual of the ablation lesion correlates with the size of the lesion.</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the performed regression includes pre-clinical work that relates the ablation parameters to the lesion depth and width.</claim-text>
+</claim>
+</claims>

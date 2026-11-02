@@ -166,7 +166,7 @@ describe("Secure header schemas", () => {
       const header = yield* decodeCrossOriginEmbedderPolicyHeaderEffect("require-corp");
       const result = yield* Effect.exit(encodeCrossOriginEmbedderPolicyHeaderEffect(header));
       pipe(result, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(result)) {
+      if (Exit.isFailure(result) && Exit.hasFails(result)) {
         expect(pipe(result.cause, Cause.findErrorOption, O.getOrThrow).message).toContain(
           "Encoding CrossOriginEmbedderPolicyHeader back to the original input is not supported"
         );

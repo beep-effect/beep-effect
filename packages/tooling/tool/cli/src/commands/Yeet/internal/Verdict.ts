@@ -10,6 +10,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { GitObjectId } from "@beep/schema/Conformance";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -33,6 +34,13 @@ import type { QualityTaskLaneRun } from "../../Quality/Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Verdict");
 const OptionalVerdictString = S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
+const OptionalPublishedHeadSha = GitObjectId.pipe(
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(Effect.succeedNone),
+  $I.annoteSchema("OptionalPublishedHeadSha", {
+    description: "Commit observed around a successful Git push; separate from the attempt's starting proof identity.",
+  })
+);
 const NullableInputDigest = S.OptionFromNullOr(S.String).pipe(
   S.withConstructorDefault(Effect.succeedNone),
   S.withDecodingDefaultKey(Effect.succeed(null))
@@ -582,11 +590,19 @@ export const YeetMergeReadyFromEncoded = YeetMergeReadyEncoded.pipe(
  *
  * **Gotchas**
  *
- * Attempt identity, immutable input facts (`resolvedHeadSha`,
+ * Attempt identity, attempt input facts (`resolvedHeadSha`,
  * `diffFingerprint`, `proofTier`), and the run-timing trio (`startedAt`,
  * `endedAt`, `elapsedMs`) are `Option`-typed optional keys. Verdict documents
  * written before those facts landed still decode as `None`; current attempt
  * writers supply every fact.
+ *
+ * `publishedHeadSha` records transport identity after a successful owned push.
+ * `head` and `diffFingerprint` keep the state the attempt started from. A publish
+ * whose commit step succeeds sets `resolvedHeadSha` to the commit it created, the
+ * head its gates proved and its push sent; any other run keeps the starting head.
+ * Older records, unsuccessful pushes and pushes whose head changes retain `None`
+ * for `publishedHeadSha`; that field alone grants no proof reuse, qualification
+ * or hosted-status authority.
  *
  * **Example** (Construct a yeet verdict)
  *
@@ -640,6 +656,7 @@ export class YeetVerdict extends S.Opaque<YeetVerdict, { readonly brand: unique 
     runId: S.String,
     attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     resolvedHeadSha: OptionalVerdictString,
+    publishedHeadSha: OptionalPublishedHeadSha,
     diffFingerprint: OptionalVerdictString,
     proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     startedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
@@ -850,6 +867,7 @@ export class BuildYeetVerdictInput extends S.Opaque<BuildYeetVerdictInput, { rea
     base: S.String,
     attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     resolvedHeadSha: OptionalVerdictString,
+    publishedHeadSha: OptionalPublishedHeadSha,
     diffFingerprint: OptionalVerdictString,
     proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     baseFreshness: S.optionalKey(YeetBaseFreshness),
@@ -963,6 +981,7 @@ export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
     runId: input.runId,
     attemptId: input.attemptId,
     resolvedHeadSha: input.resolvedHeadSha,
+    publishedHeadSha: input.publishedHeadSha,
     diffFingerprint: input.diffFingerprint,
     proofTier: input.proofTier,
     startedAt: input.startedAt,

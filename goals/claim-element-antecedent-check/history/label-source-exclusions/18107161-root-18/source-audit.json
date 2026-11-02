@@ -1,0 +1,75 @@
+{
+  "familyId": "18107161-root-18",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "ineligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "said tool",
+      "nativeQuote": "said tool",
+      "literalMatch": true,
+      "explanation": "Exact18; root has actual112(b) association."
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the tool",
+      "nativeQuote": "The tool",
+      "literalMatch": false,
+      "explanation": "Exact19. Case-only difference from lowercased examiner text."
+    },
+    {
+      "claimNumber": 21,
+      "examinerPhrase": "the tool",
+      "nativeQuote": "The tool",
+      "literalMatch": false,
+      "explanation": "Native21 contains appended claim22; phrase match alone cannot validate numbered source. Case-only difference from lowercased examiner text."
+    }
+  ],
+  "concerns": [
+    "Native claim21 contains full literal22. The tool of claim21 ... after original21 ends. Native XML parents[18,21] exposes a self-reference induced by merged22. Original LDW11Q27GREENX2 has separate21 and22, so selected21 source is not a faithful single numbered claim.",
+    "Native set25 versus OA range1-26 and original23 parsed claims reflects several bitmap/segmentation gaps; root18 contains image-backed clauses in original and cannot be fully reconciled from text.",
+    "Publication identity/digest matches and45/45 chronology precedes OA2024-09-30, but cannot cure merged-source numbering. Family membership should not accept self-reference21."
+  ],
+  "rationale": "Ineligible frozen normalized source family until source numbering is repaired and re-audited; actual112(b) ground exists, but exact numbered claim version fails.",
+  "sourceIdentity": {
+    "applicationNumber": "18107161",
+    "publicationNumber": "US20230264331A1",
+    "publicationDate": "2023-08-24",
+    "officeActionMailDate": "2024-09-30",
+    "officeActionDocumentIdentifiers": ["M1OZ0Q7XWFYBX99"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20230264331 A1 20230824",
+      "application-reference": "US 18107161 20230208",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "LDW11Q27GREENX2",
+        "officialDate": "2023-02-08T13:51:31.000-0500"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "LDW11Q27GREENX2",
+        "officialDate": "2023-02-08T13:51:31.000-0500",
+        "sha256": "7da1a38d429480a9b3f6d86011f887237fd78d709f0a94c25972e3474784ee4f",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [
+          1, 3, 4, 5, 7, 8, 10, 11, 14, 19, 20, 23, 25, 26
+        ],
+        "sourceClaimCount": 23
+      }
+    ],
+    "documentInventoryCount": 45,
+    "documentInventoryRows": 45,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

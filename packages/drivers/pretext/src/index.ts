@@ -2,6 +2,8 @@
  * Text measurement as a typed, schema-first capability, backed by
  * `@chenglou/pretext`.
  *
+ * **Details**
+ *
  * This root entrypoint is the browser-safe pure surface: versioned
  * font-metrics contracts, codecs, pure layout helpers over decoded
  * snapshots, the capture service contract, and fixture-backed test layers.

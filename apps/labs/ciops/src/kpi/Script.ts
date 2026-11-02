@@ -14,6 +14,7 @@
 
 import { $CiopsId } from "@beep/identity/packages";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -91,10 +92,11 @@ export const syncKpiArtifacts = Effect.fn("KpiScript.syncKpiArtifacts")(function
     return;
   }
   const stale = yield* Effect.filter(outputs, ([path, rendered]) =>
-    fs.readFileString(`${repoRoot}/${path}`).pipe(
-      Effect.mapError(() => ioFailure("read", path)),
-      Effect.map((committed) => committed !== rendered)
-    )
+    fs
+      .readFileString(`${repoRoot}/${path}`)
+      .pipe(
+        Effect.mapBoth({ onFailure: () => ioFailure("read", path), onSuccess: (committed) => committed !== rendered })
+      )
   );
   if (A.isReadonlyArrayNonEmpty(stale)) {
     return yield* KpiArtifactError.make({
@@ -106,7 +108,7 @@ export const syncKpiArtifacts = Effect.fn("KpiScript.syncKpiArtifacts")(function
   }
 });
 
-const platform = Layer.provideMerge(CiOpsKpiLive, BunServices.layer);
+const platform = Layer.provideMerge(CiOpsKpiLive, Layer.merge(BunServices.layer, BunCrypto.layer));
 
 /**
  * Runs a KPI script with the live KPI layer over the Bun platform services.

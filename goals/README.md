@@ -59,6 +59,14 @@ the entry pattern rejects, such as `ops/my probe.ts`; rename it) and
 ops script in the same PR that adds it. Packets without the key are not
 checked.
 
+Every `goals/*/ops/**/*.ts` file, registered or not, is type-checked by
+`goals/tsconfig.ops.json` on the `repo-sanity:goals-ops-typecheck` lane
+(`bunx tsrs -p goals/tsconfig.ops.json --noEmit`). The project runs the
+compiler only, not the Effect style profile: ops scripts are frozen evidence,
+not product code. Ambient module types a script needs go in
+`goals/ops-ambient.d.ts`, never under `ops/`, which holds only registered
+scripts.
+
 ### Launcher Rule
 
 Every future execution-capable packet must include `GOAL.md`.
@@ -100,8 +108,9 @@ The fleet convention migration completed through PR #855 and its D27 recovery
 closeout. All 160 tracked goal packets plus `_template` now use
 `initiative-manifest/v2`; the retained apply report is
 [`packet-convention-migration/history/fleet-migration-report.md`](./packet-convention-migration/history/fleet-migration-report.md).
-Use `bun run beep goals migrate-conventions --preview` and
-`bun run beep explore --check` as drift checks. Do not restore legacy wire
+Use `bun run beep explore --check` as the drift check; its fleet lint
+reports duplicate ids, dependency cycles and dangling references. (`goals
+migrate-conventions` was retired in beep-cli-composition W0.) Do not restore legacy wire
 shapes or infer a convention from historical packet examples.
 
 ## Lifecycle

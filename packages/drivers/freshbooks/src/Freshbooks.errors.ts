@@ -53,6 +53,8 @@ type FreshbooksErrorOptions = {
 /**
  * Technical error reasons emitted by the FreshBooks driver.
  *
+ * **Details**
+ *
  * `token refresh` is the single-use refresh-token rotation failure class,
  * kept distinct from ordinary `config` so callers can detect a stranded
  * refresh token and trigger re-authorization.

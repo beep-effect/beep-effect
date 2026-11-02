@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "head-review/v2",
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "11575704-root-1",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "previousRound": 1,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 2,
+      "path": "2.a",
+      "anchor": {
+        "startChar": 134,
+        "endChar": 167,
+        "quote": "each respective fiber optic cable"
+      },
+      "determiner": "bare",
+      "beforeHead": "each respective fiber optic cable",
+      "afterHead": "respective fiber optic cable",
+      "action": "changed",
+      "reason": "Each distributes over the already recited cable members. Respective is the substantive correspondence modifier and remains; no one cable or light source is chosen.",
+      "sourceContext": "The headlamp of claim 1 wherein the first array of illumination light sources comprises a plurality of fiber optic cables, one end of each respective fiber optic cable being optically coupled to a respective one of a plurality of LED light sources, the other end of each respective fiber optic cable being substantially arrange",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 2,
+      "path": "2.a",
+      "anchor": {
+        "startChar": 266,
+        "endChar": 299,
+        "quote": "each respective fiber optic cable"
+      },
+      "determiner": "bare",
+      "beforeHead": "each respective fiber optic cable",
+      "afterHead": "respective fiber optic cable",
+      "action": "changed",
+      "reason": "Each distributes over the cables whose other ends form the pattern. Respective remains a correspondence modifier; the full source end/cable relationship is unchanged.",
+      "sourceContext": " end of each respective fiber optic cable being optically coupled to a respective one of a plurality of LED light sources, the other end of each respective fiber optic cable being substantially arranged corresponding to the illumination beam pattern, whereby the light emitted by the LED light sources is transferred by the fiber opt",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 4,
+      "path": "4.a",
+      "anchor": {
+        "startChar": 150,
+        "endChar": 183,
+        "quote": "each respective fiber optic cable"
+      },
+      "determiner": "bare",
+      "beforeHead": "each respective fiber optic cable",
+      "afterHead": "respective fiber optic cable",
+      "action": "changed",
+      "reason": "Each determines the cable noun phrase; respective still ties a cable to its own array. The source omitted linking wording is not repaired.",
+      "sourceContext": "mp of claim 3 wherein the first and second arrays of illumination light sources each comprise a plurality of fiber optic cables, one end of each respective fiber optic cable the respective arrays being optically coupled to a respective one of a plurality of LED light sources in the respective array, the other end of each respective",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 4,
+      "path": "4.a",
+      "anchor": {
+        "startChar": 328,
+        "endChar": 361,
+        "quote": "each respective fiber optic cable"
+      },
+      "determiner": "bare",
+      "beforeHead": "each respective fiber optic cable",
+      "afterHead": "respective fiber optic cable",
+      "action": "changed",
+      "reason": "Each is the outer distributive determiner of cable. Respective remains meaningful across the separately recited arrays, and no array/member identity is inferred.",
+      "sourceContext": "respective arrays being optically coupled to a respective one of a plurality of LED light sources in the respective array, the other end of each respective fiber optic cable in each respective array being substantially arranged corresponding to a portion of the at least one illumination beam pattern, whereby the light emitted by th",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 4,
+      "path": "4.a",
+      "anchor": {
+        "startChar": 365,
+        "endChar": 386,
+        "quote": "each respective array"
+      },
+      "determiner": "bare",
+      "beforeHead": "each respective array",
+      "afterHead": "respective array",
+      "action": "changed",
+      "reason": "Each determines array in the location phrase in each respective array. Respective identifies the existing source correspondence and remains in the lexical head.",
+      "sourceContext": "pled to a respective one of a plurality of LED light sources in the respective array, the other end of each respective fiber optic cable in each respective array being substantially arranged corresponding to a portion of the at least one illumination beam pattern, whereby the light emitted by the LED light sources in th",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round1.json",
+      "sha256": "09b6c30d503ba24ace9d97393dc59880ccad66803799ba3c3636718bbf51ddb3"
+    },
+    {
+      "file": "extractor.round1.json",
+      "sha256": "2367ce4e6ab0413eb3bc3428901d356d154c2cd1097165e3e7991d809535c5de"
+    },
+    {
+      "file": "critic.round1.json",
+      "sha256": "680a7739f81e1d70204b7bf2fa7a66d9b2d706acf8f6ab86eadff5cb2b404b7f"
+    }
+  ],
+  "structureInvariant": "Reversing exactly these manually adjudicated head fields restores the complete prior expected JSON tree. Raw expected text differs only at the declared head string values; all source anchors, determiners, functional parts, typed edges, element structure and source/claim scope remain unchanged.",
+  "sourceValidation": {
+    "claimsXmlSha256": "d665ccb73c27b7abde1d3d13fb5a273146402c7a39a55378d38d912c70ac9937",
+    "nativeCanonical": "All canonical/context claims match native XML under permitted printed-number/whitespace normalization; digest matches provenance. Every action anchor checked as exact half-open UTF-16 source span."
+  },
+  "independence": "Bounded source-based lexical-head/v1 extractor review. Each listed source phrase manually judged before serialization; no automatic regex head selection, decomposition implementation, P2-DESIGN, predictions or conformance rules used. No new source gold derivation or semantic acceptance claimed.",
+  "attorneyAdjudication": "unchanged; agent confidence is not attorney agreement",
+  "humanHolds": "Known six count/selector head holds and16068637 each edge/each other preserved; no round4 or out-of-scope modification."
+}

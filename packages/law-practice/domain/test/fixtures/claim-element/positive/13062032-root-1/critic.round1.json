@@ -1,0 +1,257 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "13062032-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "reviewScope": {
+    "claimCount": 13,
+    "elementCount": 39,
+    "termCount": 136,
+    "edgeCount": 122,
+    "functionalRelationCount": 26
+  },
+  "findings": [
+    {
+      "id": "bare-dependent-method-reference",
+      "kind": "missing-source-supported-antecedents",
+      "cases": [
+        {
+          "referring": {
+            "path": "2",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "3",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "4",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "5",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "6",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "7",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "8",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "9",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "10",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "11",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "12",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            }
+          }
+        }
+      ],
+      "reason": "Each bare Method according to claim1 (or claim2 in7) expressly refers to the claimed method in its actual natural dependency chain. The unsupported/bare determiner tag does not remove this referential function. The root Method is an explicit noun mention, and there is no competing method subject on these chains.",
+      "correction": "Add antecedent edges from the exact bare dependent Method terms2–12 to root1 Method, preserving natural dependencies, claim subjects, source spans and heads. Do not add a device→method subject edge in13; its separate the method term already carries the explicit method reference."
+    }
+  ],
+  "verification": [
+    "Read selected canonical claims, all expected elements/terms/typed edges and extractor rationale; reviewed native source XML and independent source-critic evidence. Source eligibility is separately accepted; no fresh original-PDF/full-inventory authentication claimed.",
+    "Independent checks passed every exact UTF-16 anchor, term order/nonoverlap/ownership and normalized head shape, full contiguous functional reconstruction and exact participating terms, local/foreign endpoint membership and true dependency ancestry, path uniqueness and no duplicate edges. Native XML digest matches provenance and canonical/native source strings match under permitted printed-number/whitespace normalization. Geometry supplements manual semantics; no decomposer was called."
+  ],
+  "referenceSha256": "df009be59cc98b9c02cdcb3c0daececd8ce43c32497fe0a4fc5253f283cd7aae",
+  "extractorSha256": "08567ae9cea4ff3872163471bc9123058e97c44ca6025866e6c2d5a2f0f970d5",
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json written. Source/model/tree/edge schema evidence only; no production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "roundLimit": "Round1 of at most3 extractor/critic rounds. Return exact findings to extractor, do not edit expected here.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference review only; no active sample admission, goal completion, human agreement or accuracy result claimed.",
+  "reviewNotes": [
+    "Audited root pulse emission/reflection/reception, leading-body placement and sound-velocity/transducer relationships and every selected dependent. Claim7 actually depends2; the rest of2–12 depend1. Claim13 changes subject to Device but expressly refers to1 and retains that dependency. Device-local indefinite body/array/transmitter/receiver introductions remain distinct from method-local instances.",
+    "Complete numeric bounds more than two and two plane-parallel surfaces are preserved. Explicit lexical genitive leading body's coupling surface is retained; no pronominal-owner deletion applies. The latter in6 and it in13 have clear body antecedents. Functional parts retain all mutually exclusive shape/calculation options and calibration conditions.",
+    "Uncertain emitted/reflected/calibration wave instances, physical signals versus pulses, transducer-group unions, outermost subsets and the received echo in12 remain explicit localized concerns. Claim12 cannot borrow sibling2 echo introduction. These concerns do not justify omitting the unambiguous bare dependent-method identities in the finding."
+  ]
+}

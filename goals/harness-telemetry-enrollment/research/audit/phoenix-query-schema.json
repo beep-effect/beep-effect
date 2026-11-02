@@ -1,0 +1,520 @@
+{
+  "data": {
+    "__type": {
+      "fields": [
+        {
+          "name": "modelProviders",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "generativeModelCustomProviders",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "GenerativeModelCustomProviderConnection"
+            }
+          }
+        },
+        {
+          "name": "secrets",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "SecretConnection"
+            }
+          }
+        },
+        {
+          "name": "generativeModels",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "GenerativeModelConnection"
+            }
+          }
+        },
+        {
+          "name": "playgroundModels",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "users",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "UserConnection"
+            }
+          }
+        },
+        {
+          "name": "userRoles",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "userApiKeys",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "oauth2Grants",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "systemApiKeys",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "projects",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ProjectConnection"
+            }
+          }
+        },
+        {
+          "name": "projectsLastUpdatedAt",
+          "type": {
+            "kind": "SCALAR",
+            "name": "DateTime",
+            "ofType": null
+          }
+        },
+        {
+          "name": "datasets",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "DatasetConnection"
+            }
+          }
+        },
+        {
+          "name": "datasetsLastUpdatedAt",
+          "type": {
+            "kind": "SCALAR",
+            "name": "DateTime",
+            "ofType": null
+          }
+        },
+        {
+          "name": "compareExperiments",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ExperimentComparisonConnection"
+            }
+          }
+        },
+        {
+          "name": "experimentRunMetricComparisons",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ExperimentRunMetricComparisons"
+            }
+          }
+        },
+        {
+          "name": "validateExperimentRunFilterCondition",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ValidationResult"
+            }
+          }
+        },
+        {
+          "name": "node",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "INTERFACE",
+              "name": "Node"
+            }
+          }
+        },
+        {
+          "name": "viewer",
+          "type": {
+            "kind": "OBJECT",
+            "name": "User",
+            "ofType": null
+          }
+        },
+        {
+          "name": "prompts",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "PromptConnection"
+            }
+          }
+        },
+        {
+          "name": "searchResources",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "promptLabels",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "PromptLabelConnection"
+            }
+          }
+        },
+        {
+          "name": "datasetLabels",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "DatasetLabelConnection"
+            }
+          }
+        },
+        {
+          "name": "datasetSplits",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "DatasetSplitConnection"
+            }
+          }
+        },
+        {
+          "name": "builtInEvaluators",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "evaluators",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "EvaluatorConnection"
+            }
+          }
+        },
+        {
+          "name": "annotationConfigs",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AnnotationConfigConnection"
+            }
+          }
+        },
+        {
+          "name": "classificationEvaluatorConfigs",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "defaultProjectTraceRetentionPolicy",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ProjectTraceRetentionPolicy"
+            }
+          }
+        },
+        {
+          "name": "projectTraceRetentionPolicies",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ProjectTraceRetentionPolicyConnection"
+            }
+          }
+        },
+        {
+          "name": "dbStorageCapacityBytes",
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        },
+        {
+          "name": "dbTableStats",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "serverStatus",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ServerStatus"
+            }
+          }
+        },
+        {
+          "name": "agentSessions",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AgentSessionConnection"
+            }
+          }
+        },
+        {
+          "name": "agentsConfig",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AgentsConfig"
+            }
+          }
+        },
+        {
+          "name": "availableAgentSkills",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "validateRegularExpression",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ValidationResult"
+            }
+          }
+        },
+        {
+          "name": "getSpanByOtelId",
+          "type": {
+            "kind": "OBJECT",
+            "name": "Span",
+            "ofType": null
+          }
+        },
+        {
+          "name": "getTraceByOtelId",
+          "type": {
+            "kind": "OBJECT",
+            "name": "Trace",
+            "ofType": null
+          }
+        },
+        {
+          "name": "getProjectByName",
+          "type": {
+            "kind": "OBJECT",
+            "name": "Project",
+            "ofType": null
+          }
+        },
+        {
+          "name": "getProjectSessionById",
+          "type": {
+            "kind": "OBJECT",
+            "name": "ProjectSession",
+            "ofType": null
+          }
+        },
+        {
+          "name": "getDatasetExampleByExternalId",
+          "type": {
+            "kind": "OBJECT",
+            "name": "DatasetExample",
+            "ofType": null
+          }
+        },
+        {
+          "name": "applyChatTemplate",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "PromptChatTemplate"
+            }
+          }
+        },
+        {
+          "name": "projectCount",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "datasetCount",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "promptCount",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "evaluatorCount",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "sandboxBackends",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "sandboxProviders",
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        }
+      ]
+    }
+  }
+}

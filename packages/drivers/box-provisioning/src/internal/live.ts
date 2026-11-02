@@ -234,17 +234,18 @@ const decodeUnknownRawWebhook = S.decodeUnknownEffect(RawWebhook);
 
 export const toObservedWebhook = (webhook: unknown): Effect.Effect<BoxObservedWebhook, BoxProvisioningInvariantError> =>
   decodeUnknownRawWebhook(webhook).pipe(
-    Effect.map((decoded) =>
-      canonicalObservedWebhook(
-        BoxObservedWebhook.make({
-          address: decoded.address,
-          providerId: BoxProviderId.make(decoded.id),
-          targetProviderId: BoxProviderId.make(decoded.target.id),
-          triggers: decoded.triggers,
-        })
-      )
-    ),
-    Effect.mapError(invariant)
+    Effect.mapBoth({
+      onFailure: invariant,
+      onSuccess: (decoded) =>
+        canonicalObservedWebhook(
+          BoxObservedWebhook.make({
+            address: decoded.address,
+            providerId: BoxProviderId.make(decoded.id),
+            targetProviderId: BoxProviderId.make(decoded.target.id),
+            triggers: decoded.triggers,
+          })
+        ),
+    })
   );
 
 export const listObservedWebhooks = (box: B.Box["Service"]) =>

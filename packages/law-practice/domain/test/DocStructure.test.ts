@@ -8,6 +8,7 @@ import {
   recognizeOfficeActionPair,
   ShortenedStatutoryPeriodCandidate,
 } from "@beep/law-practice-domain";
+import { fixtureSource, TestCrypto } from "@beep/law-practice-domain/test";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import {
   VerifyTextAnchorAgainstVerifiedSourceInput,
@@ -18,7 +19,6 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { fixtureSource, TestCrypto } from "./officeActionFixtures.ts";
 
 const finality = "THIS ACTION IS MADE FINAL";
 const period =

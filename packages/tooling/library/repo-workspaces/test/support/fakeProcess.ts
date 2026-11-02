@@ -6,14 +6,19 @@
  * @packageDocumentation
  */
 import { ScriptedSpawner } from "@beep/commands";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Redacted from "effect/Redacted";
 import type { SpawnScript } from "@beep/commands";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as PlatformError from "effect/PlatformError";
+import type * as CommandLine from "effect/process/CommandLine";
+
+const wordText = (word: CommandLine.Word): string => (Redacted.isRedacted(word) ? Redacted.value(word) : word);
 
 /** What a fake process does to the filesystem before its scripted reply is read. */
 export type ProcessAction = (
@@ -48,10 +53,10 @@ export const fakeProcess = ({ act, reply = () => ({}) }: FakeProcessScript): Fak
       const inner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const services = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
       return ChildProcessSpawner.make((command) =>
-        (ChildProcess.isStandardCommand(command) ? act(command.command, command.args) : Effect.void).pipe(
-          Effect.provide(services),
-          Effect.andThen(inner.spawn(command))
-        )
+        (ChildProcess.isStandardCommand(command)
+          ? act(command.command, A.map(command.args, wordText))
+          : Effect.void
+        ).pipe(Effect.provide(services), Effect.andThen(inner.spawn(command)))
       );
     })
   ).pipe(Layer.provide(scripted.layer));

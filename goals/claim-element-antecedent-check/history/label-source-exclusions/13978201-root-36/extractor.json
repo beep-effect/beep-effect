@@ -1,0 +1,42 @@
+{
+  "familyId": "13978201-root-36",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.99,
+  "resolvedClaimNumbers": [],
+  "unresolved": [
+    {
+      "claimNumber": 36,
+      "reason": "Positive-family source qualification fails: cited office action rejection covers1–5,7,9–17,19,24–27 and does not reject this selected claim or any member36–40. Requires source-qualified replacement per protocol.",
+      "sourceQuote": "claims 1-5,7,9-17,19,24-27 are rejected"
+    },
+    {
+      "claimNumber": 37,
+      "reason": "Positive-family source qualification fails: cited office action rejection covers1–5,7,9–17,19,24–27 and does not reject this selected claim or any member36–40. Requires source-qualified replacement per protocol.",
+      "sourceQuote": "claims 1-5,7,9-17,19,24-27 are rejected"
+    },
+    {
+      "claimNumber": 38,
+      "reason": "Positive-family source qualification fails: cited office action rejection covers1–5,7,9–17,19,24–27 and does not reject this selected claim or any member36–40. Requires source-qualified replacement per protocol.",
+      "sourceQuote": "claims 1-5,7,9-17,19,24-27 are rejected"
+    },
+    {
+      "claimNumber": 39,
+      "reason": "Positive-family source qualification fails: cited office action rejection covers1–5,7,9–17,19,24–27 and does not reject this selected claim or any member36–40. Requires source-qualified replacement per protocol.",
+      "sourceQuote": "claims 1-5,7,9-17,19,24-27 are rejected"
+    },
+    {
+      "claimNumber": 40,
+      "reason": "Positive-family source qualification fails: cited office action rejection covers1–5,7,9–17,19,24–27 and does not reject this selected claim or any member36–40. Requires source-qualified replacement per protocol.",
+      "sourceQuote": "claims 1-5,7,9-17,19,24-27 are rejected"
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "Selected independent family36–40 has no cited rejection association. Do not count any as positive gold.",
+    "Claim40 natural text says any one of claims36 to39; XML proposes only36. Intended alternative dependencies are36,37,38,39. All nonetheless belong to root36.",
+    "Natural language37→36;38/39→37. Publication predates office action; chronological consistency alone does not establish rejection association."
+  ],
+  "rationale": "No trees fabricated for a source-unqualified positive family. Root notified to select replacement without predictions. Context and retained provenance were reviewed; no implementation/predictions consulted."
+}

@@ -1,0 +1,80 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14971439-root-17",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [17],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20160102789", "A1", "20160414"],
+    "applicationReference": ["US", "14971439", "20151216"],
+    "officeActionDocumentIdentifiers": ["IXTEHR7ZRXEAPX2"],
+    "officeActionMailDate": "2017-01-11"
+  },
+  "digestEvidence": [
+    {
+      "file": "14971439.publication.xml",
+      "sha256": "a59a3650a5fabb773fb3967b9bcd02446d6812ad75b08bff208c9f5b0e712b37",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14971439.claims.xml",
+      "sha256": "15257b174ff30cb7484cdb56e84beb5931acd39a5ce92261e2a908b3373d8ebf",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "15257b174ff30cb7484cdb56e84beb5931acd39a5ce92261e2a908b3373d8ebf",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "II9BVJ8LPXXIFW3",
+      "xmlAvailable": true,
+      "sha256": "aed2453977b21fb76e886ebf5d60387fcf51e402ec2bef716888db22d7168e24",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 39,
+    "actualRows": 39,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2015-12-16T00:00:00.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "II9BVJ8LPXXIFW3"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-17 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the threaded socket interior surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the threaded socket interior surface"
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the connected tube sections",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the connected tube sections"
+    }
+  ],
+  "assessment": "Original17 substantive wording matches apart from embedded page12/trailing13 artifacts. OA explicitly covers1-17 and specifically17; selected single independent17 is a meaningful family.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

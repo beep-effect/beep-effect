@@ -23,7 +23,7 @@ import {
   runRepoCommandCapture,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
@@ -92,7 +92,7 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
 ): Effect.fn.Return<
   RepoStepRunResult,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

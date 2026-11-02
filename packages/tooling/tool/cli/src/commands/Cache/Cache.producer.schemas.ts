@@ -15,9 +15,12 @@ import {
 } from "@beep/repo-configs/cache";
 import { Sha256Hex } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { CacheProducerAdapterReceipt } from "./Cache.adapter.schemas.ts";
 import { CacheSignedPilotReceipt } from "./Cache.pilot.signed.schemas.ts";
 import { CacheProtocolExecution } from "./Cache.protocol.runner.schemas.ts";
+import { CacheHostedProducerUpload, CacheProducerUploadApproval } from "./Cache.workflow.upload.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.producer.schemas");
 
@@ -43,6 +46,10 @@ export class CacheProducerBundle extends S.Opaque<CacheProducerBundle, { readonl
     schemaVersion: S.tag("cache-producer-bundle/v1"),
     pilot: CacheSignedPilotReceipt,
     protocol: CacheProtocolExecution,
+    upload: S.OptionFromOptionalKey(CacheHostedProducerUpload).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    adapterRuntime: S.OptionFromOptionalKey(CacheProducerAdapterReceipt).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   }).pipe(
     $I.annoteSchema("CacheProducerBundle", {
       description: "One channel's complete native pilot and conformance observations; authentication remains separate.",
@@ -78,6 +85,9 @@ export class CacheProducerBinding extends S.Opaque<CacheProducerBinding, { reado
     signedConfigurationDigest: Sha256Hex,
     toolchainDigest: Sha256Hex,
     signedRootConfiguration: Sha256Hex,
+    uploadApproval: S.OptionFromOptionalKey(CacheProducerUploadApproval).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   }).pipe(
     $I.annoteSchema("CacheProducerBinding", {
       description: "Trusted workflow and live computation identities expected by a receipt verifier.",

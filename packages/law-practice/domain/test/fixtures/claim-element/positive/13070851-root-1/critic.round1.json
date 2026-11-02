@@ -1,0 +1,83 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "13070851-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "reviewScope": {
+    "claimCount": 7,
+    "elementCount": 15,
+    "termCount": 38,
+    "edgeCount": 45,
+    "functionalRelationCount": 8
+  },
+  "findings": [
+    {
+      "id": "stacked-determiner-in-head",
+      "kind": "lexical-head-convention",
+      "path": "2.a",
+      "anchor": {
+        "startChar": 104,
+        "endChar": 118,
+        "quote": "the said UL CC"
+      },
+      "actualHead": "said ul cc",
+      "requiredHead": "ul cc",
+      "reason": "The source has malformed stacked determiners the said before UL CC. Said still functions grammatically as a referring determiner; it is not a lexical modifier or part of the carrier name. Preserving the source does not require retaining said in the normalized lexical head.",
+      "correction": "Retain complete the said UL CC anchor and the supported outer the tag, normalize its head to ul cc, and retain the unique source-supported UL carrier antecedent. Do not rewrite source text or shorten its anchor."
+    },
+    {
+      "id": "reference-claim-order",
+      "kind": "artifact-conformance",
+      "actualOrder": [
+        1,
+        2,
+        3,
+        4,
+        7,
+        5,
+        6
+      ],
+      "requiredOrder": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reason": "LABEL-PROTOCOL requires expected resolved trees in claim order. Claim7 currently precedes5/6, despite its explicit dependency on5. This is an artifact-order issue, not a semantic accuracy improvement.",
+      "correction": "Serialize expected trees in numbered claim order1–7 and keep extractor resolvedClaimNumbers in the same order. Preserve all term/element paths, source anchors, alternative dependency edges and semantics."
+    }
+  ],
+  "verification": [
+    "Read selected canonical claims, all expected elements/terms/typed edges and extractor rationale; reviewed native source XML and independent source-critic evidence. Source eligibility is separately accepted; no fresh original-PDF/full-inventory authentication claimed.",
+    "Independent checks passed every exact UTF-16 anchor, term order/nonoverlap/ownership and normalized head shape, full contiguous functional reconstruction and exact participating terms, local/foreign endpoint membership and true dependency ancestry, path uniqueness and no duplicate edges. Native XML digest matches provenance and canonical/native source strings match under permitted printed-number/whitespace normalization. Geometry supplements manual semantics; no decomposer was called."
+  ],
+  "referenceSha256": "ea0eb4ed890a8fdf592974f7798a32f18ed30085596606ef6794e1df0f06f1cc",
+  "extractorSha256": "129e48b09b49f4fa96b0e00933df63f0b0c69e85a16826b57a82d945e12ab3e4",
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json written. Source/model/tree/edge schema evidence only; no production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "roundLimit": "Round1 of at most3 extractor/critic rounds. Return exact findings to extractor, do not edit expected here.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference review only; no active sample admission, goal completion, human agreement or accuracy result claimed.",
+  "reviewNotes": [
+    "All seven claims reviewed against source and model schemas. The CC-deactivation subject, UE/RRC/CA initialisms, flushing/deactivation condition, UL/DL linkage, PHICH feedback and MAC/timer alternatives preserve complete lexical names and functional relationships. First definite HARQ entity has no fabricated noun introduction.",
+    "Claims5/6 explicitly refer to any of1–4. Their four dependency edges enumerate natural alternatives without deleting the source alternative wording; every alternative shares the same unique root UL/DL entities. Claim7 depends5, not6. No external telecommunications assumptions are needed for the explicit acronym/role identities.",
+    "Standalone arbitrary buffer/member identities remain unasserted; full all-buffer scope stays in the source anchor. The stacked-determiner and array-order findings prevent acceptance of this round."
+  ]
+}

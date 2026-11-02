@@ -17,6 +17,7 @@ import {
   WorkspaceManifestError,
   WorkspacePackage,
   WorkspacePatternError,
+  WorkspacePatternReadError,
   WorkspaceRootNotFoundError,
 } from "@beep/repo-workspaces/testing";
 import { assert, describe, it } from "@effect/vitest";
@@ -58,5 +59,6 @@ describe("testing entrypoint schema property floor", () => {
   roundTrips("WorkspaceManifestError", WorkspaceManifestError);
   roundTrips("WorkspacePackage", WorkspacePackage);
   roundTrips("WorkspacePatternError", WorkspacePatternError);
+  roundTrips("WorkspacePatternReadError", WorkspacePatternReadError);
   roundTrips("WorkspaceRootNotFoundError", WorkspaceRootNotFoundError);
 });

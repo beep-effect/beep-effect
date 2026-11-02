@@ -1,0 +1,29 @@
+{
+  "initialHostAvailableBytes": 53780369408,
+  "stopReason": null,
+  "peakObservedBytes": 2757820416,
+  "minimumHostAvailableBytes": 40986599424,
+  "exitCode": 0,
+  "finalState": {
+    "ActiveState": "inactive",
+    "MainPID": "0",
+    "Result": "success",
+    "MemoryCurrent": "[not set]",
+    "MemoryPeak": "[not set]"
+  },
+  "result": "passed",
+  "scope": "Both scoped CLI compilers and29tests; wholeCLIpackagegate remains open",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts": "f30ee3f563ac61b90a735243ca6c466ab5e49a1fdc6a582cfa936e80f3a279fb",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts": "5ac1064a61c118ef8d00c6fd0c4d9d214ebf3a658bf4d4fe20899b8083e55d8a",
+    "packages/tooling/tool/cli/test/ai-metrics-observation-deployment.test.ts": "6f3001b2f3ee551bb498c7dcb860bbac483f03cd8ea0e8bc3385339e586baf2d",
+    "goals/agent-observability-foundation/ops/managed-owner-typecheck.json": "30fa5344f3b745ff35f9b7436b8bde1e26fb516b34f540ac4664be6f2ed35643",
+    "packages/tooling/library/ai-metrics/src/observation-maintenance-http.ts": "64a72de25365722f610582db4e35f1c0e14b23a15a8a7c60e6dc8f95ccfa7f5c",
+    "packages/tooling/library/ai-metrics/src/observation-worker.ts": "285d694d033ac879816cbb45f93c3b250486db3a74d3dd1b2aca35cea73b9854",
+    "packages/tooling/library/ai-metrics/src/native-trace.ts": "7893fc7617b525d438a0161075994836810fb3151518b002bd2a21eac2379c4c",
+    "packages/tooling/library/ai-metrics/src/native-export.ts": "69114c19cf1a313b1e4db29c6c367d73dc613c0f5f5540c107831af466139551",
+    "packages/tooling/library/ai-metrics/src/native-readback.ts": "a813c80509f30727e0776d60df24a3dd00ab514b91290a0fdde7517d65307b79",
+    "packages/tooling/library/ai-metrics/src/native-http.ts": "2b377713771e5ccb8168e73f74518c7dfd5a0113af2e1ba7529894ba9fc95114",
+    "packages/tooling/library/ai-metrics/src/observation-launch.ts": "9940f6311a60366ea2cd9d2c13a3e55561deaf67632cb202342c37cb2707600d"
+  }
+}

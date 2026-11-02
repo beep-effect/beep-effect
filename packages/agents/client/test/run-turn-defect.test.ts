@@ -13,7 +13,7 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
@@ -99,7 +99,7 @@ describe("assistant turn defects", { concurrent: false }, () => {
           O.map(registry.get(turnErrorAtom), (error) => error.message),
           "The reply failed unexpectedly before completing."
         );
-        expect(registry.get(draftAtom)).toStrictEqual(status === "not_persisted" ? O.some(content) : O.none());
+        deepStrictEqual(registry.get(draftAtom), status === "not_persisted" ? O.some(content) : O.none());
         expect(registry.get(draftRevisionAtom)).toBe(status === "not_persisted" ? 1 : 0);
       }, Effect.scoped);
 

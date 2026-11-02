@@ -1770,8 +1770,10 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       stage: "decoded",
     });
     const encoded = yield* encodeJsonRpcNotification({ jsonrpc: "2.0", method, params: payload }).pipe(
-      Effect.mapError((cause) => AcpError.AcpProtocolParseError.fromEncodingError(method, undefined, cause)),
-      Effect.map((text) => `${text}\n`)
+      Effect.mapBoth({
+        onFailure: (cause) => AcpError.AcpProtocolParseError.fromEncodingError(method, undefined, cause),
+        onSuccess: (text) => `${text}\n`,
+      })
     );
     if (options.logOutgoing === true) {
       yield* logProtocol({ direction: "outgoing", payload: encoded, stage: "raw" });

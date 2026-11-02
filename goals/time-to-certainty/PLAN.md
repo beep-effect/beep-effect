@@ -218,7 +218,11 @@ orchestrator owns schemas, contracts, and judgment.
       `bun run beep yeet economics [--json] [--branch <b>] [--fleet] [--packet-dir <dir>]` prints the
       `yeet-economics/v1` report (attempt mixes, wrapper and inner lanes as separate populations, first
       failure, red-to-green episodes, terminations, the M4 fingerprint-repeat proxy, data quality) and
-      `yeet closeout` prints its five-line branch summary.
+      `yeet closeout` prints its five-line branch summary. Amended 2026-10-27 (ruling 81): the report
+      is `yeet-economics/v2`, with a review lane section beside the lane populations (rounds-to-ready
+      p50/p95 per pull request from the first `yeet ready` to `merge-ready: yes`, reviewer precision
+      from the dispositions `yeet reply` records), read from the owning clone's
+      `.beep/yeet/review-lane.ndjson`.
 - [x] A1 re-run at close; M1–M5 compared with the P0 baseline — done 2026-09-28 (round 25):
       `research/economics-close.md` from `--run close` over `research/inputs/close/` (live capture
       2026-09-28T12:57Z, 124 checkouts; hosted Check runs from 2026-09-14), after fixing the

@@ -1,0 +1,55 @@
+{
+  "applicationNumber": "12268372",
+  "publicationNumber": "US20090127033A1",
+  "publicationDate": "2009-05-21",
+  "nativeXmlSha256": "83d501d55ff2d6dd906c28c7b7dee72238ae46c44a464745ec739a6dcb223ae9",
+  "claimsXmlSha256": "16c82072468044a1c67b1ae911d5170b42b5e30334f7b8e3e71fbfdc493f03e2",
+  "officeActionDocumentIdentifiers": [
+    "GJOTJDQ8PPOPPY5"
+  ],
+  "officeActionMailDate": "2011-02-04",
+  "officeActionSection112Text": [
+    "claims 1-20 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\n1) claim 1, line 1, “the roping” lacks antecedent basis.\r\n2) claim 1, line 3, “the guide rails’ lacks antecedent basis.\r\n3) claim 1,line 4, “the ropes” lacks antecedent basis.\r\n4) claim 1, line 4, ‘the new roping’ lacks antecedent basis.\r\n5) claim 1, line 5, “ the old roping” lacks antecedent basis.\r\n6) claim 4, line 5, “ the core” lacks antecedent basis.\r\n7) claim 4, line 6, “ the remaining strands’ lacks antecedent basis.\r\n8) claim 4, line 7, “the joint location” lacks antecedent basis.\r\n9) claim , line 8, “the point’ lacks antecedent basis.\r\n10) claim 4, line 8, ‘the cut strands’ lacks antecedent basis.\r\n11) claim 5, line 2, ‘the joint location’ lacks antecedent basis.\r\n12) claim 5, line 3, “the cut strands’ lacks antecedent basis.\r\n13) claim 6, line 2, “ the hoisting roping” lacks antecedent basis.\r\n14) claim 7, line 5, “the traction appliance’ lacks antecedent basis.\r\n15) claim 7, line 5., “the friction wheel’ lacks antecedent basis.\r\n16) claim 7, line 15, “ the joint location’ lacks antecedent basis.\r\n17) claim 8, line 13, ‘ the joint location’ lacks antecedent basis.\r\n18) claim 10, line 1, ‘the elevator rope’ lacks antecedent basis.\r\n19) claim 11, line 5, ‘ the lifting wheel’ lacks antecedent basis.\r\n20) claim 13, line 2, ‘the rim’ lacks antecedent basis.\r\n21) claim 16, line 7, “ the joint location’ lacks antecedent basis.\r\n22) claim 17, line 7, ‘ the joint location’ lacks antecedent basis.\r\n23) claim 20, line 3, “the traction appliance’ lacks antecedent basis.\r\n24) claim 20, line 13, ‘ the joint location’ lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "FNDV8M1VPPOPPY4",
+      "officialDate": "2008-11-10T00:00:00.000-0500"
+    },
+    {
+      "documentIdentifier": "FNJ3VQARPPOPPY2",
+      "officialDate": "2008-11-10T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "FNDV8M1VPPOPPY4",
+      "officialDate": "2008-11-10T00:00:00.000-0500",
+      "sha256": "a537759b2a7cb7f6f7bbc596a4510118b3d78e972e88f91f3eb1f233a9a61b15",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 13
+    },
+    {
+      "documentIdentifier": "FNJ3VQARPPOPPY2",
+      "officialDate": "2008-11-10T00:00:00.000-0500",
+      "sha256": "b20d6413227bef32dd3c2b0abd07593e5b4da2cdc7d09a23f26fec049e0a36cf",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        14,
+        15
+      ],
+      "sourceClaimCount": 20
+    }
+  ],
+  "documentInventoryCount": 64,
+  "documentInventoryRows": 64,
+  "primaryCpc": "B66B  19/02",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/12268372",
+    "https://api.uspto.gov/api/v1/patent/applications/12268372/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

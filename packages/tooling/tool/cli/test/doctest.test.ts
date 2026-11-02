@@ -41,6 +41,9 @@ const changedFilesHandle = (output: string) =>
     unref: Effect.succeed(Effect.void),
   });
 
+const analyzeExample = (source: string) =>
+  Effect.fromResult(analyzeDoctestSourceForTesting("packages/example/src/index.ts", source));
+
 describe("doctest analyzer", () => {
   it.each([
     ["process-env", "process.env.HOME"],
@@ -116,6 +119,26 @@ describe("doctest analyzer", () => {
     expect(parsed.sections[0]?.title).toBe("Real title");
   });
 
+  it("ignores section headings and tags inside a fence of any language", () => {
+    const parsed = parseJSDocSections(
+      ParseJSDocSectionsOptions.make({
+        commentText:
+          "/** Lead.\n *\n * **Details**\n *\n * ~~~md\n * **Example** (Quoted)\n * @since 0.0.0\n * ~~~\n *\n * @category models\n */",
+      })
+    );
+    expect(A.map(parsed.sections, (section) => section.name)).toEqual(["Details"]);
+  });
+
+  it("masks fences with the line scanner when the Markdown parser refuses the comment", () => {
+    const deep = Str.repeat(300)(">");
+    const parsed = parseJSDocSections(
+      ParseJSDocSectionsOptions.make({
+        commentText: `/** Lead.\n *\n * **Details**\n *\n * ${deep} x\n *\n * ~~~md\n * **Example** (Quoted)\n * ~~~\n */`,
+      })
+    );
+    expect(A.map(parsed.sections, (section) => section.name)).toEqual(["Details"]);
+  });
+
   it("chooses a safe upstream name delimiter and rejects both delimiters", () => {
     expect(O.getOrUndefined(quotedDoctestName("Decode none"))).toBe('name="Decode none"');
     expect(O.getOrUndefined(quotedDoctestName('Decode "none"'))).toBe("name='Decode \"none\"'");
@@ -164,7 +187,7 @@ describe("doctest rewrite planning", () => {
         ],
         "\n"
       );
-      const analysis = analyzeDoctestSourceForTesting("packages/example/src/index.ts", source);
+      const analysis = yield* analyzeExample(source);
       expect(analysis.fences).toBe(1);
       expect(analysis.findings[0]?.kind).toBe("pure-unmarked");
       const plan = O.getOrThrow(O.fromUndefinedOr(analysis.findings[0]?.plan));
@@ -175,8 +198,66 @@ describe("doctest rewrite planning", () => {
       expect(rewritten).toContain("1 + 1 // => 2");
       expect(source).toContain("console.log(1 + 1) // 2");
 
-      const second = analyzeDoctestSourceForTesting("packages/example/src/index.ts", rewritten);
+      const second = yield* analyzeExample(rewritten);
       expect(second.findings).toEqual([]);
+    })
+  );
+
+  it.effect("keeps a four-marker opener whole when it plans the marker rewrite", () =>
+    Effect.gen(function* () {
+      const fence = Str.repeat(4)("~");
+      const inner = Str.repeat(3)("~");
+      const source = A.join(
+        [
+          "/**",
+          " * **Example** (Long fence)",
+          " *",
+          ` * ${fence}ts`,
+          " * const text = `",
+          ` * ${inner}`,
+          " * `",
+          " * console.log(text.length) // 5",
+          ` * ${fence}`,
+          " */",
+          "export const value = 2",
+        ],
+        "\n"
+      );
+      const analysis = yield* analyzeExample(source);
+      expect(analysis.fences).toBe(1);
+      const plan = O.getOrThrow(O.fromUndefinedOr(analysis.findings[0]?.plan));
+
+      const rewritten = yield* rewriteDoctestSourceForTesting("packages/example/src/index.ts", source, [plan]);
+      expect(Str.split(rewritten, "\n")[3]).toBe(` * ${fence}${plan.expectedInfoString}`);
+      expect((yield* analyzeExample(rewritten)).fences).toBe(1);
+    })
+  );
+
+  it.effect("finds the fences of an indented member JSDoc and reports their source lines", () =>
+    Effect.gen(function* () {
+      const source = A.join(
+        [
+          "export class Box {",
+          "  /**",
+          "   * **Example** (Member example)",
+          "   *",
+          "   * ```ts",
+          "   * console.log(1 + 1) // 2",
+          "   * ```",
+          "   */",
+          "  static readonly value = 2",
+          "}",
+        ],
+        "\n"
+      );
+      const analysis = yield* analyzeExample(source);
+      expect(analysis.fences).toBe(1);
+      expect(analysis.findings[0]?.location).toMatchObject({
+        startLine: 5,
+        endLine: 7,
+        exampleTitle: "Member example",
+      });
+      expect(analysis.findings[0]?.plan?.consoleRewrites).toMatchObject([{ line: 6 }]);
     })
   );
 
@@ -196,7 +277,7 @@ describe("doctest rewrite planning", () => {
         ],
         "\n"
       );
-      const analysis = analyzeDoctestSourceForTesting("packages/example/src/index.ts", source);
+      const analysis = yield* analyzeExample(source);
 
       expect(analysis.findings).toHaveLength(1);
       expect(analysis.findings[0]?.kind).toBe("console-rewrite");
@@ -206,7 +287,34 @@ describe("doctest rewrite planning", () => {
 
       const rewritten = yield* rewriteDoctestSourceForTesting("packages/example/src/index.ts", source, [plan]);
       expect(Str.split(rewritten, "\n")[5]).toBe(" * 1 + 1 // => 2");
-      expect(analyzeDoctestSourceForTesting("packages/example/src/index.ts", rewritten).findings).toEqual([]);
+      expect((yield* analyzeExample(rewritten)).findings).toEqual([]);
+    })
+  );
+
+  it.effect("fails a comment the Markdown parser refuses instead of passing its marked fence", () =>
+    Effect.gen(function* () {
+      const comment = (lead: string) =>
+        A.join(
+          [
+            "/**",
+            ` * ${lead}`,
+            " *",
+            " * **Example** (Marked)",
+            " *",
+            ' * ```ts import.meta.vitest name="Marked"',
+            " * process.env.HOME",
+            " * ```",
+            " */",
+            "export const value = 2",
+          ],
+          "\n"
+        );
+      const readable = yield* analyzeExample(comment("Lead."));
+      expect(A.map(readable.findings, (finding) => finding.kind)).toEqual(["marked-impure"]);
+
+      const error = yield* Effect.flip(analyzeExample(comment(`${Str.repeat(300)(">")} deep`)));
+      expect(error).toMatchObject({ _tag: "DoctestAnalysisError", file: "packages/example/src/index.ts", line: 1 });
+      expect(error.message).toContain("NestingDepthExceeded");
     })
   );
 
@@ -216,7 +324,7 @@ describe("doctest rewrite planning", () => {
         ["/**", " * **Example** (Stale plan)", " *", " * ```ts", " * 1 + 1", " * ```", " */"],
         "\n"
       );
-      const analysis = analyzeDoctestSourceForTesting("packages/example/src/index.ts", source);
+      const analysis = yield* analyzeExample(source);
       expect(analysis.fences).toBe(1);
       const plan = O.getOrThrow(O.fromUndefinedOr(analysis.findings[0]?.plan));
       const result = yield* Effect.exit(

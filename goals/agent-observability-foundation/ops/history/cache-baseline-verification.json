@@ -1,0 +1,50 @@
+{
+  "scopeProfileEpochUnchanged": true,
+  "reviewSubjects": ["//", "@beep/repo-ai-metrics"],
+  "projectionChanges": [
+    {
+      "computation": "//#lint:policy-fingerprint",
+      "changedFields": ["configuration"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#audit",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#build",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#check",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#coverage",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#lint:deprecated-apis",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#package-test-typecheck",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#test",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#test:property",
+      "changedFields": ["dependencies"]
+    }
+  ],
+  "baselineSha256": "25b2083517621648fb1b561af262ac8218f0d83b067e9d3ae3240ea31d146d7c",
+  "note": "Three additional uncached task graph projections (audit, coverage, package-test-typecheck) inherit the same reviewed dependency additions; no computation or cache flag is added. Fresh audit passed with zero blocking findings.",
+  "audit": {
+    "result": "passed",
+    "blockingFindings": 0,
+    "unassessedComputations": 1621,
+    "log": "/tmp/foundation-remaining-checks-v1.log"
+  }
+}

@@ -36,7 +36,7 @@ import {
 } from "@beep/schema/LocalDate";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -52,7 +52,6 @@ import * as Str from "effect/String";
 import { extractPracticeKgPathEvidence, extractPracticeKgReferences } from "../PracticeKg.matter-lookup.ts";
 import {
   DocketCalendar,
-  DocketIntakeError,
   DocketIntakeStore,
   DocketMailbox,
   DocketMatterLookup,
@@ -103,6 +102,7 @@ import type { DocketReminderRung, DocketResponsePeriod } from "@beep/law-practic
 import type { LocalDate } from "@beep/schema/LocalDate";
 import type {
   DocketCalendarShape,
+  DocketIntakeError,
   DocketIntakeStoreShape,
   DocketMailboxShape,
   DocketMatterLookupShape,
@@ -322,7 +322,7 @@ export class DocketIntake extends Context.Service<DocketIntake, DocketIntakeShap
 type Ports = {
   readonly calendar: DocketCalendarShape;
   readonly config: DocketIntakeConfig;
-  readonly crypto: Crypto.Crypto;
+  readonly crypto: Digest.Digest["Service"];
   readonly lookup: DocketMatterLookupShape;
   readonly mailbox: DocketMailboxShape;
   readonly paralegal: DocketParalegalShape;
@@ -340,10 +340,11 @@ const entryKey = Effect.fnUntraced(function* (
   identity: string,
   kind: DocketEntryKind,
   discriminator: string
-): Effect.fn.Return<string, DocketIntakeError> {
-  const digest = yield* ports.crypto
-    .digest("SHA-256", textEncoder.encode(A.join([ports.config.mailbox, identity, kind, discriminator], "\n")))
-    .pipe(Effect.mapError(() => DocketIntakeError.make({ cause: "digest", stage: "calendar" })));
+): Effect.fn.Return<string> {
+  const digest = yield* ports.crypto.digest(
+    Digest.sha256,
+    textEncoder.encode(A.join([ports.config.mailbox, identity, kind, discriminator], "\n"))
+  );
   return `docket:${Str.slice(0, KEY_HEX_LENGTH)(Hex.encode(digest))}`;
 });
 
@@ -1616,7 +1617,7 @@ export const makeDocketIntakeLayer = (
 ): Layer.Layer<
   DocketIntake,
   never,
-  | Crypto.Crypto
+  | Digest.Digest
   | DocketCalendar
   | DocketIntakeStore
   | DocketMailbox
@@ -1631,7 +1632,7 @@ export const makeDocketIntakeLayer = (
         makeService({
           calendar: yield* DocketCalendar,
           config,
-          crypto: yield* Crypto.Crypto,
+          crypto: yield* Digest.Digest,
           lookup: yield* DocketMatterLookup,
           mailbox: yield* DocketMailbox,
           paralegal: yield* DocketParalegal,

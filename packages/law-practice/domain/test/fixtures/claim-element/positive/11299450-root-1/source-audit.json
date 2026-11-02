@@ -1,0 +1,176 @@
+{
+  "familyId": "11299450-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.95,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the requested portal page",
+      "nativeQuote": "the requested Portal page",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the various page elements",
+      "nativeQuote": "the various page elements",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said portal page",
+      "nativeQuote": "said Portal page",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said url",
+      "nativeQuote": "said URL",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said portal side",
+      "nativeQuote": "said Portal side",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the latest navigational state",
+      "nativeQuote": "the latest navigational state",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the current view",
+      "nativeQuote": "the current view",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the result",
+      "nativeQuote": "the result",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said at least latest navigational state",
+      "nativeQuote": "said at least latest navigational state",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the state transition",
+      "nativeQuote": "the state transition",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said specific url",
+      "nativeQuote": "said specific URL",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the modifications",
+      "nativeQuote": "the modifications",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the underlying hierarchical tree-like object representation",
+      "nativeQuote": "the underlying hierarchical tree-like object representation",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "said new latest base navigational state",
+      "nativeQuote": "said new latest base navigational state",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "said hierarchical tree-like object representation",
+      "nativeQuote": "said hierarchical tree-like object representation",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "said hierarchical tree-like object representation",
+      "nativeQuote": "said hierarchical tree-like object representation",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "said serialization method",
+      "nativeQuote": "said serialization method",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "said serialization result",
+      "nativeQuote": "said serialization result",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "said compressed serialization result",
+      "nativeQuote": "said compressed serialization result",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    }
+  ],
+  "concerns": [
+    "All selected numbered examiner phrases match;2/3/9 explicitly dependency rejections. No original comparisons; native/numbered-examiner detailed correspondence supports qualification with retained limitation."
+  ],
+  "rationale": "Actual112(b)/second-paragraph ground read; selected natural dependencies manually checked. Native identity and retained inventory evidence supplement, never replace, numbered examiner correspondence and conflicting-version investigation. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "11299450",
+    "nativePublicationNumber": "US20070136415A1",
+    "nativePublicationDate": "20070614",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "6bcd901818e722da6cb67a12cc0f001d249fc9d90d16b45ba1c0b13d213ac5a3",
+    "sourceClaimsXmlSha256": "c75b0bb7254a5cdad49ead95d97b4d04b8ff1d78e1b9be46f0724fc313f2a146"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 60,
+    "retainedInventoryCount": 60,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "EHB7QXK1PP1GUI4",
+        "officialDate": "2005-12-09T00:00:00.000-0500"
+      }
+    ],
+    "officeActionMailDate": "2008-10-21",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [],
+  "nativeContextClaimCount": 12,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": []
+}

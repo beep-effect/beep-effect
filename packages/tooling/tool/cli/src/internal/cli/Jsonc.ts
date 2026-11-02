@@ -2,11 +2,12 @@
  * Shared JSONC editing helpers for the repo CLI.
  *
  * Config-sync command groups (TsconfigSync, CreatePackage, VersionSync) each
- * carried a verbatim `jsonc.modify` + `jsonc.applyEdits` helper and the same
- * 2-space {@link JSONC_FORMATTING_OPTIONS}. This module owns that formatting
- * policy and the comment-preserving modification once, and re-exports
- * `@beep/schema`'s {@link decodeJsoncTextAs} so callers reach parsing and editing
- * through a single import rather than re-implementing either.
+ * carried a verbatim modify-and-apply helper and the same 2-space
+ * {@link JSONC_FORMATTING_OPTIONS}. This module owns that formatting policy and
+ * the comment-preserving modification once, as a synchronous facade over
+ * `@beep/jsonc` (`JsoncModifier.modifyWithFormattingResult`, the byte-compatible
+ * port of `jsonc-parser`'s `modify`). Parsing is not here: callers decode JSONC
+ * through `@beep/jsonc` (`Jsonc.bind(schema).decode`).
  *
  * @internal
  * @packageDocumentation
@@ -14,21 +15,14 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsoncEdit } from "@beep/jsonc/JsoncEdit";
+import { JsoncModifier } from "@beep/jsonc/JsoncModifier";
+import { JsoncPath } from "@beep/jsonc/JsoncNode";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as jsonc from "jsonc-parser";
+import type { JsoncFormattingOptionsLike } from "@beep/jsonc/JsoncEdit";
 
 const $I = $RepoCliId.create("internal/cli/Jsonc");
-
-/**
- * Schema-driven JSONC decoder from `@beep/schema`.
- *
- * Re-exported so JSONC parsing and editing share one import surface; the parsing
- * implementation is not duplicated here.
- *
- * @category utilities
- * @since 0.0.0
- */
-export { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 
 /**
  * The repo's canonical 2-space JSONC formatting options.
@@ -44,7 +38,7 @@ export { decodeJsoncTextAs } from "@beep/schema/Jsonc";
  * @category configuration
  * @since 0.0.0
  */
-export const JSONC_FORMATTING_OPTIONS: jsonc.FormattingOptions = {
+export const JSONC_FORMATTING_OPTIONS: JsoncFormattingOptionsLike = {
   tabSize: 2,
   insertSpaces: true,
 };
@@ -54,11 +48,11 @@ export const JSONC_FORMATTING_OPTIONS: jsonc.FormattingOptions = {
  *
  * **Details**
  *
- * `path` is a `jsonc-parser` JSON path (string/number segments); `value` is the
- * arbitrary JSON value to write; `isArrayInsertion` inserts at an array index
- * rather than replacing (the only `jsonc.ModificationOptions` flag any call site
- * uses — `formattingOptions` is always the module default and `getInsertionIndex`
- * is unused).
+ * `path` is a `@beep/jsonc` path (string keys and natural-number indices);
+ * `value` is the arbitrary JSON value to write, `undefined` deleting it;
+ * `isArrayInsertion` inserts at an array index rather than replacing (the only
+ * option any call site sets: `formattingOptions` is always the module default
+ * and no caller positions a new property).
  *
  * **Example** (Create modification request)
  *
@@ -75,7 +69,7 @@ export const JSONC_FORMATTING_OPTIONS: jsonc.FormattingOptions = {
 export class JsoncModification extends S.Opaque<JsoncModification, { readonly brand: unique symbol }>()(
   S.Struct({
     content: S.String,
-    path: S.Array(S.Union([S.String, S.Finite])),
+    path: JsoncPath,
     value: S.Unknown,
     isArrayInsertion: S.optionalKey(S.Boolean),
   }).pipe(
@@ -100,39 +94,16 @@ export class JsoncModification extends S.Opaque<JsoncModification, { readonly br
  *
  * @param request - The content, JSON path, value, and optional array-insertion flag.
  * @returns The edited JSONC text with comments and unrelated formatting preserved.
+ * @throws The kit's `JsoncModificationError`, `JsoncPlacementError` or
+ *   `JsoncStringifyError` when the path cannot be edited or the value encoded.
  * @category editing
  * @since 0.0.0
  */
-export const applyJsoncModification = (request: JsoncModification): string => {
-  const edits = jsonc.modify(request.content, [...request.path], request.value, {
+export const applyJsoncModification = (request: JsoncModification): string =>
+  JsoncModifier.modifyWithFormattingResult(request.content, request.path, request.value, {
     formattingOptions: JSONC_FORMATTING_OPTIONS,
     ...(request.isArrayInsertion === true ? { isArrayInsertion: true } : {}),
-  });
-  return jsonc.applyEdits(request.content, edits);
-};
-
-/**
- * Re-format JSON/JSONC text with {@link JSONC_FORMATTING_OPTIONS}.
- *
- * **Details**
- *
- * Returns the formatted text without a trailing newline; callers that need one
- * (for example writing a file) append it themselves.
- *
- * **Example** (Format minified JSON)
- *
- * ```ts
- * import { jsonText } from "@beep/repo-cli/test/SharedInternals"
- *
- * console.log(jsonText('{"a":1}').includes('"a": 1'))
- * ```
- *
- * @param content - JSON/JSONC source text to format.
- * @returns The re-formatted text.
- * @category editing
- * @since 0.0.0
- */
-export const jsonText = (content: string): string => {
-  const edits = jsonc.format(content, undefined, JSONC_FORMATTING_OPTIONS);
-  return jsonc.applyEdits(content, edits);
-};
+  }).pipe(
+    Result.map((edits) => JsoncEdit.applyAll(request.content, edits)),
+    Result.getOrThrow
+  );

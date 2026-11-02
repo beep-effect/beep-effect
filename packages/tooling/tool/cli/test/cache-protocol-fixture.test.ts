@@ -4,9 +4,10 @@ import {
   CacheFixtureScenario,
   makeCacheProtocolFixture,
 } from "@beep/repo-cli/commands/Cache";
+import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect, it, vi } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue, notDeepStrictEqual } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue, deepStrictEqual, notDeepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -146,6 +147,52 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         const downloaded = yield* get(endpoint(fixture.url));
         expect(new Uint8Array(yield* downloaded.arrayBuffer)).toEqual(bytes);
       })
+    );
+    it.effect("attributes opaque request tags separately from returned tags without retaining their values", () =>
+      Effect.gen(function* () {
+        const fixture = yield* makeCacheProtocolFixture(credentials);
+        const uploaded = yield* put(endpoint(fixture.url));
+        yield* uploaded.text;
+        const ordinaryRead = yield* get(endpoint(fixture.url));
+        yield* ordinaryRead.arrayBuffer;
+        const readTag = "different-opaque-reader-request-tag";
+        const taggedRead = yield* HttpClient.get(endpoint(fixture.url), {
+          headers: { authorization: `Bearer ${reader}`, "x-artifact-tag": readTag },
+        });
+        assertSome(Headers.get(taggedRead.headers, "x-artifact-tag"), tag);
+        yield* taggedRead.arrayBuffer;
+        const events = yield* fixture.events;
+        const expected = yield* Effect.forEach([tag, readTag], (value) =>
+          S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(value))
+        );
+        deepStrictEqual(
+          A.map(events, (event) => event.requestTagSha256),
+          [O.some(expected[0]), O.none(), O.some(expected[1])]
+        );
+        expect(A.map(events, (event) => event.tagPresent)).toEqual([true, true, true]);
+        const serialized = yield* S.encodeEffect(FixtureEventsJson)(events);
+        for (const privateValue of [tag, readTag, reader, writer, new TextDecoder().decode(bytes)])
+          expect(serialized).not.toContain(privateValue);
+      })
+    );
+    it.effect.prop(
+      "binds generated opaque request tags to their digest without storing the tag",
+      { generated: Sha256Hex },
+      ({ generated }) =>
+        Effect.gen(function* () {
+          const fixture = yield* makeCacheProtocolFixture(credentials);
+          const response = yield* put(endpoint(fixture.url), bytes, writer, generated);
+          expect(response.status).toBe(200);
+          yield* response.text;
+          const expected = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(generated));
+          const events = yield* fixture.events;
+          deepStrictEqual(
+            A.map(events, (event) => event.requestTagSha256),
+            [O.some(expected)]
+          );
+          const serialized = yield* S.encodeEffect(FixtureEventsJson)(events);
+          expect(serialized).not.toContain(generated);
+        })
     );
     it.effect("round trips opaque bytes and tags, including zero-byte objects", () =>
       Effect.gen(function* () {

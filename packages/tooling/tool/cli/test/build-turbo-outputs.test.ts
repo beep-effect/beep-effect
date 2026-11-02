@@ -1,7 +1,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -10,7 +11,6 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as jsonc from "jsonc-parser";
 
 const $I = $RepoCliId.create("test/build-turbo-outputs");
 
@@ -43,11 +43,11 @@ const BuildConfiguration = S.Struct({
 
 const decodeBaseTsconfig = S.decodeUnknownEffect(BaseTsconfig);
 const decodeBuildConfiguration = S.decodeEffect(S.fromJsonString(BuildConfiguration));
-const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 
 const readBaseTsconfig = Effect.fn("BuildTurboOutputsTest.readBaseTsconfig")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* decodeBaseTsconfig(jsonc.parse(yield* fs.readFileString(`${repoRoot}/tsconfig.base.json`)));
+  return yield* decodeBaseTsconfig(yield* Jsonc.parse(yield* fs.readFileString(`${repoRoot}/tsconfig.base.json`)));
 });
 
 const writeFile = Effect.fn("BuildTurboOutputsTest.writeFile")(function* (root: string, file: string, content: string) {

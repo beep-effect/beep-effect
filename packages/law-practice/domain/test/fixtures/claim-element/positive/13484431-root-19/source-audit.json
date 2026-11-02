@@ -1,0 +1,90 @@
+{
+  "familyId": "13484431-root-19",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.96,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the center",
+      "nativeQuote": "the center",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the outer edge",
+      "nativeQuote": "the outer edge",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the tops",
+      "nativeQuote": "the tops",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the top",
+      "nativeQuote": "the top",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    }
+  ],
+  "concerns": [
+    "Blanket rejection includes selected20/21/24/25, plus detailed19/20 source wording. Original0claim extraction gives no exact corroboration; multiple numbered passages and actual ground support family association.19 independently roots family;20/21/22/24→19,23→22,25→24 verified."
+  ],
+  "rationale": "Actual112(b)/second-paragraph ground read and selected natural dependencies reviewed. Differing original versions/claim counts investigated and substantive changes not excused by chronology. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "13484431",
+    "nativePublicationNumber": "US20130025114A1",
+    "nativePublicationDate": "20130131",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "32559a1d5e0471b2ba316f9ab0615d1e8a871e21aa65564825d876cb4598ce8e",
+    "sourceClaimsXmlSha256": "399d18d79cc889291a1a77caeeac14d34aac07438b7973fabe1026298fd942fd"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 69,
+    "retainedInventoryCount": 69,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "H2VZ15PXPXXIFW3",
+        "officialDate": "2012-05-31T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2014-02-24",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "H2VZ15PXPXXIFW3",
+      "officialDate": "2012-05-31T00:00:00.000-0400",
+      "sha256": "f4343febd30b58d90b71a83cb6aed5a9a99f9875810eaa8adecc8c7a6a73d7af",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "nativeContextClaimCount": 25,
+  "selectedClaimNumbers": [19, 20, 21, 22, 23, 24, 25],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "H2VZ15PXPXXIFW3",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 0
+    }
+  ]
+}

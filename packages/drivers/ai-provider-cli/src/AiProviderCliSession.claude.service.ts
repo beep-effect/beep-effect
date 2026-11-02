@@ -5,7 +5,7 @@
  */
 import { $AiProviderCliId } from "@beep/identity";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -23,6 +23,7 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { observeStartedManagedProcess } from "./AiProviderCliSession.lifecycle.ts";
 import {
   ManagedSessionEvent,
   ManagedSessionIdentity,
@@ -45,6 +46,7 @@ import {
   MessagingToolName,
 } from "./AiProviderCliSession.wire.models.ts";
 import type { ManagedSessionError } from "./AiProviderCliSession.errors.ts";
+import type { ManagedSessionObserver } from "./AiProviderCliSession.lifecycle.ts";
 import type { ManagedLaunchProfile, ManagedSessionMessage } from "./AiProviderCliSession.models.ts";
 import type { ManagedSession } from "./AiProviderCliSession.service.ts";
 
@@ -76,11 +78,14 @@ const isInitializationNotice = S.is(InitializationNotice);
  * @category resource-management
  * @since 0.0.0
  */
-export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function* (profile: ManagedLaunchProfile) {
+export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function* (
+  profile: ManagedLaunchProfile,
+  observer?: ManagedSessionObserver
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
-  const sessionId = yield* crypto.randomUUIDv4().pipe(transportFailure("session-id"));
+  const crypto = yield* SecureRandom.SecureRandom;
+  const sessionId = yield* crypto.uuidV4().pipe(transportFailure("session-id"));
   const tools = R.fromEntries(
     A.map(profile.tools, (tool) => [tool.name, { command: tool.command, args: tool.args, env: tool.env }])
   );
@@ -156,6 +161,7 @@ export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function*
       forceKillAfter: Duration.seconds(3),
     }
   ).pipe(transportFailure("spawn"));
+  const process = yield* observeStartedManagedProcess(handle, observer);
   const outbound = yield* Queue.bounded<string>(16);
   const events = yield* PubSub.sliding<ManagedSessionEvent>(128);
   const ready = yield* Deferred.make<void, ManagedSessionError>();
@@ -306,6 +312,7 @@ export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function*
     );
   });
   return {
+    process,
     identity: ManagedSessionIdentity.make({
       provider: "claude",
       sessionId,

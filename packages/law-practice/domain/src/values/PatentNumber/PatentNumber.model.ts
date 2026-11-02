@@ -31,7 +31,7 @@ const patentNumberDigitsPattern = /^[0-9]+$/;
  * console.log(S.is(PatentNumber)("US1234567B2")) // false
  * ```
  *
- * @see https://www.wipo.int/documents/d/standards/docs-en-03-06-01.pdf
+ * @see {@link https://www.wipo.int/documents/d/standards/docs-en-03-06-01.pdf} for WIPO ST.6 publication-number formatting.
  * @category value-objects
  * @since 0.0.0
  */

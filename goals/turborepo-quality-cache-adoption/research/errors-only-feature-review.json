@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "cache-errors-only-feature-review/v1",
+  "authority": "Final current-tree optional presentation decision on frozen feature-local pins; not an actual task/profile qualification or production performance claim.",
+  "sourceBaseRevision": "f16d82e9f16d72f64d42b40284bf2867566e796b",
+  "feature": "futureFlag:errorsOnlyShowHash",
+  "disposition": "accepted-retain-current-default",
+  "rationale": "The runtime consumer already obtains hashes from structured summaries. No current named log-only consumer needs successful task hashes. Retain the absent default instead of adding an output-only flag with no measured execution benefit.",
+  "reopenWhen": "A named human or machine consumer requires successful task hashes in otherwise quiet logs; review its parsing contract and measure the benefit on fresh pins.",
+  "census": {
+    "scope": "All errors-only matches in packages, scripts, .github, infra and root turbo.json; experiment and research prose excluded.",
+    "paths": [
+      {
+        "path": "infra/r2-cache/probe.py",
+        "sha256": "3dbdda150496bd8a403719fcf6a6c3468a6f838739757c43a92bd25349e86231",
+        "role": "The actual command uses errors-only but reads task hash, cache status and execution from the structured run summary; it does not parse quiet success logs."
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+        "sha256": "c7ed5b2c9898d7691245a064707bbfa6d669b22919e44008bbd1e650c583c58e",
+        "role": "Tests preserve caller-supplied errors-only arguments and summary output; they add no production output-log default or success-hash parser."
+      },
+      {
+        "path": "packages/foundation/capability/api-transport/src/Transport.ts",
+        "sha256": "923252445ad59b90a06157b9aeb7603f20ebb2bdb94a5e661508bcd35480f109",
+        "role": "An unrelated HTTP retry policy literal, not Turbo log presentation."
+      }
+    ]
+  },
+  "nativeEvidence": {
+    "report": "native-log-controls.json",
+    "sha256": "b941d0c04c0798304cc781322ee00cc8b95500a9a3eef4603493e9df85c9ebb1",
+    "cases": 24,
+    "refusalControls": 6,
+    "pins": "errors-only-client-pins.json",
+    "stable": "2.11.10",
+    "canary": "2.11.11-canary.1",
+    "presentation": "Success hash visibility follows the flag; task stdout/stderr stay quiet for success and remain visible on failure. Full logs retain their output. Actual task exit7 remains failure.",
+    "cache": "Cold and forced write-only executions and warm restore preserve exact bytes and0755 mode. All six per-client cache cases share task hash and declared inputs across flag values.",
+    "reproduce": [
+      "python3 goals/turborepo-quality-cache-adoption/research/native-log-presentation-controls.py --pins goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json",
+      "python3 goals/turborepo-quality-cache-adoption/research/native-log-cache-controls.py --pins goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json"
+    ],
+    "binaryLocation": "Stable defaults to the checkout installation, override with --stable; canary is the exact version under ~/.cache/beep/turbo-goals-clients. Reports require fresh output paths.",
+    "executedDriverSourceRevision": "ec979dd5dbfab4efe72b33f2d82ba07dece92218",
+    "freshCurrentDriverReplay": true
+  },
+  "retainedHistory": "Older2.11.9-canary.1 private controls and the root-config-confounded single-package hash attempts remain historical; this decision uses the fresh two-workspace cache controls.",
+  "limits": [
+    "No repository client or Turbo configuration change.",
+    "No ordinary R2 or signed trial activation.",
+    "No task eligibility, qualification, real-world speedup, hosted producer authority or representative-window acceptance.",
+    "Existing current-client-pins.json stays unchanged; this review explicitly uses fresh feature-local pins."
+  ],
+  "schemaAvailability": {
+    "report": "errors-only-schema-observation.json",
+    "scope": "Integrity-verified exact2.11.11-canary.1 package schema; native cases establish behavior."
+  },
+  "acceptedMainRefresh": {
+    "priorSourceBaseRevision": "8a1252423e907b31755b54321a65849a9e17b12b",
+    "acceptedMain": "f16d82e9f16d72f64d42b40284bf2867566e796b",
+    "changedBindings": [
+      {
+        "path": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+        "priorSha256": "590c0b0b964684256eda71f68b6ebf87b47f0c57062b06bd7df6b605f5853334",
+        "sha256": "c7ed5b2c9898d7691245a064707bbfa6d669b22919e44008bbd1e650c583c58e"
+      }
+    ],
+    "review": "The changed quality-tasks test adds the goals-ops typecheck lane descriptor only; every errors-only assertion and the named production summary consumer are unchanged. Root errorsOnlyShowHash remains absent.",
+    "newFeatureAcceptance": false,
+    "nativeControlsReplayed": false
+  },
+  "priorNativeEvidence": {
+    "report": "native-log-controls-before-pin-default-fix.json",
+    "sha256": "758b4317660aed4a04ac8167df1bd6c1433078ebd925c4a1c586b7670c6c3a88",
+    "driverSourceContentCommit": "70145eb55bf202ea2c6fda4207e17d6b295dadd6",
+    "scope": "Prior execution retained unchanged, separate from the fresh default-fix driver replay."
+  }
+}

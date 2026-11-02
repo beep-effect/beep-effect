@@ -1,0 +1,42 @@
+{
+  "applicationNumber": "14971439",
+  "publicationNumber": "US20160102789A1",
+  "publicationDate": "2016-04-14",
+  "nativeXmlSha256": "a59a3650a5fabb773fb3967b9bcd02446d6812ad75b08bff208c9f5b0e712b37",
+  "claimsXmlSha256": "15257b174ff30cb7484cdb56e84beb5931acd39a5ce92261e2a908b3373d8ebf",
+  "officeActionDocumentIdentifiers": [
+    "IXTEHR7ZRXEAPX2"
+  ],
+  "officeActionMailDate": "2017-01-11",
+  "officeActionSection112Text": [
+    "claims 1-17 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1, line 13, “the threaded socket interior surface” lacks antecedent basis.\r\nclaim 1, line 16, “the connected tube sections” lacks antecedent basis.\r\nclaim 6, line 2, “said bore” lacks antecedent basis.\r\nclaim 6, line 2, “the notch” lacks antecedent basis.\r\nclaim 7, line 1, “said notch” lacks antecedent basis.\r\nclaim 8, line 1, “the arcuate camming surface” lacks antecedent basis.\r\nclaim 8, line 2,”the first arcuate surface” lacks antecedent basis.\r\nclaim 9, line 1, “the front end” lacks antecedent basis.\r\nclaim 9, line 1, “the tube gripping member” lacks antecedent basis.\r\nclaim 9, line 2, :the first arcuate surface” lacks antecedent basis.\r\nclaim 10, line 1, “the internally threaded end” lacks antecedent basis.\r\nclaim 10, line 1, “the first tube fitting member” lacks antecedent basis.\r\nclaim 10, line 3, “the second tube fitting member” lacks antecedent basis.\r\nclaim 11, line 1, “said tube gripping member” lacks antecedent basis.\r\nclaim 11, line 2, “the notch” lacks antecedent basis.\r\nclaim 11, line 3, “the second tube fitting member” lacks antecedent basis.\r\nclaim 12, line 1, “the second tube fitting member” lacks antecedent basis.\r\nclaim 12, line 2, “the tube gripping member” lacks antecedent basis.\r\nclaim 13, line 1, “the threaded end” lacks antecedent basis.\r\nclaim 13, line 1, “the first tube fitting member” lacks antecedent basis.\r\nclaim 13, line 2, “the threaded end” lacks antecedent basis.\r\nclaim 13, line 2, “the second tube fitting member” lacks antecedent basis.\r\nclaim 14, line 1, “the first tube fitting member” lacks antecedent basis.\r\nclaim 14, line 2, “the first tube fitting member” is redundant.\r\nclaim 14, line 2, “the tube gripping member” lacks antecedent basis.\r\nclaim 15, line 1, “the tube gripping member” lacks antecedent basis.\r\nclaim 15, lnn2, “the notch” lacks antecedent basis.\r\nclaim 16, line 1, “the second tube fitting member” lacks antecedent basis.\r\nclaim 17, line 15, “the threaded socket interior surface” lacks antecedent basis.\r\nclaim 17, line 18, “the connected tube sections” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "II9BVJ8LPXXIFW3",
+      "officialDate": "2015-12-16T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "II9BVJ8LPXXIFW3",
+      "officialDate": "2015-12-16T00:00:00.000-0500",
+      "sha256": "aed2453977b21fb76e886ebf5d60387fcf51e402ec2bef716888db22d7168e24",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1
+      ],
+      "sourceClaimCount": 17
+    }
+  ],
+  "documentInventoryCount": 39,
+  "documentInventoryRows": 39,
+  "primaryCpc": "F16L  19/0206",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/14971439",
+    "https://api.uspto.gov/api/v1/patent/applications/14971439/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

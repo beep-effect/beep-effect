@@ -1,0 +1,85 @@
+{
+  "familyId": "12268372-root-10",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the elevator rope",
+      "nativeQuote": "the elevator ropes",
+      "literalMatch": false,
+      "explanation": "Examiner singular versus native plural at root10."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the lifting wheel",
+      "nativeQuote": "the lifting wheel",
+      "literalMatch": true,
+      "explanation": "Exact11."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the rim",
+      "nativeQuote": "the rim",
+      "literalMatch": true,
+      "explanation": "Exact13."
+    }
+  ],
+  "concerns": [
+    "Original FNDV8M1VPPOPPY4 parsed13 versus FNJ3VQARPPOPPY2 parsed20 substantive sets; latter shows amendment-looking strike text but no explicit Del/Ins. Native12->10 versus original12->10or11 and native13->11 versus original13->11or12 remain unresolved. Native omits many reference numerals and replaces characterized transitions; do not treat all differences as OCR.",
+    "Original13-count file truncates selected12/13 to partial first lines; original20-count file contains more body but no reliable rendering of crossed-out alternatives.",
+    "Publication identity/digest and64/64 original2008-11-10 before OA2011-02-04 verified; natural native refs11/12->10,13->11 produce family, but exact operative dependencies uncertain."
+  ],
+  "rationale": "Actual secondparagraph citations associate with selected10/11/13; hold source eligibility pending amendment/version reconciliation.",
+  "sourceIdentity": {
+    "applicationNumber": "12268372",
+    "publicationNumber": "US20090127033A1",
+    "publicationDate": "2009-05-21",
+    "officeActionMailDate": "2011-02-04",
+    "officeActionDocumentIdentifiers": ["GJOTJDQ8PPOPPY5"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20090127033 A1 20090521",
+      "application-reference": "US 12268372 20081110",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "FNDV8M1VPPOPPY4",
+        "officialDate": "2008-11-10T00:00:00.000-0500"
+      },
+      {
+        "documentIdentifier": "FNJ3VQARPPOPPY2",
+        "officialDate": "2008-11-10T00:00:00.000-0500"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "FNDV8M1VPPOPPY4",
+        "officialDate": "2008-11-10T00:00:00.000-0500",
+        "sha256": "a537759b2a7cb7f6f7bbc596a4510118b3d78e972e88f91f3eb1f233a9a61b15",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [],
+        "sourceClaimCount": 13
+      },
+      {
+        "documentIdentifier": "FNJ3VQARPPOPPY2",
+        "officialDate": "2008-11-10T00:00:00.000-0500",
+        "sha256": "b20d6413227bef32dd3c2b0abd07593e5b4da2cdc7d09a23f26fec049e0a36cf",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [14, 15],
+        "sourceClaimCount": 20
+      }
+    ],
+    "documentInventoryCount": 64,
+    "documentInventoryRows": 64,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

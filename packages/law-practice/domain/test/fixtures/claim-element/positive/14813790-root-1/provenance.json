@@ -1,0 +1,44 @@
+{
+  "applicationNumber": "14813790",
+  "publicationNumber": "US20160061107A1",
+  "publicationDate": "2016-03-03",
+  "nativeXmlSha256": "23eb25051f02b10762eed238c11c79cd6b35a5df10dd37e74b69afc438bef1b9",
+  "claimsXmlSha256": "1473a5396d2f959c80eec99ffbf6e83071064aa556a515b759d9e79ab7a70192",
+  "officeActionDocumentIdentifiers": [
+    "J3W0F84RRXEAPX1"
+  ],
+  "officeActionMailDate": "2017-06-15",
+  "officeActionSection112Text": [
+    "claim 1-8 rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1\r\nl3: correct “the engine” to “the gas turbine engine” to maintain antecedent basis\r\nl3: correct “the shaft” to “the low pressure shaft” to maintain antecedent basis\r\nl4: limitation “the rearward direction” lacks antecedent basis\r\nl5: correct “the engine” to “the gas turbine engine” to maintain antecedent basis\r\nl5: limitation “the rear end” lacks antecedent basis\r\nl5: correct “the shaft” to “the low pressure shaft” to maintain antecedent basis\r\nl7: limitation “the diameter” lacks antecedent basis\r\nl8: correct “the engine” to “the gas turbine engine” to maintain antecedent basis\r\nclaim 2-8 are rejected by dependency\r\nclaim 2\r\nl10: correct “the shaft” to “the low pressure shaft” to maintain antecedent basis\r\nclaim 3\r\nl12-13: limitation “for each pair of adjacent frustoconical sub-sections” lacks proper antecedent basis\r\nl13: limitation “the cone angle of the rearward sub-section” lacks antecedent basis twice\r\nl13-14: limitation “the cone angle of the forward sub-section” lacks antecedent basis twice\r\nclaim 5\r\nl17: limitation “the wall thickness” lacks antecedent basis\r\nclaim 6\r\nl20: correct “the joint portion” to “the annular joint portion” to maintain antecedent basis\r\nl20: limitation “the wall thickness” lacks antecedent basis\r\nl21: correct “the stiffening formation” to “the annular stiffening formation” to maintain antecedent basis\r\nl21: limitation “the wall thickness” lacks antecedent basis\r\nl22: limitation “its” renders the claim indefinite, as it is not known what structure “its” is in reference. for the purpose of applying art, “its” will be read to reference the rear end of the aft section of the low pressure shaft\r\nclaim 7\r\nl24: correct “the joint portion” to “the annular joint portion” to maintain antecedent basis\r\nl24: correct “the stiffening formation” to “the annular stiffening formation” to maintain antecedent basis\r\nclaim 8, under the second interpretation of claim 8\r\nl26: change “a fan to “the fan” to maintain proper antecedent basis\r\nl27: change “a low pressure turbine” to “the low pressure turbine” to maintain proper antecedent basis"
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "ICQM3R69PXXIFW3",
+      "officialDate": "2015-07-30T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "ICQM3R69PXXIFW3",
+      "officialDate": "2015-07-30T00:00:00.000-0400",
+      "sha256": "e5ce3af0a4d44804f2225332774f2d9d8bc01e5941edda728c7c242888141294",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        4,
+        5,
+        8
+      ],
+      "sourceClaimCount": 8
+    }
+  ],
+  "documentInventoryCount": 74,
+  "documentInventoryRows": 74,
+  "primaryCpc": "F02C   3/04",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/14813790",
+    "https://api.uspto.gov/api/v1/patent/applications/14813790/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

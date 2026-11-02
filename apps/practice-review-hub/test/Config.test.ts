@@ -23,6 +23,7 @@ const CommandEnvironment = Layer.mergeAll(
     Terminal.make({
       columns: Effect.succeed(80),
       rows: Effect.succeed(24),
+      size: Effect.die("Unexpected terminal size subscription"),
       readInput: Effect.die("Unexpected terminal input"),
       readLine: Effect.die("Unexpected terminal input"),
       display: () => Effect.void,

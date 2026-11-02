@@ -1,0 +1,207 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13846690-root-15",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20130277286", "A1", "20131024"],
+    "applicationReference": ["US", "13846690", "20130318"],
+    "officeActionDocumentIdentifiers": ["IW52IU0ORXEAPX1"],
+    "officeActionMailDate": "2016-12-02"
+  },
+  "digestEvidence": [
+    {
+      "file": "13846690.publication.xml",
+      "sha256": "bd5d13ef065369f4907c8360208443269dc6d55a0765f857410538644a72a539",
+      "matchesProvenance": true
+    },
+    {
+      "file": "13846690.claims.xml",
+      "sha256": "a55481c541fe0642fac5a423cfd240432c919f3cbf81409173e95e43125a313e",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "a55481c541fe0642fac5a423cfd240432c919f3cbf81409173e95e43125a313e",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "HEGB80NPPXXIFW3",
+      "xmlAvailable": true,
+      "sha256": "80571470db546faae8e631a5f084eb186db1e2156e4efd04ad092673fcef70cc",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 57,
+    "actualRows": 57,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2013-03-18T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "HEGB80NPPXXIFW3"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-44 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.",
+    "claims 36-42 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention. claim 36 recites \u201cthe membrane of claim 36\u201d . . . . the dependency of claim 36 is unclear."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "said membrane",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said membrane"
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "said sensor",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said sensor"
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the above parameters",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the above parameters"
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "said sensor",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said sensor"
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "said sensor",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said sensor"
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the measurement",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the measurement"
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "said coupling",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said coupling"
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "a main frame computer",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": false,
+      "nativeQuote": "a mainframe computer"
+    },
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "said membranes",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said membranes"
+    },
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "different membranes",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "different membranes"
+    },
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "one of the membranes",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "one of the membranes"
+    },
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "different pvs",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "different PVs"
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "the coupling",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the coupling"
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "the membranes",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the membranes"
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "one membrane",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "one membrane"
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "the adjacent membrane",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the adjacent membrane"
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "the main conduits",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the main conduits"
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "the conduit",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the conduit"
+    },
+    {
+      "claimNumber": 24,
+      "examinerPhrase": "the coupling",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the coupling"
+    },
+    {
+      "claimNumber": 24,
+      "examinerPhrase": "the main conduits",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the main conduits"
+    }
+  ],
+  "assessment": "Original51-claim context contains selected15-24; bodies match except sentence punctuation and embedded page38. OA rejects1-44, directly discussing selected family. Main frame/mainframe is spacing; dangling coupling in19 is preserved.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

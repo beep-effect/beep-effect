@@ -120,6 +120,12 @@
         ]
       },
       {
+        "name": "@beep/beep-effect-web",
+        "patterns": [
+          "apps/beep-effect-web/src/**"
+        ]
+      },
+      {
         "name": "@beep/box",
         "patterns": [
           "packages/drivers/box/src/**"
@@ -1579,6 +1585,17 @@
         ]
       },
       {
+        "from": "@beep/beep-effect-web",
+        "allow": [
+          "@beep/beep-effect-web",
+          "@beep/public-site"
+        ],
+        "allowTypeOnly": [
+          "@beep/beep-effect-web",
+          "@beep/public-site"
+        ]
+      },
+      {
         "from": "@beep/box",
         "allow": [
           "@beep/box",
@@ -2149,6 +2166,7 @@
         "allow": [
           "@beep/effect-drizzle",
           "@beep/fc-runs",
+          "@beep/markdown",
           "@beep/pglite",
           "@beep/repo-utils",
           "@beep/test-runner"
@@ -2156,6 +2174,7 @@
         "allowTypeOnly": [
           "@beep/effect-drizzle",
           "@beep/fc-runs",
+          "@beep/markdown",
           "@beep/pglite",
           "@beep/repo-utils",
           "@beep/test-runner"
@@ -3046,6 +3065,7 @@
         "from": "@beep/lint-rules",
         "allow": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/lint-rules",
           "@beep/schema",
           "@beep/test-runner",
@@ -3054,6 +3074,7 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/lint-rules",
           "@beep/schema",
           "@beep/test-runner",
@@ -4348,11 +4369,13 @@
       {
         "from": "@beep/repo-ai-metrics",
         "allow": [
+          "@beep/ai-provider-cli",
           "@beep/cli-kit",
           "@beep/duckdb",
           "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/jsonl",
           "@beep/memfs",
           "@beep/observability",
           "@beep/phoenix",
@@ -4361,14 +4384,17 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ],
         "allowTypeOnly": [
+          "@beep/ai-provider-cli",
           "@beep/cli-kit",
           "@beep/duckdb",
           "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/jsonl",
           "@beep/memfs",
           "@beep/observability",
           "@beep/phoenix",
@@ -4377,7 +4403,8 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ]
       },
       {
@@ -4390,6 +4417,7 @@
           "@beep/colors",
           "@beep/config-file",
           "@beep/duckdb",
+          "@beep/epistemics",
           "@beep/exiftool",
           "@beep/fc-runs",
           "@beep/ffmpeg",
@@ -4401,6 +4429,7 @@
           "@beep/github-reporting",
           "@beep/glob",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/libpff",
           "@beep/lockfiles",
           "@beep/m365",
@@ -4424,7 +4453,7 @@
           "@beep/repo-docgen",
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
-          "@beep/runpod",
+          "@beep/repo-workspaces",
           "@beep/runtime-env",
           "@beep/schema",
           "@beep/semver",
@@ -4436,10 +4465,12 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
+          "@beep/tsconfig",
           "@beep/uspto",
           "@beep/utils",
           "@beep/walker",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ],
         "allowTypeOnly": [
           "@beep/ai-provider-cli",
@@ -4449,6 +4480,7 @@
           "@beep/colors",
           "@beep/config-file",
           "@beep/duckdb",
+          "@beep/epistemics",
           "@beep/exiftool",
           "@beep/fc-runs",
           "@beep/ffmpeg",
@@ -4460,6 +4492,7 @@
           "@beep/github-reporting",
           "@beep/glob",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/libpff",
           "@beep/lockfiles",
           "@beep/m365",
@@ -4483,7 +4516,7 @@
           "@beep/repo-docgen",
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
-          "@beep/runpod",
+          "@beep/repo-workspaces",
           "@beep/runtime-env",
           "@beep/schema",
           "@beep/semver",
@@ -4495,16 +4528,19 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
+          "@beep/tsconfig",
           "@beep/uspto",
           "@beep/utils",
           "@beep/walker",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ]
       },
       {
         "from": "@beep/repo-configs",
         "allow": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/repo-configs",
           "@beep/schema",
           "@beep/semver",
@@ -4514,6 +4550,7 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/repo-configs",
           "@beep/schema",
           "@beep/semver",
@@ -4528,26 +4565,34 @@
           "@beep/chalk",
           "@beep/config-file",
           "@beep/identity",
+          "@beep/markdown",
           "@beep/md",
+          "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-docgen",
+          "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/tsconfig",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/chalk",
           "@beep/config-file",
           "@beep/identity",
+          "@beep/markdown",
           "@beep/md",
+          "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-docgen",
+          "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/tsconfig",
           "@beep/utils"
         ]
       },
@@ -4749,122 +4794,68 @@
       {
         "from": "@beep/scratchpad",
         "allow": [
-          "@beep/cli-kit",
-          "@beep/commands",
-          "@beep/config-file",
           "@beep/dock",
           "@beep/dock-react",
           "@beep/drizzle",
           "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/epistemics",
-          "@beep/fc-runs",
           "@beep/file-processing",
-          "@beep/git",
-          "@beep/github",
-          "@beep/github-commands",
-          "@beep/github-references",
-          "@beep/github-reporting",
-          "@beep/glob",
           "@beep/identity",
-          "@beep/jsonc",
           "@beep/law-practice-use-cases",
-          "@beep/lockfiles",
           "@beep/m365",
-          "@beep/managed-section",
-          "@beep/markdown",
           "@beep/md",
-          "@beep/memfs",
           "@beep/n3",
           "@beep/nlp",
           "@beep/nlp-processing",
-          "@beep/npm-spec",
           "@beep/ontology",
           "@beep/oxigraph",
-          "@beep/package-json",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/pretext",
           "@beep/provenance",
           "@beep/rdf",
           "@beep/repo-cli",
-          "@beep/repo-tsconfig",
           "@beep/repo-utils",
-          "@beep/repo-workspaces",
-          "@beep/runtime-env",
-          "@beep/sbom",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/semantic-web",
-          "@beep/semver",
           "@beep/shacl",
-          "@beep/spdx",
           "@beep/test-utils",
-          "@beep/toml",
-          "@beep/tsconfig",
           "@beep/utils",
-          "@beep/walker",
-          "@beep/wink",
-          "@beep/yaml"
+          "@beep/wink"
         ],
         "allowTypeOnly": [
-          "@beep/cli-kit",
-          "@beep/commands",
-          "@beep/config-file",
           "@beep/dock",
           "@beep/dock-react",
           "@beep/drizzle",
           "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/epistemics",
-          "@beep/fc-runs",
           "@beep/file-processing",
-          "@beep/git",
-          "@beep/github",
-          "@beep/github-commands",
-          "@beep/github-references",
-          "@beep/github-reporting",
-          "@beep/glob",
           "@beep/identity",
-          "@beep/jsonc",
           "@beep/law-practice-use-cases",
-          "@beep/lockfiles",
           "@beep/m365",
-          "@beep/managed-section",
-          "@beep/markdown",
           "@beep/md",
-          "@beep/memfs",
           "@beep/n3",
           "@beep/nlp",
           "@beep/nlp-processing",
-          "@beep/npm-spec",
           "@beep/ontology",
           "@beep/oxigraph",
-          "@beep/package-json",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/pretext",
           "@beep/provenance",
           "@beep/rdf",
           "@beep/repo-cli",
-          "@beep/repo-tsconfig",
           "@beep/repo-utils",
-          "@beep/repo-workspaces",
-          "@beep/runtime-env",
-          "@beep/sbom",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/semantic-web",
-          "@beep/semver",
           "@beep/shacl",
-          "@beep/spdx",
           "@beep/test-utils",
-          "@beep/toml",
-          "@beep/tsconfig",
           "@beep/utils",
-          "@beep/walker",
-          "@beep/wink",
-          "@beep/yaml"
+          "@beep/wink"
         ]
       },
       {

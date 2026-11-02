@@ -497,8 +497,10 @@ export class WindowsHost extends Context.Service<WindowsHost, WindowsHostShape>(
 
       const folder = (name: KnownFolder) =>
         Config.option(Config.String(name)).pipe(
-          Effect.map(O.filter(Str.isNonEmpty)),
-          Effect.mapError((cause) => WindowsHostFailure.make({ cause, message: `${name} could not be read.` }))
+          Effect.mapBoth({
+            onFailure: (cause) => WindowsHostFailure.make({ cause, message: `${name} could not be read.` }),
+            onSuccess: O.filter(Str.isNonEmpty),
+          })
         );
 
       const exists = (path: string) =>

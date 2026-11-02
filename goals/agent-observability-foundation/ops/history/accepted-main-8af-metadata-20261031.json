@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "kind": "Accepted-main combined-source generated metadata qualification",
+  "headBeforeMerge": "012625f4596a8d24ed310688ff62bdfe71425445",
+  "acceptedMain": "8afbd51a6ccd16fc5b2f104874104c629524cbe0",
+  "inputGitTree": "2672e567c8903bb81c9a533e536313c399f89eb1",
+  "wholeJobPassed": true,
+  "commands": [
+    {
+      "name": "fallow-boundaries",
+      "exitCode": 0,
+      "guardStoppedFor": null,
+      "guardExitCode": 0,
+      "peakObservedBytes": 191385600
+    },
+    {
+      "name": "jsdoc-inventory",
+      "exitCode": 0,
+      "guardStoppedFor": null,
+      "guardExitCode": 0,
+      "peakObservedBytes": 5459152896
+    },
+    {
+      "name": "cache-audit",
+      "exitCode": 0,
+      "guardStoppedFor": null,
+      "guardExitCode": 0,
+      "peakObservedBytes": 2099683328
+    }
+  ],
+  "generatedArtifactsSha256": {
+    "standards/fallow.boundaries.generated.jsonc": "b31609bc2030e6ddab39e47d4e39e8a5c44f194fa87d925713314c81d139030b",
+    "standards/jsdoc-documentation.inventory.jsonc": "113efadce9242803ba3840d89543df6bf102787c12c64f207846d9b77e241759",
+    "standards/jsdoc-documentation.inventory.md": "c5ac8152b0593d32278aa51a139e7531dbeb0ea61b0c63551b90ce4763d29d5b"
+  },
+  "cacheAudit": {
+    "findings": 0,
+    "unassessed": 1655,
+    "incomingReviewsRetained": 189,
+    "allOtherIncomingReviewsUnchanged": true,
+    "qualificationGranted": false
+  },
+  "jsdocInventory": {
+    "packages": 183,
+    "openPackages": 16,
+    "openExports": 97,
+    "openModules": 166,
+    "rootPolicyOpen": 0
+  },
+  "sourceBinding": {
+    "receipt": "goals/agent-observability-foundation/ops/history/jsdoc-source-binding-20261031.json",
+    "all40CurrentSourceHashesRechecked": true,
+    "newRuntimeChangeClaimed": false,
+    "freshCanaryClaimed": false
+  },
+  "focusedProofFollowup": {
+    "phoenixPackageTestTypesExitCode": 0,
+    "sourceTestSha256": "ec950ed9e329d8577c4b8ec0e0fed363a1939a3f046a99a6a53533e30144f3e4",
+    "overlayRestored": true
+  },
+  "executionBoundary": {
+    "perPhaseRuntimeSeconds": 900,
+    "memoryHighGiB": 7,
+    "memoryMaxGiB": 12,
+    "ownedMemoryStopGiB": 8,
+    "minimumHostAvailableGiB": 16,
+    "swapBytes": 0,
+    "guardStop": null,
+    "indexTreeUnchangedDuringExecution": true,
+    "generatedOutputsWrittenToWorkingTree": true,
+    "noRuntimeOverlayOrCleanupRequired": true
+  },
+  "interpretation": "The immutable index tree identifies the exact combined-source input before generated outputs; this post-execution receipt and generated outputs are later additions. Historical cleanup-failed receipts remain unchanged. This is generated-metadata qualification, not current-head hosted CI, readiness or goal completion.",
+  "holds": {
+    "recoveryServiceAndTimer": "masked and inactive",
+    "productionDeployment": false,
+    "realHarnessEnrollment": false,
+    "realHarnessPopulations": "Unknown",
+    "mergeOwner": "Claude coordinator"
+  }
+}

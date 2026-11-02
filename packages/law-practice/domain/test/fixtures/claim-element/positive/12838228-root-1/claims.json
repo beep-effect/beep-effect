@@ -1,0 +1,107 @@
+{
+  "familyId": "12838228-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "An image erasing apparatus configured to erase an image on a recording medium, the apparatus comprising: a paper feeding tray configured to feed the recording medium; a sensor group including a double-feed detection sensor configured to detect double feed of the recording medium and a media sensor configured to detect thickness of the recording medium; a recording-medium conveying device configured to convey the recording medium; a collecting device provided in the recording-medium conveying device and configured to drop and collect the recording medium; a heating device configured to heat the recording medium to temperature equal to or higher than erasing temperature of a developer; a stacking device configured to stack the recording medium; and a control unit configured to cause, the recording-medium conveying device to collect the recording medium in the collecting device if the recording medium is judged non-conveyable on the basis of an output of the sensor group and cause the recording-medium conveying device to convey the recording medium in a direction of the heating device to erase an image if the recording medium is judged conveyable on the basis of an output of the sensor group.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The apparatus according to claim 1, wherein the collecting device is set downstream in a recording medium conveyance direction of the sensor group and upstream in the recording medium conveying direction of the heating device.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The apparatus according to claim 2, wherein the collecting device includes: a driving roller and a driven roller configured to nip the recording medium to thereby covey the recording medium; a roller lifting and lowering device configured to lift and lower the driving roller; and a movable plate configured to rotatably support the driven roller and open in a direction perpendicular to the recording medium conveying direction.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The apparatus according to claim 3, wherein the collecting device further includes, in a lower part of the collecting device, a collection box in which the recording medium is collected.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The apparatus according to claim 3, wherein the movable plate has plural teeth on a side thereof, and the collecting device further includes a motor having a gear that meshes with the plural teeth.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The apparatus according to claim 2, wherein the collecting device further includes: a first brush roller set above the recording-medium conveying device; and a second brush roller set below the recording-medium conveying device and supported by the movable plate.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The apparatus according to claim 5, wherein the roller lifting and lowering device lifts and lowers the driving roller and the first brush roller.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The apparatus according to claim 5, wherein the brush roller rotates in a direction opposite to the recording medium conveying direction.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The apparatus according to claim 5, wherein the brush roller is formed of plastic.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The apparatus according to claim 5, wherein the brush roller is formed of animal hair.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "A recording medium conveying method for an image erasing apparatus configured to erase an image on a recording medium, the method comprising: a paper feeding tray feeding the recording medium; a sensor group including a double-feed detection sensor and a media sensor detecting double feed of the recording medium and thickness of the recording medium; a recording-medium conveying device conveying the recording medium; and a control unit causing the recording-medium conveying device to collect the recording medium in the collecting device if the recording medium is judged non-conveyable on the basis of an output of the sensor group and causing the recording-medium conveying device to convey the recording medium in a direction of the heating device to erase an image if the recording medium is judged conveyable on the basis of an output of the sensor group.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The method according to claim 11, wherein the collecting device is set downstream in a recording medium conveyance direction of the sensor group and upstream in the recording medium conveying direction of the heating device, and the method further comprises the collecting device dropping the recording medium in a vertical direction and collecting the recording medium.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The method according to claim 12, wherein the collecting device includes: a driving roller and a driven roller configured to nip the recording medium to thereby covey the recording medium; a roller lifting and lowering device configured to lift and lower the driving roller; and a movable plate configured to rotatably support the driven roller and open in a direction perpendicular to the recording medium conveying direction, and the method further comprises the collecting device dropping the recording medium in the vertical direction and collecting the recording medium.",
+      "sourceXmlParentClaimNumbers": [12]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The method according to claim 13, wherein the collecting device further includes, in a lower part of the collecting device, a collection box in which the recording medium is collected, and the method further comprises the collecting device dropping the recording medium in the vertical direction and collecting the recording medium.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The method according to claim 13, wherein the movable plate has plural teeth on a side thereof, the collecting device further includes a motor having a gear that meshes with the plural teeth, and the method further comprises the movable plate opening in the direction perpendicular to the recording medium conveying direction.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The method according to claim 12, wherein the collecting device further includes: a first brush roller set above the recording-medium conveying device; and a second brush roller set below the recording-medium conveying device and supported by the movable plate, and the method further comprising the first brush roller and the second brush roller removing, while rotating, foreign matters adhering to the recording medium.",
+      "sourceXmlParentClaimNumbers": [12]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The method according to claim 15, further comprising the roller lifting and lowering device lifting and lowering the driving roller and the first brush roller.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The method according to claim 15, further comprising the brush roller rotating in a direction opposite to the recording medium conveying direction.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The method according to claim 15, wherein the brush roller is formed of plastic, and the method further comprising the brush roller removing, while rotating, foreign matters adhering to the recording medium.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The method according to claim 15, wherein the brush roller is formed of animal hair, and the method further comprising the brush roller removing, while rotating, foreign matters adhering to the recording medium.",
+      "sourceXmlParentClaimNumbers": [15]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "head-review/v2",
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "15803808-root-15",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "previousRound": 1,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 15,
+      "path": "15.b.iii",
+      "anchor": {
+        "startChar": 814,
+        "endChar": 824,
+        "quote": "each voxel"
+      },
+      "determiner": "bare",
+      "beforeHead": "each voxel",
+      "afterHead": "voxel",
+      "action": "changed",
+      "reason": "Co-registering each voxel of the image with a vector quantifies image voxels distributively. Each is the outer determiner; source vector/voxel ownership and every anchor stay exact.",
+      "sourceContext": "ects; creating a multidimensional dataset (mdd) by the data synthesis module, wherein multidimensional dataset is created by co-registering each voxel of the image with a vector of values; creating a mapped image using the data synthesis module by merging the multidimensional dataset with supplementary data s",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 15,
+      "path": "15.b.v",
+      "anchor": {
+        "startChar": 1023,
+        "endChar": 1033,
+        "quote": "each voxel"
+      },
+      "determiner": "bare",
+      "beforeHead": "each voxel",
+      "afterHead": "voxel",
+      "action": "changed",
+      "reason": "An anomaly score for each voxel of the merged dataset distributes computation over voxels. Each is the outer determiner, while image/merged-dataset contexts remain distinct and no voxel is selected.",
+      "sourceContext": "age using the data synthesis module by merging the multidimensional dataset with supplementary data sources; computing an anomaly score for each voxel of the merged dataset using anomaly detectors; receiving an output from an anomaly detector by a Signal Filtering module for signal purification, wherein the S",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round1.json",
+      "sha256": "846c1fcea3aedde6835d4612710fd14ddcf5a764ca210f42e5fc78ab3dfb9d54"
+    },
+    {
+      "file": "extractor.round1.json",
+      "sha256": "8269e25bd406665298c1cfae889e2e98e84f9628528536155fd8303815ec411e"
+    },
+    {
+      "file": "critic.round1.json",
+      "sha256": "ab5aa55d5239c0a9318e9aab382301f0331f969617e58ea7b1f113cbd3f83357"
+    }
+  ],
+  "structureInvariant": "Reversing exactly these manually adjudicated head fields restores the complete prior expected JSON tree. Raw expected text differs only at the declared head string values; all source anchors, determiners, functional parts, typed edges, element structure and source/claim scope remain unchanged.",
+  "sourceValidation": {
+    "claimsXmlSha256": "2426920929458a340ef2c506d08f5fd4f64851990fdf2ca49c5178ac9bd64fb2",
+    "nativeCanonical": "All canonical/context claims match native XML under permitted printed-number/whitespace normalization; digest matches provenance. Every action anchor checked as exact half-open UTF-16 source span."
+  },
+  "independence": "Bounded source-based lexical-head/v1 extractor review. Each listed source phrase manually judged before serialization; no automatic regex head selection, decomposition implementation, P2-DESIGN, predictions or conformance rules used. No new source gold derivation or semantic acceptance claimed.",
+  "attorneyAdjudication": "unchanged; agent confidence is not attorney agreement",
+  "humanHolds": "Known six count/selector head holds and16068637 each edge/each other preserved; no round4 or out-of-scope modification."
+}

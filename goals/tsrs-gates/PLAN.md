@@ -12,7 +12,7 @@ Status: `active`
 | P1 Implement | complete | Pin `tsrs` with `@effect/tsgo` 0.59.0, patch it in `prepare`, swap every gate script and scaffold default, update the policy test, runbook and cache baseline. | Acceptance criteria in `SPEC.md` are met; `--fast` stays off. |
 | P2 Verify | complete | Local `turbo run check` on tsrs, then hosted `Heavy / Check` and `Heavy / Build` on the swap PR with timings against the tsc-rs baseline. | Hosted gates green on tsrs (#2260: Check 3m36s, Build 2m23s); recorded in `SPEC.md`. |
 | P2b Fold | complete | PR 2: fold the standalone Effect Diagnostics lane into Check (profile into the compiler maps, ignore flags false, lane and hosted job removed). | Full check graph green with the rules gating (337/337 on 2026-10-27); PR 2 mergeable; ruleset drops the retired context at merge. |
-| P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P3 Yeet: PR to mergeable | complete | Qualify a fresh closeout PR through Yeet, retain its exact-head readiness evidence, merge with passing required checks, and refresh completion. #2262 merged with two required reds, so its historical receipt is unsatisfied. | #2320 merged as 440e6d0052 from head ec6d2cb783 with 15 of 15 required contexts green, zero unresolved threads and an elapsed review window; `goals completion refresh` verified the proposal (`history/completion-verified-2026-11-01.md`). |
 | P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Closeout Checklist
@@ -29,6 +29,9 @@ Before marking the packet closed:
    evidence verifies; do not close the external execution/session ledger from a proposal.
 
 ## Execution Notes
+
+- 2026-10-28: resume closeout in `codex/tsrs-gates-closeout`; preserve #2262 historical reds and bind the proposal to the new PR before content-final. Operative lifecycle stays active until completion refresh verifies.
+- 2026-11-01: completion verified. The receipt for #2320 (outcome `verified`, both gating evidence items verified at head ec6d2cb783) exists in the closeout clone and the primary clone; `initiative.status` stays `active` by design because completion is derived from clone-scoped receipts, not from the manifest. No further implementation work is open.
 
 - Preserve unrelated worktree changes.
 - Keep `SPEC.md` normative and update it only when the contract changes.

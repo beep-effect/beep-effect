@@ -29,7 +29,8 @@ import {
   restoreRecycleImpl,
 } from "./internal/RestorationTransformations.ts";
 import { salvageCorpusImpl, verifySalvageImpl } from "./internal/Salvage.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -99,10 +100,10 @@ import type {
 const $I = $RepoCliId.create("commands/Corpus/Corpus.service");
 
 type CorpusCommandServiceRequirements =
-  | Crypto.Crypto
+  | Digest.Digest
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner;
 
 /**

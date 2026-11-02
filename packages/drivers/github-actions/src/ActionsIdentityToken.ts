@@ -24,10 +24,10 @@ import { OidcTokenIssuer } from "./OidcTokenIssuer.ts";
  * arrangement as `@effected/workspaces` implementing `@effected/commands`'
  * `LocalExec`.
  *
- * The audience is forwarded verbatim. `SigstoreSigner` asks its identity
- * contract for the `sigstore` audience itself (`SIGSTORE_OIDC_AUDIENCE` is the
- * signing protocol's requirement, owned there), so nothing here — and nothing
- * in a consumer — needs to spell it.
+ * The audience is forwarded verbatim. A signer asks its identity contract for
+ * the audience its protocol requires (the deferred `@beep/sigstore` signer asks
+ * for `sigstore`), so nothing here — and nothing in a consumer — needs to
+ * spell it.
  *
  * An `OidcTokenError` is rewrapped as `IdentityTokenError` with the
  * original preserved structurally in `cause`, so a refused exchange still says
@@ -35,20 +35,16 @@ import { OidcTokenIssuer } from "./OidcTokenIssuer.ts";
  * `reason: "unavailable"` almost always means the workflow is missing
  * `permissions: id-token: write`.
  *
- * **Example** (Provide runner OIDC identity to the Sigstore signer)
+ * **Example** (Provide runner OIDC identity to an `IdentityToken` consumer)
  *
  * ```ts
  * import { ActionsIdentityToken } from "@beep/github-actions/ActionsIdentityToken";
  * import { OidcTokenIssuer } from "@beep/github-actions/OidcTokenIssuer";
- * import { SigstoreSigner } from "@beep/scratchpad/effected/sbom/SigstoreSigner";
  * import * as Layer from "effect/Layer";
  *
- * const signing = SigstoreSigner.layer.pipe(
- *   Layer.provide(ActionsIdentityToken.layer),
- *   Layer.provide(OidcTokenIssuer.layer),
- * );
+ * const identity = ActionsIdentityToken.layer.pipe(Layer.provide(OidcTokenIssuer.layer));
  *
- * console.log(Layer.isLayer(signing)) // true
+ * console.log(Layer.isLayer(identity)) // true
  * ```
  *
  * @public

@@ -63,7 +63,8 @@
     "./values/LogicalEdgeIdentity": "./src/values/LogicalEdgeIdentity/index.ts",
     "./internal/*": null,
     "./values/internal/*": null,
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./values/Retention": "./src/values/Retention/index.ts"
   },
   "files": [
     "src/**/*.ts",

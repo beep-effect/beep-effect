@@ -1,0 +1,72 @@
+{
+  "familyId": "18018354-root-6",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the user id",
+      "nativeQuote": "the user ID",
+      "literalMatch": false,
+      "explanation": "Case-only exact phrase in6."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the positive aspect",
+      "nativeQuote": "the positive aspect",
+      "literalMatch": true,
+      "explanation": "Exact selected6."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the lower step",
+      "nativeQuote": "the lower step",
+      "literalMatch": true,
+      "explanation": "Exact selected7."
+    }
+  ],
+  "concerns": [
+    "Selected6-13 and15 accepted original XML wording match after quote typography normalized;14/17 use Al for AI and16 has thranstheoretical versus transtheoretical. Local OCR glyph variation limited to these spellings; all surrounding selected wording and dependencies agree. Original set19 matches native19.",
+    "Publication US20230354979A1/app18018354/date2023-11-09 digest matches; original2023-01-27 and full inventory counts precede OA. Actual112(b) grounds cite6/7; remaining8-17 are derivative family context."
+  ],
+  "rationale": "Same-number examiner language and original content support eligible source version; natural dependencies6 root,7->6,8->7 onward through17 preserved.",
+  "sourceIdentity": {
+    "applicationNumber": "18018354",
+    "publicationNumber": "US20230354979A1",
+    "publicationDate": "2023-11-09",
+    "officeActionMailDate": "2025-06-03",
+    "officeActionDocumentIdentifiers": ["MBF31JZIWFYBX95"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20230354979 A1 20231109",
+      "application-reference": "US 18018354 20210706",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "LDEVK141XBLUEX3",
+        "officialDate": "2023-01-27T13:45:43.000-0500"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "LDEVK141XBLUEX3",
+        "officialDate": "2023-01-27T13:45:43.000-0500",
+        "sha256": "84d90f00800f9b2d7b4aa89d76547d689baa2f475ebece84392f1bb42238d6d1",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [1, 2, 4, 5, 6, 7, 8, 9, 13, 15],
+        "sourceClaimCount": 19
+      }
+    ],
+    "documentInventoryCount": 37,
+    "documentInventoryRows": 37,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

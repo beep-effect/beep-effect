@@ -1,0 +1,43 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "14262251-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "claimCount": 4,
+    "elementCount": 25,
+    "termCount": 67,
+    "edgeCount": 68,
+    "functionalRelationCount": 19
+  },
+  "reviewNotes": [
+    "Root measurement/classification steps retain T1 and complete NMR preamble. Claim2 explicit constituent measuring operations remain nested under its measuring limitation; claim3 adds T2/gradient-echo operations, and claim4 depends on3 and preserves that separate measuring sequence. Claim4 has no illicit edges to sibling2.",
+    "Complete signal intensity or line width coordination stays a source-exact term. Free induction decay (FID) signal keeps its internal abbreviation; later FID signal resolves to that explicitly named signal. Fourier-transform, pulse/readout/positive/negative gradient fields, parameter-vector operations and individual relaxation-time characteristics remain exact noun phrases and ordered functional relationships.",
+    "First definite T1/T2 quantities and metric/frequency/interval/vector properties do not receive invented earlier introductions. Later plural spin-lattice times resolve to the explicit measured collection, while singular fitted spin-lattice time is not forced to a selected member. The second vector is built locally in4; it does not borrow the first-vector node from sibling2.",
+    "The above operations refers to the explicit operation sequence and remains a collective term without selecting one action element or fabricating an operation noun introduction. Local first/second-vector and interval repetitions have source-supported earlier nominal anchors. No actionable semantic correction remains."
+  ],
+  "verification": [
+    "Read all selected exact canonical claims, native XML, expected terms/element structures/typed edges, extractor rationale and retained independent source-critic evidence. Source identity/rejection eligibility is separately accepted at source-critic confidence0.98; no fresh original-PDF/inventory authentication claimed.",
+    "Independent checks passed all exact UTF-16 anchors, head normalization shape, term ordering/nonoverlap/ownership, complete contiguous functional reconstruction, functional term participation, endpoint membership, true dependency ancestry, unique paths and no duplicate edges. Native claims XML SHA-256 matches provenance and all native/canonical claim strings agree under permitted printed-number/whitespace normalization. Schema shape/geometry supplements the manual semantic audit; no decomposer was invoked."
+  ],
+  "referenceSha256": "7b1bc3b73871c82c132b715b7d240ef58de0c59471ae84b76af1f89e4b8aa8fe",
+  "extractorSha256": "3d175e3ec9a50e086d0bbbdb96c464e84f4817807b700f3b05dc3f4a3013c60b",
+  "referenceConcernsDisposition": "Localized missing-introduction and source-specific identity concerns reviewed and retained without invented antecedents. No remaining actionable critic finding.",
+  "independence": "Separate GPT-6.1-Sol medium critic session, independent of extractor. Only assigned critic.json files written. Source and model/tree/edge schemas only; no production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference review only; no active sample admission, goal completion, accuracy result or human agreement claimed."
+}

@@ -33,6 +33,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { YeetReviewDisposition, YeetThreadDisposition } from "./ReviewLane.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Reply.schemas");
 
@@ -154,6 +155,12 @@ const ReplyTargetPresenceCheck = S.makeFilter(
  * post a reply on a review thread is to close it, so a hand-written drafts file
  * that omits the key gets the intended behaviour, and opting out is explicit.
  *
+ * `disposition` is how the author disposed of the finding (ruling 81): `fixed`,
+ * `rejected`, `intentional` or `immaterial`. It is optional because the lane
+ * measures reviewer precision from it and a measurement must not refuse the
+ * reply it measures; a draft without one records `unknown`, and nothing reads
+ * the body to guess.
+ *
  * **Example** (Draft a reply against a thread id)
  *
  * ```ts
@@ -163,6 +170,7 @@ const ReplyTargetPresenceCheck = S.makeFilter(
  * const draft = ReplyDraft.make({
  *   threadId: O.some("PRRT_kwDOA"),
  *   body: "Fixed in 0123456: the writer now encodes through the schema codec.",
+ *   disposition: O.some("fixed"),
  * })
  * console.log(draft.resolve)
  * ```
@@ -178,9 +186,11 @@ export class ReplyDraft extends S.Class<ReplyDraft, { readonly brand: unique sym
       S.withConstructorDefault(Effect.succeed(true)),
       S.withDecodingDefaultKey(Effect.succeed(true))
     ),
+    disposition: YeetReviewDisposition.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(S.check(ReplyTargetPresenceCheck)),
   $I.annote("ReplyDraft", {
-    description: "One drafted reply to a pull request review thread, targeted by thread id or comment id.",
+    description:
+      "One drafted reply to a pull request review thread, targeted by thread id or comment id, with the author's optional disposition of the finding.",
   })
 ) {}
 
@@ -264,6 +274,13 @@ export type ReplyOutcomeStatus = typeof ReplyOutcomeStatus.Type;
 /**
  * One drafted reply paired with what the run did about it.
  *
+ * **Details**
+ *
+ * `disposition` is the draft's declared disposition carried onto the outcome,
+ * or `unknown` when the draft declared none (ruling 81). It defaults to
+ * `unknown` on construction and on decoding, so a report written before the
+ * field existed still decodes and reads as undeclared rather than as fixed.
+ *
  * **Example** (Record a stale draft)
  *
  * ```ts
@@ -275,7 +292,7 @@ export type ReplyOutcomeStatus = typeof ReplyOutcomeStatus.Type;
  *   status: "stale",
  *   detail: "thread was already resolved upstream",
  * })
- * console.log(outcome.status)
+ * console.log(outcome.disposition) // "unknown"
  * ```
  *
  * @category models
@@ -288,9 +305,14 @@ export class ReplyDraftOutcome extends S.Class<ReplyDraftOutcome, { readonly bra
     ...replyTargetFields,
     status: ReplyOutcomeStatus,
     detail: S.NonEmptyString,
+    disposition: YeetThreadDisposition.pipe(
+      S.withConstructorDefault(Effect.succeed<YeetThreadDisposition>("unknown")),
+      S.withDecodingDefaultKey(Effect.succeed<YeetThreadDisposition>("unknown"))
+    ),
   }).pipe(S.check(ReplyTargetPresenceCheck)),
   $I.annote("ReplyDraftOutcome", {
-    description: "One drafted reply paired with what the reply run did about it.",
+    description:
+      "One drafted reply paired with what the reply run did about it and the disposition it recorded, unknown when undeclared.",
   })
 ) {}
 

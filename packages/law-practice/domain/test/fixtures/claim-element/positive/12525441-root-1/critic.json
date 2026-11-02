@@ -1,0 +1,63 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12525441-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "representationalObservations": [
+    {
+      "category": "pure-pronoun-relative-coverage-convention",
+      "actionable": false,
+      "evidence": [
+        {
+          "claimNumber": 1,
+          "path": "1.c",
+          "anchor": {
+            "startChar": 387,
+            "endChar": 392,
+            "quote": "which"
+          }
+        },
+        {
+          "claimNumber": 1,
+          "path": "1.d",
+          "anchor": {
+            "startChar": 451,
+            "endChar": 453,
+            "quote": "it"
+          }
+        }
+      ],
+      "reason": "These pure pronominal/relative surfaces remain in anchored functional connecting text rather than separate terms. They are recorded for consistent corpus-level protocol adjudication; the current v2 wording does not settle a universal token-level coverage rule. Their presence alone is not a compulsory correction in this review. Do not fabricate antecedent introductions while adjudicating this convention."
+    }
+  ],
+  "reviewScope": {
+    "selectedClaimCount": 5,
+    "resolvedTreesReviewed": 5,
+    "unresolvedClaimNumbers": [],
+    "elementCount": 21,
+    "termCount": 63,
+    "functionalRelationCount": 13
+  },
+  "reviewNotes": [
+    "Read exact canonical claims/full family context, native claims XML, provenance, accepted source critic, extractor receipt, v2 protocol and ClaimElement schema contracts. Source eligibility is separately qualified and no fresh original-PDF/inventory authentication is claimed.",
+    "Reviewed subject/main-transition grammar, complete noun heads, explicit/nested source lists, actual dependency ancestry, typed edges, term ownership, exact anchors and ordered functional parts. Manual geometry checks found no mismatched UTF-16 anchors, out-of-order/overlapping owned terms, or invalid local functional term ownership in the submitted trees. Those checks do not establish semantic approval.",
+    "Pure pronominal/relative token coverage is under independent protocol review. This receipt does not silently impose a blanket requirement to turn every pronoun or relative word into a ClaimTerm. Exact optional coverage observations are separate from compulsory noun-phrase/structure corrections.",
+    "Accepted actual 2-5->1 dependencies and the explicit three-item a)/b)/c) parameter list under 3.a with narrow child ownership. Hydraulic target value, nut, piston and device references have actual local/ancestor introductions; threaded bolt, hydraulic oil, volume, course and nominalized blocking retain their missing introductions. Context device claims 6-7 supply no sibling antecedents. No actionable finding remains apart from separately recorded protocol-convention observations."
+  ],
+  "independence": "Independent bounded semantic critic. No implementation rules, P2-DESIGN, production policy/decomposer, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helpers only locate manually selected quotations, serialize the receipt and check schema/span geometry. Only this family critic.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental reference review; no goal completion, active sample admission or attorney agreement claimed."
+}

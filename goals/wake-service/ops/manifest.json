@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "wake-service",
+    "packetId": "goal-packet/v1:2e77f204da2439abca57f327236e45816316cb73f3911325688f1a2e9a4b6f93",
+    "title": "Wake Service",
+    "status": "active",
+    "created": "2026-10-31",
+    "updated": "2026-10-31",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/wake-service",
+  "lifecycle": "active",
+  "mission": "Port skulk to Effect as a durable wake service that delivers one wake per time or event through the agent-message router, with a quota-only fallback dispatcher and a workstation daemon behind a dead-man check.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/expiring-repo-facts",
+    "graduated": "2026-10-31"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/wake-service/README.md",
+    "goals/wake-service/SPEC.md",
+    "goals/wake-service/PLAN.md",
+    "goals/wake-service/GOAL.md",
+    "goals/wake-service/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/wake-service/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/wake-service/GOAL.md)\" -le 4000",
+    "jq . goals/wake-service/ops/manifest.json",
+    "rg -n \"wake-service|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/wake-service",
+    "git diff --check -- goals/wake-service",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

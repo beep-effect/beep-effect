@@ -1,0 +1,46 @@
+{
+  "kind": "focused-http-layer-repair-proof",
+  "sourceCommit": "7b55c61325",
+  "workingTreeContext": "Incoming accepted main3fbb6e614b merged in working tree; generated-file merge resolution pending at proof time.",
+  "repair": "Five equivalent NodeHttpServer.layerTest.pipe(Layer.fresh) expressions clear hosted missedPipeableOpportunity diagnostics without changing test assertions.",
+  "packageChecksPassed": [
+    "@beep/ai-metrics",
+    "@beep/phoenix",
+    "@beep/ai-provider-cli",
+    "@beep/repo-cli"
+  ],
+  "focusedTests": {
+    "files": 3,
+    "node22Passed": 23,
+    "bun144Passed": 23
+  },
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/test/native-http.test.ts": "034a1e103ce1ed068bd4df05c558e8c5fc33ca4ff3e110d086ae8e994a2cbc6e",
+    "packages/tooling/library/ai-metrics/test/observation-launch-http.test.ts": "46dd90fe54c2df87a30551f967d60bc1dd7c67c8e958a87935d97fac85496d38",
+    "packages/tooling/library/ai-metrics/test/observation-worker.test.ts": "0ff2e628b71085561b939022c898c1b82b8b3f70ed3c2e0a002e7b9aa6d7513d"
+  },
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-pr2364-four-package-proof-20261031.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 42580541440,
+    "peakObservedBytes": 4312629248,
+    "minimumAvailableBytes": 38465949696,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 76,
+    "pidsLimitEvents": 0,
+    "observedPhases": [
+      {
+        "phase": "beep:check",
+        "observedAtEpochSeconds": 1793452224.8481681
+      }
+    ],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "qualification": "Focused local proof only; final-head hosted gates, source binding and merge/goal completion remain required.",
+  "recoveryHold": "Preserved; no production enrollment."
+}

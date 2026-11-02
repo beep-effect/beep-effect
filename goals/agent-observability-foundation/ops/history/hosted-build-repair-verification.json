@@ -1,0 +1,191 @@
+{
+  "recordedAt": "2026-10-29T21:58:10.037893+00:00",
+  "result": "passed",
+  "scope": "AC12 declared synthetic host/repository and CLI/desktop fixture routes; no real harness enrollment",
+  "sourceHead": "fc6451b88670141a186e6a79d3ef2a5b009e8bcc",
+  "sourceDirtyProofFiles": true,
+  "finalArchive": "~/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f",
+  "initialRunsArchive": "~/.local/state/beep/observation-proof-archive/declared-stage-initial-3ahnp2v7",
+  "priorV2RefusalChecksArchive": "~/.local/state/beep/observation-proof-archive/declared-plan-refusal-r3wfvkdc",
+  "stages": {
+    "disposable": {
+      "evidencePath": "~/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/disposable/evidence.json",
+      "evidenceSha256": "40917598aa61f3f6a570a9c114b6db1b5c9b1b82d267eb5d40b324e41507b290",
+      "sourceFiles": 87,
+      "project": "foundation-canary-4e3311cb9304",
+      "planSha256": "c6c6715e7da06deaa6b337d97177a57cb81e4d58ba9ca34de3d8602da701bcc6",
+      "eventIds": [
+        "034805cca82d24a47b27e1d6acbaf9f9a7792e6c6628107ba56a7d1c5a2c39dc",
+        "4174fb369ed8136800c5da5ad313643b9b9d431a63b4ad6aa8541c63625196bc"
+      ],
+      "root": {
+        "rootId": "root-3873213dffc2f4b20a3b2bef2f3c1d59796dc432de6a2d41b7090bdbcf48ac68",
+        "hostId": "06ed7e6e830e5087e751a3f23c66701c1a17c96cbee2d6ab6c48a6bc22c21f5d",
+        "repositoryId": {
+          "_tag": "Verified",
+          "id": "fe601aa7f7103aa19c73a1de186e282d632fa8d3ce2972110888e0615e7c7ac5",
+          "evidenceId": "8c50456a239111bd95ad16ffb19a39fdbc5505becba0d700bdd89d408e3e9d97"
+        },
+        "cloneId": {
+          "_tag": "Verified",
+          "id": "9ce97041ec39884f4fac46338d0dfa3f505256f794debfd252eb28156e57d656",
+          "evidenceId": "8c50456a239111bd95ad16ffb19a39fdbc5505becba0d700bdd89d408e3e9d97"
+        },
+        "worktreeId": {
+          "_tag": "Verified",
+          "id": "5113a4e20558873e20a5e13fd2d2f447ca8dfea333deb5af0c12e39ac16f7103",
+          "evidenceId": "8c50456a239111bd95ad16ffb19a39fdbc5505becba0d700bdd89d408e3e9d97"
+        },
+        "availability": "present",
+        "evidenceId": "8c50456a239111bd95ad16ffb19a39fdbc5505becba0d700bdd89d408e3e9d97"
+      },
+      "host": {
+        "hostId": "06ed7e6e830e5087e751a3f23c66701c1a17c96cbee2d6ab6c48a6bc22c21f5d",
+        "identityNamespaceId": "115c12ef0db1d87026ae48567e458aba200b0f948feadceb44b0c8704ecb33ed"
+      },
+      "qualificationSha256": "3391a1b8b9fd3cf4470faba9556d48fd8b204269bed900e4fc2be98f90fd496b",
+      "guard": {
+        "ownedScopes": {},
+        "unit": "foundation-repaired-disposable-v1.service",
+        "profile": "focused",
+        "memoryStopBytes": 2147483648,
+        "hostAvailableFloorBytes": 17179869184,
+        "initialAvailableBytes": 36325777408,
+        "peakObservedBytes": 622411776,
+        "minimumAvailableBytes": 23852515328,
+        "stoppedFor": null,
+        "tasksMax": 1024,
+        "peakObservedTasks": 59,
+        "pidsLimitEvents": 0,
+        "observedPhases": [],
+        "exitCode": 0,
+        "orphanCleanup": []
+      },
+      "rollback": "owned collector stopped and removed; private queue retained",
+      "backendReadbackAfterRouteRollback": true
+    },
+    "live": {
+      "evidencePath": "~/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/live/evidence.json",
+      "evidenceSha256": "9e3b5e3e5369c8e8c4516a2c095a8ed80336951e7b1a1eed3fd44c92bc51da93",
+      "sourceFiles": 86,
+      "project": "foundation-canary-1879ab28ba1c",
+      "planSha256": "7f67c4ce321789a909e85f2df8b386649b73f539e467b359b0f5d73f8c9b0189",
+      "eventIds": [
+        "19d946407c68cb3e7db482decafd1f203e293fd140961b93a492c89564138f9b",
+        "4bfe8e8d895ad2ff7b0f1c96293055a11a48c410c9c35230a3c864ac6ef1502d"
+      ],
+      "root": {
+        "rootId": "root-3873213dffc2f4b20a3b2bef2f3c1d59796dc432de6a2d41b7090bdbcf48ac68",
+        "hostId": "06ed7e6e830e5087e751a3f23c66701c1a17c96cbee2d6ab6c48a6bc22c21f5d",
+        "repositoryId": {
+          "_tag": "Verified",
+          "id": "fe601aa7f7103aa19c73a1de186e282d632fa8d3ce2972110888e0615e7c7ac5",
+          "evidenceId": "8c50456a239111bd95ad16ffb19a39fdbc5505becba0d700bdd89d408e3e9d97"
+        },
+        "cloneId": {
+          "_tag": "Verified",
+          "id": "9ce97041ec39884f4fac46338d0dfa3f505256f794debfd252eb28156e57d656",
+          "evidenceId": "8c50456a239111bd95ad16ffb19a39fdbc5505becba0d700bdd89d408e3e9d97"
+        },
+        "worktreeId": {
+          "_tag": "Verified",
+          "id": "5113a4e20558873e20a5e13fd2d2f447ca8dfea333deb5af0c12e39ac16f7103",
+          "evidenceId": "8c50456a239111bd95ad16ffb19a39fdbc5505becba0d700bdd89d408e3e9d97"
+        },
+        "availability": "present",
+        "evidenceId": "8c50456a239111bd95ad16ffb19a39fdbc5505becba0d700bdd89d408e3e9d97"
+      },
+      "host": {
+        "hostId": "06ed7e6e830e5087e751a3f23c66701c1a17c96cbee2d6ab6c48a6bc22c21f5d",
+        "identityNamespaceId": "115c12ef0db1d87026ae48567e458aba200b0f948feadceb44b0c8704ecb33ed"
+      },
+      "qualificationSha256": "3391a1b8b9fd3cf4470faba9556d48fd8b204269bed900e4fc2be98f90fd496b",
+      "guard": {
+        "ownedScopes": {},
+        "unit": "foundation-repaired-live-v1.service",
+        "profile": "focused",
+        "memoryStopBytes": 2147483648,
+        "hostAvailableFloorBytes": 17179869184,
+        "initialAvailableBytes": 38454534144,
+        "peakObservedBytes": 678461440,
+        "minimumAvailableBytes": 37732294656,
+        "stoppedFor": null,
+        "tasksMax": 1024,
+        "peakObservedTasks": 59,
+        "pidsLimitEvents": 0,
+        "observedPhases": [],
+        "exitCode": 0,
+        "orphanCleanup": []
+      },
+      "rollback": "owned collector stopped and removed; private queue retained",
+      "backendReadbackAfterRouteRollback": true
+    }
+  },
+  "review": "Independent Astra accepted source repair, v3 preparation and final disposable/live artifacts: exact current source hashes, same declaration, expected/backend/native/local/visibility IDs, checksum-valid receipts, source nanoseconds and rollback. No actionable finding.",
+  "hold": "Historical forwarder masked and inactive; raw archives preserved",
+  "notProven": [
+    "Real harness populations remain Unknown",
+    "Production enrollment, repository delivery and overall goal completion"
+  ],
+  "repairSourceHashes": {
+    "package.json": "d02275afe738c7c110de2d2462debcd39a52b2a8b23ff197ceb67659b100ba13",
+    "bun.lock": "4a13332c30674c11957df7866cd46fed21277d2ace729b92e5298557800ae228",
+    "packages/tooling/library/ai-metrics/src/internal/native-trace-wire.ts": "bd0c8267abfd53e11ad24ed28b785071ed81098c3543de16edd16867671dd6e5",
+    "packages/tooling/library/ai-metrics/src/internal/observation-metadata-codecs.ts": "c49aac36d0c71204a95cbf3894f6bb761d8bc1c8792cd6f644956de664ae25f7",
+    "packages/tooling/library/ai-metrics/src/native-trace.ts": "fe683bd1d7b5ad60321e9452cf1355050adabc0f008efc335993d59ba37b8d04",
+    "packages/tooling/library/ai-metrics/src/payload-reclamation.ts": "a21097adc11e259e247d1bdb71c27815bba9aaa1e151d386616830caef1ba637",
+    "packages/tooling/library/ai-metrics/src/transcript-intake.ts": "38b6bb608409736fe756c10d57ddf272ddfbbd0553f9cba38718b16b6099210a",
+    "goals/agent-observability-foundation/ops/declared_canary_support.py": "c10b1b6c3a5bf6725ae68d8c282ad99978af5a15694b4fa40bac2baa9233c1f0"
+  },
+  "verification": {
+    "productionBuild": "passed",
+    "focusedTests": 37,
+    "packageAudit": "passed134.3s",
+    "packageDocgen": "passed11.2s",
+    "syncpackLint": "passed",
+    "fullPackageGuard": {
+      "ownedScopes": {},
+      "unit": "foundation-hosted-build-package-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 31316815872,
+      "peakObservedBytes": 5563080704,
+      "minimumAvailableBytes": 19690889216,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 193,
+      "pidsLimitEvents": 0,
+      "observedPhases": [
+        {
+          "phase": "beep:build",
+          "observedAtEpochSeconds": 1793310702.229818
+        },
+        {
+          "phase": "beep:check",
+          "observedAtEpochSeconds": 1793310712.458559
+        },
+        {
+          "phase": "beep:test",
+          "observedAtEpochSeconds": 1793310714.9415495
+        },
+        {
+          "phase": "beep:lint",
+          "observedAtEpochSeconds": 1793310824.317565
+        },
+        {
+          "phase": "docgen",
+          "observedAtEpochSeconds": 1793310838.3710976
+        }
+      ],
+      "exitCode": 0,
+      "orphanCleanup": []
+    }
+  },
+  "change": "10 Effect production-build diagnostics repaired, protobuf catalog override preserves locked version/integrity; explicit fresh v3 root and both stages, prior v2 immutable",
+  "scannerCorrection": {
+    "pr": "https://github.com/beep-effect/beep-effect/pull/2366",
+    "review": "15 exact historical fingerprints independently accepted; pinned scanner15 before0 after",
+    "merged": false
+  }
+}

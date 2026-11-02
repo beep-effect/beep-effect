@@ -71,7 +71,7 @@ import {
   readDocstring,
   readSignature,
 } from "./TSMorph.shared.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { ClassDeclaration, SourceFile, Statement } from "ts-morph";
 import type {
   ProjectCacheKey,
@@ -576,7 +576,7 @@ const normalizeOutlineSymbol = Effect.fn("normalizeOutlineSymbol")(function* (
   symbolFilePath: SymbolFilePath,
   declaration: OutlineDeclaration,
   parentSymbol: O.Option<TsMorphSymbol>
-): Effect.fn.Return<O.Option<ScopeSymbolEntry>, TSMorphServiceError, Crypto.Crypto> {
+): Effect.fn.Return<O.Option<ScopeSymbolEntry>, TSMorphServiceError, Digest.Digest> {
   const declarationName = getDeclarationName(declaration);
   if (O.isNone(declarationName)) {
     return O.none<ScopeSymbolEntry>();
@@ -690,7 +690,7 @@ const collectClassOutlineEntries = Effect.fnUntraced(function* (
   sourceText: string,
   symbolFilePath: SymbolFilePath,
   declaration: ClassDeclaration
-): Effect.fn.Return<ReadonlyArray<ScopeSymbolEntry>, TSMorphServiceError, Crypto.Crypto> {
+): Effect.fn.Return<ReadonlyArray<ScopeSymbolEntry>, TSMorphServiceError, Digest.Digest> {
   const classEntry = yield* normalizeOutlineSymbol(sourceText, symbolFilePath, declaration, O.none());
 
   if (O.isNone(classEntry)) {
@@ -721,7 +721,7 @@ const collectStatementOutlineEntries = Effect.fnUntraced(function* (
   sourceText: string,
   symbolFilePath: SymbolFilePath,
   statement: Statement
-): Effect.fn.Return<ReadonlyArray<ScopeSymbolEntry>, TSMorphServiceError, Crypto.Crypto> {
+): Effect.fn.Return<ReadonlyArray<ScopeSymbolEntry>, TSMorphServiceError, Digest.Digest> {
   if (Node.isClassDeclaration(statement)) {
     return yield* collectClassOutlineEntries(sourceText, symbolFilePath, statement);
   }
@@ -744,7 +744,7 @@ const collectStatementOutlineEntries = Effect.fnUntraced(function* (
 const collectOutlineEntries = Effect.fn(function* (
   filePath: TypeScriptFilePath,
   sourceFile: SourceFile
-): Effect.fn.Return<ReadonlyArray<ScopeSymbolEntry>, TSMorphServiceError, Crypto.Crypto> {
+): Effect.fn.Return<ReadonlyArray<ScopeSymbolEntry>, TSMorphServiceError, Digest.Digest> {
   const symbolFilePath = yield* resolveSymbolFilePath(filePath);
 
   let entries = A.empty<ScopeSymbolEntry>();
@@ -774,7 +774,7 @@ const collectOutlineEntries = Effect.fn(function* (
  *
  * @returns Live service implementation backed by filesystem, path, and ts-morph project loading.
  * @effects
- * - Requires `Crypto.Crypto`, `FileSystem.FileSystem`, and `Path.Path`.
+ * - Requires `Digest.Digest`, `FileSystem.FileSystem`, and `Path.Path`.
  * - Resolves repository roots from `process.cwd()`, reads tsconfig/source
  *   files, loads ts-morph projects, computes content hashes, and reads
  *   diagnostics/symbol outlines.
@@ -786,11 +786,11 @@ const collectOutlineEntries = Effect.fn(function* (
 export const createTSMorphService = Effect.fn("createTSMorphService")(function* (): Effect.fn.Return<
   TSMorphServiceShape,
   never,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  Digest.Digest | FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const pathApi = yield* Path.Path;
-  const cryptoContext = yield* Effect.context<Crypto.Crypto>();
+  const cryptoContext = yield* Effect.context<Digest.Digest>();
 
   const resolvedScopes = MutableHashMap.empty<
     string,
@@ -1467,5 +1467,5 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
  * @category configuration
  * @since 0.0.0
  */
-export const TSMorphServiceLive: Layer.Layer<TSMorphService, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =
+export const TSMorphServiceLive: Layer.Layer<TSMorphService, never, Digest.Digest | FileSystem.FileSystem | Path.Path> =
   Layer.effect(TSMorphService, createTSMorphService().pipe(Effect.map(TSMorphService.of)));

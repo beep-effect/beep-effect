@@ -18,7 +18,8 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -35,21 +36,25 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 
 const FailingCuidTestLayer = Layer.suspend(() => {
   let digestCalls = 0;
-  const FailingCryptoLayer = Layer.succeed(
-    Crypto.Crypto,
-    Crypto.make({
+  const FailingCryptoLayer = Layer.mergeAll(
+    Layer.mock(Digest.Digest)({
       digest: (_algorithm, data) =>
-        digestCalls++ === 0
-          ? Effect.succeed(data)
-          : Effect.fail(
-              PlatformError.systemError({
-                _tag: "Unknown",
-                module: "ThreadStoreTest",
-                method: "digest",
-              })
-            ),
-      randomBytes: (size) => new Uint8Array(size).fill(1),
-    })
+        Effect.suspend(() =>
+          digestCalls++ === 0
+            ? Effect.succeed(data)
+            : Effect.die(
+                PlatformError.systemError({
+                  _tag: "Unknown",
+                  module: "ThreadStoreTest",
+                  method: "digest",
+                })
+              )
+        ),
+    }),
+    Layer.succeed(
+      SecureRandom.SecureRandom,
+      SecureRandom.make((size) => new Uint8Array(size).fill(1))
+    )
   );
   const FailingCuidLayer = CuidState.Default.pipe(Layer.provideMerge(FailingCryptoLayer));
   return FailingCuidLayer;
@@ -70,10 +75,9 @@ const makeTestThreadStore = makeInMemoryThreadStore();
 
 const makeYieldingCuidLayer = () => {
   let randomCall = 0;
-  const YieldingCryptoLayer = Layer.succeed(
-    Crypto.Crypto,
-    Crypto.make({
-      digest: Effect.fn("ThreadStoreTest.yieldingDigest")(function* (_algorithm, data) {
+  const YieldingCryptoLayer = Layer.mergeAll(
+    Layer.mock(Digest.Digest)({
+      digest: Effect.fn("ThreadStoreTest.yieldingDigest")(function* (_algorithm: Digest.Algorithm, data: Uint8Array) {
         yield* Effect.yieldNow;
         const digest = new Uint8Array(64);
         for (let index = 0; index < digest.length; index++) {
@@ -81,8 +85,11 @@ const makeYieldingCuidLayer = () => {
         }
         return digest;
       }),
-      randomBytes: (size) => new Uint8Array(size).fill(++randomCall),
-    })
+    }),
+    Layer.succeed(
+      SecureRandom.SecureRandom,
+      SecureRandom.make((size) => new Uint8Array(size).fill(++randomCall))
+    )
   );
   return CuidState.Default.pipe(Layer.provideMerge(YieldingCryptoLayer));
 };
@@ -266,34 +273,34 @@ describe("ThreadStore in-memory", () => {
 
   it.layer(Layer.fresh(FailingCuidTestLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
-      "maps public-id generation failures to ThreadStoreUnavailable",
+      "propagates a public-id digest defect instead of persisting the thread",
       Effect.fnUntraced(function* () {
         const store = yield* makeInMemoryThreadStore();
         const workspaceId = yield* S.decodeEffect(WorkspaceIdentity.WorkspaceId)(2);
-        const error = yield* store
+        const exit = yield* store
           .createThread(CreateThreadInput.make({ title: "Unavailable", workspaceId }))
-          .pipe(Effect.flip);
+          .pipe(Effect.exit);
 
-        expect(error._tag).toBe("ThreadStoreUnavailable");
-        expect(error.reason).toBe("generate Thread public id failed");
+        assertTrue(Exit.isFailure(exit) && Exit.hasDies(exit));
+        expect(yield* store.listThreads(workspaceId)).toHaveLength(0);
       })
     );
   });
 
   it.effect(
-    "preserves public-id generator initialization failures as typed store errors",
+    "propagates a public-id generator initialization defect",
     Effect.fnUntraced(function* () {
       const initializationFailure = PlatformError.systemError({
         _tag: "Unknown",
         module: "ThreadStoreTest",
         method: "digest",
       });
-      const FailingInitializationCryptoLayer = Layer.succeed(
-        Crypto.Crypto,
-        Crypto.make({
-          digest: () => Effect.fail(initializationFailure),
-          randomBytes: (size) => new Uint8Array(size).fill(1),
-        })
+      const FailingInitializationCryptoLayer = Layer.mergeAll(
+        Layer.mock(Digest.Digest)({ digest: () => Effect.die(initializationFailure) }),
+        Layer.succeed(
+          SecureRandom.SecureRandom,
+          SecureRandom.make((size) => new Uint8Array(size).fill(1))
+        )
       );
       const exit = yield* ThreadStoreInMemoryLayer.pipe(
         Layer.provide(FailingInitializationCryptoLayer),
@@ -303,12 +310,9 @@ describe("ThreadStore in-memory", () => {
 
       pipe(exit, Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
-        expect(Cause.hasFails(exit.cause)).toBe(true);
-        expect(Cause.hasDies(exit.cause)).toBe(false);
-        expect(Cause.squash(exit.cause)).toMatchObject({
-          _tag: "ThreadStoreUnavailable",
-          reason: "initialize public id generator failed",
-        });
+        expect(Cause.hasFails(exit.cause)).toBe(false);
+        expect(Cause.hasDies(exit.cause)).toBe(true);
+        expect(Cause.squash(exit.cause)).toBe(initializationFailure);
       }
     })
   );

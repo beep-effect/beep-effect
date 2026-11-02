@@ -4,14 +4,20 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual } from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
+import { ensureZeroExit } from "../../internal/process/index.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheEvidenceReference } from "@beep/repo-configs/cache";
+import type { CapturedStreams } from "../../internal/process/index.ts";
 
 /**
  * Read a required contained experiment artifact within its byte bound.
@@ -140,4 +146,69 @@ export const readCacheEvidenceBytes = Effect.fn("CacheEvidence.readBytes")(funct
 export const requireCacheLinuxX64 = Effect.fn("CacheEvidence.requireLinuxX64")(function* (message: string) {
   if ((yield* HostProcessPlatform) !== "linux" || (yield* HostProcessArchitecture) !== "x64")
     return yield* CacheCommandError.new(message);
+});
+
+/**
+ * Require a complete successful supervisor capture without exposing worker streams.
+ *
+ * **Example** (Validate a bounded private capture)
+ * ```ts
+ * import { requireCacheSupervisorCapture } from "@beep/repo-cli/commands/Cache/Cache.evidence"
+ * import { CapturedStreams } from "@beep/repo-cli/test/Process"
+ * const capture = CapturedStreams.make({ exitCode: 0, stdout: "", stderr: "", truncated: false })
+ * const check = requireCacheSupervisorCapture("Protocol")(capture)
+ * console.assert(check !== undefined)
+ * ```
+ *
+ * @param captured - Private captured streams; only status and truncation affect the result.
+ * @param context - Static runner label for the bounded diagnostic.
+ * @returns Typed failure for truncation or nonzero exit, with no raw stream cause.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const requireCacheSupervisorCapture: {
+  (context: string): (captured: CapturedStreams) => Effect.Effect<void, CacheCommandError>;
+  (captured: CapturedStreams, context: string): Effect.Effect<void, CacheCommandError>;
+} = dual(
+  2,
+  Effect.fn("CacheEvidence.requireSupervisorCapture")(function* (captured: CapturedStreams, context: string) {
+    if (captured.truncated) return yield* CacheCommandError.new(`${context} supervisor exceeded its capture bound.`);
+    yield* ensureZeroExit(captured, (exitCode) =>
+      CacheCommandError.new(`${context} supervisor exited with exit code ${exitCode}.`)
+    );
+  })
+);
+
+/**
+ * Allocate scoped supervisor storage outside every task input mount.
+ *
+ * **Example** (Reference private host storage)
+ * ```ts
+ * import { makePrivateSupervisorStorage } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof makePrivateSupervisorStorage === "function")
+ * ```
+ *
+ * @internal
+ * @category resources
+ * @since 0.0.0
+ */
+export const makePrivateSupervisorStorage = Effect.fn("CachePilot.makePrivateSupervisorStorage")(function* (
+  root: string,
+  mounts: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = yield* fs
+    .makeTempDirectoryScoped({
+      directory: "/tmp",
+      prefix: "beep-cache-supervisor-",
+    })
+    .pipe(Effect.flatMap(fs.realPath));
+  if (A.some([...mounts, "/usr"], (mount) => isResolvedPathWithinRoot(path, { root: mount, candidate: directory })))
+    return yield* CacheCommandError.new("Private supervisor storage must remain outside every source input mount.");
+  yield* fs.chmod(directory, 0o700);
+  // Resolve worker imports without placing private captures inside a source mount.
+  yield* fs.symlink(path.join(root, "node_modules"), path.join(directory, "node_modules"));
+  return directory;
 });

@@ -11,7 +11,7 @@ import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -67,6 +67,7 @@ import {
   terminationReasonForServiceResult,
   YeetProofJobCapsule,
 } from "./ProofJob.ts";
+import type * as Digest from "effect/crypto/Digest";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RunScopeSupport } from "../../../internal/repo-run/RunScope.schemas.ts";
 import type { ProofJobOutcome, ProofJobSubmission, ProofJobWaitOptions } from "./ProofJob.ts";
@@ -338,12 +339,20 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
 ): Effect.fn.Return<
   ProofJobLauncherShape,
   never,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const context = yield* Effect.context<
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    | Digest.Digest
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
   >();
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const jobsRoot = path.join(repoRoot, ".beep", "yeet", "jobs");
@@ -386,7 +395,7 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     );
     yield* fs.makeDirectory(jobsRoot, { recursive: true }).pipe(Effect.mapError(guardError));
     const start = yield* processStartIdentityForPid(process.pid).pipe(Effect.provide(context));
-    const nonce = yield* crypto.randomUUIDv4().pipe(Effect.mapError(guardError));
+    const nonce = yield* crypto.uuidV4();
     const token = `${process.pid}:${O.getOrElse(start, constant("unknown"))}:${nonce}`;
     const owned = yield* acquireJournalFileLock(lockPath, token, retryAttempts).pipe(Effect.provide(context));
     return { lockPath, owned, token };
@@ -721,9 +730,7 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       if (submission.request.checkout !== repoRoot)
         return yield* YeetCommandError.make({ message: "Submission checkout does not match launcher root." });
       yield* prune(PROOF_JOB_RETENTION_BUDGET);
-      const jobId = yield* decodeUUID(yield* crypto.randomUUIDv4().pipe(Effect.mapError(guardError))).pipe(
-        Effect.mapError(guardError)
-      );
+      const jobId = yield* decodeUUID(yield* crypto.uuidV4()).pipe(Effect.mapError(guardError));
       const env = yield* proofJobEnvironment();
       const argv = stripProofJobSubmitFlags(submission.request.argv);
       const record = ProofJobRecord.make({
@@ -985,7 +992,12 @@ export const reportProofJobCommand = Effect.fn("ProofJob.reportCommand")(functio
 ): Effect.fn.Return<
   A,
   E,
-  R | Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | R
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const startedAt = yield* DateTime.now;
   const procStart = yield* processStartIdentityForPid(process.pid);

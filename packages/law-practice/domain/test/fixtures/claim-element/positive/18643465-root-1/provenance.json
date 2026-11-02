@@ -1,0 +1,56 @@
+{
+  "applicationNumber": "18643465",
+  "publicationNumber": "US20240369068A1",
+  "publicationDate": "2024-11-07",
+  "nativeXmlSha256": "75df240c115b4cd591dba565370c2854ac0567c972f709f38d304efeabee6bb1",
+  "claimsXmlSha256": "8d7b2ee3bafd2dab852f470928256c778987b250d50ed7af1ea7ce7021545c86",
+  "officeActionDocumentIdentifiers": [
+    "MKBBXLRP149X195"
+  ],
+  "officeActionMailDate": "2026-01-13",
+  "officeActionSection112Text": [
+    "claims 1-10 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention.\r\ndue to the number of 112(b) rejections presented below, if any clarity regarding said rejections would be helpful to expedite prosecution, applicant is invited to contact examiner michael hotchkiss at the number listed in the conclusion below.\r\nclaim 1 recites “the machining tool”. there is insufficient antecedent basis for this limitation. earlier in the claim “a tool for machining” was introduced. alignment of the verbiage used for each recitation would remedy the unclear nature of the current claim language.\r\nclaim 1 recites “the beginning” and “the end” in several places. there is insufficient antecedent basis for these limitations.\r\nclaim 1 recites “the reciprocating motions”. there is insufficient antecedent basis for this limitation.\r\nclaim 1 recites “the sinusoidal program”. there is insufficient antecedent basis for this limitation.\r\nclaim 1 recites “the desired, programmed arrangement”. there is insufficient antecedent basis for this limitation.\r\nclaim 1 recites “the displacement”. there is insufficient antecedent basis for this limitation.\r\nclaim 2 recites “the head”. there is insufficient antecedent basis for this limitation.\r\nclaim 2 recites “the first machined portion”. there is insufficient antecedent basis for this limitation.\r\nclaim 2 recites “the second machined portion”. there is insufficient antecedent basis for this limitation.\r\nclaim 3 recites “the halfway point”. there is insufficient antecedent basis for this limitation.\r\nclaim 3 recites “the length”. there is insufficient antecedent basis for this limitation.\r\nclaim 3 recites “the front radial bearing”. there is insufficient antecedent basis for this limitation.\r\nclaim 4 recites “the halfway point”. there is insufficient antecedent basis for this limitation.\r\nclaim 4 recites “the length”. there is insufficient antecedent basis for this limitation.\r\nclaim 4 recites “the rear radial bearing”. there is insufficient antecedent basis for this limitation.\r\nclaim 5 recites “the rotating disc”. there is insufficient antecedent basis for this limitation.\r\nclaim 5 recites “the periphery”. there is insufficient antecedent basis for this limitation.\r\nclaim 5 recites “the bottom”. there is insufficient antecedent basis for this limitation.\r\nclaim 5 recites “the annular area”. there is insufficient antecedent basis for this limitation.\r\nclaim 6 recites “the rotating disc”. there is insufficient antecedent basis for this limitation.\r\nclaim 6 recites “the periphery”. there is insufficient antecedent basis for this limitation.\r\nclaim 6 recites “the bottom”. there is insufficient antecedent basis for this limitation.\r\nclaim 6 recites “the annular area”. there is insufficient antecedent basis for this limitation.\r\nit is noted that the antecedent basis issues with claim 6 will be impacted by modifications to correct the antecedent basis issues with claim 5\r\nclaim 7 recites “the two faces”. there is insufficient antecedent basis for this limitation.\r\nclaim 7 recites “the axis”. there is insufficient antecedent basis for this limitation.\r\nclaim 8 recites “the two faces”. there is insufficient antecedent basis for this limitation.\r\nclaim 9 recites “the two faces”. there is insufficient antecedent basis for this limitation.\r\nclaim 9 recites “the placing or attachment”. there is insufficient antecedent basis for this limitation.\r\nclaim 10 recites “an electric motor”. there has already been an electric motor introduced in the claim previously, therefore it is unclear whether the new recitation is a new “electric motor” or referring to the previously recited version.\r\nclaim 10 recites “the two faces”. there is insufficient antecedent basis for this limitation."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "LVCSH1BCXBLUEX9",
+      "officialDate": "2024-04-23T15:37:14.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "LVCSH1BCXBLUEX9",
+      "officialDate": "2024-04-23T15:37:14.000-0400",
+      "sha256": "56106a68fd13726a3f4cef8856d852ecb14bd879e7fce558dceb61d6d9c11b99",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "sourceClaimCount": 15
+    }
+  ],
+  "documentInventoryCount": 78,
+  "documentInventoryRows": 78,
+  "primaryCpc": "B23B   5/48",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/18643465",
+    "https://api.uspto.gov/api/v1/patent/applications/18643465/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

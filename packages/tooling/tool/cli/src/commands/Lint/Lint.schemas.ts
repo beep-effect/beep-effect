@@ -15,6 +15,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import type { Ordering } from "effect/Ordering";
 import type * as AST from "effect/SchemaAST";
 
@@ -810,10 +811,10 @@ export const encodeSchemaFirstInventoryDocument: {
   (
     input: unknown,
     options?: AST.ParseOptions
-  ): Effect.Effect<S.Codec.Encoded<typeof SchemaFirstInventoryDocument>, S.SchemaError>;
+  ): Effect.Effect<typeof SchemaFirstInventoryDocument.Encoded, S.SchemaError>;
   (
     options?: AST.ParseOptions
-  ): (input: unknown) => Effect.Effect<S.Codec.Encoded<typeof SchemaFirstInventoryDocument>, S.SchemaError>;
+  ): (input: unknown) => Effect.Effect<typeof SchemaFirstInventoryDocument.Encoded, S.SchemaError>;
 } = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SchemaFirstInventoryDocument));
 
 const makeParityMembershipKey = (file: string, ruleId: string, occurrence: string): string =>
@@ -859,6 +860,78 @@ export const makeSchemaFirstEntryKey = (entry: SchemaFirstInventoryEntry): strin
     O.map((occurrence) => makeParityMembershipKey(entry.file, entry.ruleId ?? "", occurrence)),
     O.getOrElse(() => `${entry.file}::${entry.symbol}::${entry.kind}::${entry.ruleId ?? ""}::${entry.line ?? ""}`)
   );
+
+/**
+ * Line-independent identity of a schema-first inventory entry: the file,
+ * symbol, kind and rule id it reports.
+ *
+ * **Details**
+ *
+ * `--write` regeneration matches committed entries to live findings by this
+ * identity, so an edit that only shifts lines keeps a committed `exception`
+ * and its `reason`. Values compare structurally, so they key `HashMap` and
+ * `HashSet` directly.
+ *
+ * **Example** (Compare identities across a line shift)
+ *
+ * ```ts
+ * import { makeSchemaFirstEntryIdentity, SchemaFirstInventoryEntry } from "@beep/repo-cli/commands/Lint"
+ * import * as Equal from "effect/Equal"
+ *
+ * const entry = (line: number) =>
+ *   SchemaFirstInventoryEntry.make({
+ *     file: "packages/example/src/Users.ts",
+ *     kind: "schema-policy-advisory",
+ *     line,
+ *     owner: "@beep/example",
+ *     reason: "kept",
+ *     ruleId: "SFV4-null-return",
+ *     status: "exception",
+ *     symbol: "findUser"
+ *   })
+ * console.log(Equal.equals(makeSchemaFirstEntryIdentity(entry(1)), makeSchemaFirstEntryIdentity(entry(6)))) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SchemaFirstEntryIdentity extends S.Opaque<SchemaFirstEntryIdentity, { readonly brand: unique symbol }>()(
+  S.Struct(Struct.pick(SchemaFirstInventoryEntry.fields, ["file", "symbol", "kind", "ruleId"])).pipe(
+    $I.annoteSchema("SchemaFirstEntryIdentity", {
+      description: "Line-independent identity of a schema-first inventory entry: file, symbol, kind and rule id.",
+    })
+  )
+) {}
+
+/**
+ * Project an inventory entry onto its line-independent {@link SchemaFirstEntryIdentity}.
+ *
+ * **Example** (Project an entry identity)
+ *
+ * ```ts
+ * import { makeSchemaFirstEntryIdentity, SchemaFirstInventoryEntry } from "@beep/repo-cli/commands/Lint"
+ *
+ * const identity = makeSchemaFirstEntryIdentity(
+ *   SchemaFirstInventoryEntry.make({
+ *     file: "packages/example/src/Foo.ts",
+ *     kind: "exported-interface",
+ *     line: 12,
+ *     owner: "@beep/example",
+ *     reason: "exported schema carries annotations",
+ *     status: "candidate",
+ *     symbol: "Foo"
+ *   })
+ * )
+ * console.log(identity.symbol) // "Foo"
+ * ```
+ *
+ * @param entry - The schema-first inventory entry to project.
+ * @returns The entry's file, symbol, kind and rule id.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const makeSchemaFirstEntryIdentity = (entry: SchemaFirstInventoryEntry): SchemaFirstEntryIdentity =>
+  SchemaFirstEntryIdentity.make(Struct.pick(entry, ["file", "symbol", "kind", "ruleId"]));
 
 /**
  * Membership keys for every occurrence a committed backlog row tracks.
@@ -1743,11 +1816,11 @@ export const decodeEffectVitestPrimitiveGraphDocument: {
 export const encodeEffectVitestPrimitiveGraphDocument: {
   (
     options?: AST.ParseOptions
-  ): (input: unknown) => Effect.Effect<S.Codec.Encoded<typeof EffectVitestPrimitiveGraphDocument>, S.SchemaError>;
+  ): (input: unknown) => Effect.Effect<typeof EffectVitestPrimitiveGraphDocument.Encoded, S.SchemaError>;
   (
     input: unknown,
     options?: AST.ParseOptions
-  ): Effect.Effect<S.Codec.Encoded<typeof EffectVitestPrimitiveGraphDocument>, S.SchemaError>;
+  ): Effect.Effect<typeof EffectVitestPrimitiveGraphDocument.Encoded, S.SchemaError>;
 } = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(EffectVitestPrimitiveGraphDocument));
 
 /**
@@ -1799,11 +1872,11 @@ export const decodeEffectVitestInventoryDocument: {
 export const encodeEffectVitestInventoryDocument: {
   (
     options?: AST.ParseOptions
-  ): (input: unknown) => Effect.Effect<S.Codec.Encoded<typeof EffectVitestInventoryDocument>, S.SchemaError>;
+  ): (input: unknown) => Effect.Effect<typeof EffectVitestInventoryDocument.Encoded, S.SchemaError>;
   (
     input: unknown,
     options?: AST.ParseOptions
-  ): Effect.Effect<S.Codec.Encoded<typeof EffectVitestInventoryDocument>, S.SchemaError>;
+  ): Effect.Effect<typeof EffectVitestInventoryDocument.Encoded, S.SchemaError>;
 } = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(EffectVitestInventoryDocument));
 /**
  * Encode one validated finding as its JSONL-compatible JSON string.

@@ -1,0 +1,76 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "14970678-root-17",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    17,
+    18,
+    19,
+    20
+  ],
+  "unresolved": [],
+  "referenceConcerns": [
+    {
+      "claimNumber": 17,
+      "quotes": [
+        "a cabinet housing",
+        "a housing",
+        "the housing"
+      ],
+      "reason": "First housing reference in drawer mounting precedes the later indefinite a housing and links to cabinet housing. Later housing references could identify the original cabinet housing or newly recited a housing; no identity/difference is assumed and those edges are withheld."
+    },
+    {
+      "claimNumber": 17,
+      "quotes": [
+        "one of the latch elements",
+        "the other latch element"
+      ],
+      "reason": "One/other establishes complementary role selection among two expressly named latch participants, but source does not select which is first/second. Repeated said one references resolve to the explicit role term one. No arbitrary one/other→first/second member edge or invented collective introduction is supplied."
+    },
+    {
+      "claimNumbers": [
+        17,
+        18
+      ],
+      "quotes": [
+        "the bias",
+        "said bias"
+      ],
+      "reason": "Biased predicate conveys a bias but no indefinite/bare nominal introduction of bias is recited. Nominal references are preserved without fabricating an introducing term from the verb."
+    },
+    {
+      "claimNumber": 20,
+      "quotes": [
+        "its longitudinal axis"
+      ],
+      "reason": "Possessive owner is the role-selected movable latch element, but no axis term is introduced on this chain. Axis is preserved as a bare possessive phrase, not linked as though it were identical to the latch element."
+    },
+    {
+      "claimNumber": 17,
+      "quotes": [
+        "the path"
+      ],
+      "reason": "Definite path has no nominal introduction. Source predicate describes a traversed path but does not supply an introducing term to invent."
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "Source audits and independent source critic accepted source identity/version and actual rejection association; this semantic pass relies on those retained qualifications and does not claim fresh PDF/inventory authentication. Examiner wording is evidence, not the semantic reference answer. All unselected claims were context only; no sibling-reference borrowing."
+  ],
+  "annotationRationale": "Fresh nested apparatus grammar: cabinet drawer root precedes its actual comprising transition; housing, drawer/body mounting function, and apparatus subgroup remain distinct. Four explicitly enumerated inner latch limitations nest under the apparatus subgroup. Source housing uncertainty and role selection are represented without choosing physical members. All selected18–20 depend directly on17; sibling1–16 are not antecedent sources. Relative connectors are anchored function text and full bare possessive phrases retained. Claim19 has only dependency-based source rejection, not an invented individualized ground.",
+  "independence": "Fresh manual semantic extractor. Only exact manually chosen source quote location, serialization, geometry and schema validation helpers used. No production decomposition/policy, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation. Agent confidence is not attorney agreement; independent semantic critic is pending.",
+  "headConvention": "lexical-head/v1",
+  "headConventionReview": {
+    "previousRound": 1,
+    "round": 2,
+    "review": "head-review.json",
+    "reviewedFlagCount": 1,
+    "changedHeadCount": 1,
+    "scope": "Only independently reviewed flagged lexical heads changed. Existing anchors, determiners, elements, edges, sources, semantic confidence and unresolved/reference concerns remain unchanged. Prior semantic acceptance is preserved as evidence; current lexical revision awaits independent critic. Attorney adjudication and admission bar unchanged."
+  },
+  "criticReview": "round2 lexical-head-only independent critic pending"
+}

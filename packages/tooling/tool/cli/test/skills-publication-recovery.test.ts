@@ -29,8 +29,8 @@ import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
@@ -72,8 +72,8 @@ const intendedFiles = A.map(intendedTree, (file) =>
 );
 
 const sha256 = Effect.fnUntraced(function* (bytes: Uint8Array) {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(yield* crypto.digest("SHA-256", bytes));
+  const crypto = yield* Digest.Digest;
+  return Hex.encode(yield* crypto.digest(Digest.sha256, bytes));
 });
 
 // A file is fingerprinted by its bytes, a directory by its tree hash.
@@ -321,7 +321,7 @@ layer(
         const fs = yield* FileSystem.FileSystem;
         const { journals, root, target } = yield* fixture(kind, true);
         const base = yield* ModelsAtomicExchange;
-        const services = yield* Effect.context<FileSystem.FileSystem | Path.Path | Crypto.Crypto>();
+        const services = yield* Effect.context<FileSystem.FileSystem | Path.Path | Digest.Digest>();
         let competitor = "";
         const interfering = ModelsAtomicExchange.of({
           qualify: base.qualify,
@@ -435,6 +435,43 @@ layer(
       expect(publication.state).toMatchObject({ _tag: "abandoned", from: "backed-up" });
       expect(yield* fs.exists(publication.staging)).toBe(false);
       expect(yield* fs.readFileString(O.getOrThrow(publication.backup))).toBe(nativeFile);
+    })
+  );
+
+  it.effect("refuses cleanup through a symlinked parent when target and stage are absent", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { journals, root, target } = yield* fixture("directory", false);
+      const publisher = yield* publisherWith();
+      yield* publish(publisher, "directory", root, target);
+      const journal = O.getOrThrow(A.head(yield* journalsIn(journals)));
+      const outside = yield* fs.makeTempDirectoryScoped({ prefix: "skills-outside-" });
+      const escape = path.join(root, "escape");
+      yield* fs.symlink(outside, escape);
+      const staging = path.join(escape, ".missing.stage-probe");
+      const partial = `${staging}.partial`;
+      yield* fs.makeDirectory(partial);
+      yield* fs.writeFileString(path.join(partial, "unrelated.txt"), "keep external bytes");
+      const pending = SkillPublicationJournal.make({
+        id: journal.id,
+        publication: SkillTrackedPublication.make({
+          ...trackedOf(journal),
+          target: path.join(escape, "missing"),
+          staging,
+          partial: O.some(partial),
+          preimage: O.none(),
+          backup: O.none(),
+          owner: O.none(),
+          state: ModelsPublicationState.cases.staged.make({}),
+        }),
+      });
+      yield* fs.writeFileString(path.join(journals, `${journal.id}.json`), yield* encodeJournal(pending));
+      const reports = yield* publisher.recover(root, "pending");
+      expect(A.map(reports, (report) => report.result)).toEqual([
+        expect.objectContaining({ _tag: "refused", reason: "foreign-artifact" }),
+      ]);
+      expect(yield* fs.readFileString(path.join(partial, "unrelated.txt"))).toBe("keep external bytes");
     })
   );
 

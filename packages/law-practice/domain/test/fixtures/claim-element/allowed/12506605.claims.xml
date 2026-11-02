@@ -1,0 +1,114 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system for controlling access to cryptographic resources, the system comprising:
+<claim-text>a security device storing encrypted private keys for blockchain operations;</claim-text>
+<claim-text>a first secure bypass switch connecting a receiver computing device to an external network or to an internal network and a second secure bypass switch connecting a sender computing device to the external network or to the internal network, wherein each of the first secure bypass switch and the second secure bypass switch physically switch a corresponding network connection of a corresponding computing device between the external network and the internal network, and wherein the external network and the internal network are physically prevented from being simultaneously connected to each computing device using an air gap; and</claim-text>
+<claim-text>the receiver computing device coupled to the security device and the first secure bypass switch, the receiver computing device comprising one or more processors and one or more non-transitory computer-readable storage media storing instructions, which when executed by the one or more processors cause the one or more processors to perform operations comprising:
+<claim-text>receiving, while connected to the external network, a transfer request to transfer control of a number of cryptographic resources from a first user to a second user, wherein the transfer request comprises a user identifier and a hash of a blockchain operation;</claim-text>
+<claim-text>in response to receiving the transfer request, transmitting a first command to the first secure bypass switch to switch from the external network to the internal network; and</claim-text>
+<claim-text>subsequently to transmitting the first command, transmitting, to the security device on the internal network, a signature request requesting generation of a cryptographic signature for the blockchain operation using the hash and the user identifier, wherein the first command instructs the security device to (1) decrypt a private key associated with the user identifier and generate the cryptographic signature using the hash and (2) transmit the cryptographic signature to the sender computing device, and wherein the sender computing device instructs the second secure bypass switch to switch the corresponding network connection from the internal network to the external network and transmits the cryptographic signature to the external network.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the instructions further cause the one or more processors to perform operations comprising:
+<claim-text>receiving, while connected to the external network, a new account generation request to generate a new account for a new user;</claim-text>
+<claim-text>transmitting, to the first secure bypass switch, a switching command to connect the receiver computing device to the internal network;</claim-text>
+<claim-text>in response to connecting to the internal network, transmitting an account generation command to the security device, wherein the new account generation request comprises one or more commands to generate a new private key and a new public key for the new user; and</claim-text>
+<claim-text>causing a generation of an indication that the new account has been created, wherein the indication comprises the new public key.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the instructions for transmitting, to the security device, the new account generation request further comprises:
+<claim-text>generating a shard generation command to generate a plurality of cryptographic key shards using the security device, wherein each cryptographic key shard of the plurality of cryptographic key shards enables generation of a partial cryptographic signature that signs one ro more blockchain operations;</claim-text>
+<claim-text>generating an encryption command that instructs the security device to encrypt each cryptographic key shard of the plurality of cryptographic key shards; and</claim-text>
+<claim-text>transmitting the shard generation command and the encryption command to the security device, wherein the security device generates the new private key comprising the plurality of cryptographic key shards and encrypts each cryptographic key shard.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the new account generation request comprises an identifier of a blockchain network indicating a type of keys required.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the account generation command comprises a request to return the new public key, and wherein the new public key is used to generate a cryptographic address on a corresponding blockchain.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the security device is connected to the internal network only and is isolated from other networks.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. A method for controlling access to cryptographic resources using offline storage, the method comprising:
+<claim-text>receiving, at a computing device while connected to an external network, a transfer request to transfer control of a number of cryptographic resources from a first user to a second user, wherein the transfer request comprises a user identifier and a transaction hash of a blockchain operation, wherein the computing device is coupled to both a security device that stores decryption keys and a secure bypass switch, wherein the secure bypass switch physically switches a network connection of the computing device between the external network and an internal network, and wherein the external network and the internal network are physically prevented from being simultaneously connected to the computing device using an air gap;</claim-text>
+<claim-text>in response to receiving the transfer request, transmitting a first command to the secure bypass switch to switch the network connection from the external network to the internal network;</claim-text>
+<claim-text>subsequently to transmitting the first command, transmitting, to the security device on the internal network, a signature request requesting generation of a cryptographic signature for the blockchain operation using the transaction hash and the user identifier, wherein the security device decrypts a private key associated with the user identifier and generates the cryptographic signature using the transaction hash;</claim-text>
+<claim-text>receiving, from the security device, the cryptographic signature;</claim-text>
+<claim-text>in response to receiving the cryptographic signature, transmitting a second command to the secure bypass switch to switch the network connection from the internal network to the external network; and</claim-text>
+<claim-text>transmitting the cryptographic signature to a requesting device.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, further comprising:
+<claim-text>receiving, while connected to the external network, a new account generation request to generate a new account for a new user;</claim-text>
+<claim-text>transmitting, to the secure bypass switch, a switching command to connect the computing device to the internal network;</claim-text>
+<claim-text>in response to connecting to the internal network, transmitting an account generation command to the security device, wherein the new account generation request comprises one or more commands to generate a new private key and a new public key for the new user; and</claim-text>
+<claim-text>transmitting an indication that the new account has been created, wherein the indication comprises the new public key.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein transmitting, to the security device, the new account generation request further comprises:
+<claim-text>generating a shard generation command to generate a plurality of cryptographic key shards using the security device, wherein each cryptographic key shard of the plurality of cryptographic key shards enables generation of a partial cryptographic signature that signs one or more blockchain operations;</claim-text>
+<claim-text>generating an encryption command that instructs the security device to encrypt each cryptographic key shard of the plurality of cryptographic key shards; and</claim-text>
+<claim-text>transmitting the shard generation command and the encryption command to the security device, wherein the security device generates the new private key comprising the plurality of cryptographic key shards and encrypts each cryptographic key shard.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the new account generation request comprises an identifier of a blockchain network indicating a type of keys required.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the account generation command comprises a request to return the new public key, and wherein the new public key is used to generate a cryptographic address on a corresponding blockchain.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the security device is connected to the internal network only and is isolated from other networks.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the transfer request comprises an encrypted private key for generating the cryptographic signature, and wherein the security device stores one or more decryption keys for decrypting the encrypted private key.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00013">claim 13</claim-ref>, further comprising:
+<claim-text>extracting, at the computing device, the encrypted private key; and</claim-text>
+<claim-text>transmitting, to the security device an instruction to sign the blockchain operation using a decrypted instance of the encrypted private key, wherein the security device decrypts the encrypted private key and signs the blockchain operation.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. One or more non-transitory, computer-readable storage media storing instructions that when executed by one or more processors cause the one or more processors to perform operations comprising:
+<claim-text>receiving, at a computing device while connected to an external network, a transfer request to transfer control of a number of cryptographic resources from a first user to a second user, wherein the computing device is coupled to both a security device and a secure bypass switch, wherein the secure bypass switch physically switches a network connection of the computing device between the external network and an internal network, and wherein the external network and the internal network are physically prevented from being simultaneously connected to the computing device using an air gap;</claim-text>
+<claim-text>in response to receiving the transfer request, transmitting a first command to the secure bypass switch to switch the network connection from the external network to the internal network;</claim-text>
+<claim-text>subsequently to transmitting the first command, transmitting, to the security device on the internal network, a signature request requesting generation of a cryptographic signature for a blockchain operation, wherein the security device decrypts a private key associated with the first user and generates the cryptographic signature;</claim-text>
+<claim-text>receiving, from the security device, the cryptographic signature;</claim-text>
+<claim-text>in response to receiving the cryptographic signature, transmitting a second command to the secure bypass switch to switch the network connection from the internal network to the external network; and</claim-text>
+<claim-text>transmitting the cryptographic signature to a requesting device.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the instructions further cause the one or more processors to perform operations comprising:
+<claim-text>receiving, while connected to the external network, a new account generation request to generate a new account for a new user;</claim-text>
+<claim-text>transmitting, to the secure bypass switch, a switching command to connect the computing device to the internal network;</claim-text>
+<claim-text>in response to connecting to the internal network, transmitting an account generation command to the security device, wherein the new account generation request comprises one or more commands to generate a new private key and a new public key for the new user; and</claim-text>
+<claim-text>transmitting an indication that the new account has been created, wherein the indication comprises the new public key.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the instructions further cause the one or more processors to perform operations comprising:
+<claim-text>generating a shard generation command to generate a plurality of cryptographic key shards using the security device, wherein each cryptographic key shard of the plurality of cryptographic key shards enables generation of a partial cryptographic signature that signs one ro more blockchain operations;</claim-text>
+<claim-text>generating an encryption command that instructs the security device to encrypt each cryptographic key shard of the plurality of cryptographic key shards; and</claim-text>
+<claim-text>transmitting the shard generation command and the encryption command to the security device, wherein the security device generates the new private key comprising the plurality of cryptographic key shards and encrypts each cryptographic key shard.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the new account generation request comprises an identifier of a blockchain network indicating a type of keys required.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the account generation command comprises a request to return the new public key, and wherein the new public key is used to generate a cryptographic address on a corresponding blockchain.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the security device is connected to the internal network only and is isolated from other networks.</claim-text>
+</claim>
+</claims>

@@ -50,60 +50,6 @@ export const DOCGEN_CONFIG_FILENAME = "docgen.json" as const;
 export const CHECK_TSCONFIG_FILENAME = "tsconfig.check.json" as const;
 
 /**
- * Synthetic root key in repo-utils dependency maps.
- *
- * **Example** (Use tsconfig-sync schemas)
- *
- * ```ts
- * import { ROOT_DEP_INDEX_KEY } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
- *
- * console.log(typeof ROOT_DEP_INDEX_KEY !== "undefined") // true
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const ROOT_DEP_INDEX_KEY = "@beep/root" as const;
-/**
- * Schema for the synthetic root dependency-index key.
- *
- * **Example** (Use tsconfig-sync schemas)
- *
- * ```ts
- * import { RootDepIndexKey } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
- * import * as S from "effect/Schema"
- *
- * const value = "sync"
- * console.log(S.is(RootDepIndexKey)(value)) // true
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const RootDepIndexKey = S.Literal(ROOT_DEP_INDEX_KEY).pipe(
-  $I.annoteSchema("RootDepIndexKey", {
-    description: "Synthetic root dependency index key from repo-utils dependency maps.",
-  })
-);
-
-/**
- * Synthetic root dependency-index key.
- *
- * **Example** (Use tsconfig-sync schemas)
- *
- * ```ts
- * import type { RootDepIndexKey } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
- *
- * const key: RootDepIndexKey = "@beep/root"
- * console.log(key) // "@beep/root"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type RootDepIndexKey = typeof RootDepIndexKey.Type;
-
-/**
  * Canonical alias key matcher managed by this command.
  *
  * Matches exactly:
@@ -231,21 +177,6 @@ export const isCanonicalAliasKey = S.is(CanonicalAliasKey);
  * @since 0.0.0
  */
 export const isBeepScopedPackageName = S.is(BeepScopedPackageName);
-/**
- * Predicate for the synthetic root dependency-index key.
- *
- * **Example** (Use tsconfig-sync schemas)
- *
- * ```ts
- * import { isRootDepIndexKey } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
- *
- * console.log(isRootDepIndexKey("@beep/root")) // true
- * ```
- *
- * @category guards
- * @since 0.0.0
- */
-export const isRootDepIndexKey = S.is(RootDepIndexKey);
 /**
  * Equivalence relation for arrays of strings.
  *
@@ -1566,118 +1497,6 @@ export const JsonObject = S.Record(S.String, S.Unknown).pipe(
  * @since 0.0.0
  */
 export type JsonObject = typeof JsonObject.Type;
-
-/**
- * Single tsconfig references entry with optional path field.
- *
- * **Example** (Decode one project reference)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { TsconfigReferenceEntry } from "@beep/repo-cli/commands/TsconfigSync"
- *
- * const entry = S.decodeUnknownSync(TsconfigReferenceEntry)({ path: "../../foundation/modeling/schema" })
- *
- * console.log(entry.path) // => "../../foundation/modeling/schema"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class TsconfigReferenceEntry extends S.Opaque<TsconfigReferenceEntry, { readonly brand: unique symbol }>()(
-  S.Struct({
-    path: S.optionalKey(S.Unknown),
-  }).pipe(
-    $I.annoteSchema("TsconfigReferenceEntry", {
-      description: "Single tsconfig references entry with optional path field.",
-    })
-  )
-) {}
-
-/**
- * Subset of tsconfig compilerOptions containing optional paths map.
- *
- * **Example** (Decode compiler path aliases)
- *
- * ```ts
- * import * as R from "effect/Record"
- * import * as S from "effect/Schema"
- * import { TsconfigCompilerOptionsPaths } from "@beep/repo-cli/commands/TsconfigSync"
- *
- * const options = S.decodeUnknownSync(TsconfigCompilerOptionsPaths)({
- *   paths: { "@beep/schema/*": ["./packages/foundation/modeling/schema/src/*.ts"] }
- * })
- *
- * console.log(R.keys(options.paths ?? {})) // => ["@beep/schema/*"]
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class TsconfigCompilerOptionsPaths extends S.Opaque<
-  TsconfigCompilerOptionsPaths,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    paths: S.optionalKey(S.Record(S.String, S.Unknown)),
-  }).pipe(
-    $I.annoteSchema("TsconfigCompilerOptionsPaths", {
-      description: "Subset of tsconfig compilerOptions containing optional paths map.",
-    })
-  )
-) {}
-
-/**
- * Minimal tsconfig shape containing optional `references`.
- *
- * **Example** (Use tsconfig-sync schemas)
- *
- * ```ts
- * import { TsconfigWithReferences } from "@beep/repo-cli/commands/TsconfigSync"
- * import * as S from "effect/Schema"
- *
- * const candidate = { references: [{ path: "./packages/example" }] }
- * console.log(S.is(TsconfigWithReferences)(candidate)) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class TsconfigWithReferences extends S.Opaque<TsconfigWithReferences, { readonly brand: unique symbol }>()(
-  S.Struct({
-    references: TsconfigReferenceEntry.pipe(S.Array, S.optionalKey),
-  }).pipe(
-    $I.annoteSchema("TsconfigWithReferences", {
-      description: "A class representing a tsconfig.json file with references property.",
-    })
-  )
-) {}
-
-/**
- * Minimal tsconfig shape containing optional `compilerOptions.paths`.
- *
- * **Example** (Use tsconfig-sync schemas)
- *
- * ```ts
- * import { TsconfigWithPaths } from "@beep/repo-cli/commands/TsconfigSync"
- * import * as S from "effect/Schema"
- *
- * const candidate = { compilerOptions: { paths: { "@beep/example": ["./packages/example/src/index.ts"] } } }
- * console.log(S.is(TsconfigWithPaths)(candidate)) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class TsconfigWithPaths extends S.Opaque<TsconfigWithPaths, { readonly brand: unique symbol }>()(
-  S.Struct({
-    compilerOptions: S.optionalKey(TsconfigCompilerOptionsPaths),
-  }).pipe(
-    $I.annoteSchema("TsconfigWithPaths", {
-      description: "A class representing a tsconfig.json file with compilerOptions.paths property.",
-    })
-  )
-) {}
 
 /**
  * Workspace descriptor order by repo-relative directory.

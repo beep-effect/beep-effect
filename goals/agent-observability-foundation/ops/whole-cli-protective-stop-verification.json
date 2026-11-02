@@ -1,0 +1,47 @@
+{
+  "at": "2026-10-29T20:17:56.582163+00:00",
+  "head": "ae89646bded05f2a249a2a91896e27ad8c0c9a2e",
+  "archive": "~/.local/state/beep/observation-proof-archive/whole-cli-protective-stop-8tyqkoeb",
+  "sourceFilesChecked": 1779,
+  "changedSourceFiles": [],
+  "result": "incomplete: guard stopped for host pressure during docgen",
+  "kernelOomClaim": false,
+  "serviceResult": "timeout after controlled stop exceeded 5-second grace; not RuntimeMaxSec expiry",
+  "guard": {
+    "unit": "foundation-whole-cli-quality-v2.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 38361522176,
+    "peakObservedBytes": 7535767552,
+    "minimumAvailableBytes": 16506548224,
+    "stoppedFor": "host pressure",
+    "tasksMax": 1024,
+    "peakObservedTasks": 288,
+    "pidsLimitEvents": 0,
+    "observedPhases": [
+      {
+        "phase": "beep:build",
+        "observedAtEpochSeconds": 1793303444.4109674
+      },
+      {
+        "phase": "beep:check",
+        "observedAtEpochSeconds": 1793303453.872585
+      },
+      {
+        "phase": "beep:test",
+        "observedAtEpochSeconds": 1793303464.0444744
+      },
+      {
+        "phase": "docgen",
+        "observedAtEpochSeconds": 1793304291.4006782
+      }
+    ],
+    "exitCode": 1,
+    "orphanCleanup": [],
+    "ownedScopeCount": 2
+  },
+  "phaseObservationLimit": "descendant command names include fixtures; only terminal package result proves acceptance",
+  "runtimeOverrideCleanup": "removed exact owned override",
+  "next": "Preserve exact evidence; use bounded targeted checks and finish package proof when resources allow."
+}

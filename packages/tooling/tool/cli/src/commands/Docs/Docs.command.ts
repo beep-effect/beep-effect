@@ -17,7 +17,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { printLines } from "../../internal/cli/Printer.ts";
-import { docsAggregateCommand } from "./Docs.aggregate.ts";
 
 const $I = $RepoCliId.create("docs");
 
@@ -165,7 +164,6 @@ const printDocsIndex = () =>
     "- bun run beep docs skills",
     "- bun run beep docs policies",
     "- bun run beep docs find <topic>",
-    "- bun run beep docs aggregate",
   ]);
 
 const findSectionByName = (name: DocsSectionName): O.Option<DocsSection> =>
@@ -256,11 +254,5 @@ const docsFindCommand = Command.make(
  */
 export const docsCommand = Command.make("docs", {}, printDocsIndex).pipe(
   Command.withDescription("Discover laws, skills, and policies without path references"),
-  Command.withSubcommands([
-    docsLawsCommand,
-    docsSkillsCommand,
-    docsPoliciesCommand,
-    docsFindCommand,
-    docsAggregateCommand,
-  ])
+  Command.withSubcommands([docsLawsCommand, docsSkillsCommand, docsPoliciesCommand, docsFindCommand])
 );

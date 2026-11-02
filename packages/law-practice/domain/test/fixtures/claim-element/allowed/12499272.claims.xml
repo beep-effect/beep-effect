@@ -1,0 +1,73 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A computer-implemented method, comprising:
+<claim-text>parsing received documentation in a first language for burdened content, wherein the received documentation comprises respective healthcare-related discharge instructions for each of a plurality of identifiable individuals from a plurality of respectively associated output systems;</claim-text>
+<claim-text>removing the burdened content in the first language for each of the respective healthcare-related discharge instructions and, for each identifiable individual of the plurality of identifiable individuals, encrypting and storing the burdened content from each of the respective healthcare-related discharge instructions in a geographically bound computing system;</claim-text>
+<claim-text>transmitting unburdened content in the first language for each of the respective healthcare-related discharge instructions to a geographically unbound system, wherein the geographically unbound system comprises an automated translation system operable to automatically compare the unburdened content to a set of stored translations from the first language to a second language to produce an initial unburdened content translation;</claim-text>
+<claim-text>receiving, by the geographically bound computing system for each of the respective healthcare-related discharge instructions, a second language translation of the unburdened content in the first language from the geographically unbound system;</claim-text>
+<claim-text>for each identifiable individual, decrypting the encrypted burdened content and combining the decrypted burdened content and the second language translation of the unburdened content for each of the respective healthcare-related discharge instructions into combined translations; and</claim-text>
+<claim-text>transmitting, in parallel, each respective one of the combined translations to a respective associated output system of the plurality of output systems.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the second language is different for the unburdened content as between at least two of the identifiable individuals.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the received documentation is encrypted, and further comprising decrypting the received documentation prior to parsing.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The computer-implemented method of <claim-ref idref="CLM-00003">claim 3</claim-ref>, further comprising encrypting the combined translations prior to transmitting.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising transmitting the second language translations to a training component for the geographically unbound computing system.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The computer-implemented method of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the second language translations are transmitted to a training component upon the second language translations producing an accuracy metric that exceeds a predetermined accuracy threshold.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. A computer-implemented method, comprising:
+<claim-text>receiving encrypted documentation by a geographically bound system;</claim-text>
+<claim-text>decrypting, by the geographically bound system, at least a first portion of the received encrypted documentation, wherein the decrypted portion of the received encrypted documentation comprises unburdened content in a first language;</claim-text>
+<claim-text>storing a second portion of the encrypted documentation;</claim-text>
+<claim-text>transmitting the unburdened content to a geographically unbound system, wherein the geographically unbound system comprises an automated translation system operable to automatically compare the unburdened content to a set of stored translations from the first language to a second language to produce an initial unburdened content translation;</claim-text>
+<claim-text>receiving, by the geographically bound system, a second language translation of the unburdened content in the first language from the geographically unbound system;</claim-text>
+<claim-text>decrypting the second portion of the encrypted documentation, wherein the second portion comprises burdened content;</claim-text>
+<claim-text>combining the burdened content and the second language translation of the unburdened content into a combined translation;</claim-text>
+<claim-text>encrypting the combined translation; and</claim-text>
+<claim-text>transmitting the encrypted combined translation to an output system.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The computer-implemented method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the unburdened content in the first language is transmitted to a supplemental external system upon the second language translation producing an accuracy metric that falls below a predetermined accuracy threshold.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The computer-implemented method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising receiving a supplemental second language translation of the unburdened content in the first language from the supplemental external system that produces a supplemental accuracy metric that meets or exceeds the predetermined accuracy threshold.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A system, comprising:
+<claim-text>a control server geographically bound within a first jurisdiction, wherein the control server comprises a processor and a memory storing instructions which, when executed by the processor, cause the processor to:
+<claim-text>parse received documentation in a first language for burdened content, wherein the received documentation comprises respective healthcare-related discharge instructions for each of a plurality of identifiable individuals from a plurality of respectively associated output systems;</claim-text>
+<claim-text>remove the burdened content in the first language for each of the respective healthcare-related discharge instructions and, for each identifiable individual of the plurality of identifiable individuals, encrypting and storing the burdened content from each of the respective healthcare-related discharge instructions in a geographically bound computing system;</claim-text>
+<claim-text>transmit unburdened content in the first language for each of the respective healthcare-related discharge instructions to a geographically unbound system, wherein the geographically unbound system comprises an automated translation system operable to automatically compare the unburdened content to a set of stored translations from the first language to a second language to produce an initial unburdened content translation;</claim-text>
+<claim-text>receive, for each of the respective healthcare-related discharge instructions, a second language translation of the unburdened content in the first language from the geographically unbound system;</claim-text>
+<claim-text>for each identifiable individual, decrypt the encrypted burdened content and combine the decrypted burdened content and the second language translation of the unburdened content for each of the respective healthcare-related discharge instructions into combined translations; and</claim-text>
+<claim-text>transmit each respective one of the combined translations to a respective associated output system of the plurality of output systems.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the instructions cause the processor to further transmit, in parallel, the combined translation to the geographically unbound system, whereupon the set of stored translations is automatically updated with the combined translations.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the received documentation is encrypted, and wherein the instructions further cause the processor to decrypt the received documentation prior to parsing.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the instructions further cause the processor to encrypt the combined translations prior to transmitting.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein each respective one of the combined translations is transmitted to a respective associated output system of the plurality of output systems in parallel.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the instructions further cause the processor to measure the volume and timing of transmissions sent to and received from the geographically unbound system, and upon the volume or timing of transmissions exceeding a congestion threshold, staggering the transmission of the combined translations over time.</claim-text>
+</claim>
+</claims>

@@ -6,6 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.protocol.fixture.schemas");
@@ -138,9 +139,11 @@ export class CacheFixtureEvent extends S.Opaque<CacheFixtureEvent, { readonly br
     digest: S.OptionFromNullOr(Sha256Hex),
     bytes: S.Natural,
     tagPresent: S.Boolean,
+    requestTagSha256: S.OptionFromOptionalKey(Sha256Hex).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("CacheFixtureEvent", {
-      description: "Sanitized fixture request, selected bytes and response disposition.",
+      description:
+        "Sanitized fixture request, selected bytes and response disposition; an optional opaque request-tag digest does not assert signature validity or backend authorization.",
     })
   )
 ) {}

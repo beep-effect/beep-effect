@@ -1,0 +1,71 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A propulsion system comprising:
+<claim-text>an electric motor for propulsion; and</claim-text>
+<claim-text>a fuel cell configured to receive compressed air from a compressor and fuel from a fuel source and provide power to at least the electric motor,</claim-text>
+<claim-text>wherein the fuel is configured to be combusted within a combustion chamber of the fuel cell after interacting with an anode of one or more fuel cell tubes to define combustion products, and</claim-text>
+<claim-text>wherein the combustion products interact with a cathode of the one or more fuel cell tubes prior to exiting the fuel cell as output gases.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The propulsion system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the fuel cell is a solid oxide fuel cell.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The propulsion system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the fuel cell is positioned within a nacelle having a hollow ring-shaped interior surrounding a cylindrical passageway, the cylindrical passageway including a fan and a turbine coupled to a common shaft positioned within the cylindrical passageway.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The propulsion system of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the fuel cell is radially disposed within the hollow ring-shaped interior of the nacelle, separate from and fully surrounding the cylindrical passageway.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The propulsion system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a downstream expansion device configured to receive the output gases and convert thermal energy therein into mechanical power.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The propulsion system of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the expansion device is a turbine operatively coupled to a propulsor.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The propulsion system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising an exhaust manifold configured to direct the combustion products away from the fuel cell after passing over the cathode of the one or more fuel cell tubes.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The propulsion system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the fuel cell is configured to provide electrical power to one or more of the electric motor, an electric payload, or an onboard energy storage system.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The propulsion system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the fuel is selected from hydrogen, methane, natural gas, or a hydrocarbon-based fuel suitable for fuel cell operation.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The propulsion system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a nacelle with nacelle support struts configured to structurally support at least one of: a shaft, a fan, a turbine, the electric motor, the compressor, or the fuel cell.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The propulsion system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the nacelle support struts include one or more internal passageways configured to route compressed air to the fuel cell and/or route output gases from the fuel cell to the turbine.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A hybrid propulsion system comprising:
+<claim-text>a shaft;</claim-text>
+<claim-text>a turbine coupled to the shaft;</claim-text>
+<claim-text>an electric motor coupled to the shaft; and</claim-text>
+<claim-text>a fuel cell configured to receive compressed air from a compressor and fuel from a fuel source, to provide electrical power to the electric motor, and to provide output gases to the turbine;</claim-text>
+<claim-text>wherein the turbine and the electric motor are configured to supply torque to the shaft in parallel,</claim-text>
+<claim-text>wherein the fuel cell is positioned within a nacelle having a hollow annular interior separated from and surrounding a cylindrical passageway.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The hybrid propulsion system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising a fan coupled to the shaft and configured to receive torque from at least one of the turbine or the electric motor.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The hybrid propulsion system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the compressor is coupled to the shaft and configured to supply compressed air to the fuel cell.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The hybrid propulsion system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the fuel cell comprises a combustion chamber positioned between an anode and a cathode of one or more fuel cell tubes, and an exhaust manifold configured to direct combustion products away from the fuel cell.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The hybrid propulsion system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the fuel cell is radially disposed within the hollow annular interior and fully surrounds the cylindrical passageway.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The hybrid propulsion system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the turbine is configured to receive combustion gases from the fuel cell as a primary source of heat energy for mechanical expansion.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The hybrid propulsion system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising a combustor configured to receive at least one of fuel or output gases from the fuel cell and to supply additional combustion products to the turbine.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The hybrid propulsion system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the fuel cell is configured to supply electrical power to at least one of the electric motor, an electric payload, or an onboard energy storage system.</claim-text>
+</claim>
+</claims>

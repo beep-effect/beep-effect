@@ -136,7 +136,8 @@ from upstream (its own `README.md` records the tag and commit); the package
 
 Ported from upstream `@effected/toml` (MIT, C. Spencer Beggs) through the
 effected kit port, which landed it as the scratchpad module
-`scratchpad/effected/toml`, and promoted into this workspace package by
+`scratchpad/effected/toml` (last held at `d02420ed7bb2a0e1008f80730a20c74ba38abb17`), and promoted into
+this workspace package by
 `goals/effected-promotion`. The promotion moved the sources to `src/` and the
 tests to `test/`, renamed the schema identities from
 `@beep/scratchpad/effected/toml/<Name>` to `@beep/toml/<Name>`, and changed no

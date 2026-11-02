@@ -1,0 +1,165 @@
+{
+  "schemaVersion": "cache-storage-refusal-coverage-repair/v1",
+  "recordedAt": "2026-10-30T02:22:25.115412+00:00",
+  "sourceBaseRevision": "0d743f018ef79c29468f02678f8825d0564649e8",
+  "authority": "Source-bound repair and direct/combined diagnostic evidence. Fresh current-head canonical final and hosted acceptance remain required.",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "2283a850e8e65c55c6a1e869f43718382948f872d21e1e2857a7e10124a34077",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "0db66290385c73048895e9fb06c24822d248cf6d0e63abfa051e8b35928fdbe6"
+  },
+  "baselineSha256": "408572ee3483125060b2870e5d9989c20af2e0b9a3b69b19283ce5da66d1e0c6",
+  "baselineUnchanged": true,
+  "attribution": {
+    "kind": "introduced coverage gap",
+    "hostedRun": 40985410945,
+    "hostedJob": 123844603476,
+    "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+    "observed": {
+      "lines": 91.18,
+      "statements": 91.0,
+      "branches": 85.91,
+      "functions": 88.09
+    },
+    "unchangedFloors": {
+      "lines": 91.23,
+      "statements": 91.04,
+      "branches": 86.09,
+      "functions": 87.95
+    },
+    "exactMissingCase": "Hosted merged Istanbul statement181 at line507 has0 hits; containment branch41 has[0,19]. The private storage repair added refusal before any task, but its negative path was not exercised.",
+    "cancelledLocalFinal": {
+      "exit": 130,
+      "seconds": 1636.696,
+      "ownedControllerInterrupted": true,
+      "allObservedOwnedProcessesGoneBeforeEdit": true,
+      "claim": "Deliberate source-safe cancellation after the hosted red; no passing final receipt is claimed."
+    }
+  },
+  "repair": "Force the scoped allocator to return storage inside a source input. Require the exact containment refusal, zero task starts, one actual allocation and complete cleanup. Ordinary fixture paths keep their existing checks.",
+  "verification": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 12.717,
+      "finishedAt": "2026-10-30T02:11:38.838489+00:00",
+      "tests": 26,
+      "files": 1
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 8.983,
+      "finishedAt": "2026-10-30T02:11:34.615070+00:00",
+      "tests": 26,
+      "files": 1
+    },
+    "quickPackage": {
+      "exit": 0,
+      "elapsedSeconds": 13.731,
+      "finishedAt": "2026-10-30T02:11:38.810571+00:00"
+    },
+    "directIstanbul": {
+      "exit": 0,
+      "elapsedSeconds": 46.777,
+      "finishedAt": "2026-10-30T02:14:26.820965+00:00",
+      "tests": 26,
+      "guardErrorStatementHits": 1,
+      "guardBranchHits": [1, 19]
+    },
+    "guardRemoval": {
+      "schemaVersion": "cache-private-storage-refusal-control/v1",
+      "recordedAt": "2026-10-30T02:13:14.437981+00:00",
+      "source": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sourceSha256": "0db66290385c73048895e9fb06c24822d248cf6d0e63abfa051e8b35928fdbe6",
+      "mutantSha256": "38e8664e58322c3a7a5a826ccc6108165d89d9b63b943546c789905841232cfd",
+      "testFile": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+      "testSha256": "2283a850e8e65c55c6a1e869f43718382948f872d21e1e2857a7e10124a34077",
+      "test": "rejects source-visible private storage before starting any task and removes it",
+      "removed": "source-input private-storage containment guard",
+      "exit": 1,
+      "failedTests": 1,
+      "selectedGuardTestFailed": true,
+      "reportSha256": "dd33bea8a9d497aa38533aea7cb73d2cbb79891fdb23861b30764e459a41125a",
+      "elapsedSeconds": 5.03,
+      "sourceRestoredExactly": true
+    },
+    "combinedDiagnostic": {
+      "schemaVersion": "cache-storage-refusal-coverage-diagnostic/v1",
+      "recordedAt": "2026-10-30T02:21:06.729Z",
+      "scope": "Additive diagnostic using immutable hosted0d coverage and new focused26-test coverage over the identical production map; fresh canonical and hosted acceptance remains required.",
+      "source": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sourceSha256": "0db66290385c73048895e9fb06c24822d248cf6d0e63abfa051e8b35928fdbe6",
+      "mapsMatchAfterCanonicalNormalization": true,
+      "canonicalHelperSha256": "2c9a87e8481e9aae58a25104fefee841c78006db69451a9d04ec48932bfa9973",
+      "hosted": {
+        "lines": {
+          "total": 794,
+          "covered": 724,
+          "skipped": 0,
+          "pct": 91.18
+        },
+        "functions": {
+          "total": 168,
+          "covered": 148,
+          "skipped": 0,
+          "pct": 88.09
+        },
+        "statements": {
+          "total": 834,
+          "covered": 759,
+          "skipped": 0,
+          "pct": 91
+        },
+        "branches": {
+          "total": 419,
+          "covered": 360,
+          "skipped": 0,
+          "pct": 85.91
+        }
+      },
+      "combinedDiagnostic": {
+        "lines": {
+          "total": 794,
+          "covered": 725,
+          "skipped": 0,
+          "pct": 91.3
+        },
+        "functions": {
+          "total": 168,
+          "covered": 148,
+          "skipped": 0,
+          "pct": 88.09
+        },
+        "statements": {
+          "total": 834,
+          "covered": 760,
+          "skipped": 0,
+          "pct": 91.12
+        },
+        "branches": {
+          "total": 419,
+          "covered": 361,
+          "skipped": 0,
+          "pct": 86.15
+        }
+      },
+      "guardBranch": [1, 19],
+      "guardErrorStatement": 1,
+      "coverageFloorsChanged": false
+    }
+  },
+  "proofStrategy": {
+    "reason": "Only tests and packet evidence change; production source is identical to0d. Package quick lint/type checks and both-runtime focused replays verify the edit, while the fresh complete canonical final and required hosted coverage remain mandatory.",
+    "priorFullPackage": {
+      "head": "0d743f018ef79c29468f02678f8825d0564649e8",
+      "seconds": 1058.821,
+      "result": "audit andDocgen passed",
+      "scope": "Historical source scope, not relabelled as this new test revision."
+    },
+    "noIntroducedFailureWaiver": true,
+    "noFloorReduction": true
+  },
+  "limits": [
+    "The additive diagnostic combines retained hosted0d counters and the new focused run after canonical normalization. It is not a fresh CI result.",
+    "Unchanged floor and uncovered-count gates must pass on the new published head.",
+    "No native R2 producer, credential activation, qualification, rollout or representative window is granted."
+  ]
+}

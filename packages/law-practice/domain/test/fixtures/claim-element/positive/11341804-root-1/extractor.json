@@ -1,0 +1,2825 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "11341804-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "the non-expanded state",
+      "reason": "Exact canonical claim-4 wording retained. Accepted source critic confirms original PDF corroboration and identifies examiner non-expandable state as an isolated inaccurate quotation, not text to substitute."
+    },
+    {
+      "quote": "claims 1-24",
+      "reason": "Selected root-family 1-9 are within the actual second-paragraph ground. Context roots 10/17 and their descendants stay out of scope and are not antecedent donors. Source critic separately discloses preliminary-amendment inventory and its original/PDF version reconciliation."
+    }
+  ],
+  "referenceConcerns": [
+    {
+      "claimNumbers": [
+        1,
+        8
+      ],
+      "quotes": [
+        "its desired, predetermined expansion and/or shape",
+        "the expansion"
+      ],
+      "reason": "The root possessive phrase preserves coordinated expansion/shape as recited. No arbitrary selection of one member supplies an invented scalar expansion introduction in claim 8."
+    },
+    {
+      "claimNumbers": [
+        4,
+        5
+      ],
+      "quotes": [
+        "the expandable particles",
+        "the expandable components"
+      ],
+      "reason": "Links use the bare components term in root composition whose explicit following clause states expandability. Electrically-conducting components are separately recorded. No source claim is rewritten or sphere-property evidence borrowed across siblings."
+    },
+    {
+      "claimNumbers": [
+        6,
+        7
+      ],
+      "quote": "the heat treatment",
+      "reason": "Root 1 states treated with heat without an explicit heat-treatment NP introduction. Sibling claim 5 bare heat treatment cannot donate an antecedent to claims 6/7. Exact process relations remain present without inventing a term for the earlier verb phrase."
+    },
+    {
+      "claimNumber": 5,
+      "quote": "which spheres",
+      "reason": "Explicit lexical sphere phrase retained as a bare relative NP, unlike a bare which linker. It is not forced to one member of the micro-sphere/micro-hollow-sphere alternatives."
+    },
+    {
+      "claimNumbers": [
+        2,
+        3
+      ],
+      "quote": "a housing and/or printed circuit board and/or housing parts",
+      "reason": "Source and/or alternatives remain explicit in full functional text and separate anchored component NPs. Claim 3 does not borrow the sibling-2 placement component introductions."
+    }
+  ],
+  "annotationRationale": "Fresh manual extraction of source grammar and exact material/process phrases. Extensive shielding-substance composition remains root context before in which method; its component specification is a functional child. Dispensing and heat-treatment/expansion are separate ordered functional limitations. Claim 3 separates detaching from subsequent placement; claim 4 preserves two state-dependent diameter conditions. No material chemistry/Markush or means-plus-function interpretation is attempted. Full lexical heads retain electrically-conducting, different (partial), desired, predetermined, and explicit numeric factor wording. Bare/possessive entity phrases are explicit; relative connectors do not automatically create duplicate pronoun entities. Gasket substance and expanded shielding substance identify the single described shielding mixture; expandable particles/components identify the sole component group explicitly described as expandable in 1.a, without borrowing sibling sphere descriptions.",
+  "counts": {
+    "trees": 9,
+    "elements": 22,
+    "terms": 64,
+    "edges": 65
+  },
+  "sourceValidation": {
+    "nativeClaimsMatchCanonicalIgnoringPermittedWhitespace": true,
+    "claimsXmlSha256": "f5fdd6c5f938fc2d4c77d249edd92179a6233cc29d55f4e1d52b4aa481f40d90",
+    "sourceEligibility": "Accepted retained source critic reviewed, including original-text/PDF reconciliation. No new original-document or inventory authentication claimed."
+  },
+  "independence": "Fresh source-semantic extraction. No prior structural labels, production rules, P2-DESIGN, predictions, synthetic fixtures, conformance, network, secrets, git or delegation. Helpers locate manually specified source quotations, serialize chosen trees and validate spans; no decomposer used. Only this family expected.json and extractor.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "validation": {
+    "schema": "Every tree decoded successfully through the declared ClaimElementTree schema; no production decomposer invoked.",
+    "anchors": "Exact canonical UTF-16 element/term spans and ordered nonoverlapping terms checked. Native claims bodies match canonical ignoring permitted printed-number removal/whitespace; source XML digest matches provenance.",
+    "functionalParts": "Each functional edge reconstructs its complete source element span from ordered contiguous term/text parts.",
+    "references": "All local/foreign antecedent endpoints name labeled terms; targets stay on independently read actual natural ancestry. No context/sibling donors.",
+    "scope": "Every selected claim exactly once as resolved. Local reference uncertainty retained separately; no whole-claim abstentions.",
+    "independentSemanticCritic": "Pending. These checks are extractor validation, not independent criticism or human acceptance."
+  },
+  "headConvention": "lexical-head/v1",
+  "headConventionReview": {
+    "previousRound": 1,
+    "round": 2,
+    "review": "head-review.json",
+    "reviewedFlagCount": 1,
+    "changedHeadCount": 1,
+    "scope": "Only independently reviewed flagged lexical heads changed. Existing anchors, determiners, elements, edges, sources, semantic confidence and unresolved/reference concerns remain unchanged. Prior semantic acceptance is preserved as evidence; current lexical revision awaits independent critic. Attorney adjudication and admission bar unchanged."
+  },
+  "criticReview": "Independent round3 critic pending; maximum round reached.",
+  "previousRounds": [
+    {
+      "round": 2,
+      "expected": [
+        {
+          "claimNumber": 1,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "1",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 230,
+                "quote": "A method for producing an electromagnetic shielding gasket by means of a shielding substance that contains a silicone plastic mass, electrically-conducting components, and components that are expandable under the influence of heat"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 8,
+                    "quote": "A method"
+                  },
+                  "determiner": "a",
+                  "head": "method"
+                },
+                {
+                  "anchor": {
+                    "startChar": 23,
+                    "endChar": 58,
+                    "quote": "an electromagnetic shielding gasket"
+                  },
+                  "determiner": "an",
+                  "head": "electromagnetic shielding gasket"
+                }
+              ]
+            },
+            {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 71,
+                "endChar": 230,
+                "quote": "a shielding substance that contains a silicone plastic mass, electrically-conducting components, and components that are expandable under the influence of heat"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 71,
+                    "endChar": 92,
+                    "quote": "a shielding substance"
+                  },
+                  "determiner": "a",
+                  "head": "shielding substance"
+                },
+                {
+                  "anchor": {
+                    "startChar": 107,
+                    "endChar": 130,
+                    "quote": "a silicone plastic mass"
+                  },
+                  "determiner": "a",
+                  "head": "silicone plastic mass"
+                },
+                {
+                  "anchor": {
+                    "startChar": 132,
+                    "endChar": 166,
+                    "quote": "electrically-conducting components"
+                  },
+                  "determiner": "bare",
+                  "head": "electrically-conducting components"
+                },
+                {
+                  "anchor": {
+                    "startChar": 172,
+                    "endChar": 182,
+                    "quote": "components"
+                  },
+                  "determiner": "bare",
+                  "head": "components"
+                },
+                {
+                  "anchor": {
+                    "startChar": 209,
+                    "endChar": 222,
+                    "quote": "the influence"
+                  },
+                  "determiner": "the",
+                  "head": "influence"
+                }
+              ]
+            },
+            {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 248,
+                "endChar": 293,
+                "quote": "the gasket substance is dispensed onto a foil"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 248,
+                    "endChar": 268,
+                    "quote": "the gasket substance"
+                  },
+                  "determiner": "the",
+                  "head": "gasket substance"
+                },
+                {
+                  "anchor": {
+                    "startChar": 287,
+                    "endChar": 293,
+                    "quote": "a foil"
+                  },
+                  "determiner": "a",
+                  "head": "foil"
+                }
+              ]
+            },
+            {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 299,
+                "endChar": 423,
+                "quote": "after and/or during the dispensing is treated with heat, thereby obtaining its desired, predetermined expansion and/or shape"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 319,
+                    "endChar": 333,
+                    "quote": "the dispensing"
+                  },
+                  "determiner": "the",
+                  "head": "dispensing"
+                },
+                {
+                  "anchor": {
+                    "startChar": 374,
+                    "endChar": 423,
+                    "quote": "its desired, predetermined expansion and/or shape"
+                  },
+                  "determiner": "bare",
+                  "head": "desired, predetermined expansion and/or shape"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "part-of",
+              "child": "1.a",
+              "parent": "1"
+            },
+            {
+              "kind": "functional",
+              "element": "1.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 71,
+                      "endChar": 92,
+                      "quote": "a shielding substance"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 92,
+                    "endChar": 107,
+                    "quote": " that contains "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 107,
+                      "endChar": 130,
+                      "quote": "a silicone plastic mass"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 130,
+                    "endChar": 132,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 132,
+                      "endChar": 166,
+                      "quote": "electrically-conducting components"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 166,
+                    "endChar": 172,
+                    "quote": ", and "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 172,
+                      "endChar": 182,
+                      "quote": "components"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 182,
+                    "endChar": 209,
+                    "quote": " that are expandable under "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 209,
+                      "endChar": 222,
+                      "quote": "the influence"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 222,
+                    "endChar": 230,
+                    "quote": " of heat"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "part-of",
+              "child": "1.b",
+              "parent": "1"
+            },
+            {
+              "kind": "functional",
+              "element": "1.b",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.b",
+                    "anchor": {
+                      "startChar": 248,
+                      "endChar": 268,
+                      "quote": "the gasket substance"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 268,
+                    "endChar": 287,
+                    "quote": " is dispensed onto "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.b",
+                    "anchor": {
+                      "startChar": 287,
+                      "endChar": 293,
+                      "quote": "a foil"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "part-of",
+              "child": "1.c",
+              "parent": "1"
+            },
+            {
+              "kind": "functional",
+              "element": "1.c",
+              "parts": [
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 299,
+                    "endChar": 319,
+                    "quote": "after and/or during "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 319,
+                      "endChar": 333,
+                      "quote": "the dispensing"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 333,
+                    "endChar": 374,
+                    "quote": " is treated with heat, thereby obtaining "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 374,
+                      "endChar": 423,
+                      "quote": "its desired, predetermined expansion and/or shape"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 248,
+                  "endChar": 268,
+                  "quote": "the gasket substance"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 71,
+                  "endChar": 92,
+                  "quote": "a shielding substance"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "claimNumber": 2,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "2",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 21,
+                "quote": "The method of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 10,
+                    "quote": "The method"
+                  },
+                  "determiner": "the",
+                  "head": "method"
+                }
+              ]
+            },
+            {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 172,
+                "quote": "the foil and the shielding gasket which is attached to the foil are disposed onto a housing and/or printed circuit board and/or housing parts"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 31,
+                    "endChar": 39,
+                    "quote": "the foil"
+                  },
+                  "determiner": "the",
+                  "head": "foil"
+                },
+                {
+                  "anchor": {
+                    "startChar": 44,
+                    "endChar": 64,
+                    "quote": "the shielding gasket"
+                  },
+                  "determiner": "the",
+                  "head": "shielding gasket"
+                },
+                {
+                  "anchor": {
+                    "startChar": 86,
+                    "endChar": 94,
+                    "quote": "the foil"
+                  },
+                  "determiner": "the",
+                  "head": "foil"
+                },
+                {
+                  "anchor": {
+                    "startChar": 113,
+                    "endChar": 122,
+                    "quote": "a housing"
+                  },
+                  "determiner": "a",
+                  "head": "housing"
+                },
+                {
+                  "anchor": {
+                    "startChar": 130,
+                    "endChar": 151,
+                    "quote": "printed circuit board"
+                  },
+                  "determiner": "bare",
+                  "head": "printed circuit board"
+                },
+                {
+                  "anchor": {
+                    "startChar": 159,
+                    "endChar": 172,
+                    "quote": "housing parts"
+                  },
+                  "determiner": "bare",
+                  "head": "housing parts"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "depends-on-element",
+              "dependent": "2",
+              "ancestor": "1"
+            },
+            {
+              "kind": "part-of",
+              "child": "2.a",
+              "parent": "2"
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "2.a",
+              "ancestor": "1.b"
+            },
+            {
+              "kind": "functional",
+              "element": "2.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 31,
+                      "endChar": 39,
+                      "quote": "the foil"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 39,
+                    "endChar": 44,
+                    "quote": " and "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 44,
+                      "endChar": 64,
+                      "quote": "the shielding gasket"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 64,
+                    "endChar": 86,
+                    "quote": " which is attached to "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 86,
+                      "endChar": 94,
+                      "quote": "the foil"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 94,
+                    "endChar": 113,
+                    "quote": " are disposed onto "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 113,
+                      "endChar": 122,
+                      "quote": "a housing"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 122,
+                    "endChar": 130,
+                    "quote": " and/or "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 130,
+                      "endChar": 151,
+                      "quote": "printed circuit board"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 151,
+                    "endChar": 159,
+                    "quote": " and/or "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 159,
+                      "endChar": 172,
+                      "quote": "housing parts"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The method"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A method"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 31,
+                  "endChar": 39,
+                  "quote": "the foil"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 287,
+                  "endChar": 293,
+                  "quote": "a foil"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 44,
+                  "endChar": 64,
+                  "quote": "the shielding gasket"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 23,
+                  "endChar": 58,
+                  "quote": "an electromagnetic shielding gasket"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 86,
+                  "endChar": 94,
+                  "quote": "the foil"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 287,
+                  "endChar": 293,
+                  "quote": "a foil"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "claimNumber": 3,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "3",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 21,
+                "quote": "The method of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 10,
+                    "quote": "The method"
+                  },
+                  "determiner": "the",
+                  "head": "method"
+                }
+              ]
+            },
+            {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 78,
+                "quote": "the shielding gasket is separated from the foil"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 31,
+                    "endChar": 51,
+                    "quote": "the shielding gasket"
+                  },
+                  "determiner": "the",
+                  "head": "shielding gasket"
+                },
+                {
+                  "anchor": {
+                    "startChar": 70,
+                    "endChar": 78,
+                    "quote": "the foil"
+                  },
+                  "determiner": "the",
+                  "head": "foil"
+                }
+              ]
+            },
+            {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 91,
+                "endChar": 188,
+                "quote": "the shielding gasket is disposed onto a housing and/or printed circuit board and/or housing parts"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 91,
+                    "endChar": 111,
+                    "quote": "the shielding gasket"
+                  },
+                  "determiner": "the",
+                  "head": "shielding gasket"
+                },
+                {
+                  "anchor": {
+                    "startChar": 129,
+                    "endChar": 138,
+                    "quote": "a housing"
+                  },
+                  "determiner": "a",
+                  "head": "housing"
+                },
+                {
+                  "anchor": {
+                    "startChar": 146,
+                    "endChar": 167,
+                    "quote": "printed circuit board"
+                  },
+                  "determiner": "bare",
+                  "head": "printed circuit board"
+                },
+                {
+                  "anchor": {
+                    "startChar": 175,
+                    "endChar": 188,
+                    "quote": "housing parts"
+                  },
+                  "determiner": "bare",
+                  "head": "housing parts"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "depends-on-element",
+              "dependent": "3",
+              "ancestor": "1"
+            },
+            {
+              "kind": "part-of",
+              "child": "3.a",
+              "parent": "3"
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "3.a",
+              "ancestor": "1.b"
+            },
+            {
+              "kind": "functional",
+              "element": "3.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.a",
+                    "anchor": {
+                      "startChar": 31,
+                      "endChar": 51,
+                      "quote": "the shielding gasket"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 51,
+                    "endChar": 70,
+                    "quote": " is separated from "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.a",
+                    "anchor": {
+                      "startChar": 70,
+                      "endChar": 78,
+                      "quote": "the foil"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "part-of",
+              "child": "3.b",
+              "parent": "3"
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "3.b",
+              "ancestor": "1.b"
+            },
+            {
+              "kind": "functional",
+              "element": "3.b",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.b",
+                    "anchor": {
+                      "startChar": 91,
+                      "endChar": 111,
+                      "quote": "the shielding gasket"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 111,
+                    "endChar": 129,
+                    "quote": " is disposed onto "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.b",
+                    "anchor": {
+                      "startChar": 129,
+                      "endChar": 138,
+                      "quote": "a housing"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 138,
+                    "endChar": 146,
+                    "quote": " and/or "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.b",
+                    "anchor": {
+                      "startChar": 146,
+                      "endChar": 167,
+                      "quote": "printed circuit board"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 167,
+                    "endChar": 175,
+                    "quote": " and/or "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.b",
+                    "anchor": {
+                      "startChar": 175,
+                      "endChar": 188,
+                      "quote": "housing parts"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "3",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The method"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A method"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "3.a",
+                "anchor": {
+                  "startChar": 31,
+                  "endChar": 51,
+                  "quote": "the shielding gasket"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 23,
+                  "endChar": 58,
+                  "quote": "an electromagnetic shielding gasket"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "3.a",
+                "anchor": {
+                  "startChar": 70,
+                  "endChar": 78,
+                  "quote": "the foil"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 287,
+                  "endChar": 293,
+                  "quote": "a foil"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "3.b",
+                "anchor": {
+                  "startChar": 91,
+                  "endChar": 111,
+                  "quote": "the shielding gasket"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 23,
+                  "endChar": 58,
+                  "quote": "an electromagnetic shielding gasket"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "claimNumber": 4,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "4",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 21,
+                "quote": "The method of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 10,
+                    "quote": "The method"
+                  },
+                  "determiner": "the",
+                  "head": "method"
+                }
+              ]
+            },
+            {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 148,
+                "quote": "the expandable particles, in the non-expanded state, have a diameter that is substantially in the range of 2 to 50 \u03bcm"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 31,
+                    "endChar": 55,
+                    "quote": "the expandable particles"
+                  },
+                  "determiner": "the",
+                  "head": "expandable particles"
+                },
+                {
+                  "anchor": {
+                    "startChar": 60,
+                    "endChar": 82,
+                    "quote": "the non-expanded state"
+                  },
+                  "determiner": "the",
+                  "head": "non-expanded state"
+                },
+                {
+                  "anchor": {
+                    "startChar": 89,
+                    "endChar": 99,
+                    "quote": "a diameter"
+                  },
+                  "determiner": "a",
+                  "head": "diameter"
+                },
+                {
+                  "anchor": {
+                    "startChar": 125,
+                    "endChar": 134,
+                    "quote": "the range"
+                  },
+                  "determiner": "the",
+                  "head": "range"
+                }
+              ]
+            },
+            {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 154,
+                "endChar": 251,
+                "quote": "in the expanded state a diameter that is substantially in the range of approximately 30 to 200 \u03bcm"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 157,
+                    "endChar": 175,
+                    "quote": "the expanded state"
+                  },
+                  "determiner": "the",
+                  "head": "expanded state"
+                },
+                {
+                  "anchor": {
+                    "startChar": 176,
+                    "endChar": 186,
+                    "quote": "a diameter"
+                  },
+                  "determiner": "a",
+                  "head": "diameter"
+                },
+                {
+                  "anchor": {
+                    "startChar": 212,
+                    "endChar": 221,
+                    "quote": "the range"
+                  },
+                  "determiner": "the",
+                  "head": "range"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "depends-on-element",
+              "dependent": "4",
+              "ancestor": "1"
+            },
+            {
+              "kind": "part-of",
+              "child": "4.a",
+              "parent": "4"
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "4.a",
+              "ancestor": "1.a"
+            },
+            {
+              "kind": "functional",
+              "element": "4.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 31,
+                      "endChar": 55,
+                      "quote": "the expandable particles"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 55,
+                    "endChar": 60,
+                    "quote": ", in "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 60,
+                      "endChar": 82,
+                      "quote": "the non-expanded state"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 82,
+                    "endChar": 89,
+                    "quote": ", have "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 89,
+                      "endChar": 99,
+                      "quote": "a diameter"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 99,
+                    "endChar": 125,
+                    "quote": " that is substantially in "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 125,
+                      "endChar": 134,
+                      "quote": "the range"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 134,
+                    "endChar": 148,
+                    "quote": " of 2 to 50 \u03bcm"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "part-of",
+              "child": "4.b",
+              "parent": "4"
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "4.b",
+              "ancestor": "1.a"
+            },
+            {
+              "kind": "functional",
+              "element": "4.b",
+              "parts": [
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 154,
+                    "endChar": 157,
+                    "quote": "in "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.b",
+                    "anchor": {
+                      "startChar": 157,
+                      "endChar": 175,
+                      "quote": "the expanded state"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 175,
+                    "endChar": 176,
+                    "quote": " "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.b",
+                    "anchor": {
+                      "startChar": 176,
+                      "endChar": 186,
+                      "quote": "a diameter"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 186,
+                    "endChar": 212,
+                    "quote": " that is substantially in "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.b",
+                    "anchor": {
+                      "startChar": 212,
+                      "endChar": 221,
+                      "quote": "the range"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 221,
+                    "endChar": 251,
+                    "quote": " of approximately 30 to 200 \u03bcm"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "4",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The method"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A method"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "4.a",
+                "anchor": {
+                  "startChar": 31,
+                  "endChar": 55,
+                  "quote": "the expandable particles"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 172,
+                  "endChar": 182,
+                  "quote": "components"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "claimNumber": 5,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "5",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 21,
+                "quote": "The method of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 10,
+                    "quote": "The method"
+                  },
+                  "determiner": "the",
+                  "head": "method"
+                }
+              ]
+            },
+            {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 30,
+                "endChar": 286,
+                "quote": "the expandable components are micro spheres or micro hollow spheres consisting of a polymer or another plastic, which spheres are electrically nonconductive and, through heat treatment, are enlargeable in size by a factor of approximately 5 to 70 in volume"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 30,
+                    "endChar": 55,
+                    "quote": "the expandable components"
+                  },
+                  "determiner": "the",
+                  "head": "expandable components"
+                },
+                {
+                  "anchor": {
+                    "startChar": 60,
+                    "endChar": 97,
+                    "quote": "micro spheres or micro hollow spheres"
+                  },
+                  "determiner": "bare",
+                  "head": "micro spheres or micro hollow spheres"
+                },
+                {
+                  "anchor": {
+                    "startChar": 112,
+                    "endChar": 121,
+                    "quote": "a polymer"
+                  },
+                  "determiner": "a",
+                  "head": "polymer"
+                },
+                {
+                  "anchor": {
+                    "startChar": 125,
+                    "endChar": 140,
+                    "quote": "another plastic"
+                  },
+                  "determiner": "bare",
+                  "head": "another plastic"
+                },
+                {
+                  "anchor": {
+                    "startChar": 142,
+                    "endChar": 155,
+                    "quote": "which spheres"
+                  },
+                  "determiner": "bare",
+                  "head": "which spheres"
+                },
+                {
+                  "anchor": {
+                    "startChar": 200,
+                    "endChar": 214,
+                    "quote": "heat treatment"
+                  },
+                  "determiner": "bare",
+                  "head": "heat treatment"
+                },
+                {
+                  "anchor": {
+                    "startChar": 243,
+                    "endChar": 276,
+                    "quote": "a factor of approximately 5 to 70"
+                  },
+                  "determiner": "a",
+                  "head": "factor of approximately 5 to 70"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "depends-on-element",
+              "dependent": "5",
+              "ancestor": "1"
+            },
+            {
+              "kind": "part-of",
+              "child": "5.a",
+              "parent": "5"
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "5.a",
+              "ancestor": "1.a"
+            },
+            {
+              "kind": "functional",
+              "element": "5.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "5.a",
+                    "anchor": {
+                      "startChar": 30,
+                      "endChar": 55,
+                      "quote": "the expandable components"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 55,
+                    "endChar": 60,
+                    "quote": " are "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "5.a",
+                    "anchor": {
+                      "startChar": 60,
+                      "endChar": 97,
+                      "quote": "micro spheres or micro hollow spheres"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 97,
+                    "endChar": 112,
+                    "quote": " consisting of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "5.a",
+                    "anchor": {
+                      "startChar": 112,
+                      "endChar": 121,
+                      "quote": "a polymer"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 121,
+                    "endChar": 125,
+                    "quote": " or "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "5.a",
+                    "anchor": {
+                      "startChar": 125,
+                      "endChar": 140,
+                      "quote": "another plastic"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 140,
+                    "endChar": 142,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "5.a",
+                    "anchor": {
+                      "startChar": 142,
+                      "endChar": 155,
+                      "quote": "which spheres"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 155,
+                    "endChar": 200,
+                    "quote": " are electrically nonconductive and, through "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "5.a",
+                    "anchor": {
+                      "startChar": 200,
+                      "endChar": 214,
+                      "quote": "heat treatment"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 214,
+                    "endChar": 243,
+                    "quote": ", are enlargeable in size by "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "5.a",
+                    "anchor": {
+                      "startChar": 243,
+                      "endChar": 276,
+                      "quote": "a factor of approximately 5 to 70"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 276,
+                    "endChar": 286,
+                    "quote": " in volume"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "5",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The method"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A method"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "5.a",
+                "anchor": {
+                  "startChar": 30,
+                  "endChar": 55,
+                  "quote": "the expandable components"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 172,
+                  "endChar": 182,
+                  "quote": "components"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "claimNumber": 6,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "6",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 21,
+                "quote": "The method of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 10,
+                    "quote": "The method"
+                  },
+                  "determiner": "the",
+                  "head": "method"
+                }
+              ]
+            },
+            {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 152,
+                "quote": "during the heat treatment the temperature of the shielding substance lies approximately in the range of 50\u00b0 C. to 140\u00b0 C."
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 38,
+                    "endChar": 56,
+                    "quote": "the heat treatment"
+                  },
+                  "determiner": "the",
+                  "head": "heat treatment"
+                },
+                {
+                  "anchor": {
+                    "startChar": 57,
+                    "endChar": 72,
+                    "quote": "the temperature"
+                  },
+                  "determiner": "the",
+                  "head": "temperature"
+                },
+                {
+                  "anchor": {
+                    "startChar": 76,
+                    "endChar": 99,
+                    "quote": "the shielding substance"
+                  },
+                  "determiner": "the",
+                  "head": "shielding substance"
+                },
+                {
+                  "anchor": {
+                    "startChar": 122,
+                    "endChar": 131,
+                    "quote": "the range"
+                  },
+                  "determiner": "the",
+                  "head": "range"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "depends-on-element",
+              "dependent": "6",
+              "ancestor": "1"
+            },
+            {
+              "kind": "part-of",
+              "child": "6.a",
+              "parent": "6"
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "6.a",
+              "ancestor": "1.c"
+            },
+            {
+              "kind": "functional",
+              "element": "6.a",
+              "parts": [
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 31,
+                    "endChar": 38,
+                    "quote": "during "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "6.a",
+                    "anchor": {
+                      "startChar": 38,
+                      "endChar": 56,
+                      "quote": "the heat treatment"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 56,
+                    "endChar": 57,
+                    "quote": " "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "6.a",
+                    "anchor": {
+                      "startChar": 57,
+                      "endChar": 72,
+                      "quote": "the temperature"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 72,
+                    "endChar": 76,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "6.a",
+                    "anchor": {
+                      "startChar": 76,
+                      "endChar": 99,
+                      "quote": "the shielding substance"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 99,
+                    "endChar": 122,
+                    "quote": " lies approximately in "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "6.a",
+                    "anchor": {
+                      "startChar": 122,
+                      "endChar": 131,
+                      "quote": "the range"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 131,
+                    "endChar": 152,
+                    "quote": " of 50\u00b0 C. to 140\u00b0 C."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "6",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The method"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A method"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "6.a",
+                "anchor": {
+                  "startChar": 76,
+                  "endChar": 99,
+                  "quote": "the shielding substance"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 71,
+                  "endChar": 92,
+                  "quote": "a shielding substance"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "claimNumber": 7,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "7",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 21,
+                "quote": "The method of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 10,
+                    "quote": "The method"
+                  },
+                  "determiner": "the",
+                  "head": "method"
+                }
+              ]
+            },
+            {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 165,
+                "quote": "after the dispensing and after the heat treatment the shielding substance is essentially circular in cross section (bead, double bead)"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 37,
+                    "endChar": 51,
+                    "quote": "the dispensing"
+                  },
+                  "determiner": "the",
+                  "head": "dispensing"
+                },
+                {
+                  "anchor": {
+                    "startChar": 62,
+                    "endChar": 80,
+                    "quote": "the heat treatment"
+                  },
+                  "determiner": "the",
+                  "head": "heat treatment"
+                },
+                {
+                  "anchor": {
+                    "startChar": 81,
+                    "endChar": 104,
+                    "quote": "the shielding substance"
+                  },
+                  "determiner": "the",
+                  "head": "shielding substance"
+                },
+                {
+                  "anchor": {
+                    "startChar": 132,
+                    "endChar": 145,
+                    "quote": "cross section"
+                  },
+                  "determiner": "bare",
+                  "head": "cross section"
+                },
+                {
+                  "anchor": {
+                    "startChar": 147,
+                    "endChar": 151,
+                    "quote": "bead"
+                  },
+                  "determiner": "bare",
+                  "head": "bead"
+                },
+                {
+                  "anchor": {
+                    "startChar": 153,
+                    "endChar": 164,
+                    "quote": "double bead"
+                  },
+                  "determiner": "bare",
+                  "head": "double bead"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "depends-on-element",
+              "dependent": "7",
+              "ancestor": "1"
+            },
+            {
+              "kind": "part-of",
+              "child": "7.a",
+              "parent": "7"
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "7.a",
+              "ancestor": "1.c"
+            },
+            {
+              "kind": "functional",
+              "element": "7.a",
+              "parts": [
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 31,
+                    "endChar": 37,
+                    "quote": "after "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.a",
+                    "anchor": {
+                      "startChar": 37,
+                      "endChar": 51,
+                      "quote": "the dispensing"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 51,
+                    "endChar": 62,
+                    "quote": " and after "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.a",
+                    "anchor": {
+                      "startChar": 62,
+                      "endChar": 80,
+                      "quote": "the heat treatment"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 80,
+                    "endChar": 81,
+                    "quote": " "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.a",
+                    "anchor": {
+                      "startChar": 81,
+                      "endChar": 104,
+                      "quote": "the shielding substance"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 104,
+                    "endChar": 132,
+                    "quote": " is essentially circular in "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.a",
+                    "anchor": {
+                      "startChar": 132,
+                      "endChar": 145,
+                      "quote": "cross section"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 145,
+                    "endChar": 147,
+                    "quote": " ("
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.a",
+                    "anchor": {
+                      "startChar": 147,
+                      "endChar": 151,
+                      "quote": "bead"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 151,
+                    "endChar": 153,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.a",
+                    "anchor": {
+                      "startChar": 153,
+                      "endChar": 164,
+                      "quote": "double bead"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 164,
+                    "endChar": 165,
+                    "quote": ")"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "7",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The method"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A method"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "7.a",
+                "anchor": {
+                  "startChar": 81,
+                  "endChar": 104,
+                  "quote": "the shielding substance"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 71,
+                  "endChar": 92,
+                  "quote": "a shielding substance"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "claimNumber": 8,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "8",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 21,
+                "quote": "The method of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 10,
+                    "quote": "The method"
+                  },
+                  "determiner": "the",
+                  "head": "method"
+                }
+              ]
+            },
+            {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 169,
+                "quote": "means are provided whereby the expansion is guided into a direction and/or shape that is associated with the purpose and/or is appropriate"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 31,
+                    "endChar": 36,
+                    "quote": "means"
+                  },
+                  "determiner": "bare",
+                  "head": "means"
+                },
+                {
+                  "anchor": {
+                    "startChar": 58,
+                    "endChar": 71,
+                    "quote": "the expansion"
+                  },
+                  "determiner": "the",
+                  "head": "expansion"
+                },
+                {
+                  "anchor": {
+                    "startChar": 87,
+                    "endChar": 111,
+                    "quote": "a direction and/or shape"
+                  },
+                  "determiner": "a",
+                  "head": "direction and/or shape"
+                },
+                {
+                  "anchor": {
+                    "startChar": 136,
+                    "endChar": 147,
+                    "quote": "the purpose"
+                  },
+                  "determiner": "the",
+                  "head": "purpose"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "depends-on-element",
+              "dependent": "8",
+              "ancestor": "1"
+            },
+            {
+              "kind": "part-of",
+              "child": "8.a",
+              "parent": "8"
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "8.a",
+              "ancestor": "1.c"
+            },
+            {
+              "kind": "functional",
+              "element": "8.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "8.a",
+                    "anchor": {
+                      "startChar": 31,
+                      "endChar": 36,
+                      "quote": "means"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 36,
+                    "endChar": 58,
+                    "quote": " are provided whereby "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "8.a",
+                    "anchor": {
+                      "startChar": 58,
+                      "endChar": 71,
+                      "quote": "the expansion"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 71,
+                    "endChar": 87,
+                    "quote": " is guided into "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "8.a",
+                    "anchor": {
+                      "startChar": 87,
+                      "endChar": 111,
+                      "quote": "a direction and/or shape"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 111,
+                    "endChar": 136,
+                    "quote": " that is associated with "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "8.a",
+                    "anchor": {
+                      "startChar": 136,
+                      "endChar": 147,
+                      "quote": "the purpose"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 147,
+                    "endChar": 169,
+                    "quote": " and/or is appropriate"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "8",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The method"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A method"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "claimNumber": 9,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "9",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 21,
+                "quote": "The method of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 10,
+                    "quote": "The method"
+                  },
+                  "determiner": "the",
+                  "head": "method"
+                }
+              ]
+            },
+            {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 271,
+                "quote": "the expanded shielding substance undergoes locally a different (partial) heat treatment, in order to achieve targeted, different heights and/or widths of the expanded shielding substance and to lower the possible physical deformation forces"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 31,
+                    "endChar": 63,
+                    "quote": "the expanded shielding substance"
+                  },
+                  "determiner": "the",
+                  "head": "expanded shielding substance"
+                },
+                {
+                  "anchor": {
+                    "startChar": 82,
+                    "endChar": 118,
+                    "quote": "a different (partial) heat treatment"
+                  },
+                  "determiner": "a",
+                  "head": "different (partial) heat treatment"
+                },
+                {
+                  "anchor": {
+                    "startChar": 140,
+                    "endChar": 181,
+                    "quote": "targeted, different heights and/or widths"
+                  },
+                  "determiner": "bare",
+                  "head": "targeted, different heights and/or widths"
+                },
+                {
+                  "anchor": {
+                    "startChar": 185,
+                    "endChar": 217,
+                    "quote": "the expanded shielding substance"
+                  },
+                  "determiner": "the",
+                  "head": "expanded shielding substance"
+                },
+                {
+                  "anchor": {
+                    "startChar": 231,
+                    "endChar": 271,
+                    "quote": "the possible physical deformation forces"
+                  },
+                  "determiner": "the",
+                  "head": "possible physical deformation forces"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "depends-on-element",
+              "dependent": "9",
+              "ancestor": "1"
+            },
+            {
+              "kind": "part-of",
+              "child": "9.a",
+              "parent": "9"
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "9.a",
+              "ancestor": "1.c"
+            },
+            {
+              "kind": "functional",
+              "element": "9.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "9.a",
+                    "anchor": {
+                      "startChar": 31,
+                      "endChar": 63,
+                      "quote": "the expanded shielding substance"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 63,
+                    "endChar": 82,
+                    "quote": " undergoes locally "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "9.a",
+                    "anchor": {
+                      "startChar": 82,
+                      "endChar": 118,
+                      "quote": "a different (partial) heat treatment"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 118,
+                    "endChar": 140,
+                    "quote": ", in order to achieve "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "9.a",
+                    "anchor": {
+                      "startChar": 140,
+                      "endChar": 181,
+                      "quote": "targeted, different heights and/or widths"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 181,
+                    "endChar": 185,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "9.a",
+                    "anchor": {
+                      "startChar": 185,
+                      "endChar": 217,
+                      "quote": "the expanded shielding substance"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 217,
+                    "endChar": 231,
+                    "quote": " and to lower "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "9.a",
+                    "anchor": {
+                      "startChar": 231,
+                      "endChar": 271,
+                      "quote": "the possible physical deformation forces"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "9",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The method"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A method"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "9.a",
+                "anchor": {
+                  "startChar": 31,
+                  "endChar": 63,
+                  "quote": "the expanded shielding substance"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 71,
+                  "endChar": 92,
+                  "quote": "a shielding substance"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "9.a",
+                "anchor": {
+                  "startChar": 185,
+                  "endChar": 217,
+                  "quote": "the expanded shielding substance"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 71,
+                  "endChar": 92,
+                  "quote": "a shielding substance"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "extractor": {
+        "protocolVersion": "semantic-reference/v2",
+        "convention": "entity-mentions/v1",
+        "familyId": "11341804-root-1",
+        "role": "extractor",
+        "model": "gpt-6.1-sol",
+        "effort": "medium",
+        "round": 2,
+        "confidence": 0.95,
+        "resolvedClaimNumbers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "unresolved": [],
+        "sourceFamilyConcerns": [
+          {
+            "quote": "the non-expanded state",
+            "reason": "Exact canonical claim-4 wording retained. Accepted source critic confirms original PDF corroboration and identifies examiner non-expandable state as an isolated inaccurate quotation, not text to substitute."
+          },
+          {
+            "quote": "claims 1-24",
+            "reason": "Selected root-family 1-9 are within the actual second-paragraph ground. Context roots 10/17 and their descendants stay out of scope and are not antecedent donors. Source critic separately discloses preliminary-amendment inventory and its original/PDF version reconciliation."
+          }
+        ],
+        "referenceConcerns": [
+          {
+            "claimNumbers": [
+              1,
+              8
+            ],
+            "quotes": [
+              "its desired, predetermined expansion and/or shape",
+              "the expansion"
+            ],
+            "reason": "The root possessive phrase preserves coordinated expansion/shape as recited. No arbitrary selection of one member supplies an invented scalar expansion introduction in claim 8."
+          },
+          {
+            "claimNumbers": [
+              4,
+              5
+            ],
+            "quotes": [
+              "the expandable particles",
+              "the expandable components"
+            ],
+            "reason": "Links use the bare components term in root composition whose explicit following clause states expandability. Electrically-conducting components are separately recorded. No source claim is rewritten or sphere-property evidence borrowed across siblings."
+          },
+          {
+            "claimNumbers": [
+              6,
+              7
+            ],
+            "quote": "the heat treatment",
+            "reason": "Root 1 states treated with heat without an explicit heat-treatment NP introduction. Sibling claim 5 bare heat treatment cannot donate an antecedent to claims 6/7. Exact process relations remain present without inventing a term for the earlier verb phrase."
+          },
+          {
+            "claimNumber": 5,
+            "quote": "which spheres",
+            "reason": "Explicit lexical sphere phrase retained as a bare relative NP, unlike a bare which linker. It is not forced to one member of the micro-sphere/micro-hollow-sphere alternatives."
+          },
+          {
+            "claimNumbers": [
+              2,
+              3
+            ],
+            "quote": "a housing and/or printed circuit board and/or housing parts",
+            "reason": "Source and/or alternatives remain explicit in full functional text and separate anchored component NPs. Claim 3 does not borrow the sibling-2 placement component introductions."
+          }
+        ],
+        "annotationRationale": "Fresh manual extraction of source grammar and exact material/process phrases. Extensive shielding-substance composition remains root context before in which method; its component specification is a functional child. Dispensing and heat-treatment/expansion are separate ordered functional limitations. Claim 3 separates detaching from subsequent placement; claim 4 preserves two state-dependent diameter conditions. No material chemistry/Markush or means-plus-function interpretation is attempted. Full lexical heads retain electrically-conducting, different (partial), desired, predetermined, and explicit numeric factor wording. Bare/possessive entity phrases are explicit; relative connectors do not automatically create duplicate pronoun entities. Gasket substance and expanded shielding substance identify the single described shielding mixture; expandable particles/components identify the sole component group explicitly described as expandable in 1.a, without borrowing sibling sphere descriptions.",
+        "counts": {
+          "trees": 9,
+          "elements": 22,
+          "terms": 64,
+          "edges": 65
+        },
+        "sourceValidation": {
+          "nativeClaimsMatchCanonicalIgnoringPermittedWhitespace": true,
+          "claimsXmlSha256": "f5fdd6c5f938fc2d4c77d249edd92179a6233cc29d55f4e1d52b4aa481f40d90",
+          "sourceEligibility": "Accepted retained source critic reviewed, including original-text/PDF reconciliation. No new original-document or inventory authentication claimed."
+        },
+        "independence": "Fresh source-semantic extraction. No prior structural labels, production rules, P2-DESIGN, predictions, synthetic fixtures, conformance, network, secrets, git or delegation. Helpers locate manually specified source quotations, serialize chosen trees and validate spans; no decomposer used. Only this family expected.json and extractor.json written.",
+        "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+        "validation": {
+          "schema": "Every tree decoded successfully through the declared ClaimElementTree schema; no production decomposer invoked.",
+          "anchors": "Exact canonical UTF-16 element/term spans and ordered nonoverlapping terms checked. Native claims bodies match canonical ignoring permitted printed-number removal/whitespace; source XML digest matches provenance.",
+          "functionalParts": "Each functional edge reconstructs its complete source element span from ordered contiguous term/text parts.",
+          "references": "All local/foreign antecedent endpoints name labeled terms; targets stay on independently read actual natural ancestry. No context/sibling donors.",
+          "scope": "Every selected claim exactly once as resolved. Local reference uncertainty retained separately; no whole-claim abstentions.",
+          "independentSemanticCritic": "Pending. These checks are extractor validation, not independent criticism or human acceptance."
+        },
+        "headConvention": "lexical-head/v1",
+        "headConventionReview": {
+          "previousRound": 1,
+          "round": 2,
+          "review": "head-review.json",
+          "reviewedFlagCount": 1,
+          "changedHeadCount": 1,
+          "scope": "Only independently reviewed flagged lexical heads changed. Existing anchors, determiners, elements, edges, sources, semantic confidence and unresolved/reference concerns remain unchanged. Prior semantic acceptance is preserved as evidence; current lexical revision awaits independent critic. Attorney adjudication and admission bar unchanged."
+        },
+        "criticReview": "round2 lexical-head-only independent critic pending"
+      },
+      "critic": {
+        "protocolVersion": "semantic-reference/v2",
+        "convention": "entity-mentions/v1",
+        "headConvention": "lexical-head/v1",
+        "familyId": "11341804-root-1",
+        "role": "critic",
+        "model": "gpt-6.1-sol",
+        "effort": "medium",
+        "round": 2,
+        "confidence": 0.96,
+        "verdict": "changes-required",
+        "reviewedClaimNumbers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "findings": [
+          {
+            "id": "C1",
+            "category": "outer-relative-determiner-in-head",
+            "actionable": true,
+            "evidence": [
+              {
+                "claimNumber": 5,
+                "path": "5.a",
+                "anchor": {
+                  "startChar": 142,
+                  "endChar": 155,
+                  "quote": "which spheres"
+                },
+                "head": "which spheres"
+              }
+            ],
+            "reason": "Which is the outer relative determiner of spheres, not part of its lexical noun name. The full quote is retained correctly, but lexical-head/v1 removes outer pronominal determiners in normalized heads.",
+            "correction": "Keep the exact bare term anchor [142,155) and normalize head to spheres. Keep the full relative clause and source alternatives; no antecedent edge or extra pronoun node is required by this correction."
+          }
+        ],
+        "sourceConcerns": [],
+        "reviewScope": {
+          "selectedClaimCount": 9,
+          "resolvedTreesReviewed": 9,
+          "elementCount": 22,
+          "termCount": 64,
+          "functionalRelationCount": 13
+        },
+        "reviewNotes": [
+          "Full initial semantic review of all nine claims, beyond the earlier head-only revision. Root1 composition and dispensing/heating, coordinated substrate options, state/range restrictions, expansion functions and local heat treatment are represented.",
+          "All natural dependencies2\u20139\u21921 and submitted cross-claim entity identities were reviewed. Gasket/shielding-substance and expandable-particle/component aliases have unique source roles. No connection is fabricated to unintroduced dispensing/heat-treatment property nouns or a selected member of the coordinated expansion/shape phrase.",
+          "Every submitted tree decoded through ClaimElementTree. Independently checked exact UTF-16 element/term spans, nonoverlap, term ownership, antecedent endpoints and complete contiguous ordered functional-part reconstruction. Native XML agrees with canonical claims after permitted printed-number/whitespace normalization, and claims XML SHA256 matches provenance.",
+          "Read source-critic and source/rejection provenance; retained source eligibility is accepted separately. No fresh original-PDF/inventory authentication or attorney agreement is claimed. Genuine reference ambiguity remains explicit in extractor concerns."
+        ],
+        "independence": "Independent semantic critic; did not author these references. Reviewed exact canonical/native source, source critic, provenance, extractor and schemas against semantic-reference/v2, entity-mentions/v1 and lexical-head/v1. No production implementation, decomposer, P2-DESIGN, predictions or synthetic/conformance fixtures inspected. Helpers only validate manually reviewed source annotations. Only assigned critic receipts written.",
+        "attorneyAdjudication": "pending; agent confidence is not attorney agreement"
+      }
+    }
+  ],
+  "round3Changes": [
+    {
+      "findingId": "C1",
+      "disposition": "accepted",
+      "reason": "Which is an outer relative determiner in the explicit sphere NP. Kept anchor [142,155), determiner bare, full functional text and no invented alternative-specific antecedent; changed lexical head to spheres."
+    }
+  ],
+  "round3Independence": "Bounded final-round correction from exact source/protocol and independent round2 findings; prior round2 trees/extractor/critic retained in previousRounds. No production/decomposer/design/prediction/synthetic/conformance/source mutation."
+}

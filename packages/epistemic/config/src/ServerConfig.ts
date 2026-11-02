@@ -1,6 +1,8 @@
 /**
  * Server-only execution-authority configuration contract.
  *
+ * **Details**
+ *
  * Owns the three settings the authority boundary is evaluated against: which
  * destinations may be reached at all, and which policy revision every grant and
  * record is pinned to. Destination audience is not configured here — it is

@@ -2,6 +2,8 @@
  * Runtime configuration models and identity namespaces for the FreshBooks
  * driver.
  *
+ * **Details**
+ *
  * FreshBooks uses two distinct identity namespaces — an `account_id` string on
  * accounting endpoints and an integer `business_id` on time-tracking and
  * project endpoints. They are modeled as separate schema types here; nothing
@@ -260,6 +262,8 @@ export type FreshbooksBusinessId = typeof FreshbooksBusinessId.Type;
 const freshbooksConfigInputHeadersDefault = R.empty();
 /**
  * Runtime configuration accepted by {@link Freshbooks.makeLayer}.
+ *
+ * **Details**
  *
  * The OAuth `clientId` / `clientSecret` and the initial redacted refresh token
  * resolve from the recorded 1Password references at runtime; they are never

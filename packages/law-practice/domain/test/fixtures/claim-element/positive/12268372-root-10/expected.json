@@ -1,0 +1,1547 @@
+[
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 133,
+          "quote": "Traction appliance arrangement for replacing the elevator ropes in an elevator provided with a hoisting machine and a traction sheave"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 30,
+              "quote": "Traction appliance arrangement"
+            },
+            "determiner": "bare",
+            "head": "traction appliance arrangement"
+          },
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 63,
+              "quote": "the elevator ropes"
+            },
+            "determiner": "the",
+            "head": "elevator ropes"
+          },
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 78,
+              "quote": "an elevator"
+            },
+            "determiner": "an",
+            "head": "elevator"
+          },
+          {
+            "anchor": {
+              "startChar": 93,
+              "endChar": 111,
+              "quote": "a hoisting machine"
+            },
+            "determiner": "a",
+            "head": "hoisting machine"
+          },
+          {
+            "anchor": {
+              "startChar": 116,
+              "endChar": 133,
+              "quote": "a traction sheave"
+            },
+            "determiner": "a",
+            "head": "traction sheave"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 143,
+          "endChar": 464,
+          "quote": "the arrangement comprises at least a traction appliance fixed into position in the elevator shaft, which appliance contains a frame, onto which frame a friction wheel provided with a suitable friction surface is fitted with bearings allowing rotation, which friction wheel is arranged to press against the traction sheave"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 158,
+              "quote": "the arrangement"
+            },
+            "determiner": "the",
+            "head": "arrangement"
+          },
+          {
+            "anchor": {
+              "startChar": 178,
+              "endChar": 198,
+              "quote": "a traction appliance"
+            },
+            "determiner": "a",
+            "head": "traction appliance"
+          },
+          {
+            "anchor": {
+              "startChar": 210,
+              "endChar": 218,
+              "quote": "position"
+            },
+            "determiner": "bare",
+            "head": "position"
+          },
+          {
+            "anchor": {
+              "startChar": 222,
+              "endChar": 240,
+              "quote": "the elevator shaft"
+            },
+            "determiner": "the",
+            "head": "elevator shaft"
+          }
+        ]
+      },
+      {
+        "path": "10.a.i",
+        "anchor": {
+          "startChar": 242,
+          "endChar": 274,
+          "quote": "which appliance contains a frame"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 242,
+              "endChar": 257,
+              "quote": "which appliance"
+            },
+            "determiner": "bare",
+            "head": "appliance"
+          },
+          {
+            "anchor": {
+              "startChar": 267,
+              "endChar": 274,
+              "quote": "a frame"
+            },
+            "determiner": "a",
+            "head": "frame"
+          }
+        ]
+      },
+      {
+        "path": "10.a.ii",
+        "anchor": {
+          "startChar": 276,
+          "endChar": 393,
+          "quote": "onto which frame a friction wheel provided with a suitable friction surface is fitted with bearings allowing rotation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 281,
+              "endChar": 292,
+              "quote": "which frame"
+            },
+            "determiner": "bare",
+            "head": "frame"
+          },
+          {
+            "anchor": {
+              "startChar": 293,
+              "endChar": 309,
+              "quote": "a friction wheel"
+            },
+            "determiner": "a",
+            "head": "friction wheel"
+          },
+          {
+            "anchor": {
+              "startChar": 324,
+              "endChar": 351,
+              "quote": "a suitable friction surface"
+            },
+            "determiner": "a",
+            "head": "suitable friction surface"
+          },
+          {
+            "anchor": {
+              "startChar": 367,
+              "endChar": 375,
+              "quote": "bearings"
+            },
+            "determiner": "bare",
+            "head": "bearings"
+          },
+          {
+            "anchor": {
+              "startChar": 385,
+              "endChar": 393,
+              "quote": "rotation"
+            },
+            "determiner": "bare",
+            "head": "rotation"
+          }
+        ]
+      },
+      {
+        "path": "10.a.iii",
+        "anchor": {
+          "startChar": 395,
+          "endChar": 464,
+          "quote": "which friction wheel is arranged to press against the traction sheave"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 395,
+              "endChar": 415,
+              "quote": "which friction wheel"
+            },
+            "determiner": "bare",
+            "head": "friction wheel"
+          },
+          {
+            "anchor": {
+              "startChar": 445,
+              "endChar": 464,
+              "quote": "the traction sheave"
+            },
+            "determiner": "the",
+            "head": "traction sheave"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a.i",
+        "parent": "10.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a.ii",
+        "parent": "10.a"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a.ii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 276,
+              "endChar": 281,
+              "quote": "onto "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.ii",
+              "anchor": {
+                "startChar": 281,
+                "endChar": 292,
+                "quote": "which frame"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 292,
+              "endChar": 293,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.ii",
+              "anchor": {
+                "startChar": 293,
+                "endChar": 309,
+                "quote": "a friction wheel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 309,
+              "endChar": 324,
+              "quote": " provided with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.ii",
+              "anchor": {
+                "startChar": 324,
+                "endChar": 351,
+                "quote": "a suitable friction surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 351,
+              "endChar": 367,
+              "quote": " is fitted with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.ii",
+              "anchor": {
+                "startChar": 367,
+                "endChar": 375,
+                "quote": "bearings"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 375,
+              "endChar": 385,
+              "quote": " allowing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.ii",
+              "anchor": {
+                "startChar": 385,
+                "endChar": 393,
+                "quote": "rotation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a.iii",
+        "parent": "10.a"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a.iii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.iii",
+              "anchor": {
+                "startChar": 395,
+                "endChar": 415,
+                "quote": "which friction wheel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 415,
+              "endChar": 445,
+              "quote": " is arranged to press against "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.iii",
+              "anchor": {
+                "startChar": 445,
+                "endChar": 464,
+                "quote": "the traction sheave"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 158,
+            "quote": "the arrangement"
+          }
+        },
+        "introducing": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 30,
+            "quote": "Traction appliance arrangement"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 242,
+            "endChar": 257,
+            "quote": "which appliance"
+          }
+        },
+        "introducing": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 178,
+            "endChar": 198,
+            "quote": "a traction appliance"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.ii",
+          "anchor": {
+            "startChar": 281,
+            "endChar": 292,
+            "quote": "which frame"
+          }
+        },
+        "introducing": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 267,
+            "endChar": 274,
+            "quote": "a frame"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.iii",
+          "anchor": {
+            "startChar": 395,
+            "endChar": 415,
+            "quote": "which friction wheel"
+          }
+        },
+        "introducing": {
+          "path": "10.a.ii",
+          "anchor": {
+            "startChar": 293,
+            "endChar": 309,
+            "quote": "a friction wheel"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.iii",
+          "anchor": {
+            "startChar": 445,
+            "endChar": 464,
+            "quote": "the traction sheave"
+          }
+        },
+        "introducing": {
+          "path": "10",
+          "anchor": {
+            "startChar": 116,
+            "endChar": 133,
+            "quote": "a traction sheave"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 11,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "11",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 52,
+          "quote": "Traction appliance arrangement according to claim 10"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 30,
+              "quote": "Traction appliance arrangement"
+            },
+            "determiner": "bare",
+            "head": "traction appliance arrangement"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "anchor": {
+          "startChar": 62,
+          "endChar": 213,
+          "quote": "a lifting wheel (25) provided with a suitable friction surface is fined with bearings allowing rotation to the frame, in addition to the friction wheel"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 77,
+              "quote": "a lifting wheel"
+            },
+            "determiner": "a",
+            "head": "lifting wheel"
+          },
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 124,
+              "quote": "a suitable friction surface"
+            },
+            "determiner": "a",
+            "head": "suitable friction surface"
+          },
+          {
+            "anchor": {
+              "startChar": 139,
+              "endChar": 147,
+              "quote": "bearings"
+            },
+            "determiner": "bare",
+            "head": "bearings"
+          },
+          {
+            "anchor": {
+              "startChar": 157,
+              "endChar": 165,
+              "quote": "rotation"
+            },
+            "determiner": "bare",
+            "head": "rotation"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 178,
+              "quote": "the frame"
+            },
+            "determiner": "the",
+            "head": "frame"
+          },
+          {
+            "anchor": {
+              "startChar": 195,
+              "endChar": 213,
+              "quote": "the friction wheel"
+            },
+            "determiner": "the",
+            "head": "friction wheel"
+          }
+        ]
+      },
+      {
+        "path": "11.b",
+        "anchor": {
+          "startChar": 227,
+          "endChar": 368,
+          "quote": "the elevator hoisting rope to be replaced is arranged for placement between the friction surfaces of the friction wheel and the lifting wheel"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 227,
+              "endChar": 253,
+              "quote": "the elevator hoisting rope"
+            },
+            "determiner": "the",
+            "head": "elevator hoisting rope"
+          },
+          {
+            "anchor": {
+              "startChar": 285,
+              "endChar": 294,
+              "quote": "placement"
+            },
+            "determiner": "bare",
+            "head": "placement"
+          },
+          {
+            "anchor": {
+              "startChar": 303,
+              "endChar": 324,
+              "quote": "the friction surfaces"
+            },
+            "determiner": "the",
+            "head": "friction surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 328,
+              "endChar": 346,
+              "quote": "the friction wheel"
+            },
+            "determiner": "the",
+            "head": "friction wheel"
+          },
+          {
+            "anchor": {
+              "startChar": 351,
+              "endChar": 368,
+              "quote": "the lifting wheel"
+            },
+            "determiner": "the",
+            "head": "lifting wheel"
+          }
+        ]
+      },
+      {
+        "path": "11.c",
+        "anchor": {
+          "startChar": 382,
+          "endChar": 532,
+          "quote": "at least one of the wheels is fitted to tightened against the other wheel when the elevator rope is placed between the friction surfaces of the wheels"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 382,
+              "endChar": 394,
+              "quote": "at least one"
+            },
+            "determiner": "bare",
+            "head": "at least one"
+          },
+          {
+            "anchor": {
+              "startChar": 398,
+              "endChar": 408,
+              "quote": "the wheels"
+            },
+            "determiner": "the",
+            "head": "wheels"
+          },
+          {
+            "anchor": {
+              "startChar": 440,
+              "endChar": 455,
+              "quote": "the other wheel"
+            },
+            "determiner": "the",
+            "head": "other wheel"
+          },
+          {
+            "anchor": {
+              "startChar": 461,
+              "endChar": 478,
+              "quote": "the elevator rope"
+            },
+            "determiner": "the",
+            "head": "elevator rope"
+          },
+          {
+            "anchor": {
+              "startChar": 497,
+              "endChar": 518,
+              "quote": "the friction surfaces"
+            },
+            "determiner": "the",
+            "head": "friction surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 522,
+              "endChar": 532,
+              "quote": "the wheels"
+            },
+            "determiner": "the",
+            "head": "wheels"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "11",
+        "ancestor": "10"
+      },
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "functional",
+        "element": "11.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 62,
+                "endChar": 77,
+                "quote": "a lifting wheel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 97,
+              "quote": " (25) provided with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 124,
+                "quote": "a suitable friction surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 124,
+              "endChar": 139,
+              "quote": " is fined with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 139,
+                "endChar": 147,
+                "quote": "bearings"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 147,
+              "endChar": 157,
+              "quote": " allowing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 157,
+                "endChar": 165,
+                "quote": "rotation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 165,
+              "endChar": 169,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 169,
+                "endChar": 178,
+                "quote": "the frame"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 178,
+              "endChar": 195,
+              "quote": ", in addition to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 195,
+                "endChar": 213,
+                "quote": "the friction wheel"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "11.b",
+        "parent": "11"
+      },
+      {
+        "kind": "functional",
+        "element": "11.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.b",
+              "anchor": {
+                "startChar": 227,
+                "endChar": 253,
+                "quote": "the elevator hoisting rope"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 253,
+              "endChar": 285,
+              "quote": " to be replaced is arranged for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.b",
+              "anchor": {
+                "startChar": 285,
+                "endChar": 294,
+                "quote": "placement"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 294,
+              "endChar": 303,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.b",
+              "anchor": {
+                "startChar": 303,
+                "endChar": 324,
+                "quote": "the friction surfaces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 324,
+              "endChar": 328,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.b",
+              "anchor": {
+                "startChar": 328,
+                "endChar": 346,
+                "quote": "the friction wheel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 346,
+              "endChar": 351,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.b",
+              "anchor": {
+                "startChar": 351,
+                "endChar": 368,
+                "quote": "the lifting wheel"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "11.c",
+        "parent": "11"
+      },
+      {
+        "kind": "functional",
+        "element": "11.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.c",
+              "anchor": {
+                "startChar": 382,
+                "endChar": 394,
+                "quote": "at least one"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 394,
+              "endChar": 398,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.c",
+              "anchor": {
+                "startChar": 398,
+                "endChar": 408,
+                "quote": "the wheels"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 408,
+              "endChar": 440,
+              "quote": " is fitted to tightened against "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.c",
+              "anchor": {
+                "startChar": 440,
+                "endChar": 455,
+                "quote": "the other wheel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 455,
+              "endChar": 461,
+              "quote": " when "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.c",
+              "anchor": {
+                "startChar": 461,
+                "endChar": 478,
+                "quote": "the elevator rope"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 478,
+              "endChar": 497,
+              "quote": " is placed between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.c",
+              "anchor": {
+                "startChar": 497,
+                "endChar": 518,
+                "quote": "the friction surfaces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 518,
+              "endChar": 522,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.c",
+              "anchor": {
+                "startChar": 522,
+                "endChar": 532,
+                "quote": "the wheels"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 30,
+            "quote": "Traction appliance arrangement"
+          }
+        },
+        "introducing": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 30,
+            "quote": "Traction appliance arrangement"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 169,
+            "endChar": 178,
+            "quote": "the frame"
+          }
+        },
+        "introducing": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 267,
+            "endChar": 274,
+            "quote": "a frame"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 195,
+            "endChar": 213,
+            "quote": "the friction wheel"
+          }
+        },
+        "introducing": {
+          "path": "10.a.ii",
+          "anchor": {
+            "startChar": 293,
+            "endChar": 309,
+            "quote": "a friction wheel"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.b",
+          "anchor": {
+            "startChar": 328,
+            "endChar": 346,
+            "quote": "the friction wheel"
+          }
+        },
+        "introducing": {
+          "path": "10.a.ii",
+          "anchor": {
+            "startChar": 293,
+            "endChar": 309,
+            "quote": "a friction wheel"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.b",
+          "anchor": {
+            "startChar": 351,
+            "endChar": 368,
+            "quote": "the lifting wheel"
+          }
+        },
+        "introducing": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 62,
+            "endChar": 77,
+            "quote": "a lifting wheel"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 12,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "12",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 52,
+          "quote": "Traction appliance arrangement according to claim 10"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 30,
+              "quote": "Traction appliance arrangement"
+            },
+            "determiner": "bare",
+            "head": "traction appliance arrangement"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "anchor": {
+          "startChar": 62,
+          "endChar": 203,
+          "quote": "the friction surface of the friction wheel is rubber, plastic, urethane or other suitable flexible material having essentially large friction"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 82,
+              "quote": "the friction surface"
+            },
+            "determiner": "the",
+            "head": "friction surface"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 104,
+              "quote": "the friction wheel"
+            },
+            "determiner": "the",
+            "head": "friction wheel"
+          }
+        ]
+      },
+      {
+        "path": "12.a.i",
+        "anchor": {
+          "startChar": 108,
+          "endChar": 114,
+          "quote": "rubber"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 108,
+              "endChar": 114,
+              "quote": "rubber"
+            },
+            "determiner": "bare",
+            "head": "rubber"
+          }
+        ]
+      },
+      {
+        "path": "12.a.ii",
+        "anchor": {
+          "startChar": 116,
+          "endChar": 123,
+          "quote": "plastic"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 116,
+              "endChar": 123,
+              "quote": "plastic"
+            },
+            "determiner": "bare",
+            "head": "plastic"
+          }
+        ]
+      },
+      {
+        "path": "12.a.iii",
+        "anchor": {
+          "startChar": 125,
+          "endChar": 133,
+          "quote": "urethane"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 133,
+              "quote": "urethane"
+            },
+            "determiner": "bare",
+            "head": "urethane"
+          }
+        ]
+      },
+      {
+        "path": "12.a.iv",
+        "anchor": {
+          "startChar": 137,
+          "endChar": 203,
+          "quote": "other suitable flexible material having essentially large friction"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 169,
+              "quote": "other suitable flexible material"
+            },
+            "determiner": "bare",
+            "head": "other suitable flexible material"
+          },
+          {
+            "anchor": {
+              "startChar": 177,
+              "endChar": 203,
+              "quote": "essentially large friction"
+            },
+            "determiner": "bare",
+            "head": "essentially large friction"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "12",
+        "ancestor": "10"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a.i",
+        "parent": "12.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a.ii",
+        "parent": "12.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a.iii",
+        "parent": "12.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a.iv",
+        "parent": "12.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 30,
+            "quote": "Traction appliance arrangement"
+          }
+        },
+        "introducing": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 30,
+            "quote": "Traction appliance arrangement"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 62,
+            "endChar": 82,
+            "quote": "the friction surface"
+          }
+        },
+        "introducing": {
+          "path": "10.a.ii",
+          "anchor": {
+            "startChar": 324,
+            "endChar": 351,
+            "quote": "a suitable friction surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 86,
+            "endChar": 104,
+            "quote": "the friction wheel"
+          }
+        },
+        "introducing": {
+          "path": "10.a.ii",
+          "anchor": {
+            "startChar": 293,
+            "endChar": 309,
+            "quote": "a friction wheel"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 13,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "13",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 52,
+          "quote": "Traction appliance arrangement according to claim 11"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 30,
+              "quote": "Traction appliance arrangement"
+            },
+            "determiner": "bare",
+            "head": "traction appliance arrangement"
+          }
+        ]
+      },
+      {
+        "path": "13.a",
+        "anchor": {
+          "startChar": 62,
+          "endChar": 175,
+          "quote": "the rim of the lifting wheel is provided with grooving, serration or other suitable surface having large friction"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 69,
+              "quote": "the rim"
+            },
+            "determiner": "the",
+            "head": "rim"
+          },
+          {
+            "anchor": {
+              "startChar": 73,
+              "endChar": 90,
+              "quote": "the lifting wheel"
+            },
+            "determiner": "the",
+            "head": "lifting wheel"
+          }
+        ]
+      },
+      {
+        "path": "13.a.i",
+        "anchor": {
+          "startChar": 108,
+          "endChar": 116,
+          "quote": "grooving"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 108,
+              "endChar": 116,
+              "quote": "grooving"
+            },
+            "determiner": "bare",
+            "head": "grooving"
+          }
+        ]
+      },
+      {
+        "path": "13.a.ii",
+        "anchor": {
+          "startChar": 118,
+          "endChar": 127,
+          "quote": "serration"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 118,
+              "endChar": 127,
+              "quote": "serration"
+            },
+            "determiner": "bare",
+            "head": "serration"
+          }
+        ]
+      },
+      {
+        "path": "13.a.iii",
+        "anchor": {
+          "startChar": 131,
+          "endChar": 175,
+          "quote": "other suitable surface having large friction"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 131,
+              "endChar": 153,
+              "quote": "other suitable surface"
+            },
+            "determiner": "bare",
+            "head": "other suitable surface"
+          },
+          {
+            "anchor": {
+              "startChar": 161,
+              "endChar": 175,
+              "quote": "large friction"
+            },
+            "determiner": "bare",
+            "head": "large friction"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "13",
+        "ancestor": "11"
+      },
+      {
+        "kind": "part-of",
+        "child": "13.a",
+        "parent": "13"
+      },
+      {
+        "kind": "part-of",
+        "child": "13.a.i",
+        "parent": "13.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "13.a.ii",
+        "parent": "13.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "13.a.iii",
+        "parent": "13.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 30,
+            "quote": "Traction appliance arrangement"
+          }
+        },
+        "introducing": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 30,
+            "quote": "Traction appliance arrangement"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 90,
+            "quote": "the lifting wheel"
+          }
+        },
+        "introducing": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 62,
+            "endChar": 77,
+            "quote": "a lifting wheel"
+          }
+        }
+      }
+    ]
+  }
+]

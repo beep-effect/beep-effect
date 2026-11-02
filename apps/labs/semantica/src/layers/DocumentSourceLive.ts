@@ -1,7 +1,7 @@
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -70,12 +70,12 @@ export const loadDocumentSelection = Effect.fn("DocumentSource.loadSelection")(f
 
 const makeDocumentSource = Effect.gen(function* () {
   const config = yield* LabConfig;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
   const hashBytes = Effect.fn("DocumentSource.hashBytes")((bytes: Uint8Array) =>
-    S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.orDie)
+    S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(Effect.provideService(Digest.Digest, crypto), Effect.orDie)
   );
 
   const makeAcquiredId = Effect.fn("DocumentSource.makeAcquiredId")(function* (document: DocumentId) {
@@ -164,8 +164,10 @@ const makeDocumentSource = Effect.gen(function* () {
       onSome: (paperId) =>
         A.findFirst(selection.manifest.rows, (row) => Str.Equivalence(row.id, paperId)).pipe(
           Effect.fromOption,
-          Effect.map(A.of),
-          Effect.mapError(() => unavailable("The requested paper id is not present in the selected W1 manifest."))
+          Effect.mapBoth({
+            onFailure: () => unavailable("The requested paper id is not present in the selected W1 manifest."),
+            onSuccess: A.of,
+          })
         ),
     });
   });

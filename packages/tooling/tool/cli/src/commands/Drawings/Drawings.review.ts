@@ -412,8 +412,10 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
           })
         )
         .pipe(
-          Effect.mapError(fail(`Could not compare ${file} page ${page} with FIG. ${figure.figure}.`)),
-          Effect.map((coverage) => SheetCandidate.make({ figure: figure.figure, page: figure.figure, coverage }))
+          Effect.mapBoth({
+            onFailure: fail(`Could not compare ${file} page ${page} with FIG. ${figure.figure}.`),
+            onSuccess: (coverage) => SheetCandidate.make({ figure: figure.figure, page: figure.figure, coverage }),
+          })
         )
     );
     const override = pipe(
@@ -618,13 +620,13 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
     const entries = yield* O.match(dir, {
       onNone: () => Effect.succeed(A.empty<string>()),
       onSome: (review) =>
-        fs
-          .readDirectory(review)
-          .pipe(
-            Effect.map(A.filter((name) => ROUND_DIR.test(name))),
-            Effect.map(A.map((name) => path.join(review, name))),
-            Effect.mapError(fail(`Could not list "${review}".`))
-          ),
+        fs.readDirectory(review).pipe(
+          Effect.map(A.filter((name) => ROUND_DIR.test(name))),
+          Effect.mapBoth({
+            onFailure: fail(`Could not list "${review}".`),
+            onSuccess: A.map((name) => path.join(review, name)),
+          })
+        ),
     });
     const rounds = yield* Effect.forEach(entries, (roundDir) =>
       fs.exists(path.join(roundDir, "round.json")).pipe(

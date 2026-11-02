@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "cache-go-workspace-feature-review/v1",
+  "recordedAt": "2026-10-30T10:07:25.053517+00:00",
+  "authority": "Final source-backed non-applicability disposition for this feature in the accepted repository tree. No task qualification, remote-cache grant, runtime activation or whole-goal acceptance.",
+  "sourceRevision": "dcca065b86e48c2ec1b014d998da133cc04c7e60",
+  "feature": "futureFlag:experimentalGoWorkspaces",
+  "owner": "turborepo-quality-cache-adoption",
+  "disposition": "not-applicable-current-repository; retain disabled",
+  "reason": "There is no root go.work, Go module manifest or tracked Go source. No tracked package.json script directly invokes the enumerated Go build/module commands. The current accepted source has no Go workspace graph for this discovery feature to enroll.",
+  "sourceEvidence": {
+    "base": "dcca065b86e48c2ec1b014d998da133cc04c7e60",
+    "trackedPaths": 43760,
+    "trackedPathInventorySha256": "eb28af85920ad4575c9e976ec86e20f18a814c5ef0baf83f42df265582454628",
+    "trackedGoPaths": [],
+    "allTrackedManifestScripts": 4544,
+    "scriptInventorySha256": "464f657d23e6d7cb9a8cca7eb1f5755414b1960065163ee023e0556a640c4822",
+    "goCommandHits": [],
+    "manifestParseFailures": [],
+    "rootGoWorkExists": false,
+    "rootGoModExists": false,
+    "goFlagConfigured": "absent"
+  },
+  "sourceEvidenceAlgorithms": {
+    "trackedPathInventorySha256": "SHA-256 of exact git ls-files -z bytes.",
+    "scriptInventorySha256": "SHA-256 of UTF-8 compact JSON for sorted [relative manifest path, script name, script text] rows, ensure_ascii=false.",
+    "scriptScope": "All tracked package.json files, including fixtures. This is a superset and is not the executable computation census.",
+    "goPaths": "Tracked paths ending .go or with basename go.work, go.mod, go.sum, go.work.sum.",
+    "goCommandPattern": "\\bgo\\s+(?:build|test|run|install|list|mod|work|generate|vet|tool)\\b",
+    "workingTreeScope": "Accepted tracked tree only; untracked/ignored dependencies do not establish a new approved computation."
+  },
+  "clients": {
+    "stable": {
+      "reportedVersion": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "reportedVersion": "2.11.9-canary.1",
+      "sha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb"
+    }
+  },
+  "availabilityEvidence": {
+    "stable": {
+      "packageVersion": "2.11.10",
+      "schemaSha256": "e3042f9184a5e53260af50b724cbcbbb375f23d53bc1abdc6a3894216f10efaa",
+      "jsonPath": "definitions.FutureFlags.properties.experimentalGoWorkspaces",
+      "description": "Treat the modules listed in a `go.work` file as Turborepo packages.\n\nWhen enabled, Go modules are discovered from the repository-root `go.work` via the Go toolchain and participate in the package graph: they resolve in `--filter` expressions, propagate `--affected`, and appear in `turbo query`. This feature is experimental.",
+      "default": false
+    },
+    "canary": {
+      "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+      "goFlagMentioned": false,
+      "scope": "Documentation occurrence only; no unsupported-runtime claim."
+    },
+    "limits": "Canary documentation absence is not proof of runtime non-support. Non-applicability follows from the absence of a Go workspace in this repository, independent of client support."
+  },
+  "sourceSha256": {
+    "package.json": "640d51eba1db211244fef7c066eaa179c2740a4bbe192e3d8b2e2afe37c6daeb",
+    "turbo.json": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf",
+    "goals/turborepo-quality-cache-adoption/research/current-client-pins.json": "daf3cd0b53edf45e209a7be2f8eea93981a56d133d95ed81b7f929ed82683ae3"
+  },
+  "priorFeatureMatrixSha256": "79bc4d881c29a8d804719979c177d360ec48ead49d3e7473a4dfc54c8a0e3dc2",
+  "correctnessCase": "Verify the clean accepted-tree absence census, exact pinned binary identities and schema false default; preserve absent root setting. Do not enable the feature or substitute a synthetic Go task for a repository consumer.",
+  "expectedBenefit": "Zero current Go-workspace computations or graph edges can benefit; no time saving is claimed.",
+  "reopenWhen": [
+    "A root Go workspace, module, tracked source or actual consumer is introduced.",
+    "A client update changes the discovery or applicability contract.",
+    "A proposal would enable Go workspace discovery; exact-client positive and negative regression evidence is then required before activation."
+  ],
+  "otherEcosystems": "Existing nested Cargo crates and the photo-face uv project remain in scope for independent reviews.",
+  "runtimeOrConfigurationChanges": false,
+  "populationDispositionsChanged": 0,
+  "goalAcceptanceCriteriaCompleted": 0,
+  "verification": {
+    "doctor": {
+      "exit": 0,
+      "elapsedSeconds": 2.07,
+      "finishedAt": "2026-10-30T10:07:54.421579+00:00"
+    },
+    "explore": {
+      "exit": 0,
+      "elapsedSeconds": 1.356,
+      "finishedAt": "2026-10-30T10:07:55.794727+00:00"
+    },
+    "reflection": {
+      "exit": 0,
+      "elapsedSeconds": 1.737,
+      "finishedAt": "2026-10-30T10:07:57.547887+00:00"
+    },
+    "structural": {
+      "sourceRevision": "dcca065b86e48c2ec1b014d998da133cc04c7e60",
+      "exactOneFeatureRowChanged": true,
+      "other34RowsUnchanged": true,
+      "completeAcceptanceStatesUnchanged": true,
+      "sourceHashesMatch": true,
+      "specHashMatches": true,
+      "noRuntimeConfigurationChange": true,
+      "noPopulationDispositionChange": true
+    }
+  }
+}

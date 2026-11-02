@@ -1,0 +1,49 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "11279554-root-25",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "referenceConcernsDisposition": "Source-specific reference concerns independently reviewed. Unintroduced, collective and ambiguous member/result references remain explicit without forced identity; those local concerns do not preclude the clear whole-claim trees. No actionable correction remains in this bounded review.",
+  "reviewScope": {
+    "claimCount": 10,
+    "elementCount": 39,
+    "termCount": 115,
+    "edgeCount": 129,
+    "functionalRelationCount": 25
+  },
+  "reviewNotes": [
+    "Claim 25 retains processor/program nesting and six explicit program functions; claim 26 has five genetic-process steps; claim 27 has three modification-technique steps; claim 32 has four explicit termination alternatives. Element paths, kinds and owned full noun heads reflect these source lists, and all function parts preserve their complete source text.",
+    "Feasible operational state and operational state refer to the uniquely described feasible production state specified by each population solution in 25.b.ii. This source-specific alias is supported by the common role in the same optimization process, without borrowing a state from independent root 13 or sibling 34.",
+    "Actual dependencies are 26/31/32/33/34->25, 27->26 and 28/29/30->27. The repeated each solution variable can refer to the explicit per-solution variable; collective solutions/population identity and a singular modified result are not forced onto an arbitrary member.",
+    "The source defects at least one solutions, the least one aspect and comprise the termination conditions include remain literal. Plural termination conditions retain their cardinality uncertainty without a fabricated collective introduction. Claim 31 cannot borrow a selected-solution introduction from sibling 27; cross-breeding claim 30 does not force identity with a prior modification result.",
+    "The actual second-paragraph source scope covers selected 25-28 and 31-32. Selected 29/30/33/34 remain dependency context, and the isolated examiner 21 wording near the claim-31 issue is not silently renumbered or used to invent an individualized rejection."
+  ],
+  "verification": [
+    "Read canonical full family context, native selected-claim XML, provenance, independent source critic and extractor rationale under v2/entity-mentions/v1 and the declared ClaimElement schemas. Source eligibility remains separately qualified; no fresh original-PDF/full-inventory authentication is claimed.",
+    "Audited every expected element, term and typed edge for source grammar, complete lexical heads, explicit list nesting, actual local/ancestor references and functional participants. Relative/reciprocal connectors remain source-anchored relation text when their participants are explicit; no blanket extra-node rule was applied.",
+    "Independent geometry/schema helpers verified exact canonical UTF-16 anchors for elements, terms, functional parts and antecedents; normalized heads; unique paths; ordered nonoverlapping owned terms; complete contiguous functional partitions; local functional term ownership; actual ancestor membership of foreign references; coherent typed endpoints; and absence of duplicate edges. Native claims XML SHA256 matches provenance. These bounded checks supplement semantic review and do not invoke a production decomposer."
+  ],
+  "referenceSha256": "3f8ec8cacf15fe47d0f855dd94ae64ee52f3cb19c82e206e893f0f395e8068dd",
+  "independence": "Independent source-semantic critic, separate from extractor. Only this family critic.json written. No expected/source/code edits, production rules/P2-DESIGN, predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers only check manually reviewed source spans/schema geometry and serialize the receipt.",
+  "attorneyAdjudication": "pending; confidence is not attorney agreement",
+  "corpusStatus": "Incremental reference review only; no goal completion, active sample admission, or human agreement claimed."
+}

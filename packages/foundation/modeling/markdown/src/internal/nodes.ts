@@ -1523,7 +1523,8 @@ export declare namespace ThematicBreak {
  * `lang` and `meta` split the fence's info string at the first run of
  * whitespace. The fidelity extras `fenceChar` and `fenceLength` are present
  * for fenced blocks and **absent for indented blocks** — their absence is how
- * the two are told apart on the way back out.
+ * the two are told apart on the way back out. `unterminated` is `true` on a
+ * parsed fenced block whose closing fence never came, and absent otherwise.
  *
  * **Gotchas**
  *
@@ -1579,6 +1580,12 @@ export class Code extends S.Opaque<Code, { readonly brand: unique symbol }>()(
         description: "Number of repeated characters in the opening fence; absent on parsed indented code blocks",
       })
     ),
+    unterminated: S.optionalKey(S.Boolean).pipe(
+      $I.annoteKey("Code.unterminated", {
+        description:
+          "Present and true on a parsed fenced block that no closing fence ended (the document or its container ended first)",
+      })
+    ),
   }).pipe($I.annoteSchema("Code", { description: "Code — a code block, fenced or indented." }))
 ) {}
 
@@ -1602,6 +1609,7 @@ export declare namespace Code {
     readonly meta?: string;
     readonly position: Position.Encoded;
     readonly type: "code";
+    readonly unterminated?: boolean;
     readonly value: string;
   }
 }

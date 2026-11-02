@@ -5,7 +5,7 @@ set +x
 root="$(cd "$(dirname "$0")" && pwd)"
 "$root/adapter.sh" install
 python3 - "$root" <<'PY'
-import http.server,json,os,pathlib,re,shutil,socket,subprocess,sys,tarfile,tempfile,threading,time,uuid
+import hashlib,http.server,json,os,pathlib,re,shutil,socket,subprocess,sys,tarfile,tempfile,threading,time,uuid
 source=pathlib.Path(sys.argv[1]);parent=pathlib.Path.home()/'.cache/beep/r2-cache-check';parent.mkdir(parents=True,exist_ok=True)
 def run(args,env,ok=True,cwd=None):
     p=subprocess.run(args,env=env,capture_output=True,text=True,timeout=30,cwd=cwd)
@@ -114,6 +114,47 @@ with tempfile.TemporaryDirectory(dir=parent) as directory:
         if pid:
             try:os.kill(pid,15)
             except ProcessLookupError:pass
+    # Exercise the signed exec boundary with an inert executable, not storage.
+    signed=base/'signed-adapter-spy'
+    signed.write_text('#!/usr/bin/python3\nimport json,os,sys\nrole=os.environ.get("BEEP_CACHE_ACCESS_ROLE")\nprint(json.dumps({"names":sorted(os.environ),"policy":os.environ.get("BEEP_CACHE_POLICY"),"role":role,"namespace":os.environ.get("BEEP_CACHE_NAMESPACE"),"storageMatches":os.environ.get("S3_ACCESS_KEY")=="fixture" and os.environ.get("S3_SECRET_KEY")=="fixture","bearerMatches":os.environ.get("TURBO_TOKEN")=="synthetic-"+(role or "writer")+"-bearer","fixedRuntime":os.environ.get("TOKIO_WORKER_THREADS")=="2" and os.environ.get("OTEL_SDK_DISABLED")=="true","argc":len(sys.argv)}))\n')
+    signed.chmod(0o700);signed_hash=hashlib.sha256(signed.read_bytes()).hexdigest()
+    signed_env={'PATH':os.environ['PATH'],'HOME':str(base),'LANG':'C.UTF-8','RUNNER_TRACKING_ID':'fixture-runner',
+        **{name:ci[name] for name in ['R2_ENDPOINT','R2_BUCKET','R2_ACCESS_KEY_ID','R2_SECRET_ACCESS_KEY','R2_ADAPTER_PORT']},
+        'R2_SIGNED_ADAPTER':str(signed),'R2_SIGNED_ADAPTER_SHA256':signed_hash,'TURBO_TOKEN':'synthetic-writer-bearer',
+        'BEEP_CACHE_POLICY':'legacy','BEEP_CACHE_NAMESPACE':'team_beep_fixture_signed','BEEP_CACHE_ACCESS_ROLE':'writer',
+        'TURBO_REMOTE_CACHE_SIGNATURE_KEY':'synthetic-artifact-key-not-for-backend','APPLICATION_FIXTURE_SECRET':'fixture',
+        'TOKIO_WORKER_THREADS':'99','OTEL_SDK_DISABLED':'false'}
+    ordinary_names={'PATH','HOME','LANG','RUNNER_TRACKING_ID','HOST','PORT','S3_ENDPOINT','S3_REGION','S3_BUCKET_NAME','S3_ACCESS_KEY','S3_SECRET_KEY','S3_USE_PATH_STYLE','TOKIO_WORKER_THREADS','OTEL_SDK_DISABLED','TURBO_TOKEN'}
+    policy_names={'BEEP_CACHE_POLICY','BEEP_CACHE_NAMESPACE','BEEP_CACHE_ACCESS_ROLE'}
+    for role in ['reader','writer']:
+        observed=json.loads(run([str(source/'adapter.sh'),'serve-signed'],{**signed_env,'BEEP_CACHE_ACCESS_ROLE':role,'TURBO_TOKEN':'synthetic-'+role+'-bearer'}).stdout)
+        assert set(observed['names'])==ordinary_names|policy_names,'Signed backend inherited unrelated environment'
+        assert observed['policy']=='signed-v1' and observed['role']==role and observed['namespace']=='team_beep_fixture_signed'
+        assert observed['storageMatches'] and observed['bearerMatches'] and observed['fixedRuntime'] and observed['argc']==1
+    for invalid in [
+        {**signed_env,'R2_SIGNED_ADAPTER_SHA256':'0'*64},
+        {**signed_env,'R2_SIGNED_ADAPTER_SHA256':'not-a-sha256'},
+        {**signed_env,'R2_SIGNED_ADAPTER':'relative-adapter'},
+        {**signed_env,'R2_SIGNED_ADAPTER':str(base/'absent-adapter')},
+        {**signed_env,'BEEP_CACHE_ACCESS_ROLE':'admin'},
+        {key:value for key,value in signed_env.items() if key!='BEEP_CACHE_NAMESPACE'},
+        {key:value for key,value in signed_env.items() if key!='BEEP_CACHE_ACCESS_ROLE'},
+    ]:
+        rejected=run([str(source/'adapter.sh'),'serve-signed'],invalid,False)
+        assert rejected.returncode!=0 and rejected.stdout=='','Invalid signed launch executed the candidate'
+    signed.chmod(0o600)
+    assert run([str(source/'adapter.sh'),'serve-signed'],signed_env,False).returncode!=0
+    signed.chmod(0o700)
+    # Substitute only the ordinary release pin in a private fixture copy.
+    ordinary_launcher=base/'ordinary-adapter-fixture.sh'
+    ordinary_text,count=re.subn(r'^checksum=[a-f0-9]{64}$','checksum='+signed_hash,(source/'adapter.sh').read_text(),flags=re.M)
+    assert count==1;ordinary_launcher.write_text(ordinary_text);ordinary_launcher.chmod(0o700)
+    ordinary_cache=base/'ordinary-cache';ordinary_binary=ordinary_cache/'beep/turbo-r2/4.0.20/decay';ordinary_binary.parent.mkdir(parents=True)
+    shutil.copyfile(signed,ordinary_binary);ordinary_binary.chmod(0o700)
+    ordinary=json.loads(run([str(ordinary_launcher),'serve'],{**signed_env,'XDG_CACHE_HOME':str(ordinary_cache),'BEEP_CACHE_POLICY':'signed-v1','BEEP_CACHE_ACCESS_ROLE':'admin'}).stdout)
+    assert set(ordinary['names'])==ordinary_names and ordinary['policy'] is None and ordinary['role'] is None and ordinary['namespace'] is None
+    assert ordinary['storageMatches'] and ordinary['bearerMatches'] and ordinary['fixedRuntime'] and ordinary['argc']==1
+    print('PASS: explicit pinned signed reader/writer exec; invalid pins/roles refused; artifact key and unrelated environment excluded; ordinary mode ignores signed policy.')
     # Render install with an inert op executable; no vault operation is performed.
     real_systemctl=shutil.which('systemctl');fixturebin=base/'bin space % dollar$';fixturebin.mkdir()
     cfgroot=base/'config space % dollar$';dataroot=base/'data space % dollar$'
@@ -170,5 +211,20 @@ with tempfile.TemporaryDirectory(dir=parent) as directory:
     assert sorted(versions)==[1,2]
     assert (tool/'.alchemy.before-durable-state/state.json').read_text()=='{"version":1}'
     print('PASS: repeated Alchemy plans retain distinct pre-operation archives and the original recovery state; inert tool boundaries only.')
+    # Execute the actual source-bound exception guard against adversarial locks.
+    # The end-to-end OSV run separately verifies the positive scanner invocation.
+    marker="    if python3 - \"$run/Cargo.lock\" <<'PY'\n"
+    policy=(source/'policy.sh').read_text();assert policy.count(marker)==1
+    guard=policy.split(marker,1)[1].split('\nPY\n',1)[0]
+    reviewed={'name':'block-buffer','version':'0.10.4','checksum':'3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71'}
+    guard_lock=base/'guard-Cargo.lock'
+    for packages,allowed in [([reviewed],True),([],False),
+        ([{**reviewed,'version':'0.11.0'}],False),
+        ([{**reviewed,'checksum':'0'*64}],False),
+        ([reviewed,{**reviewed,'version':'0.11.0'}],False)]:
+        guard_lock.write_text(''.join('[[package]]\n'+''.join(f'{k} = {json.dumps(v)}\n' for k,v in package.items()) for package in packages))
+        checked=subprocess.run([sys.executable,'-',str(guard_lock)],input=guard,text=True,capture_output=True,timeout=5)
+        assert (checked.returncode==0)==allowed,'Security exception admitted an unreviewed dependency'
+    print('PASS: exact-archive advisory guard; absent, changed-version, changed-checksum and mixed-version inputs get no exception.')
 print('PASS: enrollment/export-line rollback preservation, duplicate/raw-token refusal, occupied-port/startup fallback, secret isolation, runner tracking and exact-process cleanup.')
 PY

@@ -1,0 +1,2532 @@
+{
+  "schemaVersion": "claim-preservation/v1",
+  "baselineCommit": "07dc26d8a1",
+  "immutableFilesChecked": 631,
+  "allByteIdentical": true,
+  "files": [
+    {
+      "path": "goals/claim-element-antecedent-check/history/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-allowed-input-coverage-before-colon.json",
+      "sha256": "9459ce0aef7df8b98bbd360c068ebb8fa48a07a2c803fd373f802d44cc4e128d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-allowed-input-coverage.json",
+      "sha256": "4c9f3f570e528c7f2259418f3a707d5db4cc6dc96f5c82d64597ffd47397d8dd"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-attorney-packet-ready.md",
+      "sha256": "c31a3f482c3ba08ed9f13c76a3aa91a4eee0e5802b6979cde57dbbabfc950b60"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-closest-comparison-receipt.json",
+      "sha256": "a40488c57fe4e829b573f6987b38d065d94d8e2d621261646a38eda96987c2fc"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-closest-comparison.md",
+      "sha256": "ddbc25079d955ee9a3b284ef67a91f17009672d148e2e77a6e92b040c6946f0f"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-closest-remaining.json",
+      "sha256": "1a864b1949eb067b7e805c6cd952235f84676b3b176fcbb07858238e3e9bb4bd"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-discourse-comparison.md",
+      "sha256": "168fa3d4df9aa36a018004c276feaf0b5d69f7853aed2b5d43e92e9ed52f32d1"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-discourse-receipt.json",
+      "sha256": "ddd674b998f39229d86e811ac707f6f4a428bb459afbf102dfd0b0b8c7c59886"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-discourse-remaining.json",
+      "sha256": "5001ca8307a0dbaac0fd4b61cff581bed1f24bd025f3e1f1103c892efff0c276"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-evidence-format-preservation.md",
+      "sha256": "688eb9ead32e330bddd8730b5aeff6d402a52dd96905d00c3b4a1a8e24260ab4"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-full-reference-integrity.md",
+      "sha256": "7f5aba380437aef9c06a2cb44621d2c8a35ba57ae8eca4d0720acc417e62d7e7"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-iprally-smoke.json",
+      "sha256": "131d08b6ba6081218bcc347832788b306d7c6853a432dde26650f92ef51e1950"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-iprally-smoke.md",
+      "sha256": "96877b9d14ff1a6d14c34960f00155b7df9e141e110649cf16eaa079e5688ab1"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-next-closest-comparison.md",
+      "sha256": "b216bf35d8d8a578c93f9a27e4b378dadacc4bb03eaec40f35a1d6041ccf3cc2"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-next-closest-receipt.json",
+      "sha256": "f2cac498162881e2282a8479a7e46e60d9ddd48c8497aeb12d65a895c2ce757d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-next-closest-remaining.json",
+      "sha256": "f073c1d10622a3dca6d0924e657f02701d7d158b9f7f0ace6bd90daaebaae3ea"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-operator-attorney-gate.json",
+      "sha256": "8c435824d7e26ce0045e862a5288d7a7580a3a718455c0a128fe813fbe0f6dce"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-p3-read-tool.md",
+      "sha256": "c90d7723f27835144abc4c7e6e2f815760eb787dfa5db116d6424535b1a52e2c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-positive-evaluation-summary.json",
+      "sha256": "e5ebe913a7f54ce35eebdaeab1f2fc4e034263ab3e6ddd29d93a4f284e44a1db"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-positive-evaluation.json",
+      "sha256": "a33627b77740d7a368131b98f7646ed2507ca8a8246afc4710992b2b0fbcfaac"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-positive-evaluation.md",
+      "sha256": "eaf637d6eac2e795480b5f7105afc41a5ee865ef30fda413c09897aad2b27951"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-positive-run-receipt.json",
+      "sha256": "71a0a46d2bb995ed0c50a6c26250157ae9a14967ec67aa64191404051abd1655"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-comparison-receipt.json",
+      "sha256": "d7483a81fab7d02226af9f5c55a4f999a769f01eb74848316bee70d2549f688d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-comparison.md",
+      "sha256": "c039dfacda1d4ae3e0dff6befda51d286d734c725b1d8a5063f7180403b657fb"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v10-evaluation.json",
+      "sha256": "ecb2ae885ae915ecfdc23a462f432908378b0482d0e64032c4932c9b545f3801"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v10-summary.json",
+      "sha256": "d24d7ee15629816cc9214108f5414b96c1d48d94ddc6b8cae807569cab719254"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v2-evaluation.json",
+      "sha256": "b1fff833d0002de30d3b8c52661cd50aacb17480ff688d6a57d807b0c7ffe1a7"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v2-summary.json",
+      "sha256": "f0192428ebbe871e1d051804bd1e2751f249da9cfead684321203886986bfc9a"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v3-evaluation.json",
+      "sha256": "dbb51ec62e951e722ce4589bdc350704110ede0977993413afd9314bf0a808a5"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v3-summary.json",
+      "sha256": "13a8b296a024df50417e14f2e64d7b7b3ed47291b45e90c12494089020fa76ae"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v4-evaluation.json",
+      "sha256": "d6b8e777d71b240fd243598b7b49ad850946bdb3342e485c4ab7775baff88d29"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v4-summary.json",
+      "sha256": "13a8b296a024df50417e14f2e64d7b7b3ed47291b45e90c12494089020fa76ae"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v5-checkpoint.md",
+      "sha256": "8e1c5476dff1fd1155ef919a254f68851599e9c96825e3ae0ddb1872a42861cd"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v5-evaluation.json",
+      "sha256": "740aa727d5a650eb1df9f378c76732561f5771c004ed02b67c2785c10c4a8321"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v5-summary.json",
+      "sha256": "3774881c6b80da2d02ecd08a4f8cafe65f0d6fdeda6101ebe66ab7967d95336d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v6-evaluation.json",
+      "sha256": "a54cf9f6e90be8b817ba26fa0b2b71b4b15fcbf2d0efebe138ed5fd59e587838"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v6-summary.json",
+      "sha256": "681a4caee6095a388bb5c7dd975ee04f303e4ecebfb09adedeebb0a1282d2043"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v7-evaluation.json",
+      "sha256": "46a1112a9fb16d3b4f90c4be2ca54988bfa0a3f52d80aee689f8ba924a19248f"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v7-summary.json",
+      "sha256": "594c779ffe4d7e822d8093ff2570f131e9e6eef57d626fd7ddb4243f477fdeb8"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v8-evaluation.json",
+      "sha256": "08f105c3fa25404368a0777ca86768bf1d36a1ea5ce3db6a582b715fe74013a1"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v8-summary.json",
+      "sha256": "d740e3600b0ce0ed9c6812e44070a418cc6fae2e8071cf59d599337e2b2827c6"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v9-evaluation.json",
+      "sha256": "6fc88f9afe42be5e1a998614a38aaef8145c0ba21cf435796ac2271be4de816f"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v9-summary.json",
+      "sha256": "ac6b6bb946b354a3af128a8e1fcdff30511d982e8c00d375904afbbdf725240c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-resumption.md",
+      "sha256": "1893f83b3a9b3eae7fd3b85f7097b4a81c0e8d5a2101ea9b69fb75c2cd5fed42"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-source-replacements.json",
+      "sha256": "d14b6fd9bcaa3310b1b84b81cc290fc2dc37ca7a6077011c4b4e5fa5f6446a3d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-structural-scorer.md",
+      "sha256": "ccd5d85dff8e30ed9d8f74144663ee3203c0f46b513fb6636ea206e4343b94c2"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-v10-retention.json",
+      "sha256": "7d69fd0551047cc4c460e13bde3c80f4b7b6627c95b3a446b2591043c29823c2"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-adjudication-authority-guard.md",
+      "sha256": "2d8795e19b550ae3a5b5e5fb0a754de99c7752d4b816512a6c850b7da519bdb2"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-adjudication-authority-receipt.json",
+      "sha256": "83dad84c2cde0ee488e8e514e3c8e21fb83eb3efd2b0aa48be02e0ebe267f95b"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-allowed-v12-coverage.json",
+      "sha256": "f76f4553a745241c419772955038e8f8b6340f1d1faf2aeefe7fe311c2552218"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-allowed-v12-receipt.json",
+      "sha256": "b4b188f2057764744274ba092083f455ec4c91756c64ca9de406b3d515c3c60f"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-allowed-v12-report.md",
+      "sha256": "dda807cc34ffd1e99f5a1dc56c67a81be6254d8702e4b20cf0bf0d0201271bcd"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-allowed-v12-results.json",
+      "sha256": "142cf86ce325c90b52c10b8820a9a3223d9477eb5d1c9782c5d8f043569ea4b0"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-allowed-v13-coverage.json",
+      "sha256": "6abb26c03b4b87492852143b2b65ffad8779c075c609ef204c02fcd017fd85a2"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-allowed-v13-results.json",
+      "sha256": "7b3695fe4ff08fd84cda8d4e32ef5ebe936dc1ed5dc22b95b5964f8a738e73a6"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-human-acceptance-blocker.json",
+      "sha256": "f8871430647de2ec63335e66ececfa40603a8add0ab7d9f1c228c05556a62507"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-human-acceptance-blocker.md",
+      "sha256": "6b35d40bf658f235cc6ff955bc24da0137890646534fec9e38336b56e6c3e504"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-implicit-dependent-comparison.md",
+      "sha256": "5cd6a9acc31fa2e6294b16e9da79b4276dfd37b18b68a3a0b381f3bc9e0ce130"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-implicit-dependent-receipt.json",
+      "sha256": "ab4e0da1d472c2e62480d077bd80402750e96737fc1ece50da9f24a888284201"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-iprally-v12-smoke.json",
+      "sha256": "7b4376a5490867615389b2efedf4fe203f41fd42ca812fe6d8e01973d0a1a76c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-iprally-v13-smoke.json",
+      "sha256": "161c567aafc5cca9f0cbfbbe5b3d8f782adb84876af5a85d64b36460bec70ac4"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-predicate-comparison.md",
+      "sha256": "2ee4e0f482a7cf5f91e8dc53b51f20c42b9b19266ecb7c1ec826f8b0266cf97d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-predicate-receipt.json",
+      "sha256": "6d437b0ddefddbef1671ee9ef854ad6abce9ef5a7324c7407529bf773d9fd425"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-predicate-remaining.json",
+      "sha256": "f6b76d9041b057f23a1aefaba6c1ad8426c02e051abe1424b794a2c95d0d1d49"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-quantity-comparison.md",
+      "sha256": "40346a293f236fa8fd3fa54f072e3781b3c3e479e453a80c94953ed97e575b7e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-quantity-receipt.json",
+      "sha256": "a96af59cbe563d054d9db3e0d10938f52fa32a6bc1a1a7db225cdc6e101ebcea"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-quantity-remaining.json",
+      "sha256": "af525f70499d831c2fde3f992192c2bec522c521f6b984f79c9092e841df9447"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-reference-review-import-audit.json",
+      "sha256": "ba5c0020c418dc42d7a2d5529f657f3168d2639d0f9b22f288a6407c0d44b034"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-reference-review-import-receipt.json",
+      "sha256": "e1c98feb210d317d3b5166099801d9fe8c83f4485e798111be8656f41c47bc34"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-reference-review-import.md",
+      "sha256": "ea2b308a84c5b7c73dff518544276faf0840f017102993ef65a95e2f2a36feed"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v11-evaluation.json",
+      "sha256": "8863be400e9ce9b5d29305fa3eecd3717b71b9bb9dfc8d9f771ed1c2be4682dd"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v11-summary.json",
+      "sha256": "78fe878d7f7e6d7ab0d31be73aeb625914eaae61ccb0226e308491be1f1a5c2e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v12-evaluation.json",
+      "sha256": "4890e14ed898a27606e4561c648af4c5edf3c12d3b556a4edca694f73f5d5f00"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v12-summary.json",
+      "sha256": "78fe878d7f7e6d7ab0d31be73aeb625914eaae61ccb0226e308491be1f1a5c2e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v13-evaluation.json",
+      "sha256": "f6eb06aea37317eb0e209614828596e0a0dcdc89c28c3172e32ad06ac5c3322b"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v13-summary.json",
+      "sha256": "78fe878d7f7e6d7ab0d31be73aeb625914eaae61ccb0226e308491be1f1a5c2e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v14-evaluation.json",
+      "sha256": "d0d7fb36e1fb47ab72e2716123cbd3be3100162a862caef8049aa81bdbefaf12"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v14-summary.json",
+      "sha256": "4a54ad997bc86f6998e8bdd9201df4ef5ba40db2b4287c6d2f0fcec0e5176596"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-v12-retention.json",
+      "sha256": "c916c4195221abcef1742badc89b08845d496a592c4d0755a09bc73a23d420ff"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-v13-retention.json",
+      "sha256": "8eca52174351d6981cf24dc2f2e71e5926767fe3a0cff8cff69f8334ea31d960"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-v14-retention.json",
+      "sha256": "b5afd6ec7db92b33de6bb75918f9057e5ff7bd4587af47c78fe3aff910242297"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/allowed-review-v1/index.html",
+      "sha256": "a428322ca71ffed5f5d601c7ec20eaabbe08ade7534723c9dedb305921d79e9e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/allowed-review-v1/packet.json",
+      "sha256": "03e7915503e372ae09c248e6970109582392b7656aa209cc7f1346fe0068666c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/allowed-review-v2/index.html",
+      "sha256": "b69c655fe6fdd3f3136851b6b1d06588784ff0e16d94c4cc03a8e878d96925bb"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/allowed-review-v2/packet.json",
+      "sha256": "d9ff710faa56ad482660fd1cb50d285025309bee0961e192b8703bc2d6ea2eae"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/README.md",
+      "sha256": "978195e66281d89827678c6de1b6b6b2dfb77e8e35589a5fad22bfe17d58448c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
+      "sha256": "f4762a3df511e409baa3fbd240d5e865b76d4189e653c9cd47ffe401bd251ba7"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/addendum.json",
+      "sha256": "ee7d67cfef9b72ab31956b503fd5c616b686b7a871af14211967cfaf51da7ccd"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/index.html",
+      "sha256": "3137a07a0d4c316e1c9139c7c57e48f601fd5a361df62728262f354a59f889a6"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/packet.json",
+      "sha256": "0417c781fc706510a2200a5bb84b18eadf40acbdcdb289ea006d81d824caac96"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/11670278-root-61/critic.json",
+      "sha256": "0723ddc4da476183f02edbec8aa66fd666a70c28280e8b2139e87056a0590a88"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/11670278-root-61/expected.json",
+      "sha256": "7198509d03f4a3698222c196e559d8fca8f79aabd973d43f2e50b96287a26fa4"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/11670278-root-61/extractor.json",
+      "sha256": "26c15056d1a7daa71f9900fd3503e5498ead545254a189df3271e051fd48384c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/12360911-root-1/critic.json",
+      "sha256": "807aa3324f9bdab0eac23a7d9dde745790b87eb2ec91b13145c38bc2d37128ce"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/12360911-root-1/expected.json",
+      "sha256": "5519becff364aefd014aa5fdcce4b34e9704f866b7f1562f5590b913dcad9783"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/12360911-root-1/extractor.json",
+      "sha256": "f170de751688c1e74df918743ba364f52e528e814b7e84722d45ff0a925f0733"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/12447956-root-7/critic.json",
+      "sha256": "74987443954ec7c66ae2c772b317010c349f11fe25722876dc9e6b17ada272f2"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/12447956-root-7/expected.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/12447956-root-7/extractor.json",
+      "sha256": "ee6f37df76ef16fbb966b6c79702a0022825bedb078c6c7f8eea82d0ea469a8d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/12838228-root-1/critic.json",
+      "sha256": "0515c70d1d8893598443cde4e05d123ec543ab2a86aa0e89393fae1a06533fc4"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/12838228-root-1/expected.json",
+      "sha256": "6a5b1de17bb7150fbb9bc368aa834f59d1cde47f3a4d3debad6bc6ab9e5a3c5b"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/12838228-root-1/extractor.json",
+      "sha256": "6fdcef831cc8b5031e44a35a8ef50c69e68c1a3adb1304f3c4b66c0d7d9d87b0"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/13687596-root-1/critic.json",
+      "sha256": "fa712efa46374db5b5f6b41c3faf2edbe45ff2034fdb690d3ae28367812bb99e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/13687596-root-1/expected.json",
+      "sha256": "7a39d94a9d0f3a62156fcde38bdc8d5ed5ebca150e1b94630fb140cd45c9fa76"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/13687596-root-1/extractor.json",
+      "sha256": "d6fbe5a0ad62d7128376bd4247bc407596cd77f6d062d017ab0cf196f027f9b1"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/14432872-root-5/critic.json",
+      "sha256": "1d9adeeaa0ca48f08cb49dd20c66fb450becfe2fd5c836859b3566b2d434b510"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/14432872-root-5/expected.json",
+      "sha256": "f181b7da9d55d27112961cd36d6a51d21bdf70f791009e8a4c031de20cf39b2c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/14432872-root-5/extractor.json",
+      "sha256": "d37d285470d329d660382063e515b924010f5d730bdfebda80aa7498b4a549fc"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/15773469-root-5/critic.json",
+      "sha256": "fd6b3fd5cc2d2d1d22738f73548f41d5ccf094551d60080195f9557abfda337c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/15773469-root-5/expected.json",
+      "sha256": "ca6064f51a2364dd4523453287563abb7c998dc6f9b6c855f065df96b27a357e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/15773469-root-5/extractor.json",
+      "sha256": "e96b7336b10237b39596605da1005e0065159bd7bf2a5b2bf06153a4ff99b66c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/15927789-root-6/critic.json",
+      "sha256": "9f80e4d822afa658968e03d1c875bd53a0e64e59c1a4d57ef977c64ceed7d634"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/15927789-root-6/expected.json",
+      "sha256": "0d1371186b58e9d72cdfaeffc5fdad5b0a71896bba3b75a630f803aeba863125"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/15927789-root-6/extractor.json",
+      "sha256": "124090636be658b315263154a055bb01fbe0e63813d9aea773a89c6a8d16db32"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/16052309-root-1/critic.json",
+      "sha256": "84c68fd13057042abf02a1279377aeeaf28a9a0c97ae2b234ba1264eb4cae29f"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/16052309-root-1/expected.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/16052309-root-1/extractor.json",
+      "sha256": "9c8768bf088b5c109f6e08fbce46ad665e47d4dc8bd66c733f63e5fc2f8cf467"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/16068637-root-11/critic.json",
+      "sha256": "f948c58f8cb8846173f65451530ac882ea80716342e8c600e36801799fc8b1c0"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/16068637-root-11/expected.json",
+      "sha256": "1161d402a4eeaf82b5046ab0a5385b562041138e854e08316c0811376f3362cf"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/16068637-root-11/extractor.json",
+      "sha256": "55bd8a2e944fa2eefdd1a64587bb9d0b32fc46dd2c752c381e79d339cb4bca0a"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/16628033-root-1/critic.json",
+      "sha256": "6cda72a29a0641f281b7726776ffb7a512d567f582fb601536937aa790f3922f"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/16628033-root-1/expected.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/16628033-root-1/extractor.json",
+      "sha256": "abebd5c4362a74bd427139853cd4e70bdca4a7e2671ccb3de2118a7a9675d255"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/17755831-root-1/critic.json",
+      "sha256": "5bfd22361f426767742ee086a18581fd8783bfb0d243e3e70f11a62f4041a7d9"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/17755831-root-1/expected.json",
+      "sha256": "47ebe1eccdbf16721da7c3bcad5dc3a1dfbde5b61174ca779326ea7ff1ffd584"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/17755831-root-1/extractor.json",
+      "sha256": "4c0f119633b512c78fea07871570116af063df8d4f5dcf287a60f5e0fc545276"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/18018354-root-6/critic.json",
+      "sha256": "5cc16e3881f047d7da2900ee87f8bc0c196ac90c5fc1f73cbb3b71a3759f860d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/18018354-root-6/expected.json",
+      "sha256": "73e4d016a62837534fafe7768f9d9cf84b439f8645d4ac89238d775c41cff745"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/18018354-root-6/extractor.json",
+      "sha256": "388e653627ee5c75665d58fe2616a2bc1513a626ff1faaf848b1a774dc7a4aa3"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/18734099-root-1/critic.json",
+      "sha256": "ae11a017c4c2b290c8d133d66cdaacecdbf8e5ce63fd85c3784491423e065b1c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/18734099-root-1/expected.json",
+      "sha256": "9a61c014a6c89a38e459d49506b29407ca15ad0affe271efa7318a293cc70011"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/18734099-root-1/extractor.json",
+      "sha256": "1563bd554a6788153de5d2d3edffa1e8e22779a314cafe4ad0a8b878ee3c3801"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-conformance-drafts/README.md",
+      "sha256": "e05714c253056d6d083bbbe8486176e238fa084fe1d8ea770bb345e416cc2f47"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/11479265-root-1/claims.json",
+      "sha256": "e59697a8a3635e0e6cc09ef145ff9ac6774a49697a17ae1b9a6dde37ee3eedfe"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/11479265-root-1/provenance.json",
+      "sha256": "f0689f9e961fb342080a1c40f881f5907b8ab0b8c1a1685c2e33742ef41aac7e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/11479265-root-1/replacement.json",
+      "sha256": "727e9e3cadf4f8c7228a736e58371fcd0e4f1cfbab7f10cb3df70a8cb05e73db"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/11479265-root-1/source-audit.json",
+      "sha256": "4f180510b95927b25f234a54b868b7421ebc64c34ceccd7694f16e8b7a47bead"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/11479265-root-1/source-critic.json",
+      "sha256": "55f608c86531fa0827c2b31af42d34c04447ad9bb0eceb72eb2369e34a4a8720"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/11479265-root-1/source.claims.xml",
+      "sha256": "a95f5a9d57a63e6616eebcce267f6125aad804eb4b1ff44821b44f9dd17ccab2"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/12267381-root-1/claims.json",
+      "sha256": "e08f87e6aeb251ed33fca4af52911e7da481a5630a858d8dd89b50d913260767"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/12267381-root-1/provenance.json",
+      "sha256": "5047a09f16c052dbe274d56f8a37b1c503bbbd87c817de507fdd7cdf0246424d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/12267381-root-1/replacement.json",
+      "sha256": "5921b4d7e2e26d93791945cdbd65dde3e872130dd0190e8ee4dcf7d10772ebee"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/12267381-root-1/source-audit.json",
+      "sha256": "8bb1be1db686d26cd7756039b52968ec80768e8d6c688653481683ff56eb1d20"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/12267381-root-1/source-clarification.json",
+      "sha256": "c39f4b421dcff431e673f0e84b259018301fcfab4579c28b23fb47ad08bf8011"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/12267381-root-1/source-critic.json",
+      "sha256": "724bdc6c644d660fa9d82b52f62ba2dc7195ceef8b2c71326d16e25d8d714b9b"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/12267381-root-1/source.claims.xml",
+      "sha256": "4330eb8760f199190cfda2f2fb341b50d5aa6c27dfbbffcd66b3e51d0d96a20e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-24/claims.json",
+      "sha256": "3485b22c05675cf86a4c7e56d80103a9f3ed38fdaba91aae617c4f50313eaba9"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-24/expected.json",
+      "sha256": "1eca79da9a30a02d3bcb84902242175c161b961e7f986a603906251f41443cd9"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-24/extractor.json",
+      "sha256": "43e20ba12f47f4de47dfe043f84a58d0f7cff52cf240eaa75b4bd239f9bb30a8"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-24/provenance.json",
+      "sha256": "53bd30f08b722b0ecf37d1257757e9fc65748d1842555473ebc2b1fc31cf50d9"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-24/source-audit.json",
+      "sha256": "bc704805b5e7715db9cd5be63f53dd286e313e5ebfae8a80b82dffc25a240c4b"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-24/source-critic.json",
+      "sha256": "f016b5d99115e84fe5247a0306c4420d68344f260593e8f1a4725f5667b6d6cd"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-24/source.claims.xml",
+      "sha256": "4ba89eb934ce1212848545636712e8b95eb86946552fd368081af34fd78b9df7"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-36/claims.json",
+      "sha256": "b761fccf567d83a80738c6404a83b3e49a96e62620eaf6cad647bc2cf36738d1"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-36/expected.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-36/extractor.json",
+      "sha256": "022c8d28e4b62369b9887eb8a863aacae8e193650fb2d9118537992882fd5d4b"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-36/provenance.json",
+      "sha256": "2c6f03827245ba3634b371e5fb401cf5d976300ab56f8edb8e0ad1244de9d049"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/13978201-root-36/source.claims.xml",
+      "sha256": "4ba89eb934ce1212848545636712e8b95eb86946552fd368081af34fd78b9df7"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14172895-root-10/claims.json",
+      "sha256": "a54976f8b794a6dbfc06918017f3d722015043cd4ed3ee0024fcd72dc54a1001"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14172895-root-10/provenance.json",
+      "sha256": "394d2b1b07720eaaf626040d5d306c6ae592cab4dc5c36fee1de99698a86c88f"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14172895-root-10/replacement.json",
+      "sha256": "a94cd8dbefb05090beb525e4c4580133d7643504f646295bbece8e892b7fb197"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14172895-root-10/source-audit.json",
+      "sha256": "da847ad4792c83e377cf91042dbabddfde12cf8a86623eed0d57bbb56fd9d4f8"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14172895-root-10/source-clarification.json",
+      "sha256": "599d2e850ff850aded712869919a7085e38ffeb612087e541d6cf6cfe6724a4d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14172895-root-10/source-critic.json",
+      "sha256": "2b56b2d7ec6ace4a9b4c8c8bc483a2f8d16665a7e569dbe24d7d617dd595232f"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14172895-root-10/source.claims.xml",
+      "sha256": "ef300846d62785a1015c3a8ec00d295bb822dd0ec7e1004e38c1ffd7d9173d16"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14438042-root-4/claims.json",
+      "sha256": "9968d1945de699f8167fab426c50394b42d8eb8e946fc2a868ad4014a769569c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14438042-root-4/provenance.json",
+      "sha256": "a8ffc6ce04697efb4b337fd5e2e554e4d9a1b241f530baacbfc5e9bbb5186574"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14438042-root-4/replacement.json",
+      "sha256": "058ed91943fed6a73ae1c140641e3e80e8b1c3b1f76ecb065b0343cd80e36e4d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14438042-root-4/source-audit.json",
+      "sha256": "0fd06e483ef33ed389b884748ed69d6e94bdeb4df635de618a5881672560993e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14438042-root-4/source-critic.json",
+      "sha256": "1812b0350876091c62ae5d36c1ccc66a2f4304458ba59da6453e053fbb932a5b"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/14438042-root-4/source.claims.xml",
+      "sha256": "0321dd531bb877d1fc5f79b2bcb23828e0af1648be2258c5739ebdef5e855eee"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15572618-root-22/claims.json",
+      "sha256": "5c3a8b6c37812d5469500b2a7b7b2e0bdd9d3b8fb7ae82ae6c47f82977acda4e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15572618-root-22/provenance.json",
+      "sha256": "b73ffddba176ba7c98994b40c9399b873a8108234c6d606aede56e39e03acce9"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15572618-root-22/replacement.json",
+      "sha256": "6e9ceaae46af82d5f036ab7f8d47609eaceff285189e16c30ea50508db9025e7"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15572618-root-22/source-audit.json",
+      "sha256": "b976c77ce195015b9dcba7492abdb076cce911e8fa092760f65883ff8f51a525"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15572618-root-22/source-critic.json",
+      "sha256": "f21e2d4c3fc22c980b9d7c02fb4461ee7fac7e3a7a301e0f8c7a4d800b4bc263"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15572618-root-22/source.claims.xml",
+      "sha256": "9a9ac0f4064773dc5ed4abe8fe40fa1538c7945a97f84b74cf64c816e47b66bc"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15773469-root-5/claims.json",
+      "sha256": "7b464bf0b36d99209091f2ea9ab911b44fdb88a9d3baa0f12b7bbebc84f0617e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15773469-root-5/provenance.json",
+      "sha256": "844ad8a2502ba6e2e10f408f0e82936fd111e1421eb12f9aedd856c723395b66"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15773469-root-5/replacement.json",
+      "sha256": "e60efd6d54a96490de2a045126c1debff21d3be5112c96744253f29a482c01bb"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15773469-root-5/source-audit.json",
+      "sha256": "4ce3b5e0c9ef651ea4a0ce19edea63494c4c57b6dc15de72d20c3c9e1b1dd810"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15773469-root-5/source-critic.json",
+      "sha256": "faed03025d3e3a9017bad6ea800afdebfabe799973d982fc1a39b7e4e3669855"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/15773469-root-5/source.claims.xml",
+      "sha256": "2fa540f5e056375e7b82d98f8a1f615b0fc2e0450fb3ec8384ae80dcea673b93"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17045367-root-1/claims.json",
+      "sha256": "58ba394bd2a8dcb2839fc27a371e803256d71f482d9f985bc1f6d655661a6468"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17045367-root-1/provenance.json",
+      "sha256": "e7d1a095396cd084ffdd6a8d5600852624417b433308619184e00045f0ae43f9"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17045367-root-1/replacement.json",
+      "sha256": "060b40f78a28451dfddc4a51d1ec624d8421e973344bd5729b73b956123474fe"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17045367-root-1/source-audit.json",
+      "sha256": "a3576b867192c795a4ca9af50d98b6372a2c43b42ac282ae915a0c6f74af1c56"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17045367-root-1/source-critic.json",
+      "sha256": "d59bc71bc64bae1f1407160684be59528481968fffd9403f1b04bd30efc83246"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17045367-root-1/source.claims.xml",
+      "sha256": "5fb8980debef0bd2cac995aacae683e415cab8ce4c5f0949f5e0f081c8e01853"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17755831-root-1/claims.json",
+      "sha256": "719075e497e5e7c8db42de40e7df632b4b90c321f06a866a4f97c4cfbb6185ca"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17755831-root-1/provenance.json",
+      "sha256": "63de1d3f5fa32a7629cc639b62d1b86a35c6e16dd4e9090bd51e51fb353ea34b"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17755831-root-1/replacement.json",
+      "sha256": "3e533670ee2a49db938eabcda09e330158373ab113786287eb64e5cffbb15499"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17755831-root-1/source-audit.json",
+      "sha256": "a2c3fad8fac6655c4cbc9094d5c820c629424ad005357b175eda25f42a3e15c5"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17755831-root-1/source-critic.json",
+      "sha256": "4386e03dbc37f7e9c4c9c863c70ab8857949cd6939cbafd6b9731facc95b0ac4"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/17755831-root-1/source.claims.xml",
+      "sha256": "5799ce00768b6bf3ec8bfca714e141ce9773618fb451ec0fd1df78c03e7dc556"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/18107161-root-18/claims.json",
+      "sha256": "e460e5cab93b04990d60708cba2e7f573bf6b81b1e9c070dd6ed8bbab843b2c5"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/18107161-root-18/provenance.json",
+      "sha256": "cbd32b903373a7847a99f2f841ca6d41d6aba2d7444085836f79f1128f1f38e6"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/18107161-root-18/replacement.json",
+      "sha256": "d7cf25502b8eb1646250756a60c64584d82f232b56762c8475db497f1da44d63"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/18107161-root-18/source-audit.json",
+      "sha256": "1e22040b456055b83628b323a75c803b917d8afb882e067b43efdd740e9b9a23"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/18107161-root-18/source-critic.json",
+      "sha256": "3ce29568c0d84507b0d09b9bf68421d7a70ef7fae3d99bd16b32fc32db24eef6"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/label-source-exclusions/18107161-root-18/source.claims.xml",
+      "sha256": "e868184a0fb34369bc142b86469031c70d59e72eb427206f9823d54c5317e051"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/reflections/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/allowed-adjudication-v1-freeze.json",
+      "sha256": "be394162cdd8ebd61585a4703abe402abbb77150fe8ce2c908d51c237dd58080"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/allowed-adjudication-v2-freeze.json",
+      "sha256": "ba68501b501a6bdc081387acaedbc6a07027d83069ca628c2850a26318686d05"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-freeze.json",
+      "sha256": "f17b4b91029e5ebfb0f17b7866295f4e4b1bd3dd4c8477501a9129c51e420dde"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v10-freeze.json",
+      "sha256": "d9d5f63dcfed6a83798b6a9317e15ac31e62b6a72b0a2b56a838b9e07c6e48b0"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v11-freeze.json",
+      "sha256": "c185546d70f423833c8c337c2c0218c9c210eb341d69f0f8c16ed60207299872"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v12-freeze.json",
+      "sha256": "74f52aa463106dbccd3859c51a2e075b5f29767b4ce505bcff30c68ff09af8a6"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v13-freeze.json",
+      "sha256": "8ffc5a57438211aba580c593104916c5ff93a7719be28fa6aaae157762eebd56"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v14-freeze.json",
+      "sha256": "2ff15e47099bd33875e8442aeb8ff6b341c8bdafea8704c4ddedb7f4b8b2dce0"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v2-freeze.json",
+      "sha256": "4a691d725e49dd09391196e344b112c9c1c1915ac7f8f65e55c067a957c9246e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v3-freeze.json",
+      "sha256": "863a652fec6e3d59d8feab70122c4ed2d2d370af86dec55ab57ff52cc72e5267"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v4-freeze.json",
+      "sha256": "f41f20a5aa1b2cb171c911c2296925df61f704d8849171c3fcea7f89a7213a84"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v5-freeze.json",
+      "sha256": "14d6410df6413b319ac2dd1755d46829b5f4de102459ebb73d44552859d40b1d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v6-freeze.json",
+      "sha256": "672e42e28e67af9675a36b2d0c506b24b67e72729b083e730c342f3f461ba8ea"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v7-freeze.json",
+      "sha256": "aa0319576f2db6ac3c5e663051b903f25ede522d8bb15166d4c67cd5a62c536d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v8-freeze.json",
+      "sha256": "0280cf6abb31bab5177d62d85e0f0f367271d8b999e9ae9b99c0bc495ebe3690"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v9-freeze.json",
+      "sha256": "8c652520e057be56e86ca9a20bedc6af96997e99a9c3b2ed130051466e26688c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/positive-source-freeze.json",
+      "sha256": "59fe84a8963fdb7265f464afc2ee1ff081c325fa6bb1acd66bf6bf10ff232028"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/reference-freeze.json",
+      "sha256": "9c1ba8d210af9b27f3ac02cdea643e6437ae7068d23b449038a51a6de5e0932c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11246782-root-28/claims.json",
+      "sha256": "fcf2359983dfa5707686a5f0a41aa971f209decb31659f2162a70b011ad477de"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11246782-root-28/critic.json",
+      "sha256": "fe33fbfe2792fa6c607a94a8f19f00d596e3dfcc0d159d849a65feccd91d4c3a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11246782-root-28/expected.json",
+      "sha256": "e527a251d6ddb2344ae91a58f2b9b260b20aa505fe047390c563387ef97f3806"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11246782-root-28/extractor.json",
+      "sha256": "cdf783ec19a00d2ecfb532dbacb05d45a1923c07f91b607d6c3b698d6707df9b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11246782-root-28/source-critic.json",
+      "sha256": "eed47a69ef074e60de55b777bd1a91816080ec999b780b899d9abc5239142bd3"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11279554-root-25/claims.json",
+      "sha256": "04a3335b5acd160c473d12c7c607731cde8b942ce0a2ac8223a0f264e0e23cb1"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11279554-root-25/critic.json",
+      "sha256": "3184ba8088e72550e987ec2e12aa635c24f44f448a167ecbb8c7100639cb523c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11279554-root-25/critic.round1.json",
+      "sha256": "171172a71a71a593f385e52b94f736abcdb2e0852e6224dfc89ab996e69e9753"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11279554-root-25/expected.json",
+      "sha256": "a2534f676f54efad6d75cfcfb3a412ced0ce37e06ee59a5ae9e4588a5a45ac84"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11279554-root-25/expected.round1.json",
+      "sha256": "3f8ec8cacf15fe47d0f855dd94ae64ee52f3cb19c82e206e893f0f395e8068dd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11279554-root-25/extractor.json",
+      "sha256": "2da813bf76a25b986f4905b7cebf60383f4a2abec528cc09fa6043758fc25469"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11279554-root-25/extractor.round1.json",
+      "sha256": "0f08fbe87318ee79b011e2020fc9cc3851e9f93206fc02576966e0a435d04fca"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11279554-root-25/source-critic.json",
+      "sha256": "0151f011e67d258060b9fb08c3c8c27c3d3bd638ea1699b1250179e8b18729a9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/claims.json",
+      "sha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/critic.json",
+      "sha256": "ee23b8297e7db458da37a0d1da3669467be35bd65a2596055bb73d5c3c9b289c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/expected.json",
+      "sha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/extractor.json",
+      "sha256": "73fc9cac03915880e7b7800744dcf7607161ca6e5587d33708a546a956728baa"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/source-critic.json",
+      "sha256": "e24967fae6352c23c3d0167519bbfd78d8a082c14c1b7e92bcff003371dc3d95"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11341804-root-1/claims.json",
+      "sha256": "485834ede769a56a506872811107b6afecfbd606a79b02b77ba0c571a95c5197"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11341804-root-1/critic.json",
+      "sha256": "b4d30e31a2da65122be6bc0073e02a29208448663499654f0759d6275fd08b71"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11341804-root-1/critic.round2.json",
+      "sha256": "02e0acff33e3905aad0cb717fd8776b0c8cad4d9f1b79d060cce76fc152c449c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11341804-root-1/expected.json",
+      "sha256": "bf62fb2aa1d44ad7216c2bd6f3876e9ebf5ded82028b43bd2fc57d5a125e0d54"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11341804-root-1/expected.round1.json",
+      "sha256": "4a323d0a2424fddd3158a3b55f140de7881d7d0aba54b054e1288dc92cf48890"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11341804-root-1/extractor.json",
+      "sha256": "aaabffe3c85bb21e7f422650467484d48a7e4b9589c93f66d0b61f1e2f43708b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11341804-root-1/extractor.round1.json",
+      "sha256": "2337379c783a59f3f7efd9ca819fd724e7b1b59e8ad03a5e5033bc3904987dbd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11341804-root-1/source-critic.json",
+      "sha256": "14249fcaa6cd826f70398963cfee9dd3df500289521422a0951c4514a6cc45f5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11457178-root-1/claims.json",
+      "sha256": "87710a099c729d9767f3a7fa3b09cd0f4d11b3f6cd2e523fa5c1fe0db814ead9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11457178-root-1/critic.json",
+      "sha256": "59fa80285652777ee0d6f37b6670482700403f2214deef5efabfec072ad846c8"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11457178-root-1/expected.json",
+      "sha256": "339d32da4009eafd67616d401fc73f6e37de9a514ce6a1892f8c8ef5c0a9d631"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11457178-root-1/extractor.json",
+      "sha256": "cb51b6342394f39b91753a3d70a7ad230c10d519b038b32951d4d66d7501e016"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11457178-root-1/source-critic.json",
+      "sha256": "48f1eabbb7b7b1bf06d5351692ad3d9366e3ffce708cef0419b9add0dc877ddc"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11502512-root-11/claims.json",
+      "sha256": "d6437b537196f4b67468a2773ecfd52c76b87563da1a6f3ea5075f9a33c60a4b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11502512-root-11/critic.json",
+      "sha256": "3ce9021b5935db46535e925ba43016664f5cba5569ef0919e448e2867f9d8b4e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11502512-root-11/expected.json",
+      "sha256": "4d5bb5c8571cbf0c2c9602cc5af8fea99dd7f91b60ddecc26b3c653a14615e9e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11502512-root-11/extractor.json",
+      "sha256": "831d167f635de8a5c4a5c409caee797b1a0f43f6fc6f9979052040a88e5b17a6"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11502512-root-11/source-critic.json",
+      "sha256": "0ac0db90f0236b60522aa423a217389c3bcb516a8298b8a6c4e99a4924f8f511"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11575704-root-1/claims.json",
+      "sha256": "8d7d7b69f6f74fbba7c17c0488f7ed3a7c444dbdfd47f98020a393239e77e34a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11575704-root-1/critic.json",
+      "sha256": "8a5935c599f23df738231d6c116ab95e023f7cd495acfd486eadf0f655a50813"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11575704-root-1/critic.round1.json",
+      "sha256": "680a7739f81e1d70204b7bf2fa7a66d9b2d706acf8f6ab86eadff5cb2b404b7f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11575704-root-1/expected.json",
+      "sha256": "eadff8b53126abeda1c958c169d28360c0332eb5d403c9b17f8d4e3bf91ac3a0"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11575704-root-1/expected.round1.json",
+      "sha256": "09b6c30d503ba24ace9d97393dc59880ccad66803799ba3c3636718bbf51ddb3"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11575704-root-1/extractor.json",
+      "sha256": "879e77f7eb9c7e5542a1e4a061b131a353836a04df3c3478879b5442bccdee3e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11575704-root-1/extractor.round1.json",
+      "sha256": "2367ce4e6ab0413eb3bc3428901d356d154c2cd1097165e3e7991d809535c5de"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11575704-root-1/source-critic.json",
+      "sha256": "e1d5df44125f232fde8582219606278ffcc3c4f1a0b2347de43480bceece903f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/claims.json",
+      "sha256": "c651b30ed97a9fa48eabf460294f25496e468b5bfaf441f841069ad5911542ab"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/critic.json",
+      "sha256": "d76fc81064823e2887c6fa6501733897bdc24d7515c9287709015f70c6bd9b97"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/critic.round1.json",
+      "sha256": "abc05336ff5b49fd32bfd585fb60ac024295fb0b85bb1456dfb7ec2b5ec801f3"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/critic.round2.json",
+      "sha256": "ed1eae73e029c0282d8d62112b644ee9b9180564aa6327c473f06bcb0af24fed"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/expected.json",
+      "sha256": "1e9602d977ed29d60630035ded7f46d98238a7327837d8874bd741bf64971750"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/expected.round1.json",
+      "sha256": "c283a6551d5d0ca686a2626df038300cbc2b1ed32eb33eae5df68c842760d51b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/expected.round2.json",
+      "sha256": "5af343780a1d50506e08265c1827c709908e2c4d033e68eeba74192f2cdb0f05"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/extractor.json",
+      "sha256": "e72f08da985cef2447be1a612098009da817d9a0f48c80949a13baf6ddc1ead6"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/extractor.round1.json",
+      "sha256": "e21c941db9bf784966fae3778965f6a9f640a4e21fbbaa604c146db7f75472d1"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/extractor.round2.json",
+      "sha256": "6557ed24516a4cd4ff42a7bb4036f9e281027c44afb9d969be2e18baa692e04c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/source-critic.json",
+      "sha256": "74b229bb2562f70c63456094d0dea47ed0bdf5f01d8efcf91b38106060eacce2"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11910514-root-1/claims.json",
+      "sha256": "ae8cbf5c8cf813bcf98e50490439c958b8ac5b46bed226544d79773c3946f089"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11910514-root-1/critic.json",
+      "sha256": "bdc95e534b38e42f8574a9b41f6229ac4203ee96c4b93cf3edc942da15189873"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11910514-root-1/expected.json",
+      "sha256": "45752eeb1b4b6273de0cb3315e061896228f643a8b3a32529bac1922922f5a41"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11910514-root-1/extractor.json",
+      "sha256": "8c3f26b3e2e077e242ac2d1ad12cf1083e961ffbbce303894ec5df7ae7f06366"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11910514-root-1/source-critic.json",
+      "sha256": "84964dd8c2400d4728284431bb979766d66c2912d0d074ded76e3aee8b92b288"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11973401-root-12/claims.json",
+      "sha256": "ee32837d52928c555526a659d4a1ab1256ca936edcc45f27edfc8454a988d2c8"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11973401-root-12/critic.json",
+      "sha256": "865fd866b577765d8d7fe9e0f3a5b503385c7831deecaca4ebc688c0492e29ef"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11973401-root-12/expected.json",
+      "sha256": "4866502980abeb57dc79f8ec296e5211c3fd8bfd0d536273dc2def41ba1e9de3"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11973401-root-12/extractor.json",
+      "sha256": "8d7338b78cb0891529d8a6cae776c1a32f1b6d8878399c9a236fa18e38cf9651"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11973401-root-12/source-critic.json",
+      "sha256": "1d1ce5e70e6c65c4ebea6b2d1acc88959a1149e0d63f3fdf8114a3b9ee6524f7"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12117564-root-7/claims.json",
+      "sha256": "9a53fa97f887b2773ef7b8ca55f0567b746f400cb28589bff9aa2c39355b06e1"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12117564-root-7/critic.json",
+      "sha256": "e1569a98843d1581bf9b6c5fcf633456e7400d272a5ea83a8addd85348b1b732"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12117564-root-7/critic.round1.json",
+      "sha256": "ec70e4a4088307b90d3ca158adf817ebb04b9a16aa6da7ddd842b46454cd9efd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12117564-root-7/expected.json",
+      "sha256": "4ed9ac20007ae4b2ae0833479729a362aaa64f8ec8d8ef91194330dbb9399a11"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12117564-root-7/extractor.json",
+      "sha256": "bdc36b1fc28ef1468cf555c31fa3aaee0713683946d42a9beaadbfb2f661a4be"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12117564-root-7/source-critic.json",
+      "sha256": "93552e827fad09e80935b4538effb0afcf09b4b701d79939cff719371eec1836"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12268372-root-10/claims.json",
+      "sha256": "331429895c9faa9b9038bc1df8b42dcea772882ab2639fe49e0f1a9aad1b745f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12268372-root-10/critic.json",
+      "sha256": "717c49dfeaf9e2a6f8964c62a6d71ed1843b830d1179a01b2bceeec7dbb0691d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12268372-root-10/critic.round1.json",
+      "sha256": "b80087559eacdb3c2796764651a801d100f0e64d470ff9a8ac308e4fe204d933"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12268372-root-10/expected.json",
+      "sha256": "ca08cfe9f3aa8bc79e759b5a14bd17cf2952b578555c9036a483b6d2bd487a0c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12268372-root-10/expected.round1.json",
+      "sha256": "e9912d7b9836183e497baab60b7d4bd5afd26927e25216a0f5e03d917d903a5d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12268372-root-10/extractor.json",
+      "sha256": "3c1f094011e8abbf2f0d019ffed17058a216ceb91ace97871b55f0cf68f61ac2"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12268372-root-10/extractor.round1.json",
+      "sha256": "9912db6f0fdd977a693f9ab89dd82a595fd6f37899ec5fe3fb0be7a2055bce6b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12268372-root-10/source-critic.json",
+      "sha256": "07db39b7e5cc170681520395e29688c21cb839216eee4aa4dae81094a5cc2148"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12360911-root-1/claims.json",
+      "sha256": "4b359a2b3ff4d7d48844cd1ad0f648bd751c5369d497c8fcbac93eb6436544e7"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12360911-root-1/critic.json",
+      "sha256": "78c2c3416e16a11cf4249aa5f0743d53135a3fd964599eed14871020a3cc69cb"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12360911-root-1/expected.json",
+      "sha256": "d9767a3d6379119b2f0a8b5ad5a62d655b765baeeee6ab1c402b7a1a53d8ba19"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12360911-root-1/extractor.json",
+      "sha256": "dabc0c50b0dddf43a526de7510d4b573de063606097a7c313bafe98268acc5d5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12360911-root-1/source-critic.json",
+      "sha256": "c504ff0c067337f75469a73dd7f56ee8d282c11bdabd054d44e629c11ec7d343"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12447956-root-7/claims.json",
+      "sha256": "1c6276ccb04681554f50ae68f0a75556143b0173b3983db7bb1581a6472efe27"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12447956-root-7/critic.json",
+      "sha256": "959b4d8d00a1c4f60c4403fc2bd1cdb3aabdc3b29472a397d76f10dbf31d801c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12447956-root-7/expected.json",
+      "sha256": "eac83ca86808db73a59b886cea1c5ad89343474f47e6a025d95008bb012a2acd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12447956-root-7/extractor.json",
+      "sha256": "c6772f0d0de4d59341c435811ee078ddb98c4d5ca1edd9b3a43f9e6286671305"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12447956-root-7/source-critic.json",
+      "sha256": "b294161aca84ededd93358cb7522ab1af2e25c8a6a873f352283327a1ded2fe3"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12451999-root-15/claims.json",
+      "sha256": "42ba736948a40e8df909b0147dee5720e265be6c36f436c0ab9694c3085d5e78"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12451999-root-15/critic.json",
+      "sha256": "3f2744eb918adfe7000fe5192afe4b7dccab9b540e252d35fb3af8c3dc841c3a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12451999-root-15/expected.json",
+      "sha256": "93b036583b29d2af8bd5b6d442a39cbdc4b541a10607beeb41fc98da6a5d341b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12451999-root-15/extractor.json",
+      "sha256": "da01b9af913f693afcffb15b256c129fcfbf3e6e83c48ae0587b8b6dbb64538a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12451999-root-15/source-critic.json",
+      "sha256": "ee4b5f94149c38f8dec0c8554bcbd4ccf8d5d91044bc2f08288ac63e953427fc"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12525441-root-1/claims.json",
+      "sha256": "0969f3d8ccbfdb52ce1808ac5f5520fcfaef94419a4b29e69b000b9077740177"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12525441-root-1/critic.json",
+      "sha256": "f3c827f85b5ffe0d6984f538137e2c45a0fd7c7004e51c2d67401999757c364b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12525441-root-1/expected.json",
+      "sha256": "5c44400ace09dd357507541360e1c46540162c43db74c4c31902fd3df37d746d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12525441-root-1/extractor.json",
+      "sha256": "ed732a28c4a36656b6f4d6db378140e8bc4fa082659cd06d6f45685c1fc8c5e3"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12525441-root-1/source-critic.json",
+      "sha256": "5196d210be27acad5268097f9c17418c7ff74d83d59f6b59980a22b82056c775"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12536794-root-19/claims.json",
+      "sha256": "8d51f034ccffd16ba8063a5ac11bbd50a1ff004a29fb5c087562ba68dab0ef6c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12536794-root-19/critic.json",
+      "sha256": "9cda54aba3e846bf683845e69c41e2439e396fba89c54ffcd323f043cd5b53c9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12536794-root-19/critic.round1.json",
+      "sha256": "3fcd4c8c9a201be0ecd9869d62be5ea248851ed041a99177f8d4fdb0f7f3de08"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12536794-root-19/expected.json",
+      "sha256": "9901af1295689f767705ef992f2bd1b03550784ca2a02c877837be19b24e6bbe"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12536794-root-19/expected.round1.json",
+      "sha256": "31331686e9c76d4d6e9b2834c29d160ab9866db8569b43f694e516c7ae3f582d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12536794-root-19/extractor.json",
+      "sha256": "81290dd63f88c3124a30b3c5e83beb8300a40d8e4de11bae30a13e8a1c55e17c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12536794-root-19/extractor.round1.json",
+      "sha256": "1b78b17d5acbc7d5318cfffa5a5912375c6d78d0f892c740807d4c9fa5bd78ed"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12536794-root-19/source-critic.json",
+      "sha256": "018313dd0a10b2523afc638a0de879f5805500e5211044e177f758f9fe39ef28"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/claims.json",
+      "sha256": "f5d307eb74f741071cbc3ff2af78f062db63139ef3b48736aa0852a520141052"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/critic.json",
+      "sha256": "c36f59d54492eaf76c8db077c1d8dd58a599fff769b3c042b8d51aa4e85c91f7"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/critic.round1.json",
+      "sha256": "fd7614e5d4934b9ae8b7adf75f473fd2567441aa0140c69302487eedb43b5ff0"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/critic.round2.json",
+      "sha256": "16efc9a25a75547ab98039d294f7940c538192af7d3e1142340c474f6a0724b5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/expected.json",
+      "sha256": "478a5dc097a52f4ca57d5ab3df514b5907a3736aedba44ad5d495429c7628704"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/expected.round1.json",
+      "sha256": "b5d8ed434c3da9fa0604bd20b8bde9499f257be6fc1bbf9d3c16a4d6fcc42a09"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/expected.round2.json",
+      "sha256": "eb48f9471a6a8a63ca4ef08154629231c270cd7f490b15fd996bfdb64bb9f40b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/extractor.json",
+      "sha256": "edacfaf4e669d77f50dfe63e84f1909fa6ab89de517c7b5c81753c093469e406"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/extractor.round1.json",
+      "sha256": "9109bc2d5213517146def8092f3157242b554971fa4a1da74bc28c08a97f27fd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/extractor.round2.json",
+      "sha256": "da3966b930893e09afe65dfe6dea36ab5e4634a2b32fc5a833255c572f4a6032"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/source-critic.json",
+      "sha256": "3bbc7d0968752a65ba216882f49e08bf2913e263abaecee9238e84184b4d9bd6"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12748625-root-1/claims.json",
+      "sha256": "de90f0b20f0aa9215678967250d126092eefbb283440a89f10e11418e251abee"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12748625-root-1/critic.json",
+      "sha256": "a5e68e0a235952b4b69b873635cb60669011b5df739616503bb69638e4498bcb"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12748625-root-1/expected.json",
+      "sha256": "7b291ccabdb53cd8e1a756116601fdd57cf2c0f3f2f17db4cec951ab35b36b83"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12748625-root-1/extractor.json",
+      "sha256": "83a1d92084717b60402fa92811591536ff0104a815170e84fc0b6a8c65423a98"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12748625-root-1/source-critic.json",
+      "sha256": "135e207fbb843e2f42367784e9a5cc480690a9097b8b130208d0933dbdf9b550"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12749812-root-1/claims.json",
+      "sha256": "4f43bcca9f720c1672f9cd46f3890012122e0ae53d42094e5f95eea065155df6"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12749812-root-1/critic.json",
+      "sha256": "90debec03a4b829617ea7b8555faef8e52f3820bdb0d5bdfdc6bb461152f97a0"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12749812-root-1/expected.json",
+      "sha256": "7709357a915804cc8d8bf8e984c693c23a75ba3dfe0b564fc36dea826b918777"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12749812-root-1/extractor.json",
+      "sha256": "5eae756c1cb254dcdeb8bd3c0ee8f8602a78855b574287d5bc0056cdfd6af4a6"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12749812-root-1/source-critic.json",
+      "sha256": "3e365a7600c381b2ecbfb3b11654606a1a6c97fba3e9d2f188009f37ebaf82f9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/claims.json",
+      "sha256": "a1673d124a37a3aabe3cd8584ccb5b33f400e1d7e874db9c906830b90b6d6bc9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/critic.json",
+      "sha256": "0cc4c17f54610e846d5653d2be1d853a602b6c9ad5521e76363d67efe3098697"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/expected.json",
+      "sha256": "ec8c5d46441ddef8c6bf387f4590d99ab70098db4c0e829eb8f472a126351cca"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/extractor.json",
+      "sha256": "4a5a97930210d7c92c03790bfde7753ded21c5a75ba24336ac76ded9e7380b16"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/source-critic.json",
+      "sha256": "a74f4ce4db3a2bd5629cb6880fa674ab3659513a709843107536d0ad22578419"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13062032-root-1/claims.json",
+      "sha256": "63964e79e96c56539ff302423c6b6d296ce21cbb29bc62af6e9325609ab25725"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13062032-root-1/critic.json",
+      "sha256": "41cadaec652e97aad1cb4369b19099f7dbcdca596f1eff40dea10275b63c7043"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13062032-root-1/critic.round1.json",
+      "sha256": "7311b28eec48b39aab2d19a35ed22f8698080b95e34bb8d4aa8124029bc0a8ed"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13062032-root-1/expected.json",
+      "sha256": "ff00ab93ad499a68e7160e665581588f8efef9c62d312633c7292f045f28da17"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13062032-root-1/expected.round1.json",
+      "sha256": "df009be59cc98b9c02cdcb3c0daececd8ce43c32497fe0a4fc5253f283cd7aae"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13062032-root-1/extractor.json",
+      "sha256": "d1f0c6228e7cf1b0f077eb6b5fd734b40a8f8c7af3737fe812b3277f230d28eb"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13062032-root-1/extractor.round1.json",
+      "sha256": "08567ae9cea4ff3872163471bc9123058e97c44ca6025866e6c2d5a2f0f970d5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13062032-root-1/source-critic.json",
+      "sha256": "478fdce2ef92576598fab933b0b48e82689b0bfb9c79fb2285166ef847af4712"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13070851-root-1/claims.json",
+      "sha256": "168cf2e940b2153c9115d4ec5d54f5982f5370df7cebd0efa51f266042eb44d6"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13070851-root-1/critic.json",
+      "sha256": "898f7da4ba757d305a3350e058a806ef1605af848f704b417e04efdb6f0d5184"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13070851-root-1/critic.round1.json",
+      "sha256": "240b2e55465d376a3e56a555aad0758cbca5a2542527128b74c7f896f8e39904"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13070851-root-1/expected.json",
+      "sha256": "556c3c32543d7ad45ea1327aa7351d98d3424711843fe45a1a2897944b007ced"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13070851-root-1/expected.round1.json",
+      "sha256": "ea0eb4ed890a8fdf592974f7798a32f18ed30085596606ef6794e1df0f06f1cc"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13070851-root-1/extractor.json",
+      "sha256": "32250362d7e8ffb1cd39b4246d1b6d49fd0bc8756dd321b6b837e5143f09e411"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13070851-root-1/extractor.round1.json",
+      "sha256": "129e48b09b49f4fa96b0e00933df63f0b0c69e85a16826b57a82d945e12ab3e4"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13070851-root-1/source-critic.json",
+      "sha256": "0630dcf1f053f6936e783760685577b4665f2c591742844ca8ef4f4a0170ecbf"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13272881-root-1/claims.json",
+      "sha256": "0bad7882015bca71376e341290bada69ab8e995ed7b42f27a34fcc512c77b9d9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13272881-root-1/critic.json",
+      "sha256": "a6b565b3b814809711f058ae97620bc205e3908233ef4219a1a7bf4dde64c602"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13272881-root-1/critic.round1.json",
+      "sha256": "ece56a9add64b4ebf7478b922fa1c760458817ae97aeee306b59eaeaf514599e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13272881-root-1/expected.json",
+      "sha256": "d1cd3d8e23e2411cf3aad66d8250f45bce81959d7ead52befd8619588392ed3a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13272881-root-1/extractor.json",
+      "sha256": "bdcd1638b247e7804dd00cdf4433bb3aacefcc90510f5d7b9270e839dd657be5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13272881-root-1/source-critic.json",
+      "sha256": "10ae8deb6cd776e6fff14b1b5e64ea50813cb35000fb0f0663846b55863a3ea8"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13275397-root-1/claims.json",
+      "sha256": "c715dc0dbffab90e97c95c37ad0cac61b634d3c6e2ea3165676962fc4725083d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13275397-root-1/critic.json",
+      "sha256": "ec3fa2b94649aa37f08d60cbf8d7aee3d194d643e87aee7d77e1b98e3accb230"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13275397-root-1/expected.json",
+      "sha256": "e571b449f2e3bfb75b75fdbedcd6cf9b2053ce0633d606e43deba3a11e2fbc5c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13275397-root-1/extractor.json",
+      "sha256": "dcc1ad621d44164ea4a8b59da5eb88b5ddd00ceac8c8340fb8784b832395f774"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13275397-root-1/source-critic.json",
+      "sha256": "c944dd1c2e9741a1521a27219f8dc3814b7a306f05fccb849b73bfea12c3a30c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13468456-root-1/claims.json",
+      "sha256": "da2248e87240a84aab03ae30ca19ede3d4627c497ee0f71919775e2e0d94f9af"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13468456-root-1/critic.json",
+      "sha256": "7c732005f417836f2cc6c91484d905d224ca3a65c2163804e80df72b999988ca"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13468456-root-1/expected.json",
+      "sha256": "495586040708f87b82f16a6da6fe6f53fd2540e76687770e648eeb886aad111f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13468456-root-1/extractor.json",
+      "sha256": "23718c6a6b18261684deaae75fd9ffc967f6b35340d72a79185c4c1c32dcc971"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13468456-root-1/source-critic.json",
+      "sha256": "b23f2bb2449007829160c6c8cf4a20c8cf793237e0923790c8f81fdb983b081b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/claims.json",
+      "sha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/critic.json",
+      "sha256": "29759f5a3a9d61edf3a27dac9ec0b48ff8c351feafec918ae2b13988b9a98353"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/expected.json",
+      "sha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/extractor.json",
+      "sha256": "90b18cc725e36c21d3fcb7d50144ea55579dcb6294295a9d02cff633658ba784"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/source-critic.json",
+      "sha256": "4af1584289d4a8946f7ccfa26e66aff31d7e3c8c0dea07c0ad820b8d4781c009"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/claims.json",
+      "sha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/critic.json",
+      "sha256": "ac134bd2475dd7697ae1eae753ee9fd43e3690e37e19f3f6423190f39ffca802"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/expected.json",
+      "sha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/extractor.json",
+      "sha256": "1d5b5a827b464c52d983d7830228a0e2cdda449665ca826f924311382d475216"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/source-critic.json",
+      "sha256": "b6ce85426af9cd9863ea0e338df537c09bdcfb4092ff5bf710612c4c1d8ecce9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/claims.json",
+      "sha256": "a739f374efec89341efad4bcbdf65016cd84402d930299ae4522b20aae59c495"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/critic.json",
+      "sha256": "fe9cfc63a3593cef9206b0b0cfea5cb726fbf81db50b00f89b6f5103c727b8f5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/critic.round1.json",
+      "sha256": "3755f5bce06c9432a43c3e192234a5c27dc0cc52066f191c2e3944048bcdd985"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/critic.round2.json",
+      "sha256": "4c5bd37635b4072be1d5db721b3e5e10fe92dc59d3ef9b8353b2b926230c0ea4"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/expected.json",
+      "sha256": "ec2c009e0f3188cc3ac18dc91a2837f655124178e4055a02935a00c18b7cf82c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/expected.round1.json",
+      "sha256": "c728a5b125a866581b5ad20342d8c2ce2ba1baa151ea618cad00f8a70d842cb1"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/expected.round2.json",
+      "sha256": "a03cdb42cc56cd8ff0bdbd419cd78dc6072ed620e8b0b9cc837c5d5988c51402"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/extractor.json",
+      "sha256": "30f207c743858a8198334f0ea660234b69719b1ee82567a8d4468add7dab262a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/extractor.round1.json",
+      "sha256": "3eb926e0297cae8e48ca1404b652a1e7588ad2a259a25041e9cc96d23c1054b8"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/extractor.round2.json",
+      "sha256": "7b1384fa9ec8609c03d597925cc668405792f6852b2b873eb747611e732f09f9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/source-critic.json",
+      "sha256": "91d8533b4f49acb0294a8d74f32d637a4d2f6fc01ee1e195af2a42dd0d5ab027"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13822885-root-1/claims.json",
+      "sha256": "5e4de16310116539d5de52028f3e832076f4b8cd510c405929a64dd831ed95ab"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13822885-root-1/critic.json",
+      "sha256": "60372d43e46604a6e17654e38cfada921cda16e8d9ff3e0a5c13c93be93a6477"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13822885-root-1/expected.json",
+      "sha256": "ac25230958feba312a387956b3bf79cd7559153d9dea188582972dce57b91902"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13822885-root-1/extractor.json",
+      "sha256": "7bfd8b42027138aaab32fc9bebae17f570b55dbf1ebf09a32833a7997906e42d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13822885-root-1/source-critic.json",
+      "sha256": "20e4f33df6e232d756d03b39bc3c49f2bd1ad5d45ee44669bdf487e20919be5a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13846690-root-15/claims.json",
+      "sha256": "93f33db91b62de82b9c30b4267cd2dc3f8892b89683b9fb9573082e5c9d29dd8"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13846690-root-15/critic.json",
+      "sha256": "98bea968d2e41940fbc3ea26e7b8c025357edd75a754eaca06ccdee8cd4eef58"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13846690-root-15/expected.json",
+      "sha256": "7c694b3139dd4ee7ae5d9c549358b252b43402509475895dc0e21e79577a68ef"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13846690-root-15/extractor.json",
+      "sha256": "ed54cd26a99459c17de197334a3826c1b653cb23a52e8eb7b92535abf0f376b8"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13846690-root-15/source-critic.json",
+      "sha256": "d374fba4bb4800169844baeb38b429e4f8e9a24dd9a26c2469fab62f158b7a8d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14260199-root-1/claims.json",
+      "sha256": "2a6566ce3959224099eb96e8c035f39443d2b2f97c693079e9e0d92fe17d411d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14260199-root-1/critic.json",
+      "sha256": "9764610eb92d72374d1e2c099840d36aec0a6d0b4b14f1370fdf0150a174ded1"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14260199-root-1/critic.round1.json",
+      "sha256": "890d1704c3c58c5ba2b7de9aaa5af52ec7080cc3521b0b49d5c209a64af057bc"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14260199-root-1/expected.json",
+      "sha256": "0f8414949bbdfef818f52da8786140307f4a3b187765e6de602177ed269be656"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14260199-root-1/expected.round1.json",
+      "sha256": "7e7a5e17b86cfed010e439246ad533dbd8fdbbcb0bdb949c9b5a056e97350d00"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14260199-root-1/extractor.json",
+      "sha256": "dc765667fb9770ccadda14fff1941b95c5edf1bb00616a578f8f4d5d98ce8496"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14260199-root-1/extractor.round1.json",
+      "sha256": "c8defca82888f908aa8cd75986542f4f39877634f72fecb710bf30513e92a5ea"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14260199-root-1/source-critic.json",
+      "sha256": "b7d394924d819e9f15f81059433e3a1e87af512166af528c603fecd2f77f562d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14262251-root-1/claims.json",
+      "sha256": "7895fa26cc03152fd1557b1e813722cae01467cac89ed50f3000d907c0b32c06"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14262251-root-1/critic.json",
+      "sha256": "382c4736411aa67f45fb56aa79026dc15acafc62433f5657cb6e9429046e4152"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14262251-root-1/expected.json",
+      "sha256": "7b1bc3b73871c82c132b715b7d240ef58de0c59471ae84b76af1f89e4b8aa8fe"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14262251-root-1/extractor.json",
+      "sha256": "3d175e3ec9a50e086d0bbbdb96c464e84f4817807b700f3b05dc3f4a3013c60b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14262251-root-1/source-critic.json",
+      "sha256": "ac777b882f0c904f6d73cff74033e59bf982f4fc3d82aaaef97004e4d983e948"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/claims.json",
+      "sha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/critic.json",
+      "sha256": "5f7f848cedf5859ee12be31025da98d05d6a64a68be64b1a0088c6b31759826f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/expected.json",
+      "sha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/extractor.json",
+      "sha256": "622a36125a942cac33ba1a36910badd9751c50420fb754470c56b2b20007da3b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/source-critic.json",
+      "sha256": "fcc94068d5d141694b4dd3c7a19f0c9aa64b42529c372de2c725dab032f01775"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14657939-root-1/claims.json",
+      "sha256": "e817d70498be4fcbbe2290230abb53d2683d2b1224d5d8a6e287eede9dda80a5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14657939-root-1/critic.json",
+      "sha256": "34d59b34ce2eeea76dc82de2737982304f506e07ae7abe393869f87dc08c30cb"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14657939-root-1/critic.round2.json",
+      "sha256": "8fb683b30aec747653a461c6413b779d3e6dc6a626af03f43a5e0486603470bc"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14657939-root-1/expected.json",
+      "sha256": "3ebe566ad60940f6a5b305d16b7954b3b5b5600c5cfa7ee8b8a3f2646b421ec5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14657939-root-1/expected.round2.json",
+      "sha256": "e8f0fe0ead6483c43e44313728ca8924fc6b9f052f1170c7b9b62d934f9f68d5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14657939-root-1/extractor.json",
+      "sha256": "3c87c0de24873867435612ef00e71114bbf8068c054a53b8c215fe8d77ecad34"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14657939-root-1/extractor.round2.json",
+      "sha256": "2926e838297c3865f8f241e3ad798ac5b4b873e896f4a4140be4d796ab1d51a9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14657939-root-1/source-critic.json",
+      "sha256": "7114cda7d808780f9ddc791f6dff4c9fd72cae3f2779e5503787c1c73b290441"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/claims.json",
+      "sha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/critic.json",
+      "sha256": "8eceb9b614975300d50961cead27d4076f92ff4b6d7a6c708c19e3ae27b6cba0"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/expected.json",
+      "sha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/extractor.json",
+      "sha256": "c62eeb3007812d2ab5b2bcb11682c76a282581e9366fbf3b609f1e20f9fc5fde"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/source-critic.json",
+      "sha256": "389ba6cc0ff285816820c76c094ab843d4f8c4fec599ae2bf4ce5059920ffe7b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14813790-root-1/claims.json",
+      "sha256": "fb30005670a9a542c5f3c243c237d6d73b8b881fd3cd629913ad82a82cc1e4dd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14813790-root-1/critic.json",
+      "sha256": "298b2e190839d58a15fcfd6e71648593bf6370f6744589dc17fc79e762ebfbfd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14813790-root-1/critic.round2.json",
+      "sha256": "05506c5b12dea40523f0e5e9d7d3f1545c2d447f645029532a1d08e6a6f3c408"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14813790-root-1/expected.json",
+      "sha256": "7be31884a736ca56667a8e61cb60dce109e45011d11c04f3d0dda1727af3a0d7"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14813790-root-1/expected.round1.json",
+      "sha256": "1aab0bba18d3b34618da0edb59ee4a53b393e771f3c73a1cf200c38586fb481f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14813790-root-1/expected.round2.json",
+      "sha256": "afd97720f0ce7cff12b8a377d72f066822286fefcf87b626ceb0c41d16d381ef"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14813790-root-1/extractor.json",
+      "sha256": "b2a11a6aa7d64e2b655e07fe0a474f3173517a9c0f3337f9291382605efc46c5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14813790-root-1/extractor.round1.json",
+      "sha256": "a1ce7fbc43355b85a5eed6ea2f19661f813299b192fef1ab4005040d38701923"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14813790-root-1/extractor.round2.json",
+      "sha256": "7e6a883698d22d483df4a1a1edefd634a87d8f77fe02a1ca3663917c68a9074b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14813790-root-1/source-critic.json",
+      "sha256": "cf38bf8de81faa0e74f3285a5081f2b4d6b75a666062e7f888387a9a18eb265a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/claims.json",
+      "sha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/critic.json",
+      "sha256": "69354dd5c2567c2bf10c208407d2ca68eefa8d5d62395005374b98ba3a75ecc9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/critic.round1.json",
+      "sha256": "acecfa16e0b0b467076102150cd79ec884b403ad09487c7f32c9beb539f8a8e1"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/expected.json",
+      "sha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/expected.round1.json",
+      "sha256": "f3a72e276fd1b9e51999daa46e30d96827d72ba1878a0f6943b9defa940000f2"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/extractor.json",
+      "sha256": "f0b2f340c29b24971656947bba72ee1332f76e36f60fe9dacc8c01ac554088e2"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/extractor.round1.json",
+      "sha256": "9a73b374bee33ce7f922af24404e17aeb15525fee083acaa2252d2534d8a0520"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/source-critic.json",
+      "sha256": "bf2821fb5e0951eb436e8b817d2da47039f5129d3cdda33ef95145dc7dc13997"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14971439-root-17/claims.json",
+      "sha256": "df8ffcc425240e022e58b66ec9292cde798a668c0eea68dcb5332bb902a80e61"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14971439-root-17/critic.json",
+      "sha256": "3aa9efc6a91dd7142f31d10f5b54d0931fdb7638e52836397dfb5dee7bb19f91"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14971439-root-17/expected.json",
+      "sha256": "00d437de915896a5145101ff006ba22cfd03640c0848439e3ba096e4e453b97a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14971439-root-17/extractor.json",
+      "sha256": "386bc953d5b749cdbb4c3c2a62038b09c03aa5524cfffad6cf613f3cf1ef43f0"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14971439-root-17/source-critic.json",
+      "sha256": "2466ff831ade0936f00b4f505b5ce8fd340487749d147be3d1fb1797abf7f9b4"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15276859-root-19/claims.json",
+      "sha256": "6d0209dc5b738c64bc46946b278c0961baa6b77dfa4a59530fd40267343ec00d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15276859-root-19/critic.json",
+      "sha256": "1690ff3729cec48642c60ea89da92aa7220a2bece4de17d70de60c0e16f1974e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15276859-root-19/expected.json",
+      "sha256": "4b1f7d2bc8a8e24d3d5a9ec4d8cb128523eec7d8d9ee1e4226cfd7563a7ae701"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15276859-root-19/extractor.json",
+      "sha256": "5db7c937cfcd6bc82169e4b80dbc8657183097c22393e47ab644ef371d116920"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15276859-root-19/source-critic.json",
+      "sha256": "505ba703449c7408a717c855220028a35cc75f367ebc84b5514481bebddcdc34"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15752303-root-1/claims.json",
+      "sha256": "1ae8d1b78d63c6c3dc1f57917617e98e193d095a5bd25a36a68b0ed9e405f6df"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15752303-root-1/critic.json",
+      "sha256": "e7bcd953b3346ded9dcd7afc0af2894ad468f6e4fb3524ddc7e3ac401b7d8517"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15752303-root-1/critic.round2.json",
+      "sha256": "be8d75f07e112529aa14f61f36268541a6f2ad9f6b11fc11e141168eaf0af238"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15752303-root-1/expected.json",
+      "sha256": "b2603c819721427c9816cf936d5ba3deb25491c989518b7f3b497dfba9c9d24c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15752303-root-1/expected.round2.json",
+      "sha256": "6c3a2c4589b9e32e42940b12c9719048a55d7c4a7fdf3a0e5844cea7e8ae32ed"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15752303-root-1/extractor.json",
+      "sha256": "3fba5e930c758f489c7af9f44091fc24e3a15c908e4ef30779f2cd3bcf43db38"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15752303-root-1/extractor.round2.json",
+      "sha256": "6870ba493931604883ce0b74ff059c82e10bd075a970e84e1d7fb9d9dd7f8c2b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15752303-root-1/source-critic.json",
+      "sha256": "80ac7239a5f2100b01cbaec2ccd1717aec2c40b84f49d30f820102debe87f9b2"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15803808-root-15/claims.json",
+      "sha256": "e1b33ed0f0ac85adce528bc4d8f24f8a425c025f068508281f03e5e15baa9ead"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15803808-root-15/critic.json",
+      "sha256": "22667169ae87521a8b374bf93ffee3a53b9f4c6bfa282e05782b2baae7025713"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15803808-root-15/critic.round1.json",
+      "sha256": "ab5aa55d5239c0a9318e9aab382301f0331f969617e58ea7b1f113cbd3f83357"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15803808-root-15/expected.json",
+      "sha256": "de12209bd0c68b977c45217c5dfb0fe5455c99d027acb19350abc0a0c45c2b64"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15803808-root-15/expected.round1.json",
+      "sha256": "846c1fcea3aedde6835d4612710fd14ddcf5a764ca210f42e5fc78ab3dfb9d54"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15803808-root-15/extractor.json",
+      "sha256": "bd152a1fc72046c609c128c1117726b4fce2475a2283ce941e06f01e5822ad36"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15803808-root-15/extractor.round1.json",
+      "sha256": "8269e25bd406665298c1cfae889e2e98e84f9628528536155fd8303815ec411e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15803808-root-15/source-critic.json",
+      "sha256": "da29f06d8c30ca25a1f4542d783a5ad7dac8ba42ce1b692d9addb6c0b925453c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15927789-root-6/claims.json",
+      "sha256": "c0ba2bcaadfa1f596a2509be91fb6d28917dd359055ef25f9da85038ee1a5624"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15927789-root-6/critic.json",
+      "sha256": "f79c0efb0d4f7b50d8e4c0aaf0e23d7f2986af8feb34a301fb8945911dba5686"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15927789-root-6/critic.round1.json",
+      "sha256": "03fadf11978d098970c03f780ae82a28c4d9a9c2693c5dddbd1f6497d2b04b7b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15927789-root-6/expected.json",
+      "sha256": "bb8cce114a2ebd178c30a4f3baa3a72f6a16cedbc5b6639afe79e8f1864b4012"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15927789-root-6/expected.round1.json",
+      "sha256": "ee3e1fd957a4b7b4a6e76210de2a4efacda4d6279fabd0c8b5f56c0a253a39b1"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15927789-root-6/extractor.json",
+      "sha256": "fdf4a3c7ce5b03f7f95de926fa130e5318ba66577994b62f3b11881eac3aca69"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15927789-root-6/extractor.round1.json",
+      "sha256": "51f3f69ecf8832c1feb66d7c4e97115f9c888b176fb5000a557e4fe30fe56a11"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15927789-root-6/source-critic.json",
+      "sha256": "0aad9959777f863ad53b3dadd4b92c119d9bdf5a3feb00de8fe52aa2819ff066"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/claims.json",
+      "sha256": "961fb5f2b7e5ac40f982628d7cf89c972bb3072ec095804a88a3804734a9fa4d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/critic.json",
+      "sha256": "77a7b7eb0bdb221304e493030a443debf1edb56aaba9b4d0421323dda90aecff"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/critic.round1.json",
+      "sha256": "ee8d443f0dd3bff7853a0765500d63ef0b10e87c016eb80faac77053c4a7535f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/critic.round2.json",
+      "sha256": "de162112288d0c2ebcf720bf5a937b7e4c50cc9a4c7bfbb831c6cc52982d4358"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/expected.json",
+      "sha256": "c802797ba9c717af7e5083fefdbf8a0237adde71edb682a0b5256ff122fe3045"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/expected.round1.json",
+      "sha256": "0953d41a2a9635dd6eed9af759b56d239af07fbafa9bd6c939f35a6670e6855c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/expected.round2.json",
+      "sha256": "bfe32abe2b9b6e3267a3e6d627d9aa6435be8b46e058cec4f5bde3f4cb2ba627"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/extractor.json",
+      "sha256": "7a9e3271ff4b5132a405e9d134cdc290360f8c91acec35545e7594d9c3fbcfd1"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/extractor.round1.json",
+      "sha256": "7ebaa6e0fc1079d75cfde933de8073a5c79377fcc97d395e598d774f985c0272"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/extractor.round2.json",
+      "sha256": "023f12ba599c4d3c76efef1ae31cf30fc3dc9a8f9cf1d87a10680e0eb7d0f0c0"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/source-critic.json",
+      "sha256": "190354635a2d2850ed28611ec9dee6b80328d11cf535b85e602ad2fc3f258a57"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/claims.json",
+      "sha256": "4bc7f085a60312f5dc991d9b8a5fef7ea6a6d83e7837c0223a7164b0dfa48f5e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/critic.json",
+      "sha256": "80a9c59e150f6dd1069e832f597fd6c5842701d025d103728c8b26b787b63241"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/critic.round1.json",
+      "sha256": "e7a0c11599f472198d14e2a51cb3186a05a608c8a958a76e514ce3971e4984af"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/critic.round2.json",
+      "sha256": "4903a013f4eca0153727f9533c65ec1c0dae2887e7618e4735e768d0b8c6ae7e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/expected.json",
+      "sha256": "0766c4b35e0c0be8a6ecdde66feb7d7b4635edbeaaebae6b2700dfc7e9413ff1"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/expected.round1.json",
+      "sha256": "4d32d74cc9ea633ced4d15af504aabf687d9bffe26464f819f347bc76c78c0da"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/expected.round2.json",
+      "sha256": "d5f19f9aaaeaae12cf55415b1d939573d8247dd355324a8919cf969ad9e941cd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/extractor.json",
+      "sha256": "8417bd1a1b66a8d25ae9aa614816c316f7e76bc3cf92b1a4884e704b4078475c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/extractor.round1.json",
+      "sha256": "9f4944a13ed87f588ec10dac11d7a44b4730f8772a86502dfc09d5a65ce0c3a7"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/extractor.round2.json",
+      "sha256": "e4a3038a58fb43bc82863d5a4e54f735e749e75ae4afc50e194a3773ce991e9e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/source-critic.json",
+      "sha256": "96ff6b453b060acee73e664a76dc6482d23c5d04ffe7c82b9d6e2abdb8a843d7"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/claims.json",
+      "sha256": "73a860bc0b4e953d68579b91e7f118b75cea86732da371ebf2a08fa4b44b165d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/critic.json",
+      "sha256": "d9df3aab606802e4ed8ce8704d2eb3163c66936a7e3b08d6f36d54346f2bd6e1"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/expected.json",
+      "sha256": "ba5a317888ff6aeac74731169e1d6fef8bfe813afb1d61a09a0aa3c6ff95f8d6"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/extractor.json",
+      "sha256": "161c1fff336228fb1e3fdd4b5c38a004079ba9fc456e2f8cd7c6f7a86744484e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/source-critic.json",
+      "sha256": "0f90c7b62ccf99ef45ab26ded39c854450f9b544f11608f627ae237256651495"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16135952-root-20/claims.json",
+      "sha256": "9c65af50762c01932a41c7495f7395f7ef0da3e17393e8ad64d4d76d74f166a5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16135952-root-20/critic.json",
+      "sha256": "e5de8915fb1eef6bd587751d82b5d69f8ca356d46f373fdc5faa63466b6aa51e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16135952-root-20/critic.round1.json",
+      "sha256": "ef37f98e6d54a702d597edf1cb45825976f5a3c554ad90986c0ef8b3732e3e13"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16135952-root-20/expected.json",
+      "sha256": "3a3960462381e72825eefc50904d75bbc65fa01dec00ed060642ba523cb9973f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16135952-root-20/extractor.json",
+      "sha256": "6881e3ba4aa8d09fb37febddc0b81c67e22077daf354670e97f77366f790afb9"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16135952-root-20/source-critic.json",
+      "sha256": "4a8b0e8f3b200b76273bad0fec635dd00819d0b20feb182b99de295c18120000"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/claims.json",
+      "sha256": "c7d0a0d5c89f2e3d3e3727a243e31bbbd453c8973b8d5f3898ce3f07604153b4"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/critic.json",
+      "sha256": "c3a397c5dad469544b1d1415ba388537bb8014177f1d4063a3f6d80b366873cf"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/critic.round1.json",
+      "sha256": "8206841a09cae46606ec96eb2418adf74848f3ebf0b1469260fec4771821cfa2"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/critic.round2.json",
+      "sha256": "45bdcc7c831445573c1f4ab46b57fc768410991fe516c11a4f437009268f53d8"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/expected.json",
+      "sha256": "da81a272d2a193712c713548e7437adb9fe210738f611ed13916402e8888612c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/expected.round1.json",
+      "sha256": "5b29d232b81aae2d86eeb8f3013a1f7b1e3b1e667ee380a18732dd00a80863e7"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/expected.round2.json",
+      "sha256": "3aaed4037f47dc19703619194af1515ff8c48ed12f0b4a3282c02cf5490a0aa8"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/extractor.json",
+      "sha256": "ad833f41b317bb15d44808539d1de3423d8768ccc2b364be320a5db5645032a5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/extractor.round1.json",
+      "sha256": "8818d26143b99bf19fb53876260d0592d5c613ca36ed39eb4d465b0c75ec0dec"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/extractor.round2.json",
+      "sha256": "1408fa0d2bf6441261f91dfbd474566b4c6437000609b2224aacfe491588fa0f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/source-critic.json",
+      "sha256": "ee6d6f1ec837bb7d27919ecf7464fc61fb34d99e329317b0cb842a34e8266765"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16778182-root-1/claims.json",
+      "sha256": "1e051f56a67bf1f70c03c940174a6b4e76a423f4ceac6d3308c41337385e3528"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16778182-root-1/critic.json",
+      "sha256": "fecf9d34881de527e85b5e06b3c1ca184acced488435091ea89d9c49b429521d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16778182-root-1/expected.json",
+      "sha256": "a52b1081bab2b627e40bd7ec67e251f4070070a750fa4e06a6d2ca653f4167e0"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16778182-root-1/extractor.json",
+      "sha256": "5f705b159faab751c39389c479beb6bcf2e0c0218643a55ee80fbc1c4d3f1ddd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16778182-root-1/source-critic.json",
+      "sha256": "c4a5e10b29fac81cdc60e1b0a921c81ed33988697c4358da41eab76d94f659cc"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16819424-root-10/claims.json",
+      "sha256": "bb9255f805ef26d0ad736ace7bf1c05310f33ef2323e3e5e263007fea80d6719"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16819424-root-10/critic.json",
+      "sha256": "9b992aa268b7e3bcec8a4200ad08f0ae6cf3f9ef4fed610e04a47c663a348390"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16819424-root-10/expected.json",
+      "sha256": "69e6bc2498229faaf7623b7c06c5f346d4b534c99c18dafaea4cf8a5c3dfc756"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16819424-root-10/extractor.json",
+      "sha256": "f36bd7eea9d1cfce2fa28162fa9108ab3dc11e22f04c5cc49237ad3a63235127"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16819424-root-10/source-critic.json",
+      "sha256": "c0cbe6819b75472a48d9462f5d6ef0322a18fb95439e59dea7f0391140fa6a3a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16963517-root-1/claims.json",
+      "sha256": "ac4d83f1e0a135c5b90ea4313aba9afd1671fcb0c07814f7248210e45a354432"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16963517-root-1/critic.json",
+      "sha256": "2f44b8e20737e60fd96bf66a4be419344478c01fe30589208675c6fd70a02bb5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16963517-root-1/critic.round1.json",
+      "sha256": "a3f80c013abf89b6c20024bbcd54e09d38bc24c9b21e09b0a698db377a0819b3"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16963517-root-1/critic.round2.json",
+      "sha256": "17c5fd0dae4b978f18be004612728f6a9b7fe346fa85e247b1f44d7aa2a8ed4f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16963517-root-1/expected.json",
+      "sha256": "6c479593b3083c2274b40593471d4161eb845f8fa8d9dc2f88396fe5e2940d92"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16963517-root-1/extractor.json",
+      "sha256": "d2b411425e0074d2ed4ff75420a66ffb510e6d2e097b5c74b2de4d1e1725d17d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16963517-root-1/source-critic.json",
+      "sha256": "0157248dc4f5d0cc2aaab67ae73099fb7dec46b8bd9e15597ba66a9aab9a9342"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17139442-root-1/claims.json",
+      "sha256": "513204c5075ae8c3db00045bb880d49f71a9bffa14a67c8dd52dbfc824f80938"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17139442-root-1/critic.json",
+      "sha256": "4822a61ad8b3b83ccf424f3e18845f6ed79a376dc8b8810cf55aa10eed6b0497"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17139442-root-1/critic.round1.json",
+      "sha256": "0da4698ef7942a98880f0366ef0095c7e722296f67dc5a7b9ec6d4ca6d9da97d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17139442-root-1/expected.json",
+      "sha256": "c7cafa6540e2b2235a1fcfa5e4cdd0aacb4dac57c7ae06e62fa0c23c95240d79"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17139442-root-1/extractor.json",
+      "sha256": "e4498913d70ea7f23bfa8db5e5a1d7dc5f2422feab1dbdb4dc86ed89c974e264"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17139442-root-1/source-critic.json",
+      "sha256": "168addd59d691f589c453aaae29e5b18a910f0c41ac3eae352aa6e0d9c3f3231"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/claims.json",
+      "sha256": "f515dd518e402bb6ae9c3cbac662a3203ac1e1b236256d986953696f5ef7307c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/critic.json",
+      "sha256": "dd579a9ccf8c28e038fdf3dfeb87753a6d9b05edf4525b442173a36d86c523e1"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/expected.json",
+      "sha256": "6077b7c4c31dcdb2ac1f867cea149174e35f555f82742805c27f2e467b98df11"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/expected.round3-pre-dedupe.json",
+      "sha256": "721899bc3f66e94a0a07bbf12eb703160101995208e78f7c419c9a6e3c09f2d7"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/extractor.json",
+      "sha256": "10ecbae1a35fc3edd090d9328696f3083d88bb6d022e2ee3882020f126cf116f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/source-critic.json",
+      "sha256": "5d28bcb3fc09b3fa2b38bee6c651e6ec0c71bb78d4f1c92b06d6cbff4e267c22"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18018354-root-6/claims.json",
+      "sha256": "b21f4301180d34c0e88b59ba8051ed19d3dadfe3376e2bad75d87029e8f36e4d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18018354-root-6/critic.json",
+      "sha256": "a07a72be52ad71a41cd5ae72311d02eb84112b9f4d2fbb49e30c6c5129f331cd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18018354-root-6/critic.round1.json",
+      "sha256": "91ca11848cc8726d8000682ae7694cf576c99c6970728953d42640a54ee7fbec"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18018354-root-6/expected.json",
+      "sha256": "1e42422392b34887f0abba57d02229b792a212c1bf5ee78e7e6ae7c900eeb4c8"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18018354-root-6/expected.round1.json",
+      "sha256": "9fb41024eb416913235e193563787b38e9e336d115346309fee121c8f1ca66cd"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18018354-root-6/extractor.json",
+      "sha256": "3bb102278e1c3a075653290a4e9c9cf4cd052d4783ff64ca993b058e99ffe783"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18018354-root-6/extractor.round1.json",
+      "sha256": "62a7a27959bf95ea5d1efaedb6da4690674f659caf4ffb2d9552dfa604f91f24"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18018354-root-6/source-critic.json",
+      "sha256": "e26e9ae8305c0f135ed8dacc76354893761d13a829075bcb205dfaf142b9df1a"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18087856-root-11/claims.json",
+      "sha256": "10487b946454479c41372fac3b3f7c6181b57c4dd3f79a40c237d8bf9c932af2"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18087856-root-11/critic.json",
+      "sha256": "3c0fae96ac7883ba132b473624cd71ff172996ffb0540d2ee1cd740c07839051"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18087856-root-11/expected.json",
+      "sha256": "6947163537bcd71d43ac861fe99a0262aad9ca1d163c3b5cb3fadab4febc3fbc"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18087856-root-11/extractor.json",
+      "sha256": "e21aace850b9313c0104b2bdeac1a8be4053f4ba547b32fd1682af2477fc9192"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18087856-root-11/source-critic.json",
+      "sha256": "b2748ac443e42252a781772e8954ad23651e27ef4518f8c6d98036f61c1bcd2e"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18307241-root-1/claims.json",
+      "sha256": "6e1ea332ba83d0491646aaf4a6e365d7c5090b0467e3ed931cad60d9c8622c18"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18307241-root-1/critic.json",
+      "sha256": "aa5df759e34f10ab245a066f81c87eedbf34e996fe6ce8b96223637ee026ff44"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18307241-root-1/expected.json",
+      "sha256": "30bcaf088474a78e7c6bb0de5542ff5f01bd7cddb5c0698864e6af4d0b9d540d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18307241-root-1/extractor.json",
+      "sha256": "b9c1b2a7fdab1bbb7597d40324fd190e0b10156813eb49b1f48063d3e08e1fba"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18307241-root-1/source-critic.json",
+      "sha256": "123fde2e206015b85c2aa7b1af087a618f6b051f4894dd7c9374b2c4f537108c"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18409554-root-16/claims.json",
+      "sha256": "f0d7e5db2296a90b90d7498fecfbd961e4af977ec7b97d46d713f9ad77f06655"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18409554-root-16/critic.json",
+      "sha256": "2ea0e8c6bcd36e8963bc577fb2dc94a4fcc1496833b5f4bd020b8e9a7bd12a19"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18409554-root-16/critic.round2.json",
+      "sha256": "40d48d419b2cd828034c00ed43c4aa8876b4fa3f18941c09a08089ed5b86198b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18409554-root-16/expected.json",
+      "sha256": "2c1af77913d626fcb0bca8d68b36bf7f661d5e6aa599a6ba5d58a9ecd2f9bb34"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18409554-root-16/expected.round2.json",
+      "sha256": "95e847b121750f5876eea41d6acbcf300f80b5ff18c5ac89d39ae3af77ab9054"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18409554-root-16/extractor.json",
+      "sha256": "72e6ec71b70145b744ecdd235d2623e3725a79c18773ed27d7f3b03276e96d58"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18409554-root-16/extractor.round2.json",
+      "sha256": "5143c5b759024439fca368422cd2c5d7d807fb17e48ee6e0b85e0b7699775d84"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18409554-root-16/source-critic.json",
+      "sha256": "db70d43d00e55b341e736362fb1a4d9a7711c6662d6ed41e8ee8010c8d5c8464"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18547866-root-1/claims.json",
+      "sha256": "32e58dfd4c0066d47ecac41dd8e1fa352332db500d1fe591c8ac91ddf60ff5bf"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18547866-root-1/critic.json",
+      "sha256": "f44731b4bd11076dc2e8b95ea7e2abadd0cc5bfad5502c107cc632ee698e8d75"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18547866-root-1/critic.round1.json",
+      "sha256": "63a7ddf12f9f1424994a34468f1e1785543d8b178133262893aa99fcb07a9027"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18547866-root-1/expected.json",
+      "sha256": "01fce7ac8de820f011ff76f44a3c821f99e62a957bbbc1b18c8a053956648aa5"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18547866-root-1/extractor.json",
+      "sha256": "918cd7c9eb177abcd424681c918a6a62930f6d403478dd5aeb17caa7c1529873"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18547866-root-1/source-critic.json",
+      "sha256": "f5fa487f441ceaea1cb158ff20bbad2f6566d16d2f9abb55d39a5f85043e8684"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18643465-root-1/claims.json",
+      "sha256": "7115e93cad501e433cf4e447e2d32a0321d2efe2ee5af89676f51bb047708d98"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18643465-root-1/critic.json",
+      "sha256": "1948012e5297f7c58d9941dd280ce54a58f54e09b8c10bd09f7d91e32d79ad32"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18643465-root-1/critic.round1.json",
+      "sha256": "6f4a35f3441b23005c94f03f80e63fefec1dd54dd6ccacd9023fcbeb54bc8e2b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18643465-root-1/expected.json",
+      "sha256": "65df8b6847705cdf8ebe662aab5b7c5903a88f0006db42a212a7c567a54b1306"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18643465-root-1/expected.round1.json",
+      "sha256": "1d43e86b9e1ec87d0fb236f46c5f4c9820946a352264595c04a377aaf2789882"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18643465-root-1/extractor.json",
+      "sha256": "5eff7bd928f5406d78d4ffe352e4243c8325241edb37c60ac5596acfe5570079"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18643465-root-1/extractor.round1.json",
+      "sha256": "364d51493582990a2c19aa14aad539252f6ac01c2631143f58d866d7ef02376f"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18643465-root-1/source-critic.json",
+      "sha256": "c24736dc1ce00bc2d237e7bef976799647387a17dbdf1317768cb64994a0e6c7"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18734099-root-1/claims.json",
+      "sha256": "fd8f92341d47be87a72af186c5cda1534ea3b280570505f810855659af7a760d"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18734099-root-1/critic.json",
+      "sha256": "84dba6ea5382c28108909d949a017959242dbf2a0f40c0fe27c661c845424ced"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18734099-root-1/critic.round1.json",
+      "sha256": "3a7223fd1c22989785cdfd5e5fa322f47b066dd8d06a4dce812d003a0b1c8374"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18734099-root-1/expected.json",
+      "sha256": "b44c0a52e1ecde9d0ff69609a2d2c87bc675a2e1d21ee821cd431253beda6296"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18734099-root-1/expected.round1.json",
+      "sha256": "43c73771696527e49eb4daf665fc46f94a5fe8c62af3e1da11911dc89fc94b61"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18734099-root-1/extractor.json",
+      "sha256": "40e7e5bc2e6d1ad77f05d9df5f32a1d8cf83019a8a0b3f85639ba355d97ed233"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18734099-root-1/extractor.round1.json",
+      "sha256": "6e04a730618f544c392e921c9f0174a715ea732904717972ec7bd56abb79f68b"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/18734099-root-1/source-critic.json",
+      "sha256": "b8125bec11885c531685a9f3033f203ca5686827ad52282be26a922d1e687a94"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/replacement-candidates/12610700-root-5/claims.json",
+      "sha256": "69ed38aab2e4cfd0a00f66431c588199497d1a12af98318eb7dd3f6c49363733"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/replacement-candidates/12610700-root-5/source-critic.json",
+      "sha256": "1c1d44bbb9f0c130543d720155d9472051e44817c1a3cc245ec709fca9c226a6"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/replacement-candidates/13032032-root-50/claims.json",
+      "sha256": "7323abb8f9cd3ad1ce201c841798bceebba7e2268caeab946043c1048060a269"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/replacement-candidates/13032032-root-50/source-critic.json",
+      "sha256": "e4f981c378826a8e98adb12b6a12dde5de222f7f79dd7d21f9933a27ecfee416"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/replacement-candidates/14414970-root-20/claims.json",
+      "sha256": "c2263774ec0c3421d9b913624196a706db16601c170dc757fb0b301bdb7eac14"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/replacement-candidates/14414970-root-20/source-critic.json",
+      "sha256": "dac79b4219ea8a6e0fd94915345164cbf3942686ba7ded6adb63635741adc3a3"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/replacement-candidates/15376670-root-1/claims.json",
+      "sha256": "6348ab1c887c0167aa66f8b40c97838d59a74227657fc900b11947de4208e3cc"
+    },
+    {
+      "path": "packages/law-practice/domain/test/fixtures/claim-element/replacement-candidates/15376670-root-1/source-critic.json",
+      "sha256": "4f6b9e4b251235426d05f2b2edbaf693a19a185a811f980d4cbbb42fe79c0b2a"
+    },
+    {
+      "path": "packages/law-practice/server/test/fixtures/claim-element/US20200109732A1.claim1.expected.json",
+      "sha256": "7f90b692a75e8eeadd121cc17263a247ed346c9196b076f9072789b13282ca80"
+    },
+    {
+      "path": "packages/law-practice/server/test/fixtures/claim-element/US20200109732A1.claims.json",
+      "sha256": "fc572ca63512ef76e4273b05276a83bd2ba3de61611bfdcedcaf4e8f5cd8cdbc"
+    }
+  ]
+}

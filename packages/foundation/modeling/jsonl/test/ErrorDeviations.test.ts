@@ -1,5 +1,6 @@
-// Pins for the JsonlError rows of the D9 deviation review (EFFECTED_PORT_GOAL
-// section 14). Each block names the review entry it pins and says whether the
+// Pins for the JsonlError rows of the D9 deviation review (section 14 of the lab
+// port goal, last held at
+// bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/EFFECTED_PORT_GOAL.md). Each block names the review entry it pins and says whether the
 // lab matches upstream or deviates from it, and why.
 
 import { fcRuns } from "@beep/fc-runs";

@@ -38,7 +38,7 @@ const planCommand = Command.make(
     yield* Console.log(A.join(yield* workspace.plan(home, resolved), "\n"));
   })
 ).pipe(
-  Command.withDescription("Print the clone, link, and build plan without writing"),
+  Command.withDescription("Print the clone and link plan without writing"),
   Command.provide(ReferenceWorkspaceLive)
 );
 
@@ -64,18 +64,24 @@ const provisionCommand = Command.make(
 
 const refreshCommand = Command.make(
   "refresh",
-  { root: rootFlag, jobs: Flag.Int("jobs").pipe(Flag.withDefault(16)) },
-  Effect.fn("Refs.refresh")(function* ({ root, jobs }) {
+  {
+    root: rootFlag,
+    // Timer units rendered before the 2026-10-28 graft retirement pass `--jobs 16`;
+    // accept and ignore it until `beep refs install-timer --refresh` re-renders them.
+    jobs: Flag.Int("jobs").pipe(
+      Flag.optional,
+      Flag.withDescription("Deprecated and ignored; accepted for timer units rendered before 2026-10-28")
+    ),
+  },
+  Effect.fn("Refs.refresh")(function* ({ root }) {
     const home = yield* homeConfig;
     const workspace = yield* ReferenceWorkspace;
     const resolved = yield* workspace.resolveRoot(home, root);
-    const status = yield* workspace.refresh(home, resolved, jobs);
+    const status = yield* workspace.refresh(home, resolved);
     yield* Console.log(yield* RefsRefreshStatus.encodeJson(status));
   })
 ).pipe(
-  Command.withDescription(
-    "Pull clean members on their configured branches and rebuild reference indexes (operator only)"
-  ),
+  Command.withDescription("Fast-forward clean members on their configured branches (operator only)"),
   Command.provide(ReferenceWorkspaceLive)
 );
 
@@ -137,7 +143,7 @@ const timerCommand = Command.make(
 );
 
 /**
- * Registers reference planning, refresh, and timer operations beside Graft.
+ * Registers reference planning, provisioning, refresh, and timer operations.
  *
  * **Example** (Inspect the command name)
  * ```ts

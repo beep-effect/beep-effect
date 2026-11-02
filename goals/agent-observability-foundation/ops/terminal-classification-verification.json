@@ -1,0 +1,62 @@
+{
+  "recordedAt": "2026-10-29T21:02:04.690587+00:00",
+  "baseHead": "8ff948b9c2",
+  "archive": "~/.local/state/beep/observation-proof-archive/terminal-classification-5rdyqadi",
+  "sourceHashes": {
+    ".fallowrc.jsonc": "586851f1f3c944797003922ab32f2129cbf5816d792f181cbfc9574e8f7bf68b",
+    "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts": "ced06b781c3b74342ee0e3d046030822b9ec7f794ada94ca4c76628bb005ef38",
+    "packages/tooling/library/ai-metrics/src/transcript-discovery.ts": "6c6cc95cc91b0f3de6cfe0b79a651b6ed8c51d0f1a10c4b8931295c169407c4f",
+    "packages/tooling/library/ai-metrics/test/observation-root-probe.test.ts": "79511f616a05cc013823f39df141e0350a2ff66efdab918b6ddbcc45ac0ab41c"
+  },
+  "verification": {
+    "aiMetricsTypes": "passed",
+    "discoveryAndRootTestsPassed": 14,
+    "providerCliTypes": "passed",
+    "managedSessionTestsPassed": 55,
+    "fallow": {
+      "result": "passed",
+      "report": ".beep/fallow/audit.repair-v23.json",
+      "rawVerdict": "warn",
+      "attribution": {
+        "gate": "new-only",
+        "dead_code_introduced": 0,
+        "dead_code_inherited": 0,
+        "complexity_introduced": 0,
+        "complexity_inherited": 0,
+        "duplication_introduced": 0,
+        "duplication_inherited": 4,
+        "styling_introduced": 0,
+        "styling_inherited": 0,
+        "duplication_demoted": 0,
+        "diff_risk_introduced": 20
+      }
+    },
+    "runtime": {
+      "result": "passed",
+      "sourceStableDuringRun": true,
+      "sourceFilesVerified": 86,
+      "artifact": "installed/evidence.json",
+      "sha256": "f224549c9ac5c3c484626c1c5acf11b15eb9324f5c5ed89092319288b340943c",
+      "syntheticBackendRecords": 2,
+      "exactLocalAndBackendEventSets": true,
+      "privateContentAbsentFromBackend": true,
+      "stoppedWorkerAlertDelivered": true,
+      "ownedMonitorStopped": true,
+      "allOwnedMainPidsZero": true,
+      "productionCollectorChanged": false,
+      "actualHarnessCoverage": false
+    },
+    "review": "Independent Astra accepted all four final hashes; unique root-probe selector verified in v23. No source finding remains. Summary receipt updated from prior pending snapshot.",
+    "entrypoint": {
+      "result": "passed",
+      "sourceFilesVerified": 29,
+      "artifact": "entrypoint/evidence.json",
+      "sha256": "e405a7f67bdcac5feb4a98f3843a674788bae582fdbfcdd122c8171516ebc038",
+      "allOwnedMainPidsZero": true,
+      "deliberateMemoryExhaustion": false
+    },
+    "rootSelectorCorrectionTestsPassed": 5
+  },
+  "thresholdBoundary": "Fallow 3.34.1 schema.json states CRAP reports at or above maxCrap. Three exact measured integer values use +0.01 exclusive cutoffs; no other dimension changed.",
+  "recoveryHold": "preserved"
+}

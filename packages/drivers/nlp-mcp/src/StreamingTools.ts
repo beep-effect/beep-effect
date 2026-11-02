@@ -1,6 +1,8 @@
 /**
  * Streaming and dataset MCP tool definitions.
  *
+ * **Details**
+ *
  * Declares the 17 agent-facing streaming tools (file IO, JSONL handling,
  * dataset loading, and line-transform pipelines) together with their output
  * schemas and the {@link StreamingToolkit} that groups them. Every tool fails

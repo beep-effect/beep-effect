@@ -17,7 +17,6 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind, ts } from "ts-morph";
-import { SchemaFirstInventoryReadError } from "../Lint.errors.ts";
 import { SchemaFirstInventoryEntry } from "../Lint.schemas.ts";
 import type {
   ArrowFunction,
@@ -2036,9 +2035,7 @@ const normalizedTokenText = (text: string): string => {
 const parityCandidateOrder = Order.mapInput(Order.Number, (candidate: ParityCandidate) => candidate.node.getStart());
 
 const anchoredCandidate = Effect.fnUntraced(function* (candidate: ParityCandidate) {
-  const digest = yield* sha256Hex(normalizedTokenText(occurrenceSubject(candidate.node).getText())).pipe(
-    SchemaFirstInventoryReadError.mapError("Failed to hash a schema-first parity occurrence.")
-  );
+  const digest = yield* sha256Hex(normalizedTokenText(occurrenceSubject(candidate.node).getText()));
   return {
     candidate,
     path: occurrencePath(candidate.node),

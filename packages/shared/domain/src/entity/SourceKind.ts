@@ -23,6 +23,8 @@ type SourceKindSchemaBase = typeof SourceKindWithStatics;
 /**
  * Named schema surface for {@link SourceKind}.
  *
+ * **Details**
+ *
  * Declaration emit references this interface by name instead of serializing
  * the literal-kit statics structurally at every consumer position.
  *

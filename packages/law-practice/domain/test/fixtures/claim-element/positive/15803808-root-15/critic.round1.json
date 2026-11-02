@@ -1,0 +1,43 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "15803808-root-15",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "referenceConcernsDisposition": "Extractor localized reference concerns reviewed and retained as explicit unlinked mentions; they do not require whole-claim abstention or invented introductions. No actionable correction remains in this bounded independent review.",
+  "reviewScope": {
+    "claimCount": 5,
+    "elementCount": 23,
+    "termCount": 102,
+    "edgeCount": 69,
+    "functionalRelationCount": 15
+  },
+  "reviewNotes": [
+    "The first comprising grammatically governs the computer-implemented method and its stored/executed instructions; the proposed root and instruction limitation preserve this actual outer structure. The later resumptive the method owns the eight explicit method substeps. The separate computing-device comprising is retained inside the instruction function, not mistaken for the method transition.",
+    "The sole a data synthesis/analysis module [514,546) explicitly supplies both synthesis and analysis naming components. Its later data synthesis module and analysis module references are supported aliases on this actual method chain, including claim 19. TDD resolves to the explicit tissue definition database with the native parenthetical acronym, without importing system claim 1.",
+    "Singular the image [828,837) is not forced onto one member of received plural images. The merged dataset references are preserved without choosing mapped image versus the multidimensional dataset by assumption. The unqualified data-sources reference remains uncertain between primary/supplementary source scopes.",
+    "Claims 16-19 depend directly on 15; the two explicit further-comprises lists in 18/19 retain their nested parameter/function structure. The step nominal is not supplied an invented introduction; precise typed element refinements preserve its actual function. Noise voxels and statistical-processing-data references have exact local introductions."
+  ],
+  "verification": [
+    "Read canonical full family context, native selected-claim XML, provenance, independent source critic and extractor rationale. Source eligibility remains separately accepted at source-critic confidence 0.98; no fresh original-PDF/full-inventory authentication is claimed.",
+    "Audited all expected elements/terms and typed edges for source grammar, complete heads, explicit nested lists, participating entity ownership and actual dependency-chain references. Applied entity-mentions/v1 without blanket relative/reciprocal entity nodes.",
+    "Independent helpers checked exact UTF-16 element/term/functional/antecedent source anchors, normalized heads, ordered nonoverlapping owned terms, contiguous full functional-source reconstruction, local functional ownership, actual ancestor membership of foreign references, endpoint coherence, unique paths and absence of duplicate typed edges. Native claims XML digest matches provenance. These bounded schema/geometry checks supplement semantic review; no production decomposer was called."
+  ],
+  "referenceSha256": "846c1fcea3aedde6835d4612710fd14ddcf5a764ca210f42e5fc78ab3dfb9d54",
+  "independence": "Independent semantic critic session, separate from extractor. Only this family critic.json written. No source/expected/code edits, implementation rules/P2-DESIGN, predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers only locate/check manually reviewed source spans and schema geometry and serialize this receipt.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic references only; no active sample admission, goal completion or human agreement claimed."
+}

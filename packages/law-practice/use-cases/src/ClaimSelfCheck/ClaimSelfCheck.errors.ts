@@ -125,9 +125,11 @@ export const ClaimSelfCheckFailureReason = LiteralKit([
   "decomposition-failed",
   "public-claims-unavailable",
   "candidate-mapping-failed",
+  "review-response-too-large",
 ]).pipe(
   $I.annoteSchema("ClaimSelfCheckFailureReason", {
-    description: "No decomposable claim, unavailable public claims, or a finding that could not become a candidate.",
+    description:
+      "No decomposable claim, unavailable public claims, failed candidate mapping, or an oversized review response.",
   })
 );
 

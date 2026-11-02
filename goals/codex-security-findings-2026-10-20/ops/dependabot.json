@@ -20,14 +20,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -44,14 +49,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -68,14 +78,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -92,14 +107,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -116,7 +136,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/effect-vitest-canon/research/OPPORTUNITIES.md",
         "goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md",
@@ -125,11 +149,12 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "GitHub explicitly reports this alert withdrawn (HTTP 410); not counted as a proven version fix. See research/2026-10-31-revalidation.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "withdrawn",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -146,16 +171,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -172,16 +202,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -198,14 +233,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -222,14 +262,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -246,14 +291,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -270,14 +320,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -294,14 +349,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -318,14 +378,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -342,14 +407,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -366,7 +436,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/ai-metrics-stack/research/OPPORTUNITIES.md",
         "goals/candor-gate-followups-closeout/research/OPPORTUNITIES.md",
@@ -376,11 +450,12 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -397,14 +472,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -421,14 +501,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -445,16 +530,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -471,14 +561,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -495,14 +590,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -519,14 +619,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -543,16 +648,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -569,16 +679,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -595,14 +710,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -619,14 +739,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -643,14 +768,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -667,14 +797,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -691,16 +826,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -717,14 +857,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -741,14 +886,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -765,14 +915,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -789,14 +944,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -813,14 +973,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -837,14 +1002,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -861,14 +1031,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -885,14 +1060,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -909,14 +1089,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -933,14 +1118,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -957,14 +1147,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -981,17 +1176,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1008,17 +1208,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1035,17 +1240,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1062,17 +1272,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1089,17 +1304,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1116,17 +1336,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1143,14 +1368,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1167,14 +1397,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1191,14 +1426,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1215,14 +1455,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1239,14 +1484,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1263,14 +1513,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1287,7 +1542,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/ai-metrics-stack/research/OPPORTUNITIES.md",
         "goals/candor-gate-followups-closeout/research/OPPORTUNITIES.md",
@@ -1297,11 +1556,12 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1318,14 +1578,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1342,16 +1607,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1368,16 +1638,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1394,16 +1669,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1420,14 +1700,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1444,14 +1729,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1468,14 +1758,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1492,14 +1787,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1516,14 +1816,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1540,14 +1845,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1564,14 +1874,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1588,14 +1903,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1612,17 +1932,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1639,17 +1964,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1666,17 +1996,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1693,17 +2028,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1720,14 +2060,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1744,14 +2089,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1768,14 +2118,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1792,14 +2147,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1816,14 +2176,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1840,14 +2205,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1864,14 +2234,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1888,14 +2263,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1912,14 +2292,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1936,14 +2321,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1960,14 +2350,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1984,16 +2379,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2010,16 +2410,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2036,16 +2441,21 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2062,14 +2472,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2086,14 +2501,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2110,14 +2530,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2134,14 +2559,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2158,14 +2588,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2182,14 +2617,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2206,14 +2646,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2230,14 +2675,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2254,17 +2704,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2281,17 +2736,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2308,17 +2768,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2335,17 +2800,22 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2362,14 +2832,19 @@
       "lane": "rust",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-rust.md.",
       "report": "research/dependabot-rust.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2386,14 +2861,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2410,14 +2890,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2434,14 +2919,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2458,14 +2948,19 @@
       "lane": "rust",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-rust.md.",
       "report": "research/dependabot-rust.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2482,14 +2977,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2506,14 +3006,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2530,14 +3035,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2554,14 +3064,19 @@
       "lane": "rust",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-rust.md.",
       "report": "research/dependabot-rust.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2578,14 +3093,19 @@
       "lane": "rust",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-rust.md.",
       "report": "research/dependabot-rust.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2602,15 +3122,20 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 448,
@@ -2626,15 +3151,20 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 447,
@@ -2650,15 +3180,20 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 446,
@@ -2674,15 +3209,20 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 445,
@@ -2698,15 +3238,20 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 444,
@@ -2722,15 +3267,20 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 443,
@@ -2746,15 +3296,20 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 442,
@@ -2770,15 +3325,20 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 441,
@@ -2794,15 +3354,20 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 440,
@@ -2818,15 +3383,20 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 439,
@@ -2842,15 +3412,20 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 438,
@@ -2866,15 +3441,20 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 437,
@@ -2890,15 +3470,20 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 436,
@@ -2914,15 +3499,20 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 435,
@@ -2938,15 +3528,20 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 434,
@@ -2962,15 +3557,20 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 433,
@@ -2986,15 +3586,20 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 432,
@@ -3010,15 +3615,20 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 431,
@@ -3034,19 +3644,24 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "withdrawn",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "GitHub explicitly reports this alert withdrawn (HTTP 410); not counted as a proven version fix. See research/2026-10-31-revalidation.md."
     }
   ],
   "initial_count": 104,
-  "last_refreshed_at_utc": "2026-10-21T03:29:29.392311+00:00",
+  "last_refreshed_at_utc": "2026-10-31T09:09:35.055644+00:00",
   "severity_counts": {
     "critical": 13,
     "high": 55,

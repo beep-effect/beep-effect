@@ -1,5 +1,7 @@
 import { Sha256Hex } from "@beep/schema/Sha256";
 import {
+  BoundedRecoveryPolicy,
+  BudgetDuration,
   decodeSkillFrontmatter,
   EvidenceDigest,
   EvidenceLadderReceiptTypes,
@@ -10,6 +12,7 @@ import {
   GateSummaryPredicateType,
   NoRecoveryPolicy,
   ReceiptTypeBindings,
+  RecoveryBudget,
   renderSkillMarkdown,
   SchemaReference,
   SchemaReferenceId,
@@ -23,8 +26,9 @@ import { VerifySkillArtifactInput } from "@beep/skill-contract/SkillProjection";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Result from "effect/Result";
@@ -93,6 +97,34 @@ describe("@beep/skill-contract SkillProjection", () => {
         { check: "rerender-byte-equality", outcome: "passed" },
         { check: "frontmatter-contract-equality", outcome: "passed" },
       ]);
+    })
+  );
+
+  it.effect("renders a bounded recovery policy as its budget limits table", () =>
+    Effect.gen(function* () {
+      const bounded = SkillContract.make({
+        ...contract,
+        recovery: BoundedRecoveryPolicy.make({
+          budget: RecoveryBudget.make({
+            maxAttempts: 2,
+            maxOperations: 3,
+            perAttemptTimeout: BudgetDuration.make(Duration.seconds(1)),
+            totalTimeout: BudgetDuration.make(Duration.seconds(2)),
+          }),
+        }),
+      });
+      const rendered = Result.getOrThrow(renderSkillMarkdown(bounded));
+      const verdict = yield* verifySkillArtifact(
+        VerifySkillArtifactInput.make({ committed: rendered, contract: bounded })
+      );
+
+      expect(Str.includes("Mode: bounded")(rendered)).toBe(true);
+      expect(Str.includes("| maxAttempts | 2 |")(rendered)).toBe(true);
+      expect(Str.includes("| maxOperations | 3 |")(rendered)).toBe(true);
+      expect(Str.includes("| perAttemptTimeoutMs | 1000 |")(rendered)).toBe(true);
+      expect(Str.includes("| totalTimeoutMs | 2000 |")(rendered)).toBe(true);
+      expect(Str.includes("Mode: none")(rendered)).toBe(false);
+      expect(verdict.verdict).toBe("allowed");
     })
   );
 
@@ -171,7 +203,7 @@ describe("@beep/skill-contract SkillProjection", () => {
         })
       ).toEqual(["rerender-mismatch", "frontmatter-missing"]);
       pipe(unterminated, Result.isFailure, assertTrue);
-      expect(Result.isFailure(unterminated) ? unterminated.failure.reasons : []).toEqual(["frontmatter-missing"]);
+      deepStrictEqual(Result.isFailure(unterminated) ? unterminated.failure.reasons : [], ["frontmatter-missing"]);
     })
   );
 

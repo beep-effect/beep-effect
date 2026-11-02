@@ -1,0 +1,189 @@
+{
+  "familyId": "14813790-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.97,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the engine",
+      "nativeQuote": "the engine",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the shaft",
+      "nativeQuote": "the shaft",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the rearward direction",
+      "nativeQuote": "the rearward direction",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the rear end",
+      "nativeQuote": "the rear end",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the diameter",
+      "nativeQuote": "the diameter",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the shaft",
+      "nativeQuote": "the shaft",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "for each pair of adjacent frustoconical sub-sections",
+      "nativeQuote": "for each pair of adjacent frustoconical sub-sections",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the cone angle of the rearward sub-section",
+      "nativeQuote": "the cone angle of the rearward sub-section",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the cone angle of the forward sub-section",
+      "nativeQuote": "the cone angle of the forward sub-section",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the wall thickness",
+      "nativeQuote": "the wall thickness",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the joint portion",
+      "nativeQuote": "the joint portion",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the wall thickness",
+      "nativeQuote": "the wall thickness",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the stiffening formation",
+      "nativeQuote": "the stiffening formation",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "its",
+      "nativeQuote": "its",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the joint portion",
+      "nativeQuote": "the joint portion",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the stiffening formation",
+      "nativeQuote": "the stiffening formation",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "a fan",
+      "nativeQuote": "a fan",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "a low pressure turbine",
+      "nativeQuote": "a low pressure turbine",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    }
+  ],
+  "concerns": [
+    "All cited native wording matches; recommended replacement terms are examiner corrections, not assertions that source already contains them.8 natural reference to1 makes family member.Original count8 agrees; partial exact comparison.",
+    "Original1/2/3/6/7 manually inspected: page5/10/15/20/25, trailing Independent/Dependent labels and wal l OCR split explain nonexact comparisons; substantive references/limitations agree."
+  ],
+  "rationale": "Read actual112(b)/second-paragraph indefiniteness ground and all selected claims. Natural dependency membership checked, including unusual reference wording; all selected descendants connect to root1. Identity/original/inventory checks retained before handoff. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "14813790",
+    "nativePublicationNumber": "US20160061107A1",
+    "nativePublicationDate": "20160303",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "23eb25051f02b10762eed238c11c79cd6b35a5df10dd37e74b69afc438bef1b9",
+    "sourceClaimsXmlSha256": "1473a5396d2f959c80eec99ffbf6e83071064aa556a515b759d9e79ab7a70192"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 74,
+    "retainedInventoryCount": 74,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "ICQM3R69PXXIFW3",
+        "officialDate": "2015-07-30T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2017-06-15",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "ICQM3R69PXXIFW3",
+      "officialDate": "2015-07-30T00:00:00.000-0400",
+      "sha256": "e5ce3af0a4d44804f2225332774f2d9d8bc01e5941edda728c7c242888141294",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [4, 5, 8],
+      "sourceClaimCount": 8
+    }
+  ],
+  "nativeContextClaimCount": 8,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "ICQM3R69PXXIFW3",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": ["14813790"],
+      "headerMailRoomDates": ["2015-07-30"],
+      "applicationMatches": true,
+      "claimNodeCount": 9
+    }
+  ]
+}

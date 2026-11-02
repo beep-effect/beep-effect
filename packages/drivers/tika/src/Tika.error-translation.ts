@@ -2,6 +2,8 @@
  * Translation from technical Tika driver failures to file-processing
  * operation errors.
  *
+ * **Details**
+ *
  * Every Tika engine funnels its failures through this module so no HTTP,
  * process, filesystem, or Tika error escapes the operation contract.
  *

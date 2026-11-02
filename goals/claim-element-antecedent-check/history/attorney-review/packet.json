@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "claim-reference-attorney-packet/v1",
+  "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+  "bundleDigest": "1b2f9c790af6bb6ba88eda3c753afc343d323e0c329cfd8ce80f80e01541c096",
+  "familyCount": 6,
+  "claimCount": 50,
+  "headQuestionCount": 6,
+  "granularityQuestionCount": 1,
+  "attorneyAgreement": "not-yet-recorded",
+  "htmlSha256": "3137a07a0d4c316e1c9139c7c57e48f601fd5a361df62728262f354a59f889a6",
+  "familyVersions": [
+    {
+      "familyId": "14432872-root-5",
+      "annotationSha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "canonicalClaimsSha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d"
+    },
+    {
+      "familyId": "14970678-root-17",
+      "annotationSha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "canonicalClaimsSha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd"
+    },
+    {
+      "familyId": "14659462-root-1",
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "familyId": "11299450-root-1",
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "familyId": "13484431-root-19",
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68"
+    }
+  ]
+}

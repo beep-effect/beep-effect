@@ -1,0 +1,62 @@
+{
+  "applicationNumber": "15572618",
+  "publicationNumber": "US20180136250A1",
+  "publicationDate": "2018-05-17",
+  "nativeXmlSha256": "9189a207425172ea86955ebb0111c3b770ec677e733c88eaea84f344c0569489",
+  "claimsXmlSha256": "9a9ac0f4064773dc5ed4abe8fe40fa1538c7945a97f84b74cf64c816e47b66bc",
+  "officeActionDocumentIdentifiers": ["JV2HG3JIRXEAPX2"],
+  "officeActionMailDate": "2019-05-01",
+  "officeActionSection112Text": [
+    "claims 16 and 22-31 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nin claim 16, lines 5-6, the phrase “x is in the range … than 100” includes language wherein a broad recitation is followed by a narrower recitation in a claim is indefinite as the metes and bounds of the claim cannot be readily ascertained.\r\nin claim 22, lines 12 and 13, the phrase “the input portion” lacks antecedent basis (three occurrences). in line 17, the phrase “the first input direction” lacks antecedent basis. in line 17, the phrase “the second input direction” lacks antecedent basis. in lines 17-18, the phrase “the third input direction” lacks antecedent basis.\r\nin claim 23, line 2, the phrase “the first input direction” lacks antecedent basis. in line 3, the phrase “the second input direction” lacks antecedent basis. in line 4, the phrase “the third input direction” lacks antecedent basis.\r\nin claim 25, lines 1-2, the phrase “the transmission ratio” lacks antecedent basis. in line 2, the phrase “the hydraulic transmission system” lacks antecedent basis. in line 2, the phrase “the first optical sensor” lacks antecedent basis. in line 3, the phrase “the transmission ratio” lacks antecedent basis. in line 3, the phrase “the second and third optical sensors” lacks antecedent basis.\r\nin claim 26, lines 1-2, the phrase “the transmission ratio” lacks antecedent basis. in line 2, the phrase “the hydraulic transmission system” lacks antecedent basis. in line 2, the phrase “the first optical sensor” lacks antecedent basis. in line 3, the phrase “the transmission ratio” lacks antecedent basis. in line 3, the phrase “the second and third optical sensors” lacks antecedent basis.\r\nin claim 29, lines 3-5, the phrase “the hydraulic transmission system” lacks antecedent basis (three occurrences). in line 5, the phrase “the input portion” lacks antecedent basis. in line 6, the phrase “the output portion” lacks antecedent basis. in lines 6-7, the phrase “the respective hydraulic transmission system” lacks antecedent basis.\r\nin claim 30, lines 3-5, the phrase “the hydraulic transmission system” lacks antecedent basis (three occurrences). in lines 5-6, the phrase “the input portion” lacks antecedent basis. in line 6, the phrase “the output portion” lacks antecedent basis. in lines 6-7, the phrase “the respective hydraulic transmission system” lacks antecedent basis.\r\nin claim 31, lines 3-5, the phrase “the hydraulic transmission system” lacks antecedent basis (three occurrences). in lines 5-6, the phrase “the input portion” lacks antecedent basis. in line 6, the phrase “the output portion” lacks antecedent basis. in lines 6-7, the phrase “the respective hydraulic transmission system” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "J9RFFD6QRXEAPX3",
+      "officialDate": "2017-11-08T00:00:00.000-0500"
+    },
+    {
+      "documentIdentifier": "J9RFFD6URXEAPX3",
+      "officialDate": "2017-11-08T00:00:00.000-0500"
+    },
+    {
+      "documentIdentifier": "J9S5JYATRXEAPX4",
+      "officialDate": "2017-11-08T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "J9RFFD6QRXEAPX3",
+      "officialDate": "2017-11-08T00:00:00.000-0500",
+      "sha256": "34caf2257786be079274451a307d03762499a7474673798b43b84017202bd2b7",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 32
+    },
+    {
+      "documentIdentifier": "J9RFFD6URXEAPX3",
+      "officialDate": "2017-11-08T00:00:00.000-0500",
+      "sha256": "959038a103f03477179714411b1a01b83b35f6180f9b713df89679456770a61c",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 32
+    },
+    {
+      "documentIdentifier": "J9S5JYATRXEAPX4",
+      "officialDate": "2017-11-08T00:00:00.000-0500",
+      "sha256": "c7bfc757d901d4df678287875419f6a2c1457e3b724545a62d22c727df5dc71c",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 32
+    }
+  ],
+  "documentInventoryCount": 58,
+  "documentInventoryRows": 58,
+  "primaryCpc": "G01P  15/093",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/15572618",
+    "https://api.uspto.gov/api/v1/patent/applications/15572618/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "extractor-pending; critic-and-attorney-pending"
+}

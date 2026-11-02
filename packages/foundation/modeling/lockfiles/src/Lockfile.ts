@@ -691,7 +691,7 @@ export class Lockfile extends S.Class<Lockfile, { readonly brand: unique symbol 
               );
             })
         ),
-      yarn: () => O.none<ResolvedPackage>(),
+      yarn: O.none<ResolvedPackage>,
     })(this.format);
   }
 

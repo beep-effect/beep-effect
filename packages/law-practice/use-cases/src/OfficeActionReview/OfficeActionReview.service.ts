@@ -1,6 +1,8 @@
 /**
  * Office-action review loop implementation.
  *
+ * **Details**
+ *
  * The end-to-end loop for reviewing one office action: extract text through
  * `@beep/file-processing`, invoke `@beep/langextract` for provider-neutral
  * structured extraction, map the resulting grounded extractions into law entities

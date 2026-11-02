@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "cache-fs-guards-directory-coverage/v1",
+  "recordedAt": "2026-10-29T21:29:13.907972+00:00",
+  "authority": "Deterministic source-bound error-path regression and actual package verification; no qualification or rollout authority",
+  "sourceBaseRevision": "5621577626ca2f3229d1192e1c3b0b97131a6879",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/test/cli-kits.test.ts": "319b5202650839036931a42427fffa2bf226b1cda2dac53593ffc2a0ef81c702",
+    "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts": "69847f3c783acfba217681b1a4dee8083f76a90ffac870828fc7d23fc5240d6e"
+  },
+  "problem": "Unchanged directory-creation error adapter had incidental coverage in one complete repeat and none in another; existing function, line and statement floors failed.",
+  "repair": "Deliberately fail the scoped filesystem parent-directory creation with its real platform cause. Assert typed cause/root/path/target preservation and refusal before materializing the target. Restore the scoped spy.",
+  "verification": {
+    "node": {
+      "exit": 0,
+      "tests": 34,
+      "seconds": 3.849
+    },
+    "bun": {
+      "exit": 0,
+      "tests": 34,
+      "seconds": 2.891
+    },
+    "quick": {
+      "exit": 0,
+      "seconds": 14.954
+    },
+    "targetedNodeV8": {
+      "observedAt": "2026-10-29T21:03:08.591301+00:00",
+      "authority": "Targeted actual V8 coverage of deterministic typed failure test; not a whole-package floor claim",
+      "rows": [
+        {
+          "function": "(anonymous_8)",
+          "line": 282,
+          "calls": 1
+        }
+      ],
+      "lcovSha256": "2145fb6e0d954ecd3709a4b4d0f31bf39f2285e54b4e9fe67b86b712fb662c96",
+      "sourceImplementationChanged": false,
+      "coverageFloorChanged": false,
+      "nodeTests": 34,
+      "bunTests": 34,
+      "nodeAndBunExit": 0
+    },
+    "fullPackage": {
+      "command": "bun run beep quality package-verify @beep/repo-cli",
+      "exit": 0,
+      "elapsedSeconds": 1426.728,
+      "finishedAt": "2026-10-29T21:26:56.248916+00:00",
+      "auditSeconds": 1379.3,
+      "docgenSeconds": 45.6
+    }
+  },
+  "coverageFloorChanged": false,
+  "implementationChanged": false,
+  "remaining": [
+    "Fresh final-check and hosted acceptance of the component.",
+    "PR2361 must consume the repair through main and refresh its own current proof.",
+    "Both full Turbo goal acceptance contracts remain open."
+  ]
+}

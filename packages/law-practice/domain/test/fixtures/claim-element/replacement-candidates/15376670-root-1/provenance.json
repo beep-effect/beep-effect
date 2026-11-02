@@ -1,0 +1,38 @@
+{
+  "applicationNumber": "15376670",
+  "publicationNumber": "US20170311767A1",
+  "publicationDate": "2017-11-02",
+  "nativeXmlSha256": "8e3c4e2b57d4506cb1e80f1a995bbf8430f40ffba78369dfbe12eb50526aa3ce",
+  "claimsXmlSha256": "69ce124fecc6b22322bfa87d5142909b6cf49959e2b4a3aa98515f4ef5ee1e24",
+  "officeActionDocumentIdentifiers": ["JC83NSXRRXEAPX4"],
+  "officeActionMailDate": "2018-01-11",
+  "officeActionSection112Text": [
+    "5. claims 1-19 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nthe claims are replete with indefinite language and applicant’s cooperation is respectfully requested in reviewing all claims for compliance on these matters.\r\nonly a few examples will be given:\r\nclaim 1, line 3, the barrel body edge lacks proper antecedent basis.\r\nclaim 1, lines 3-4, “the adjacent serrated-shaped portions” lack proper antecedent basis.\r\nclaim 1, lines 4-5, the serrated-shaped blade lacks proper antecedent basis.\r\nclaim 1, line 6, the blade edge lacks proper antecedent basis.\r\nclaim 1, line 7, the blade lacks proper antecedent basis.\r\nclaim 1, line 8, the barrel lacks proper antecedent basis.\r\nclaim 1, line 8, the tooth groove lacks proper antecedent basis.\r\nclaim 1, line 8, what does ...to cut the wrapped in the tooth groove mean exactly?\r\nclaim 6, line 1, “the inner cavity” lacks proper antecedent basis.\r\nclaim 7, line 1, “the inner cavity” lacks proper antecedent basis.\r\nclaim 8, line 1, “the inner cavity” lacks proper antecedent basis.\r\nclaim 9, line 1, “the inner cavity” lacks proper antecedent basis.\r\nclaim 10, line 2, “the inner cavity” lacks proper antecedent basis.\r\nclaim 10, line 3, “the center roller” lacks proper antecedent basis.\r\nclaim 11, line 2, “the inner cavity” lacks proper antecedent basis.\r\nclaim 12, line 2, “the inner cavity” lacks proper antecedent basis.\r\nclaim 13, line 2, “the inner cavity” lacks proper antecedent basis.\r\nclaim 14, line 1, “the movable blade” lacks proper antecedent basis.\r\nclaim 15, line 1, “the movable blade” lacks proper antecedent basis.\r\nclaim 16, line 1, “the movable blade” lacks proper antecedent basis.\r\nclaim 17, line 1, “the movable blade” lacks proper antecedent basis"
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "IWNF1H1YRXEAPX3",
+      "officialDate": "2016-12-13T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "IWNF1H1YRXEAPX3",
+      "officialDate": "2016-12-13T00:00:00.000-0500",
+      "sha256": "a35004ac6514863d71ef319982a5861d91a17e5122dbe8c398534ea4a236733b",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [4, 5, 7, 11],
+      "sourceClaimCount": 13
+    }
+  ],
+  "documentInventoryCount": 42,
+  "documentInventoryRows": 42,
+  "primaryCpc": "A47L   9/0477",
+  "inForceEvidence": "Source-only replacement proposal. Native publication precedes OA and inventory chronology is preliminary only; numbered examiner association and actual operative original/adoption must be independently audited. No predictions inspected.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/15376670",
+    "https://api.uspto.gov/api/v1/patent/applications/15376670/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "not in active sample; source extractor/critic and semantic review pending"
+}

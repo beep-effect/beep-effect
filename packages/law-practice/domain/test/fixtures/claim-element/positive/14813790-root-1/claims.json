@@ -1,0 +1,47 @@
+{
+  "familyId": "14813790-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A low pressure shaft for interconnecting a fan or low pressure compressor of a gas turbine engine with a low pressure turbine of the engine, the shaft having an aft section whose diameter expands progressively with distance along the rearward direction of the engine, and an annular joint portion at the rear end of the aft section for joining the shaft to a drive arm of the low pressure turbine; wherein the rate of expansion of the diameter of the aft section decreases with distance along the rearward direction of the engine.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "A low pressure shaft according to claim 1, wherein on a longitudinal cross-section through the shaft the aft section has an elliptical section profile.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "A low pressure shaft according to claim 1, wherein the aft section is formed as an axial row of two or more frustoconical sub-sections, for each pair of adjacent frustoconical sub-sections the cone angle of the rearward sub-section being less than the cone angle of the forward sub-section.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "A low pressure shaft according to claim 1, wherein the annular joint portion is configured to form a curvic coupling with the drive arm.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "A low pressure shaft according to claim 1, wherein the wall thickness of the aft section decreases with distance along the rearward direction of the engine.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "A low pressure shaft according to claim 1 further comprising an annular stiffening formation which bridges the rear end of the aft section and the joint portion, the wall thickness of the stiffening formation being greater than the wall thickness of the aft section at its rear end.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "A low pressure shaft according to claim 1 further comprising an annular stiffening formation which bridges the rear end of the aft section and the joint portion, the stiffening formation curving radially outwardly from the rear end of the aft section.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "A gas turbine engine having the low pressure shaft of claim 1 interconnecting a fan or low pressure compressor of the engine with a low pressure turbine of the engine.",
+      "sourceXmlParentClaimNumbers": [1]
+    }
+  ]
+}

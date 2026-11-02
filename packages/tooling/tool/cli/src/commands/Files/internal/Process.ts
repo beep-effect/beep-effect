@@ -86,7 +86,7 @@ import type {
 } from "@beep/file-processing/Strategy";
 import type { MimeType } from "@beep/schema/MimeType";
 import type { PosixPath } from "@beep/schema/PosixPath";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ProcessFilesOptions } from "../Files.schemas.ts";
@@ -97,8 +97,8 @@ const decodeTikaServerEngineConfig = S.decodeEffect(TikaServerEngineConfig);
 type FilesProcessRequirements =
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
-  | Crypto.Crypto
+  | Digest.Digest
+  | Digest.Digest
   | ChildProcessSpawner.ChildProcessSpawner
   | HttpClient.HttpClient;
 
@@ -307,7 +307,7 @@ const processEngineSupportsChildExport = (
 const processHashBytes = Effect.fn("Files.processHashBytes")(function* (
   bytes: Uint8Array,
   label: string
-): Effect.fn.Return<string, FilesCommandError, Crypto.Crypto> {
+): Effect.fn.Return<string, FilesCommandError, Digest.Digest> {
   return yield* decodeSha256HexFromBytes(bytes).pipe(
     FilesCommandError.mapError(`Failed to compute SHA-256 for ${label}`)
   );
@@ -316,7 +316,7 @@ const processHashBytes = Effect.fn("Files.processHashBytes")(function* (
 const makeContentDigest = Effect.fn("Files.makeContentDigest")(function* (
   bytes: Uint8Array,
   label: string
-): Effect.fn.Return<ContentDigest, FilesCommandError, Crypto.Crypto> {
+): Effect.fn.Return<ContentDigest, FilesCommandError, Digest.Digest> {
   const hex = yield* processHashBytes(bytes, label);
   return yield* decodeContentDigest(`sha256:${hex}`).pipe(
     FilesCommandError.mapError(`Failed to decode content digest for ${label}`)
@@ -336,7 +336,7 @@ const makeArtifactId = Effect.fn("Files.makeArtifactId")(function* (
 const makeOperationIdFromText = Effect.fn("Files.makeOperationIdFromText")(function* (
   text: string,
   label: string
-): Effect.fn.Return<OperationId, FilesCommandError, Crypto.Crypto> {
+): Effect.fn.Return<OperationId, FilesCommandError, Digest.Digest> {
   const hex = yield* processHashBytes(processUtf8Encoder.encode(text), label);
   return yield* decodeOperationId(`operation:${hex}`).pipe(
     FilesCommandError.mapError(`Failed to decode operation id for ${label}`)
@@ -622,7 +622,7 @@ const prepareProcessOutDir = Effect.fn("Files.prepareProcessOutDir")(function* (
 const prepareProcessSource = Effect.fn("Files.prepareProcessSource")(function* (
   sourceFile: ProcessCollectedFile,
   engine: ProcessFilesOptions["engine"]
-): Effect.fn.Return<ProcessPreparedSource, FilesCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<ProcessPreparedSource, FilesCommandError, Digest.Digest | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const bytes = yield* fs
     .readFile(sourceFile.sourcePath)
@@ -972,7 +972,7 @@ const processPreparedSource = Effect.fn("Files.processPreparedSource")(function*
   prepared: ProcessPreparedSource,
   options: ProcessFilesOptions,
   engineFor: ProcessEngineResolver
-): Effect.fn.Return<ProcessSourceOutcome, FilesCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<ProcessSourceOutcome, FilesCommandError, Digest.Digest | FileSystem.FileSystem> {
   const descriptor = processDescriptorFor(options.engine, prepared.format);
 
   if (prepared.format === "docm" || prepared.format === "xls" || prepared.format === "xlsx") {
@@ -1181,7 +1181,7 @@ const writeProcessManifestTree = Effect.fn("Files.writeProcessManifestTree")(fun
 ): Effect.fn.Return<
   void,
   FilesCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Digest.Digest | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const { failureRecords, sourceRecords } = collectSourceOutcomeRecords(outcomes);
@@ -1256,7 +1256,7 @@ const processCollectedSources = Effect.fn("Files.processCollectedSources")(funct
 ): Effect.fn.Return<
   ReadonlyArray<ProcessSourceResult>,
   FilesCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  Digest.Digest | FileSystem.FileSystem | Path.Path
 > {
   const processState = yield* Ref.make({
     byId: R.empty<string, ProcessSourceIdentity>(),

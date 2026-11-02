@@ -1,0 +1,27 @@
+{
+  "image": "arizephoenix/phoenix@sha256:c542e7de1dc1fdd0f938de337d44ebefa7266e91391eed6e7978523d7f6e1f2f",
+  "syntheticOnly": true,
+  "productionDeployment": false,
+  "scriptSha256": "8706b97d17fbb22efcf7e861cc1621e446371ab28d3cd9c683f6db69e66b7d38",
+  "resourceLimitsVerified": true,
+  "result": "passed",
+  "changed": {
+    "changed": true,
+    "policyId": "UHJvamVjdFRyYWNlUmV0ZW50aW9uUG9saWN5OjA=",
+    "previousMaxDays": 0.0,
+    "maxDays": 14,
+    "cronExpression": "0 0 * * 0",
+    "verifiedProjectCount": 1
+  },
+  "check": {
+    "changed": false,
+    "policyId": "UHJvamVjdFRyYWNlUmV0ZW50aW9uUG9saWN5OjA=",
+    "previousMaxDays": 14.0,
+    "maxDays": 14,
+    "cronExpression": "0 0 * * 0",
+    "verifiedProjectCount": 1
+  },
+  "wrongProjectAssignmentRefused": true,
+  "originalPolicyRestored": true,
+  "ownedContainerRemoved": true
+}

@@ -13,8 +13,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { resolveWorkspaceDirs } from "@beep/repo-utils";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -26,6 +25,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import { workspaceDirectories } from "../../../../internal/RepoWorkspaces.ts";
 import {
   VersionCategoryReport,
   VersionCategoryStatusEnum,
@@ -186,9 +186,9 @@ const readTurboConfigFile = Effect.fn("readTurboConfigFile")(function* (
     .readFileString(filePath)
     .pipe(VersionSyncError.mapError(`Failed to read ${relativePath}`, relativePath));
 
-  const document = yield* decodeJsoncTextAs(TurboJsonDocument)(content).pipe(
-    VersionSyncError.mapError(`Failed to parse ${relativePath}`, relativePath)
-  );
+  const document = yield* Jsonc.bind(TurboJsonDocument)
+    .decode(content)
+    .pipe(VersionSyncError.mapError(`Failed to parse ${relativePath}`, relativePath));
 
   return O.map(O.fromUndefinedOr(document.$schema), (schemaUrl) =>
     TurboConfigFile.make({
@@ -217,7 +217,7 @@ export const resolveTurboSchema = Effect.fn("resolveTurboSchema")(function* (
 ): Effect.fn.Return<TurboSchemaState, VersionSyncError, FileSystem.FileSystem | Path.Path | FsUtils> {
   const installedVersion = yield* installedVersionRead;
 
-  const workspaceDirs = yield* resolveWorkspaceDirs(repoRoot).pipe(
+  const workspaceDirs = yield* workspaceDirectories(repoRoot).pipe(
     VersionSyncError.mapError("Failed to resolve workspace directories", "package.json")
   );
 

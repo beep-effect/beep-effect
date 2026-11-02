@@ -1,0 +1,7 @@
+# Closest-match repair checkpoint — v5
+
+The user requested inspection and repair of the closest structural mismatches while retaining all previous results and reference labels. This development-set run has **10/538 strict matches**, 58 input failures, no selected undecomposed claims and 470 structural mismatches. Exact typed-edge counts are 1,496 matched / 6,910 reference / 4,999 predicted (F1 25.12%).
+
+Repairs retain source-defined parenthetical abbreviations, split coordinated subject clauses, exclude dependency scaffolding from preamble terms, retain bare dependent subjects, link unique prior mentions structurally without suppressing legal missing-introduction warnings, and attach explicit body claim references and conservative further-limitation dependencies to their source elements. Six new synthetic regressions pass; the 63 focused domain tests and full domain/use-cases/server package verification pass.
+
+The same 60 families, 538 selected claims, source/reference freezes and strict scorer are used. All original and previous repair results remain unchanged. The implementation is pinned by `research/implementation-repair-v5-freeze.json`; the per-claim results and summary are retained alongside this note. This is an intermediate checkpoint, not a full-goal completion or independent validation claim. Some remaining near matches differ in dependency-edge conventions; no label is edited or mismatch waived.

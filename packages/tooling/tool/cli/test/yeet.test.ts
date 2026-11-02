@@ -81,8 +81,6 @@ import {
   PrCloseoutOptions,
   PrCloseoutReport,
   partiallyStagedPathsForTesting,
-  prePushLocalShasFromStdinForTesting,
-  prePushShaMismatchesForTesting,
   proofCoordinatorLockPath,
   proofLockDispositionForTesting,
   proofLockPathForContext,
@@ -157,7 +155,7 @@ import { assertDefined, assertFalse, assertNone, assertSome, assertTrue, deepStr
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -238,8 +236,8 @@ const encodedAttemptPairs = Effect.fnUntraced(function* (family: string, count: 
   return { attemptIds, lines };
 });
 const proofLockReapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedText: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(observedText));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(observedText));
   return `${lockPath}.reap-${Hex.encode(digest)}.claim`;
 });
 const proofLockReapClaimTombstonePath = proofLockReapClaimPath;
@@ -840,6 +838,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "repo-sanity:syncpack",
         "repo-sanity:sherif",
         "repo-sanity:config-typecheck",
+        "repo-sanity:goals-ops-typecheck",
         "quality:cache-policy",
         "quality:build",
         "quality:desktop-ipc",
@@ -964,12 +963,6 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "--json",
         "number,headRefName,state,url,headRefOid,isDraft,author",
       ]);
-    });
-
-    it("builds pre-push-hook as a lightweight proof-state check", () => {
-      const plan = buildYeetRunPlanForTesting({ context, message: O.none(), mode: "pre-push-hook" });
-
-      expect(plan.steps).toEqual([]);
     });
 
     it("uses a Greptile retrigger body that requests review explicitly", () => {
@@ -1747,20 +1740,6 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
       expect(commit.args).toEqual(["commit", "-m", "feat(repo-cli): add yeet"]);
       expect(commandTextForStep(commit)).toBe("git commit -m 'feat(repo-cli): add yeet'");
-    });
-
-    it("parses pre-push stdin SHAs for proof reuse", () => {
-      const currentSha = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-      const otherSha = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-      const deleteSha = "0000000000000000000000000000000000000000";
-      const shas = prePushLocalShasFromStdinForTesting(
-        `refs/heads/feature ${currentSha} refs/heads/feature 1111111111111111111111111111111111111111\n` +
-          `refs/heads/old ${deleteSha} refs/heads/old 2222222222222222222222222222222222222222\n` +
-          `refs/heads/other ${otherSha} refs/heads/other 3333333333333333333333333333333333333333\n`
-      );
-
-      expect(shas).toEqual([currentSha, otherSha]);
-      expect(prePushShaMismatchesForTesting(shas, currentSha)).toEqual([otherSha]);
     });
 
     it("warns when publish push target differs from upstream tracking", () => {

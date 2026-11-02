@@ -1,0 +1,121 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method of seating a primer in a primer pocket of a projectile casing, the method comprising:
+<claim-text>providing a primer rod comprising a central portion extending in a longitudinal direction and an outer portion comprising a plurality of prongs surrounding the central portion, wherein the central portion extends farther in the longitudinal direction than the plurality of prongs;</claim-text>
+<claim-text>providing a projectile casing including a base and a primer pocket with a first depth;</claim-text>
+<claim-text>aligning a primer with the primer pocket of the projectile casing;</claim-text>
+<claim-text>inserting the primer into the primer pocket by moving the central portion of the primer rod in the longitudinal direction toward the base of the projectile casing; and</claim-text>
+<claim-text>stopping movement of the central portion in response to the plurality of prongs at least partially contacting the base of the projectile casing, thereby seating the primer in the primer pocket to a second depth indexed from the base of the projectile casing.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the plurality of prongs is fixed to a base portion of the primer rod and the central portion is slidable relative to the plurality of prongs.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the primer rod is removable from the plurality of prongs and replaceable with another primer rod having a different length to modify the second depth.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein contacting the plurality of prongs with the base of the projectile casing causes the primer to be pressed into the primer pocket such that the primer is crushed by a predetermined amount, the predetermined amount of crush corresponding to a seating depth indexed from the base of the projectile casing corresponding to a longitudinal height difference between the plurality of prongs and the central portion.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the central portion and the plurality of prongs is physically coupled to each other.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein moving the primer rod and the plurality of prongs include using a spring component.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, the method further comprises:
+<claim-text>after the primer has been inserted into the primer pocket, moving the projectile casing including the primer to a storage area.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the plurality of prongs surround the central portion in an asymmetrical pattern.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the plurality of prongs include a curved portion.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the second depth is adjustable using a threaded stop, dial, or other mechanical adjustment component coupled to the primer rod.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>securing the projectile casing in a casing holder such that the base of the projectile casing remains in a fixed reference plane during primer insertion.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the primer rod and the plurality of prongs form a single component and the plurality of prongs are fixed in place relative to the central portion of the primer rod.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the prongs surround the central portion in a symmetrical pattern.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>removing the projectile casing after the primer is seated to the second depth.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a difference in length between the central portion and the plurality of prongs corresponds to a predetermined primer seating depth within a tolerance range,
+<claim-text>wherein aligning the primer with the primer pocket of the projectile casing comprises:
+<claim-text>sliding a shuttle containing the primer into a position below the primer pocket,</claim-text>
+</claim-text>
+<claim-text>wherein the shuttle includes beveled edges to prevent the primer from falling, and</claim-text>
+<claim-text>wherein the shuttle includes one or more slots through which the plurality of prongs extend to contact the projectile casing.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the second depth is between 0.003 inches and 0.007 inches below the base of the projectile casing.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. A system for seating a primer in a primer pocket of a projectile casing, the system comprising:
+<claim-text>a primer seating component to receive the projectile casing and to hold the projectile casing when a primer is inserted into a primer pocket of the projectile casing;</claim-text>
+<claim-text>a primer rod comprising a central portion extending along a longitudinal axis and an outer portion comprising at least one prong proximate to the central portion,</claim-text>
+<claim-text>wherein the central portion extends farther in a longitudinal direction than the at least one prong; and</claim-text>
+<claim-text>an actuator operatively coupled to the primer rod and to move the primer rod along the longitudinal axis to insert the primer into the primer pocket, and</claim-text>
+<claim-text>wherein the at least one prong is to contact a base of the projectile casing and prevent further advancement of the central portion, such that a depth at which the primer is seated in the primer pocket is indexed from the base of the projectile casing.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the actuator comprises a lever, press, or cam-driven mechanism configured to advance the primer rod.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the primer rod is removably coupled to the actuator to allow replacement with another primer rod of a different length.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, further comprising an adjustment mechanism to modify the longitudinal extension of the central portion relative to the at least one prong.</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the primer seating component includes a casing holder to hold the projectile casing such that the base remains fixed during primer insertion, wherein the primer seating component includes slots to receive the at least one prong.</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the at least one prong is integrally formed with the primer rod as a unitary structure, and wherein the at least one prong is in a static position relative to the central portion of the primer rod.</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the at least one prong is deposed around the central portion.</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. The system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the depth at which the primer is seated corresponds to a predetermined amount of primer crush.</claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text><b>25</b>. The system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, further comprising a shuttle including slots to receive the at least one prong and central portion to align a primer with the primer pocket prior to insertion.</claim-text>
+</claim>
+<claim id="CLM-00026" num="00026">
+<claim-text><b>26</b>. A primer rod for inserting a primer into a primer pocket of a projectile casing, the projectile casing having a base and the primer pocket having a first width, the primer rod comprising:
+<claim-text>a central rod portion extending along a longitudinal axis and configured to contact and press the primer into the primer pocket; and</claim-text>
+<claim-text>at least one prong positioned adjacent to the central rod portion and extending along the longitudinal axis,</claim-text>
+<claim-text>wherein the central rod portion extends farther than the at least one prong in a longitudinal direction such that a distal tip of the central rod portion protrudes beyond a distal tip of the at least one prong, and</claim-text>
+<claim-text>wherein the at least one prong is laterally spaced from the central rod portion such that a width spanned by the at least one prong exceeds the first width of the primer pocket, such that contact between the at least one prong and the base of the projectile casing prevents further advancement of the central rod portion during primer insertion.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00027" num="00027">
+<claim-text><b>27</b>. The primer rod of <claim-ref idref="CLM-00026">claim 26</claim-ref>, wherein the at least one prong includes at least one of the following: a straight edge, a curved edge, and a jagged edge.</claim-text>
+</claim>
+<claim id="CLM-00028" num="00028">
+<claim-text><b>28</b>. The primer rod of <claim-ref idref="CLM-00026">claim 26</claim-ref>, wherein a number of prongs is two, and the prongs are positioned on opposite sides of the central rod portion.</claim-text>
+</claim>
+<claim id="CLM-00029" num="00029">
+<claim-text><b>29</b>. The primer rod of <claim-ref idref="CLM-00026">claim 26</claim-ref>, wherein a number of prongs is three or more and the prongs are circumferentially spaced around the central rod portion.</claim-text>
+</claim>
+<claim id="CLM-00030" num="00030">
+<claim-text><b>30</b>. The primer rod of <claim-ref idref="CLM-00026">claim 26</claim-ref>, wherein the central rod portion extends between 0.003 inches and 0.007 inches farther in a longitudinal direction than a distal tip of the at least one prong.</claim-text>
+</claim>
+</claims>

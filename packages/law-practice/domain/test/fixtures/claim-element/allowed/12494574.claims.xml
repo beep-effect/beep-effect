@@ -1,0 +1,67 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A hybrid multi-band antenna system comprising:
+<claim-text>a ferrite core divided axially into a plurality of ferrite segments, each segment comprising different ferrite materials optimized for specific frequency ranges;</claim-text>
+<claim-text>a hybrid conductor system including both flat copper tape windings and Litz wire windings associated with said ferrite segments;</claim-text>
+<claim-text>electronic switching means for selecting between conductor types and for selectively connecting and disconnecting the individual ferrite segments;</claim-text>
+<claim-text>variable capacitive elements distributed along said windings;</claim-text>
+<claim-text>a segmented cap hat system with electronically controllable diameter and asymmetry;</claim-text>
+<claim-text>switchable parasitic elements providing three-dimensional beam steering with azimuthal and elevation control;</claim-text>
+<claim-text>multi-mode operation capability including electronic switching among segmented, folded monopole and magnetic loop configurations;</claim-text>
+<claim-text>automatic mode selection and performance optimization;</claim-text>
+<claim-text>control circuitry comprising hardware and software logic controlling connection of the ferrite segments, connection of the flat copper tape and Litz wire windings, operation of the variable capacitive elements, the diameter and asymmetry of the cap hat system, switching the parasitic elements, and switching among the segmented, folded monopole and magnetic loop configurations; and</claim-text>
+<claim-text>machine learning optimization for adaptive performance enhancement.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The antenna system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said hybrid conductor system comprises flat copper tape conductors optimized for frequencies from 1-8 MHz and Litz wire conductors optimized for frequencies from 5 to 54 MHz.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The antenna system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said segmented cap hat system comprises eight independently controllable segments enabling electronic diameter adjustment from 45 mm to 200 mm.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The antenna system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said ferrite segments comprise at least four different ferrite materials from the set consisting of Type 61, Type 43, Type 67, and Type 77 materials.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The antenna system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said electronic switching means comprises PIN diodes for conductor selection, segment activation, and mode configuration.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The antenna system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said variable capacitive elements comprise up to five varactor diodes per segment positioned at distributed locations along each winding.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The antenna system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said control circuitry includes machine learning algorithms for adaptive performance optimization.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The antenna system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, operating across an extended frequency range from 1.6 MHz to 54 MHz with electronic mode switching.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The antenna system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said multi-mode operation includes automatic frequency-dependent configuration selection.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The antenna system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the antenna system achieves efficiency ranging from 15% to 85% across a frequency range from 1.6 to 54 MHz.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The antenna system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said automatic optimization includes real-time impedance monitoring, pattern analysis, and adaptive algorithm implementation.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A method of operating a hybrid multi-band ferrite antenna comprising:
+<claim-text>determining optimal operational mode based on user-selected frequency and performance requirements;</claim-text>
+<claim-text>selecting one conductor winding type from the set consisting of flat tape, Litz wire, and a combination of flat tape and Litz wire);</claim-text>
+<claim-text>configuring ferrite core segments for segmented, folded monopole, or magnetic loop operation;</claim-text>
+<claim-text>adjusting cap hat diameter and asymmetry for impedance optimization and pattern control;</claim-text>
+<claim-text>setting variable capacitive elements for frequency tuning and harmonic suppression;</claim-text>
+<claim-text>configuring parasitic elements for desired radiation pattern and beam steering;</claim-text>
+<claim-text>implementing three-dimensional beam steering through coordinated control of multiple subsystems; and</claim-text>
+<claim-text>continuously monitoring and adapting system parameters for optimal performance.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein said selecting conductor type comprises electronic switching based on frequency-dependent loss optimization.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein said three-dimensional beam steering comprises independent azimuthal and elevation control.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising machine learning adaptation based on performance history and propagation conditions.</claim-text>
+</claim>
+</claims>

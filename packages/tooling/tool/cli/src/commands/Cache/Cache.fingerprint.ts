@@ -5,9 +5,10 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -25,6 +26,7 @@ import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { collectCacheCensus, resolveCacheTurboBinary } from "./Cache.census.ts";
 import { inspectCacheDependencyTree } from "./Cache.dependencies.ts";
+import { decodeCacheExperimentText } from "./Cache.evidence.ts";
 import { collectCacheRuntimeLinker } from "./Cache.linker.ts";
 import {
   CacheCensusDefinition,
@@ -38,6 +40,82 @@ import {
   CacheToolchainSnapshot,
 } from "./Cache.schemas.ts";
 import type { CacheActivationProjection, CacheQualificationKey } from "@beep/repo-configs/cache";
+
+const $I = $RepoCliId.create("commands/Cache/Cache.fingerprint");
+
+class NativeRemoteSigning extends S.Opaque<NativeRemoteSigning, { readonly brand: unique symbol }>()(
+  S.Struct({
+    enabled: S.Boolean.pipe(S.withDecodingDefaultKey(Effect.succeed(true))),
+    signature: S.Boolean.pipe(S.withDecodingDefaultKey(Effect.succeed(false))),
+  }).pipe(
+    $I.annoteSchema("NativeRemoteSigning", {
+      description: "Only native remote-cache enablement and signing policy fields.",
+    })
+  )
+) {}
+
+class NativeGlobalSigning extends S.Opaque<NativeGlobalSigning, { readonly brand: unique symbol }>()(
+  S.Struct({ remoteCache: S.OptionFromOptionalKey(NativeRemoteSigning) }).pipe(
+    $I.annoteSchema("NativeGlobalSigning", { description: "Native global configuration's optional signing policy." })
+  )
+) {}
+
+class NativeSigningRoot extends S.Opaque<NativeSigningRoot, { readonly brand: unique symbol }>()(
+  S.Struct({
+    futureFlags: S.OptionFromOptionalKey(
+      S.Struct({ globalConfiguration: S.Boolean.pipe(S.withDecodingDefaultKey(Effect.succeed(false))) })
+    ),
+    global: S.OptionFromOptionalKey(NativeGlobalSigning),
+    remoteCache: S.OptionFromOptionalKey(NativeRemoteSigning),
+  }).pipe(
+    $I.annoteSchema("NativeSigningRoot", {
+      description: "Native root/global signing configuration with decoded absence.",
+    })
+  )
+) {}
+
+const decodeJsonObjectText = Jsonc.bind(S.JsonObject).decode;
+const decodeNativeSigningRootText = Jsonc.bind(NativeSigningRoot).decode;
+
+/**
+ * Read the checkout's bounded native signing requirement without retaining configuration values.
+ *
+ * **Details**
+ * Supports both root configuration and the enabled global-configuration flag.
+ * Missing, ambiguous, escaping or malformed configuration fails closed. No
+ * remote request runs and no artifact key is read by this operation.
+ *
+ * **Example** (Inspect the native signing requirement)
+ * ```ts
+ * import { readCacheSignatureRequired } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * console.assert(Effect.isEffect(readCacheSignatureRequired(".")))
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const readCacheSignatureRequired = Effect.fn("CacheFingerprint.readSignatureRequired")(
+  function* (root: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const json = yield* fs.exists(path.join(root, "turbo.json"));
+    const jsonc = yield* fs.exists(path.join(root, "turbo.jsonc"));
+    if (json === jsonc)
+      return yield* CacheCommandError.new("Signing posture requires exactly one checkout root Turbo configuration.");
+    const read = yield* readContainedFileBytesNoFollow(root, json ? "turbo.json" : "turbo.jsonc", 1024 * 1024);
+    const bytes = yield* read.contents.pipe(
+      Effect.fromOption(() => CacheCommandError.new("Root Turbo configuration is unavailable."))
+    );
+    const source = yield* decodeCacheExperimentText(bytes);
+    const document = yield* decodeNativeSigningRootText(source);
+    const remote = O.exists(document.futureFlags, (flags) => flags.globalConfiguration)
+      ? O.flatMap(document.global, (global) => global.remoteCache)
+      : document.remoteCache;
+    return O.exists(remote, (configuration) => configuration.enabled && configuration.signature);
+  },
+  Effect.mapError(() => CacheCommandError.new("Cannot resolve the checkout's native artifact signing policy."))
+);
 
 const CacheGlobalConfigurationFlag = S.Literal(true);
 
@@ -342,7 +420,7 @@ const decodeJsonObject = S.decodeUnknownEffect(S.JsonObject);
  * @since 0.0.0
  */
 export const projectCacheSignedRoot = Effect.fn("CacheFingerprint.projectSignedRoot")(function* (source: string) {
-  const rootConfig = yield* decodeJsoncTextAs(S.JsonObject)(source);
+  const rootConfig = yield* decodeJsonObjectText(source);
   const flags = yield* O.match(R.get(rootConfig, "futureFlags"), {
     onNone: () => Effect.succeed({}),
     onSome: decodeJsonObject,
@@ -402,8 +480,8 @@ export const projectCacheActivation = Effect.fn("CacheFingerprint.projectActivat
       "Activation must target the selected workspace's inheriting Turbo configuration."
     );
   yield* validateActivationArtifacts(census, activation, before, after);
-  const disabled = yield* decodeJsoncTextAs(S.JsonObject)(before);
-  const enabled = yield* decodeJsoncTextAs(S.JsonObject)(after);
+  const disabled = yield* decodeJsonObjectText(before);
+  const enabled = yield* decodeJsonObjectText(after);
   yield* decodeRootInheritance(disabled.extends);
   const tasks = yield* decodeJsonObject(disabled.tasks);
   const definition = yield* decodeJsonObject(tasks[taskName]);
@@ -465,7 +543,7 @@ export const projectCacheSignedActivation = Effect.fn("CacheFingerprint.projectS
 ) {
   const rootDigest = yield* hashBytes(new TextEncoder().encode(rootBefore));
   const roots = A.filter(census.sources, (source) => source.path === "turbo.json");
-  const root = yield* decodeJsoncTextAs(S.JsonObject)(rootBefore);
+  const root = yield* decodeJsonObjectText(rootBefore);
   const globalConfiguration = R.filter(root, (_, name) => name !== "tasks" && name !== "$schema");
   if (
     roots.length !== 1 ||
@@ -476,7 +554,7 @@ export const projectCacheSignedActivation = Effect.fn("CacheFingerprint.projectS
   if ((yield* projectCacheSignedRoot(rootBefore)) !== rootSigned)
     return yield* CacheCommandError.new("Signed root bytes differ from the exact reviewed projection.");
   const activated = yield* projectCacheActivation(key, census, toolchain, activation, before, after);
-  const signed = yield* decodeJsoncTextAs(S.JsonObject)(rootSigned);
+  const signed = yield* decodeJsonObjectText(rootSigned);
   const signedDigest = yield* hashBytes(new TextEncoder().encode(rootSigned));
   const configuration = CacheComputationConfiguration.make({
     ...activated.configuration,

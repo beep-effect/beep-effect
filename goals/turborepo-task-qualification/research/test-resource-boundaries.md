@@ -111,3 +111,28 @@ property binds every generated source digest to the workflow identity. These
 fixtures prove supervisor coordination; the frozen native receipts retain sole
 authority for real sandbox and client execution. No additional provider exception
 is needed.
+
+
+### Publication-bound acceptance resource review, 2026-10-30
+
+The acceptance suite still needs physical private files, permission bits,
+replacement, links and revocation; its complete-publication controls also use
+real ZIPs. The hosted producer suite exercises the actual bounded native ZIP
+parser, including malformed members and symlinks. The private upload capability
+loader reads owner-only issuer/profile files and revocation markers before a
+denying credential provider. These exact EV010 imports retain native services;
+controlled GitHub metadata cannot substitute for the filesystem/parser subjects.
+Each exception names its owner and exit condition in the generated inventory.
+
+Both transaction property loops retain their existing shared marker/ledger
+invariants, generators, run options and explicit Passed checks. Re-reviewed after
+publication-fixture integration, they still compare mutations against one
+persisted transaction before revocation. Their prior EV007 reasons are retained.
+The combined 222-case suite passes on Node and Bun. The strict-join, final approval
+and final issuer removed-guard controls each fail their selected assertions, with
+source restored exactly. These are local component checks, not deployed proof.
+
+The shared content fixture now uses an explicit test layer instead of constructing
+one inside the reusable fixture. The revocation control captures the exact three
+platform services through service provision, without a nested test layer. No
+provider or wrapper defect is admitted by the native provenance judgments.

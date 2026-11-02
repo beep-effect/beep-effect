@@ -1,0 +1,135 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "14657939-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "findings": [],
+  "priorFindingDispositions": [],
+  "reviewedGranularityCases": [
+    {
+      "claimNumber": 5,
+      "path": "5.b",
+      "anchor": {
+        "startChar": 424,
+        "endChar": 428,
+        "quote": "that"
+      },
+      "action": "retained-sole-entity-proform",
+      "reason": "Retain: this that is a standalone demonstrative proform in consistent with that of the supporting plane, not a relative-pronoun clause introducer. It supplies the only explicit comparison-height mention for the supporting plane; the earlier the height belongs to plane parts of support surfaces. Deleting the term would remove that distinct relational participant. Preserve exact bare term; no unique introducing term or antecedent is invented.",
+      "removedAntecedents": []
+    }
+  ],
+  "verifiedExactChanges": {
+    "removedTerms": [],
+    "addedTerms": [],
+    "removedNonfunctionalEdges": [],
+    "unchangedElementStructure": true,
+    "unchangedFunctionalSourceReconstruction": true,
+    "referenceSha256": "e8f0fe0ead6483c43e44313728ca8924fc6b9f052f1170c7b9b62d934f9f68d5"
+  },
+  "reviewScope": {
+    "claimCount": 9,
+    "elementCount": 31,
+    "termCount": 125,
+    "edgeCount": 96
+  },
+  "reviewNotes": [
+    "Targeted independent review under semantic-reference/v2/entity-mentions/v1 and the specific SPEC granularity decision; read the per-family granularity-review receipt, exact canonical changed contexts, prior/current reference snapshots and prior critic receipt. This is not a new source-eligibility or full original-document audit.",
+    "Independently compared the immediate pre-repair snapshot with current expected: element paths, kinds and spans are unchanged; term changes are exactly the listed removals/additions; nonfunctional edge changes are exactly the associated antecedent removals; every functional edge reconstructs the identical entire owner text before and after, with contiguous ordered source spans and valid local term ownership.",
+    "All current element/term/functional/antecedent anchors were checked against canonical UTF-16 text. Owned terms are ordered and nonoverlapping, local/foreign references exist, and typed containment/dependency endpoints are coherent. No source wording or unsupported introduction was supplied. Runtime schema success is reported in the extractor granularity receipt; this critic independently checked the specified geometry/schema constraints without rerunning production code.",
+    "Each removed relative/reciprocal surface retains its complete literal source clause or functional text and explicit governing participant(s). This applies source grammar individually; it is not a spelling-based blanket pronoun deletion rule.",
+    "Accepted retention of claim 5 that [424,428) as a bare standalone demonstrative comparison-height proform in consistent with that of the supporting plane. It supplies the second height participant, unlike a modifying-clause linker. The earlier the height belongs to the support-surface plane parts. Exact current tree is unchanged; no false identity edge equates those two heights and no omitted word height is fabricated. This source-specific representational choice is resolved for this critic; attorney adjudication remains pending."
+  ],
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "14657939-root-1",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.96,
+      "confidenceScope": "Independent native-source semantic structure/corrections; separately accepted source qualification and pending attorney adjudication are not semantic/legal agreement.",
+      "verdict": "accepted",
+      "reviewedClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "findings": [],
+      "sourceEligibility": "Separate independent source critic accepted. PDF-backed original corroboration for12360911/11670278 supersedes their earlier source-audit holds; native text remains canonical.",
+      "audit": {
+        "treesReviewed": 9,
+        "elementsReviewed": 31,
+        "termsReviewed": 125,
+        "typedEdgesReviewed": 96,
+        "edgeKinds": {
+          "antecedent": 57,
+          "part-of": 22,
+          "functional": 9,
+          "depends-on-element": 8
+        },
+        "allElementAndTermUtf16SlicesVerified": true,
+        "allFunctionalTextSlicesVerified": true,
+        "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+        "allLocalAndCrossClaimTermEndpointsVerified": true,
+        "schemaDecode": "passed every supplied tree",
+        "selectedScopeComplete": true
+      },
+      "attorneyAdjudication": "pending",
+      "independence": "Independent critic; not producer of these families. Reviewed canonical claims/context, source provenance/audit/critic, extractor/expected, v2 protocol and schema contracts. No production rules, predictions, synthetic fixtures, archived conformance, source repair, network, secrets, git or delegation. Helpers checked only supplied exact source/schema/span/reference geometry.",
+      "rationale": [
+        "Individually reviewed31 elements/125 terms/96 edges and9 explicit functional relationships. Full lexical heads and exact Greek/numeral names are preserved; nested alternatives5.a.i–iv correctly represent four lettered source conditions. No structural correction found.",
+        "Actual amended dependencies4/9->1 govern rather than superseded alternative dependencies. Sibling2 cannot introduce squeezed chamfered bevel into4; alternatives5.c/d do not supply one unconditional sole plane identity. Missing length/height/working-position introductions are retained without fabricated edges.",
+        "Source-clear aliases identify slabs, bearing seats, holding mechanisms and inherited rolls by source roles. Last/any-qualified positions and unknown plane references are not forced into generic component identity."
+      ],
+      "ambiguityResolution": [
+        {
+          "claimNumber": 4,
+          "quote": "the squeezed chamfered bevel",
+          "resolution": "Claim4->1 excludes sibling2, where squeezed bevels are explicitly introduced. Missing edge is determinate; do not import2."
+        },
+        {
+          "claimNumber": 5,
+          "quote": "the plane parts",
+          "resolution": "Two mutually listed c/d alternatives introduce a plane. The later condition applies across both; no single unconditional target introduction is chosen."
+        },
+        {
+          "claimNumber": 9,
+          "quote": "the last horizontal segment",
+          "resolution": "Last/any qualifications select positions within an unspecified arrangement. They are retained literally without an invented unique segment introduction."
+        }
+      ]
+    }
+  ],
+  "sourceConcerns": [],
+  "attorneyAdjudication": "pending; critic confidence is not attorney agreement",
+  "roundLimit": {
+    "finalPermittedRound": false,
+    "noFourthAgentRound": true
+  },
+  "independence": "Independent targeted semantic critic. Only this family critic.json written. No expected/source/code edits, production rules/predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers compare authorized reference snapshots and check exact span/schema geometry only.",
+  "corpusStatus": "Incremental reference consistency review; no active sample admission, goal completion, or attorney agreement claimed."
+}

@@ -1,3 +1,4 @@
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { CI_LANE_PARTITIONS, proveCiLanePartition } from "@beep/repo-cli/commands/Ci";
 import { CreatePackageScripts, createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
 import { syncTsconfigAtRoot, TsconfigSyncRunOptionsCheck } from "@beep/repo-cli/commands/TsconfigSync";
@@ -5,7 +6,7 @@ import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils"
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Console from "effect/Console";
@@ -18,12 +19,11 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as jsonc from "jsonc-parser";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer);
+const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
   FsUtilsLive.pipe(Layer.provideMerge(CommandPlatformLayer)),
@@ -378,10 +378,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
 
   const readJsoncFile = Effect.fn(function* (filePath: string) {
     const fs = yield* FileSystem.FileSystem;
-    return jsonc.parse(yield* fs.readFileString(filePath), undefined, {
-      allowTrailingComma: true,
-      disallowComments: false,
-    });
+    return yield* Jsonc.parse(yield* fs.readFileString(filePath));
   });
 
   const toFailureMessage = (error: unknown): string =>
@@ -1027,7 +1024,7 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               expect((yield* decodeTsconfigIncludes(appTsconfig)).include).toContain(
                 "../../vitest.aliases.generated.json"
               );
-              expect(appTsconfig.compilerOptions.rootDir).toBe("../..");
+              expect(appTsconfig).toMatchObject({ compilerOptions: { rootDir: "../.." } });
 
               yield* expectIdentityRegistration({ fs, path, rootDir }, "vite-shell", "ViteShell");
             })
@@ -1590,7 +1587,7 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             // Lint and Test Unit partition proofs: each new package lands in exactly one shard.
             for (const [laneId, partitions] of [
               ["lint", ["lint-a", "lint-b"]],
-              ["test-unit", ["repo-cli-1", "repo-cli-2", "unit-a", "unit-b"]],
+              ["test-unit", ["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "unit-a", "unit-b"]],
             ] as const) {
               const taskPackages = pipe(
                 CI_LANE_PARTITIONS,

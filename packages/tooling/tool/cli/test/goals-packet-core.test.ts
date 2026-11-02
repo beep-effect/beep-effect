@@ -28,7 +28,7 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -48,7 +48,11 @@ const decodeUnknownPacketTraceEntryEffect = S.decodeUnknownEffect(PacketTraceEnt
 const encodeUnknownPacketDerivedState = S.encodeUnknownEffect(PacketDerivedState);
 const encodeUnknownPacketTraceEntryEffect = S.encodeUnknownEffect(PacketTraceEntry);
 
-const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const testLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 
 const FIXTURES_ROOT = NodeURL.fileURLToPath(new URL("./fixtures/packet-core", import.meta.url));
 const GOLDEN_PATH = `${FIXTURES_ROOT}/golden-linear`;

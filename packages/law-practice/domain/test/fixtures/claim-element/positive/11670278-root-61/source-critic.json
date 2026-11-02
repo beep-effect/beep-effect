@@ -1,0 +1,121 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "11670278-root-61",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": false,
+  "reviewedClaimNumbers": [61, 62, 63, 64, 65, 67],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20080186197", "A1", "20080807"],
+    "applicationReference": ["US", "11670278", "20070201"],
+    "officeActionDocumentIdentifiers": ["FUEAL66WPPOPPY5"],
+    "officeActionMailDate": "2009-05-07"
+  },
+  "digestEvidence": [
+    {
+      "file": "11670278.publication.xml",
+      "sha256": "35e7bd5cf2623e235b53d0ef08c048b24817e00354f6d46d085e4c18e2899971",
+      "matchesProvenance": true
+    },
+    {
+      "file": "11670278.claims.xml",
+      "sha256": "83fccdaba8704e1cac25d45f4f37d7ea2e9f02a3ec4cd32053d1bf646e4630f7",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "83fccdaba8704e1cac25d45f4f37d7ea2e9f02a3ec4cd32053d1bf646e4630f7",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "EXNQQ9WGPPOPPY4",
+      "available": false
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 52,
+    "actualRows": 52,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2007-02-01T00:00:00.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "EXNQQ9WGPPOPPY4"
+      }
+    ]
+  },
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 61,
+      "examinerPhrase": "the location",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the location"
+    },
+    {
+      "claimNumber": 61,
+      "examinerPhrase": "the current location",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the current location"
+    },
+    {
+      "claimNumber": 61,
+      "examinerPhrase": "the contour",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the contour"
+    },
+    {
+      "claimNumber": 62,
+      "examinerPhrase": "the intensity",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the intensity"
+    },
+    {
+      "claimNumber": 62,
+      "examinerPhrase": "the polarity",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the polarity"
+    }
+  ],
+  "assessment": "Visual comparison of PDF pages9-11 (printed59-61) corroborates all selected61-65/67 text and dependencies, including native67 phrase the least one pair. Claim66 visibly refers to66 itself but is outside selected family; it is not silently repaired or added. Uppercase Claim and apostrophe typography do not show operative-version conflict. Missing original XML is now corroborated by original PDF.",
+  "findings": [],
+  "limitations": [
+    "Cached public evidence only; original OCR corroboration only, never repaired into reference. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation inspected/performed.",
+  "previousRounds": [
+    {
+      "round": 1,
+      "verdict": "unresolved",
+      "confidence": 0.98,
+      "assessment": "Second-paragraph OA covers1-164 and specifically61/62. Natural root61 family selected62-65/67 is meaningful, but original EXNQQ9WGPPOPPY4 is absent.",
+      "findings": [
+        {
+          "severity": "blocking",
+          "evidence": "Second-paragraph OA covers1-164 and specifically61/62. Natural root61 family selected62-65/67 is meaningful, but original EXNQQ9WGPPOPPY4 is absent.",
+          "requiredAction": "Obtain original EXNQQ9WGPPOPPY4; verify selected61-65/67 and context."
+        }
+      ]
+    }
+  ],
+  "pdfCorroboration": {
+    "documentIdentifier": "EXNQQ9WGPPOPPY4",
+    "sha256": "d3056140ed90a384f3b6aa275ff93d96777c0b94024cf02950d49c818d5c4f4a",
+    "pdfPagesInspected": [9, 10, 11],
+    "printedPages": [59, 60, 61],
+    "purpose": "Independent visual corroboration only; native source remains authoritative annotation text."
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-164 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention."
+  ]
+}

@@ -14,16 +14,14 @@ import {
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
-import { describe, expect } from "@effect/vitest";
+import { fcRuns } from "@beep/test-utils";
+import { expect } from "@effect/vitest";
 import { assertEquals, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import * as Layer from "effect/Layer";
-import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
@@ -43,26 +41,7 @@ const decodeHistoryJson = S.decodeEffect(HistoryJson);
 const encodeHistoryJson = S.encodeEffect(HistoryJson);
 const engine = VerifiedSpanEngine.make({ name: "fixture-extractor", version: "1" });
 
-const TestCrypto = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: (algorithm, data) =>
-      Effect.tryPromise({
-        catch: (cause) =>
-          PlatformError.systemError({
-            _tag: "Unknown",
-            cause,
-            description: "Could not compute fixture digest",
-            method: "digest",
-            module: "VerifiedSpanHistoryTest",
-          }),
-        try: () =>
-          globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data)).then((buffer) => new Uint8Array(buffer)),
-      }),
-    randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-  })
-);
-const provideTestCrypto = provideScopedLayer(TestCrypto);
+const TestCrypto = Digest.layerWebCrypto;
 
 const digestText = Effect.fnUntraced(function* (sourceText: string) {
   const digest = yield* decodeSha256HexFromBytes(Uint8Array.from(utf8Encoder.encode(sourceText)));
@@ -138,7 +117,7 @@ const persistAndReload = Effect.fnUntraced(function* (history: VerifiedSpanHisto
   return yield* decodeHistoryJson(persisted);
 });
 
-describe("verified-span persistence and re-anchor history", () => {
+it.layer(TestCrypto)("verified-span persistence and re-anchor history", (it) => {
   it.prop(
     "round-trips schema-derived persisted failures",
     { failure: Arbitrary.schema(VerifiedSpanAttemptFailure) },
@@ -176,7 +155,7 @@ describe("verified-span persistence and re-anchor history", () => {
         expect(Str.slice(receipt.anchor.startChar, receipt.anchor.endChar)(sourceText)).toBe(receipt.anchor.quote);
         expect(receipt.source).toEqual(source);
       }
-    }, provideTestCrypto)
+    })
   );
 
   it.effect(
@@ -243,7 +222,7 @@ describe("verified-span persistence and re-anchor history", () => {
         expect(Str.slice(originalAnchor.startChar, originalAnchor.endChar)(originalText)).toBe(originalAnchor.quote);
         expect(Str.slice(revisedAnchor.startChar, revisedAnchor.endChar)(revisedText)).toBe(revisedAnchor.quote);
       }
-    }, provideTestCrypto)
+    })
   );
 
   it.effect(
@@ -273,7 +252,7 @@ describe("verified-span persistence and re-anchor history", () => {
       if (VerifiedSpanAttemptOutcome.guards.failed(staleNegative.attempts[0].outcome)) {
         expect(staleNegative.attempts[0].outcome.failure.reason).toBe("stale-source");
       }
-    }, provideTestCrypto)
+    })
   );
 
   it.effect(
@@ -290,7 +269,7 @@ describe("verified-span persistence and re-anchor history", () => {
         assertNone(outcome.failure.candidateIndex);
       }
       expect("anchors" in outcome).toBe(false);
-    }, provideTestCrypto)
+    })
   );
 
   it.effect(
@@ -299,34 +278,16 @@ describe("verified-span persistence and re-anchor history", () => {
       const sourceText = "alpha beta";
       const source = yield* sourceIdentity(sourceText);
       const digestCalls = yield* Ref.make(0);
-      const CountingCrypto = Layer.succeed(
-        Crypto.Crypto,
-        Crypto.make({
-          digest: (algorithm, data) =>
-            Ref.update(digestCalls, (count) => count + 1).pipe(
-              Effect.andThen(
-                Effect.tryPromise({
-                  catch: (cause) =>
-                    PlatformError.systemError({
-                      _tag: "Unknown",
-                      cause,
-                      description: "Could not compute counted fixture digest",
-                      method: "digest",
-                      module: "VerifiedSpanHistoryTest",
-                    }),
-                  try: () =>
-                    globalThis.crypto.subtle
-                      .digest(algorithm, new Uint8Array(data))
-                      .then((buffer) => new Uint8Array(buffer)),
-                })
-              )
-            ),
-          randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-        })
-      );
+      const digest = yield* Digest.Digest;
+      const countingDigest = Digest.Digest.of({
+        ...digest,
+        digest: Effect.fn("VerifiedSpanHistoryTest.countingDigest")((algorithm, data) =>
+          Ref.update(digestCalls, (count) => count + 1).pipe(Effect.andThen(digest.digest(algorithm, data)))
+        ),
+      });
       const history = yield* beginVerifiedSpanHistory(
         beginInput(1, [candidate("alpha"), candidate("beta")], source, source, sourceText)
-      ).pipe(provideScopedLayer(CountingCrypto));
+      ).pipe(Effect.provideService(Digest.Digest, countingDigest));
 
       expect(history.attempts[0].outcome.status).toBe("verified");
       expect(yield* Ref.get(digestCalls)).toBe(1);
@@ -373,7 +334,7 @@ describe("verified-span persistence and re-anchor history", () => {
         pipe(decodeUnknownVerifiedSpanHistoryResult(swappedReceipts), Result.isFailure, assertTrue);
         pipe(decodeUnknownVerifiedSpanHistoryResult(duplicatedReceipt), Result.isFailure, assertTrue);
       }
-    }, provideTestCrypto)
+    })
   );
 
   it.effect(
@@ -437,7 +398,7 @@ describe("verified-span persistence and re-anchor history", () => {
       expect(historyEquivalence(restartedMixedVersion, mixedVersion)).toBe(true);
       pipe(decodeUnknownVerifiedSpanHistoryResult(wrongNormalizationMatter), Result.isFailure, assertTrue);
       pipe(decodeUnknownVerifiedSpanHistoryResult(wrongNormalizationSourceScope), Result.isFailure, assertTrue);
-    }, provideTestCrypto)
+    })
   );
 
   it.effect(
@@ -457,7 +418,7 @@ describe("verified-span persistence and re-anchor history", () => {
 
       expect(initialFailure.attempts[0].outcome.status).toBe("failed");
       expect(failure.reason).toBe("invalid-history");
-    }, provideTestCrypto)
+    })
   );
 
   it.effect(
@@ -685,6 +646,6 @@ describe("verified-span persistence and re-anchor history", () => {
       for (const [invariant, history] of R.toEntries(tamperedHistories)) {
         assertEquals(Result.isFailure(decodeUnknownVerifiedSpanHistoryResult(history)), true, invariant);
       }
-    }, provideTestCrypto)
+    })
   );
 });

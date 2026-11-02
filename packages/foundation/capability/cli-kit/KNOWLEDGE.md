@@ -1,8 +1,8 @@
 # cli — upstream knowledge bundle (verbatim)
 
 > Promoted as `@beep/cli-kit` in wave 4-C of `goals/effected-promotion`. The sections on `./ui`, `./ui/testing`
-> and live views describe the Ink half, which stays in the scratchpad lab until the packet's close (SPEC W4-m); the
-> package holds the root and `./testing`.
+> and live views describe the Ink half, deferred as `@beep/ink` and deleted from the lab when the packet closed
+> (SPEC W4-m); the package holds the root and `./testing`.
 
 Provenance: $HOME/YeeBois/references/effect/effected @ af7566a9da2eff169cb74955efcc5ede1e5de9f8; files listed below.
 Relative `okf/...` links refer to that checkout. Content is carried verbatim; port
@@ -12,8 +12,10 @@ Upstream paths, names and commands below describe the upstream checkout, not thi
 In this repo `@effected/cli` is `@beep/cli-kit` at `packages/foundation/capability/cli-kit`, and
 `@effected/cli/testing` is `@beep/cli-kit/testing`: upstream `packages/cli/src/<Module>.ts` maps to
 `src/<Module>.ts` and upstream `__test__/` to `test/`. `@effected/cli/ui`, `@effected/cli/ui/testing`
-and their serializer are not part of this package; they stay in the lab at `scratchpad/effected/cli`
-(SPEC W4-m), so every section about them describes lab code. Other names: `@effected/env` is
+and their serializer are not part of this package; they were deleted from the lab when the packet
+closed and wait for `@beep/ink` (SPEC W4-m; last held at
+`bb2134fcb952e07580c4cebf2586c901f090ef5b`), so every section about them describes code this repository no
+longer carries. Other names: `@effected/env` is
 `@beep/runtime-env`, `@effected/config-file` is `@beep/config-file` (a test-only dependency here: the
 `ConfigIssueRenderer` takes a structural `{ readonly issue }`), `@effected/walker` is `@beep/walker`,
 and `@effected/github-commands` is `@beep/github-commands`. The upstream `pnpm vitest` / `pnpm build`

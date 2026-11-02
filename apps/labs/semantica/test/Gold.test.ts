@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { SourceTextExtractor } from "@beep/provenance";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
@@ -51,6 +52,8 @@ import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/
 import { pipe } from "effect/Function";
 import { ProviderCache } from "@/services/ProviderCache";
 import { LabConfigValue } from "../src/runtime/Config.ts";
+
+const BunPlatformLive = Layer.merge(BunServices.layer, BunCrypto.layer);
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
@@ -229,10 +232,10 @@ const makeGoldTestLayer = (
       })
     )
   );
-  const canonicalizer = CanonicalizerLive.pipe(Layer.provide(BunServices.layer));
+  const canonicalizer = CanonicalizerLive.pipe(Layer.provide(BunPlatformLive));
 
   return Layer.mergeAll(
-    BunServices.layer,
+    BunPlatformLive,
     canonicalizer,
     config,
     documentSource,
@@ -253,7 +256,7 @@ describe("C0 gold proposer", () => {
     { arbitrary: fcRuns(20) }
   );
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("keeps the committed E6 annotation and refreeze receipt coherent", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -366,7 +369,7 @@ describe("C0 gold proposer", () => {
     assertNone(resolveGoldQuoteAnchor("prefix suffix", "-\n", 0));
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("maps a gold-generation deadline to GoldUnavailable", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -391,7 +394,7 @@ describe("C0 gold proposer", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("writes partial labels, drops invalid anchors and relation endpoints, and defers gold.json", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -465,7 +468,7 @@ describe("C0 gold proposer", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("writes gold.json only after all eighteen stub jobs form one coherent proposer set", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -497,7 +500,7 @@ describe("C0 gold proposer", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("removes gold.json when a complete set is followed by a partial rerun", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -534,7 +537,7 @@ describe("C0 gold proposer", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("leaves gold.json and label files untouched when a selected replay misses", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -576,7 +579,7 @@ describe("C0 gold proposer", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("fails with mixed-proposer when one complete-set file is stale", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -626,7 +629,7 @@ describe("C0 gold proposer", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.layer(
       Layer.unwrap(
         Effect.gen(function* () {

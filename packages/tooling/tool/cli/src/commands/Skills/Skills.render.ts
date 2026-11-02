@@ -10,7 +10,7 @@ import * as Match from "effect/Match";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as jsonc from "jsonc-parser";
+import { renderPrettyCommandJson } from "../../internal/cli/Json.ts";
 import { SkillsLockMigrationPlan, SkillsLockWriteReceipt } from "./SkillsLock.schemas.ts";
 import type { SkillProvenanceReport } from "./Skills.schemas.ts";
 import type { SkillMigrationRow, UnresolvedMigrationRow, VendoredMigrationRow } from "./SkillsLock.schemas.ts";
@@ -92,11 +92,7 @@ const encodeUnknownJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
  */
 export const renderSkillProvenanceJson = (report: SkillProvenanceReport): string => {
   const encoded = Result.getOrThrow(encodeUnknownJson(report.entry));
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
+  return renderPrettyCommandJson(encoded);
 };
 
 /**
@@ -221,8 +217,7 @@ const encodeMigrationPlanJson = S.encodeResult(S.fromJsonString(SkillsLockMigrat
  */
 export const renderSkillsLockMigrationPlanJson = (plan: SkillsLockMigrationPlan): string => {
   const encoded = Result.getOrThrow(encodeMigrationPlanJson(plan));
-  const edits = jsonc.format(encoded, undefined, { tabSize: 2, insertSpaces: true });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
+  return renderPrettyCommandJson(encoded);
 };
 
 const abbreviatedRevision = Str.slice(0, 10);
@@ -348,8 +343,7 @@ const encodeWriteReceiptJson = S.encodeResult(S.fromJsonString(SkillsLockWriteRe
  */
 export const renderSkillsLockWriteReceiptJson = (receipt: SkillsLockWriteReceipt): string => {
   const encoded = Result.getOrThrow(encodeWriteReceiptJson(receipt));
-  const edits = jsonc.format(encoded, undefined, { tabSize: 2, insertSpaces: true });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
+  return renderPrettyCommandJson(encoded);
 };
 
 const describeMaterializeTargets = (row: SkillMaterializeRow): string =>

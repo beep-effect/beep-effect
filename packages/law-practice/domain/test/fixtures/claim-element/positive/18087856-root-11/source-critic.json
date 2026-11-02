@@ -1,0 +1,311 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18087856-root-11",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20230412427", "A1", "20231221"],
+    "applicationReference": ["US", "18087856", "20221223"],
+    "officeActionDocumentIdentifiers": ["ME7NKC8P6X104X8"],
+    "officeActionMailDate": "2025-08-12"
+  },
+  "digestEvidence": [
+    {
+      "file": "18087856.publication.xml",
+      "sha256": "bb78b1a3da420e84f449568d37aab837fa4bd843f58bab3ce8ae2593afe46f8a",
+      "matchesProvenance": true
+    },
+    {
+      "file": "18087856.claims.xml",
+      "sha256": "f616e9ce106d7cdac966b940ada9a7a4676fe5ca5ffc5ae445af4e25f253a0fb",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "f616e9ce106d7cdac966b940ada9a7a4676fe5ca5ffc5ae445af4e25f253a0fb",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "LC0JWLT1XBLUEX0",
+      "xmlAvailable": true,
+      "sha256": "df3d455fc0c30a3696e5da3902aa08c3547836ca288a580eeb3adb318fa8d1f4",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 59,
+    "actualRows": 59,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2022-12-23T08:31:07.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "LC0JWLT1XBLUEX0"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-20 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the wireless communication system",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the wireless communication system"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "a base station comprising a user terminal",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "a base station comprising a user terminal"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the above-mentioned transceiver",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the above-mentioned transceiver"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the data transmission",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the data transmission"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the pilot",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the pilot"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the data",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the data"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the active user information",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the active user information"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the active user terminal",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the active user terminal"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the channel estimation information",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the channel estimation information"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the pilot generation unit",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the pilot generation unit"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the event that the signal",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the event that the signal"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the signal",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the signal"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the one generated in real time",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the one generated in real time"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the step 1 learning",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the step 1 learning"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the step 2 learning",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the step 2 learning"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the information indicating the activation states",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the information indicating the activation states"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the activation states",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the activation states"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the information indicating the estimated activation states",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the information indicating the estimated activation states"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the estimated activation states",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the estimated activation states"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the length",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the length"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the information indicating the length",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the information indicating the length"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "when a pre-set condition is satisfied",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "when a pre-set condition is satisfied"
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the codeword",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the codeword"
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the multiple pilots",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the multiple pilots"
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the pilot generation unit",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the pilot generation unit"
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the event",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the event"
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the updated pilot generation unit",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the updated pilot generation unit"
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the step 1 learning",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the step 1 learning"
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the step 2 learning",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the step 2 learning"
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the information indicating the activation states",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the information indicating the activation states"
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the estimated activation states",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the estimated activation states"
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the information indicating the length",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the information indicating the length"
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the length",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the length"
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the the",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": false,
+      "nativeQuote": "the above-mentioned one or more processors control the above-mentioned user terminal"
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "when a pre-set condition is satisfied",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "when a pre-set condition is satisfied"
+    }
+  ],
+  "assessment": "Original selected11-20 technical text/references agree except Claim capitalization and duplicated the the in20; native20 single article is recorded. OA covers1-20 with corresponding numbered clauses. Claim16 changes subject to user terminal yet expressly refers11; preserve actual subject.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

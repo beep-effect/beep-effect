@@ -1,0 +1,42 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12451999-root-15",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "resolvedClaimNumbers": [
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "A method according to claim 15",
+      "reason": "Selected 19-21 naturally depend on 15, as accepted source-critic marked-PDF evidence confirms. Context cooling-device claims 1-14 do not supply antecedents to this independent method family."
+    },
+    {
+      "quote": "the nozzle",
+      "reason": "Claim 21 lacks nozzle introduction in its actual 15 dependency; context claim 1 cannot cure it. Claim 21 the strip run likewise lacks introduction."
+    },
+    {
+      "quote": "the running direction",
+      "reason": "No introduced running direction in claim 15; no fabricated antecedent. Surface, cooling capacity, pressure, flow velocity, amount, borders, spray direction, middle and upper/lower side terms are retained without invented introducing anchors where they are first recited definitely."
+    },
+    {
+      "quote": "the pressure or the flow velocity",
+      "reason": "Claim 17 and bare pressure or flow velocity of claim 18 inherit these properties from 16, but claim 16 itself introduces neither by an introducing determiner. No edge is invented to an indefinite term that does not exist."
+    },
+    {
+      "quote": "the surface thereof",
+      "reason": "Same surface in independent 15 is first recited definitely without a determiner introduction. Term anchors exclude the pronominal thereof; no inferred introduction."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation from canonical claims and native XML. Exact manually selected quote locations only; no decomposer, implementation, predictions, synthetic fixtures or prior conformance references read. Complete lexical noun heads, nested enumeration and explicit function represented; inferred introductions omitted. Functional parts preserve intervening source text. Confidence is an extractor assessment, not attorney agreement. Independent critic review remains required."
+}

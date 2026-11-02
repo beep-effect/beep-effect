@@ -1,6 +1,8 @@
 /**
  * Claim lifecycle value schemas.
  *
+ * **Details**
+ *
  * The claim admission lifecycle vocabulary is shared-kernel product language
  * owned by `@beep/shared-domain` (promoted 2026-06-18). The epistemic slice owns
  * the *mechanism* — the SHACL claim gate, the transition service, and the

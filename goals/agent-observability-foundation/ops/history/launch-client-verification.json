@@ -1,0 +1,61 @@
+{
+  "scope": "Private destination context and bounded Unix-socket launch client, exact receipt validation and actual worker restart proof",
+  "recordedAt": "2026-10-28T19:59:37.240956-05:00",
+  "result": "passed",
+  "syntheticOnly": true,
+  "actualHarnessLaunches": 0,
+  "productionRollout": false,
+  "recoveryHoldPreserved": true,
+  "goalComplete": false,
+  "sourceSha256": {
+    "bun.lock": "32da9a6110daccc2795f3cbe51d87856df424adf5d8e08a5a6f8c847be0b0bd2",
+    "packages/tooling/library/ai-metrics/package.json": "b133118437359227f18d07f14ad0c2d1a241434bae3670bfd63a40cf68653e70",
+    "packages/tooling/library/ai-metrics/src/observation-launch-client.ts": "91ff4b5c1150353f4ccb8d698f39baaf70100dc1b580369544b10a53ec27ed8f",
+    "packages/tooling/library/ai-metrics/src/observation-launch-http.ts": "582fc7fc6c9fb25abfe24a8cae0f9eac3f2daabc109d025dce7e74ee68220d6f",
+    "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts": "036a61937bde243edc101c478df000b60b7fb434679c12fcbf874a8963b0ab0f",
+    "packages/tooling/library/ai-metrics/src/observation-worker.ts": "4c3dc64c34648bed6df723ccf16f1427d352a46e6368a066bbd0e84925a779be",
+    "packages/tooling/library/ai-metrics/src/index.ts": "e7d2aec90d3c33d7265928675cdabf20c88bb1fa9658fc918f12f0e1e1cf3c34",
+    "packages/tooling/library/ai-metrics/test/observation-launch-client.test.ts": "bf9a7bd4e5d9029f63aa9faa7a726358d1ce16b800984d65775a3b93563cd5a7",
+    "packages/tooling/library/ai-metrics/test/fixtures/observation-launch-client-process.ts": "5ad687f483af5757f356ef89e51a9c72a75fab09597c65c809c8f37bc59d7076",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "7308386f0d9e45f85d44d25f58cb9cbf6420a645dcef1c59d472df6d59a4a007"
+  },
+  "focusedVerification": {
+    "files": 4,
+    "tests": 24,
+    "result": "passed",
+    "memoryPeakMiB": 460.3,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-launch-client-check-v3.log"
+  },
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 108.4,
+    "docgenSeconds": 11.5,
+    "runtimeSeconds": 121.447,
+    "memoryPeakGiB": 5.6,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-launch-client-quality-v2.log",
+    "execution": "One agent-runs.slice job, MemoryHigh 7 GiB, MemoryMax 8 GiB, zero additional swap, CPUQuota 200%, TasksMax 256, 360-second lifetime; RAYON_NUM_THREADS=2 and BIOME_THREADS=2."
+  },
+  "actualEntrypoint": {
+    "receipt": "goals/agent-observability-foundation/ops/launch-client-entrypoint-verification.json",
+    "cliMarkedFixtures": 1,
+    "desktopMarkedFixtures": 1,
+    "actualHarnessLaunches": 0,
+    "committedFacts": 8,
+    "exactReplayAfterRestart": true,
+    "privateFieldRefused": true,
+    "startsPaused": true,
+    "typedClientVerifiedReceipts": true,
+    "privateContextWhilePaused": true,
+    "newClientAfterRestart": true
+  },
+  "remaining": [
+    "Actual managed-driver process/session evidence and durable producer ownership/reconciliation",
+    "Independent launch denominators and source-session joins",
+    "Production frontend/service installation, enrollment, live canary and rollback",
+    "Final acceptance panel and repository delivery"
+  ]
+}

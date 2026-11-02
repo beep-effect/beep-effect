@@ -1,6 +1,8 @@
 /**
  * Claim projection.
  *
+ * **Details**
+ *
  * The signature is the federation invariant: a pure, read-only fold from a
  * single-owner authority array into a deterministic read model. It takes a local
  * authority array and returns a view — it has no write capability and no central

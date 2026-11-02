@@ -1,0 +1,706 @@
+[
+  {
+    "claimNumber": 19,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "19",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 29,
+          "quote": "A turbine engine, said engine"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "A turbine engine"
+            },
+            "determiner": "a",
+            "head": "turbine engine"
+          },
+          {
+            "anchor": {
+              "startChar": 18,
+              "endChar": 29,
+              "quote": "said engine"
+            },
+            "determiner": "said",
+            "head": "engine"
+          }
+        ]
+      },
+      {
+        "path": "19.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 469,
+          "quote": "a splitter nose, wherein the splitter nose comprises: an annular wall with an annular separation surface with a circular leading edge, the surface structured and operable to separate an upstream flow into a primary flow and a secondary flow; and an electrical de-icing device with an electric heating element, the electric heating element comprises at least one electric heating strip that is disposed upstream the annular wall"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 42,
+              "endChar": 57,
+              "quote": "a splitter nose"
+            },
+            "determiner": "a",
+            "head": "splitter nose"
+          },
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 84,
+              "quote": "the splitter nose"
+            },
+            "determiner": "the",
+            "head": "splitter nose"
+          }
+        ]
+      },
+      {
+        "path": "19.a.i",
+        "anchor": {
+          "startChar": 96,
+          "endChar": 282,
+          "quote": "an annular wall with an annular separation surface with a circular leading edge, the surface structured and operable to separate an upstream flow into a primary flow and a secondary flow"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 111,
+              "quote": "an annular wall"
+            },
+            "determiner": "an",
+            "head": "annular wall"
+          },
+          {
+            "anchor": {
+              "startChar": 117,
+              "endChar": 146,
+              "quote": "an annular separation surface"
+            },
+            "determiner": "an",
+            "head": "annular separation surface"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 175,
+              "quote": "a circular leading edge"
+            },
+            "determiner": "a",
+            "head": "circular leading edge"
+          },
+          {
+            "anchor": {
+              "startChar": 177,
+              "endChar": 188,
+              "quote": "the surface"
+            },
+            "determiner": "the",
+            "head": "surface"
+          },
+          {
+            "anchor": {
+              "startChar": 225,
+              "endChar": 241,
+              "quote": "an upstream flow"
+            },
+            "determiner": "an",
+            "head": "upstream flow"
+          },
+          {
+            "anchor": {
+              "startChar": 247,
+              "endChar": 261,
+              "quote": "a primary flow"
+            },
+            "determiner": "a",
+            "head": "primary flow"
+          },
+          {
+            "anchor": {
+              "startChar": 266,
+              "endChar": 282,
+              "quote": "a secondary flow"
+            },
+            "determiner": "a",
+            "head": "secondary flow"
+          }
+        ]
+      },
+      {
+        "path": "19.a.ii",
+        "anchor": {
+          "startChar": 288,
+          "endChar": 469,
+          "quote": "an electrical de-icing device with an electric heating element, the electric heating element comprises at least one electric heating strip that is disposed upstream the annular wall"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 288,
+              "endChar": 317,
+              "quote": "an electrical de-icing device"
+            },
+            "determiner": "an",
+            "head": "electrical de-icing device"
+          },
+          {
+            "anchor": {
+              "startChar": 323,
+              "endChar": 350,
+              "quote": "an electric heating element"
+            },
+            "determiner": "an",
+            "head": "electric heating element"
+          },
+          {
+            "anchor": {
+              "startChar": 352,
+              "endChar": 380,
+              "quote": "the electric heating element"
+            },
+            "determiner": "the",
+            "head": "electric heating element"
+          },
+          {
+            "anchor": {
+              "startChar": 391,
+              "endChar": 426,
+              "quote": "at least one electric heating strip"
+            },
+            "determiner": "at-least-one",
+            "head": "electric heating strip"
+          },
+          {
+            "anchor": {
+              "startChar": 453,
+              "endChar": 469,
+              "quote": "the annular wall"
+            },
+            "determiner": "the",
+            "head": "annular wall"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "19.a",
+        "parent": "19"
+      },
+      {
+        "kind": "part-of",
+        "child": "19.a.i",
+        "parent": "19.a"
+      },
+      {
+        "kind": "functional",
+        "element": "19.a.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.i",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 111,
+                "quote": "an annular wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 111,
+              "endChar": 117,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.i",
+              "anchor": {
+                "startChar": 117,
+                "endChar": 146,
+                "quote": "an annular separation surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 146,
+              "endChar": 152,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.i",
+              "anchor": {
+                "startChar": 152,
+                "endChar": 175,
+                "quote": "a circular leading edge"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 175,
+              "endChar": 177,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.i",
+              "anchor": {
+                "startChar": 177,
+                "endChar": 188,
+                "quote": "the surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 188,
+              "endChar": 225,
+              "quote": " structured and operable to separate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.i",
+              "anchor": {
+                "startChar": 225,
+                "endChar": 241,
+                "quote": "an upstream flow"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 241,
+              "endChar": 247,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.i",
+              "anchor": {
+                "startChar": 247,
+                "endChar": 261,
+                "quote": "a primary flow"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 261,
+              "endChar": 266,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.i",
+              "anchor": {
+                "startChar": 266,
+                "endChar": 282,
+                "quote": "a secondary flow"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.a.ii",
+        "parent": "19.a"
+      },
+      {
+        "kind": "functional",
+        "element": "19.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.ii",
+              "anchor": {
+                "startChar": 288,
+                "endChar": 317,
+                "quote": "an electrical de-icing device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 317,
+              "endChar": 323,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.ii",
+              "anchor": {
+                "startChar": 323,
+                "endChar": 350,
+                "quote": "an electric heating element"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 350,
+              "endChar": 352,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.ii",
+              "anchor": {
+                "startChar": 352,
+                "endChar": 380,
+                "quote": "the electric heating element"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 380,
+              "endChar": 391,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.ii",
+              "anchor": {
+                "startChar": 391,
+                "endChar": 426,
+                "quote": "at least one electric heating strip"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 426,
+              "endChar": 453,
+              "quote": " that is disposed upstream "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.ii",
+              "anchor": {
+                "startChar": 453,
+                "endChar": 469,
+                "quote": "the annular wall"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19",
+          "anchor": {
+            "startChar": 18,
+            "endChar": 29,
+            "quote": "said engine"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "A turbine engine"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 84,
+            "quote": "the splitter nose"
+          }
+        },
+        "introducing": {
+          "path": "19.a",
+          "anchor": {
+            "startChar": 42,
+            "endChar": 57,
+            "quote": "a splitter nose"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.a.i",
+          "anchor": {
+            "startChar": 177,
+            "endChar": 188,
+            "quote": "the surface"
+          }
+        },
+        "introducing": {
+          "path": "19.a.i",
+          "anchor": {
+            "startChar": 117,
+            "endChar": 146,
+            "quote": "an annular separation surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.a.ii",
+          "anchor": {
+            "startChar": 352,
+            "endChar": 380,
+            "quote": "the electric heating element"
+          }
+        },
+        "introducing": {
+          "path": "19.a.ii",
+          "anchor": {
+            "startChar": 323,
+            "endChar": 350,
+            "quote": "an electric heating element"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.a.ii",
+          "anchor": {
+            "startChar": 453,
+            "endChar": 469,
+            "quote": "the annular wall"
+          }
+        },
+        "introducing": {
+          "path": "19.a.i",
+          "anchor": {
+            "startChar": 96,
+            "endChar": 111,
+            "quote": "an annular wall"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 20,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "20",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 40,
+          "quote": "The turbine engine according to claim 19"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 18,
+              "quote": "The turbine engine"
+            },
+            "determiner": "the",
+            "head": "turbine engine"
+          }
+        ]
+      },
+      {
+        "path": "20.a",
+        "anchor": {
+          "startChar": 61,
+          "endChar": 165,
+          "quote": "an electric source structured and operable to produce electric current and electrically power each strip"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 79,
+              "quote": "an electric source"
+            },
+            "determiner": "an",
+            "head": "electric source"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 131,
+              "quote": "electric current"
+            },
+            "determiner": "bare",
+            "head": "electric current"
+          },
+          {
+            "anchor": {
+              "startChar": 155,
+              "endChar": 165,
+              "quote": "each strip"
+            },
+            "determiner": "bare",
+            "head": "strip"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "20.a",
+        "parent": "20"
+      },
+      {
+        "kind": "functional",
+        "element": "20.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 61,
+                "endChar": 79,
+                "quote": "an electric source"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 79,
+              "endChar": 115,
+              "quote": " structured and operable to produce "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 115,
+                "endChar": 131,
+                "quote": "electric current"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 131,
+              "endChar": 155,
+              "quote": " and electrically power "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 155,
+                "endChar": 165,
+                "quote": "each strip"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "20",
+        "ancestor": "19"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "20.a",
+        "ancestor": "19.a.ii"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "The turbine engine"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "A turbine engine"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 155,
+            "endChar": 165,
+            "quote": "each strip"
+          }
+        },
+        "introducing": {
+          "path": "19.a.ii",
+          "anchor": {
+            "startChar": 391,
+            "endChar": 426,
+            "quote": "at least one electric heating strip"
+          }
+        }
+      }
+    ]
+  }
+]

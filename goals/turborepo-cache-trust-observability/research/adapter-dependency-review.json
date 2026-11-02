@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "r2-cache-dependency-review/v1",
+  "recordedAt": "2026-10-29T00:16:54.790811+00:00",
+  "authority": "component-source-review-only",
+  "initialScan": {
+    "packageNamesWithFindings": 10,
+    "scannerImage": "ghcr.io/google/osv-scanner-action@sha256:d54770fe0b09493894e76a02aaed9f51a0513fa57c5186452a755d257b0068a6"
+  },
+  "remediation": [
+    "Actix Web4.18.1 and Actix HTTP3.20.0",
+    "Compile only the HTTP1/macros server surface used by the loopback protocol; remove unused HTTP2/compression dependency closure.",
+    "Replace unmaintained dotenv0.15.0 with dotenvy0.15.7; strict mode still skips dotenv.",
+    "rustls0.23.46, rustls-webpki0.103.16, tokio1.53.3 and webpki-root-certs1.0.10"
+  ],
+  "notAffected": [
+    {
+      "id": "GHSA-qwgh-2vcv-g2f7",
+      "package": "block-buffer",
+      "version": "0.10.4",
+      "crateChecksum": "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71",
+      "libSourceSha256": "b437252d389042d894b1ef17859b043e827d2bd2a1bca4b5311c67dff565274d",
+      "reason": "The pinned implementation stores its cursor in a separate private pos:u8 field; input copies and callback blocks cannot overwrite it. It does not define the ReadBuffer type described by the advisory.",
+      "regression": "tests/dependency_scope.rs: all256 byte values preserve pos2 after caught callback panic and safe reuse after reset.",
+      "sources": [
+        "https://github.com/advisories/GHSA-qwgh-2vcv-g2f7",
+        "https://docs.rs/crate/block-buffer/0.10.4/source/src/lib.rs"
+      ],
+      "scopeGuard": "Only load the advisory-specific OSV config when the complete block-buffer resolution set equals the exact reviewed archive. Other versions get an unfiltered scan; other advisory IDs are never ignored.",
+      "recheckBefore": "2026-11-27"
+    }
+  ],
+  "verification": {
+    "rawRescan": "Only the source-reviewed block-buffer0.10.4 advisory remains.",
+    "configuredScan": {
+      "status": "passed",
+      "exitCode": 0,
+      "remainingUnignoredFindings": 0,
+      "scannerImage": "ghcr.io/google/osv-scanner-action@sha256:d54770fe0b09493894e76a02aaed9f51a0513fa57c5186452a755d257b0068a6",
+      "scope": "Reviewed exact archive permits the one expiring source-specific exception; every other advisory remains active."
+    },
+    "crateTestsPassed": 45,
+    "middlewareTestsPassed": 2,
+    "exhaustiveDependencyScopeTestsPassed": 1,
+    "exceptionGuard": {
+      "status": "passed",
+      "cases": [
+        "exact-reviewed-archive",
+        "absent-package",
+        "changed-version",
+        "changed-checksum",
+        "mixed-versions"
+      ]
+    },
+    "newPortableBinaryControls": {
+      "wirePassed": 20,
+      "nativePassed": 12,
+      "startupPassed": 1,
+      "sha256": "39b58a78c7c57470cfe40d375af84b6b18e5c9dffaaeda14aead11056094675f"
+    },
+    "cargoTestsCompiler": "1.96.0: actual tracked driver with compiler bin pinned in the child PATH"
+  },
+  "productionReadiness": false,
+  "sourcePatchSha256": "4cbc8cd80bc680d86a1cf43726ff0bb042ac93951dacb6214a9b61c732c143c5"
+}

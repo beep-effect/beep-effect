@@ -1,6 +1,8 @@
 /**
  * `@beep/gov-legal-mcp` public package entrypoint.
  *
+ * **Details**
+ *
  * Thin Effect-native stdio host exposing four bounded read-only tools from the
  * public GovInfo and eCFR drivers through `@beep/mcp-kit` gated composition and
  * sanitized dispatch.

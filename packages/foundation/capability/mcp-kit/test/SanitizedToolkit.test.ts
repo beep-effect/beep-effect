@@ -12,7 +12,7 @@ import { CurrentMcpCaller, sanitizedToolkit } from "@beep/mcp-kit";
 import { connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
-import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
+import { assertExitFailure, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
@@ -603,4 +603,49 @@ describe("sanitizedToolkit", () => {
       );
     }
   );
+});
+
+const templateLiteralReply = S.Struct({ content: S.NonEmptyArray(S.Struct({ text: S.String })) });
+
+describe("named template literal tool schemas", () => {
+  const identifier = S.TemplateLiteral([
+    "item:",
+    S.Union([S.Literal("a"), S.Literal("b")]).annotate({ identifier: "TemplatePrefix" }),
+    ":",
+    S.String.annotate({ identifier: "TemplateTail" }),
+  ]);
+  const tool = Tool.make("template_literal_tool", {
+    parameters: S.Struct({ id: identifier }),
+    success: S.Struct({ id: identifier }),
+  });
+  const toolkit = Toolkit.make(tool);
+  const handlers = toolkit.toLayer(
+    Effect.succeed(
+      toolkit.of({
+        template_literal_tool: Effect.fn("TemplateLiteralTool.echo")(({ id }) => Effect.succeed({ id })),
+      })
+    )
+  );
+  const layer = Layer.mergeAll(
+    McpServer.McpServer.layer,
+    sanitizedToolkit(toolkit).pipe(Layer.provide(handlers)),
+    StubMcpClientLayer
+  );
+  it.layer(layer, { timeout: "30 seconds" })((it) => {
+    it.effect("registers named scalar/union fragments in both schemas and retains runtime validation", () =>
+      Effect.gen(function* () {
+        const server = yield* McpServer.McpServer;
+        const result = yield* server.callTool({ name: "template_literal_tool", arguments: { id: "item:a:42" } });
+        const decoded = yield* S.decodeUnknownEffect(templateLiteralReply)(result);
+        const value = yield* S.decodeEffect(S.fromJsonString(S.Struct({ id: identifier })))(
+          A.headNonEmpty(decoded.content).text
+        );
+        assert.strictEqual(value.id, "item:a:42");
+        const invalid = yield* Effect.exit(
+          server.callTool({ name: "template_literal_tool", arguments: { id: "other:a:42" } })
+        );
+        invalid.pipe(Exit.isFailure, assertTrue);
+      })
+    );
+  });
 });

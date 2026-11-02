@@ -1,0 +1,192 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14813790-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20160061107", "A1", "20160303"],
+    "applicationReference": ["US", "14813790", "20150730"],
+    "officeActionDocumentIdentifiers": ["J3W0F84RRXEAPX1"],
+    "officeActionMailDate": "2017-06-15"
+  },
+  "digestEvidence": [
+    {
+      "file": "14813790.publication.xml",
+      "sha256": "23eb25051f02b10762eed238c11c79cd6b35a5df10dd37e74b69afc438bef1b9",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14813790.claims.xml",
+      "sha256": "1473a5396d2f959c80eec99ffbf6e83071064aa556a515b759d9e79ab7a70192",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "1473a5396d2f959c80eec99ffbf6e83071064aa556a515b759d9e79ab7a70192",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "ICQM3R69PXXIFW3",
+      "xmlAvailable": true,
+      "sha256": "e5ce3af0a4d44804f2225332774f2d9d8bc01e5941edda728c7c242888141294",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 74,
+    "actualRows": 74,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2015-07-30T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "ICQM3R69PXXIFW3"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claim 1-8 rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the engine",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the engine"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the shaft",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the shaft"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the rearward direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the rearward direction"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the rear end",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the rear end"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the diameter",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the diameter"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the shaft",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the shaft"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "for each pair of adjacent frustoconical sub-sections",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "for each pair of adjacent frustoconical sub-sections"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the cone angle of the rearward sub-section",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the cone angle of the rearward sub-section"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the cone angle of the forward sub-section",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the cone angle of the forward sub-section"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the wall thickness",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the wall thickness"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the joint portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the joint portion"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the wall thickness",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the wall thickness"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the stiffening formation",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the stiffening formation"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "its",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "its"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the joint portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the joint portion"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the stiffening formation",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the stiffening formation"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "a fan",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "a fan"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "a low pressure turbine",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "a low pressure turbine"
+    }
+  ],
+  "assessment": "Original1-8 words/references match apart from line/page numerals and OCR split words. OA covers1-8. Examiner suggested replacements are proposals, not existing source wording. Claim8 engine expressly uses shaft1; preserve changed subject.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

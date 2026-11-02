@@ -1,0 +1,73 @@
+{
+  "familyId": "12838228-root-1",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the movable plate",
+      "nativeQuote": "the movable plate",
+      "literalMatch": true,
+      "explanation": "Exact native6."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the first brush roller",
+      "nativeQuote": "the first brush roller",
+      "literalMatch": true,
+      "explanation": "Exact7."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the brush roller",
+      "nativeQuote": "the brush roller",
+      "literalMatch": true,
+      "explanation": "Exact8."
+    }
+  ],
+  "concerns": [
+    "Original GBPK8VT0PPOPPY2 uses legacy lowercase claim tags, causing prior count0. Reparsed numbered claims1-20; selected1-10 all match except a hyphen bullet after wherein in6. Extra Claim node is a header.",
+    "Actual secondparagraph rejection covers selected6-10, not every family member1-5. Natural dependency membership1 root,2->1,3->2,4/5->3,6->2,7-10->5 verified.",
+    "Publication identity/digest and27/27 inventory chronology match; original2010-07-16 before OA2012-05-25."
+  ],
+  "rationale": "Eligible after count0 reconciliation as legacy parser issue; multiple same-number rejection phrases match selected descendants.",
+  "sourceIdentity": {
+    "applicationNumber": "12838228",
+    "publicationNumber": "US20110074901A1",
+    "publicationDate": "2011-03-31",
+    "officeActionMailDate": "2012-05-25",
+    "officeActionDocumentIdentifiers": ["H2KCNOYDPXXIFW4"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20110074901 A1 20110331",
+      "application-reference": "US 12838228 20100716",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "GBPK8VT0PPOPPY2",
+        "officialDate": "2010-07-16T00:00:00.000-0400"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "GBPK8VT0PPOPPY2",
+        "officialDate": "2010-07-16T00:00:00.000-0400",
+        "sha256": "19f864e98443d3f3ae959614b83f81cf46efe7d4fb65a48037055e272759b3f3",
+        "ocrCorroborationOnly": false,
+        "exactNonWhitespaceClaimNumbers": [],
+        "sourceClaimCount": 0
+      }
+    ],
+    "documentInventoryCount": 27,
+    "documentInventoryRows": 27,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

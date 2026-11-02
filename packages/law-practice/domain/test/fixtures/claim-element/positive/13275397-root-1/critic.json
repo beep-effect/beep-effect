@@ -1,0 +1,39 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "13275397-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 7,
+    "resolvedTreesReviewed": 7,
+    "elementCount": 21,
+    "termCount": 71,
+    "functionalRelationCount": 13
+  },
+  "reviewNotes": [
+    "Full initial semantic review of all selected claims1\u20137. Sensor preamble, membrane/body/post/cap enumeration, complete cavity/adhesive relations, spacer thickness/gap conditions and concave portion/stopper relationships are represented.",
+    "Natural dependencies2/4/5\u21921,3\u21922,6/7\u21925 were independently read. Claim7 cannot borrow spacer, thickness, gap, cap-top or stopper introductions from siblings2/6. Post-bottom and mass-body-bottom surfaces remain distinct, as do the two differently owned gaps. At least the two first cavities retains the full minimum wording and lexical count without inventing a second cavity.",
+    "Cap-edge ownership is preserved in the relative functional clause and is not collapsed into the earlier membrane edge. Unintroduced definite property/reference terms are retained without fabricated antecedent introductions. Every submitted actual antecedent is supported by local or inherited source identity.",
+    "All trees decode through ClaimElementTree. Exact UTF-16 element/term spans, term ordering/nonoverlap/ownership, antecedent endpoints and complete contiguous ordered functional-part reconstruction pass independent checks. Native XML agrees with all canonical/context claims under permitted whitespace/printed-number normalization; claims XML digest matches provenance.",
+    "Retained source critic, identity and numbered rejection association were reviewed. Source eligibility remains separately accepted; no fresh original-document/inventory authentication or attorney agreement is claimed."
+  ],
+  "independence": "Independent full semantic critic; did not author these references. Read canonical/native source/context, source critic, provenance, extractor, schemas and semantic-reference/v2 with entity-mentions/v1 and lexical-head/v1. No production implementation, decomposer, P2-DESIGN, predictions or synthetic/conformance fixtures inspected. Helpers only validate manually reviewed annotations. Only assigned critic files written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement"
+}

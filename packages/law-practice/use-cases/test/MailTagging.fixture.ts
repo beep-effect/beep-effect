@@ -58,7 +58,7 @@ import {
 import { EmailString } from "@beep/schema/Email";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -194,7 +194,9 @@ type WorldOptions = {
   /** Matter index the directory answers; the two-matter `index` when absent. */
   readonly index?: MatterIndex;
   /** Makes every SHA-256 digest fail, as an unavailable platform would. */
-  readonly failingDigests?: ReadonlyArray<Crypto.DigestAlgorithm>;
+  readonly failingDigests?: ReadonlyArray<Digest.Algorithm>;
+  /** Makes these digests return truncated output, which no hex decoder accepts. */
+  readonly truncatedDigests?: ReadonlyArray<Digest.Algorithm>;
 };
 
 type WorldShape = {
@@ -248,7 +250,7 @@ export class World extends Context.Service<World, WorldShape>()($I`World`) {}
 
 const digestUnavailable = PlatformError.systemError({
   _tag: "Unknown",
-  module: "Crypto",
+  module: "Digest",
   method: "digest",
   description: "digest unavailable",
 });
@@ -258,19 +260,28 @@ const sha1Of = (bytes: Uint8Array) =>
     Effect.map((buffer) => ContentSha1.make(Hex.encode(new Uint8Array(buffer))))
   );
 
-const testCrypto = (failingDigests: ReadonlyArray<Crypto.DigestAlgorithm>) =>
-  Layer.succeed(
-    Crypto.Crypto,
-    Crypto.make({
-      digest: (algorithm, data) =>
-        A.contains(failingDigests, algorithm)
-          ? Effect.fail(digestUnavailable)
-          : Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, Uint8Array.from(data))).pipe(
-              Effect.map((buffer) => new Uint8Array(buffer))
-            ),
-      randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
+const testCrypto = (
+  failingDigests: ReadonlyArray<Digest.Algorithm>,
+  truncatedDigests: ReadonlyArray<Digest.Algorithm>
+) =>
+  Layer.effect(
+    Digest.Digest,
+    Effect.map(Digest.Digest, (webCrypto) => {
+      const available = (algorithm: Digest.Algorithm) =>
+        Effect.when(Effect.die(digestUnavailable), Effect.succeed(A.contains(failingDigests, algorithm)));
+      return Digest.Digest.of({
+        digest: Effect.fn("MailTaggingFixture.digest")(function* (algorithm: Digest.Algorithm, data: Uint8Array) {
+          yield* available(algorithm);
+          const bytes = yield* webCrypto.digest(algorithm, data);
+          return A.contains(truncatedDigests, algorithm) ? bytes.subarray(0, 3) : bytes;
+        }),
+        digestHex: Effect.fn("MailTaggingFixture.digestHex")(function* (algorithm: Digest.Algorithm, data: Uint8Array) {
+          yield* available(algorithm);
+          return yield* webCrypto.digestHex(algorithm, data);
+        }),
+      });
     })
-  );
+  ).pipe(Layer.provide(Digest.layerWebCrypto));
 
 const noSuchAttachment = MailTaggingPortError.during("Mailbox", "downloadAttachment", "no such attachment");
 
@@ -533,7 +544,7 @@ const UseCases = Layer.merge(
 export const scenario = (options: WorldOptions) =>
   Layer.fresh(
     UseCases.pipe(
-      Layer.provideMerge(Layer.merge(Ports, testCrypto(options.failingDigests ?? []))),
+      Layer.provideMerge(Layer.merge(Ports, testCrypto(options.failingDigests ?? [], options.truncatedDigests ?? []))),
       Layer.provideMerge(Layer.effect(World, makeWorld(options)))
     )
   );

@@ -1,0 +1,55 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An electric hair clipper, comprising:
+<claim-text>a cutting assembly, wherein the cutting assembly comprises a bracket and a movable blade holder; the movable blade holder is movably arranged on the bracket; the bracket is fixedly provided with a fixed blade; the movable blade holder is fixedly provided with a movable blade; and</claim-text>
+<claim-text>a driving assembly, wherein the driving assembly comprises a driving motor, a transmission member, and a pressure lever; the driving motor is in transmission connection to the transmission member; the transmission member is fixedly provided with a first eccentric part and a second eccentric part; the pressure lever is movably arranged on the bracket;</claim-text>
+<claim-text>when the driving motor drives the transmission member to rotate, the first eccentric part drives the pressure lever to do linear reciprocating motion to press hairs between the fixed blade and the movable blade; and the second eccentric part drives the movable blade holder to do linear reciprocating motion to drive the movable blade to move for clipping.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The electric hair clipper according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the transmission member is a gear; the second eccentric part is fixedly arranged on the transmission member; the first eccentric part is fixedly arranged on the second eccentric part; and the first eccentric part is located on one side of the second eccentric part facing away from the transmission member.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The electric hair clipper according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein a first limiting slot is provided in one end of the pressure lever; the first eccentric part is accommodated in the first limiting slot; the first eccentric part is connected to the pressure lever through the first limiting slot; and another end of the pressure lever is slidably connected to the bracket.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The electric hair clipper according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the movable blade holder is provided with a second limiting slot; the second eccentric part is accommodated in the second limiting slot; and the second eccentric part is connected to the movable blade holder through the second limiting slot.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The electric hair clipper according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the movable blade holder is provided with a first limiting boss; the movable blade is provided with a first clamping slot; and the first limiting boss is clamped with the first clamping slot.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The electric hair clipper according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the bracket is provided with a second limiting boss; the fixed blade is provided with a second clamping slot; and the second limiting boss is clamped with the second clamping slot.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The electric hair clipper according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the first limiting boss is provided with an accommodating slot; and the second limiting boss is accommodated inside the accommodating slot, so that the movable blade holder does the linear reciprocating motion.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The electric hair clipper according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the pressure lever is provided with a threaded part; and the threaded part is located in a middle part of the pressure lever.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The electric hair clipper according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein torsion springs are arranged on two sides of the movable blade; the torsion springs are arranged on the bracket; and two ends of the torsion springs are connected to the movable blade.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The electric hair clipper according to <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the pressure lever is arranged on the bracket through a limiting plate; the limiting plate is configured to limit movement of the pressure lever in a direction perpendicular to a reciprocating motion direction of the pressure lever; and the limiting plate is fixedly arranged on the bracket through a fastener.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The electric hair clipper according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the driving assembly further comprises:
+<claim-text>a power source, configured to supply electrical energy to the driving motor; and</claim-text>
+<claim-text>a first gear, connected to an output shaft of the driving motor and is meshed with the transmission member.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The electric hair clipper according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>an upper shell and an upper cover plate, wherein the upper shell and the upper cover plate are connected; the upper shell and the upper cover plate form an upper accommodating cavity; the cutting assembly and the driving assembly are arranged in the upper accommodating cavity; and</claim-text>
+<claim-text>a lower shell and a lower cover plate, wherein the lower shell and the lower cover plate are connected; the lower shell and the lower cover plate form a hair storage bin; the hair storage bin is configured to store fallen hairs cut off by the fixed blade and the movable blade;</claim-text>
+<claim-text>the upper shell and the lower shell are rotatably connected; and an elastic member is arranged between the upper shell and the lower shell.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The electric hair clipper according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising a circuit board and a battery level display, wherein the circuit board and the battery level display are located in the upper accommodating cavity formed by the upper shell and the upper cover plate; and the circuit board is electrically connected to the power source and the battery level display.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The electric hair clipper according to <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the lower cover plate is further provided with a bin cover, a sliding member, and a fixing member; the lower cover plate is provided with a limiting sliding chute; the fixing member is fixedly arranged on the lower cover plate; the sliding member is movably arranged on the limiting sliding chute; one end of the sliding member is connected to the lower cover plate through a spring; one side of the bin cover is used for being in clamping connection with the lower cover plate; and another side of the bin cover is used for pressing against one end of the sliding member facing away from the spring.</claim-text>
+</claim>
+</claims>

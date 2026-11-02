@@ -12,7 +12,7 @@ import * as Runtime from "effect/Runtime";
 import * as Str from "effect/String";
 import { expect } from "vitest";
 
-export const NodeTestLayer = Layer.mergeAll(NodeServices.layer);
+export const NodeTestLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 
 /**
  * Supplies native platform services and cryptography for complete CLI command trees.

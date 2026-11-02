@@ -29,7 +29,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { mergeReadyCriterionHolds, YeetMergeReadyCriterion } from "./Verdict.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMergeReadyCriteria } from "./Verdict.ts";
@@ -473,7 +473,7 @@ export const readYeetReviewWindow = Effect.fn("Yeet.readYeetReviewWindow")(funct
   context: RepoRunContext,
   target: YeetReviewWindowTarget,
   capture: typeof runRepoCommandCapture = runRepoCommandCapture
-): Effect.fn.Return<YeetReviewWindow, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<YeetReviewWindow, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
   const window = yield* YeetReviewWindowDuration.pipe(Effect.option);
   if (O.isNone(window)) {
     return unknownWindow(`${YEET_REVIEW_WINDOW_ENV} is not a duration such as "20 minutes"`);

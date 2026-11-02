@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "claim-antecedent-allowed-coverage/v4",
+  "implementationDigest": "63d2b7a823f56d33620fbd651e9b30bd4f5f986a761bd92607e39d969eb85f47",
+  "sourceSetCount": 200,
+  "sourceClaimCount": 3184,
+  "checkedSetCount": 196,
+  "checkedClaimCount": 3108,
+  "failedSetCount": 4,
+  "failedSourceClaimCount": 76,
+  "rawAdvisoryFindingCount": 21531,
+  "undecomposedCheckedClaims": 0,
+  "adjudicationAuthority": "automated; separate source-bound paired review",
+  "actualAttorneyAdjudicationRecorded": false
+}

@@ -260,6 +260,7 @@ describe("the default failure report", () => {
       Terminal.make({
         columns: Effect.succeed(100),
         rows: Effect.succeed(24),
+        size: Effect.die("unused"),
         readInput: Effect.die("unused"),
         readLine: Effect.die("unused"),
         display: () => Effect.void,

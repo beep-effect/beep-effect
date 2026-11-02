@@ -907,7 +907,7 @@ describe("proof shadow mode", () => {
 // C5 (ruling 69): the attempt's changed package set is the branch's own diff against its
 // base unioned with one working-tree snapshot, mapped onto workspaces. Both git reads run
 // through the injected capture, so these fixtures script them.
-it.layer(NodeServices.layer)("proof shadow changed packages", (it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("proof shadow changed packages", (it) => {
   const context = (repoRoot: string): RepoRunContext =>
     RepoRunContext.make({
       base: "origin/main",
@@ -1062,7 +1062,7 @@ it.layer(NodeServices.layer)("proof shadow changed packages", (it) => {
     )
   );
 
-  // Review round 1, CodeRabbit Major: `resolveWorkspaceDirs` canonicalises every
+  // Review round 1, CodeRabbit Major: `workspaceDirectories` canonicalises every
   // directory it returns, so a checkout reached through a symlink used to compare
   // symlinked paths against canonical workspace directories and map nothing —
   // `known []`, a silent fail-open for every lane.

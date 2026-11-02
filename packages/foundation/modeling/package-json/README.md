@@ -217,7 +217,7 @@ All three legal `exports` spellings are honored — the string shorthand, a subp
 
 The last case above is the semantic worth knowing: **`exports` encapsulates the package**, so a present-but-unmatched `exports` is a typed failure and `main` is *not* consulted. That is Node's rule. The lenient reading — falling through to `main`, then to `index.js` — answers a file the package deliberately does not export, and it loads and behaves plausibly instead of failing. Only an **absent** `exports` reaches `main`, and then the legacy `index.js` default. An `exports` form the resolver does not implement (an array fallback list, or a subpath map with no `"."` entry) fails for its own reason rather than being guessed at.
 
-Pair it with `PackageTarball` (the npm registry driver half, still in `scratchpad/effected/npm` until its first consumer, SPEC D-05) to find the entry file inside a tarball extracted before any install has run.
+Pair it with `PackageTarball` (the deferred npm registry driver half, SPEC D-05 and W4-m, last held in `scratchpad/effected/npm` at `bb2134fcb952e07580c4cebf2586c901f090ef5b`) to find the entry file inside a tarball extracted before any install has run.
 
 ### Errors
 
@@ -274,11 +274,12 @@ repository (`--compare` checks it against `goals/effected-promotion/research/pac
 ## Provenance
 
 `@beep/package-json` is ported from upstream `@effected/package-json` 0.20.0 (MIT, C. Spencer Beggs) at commit
-`af7566a9da2eff169cb74955efcc5ede1e5de9f8`. It was carried through the effected port in `scratchpad/effected/package-json`
-and promoted into this workspace package by `goals/effected-promotion` (wave 3-4, SPEC W3-f). The package
-[LICENSE](./LICENSE) carries both the beep-effect and the upstream copyright notices. [KNOWLEDGE.md](./KNOWLEDGE.md)
-holds the upstream knowledge bundle verbatim; its relative links point into the upstream checkout. The port reviews
-and the lab's canon exceptions are archived under `goals/effected-promotion/history/`.
+`af7566a9da2eff169cb74955efcc5ede1e5de9f8`. It was carried through the effected port in
+`scratchpad/effected/package-json` (last held at `3760b532b198a50c4ef7752fe8856877354d3a0e`) and promoted into this
+workspace package by `goals/effected-promotion` (wave 3-4, SPEC W3-f). The package [LICENSE](./LICENSE) carries both
+the beep-effect and the upstream copyright notices. [KNOWLEDGE.md](./KNOWLEDGE.md) holds the upstream knowledge bundle
+verbatim; its relative links point into the upstream checkout. The port reviews and the lab's canon exceptions are
+archived under `goals/effected-promotion/history/`.
 
 Promotion changes, beyond the lab port recorded below:
 
@@ -318,7 +319,7 @@ Promotion changes, beyond the lab port recorded below:
 
 ### Deviations
 
-One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the `package-json` row of `scratchpad/effected/PORT_LEDGER.json` (the port reviews are archived under `goals/effected-promotion/history/port-reviews/package-json`).
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the `package-json` row of the lab ledger (`bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/effected/PORT_LEDGER.json`) (the port reviews are archived under `goals/effected-promotion/history/port-reviews/package-json`).
 
 - **native-runtime** — The lab replaces native membership, record and sorting operations with Effect helpers while preserving formatting and null-prototype storage. (test/Format.test.ts:167; test/LenientManifest.test.ts:127; test/Package.test.ts:174)
 - **identity-keys** — The lab stores wire provenance and Funding arity in private instance fields instead of upstream WeakMaps and WeakSet. (test/Funding.test.ts:92; test/Person.test.ts:77; test/Person.test.ts:109; test/Repository.test.ts:355,394)

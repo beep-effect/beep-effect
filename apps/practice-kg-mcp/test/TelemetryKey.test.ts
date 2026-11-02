@@ -198,7 +198,11 @@ const fakePowerShell = (argvSeen: Array<ReadonlyArray<string>>, code = 0) =>
         if (!ChildProcess.isStandardCommand(command)) {
           return yield* Effect.die("Expected a standard PowerShell command");
         }
-        argvSeen.push([command.command, ...command.args]);
+        // A redacted word still reaches the real process command line, so record its value.
+        argvSeen.push([
+          command.command,
+          ...A.map(command.args, (word) => (Redacted.isRedacted(word) ? Redacted.value(word) : word)),
+        ]);
         const stdin = command.options.stdin;
         if (!P.isObject(stdin) || !P.hasProperty(stdin, "stream") || !Stream.isStream(stdin.stream)) {
           return yield* Effect.die("Expected the key on a stdin stream");

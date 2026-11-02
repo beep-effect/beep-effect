@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "cache-goal-packet-review/v1",
+  "recordedAt": "2026-10-29T16:17:36.774586+00:00",
+  "authority": "source-bound-goal-packet-control-regression-only",
+  "sourceState": "prepared-tested-bytes-applied-after-c8-full-proof",
+  "sourceHeadBeforePacketRepair": "c8c434026f63ebaed05d0fc9120b388626da2f6e",
+  "sourceSha256": {
+    "goals/turborepo-quality-cache-adoption/research/actual-ignored-input-control.py": "098afa7cd4088e7cc68f0dd2ad08cf06698c9c5423a89ee22885d8b2e5963c82",
+    "goals/turborepo-quality-cache-adoption/research/native-input-controls.py": "89151a8ee3f5127eacc513385cf05f6cf61adbd0025931974ad71bfca3c75d85",
+    "goals/turborepo-cache-trust-observability/research/producer-package-replay-checkpoint.json": "09061ef6e8825198ee9bba48cb1218bd29fef0261108077686dc70e873ec0ac4",
+    "goals/turborepo-quality-cache-adoption/research/OPPORTUNITIES.md": "f3b6864f99e9a7e8e6646337e9b442646f12326aa34c8fc6ace61c4c30acfc42"
+  },
+  "changes": [
+    "Keep the old package replay claim bound to its recorded sourceHead/sourceFiles and reference later evidence separately.",
+    "Refuse both research drivers under Python optimization before runtime state is created; add explicit ignored-plan exit/cardinality/execution checks.",
+    "Create the ignored report parent directory in a fresh checkout.",
+    "Mark the earlier runtime-baseline refusal as historical and reference the completed Bun1.4.4/qualification-v3 review."
+  ],
+  "controlVerification": {
+    "planUnitChecks": 18,
+    "writerUnitChecks": 6,
+    "wholeDriverOptimizationRefusals": [
+      {
+        "script": "actual-ignored-input-control.py",
+        "mode": "flag",
+        "exit": 64
+      },
+      {
+        "script": "actual-ignored-input-control.py",
+        "mode": "environment",
+        "exit": 64
+      },
+      {
+        "script": "native-input-controls.py",
+        "mode": "flag",
+        "exit": 64
+      },
+      {
+        "script": "native-input-controls.py",
+        "mode": "environment",
+        "exit": 64
+      }
+    ],
+    "unitReceiptSha256": "c6efcc25bf4318c26842837dd5156fbc348161e4c93c8b5cc0a30f75c0f16378",
+    "scope": "Controlled real-function/writer excerpts under interpreter optimization0/1/2; these are not native task executions. Removing mkdir causes the intended fresh-directory failure."
+  },
+  "nativeDriverReplay": {
+    "reportSha256": "6763dca4c52dfa22ac69ba540f925cfb8c2bdf100fa8e26315208837f732e4af",
+    "driverSha256": "89151a8ee3f5127eacc513385cf05f6cf61adbd0025931974ad71bfca3c75d85",
+    "clients": {
+      "stable": {
+        "reportedVersion": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+      },
+      "canary": {
+        "reportedVersion": "2.11.9-canary.1",
+        "sha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb"
+      }
+    },
+    "bunVersion": "1.4.4",
+    "executions": 18,
+    "assertedInvariants": 16,
+    "descriptionObservations": 2,
+    "allOwnedFixturesRemoved": true,
+    "scope": "Normal-mode real native processes in disposable local single-package fixtures; exact prepared driver bytes. No real Beep ignored-input control was rerun during the frozen CLI proof."
+  },
+  "currentCliReplay": {
+    "head": "c8c434026f63ebaed05d0fc9120b388626da2f6e",
+    "verdict": "pass",
+    "receiptSha256": "092b926ae58768abc6224e29890801984e0debee8746c3ffe7c915db1baf1e26",
+    "scope": "Workspace implementation unchanged by this goal-packet-only repair. Final receipt reuse, if applicable, is decided by Yeet; current hosted statuses remain separate."
+  },
+  "censusSourcesVerified": 431,
+  "censusSourcesChanged": false,
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "cacheFlagsChanged": false,
+  "qualificationOrDeployment": false,
+  "representativeTraffic": false,
+  "limits": [
+    "Earlier native-input-controls.json and actual-ignored-input-observation.json keep their original driver identities. No historical observation is retagged to these edited drivers.",
+    "Both full goals, protected publication, current real-computation qualification/adoption, signed rollout/rotation/rollback and actual7/7/14-day windows remain incomplete."
+  ]
+}

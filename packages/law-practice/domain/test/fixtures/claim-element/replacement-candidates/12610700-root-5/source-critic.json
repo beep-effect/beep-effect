@@ -1,0 +1,68 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12610700-root-5",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.99,
+  "verdict": "unresolved",
+  "reviewedClaimNumbers": [5, 6, 7, 8, 9, 10, 11, 12],
+  "extractorVerdictReviewed": "unresolved",
+  "extractorConclusionStands": true,
+  "sourceEligibilityConclusion": "unresolved",
+  "findings": [
+    {
+      "severity": "material-source-fidelity",
+      "blocking": true,
+      "claimNumbers": [7],
+      "originalQuote": "each tier χ_j is defined as the collection of hypotheses assuming a total of j faults",
+      "rawNativeXmlQuote": "each tier is defined as the collection of hypotheses assuming a total of χ<sub>j </sub>faults",
+      "finding": "Original unreadability resolved into actual mathematical variable relocation in raw native. No native repair or waiver authorized; source hold stands."
+    }
+  ],
+  "evidence": [
+    "Full matching OA H97520FCPXXIFW4 (2012-11-06) states1–24 pending/rejected112 and places actual112(b)/second-paragraph quotations immediately before numbered antecedent grounds. Selected5,7–12 have exact numbered associations. Family5 independent and6–12→5 is coherent;39-row inventory contains only original G1JPA2PEPPOPPY2 CLM before action.",
+    "PDF2 printed25 separately confirms5 and6. PDF3 printed26 explicitly says claim7 “partitioned into j tiers where each tier χ_j is defined ... assuming a total of j faults in the system.” Raw native CLM-00007 instead says “each tier is defined ... assuming a total of χ<sub>j </sub>faults in the system.” This relocates variable χj from tier identifier to fault count. It occurs in raw source.claims.xml and matching publication, not just canonical helper flattening. PDF3 also corroborates8–12 and O(M²) in11; that does not cure material7 discrepancy."
+  ],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "nativePublicationSha256": "e858bdd3e2cf12d367caeb864384cb13458ca9256b8498b3abe0e8ee2c089814",
+    "sourceClaimsXmlSha256": "e9bc5dc85ac28abaea996d8462c65e93c553417415b969548c4a84e0678bc4c7",
+    "fullInventorySha256": "7ef5f271ccfb798c56da52659e5dab47f62ac6b3811e504d49298105bd7a421a",
+    "inventoryReportedCount": 39,
+    "inventoryActualRows": 39,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "G1JPA2PEPPOPPY2",
+        "documentCode": "CLM",
+        "officialDate": "2009-11-02T00:00:00.000-0500"
+      }
+    ],
+    "originalCachedHashes": [
+      {
+        "documentIdentifier": "G1JPA2PEPPOPPY2",
+        "sha256": "de7778736036c584a310c9b5d2f0c1299af0d4c8377cae6e588003c0b2685761",
+        "sha256Matches": true
+      }
+    ],
+    "nativePublicationHashMatches": true,
+    "sourceClaimsHashMatches": true
+  },
+  "fullOfficeActionEvidence": {
+    "documentIdentifier": "H97520FCPXXIFW4",
+    "submissionDate": "2012-11-06",
+    "matchingRecords": 1,
+    "fullCacheSha256": "115c5af3c1f05bfc978b5b0ba07c3fe7e077848170f5dd25880d5713e74bbf56",
+    "minimalGroundQuote": "The following is a quotation of 35 U.S.C. 112(b):"
+  },
+  "originalPdfEvidence": [
+    {
+      "documentIdentifier": "G1JPA2PEPPOPPY2",
+      "sha256": "bb6864338919835ed585af3e97198a165a3c2b1a8c7fedddf1537481f73cfce9",
+      "pdfPages": [2, 3],
+      "corroborationOnly": true
+    }
+  ],
+  "independence": "Independent critic; did not extract this candidate source-audit. Read source and public provenance, original/native text and complete inventory; no expected labels, production predictions, network, secrets, git or delegation. Only this source-critic receipt written."
+}

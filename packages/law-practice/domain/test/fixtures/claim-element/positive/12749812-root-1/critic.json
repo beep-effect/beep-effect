@@ -1,0 +1,47 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "12749812-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.97,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "findings": [],
+  "reviewScope": {
+    "claimCount": 10,
+    "elementCount": 25,
+    "termCount": 61,
+    "edgeCount": 69,
+    "functionalRelationCount": 15
+  },
+  "reviewNotes": [
+    "Independently reviewed all10 claims: root method purpose and count-field definition, incoming receive/remove/control steps, CRC send/check conditions, configuration branches, header creation and ordered message conversion/insertion. Complete ETE/count-field/CRC names and malformed a maximum flits are preserved; no token cap, source repair or abbreviation truncation.",
+    "The specified number-of embedded flits and number-of messages are complete collection NPs in explicit removing predicates. Referring plural groups point to those source collections rather than numeric count objects or arbitrarily selected members. Claim9 follows its actual ancestor8 locally converted/inserted flit group; siblings2/3/4 do not donate CRC/message/buffer identities.",
+    "Correct/incorrect CRC condition NPs remain independent indefinite mentions, without fabricated physical identity. Packet/header role references follow explicit method-local introductions; no universal identity across all generic packet occurrences is asserted."
+  ],
+  "verification": [
+    "Every tree independently decoded through ClaimElementTree. ExactUTF16 source anchors, normalized lexical-head shapes, complete noun phrases, nonoverlapping term ownership, full contiguous functional-source reconstruction, local/foreign term endpoints, actual natural ancestry, duplicate-edge absence and exact selected scope checked. Source grammar review supplies the semantic assessment; mechanical checks alone do not.",
+    "Native XML SHA256 matches provenance and all canonical/context claim strings agree with native under permitted printed-number/whitespace normalization. Retained independent source critic accepted source eligibility; no fresh originalPDF/inventory authentication or attorney agreement claimed."
+  ],
+  "referenceSha256": "7709357a915804cc8d8bf8e984c693c23a75ba3dfe0b564fc36dea826b918777",
+  "extractorSha256": "5eae756c1cb254dcdeb8bd3c0ee8f8602a78855b574287d5bc0056cdfd6af4a6",
+  "sourceXmlSha256": "6b10f44cbce96b1d760664dae240868b26765fec95dd7460566a836427bf63b7",
+  "independence": "Separate GPT-6.1-Sol medium critic session; did not extract these families. Read canonical/native source/context, provenance/source critic, protocol/schema contracts and extractor annotations. No production behavior/decomposer/P2-DESIGN/predictions/synthetic/conformance inspection. Only assigned critic.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental reference acceptance only; no sample admission, accuracy result or human agreement claimed."
+}

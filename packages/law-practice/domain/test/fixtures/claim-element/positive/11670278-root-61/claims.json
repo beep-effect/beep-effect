@@ -1,0 +1,827 @@
+{
+  "familyId": "11670278-root-61",
+  "rootClaimNumber": 61,
+  "labelClaimNumbers": [61, 62, 63, 64, 65, 67],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A boundary proximity determining system for wirelessly defining a boundary having a programmable shape and for indicating the location of a rover unit with respect to the boundary, said boundary proximity determining system comprising: a base station unit, said base station unit generates at least one pair of magnetic fields, each magnetic field being separately identifiable and having a principal axis, the principal axes being mutually directionally diverse and lying substantially within a common two-dimensional plane of operation; and a rover unit being mobile and including an auxiliary communications module, said rover unit measures magnetic field properties of each respective magnetic field at the current location of said rover unit, the magnetic field properties measured at the current location of said rover unit indicating the current location of said rover unit with respect to said base station unit, said rover unit operates in a first mode of operation and a second mode of operation, when said rover unit operates in the first mode of operation, said rover unit defines the boundary by measuring the magnetic field properties of each respective magnetic field at a multiplicity of sample locations along the contour of the boundary and by storing the magnetic field properties measured at the sample locations, the magnetic field properties measured at each sample location indicating the location of the respective sample location with respect to said base station unit, when said rover unit operates in the second mode of operation, said rover unit determines the current location of said rover unit with respect to the boundary by comparing the magnetic field properties measured at the current location of said rover unit to the magnetic field properties measured at the sample locations, the auxiliary communications module transmitting an indicator signal indicating the location of said rover unit with respect to the boundary.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The boundary proximity determining system of claim 1 wherein said rover unit measures the magnetic field properties by way of at least one magnetic field sensor, the magnetic field properties including the intensity and the polarity of each respective magnetic field as measured by each respective magnetic field sensor.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The boundary proximity determining system of claim 2 wherein said rover unit calculates variables indicative of the current location of said rover unit based on the magnetic field properties measured at the current location of said rover unit, said rover unit calculates variables indicative of the respective location of each sample location of the multiplicity of sample locations based on the magnetic field properties measured at each respective sample location.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The boundary proximity determining system of claim 3 wherein said rover unit determines the current location of said rover unit with respect to the boundary by comparing the variables indicative of the current location of said rover unit to the variables indicative of the location of each sample location of the multiplicity of sample locations.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The boundary proximity determining system of claim 4 wherein the at least one pair of magnetic fields includes at least one pair of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The boundary proximity determining system of claim 5 wherein said rover unit virtually rotates said base station unit about an axis at the center of said base station unit and perpendicular to the plane of operation by calculating the magnetic field properties of the at least one pair of orthogonal magnetic fields at a particular location as they would be measured at the particular location if said base station unit were actually rotated, said rover unit's calculations being based on the magnetic field properties of the least one pair of orthogonal magnetic fields measured at the particular location.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The boundary proximity determining system of claim 6 wherein said rover unit virtually rotates said base station unit to an angle of rotation that minimizes the impact of localized magnetic field distortion.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The boundary proximity determining system of claim 5 wherein said base station unit generates at least two pairs of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The boundary proximity determining system of claim 8 wherein the variables indicative of the current location of said rover unit and the variables indicative of the location of each sample location of the multiplicity of sample locations include a sector variable, at least one angle-dependent variable, and a range-dependent variable.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The boundary proximity determining system of claim 9 wherein the value of the at least one angle-dependent variable and the value of the range-dependent variable are mutually independent.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The boundary proximity determining system of claim 9 wherein the at least one angle-dependent variable includes a variable a, a variable b, and a (a+b) variable.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The boundary proximity determining system of claim 9 wherein the plane of operation is divided into two sectors, each sector encompassing a separate and identifiable portion of the plane of operation, whereby the sector variable indicates the sector within which said rover unit is located when said rover unit measures the magnetic field properties of the at least two pairs of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The boundary proximity determining system of claim 9 wherein the plane of operation is divided into four sectors, each sector encompassing a separate and identifiable portion of the plane of operation, whereby the sector variable indicates the sector within which said rover unit is located when said rover unit measures the magnetic field properties of the at least two pairs of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The boundary proximity determining system of claim 9 wherein the plane of operation is divided into eight sectors, each sector encompassing a separate and identifiable portion of the plane of operation, whereby the sector variable indicates the sector within which said rover unit is located when said rover unit measures the magnetic field properties of the at least two pairs of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The boundary proximity determining system of claim 9 wherein the at least one angle-dependent variable includes a (variable a)2, a (variable b)2, and a (a2+b2) variable.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The boundary proximity determining system of claim 9 wherein the range-dependent variable corresponding to the current location of said rover unit indicates the distance of the current location of said rover unit from the boundary.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The boundary proximity determining system of claim 9 wherein the range-dependent variable corresponding to the current location of said rover unit indicates the distance of the current location of said rover unit from the said base station unit.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The boundary proximity determining system of claim 17 wherein the distance between the current location of said rover unit and said base station unit is calculated from the range-dependent variable corresponding to the current location of said rover unit.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The boundary proximity determining system of claim 18 wherein the value of the range-dependent variable corresponding to the current location of said rover unit is the distance between the current location of said rover unit and said base station unit.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The boundary proximity determining system of claim 5 wherein said rover unit calculates the magnetic field properties of at least one pair of calculated magnetic fields at the current location of said rover unit based on the measured magnetic field properties of the at least one pair of magnetic fields generated by said base station unit, the magnetic field properties measured and calculated at the current location of said rover unit indicating the current location of said rover unit with respect to said base station unit.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The boundary proximity determining system of claim 5 wherein said base station unit generates a first pair of orthogonal magnetic fields and a second pair of orthogonal magnetic fields",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The boundary proximity determining system of claim 21 wherein the principle axes of the first pair of orthogonal magnetic fields are situated 45 degrees (45°) from the principle axes of the second pair of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [21]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The boundary proximity determining system of claim 1 wherein the boundary does not enclose said base station unit.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The boundary proximity determining system of claim 23 wherein two sample locations of the multiplicity of sample locations are endpoints such that when particular magnetic field properties of the magnetic field properties indicating the current location of said rover unit most closely match particular magnetic field properties of the magnetic field properties indicating the location of one of the endpoints, the rover unit determines that said rover unit is within the boundary.",
+      "sourceXmlParentClaimNumbers": [23]
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "The boundary proximity determining system of claim 23 wherein said rover unit defines a sector of the plane of operation that does not include a sample location as an empty sector.",
+      "sourceXmlParentClaimNumbers": [23]
+    },
+    {
+      "claimNumber": 26,
+      "claimText": "The boundary proximity determining system of claim 25 wherein said rover unit determines that said rover unit is within the boundary when the magnetic field properties indicating the current location of said rover unit indicate that said rover unit is within the empty sector.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 27,
+      "claimText": "The boundary proximity determining system of claim 23 wherein the boundary is a wireless gate.",
+      "sourceXmlParentClaimNumbers": [23]
+    },
+    {
+      "claimNumber": 28,
+      "claimText": "The boundary proximity determining system of claim 23 wherein the boundary complements a physical containment structure such that the boundary together with the physical containment structure enclose said base station unit.",
+      "sourceXmlParentClaimNumbers": [23]
+    },
+    {
+      "claimNumber": 29,
+      "claimText": "The boundary proximity determining system of claim 1 wherein the boundary encloses said base station unit.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 30,
+      "claimText": "The boundary proximity determining system of claim 1 wherein said base station unit generates a perpendicular magnetic field, the perpendicular magnetic field being orthogonal to the plane of operation.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 31,
+      "claimText": "The boundary proximity determining system of claim 30 wherein said rover unit calculates a variable indicative of the angle between the perpendicular magnetic field and a magnetic field of the at least one pair of magnetic fields to detect localized magnetic field distortion.",
+      "sourceXmlParentClaimNumbers": [30]
+    },
+    {
+      "claimNumber": 32,
+      "claimText": "The boundary proximity determining system of claim 30 wherein the perpendicular magnetic field provides a reference signal utilized in measuring the magnetic field properties of the at least one pair of magnetic fields.",
+      "sourceXmlParentClaimNumbers": [30]
+    },
+    {
+      "claimNumber": 33,
+      "claimText": "The boundary proximity determining system of claim 1 wherein said rover unit increases the precision of the boundary by increasing the effective number of sample locations of the multiplicity of sample locations defining the boundary by way of interpolation.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 34,
+      "claimText": "The boundary proximity determining system of claim 33 wherein said rover unit increases the precision of the boundary by doubling the effective number of sample locations of the multiplicity of sample locations defining the boundary by way of mid-point interpolation.",
+      "sourceXmlParentClaimNumbers": [33]
+    },
+    {
+      "claimNumber": 35,
+      "claimText": "The boundary proximity determining system of claim 1 further comprising a user interface device in communication with said rover unit, said user interface device facilitating communication between a user of said boundary proximity determining system and said rover unit.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 36,
+      "claimText": "The boundary proximity determining system of claim 35 wherein said user interface device is in wired communication with said rover unit.",
+      "sourceXmlParentClaimNumbers": [35]
+    },
+    {
+      "claimNumber": 37,
+      "claimText": "The boundary proximity determining system of claim 35 wherein said user interface device is in wireless communication with said rover unit.",
+      "sourceXmlParentClaimNumbers": [35]
+    },
+    {
+      "claimNumber": 38,
+      "claimText": "The boundary proximity determining system of claim 35 wherein a user of said boundary proximity determining system induces said rover unit to measure the magnetic field properties of the at least one pair of magnetic fields at each sample location of the multiplicity of sample locations by way of the user interface device.",
+      "sourceXmlParentClaimNumbers": [35]
+    },
+    {
+      "claimNumber": 39,
+      "claimText": "The boundary proximity determining system of claim 38 wherein the user notifies said rover unit when the magnetic field properties of the at least one pair of magnetic fields at each sample location of the multiplicity of sample locations have been measured.",
+      "sourceXmlParentClaimNumbers": [38]
+    },
+    {
+      "claimNumber": 40,
+      "claimText": "The boundary proximity determining system of claim 35 wherein operating parameters of said boundary proximity determining system are adjusted by way of said user interface device.",
+      "sourceXmlParentClaimNumbers": [35]
+    },
+    {
+      "claimNumber": 41,
+      "claimText": "The boundary proximity determining system of claim 40 wherein the operating parameters include the mode of operation of said rover unit.",
+      "sourceXmlParentClaimNumbers": [40]
+    },
+    {
+      "claimNumber": 42,
+      "claimText": "The boundary proximity determining system of claim 40 wherein the operating parameters include the intensity of a stimulus delivered by said rover unit.",
+      "sourceXmlParentClaimNumbers": [40]
+    },
+    {
+      "claimNumber": 43,
+      "claimText": "The boundary proximity determining system of claim 40 wherein the operating parameters include the type of a stimulus delivered by said rover unit.",
+      "sourceXmlParentClaimNumbers": [40]
+    },
+    {
+      "claimNumber": 44,
+      "claimText": "The boundary proximity determining system of claim 1 wherein the auxiliary communications module of said rover unit transmits the indicator signal when said rover unit determines that the current location of said rover unit is within the boundary.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 45,
+      "claimText": "The boundary proximity determining system of claim 44 wherein said rover unit is within the boundary when said rover unit is on the same side of the boundary as said base station unit.",
+      "sourceXmlParentClaimNumbers": [44]
+    },
+    {
+      "claimNumber": 46,
+      "claimText": "The boundary proximity determining system of claim 1 wherein the auxiliary communications module of said rover unit transmits the indicator signal when said rover unit determines that the current location of said rover unit is outside the boundary.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 47,
+      "claimText": "The boundary proximity determining system of claim 46 wherein said rover unit is outside the boundary when the boundary lies between said rover unit and said base station unit.",
+      "sourceXmlParentClaimNumbers": [46]
+    },
+    {
+      "claimNumber": 48,
+      "claimText": "The boundary proximity determining system of claim 1 wherein said rover unit is carried by an animal.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 49,
+      "claimText": "The boundary proximity determining system of claim 48 wherein said rover unit includes a stimulus delivery device in electrical communication with the auxiliary communications module such that when the indicator signal is transmitted, the stimulus delivery device delivers a stimulus to the animal.",
+      "sourceXmlParentClaimNumbers": [48]
+    },
+    {
+      "claimNumber": 50,
+      "claimText": "The boundary proximity determining system of claim 48 wherein said rover unit determines the animal's direction of motion by comparing the magnetic field properties of the at least one pair of magnetic fields at the current location of said rover unit to previously measured magnetic field properties of the at least one pair of magnetic fields at a previous location of said rover unit.",
+      "sourceXmlParentClaimNumbers": [48]
+    },
+    {
+      "claimNumber": 51,
+      "claimText": "The boundary proximity determining system of claim 1 wherein said rover unit periodically measures the magnetic field properties of each respective magnetic field at the current location of said rover unit at a current location update rate.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 52,
+      "claimText": "The boundary proximity determining system of claim 51 wherein said rover unit includes a rover unit rest feature.",
+      "sourceXmlParentClaimNumbers": [51]
+    },
+    {
+      "claimNumber": 53,
+      "claimText": "The boundary proximity determining system of claim 52 wherein said rover unit decreases the current location update rate when the speed at which said rover unit is traveling is substantially low.",
+      "sourceXmlParentClaimNumbers": [52]
+    },
+    {
+      "claimNumber": 54,
+      "claimText": "The boundary proximity determining system of claim 52 wherein said rover unit decreases the current location update rate when the distance between said rover unit and the boundary is substantial.",
+      "sourceXmlParentClaimNumbers": [52]
+    },
+    {
+      "claimNumber": 55,
+      "claimText": "The boundary proximity determining system of claim 1 wherein said rover unit is in communication with a remote processing device.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 56,
+      "claimText": "The boundary proximity determining system of claim 55 wherein the remote processing device is said base station unit.",
+      "sourceXmlParentClaimNumbers": [55]
+    },
+    {
+      "claimNumber": 57,
+      "claimText": "The boundary proximity determining system of claim 55 wherein the remote processing device is a computer.",
+      "sourceXmlParentClaimNumbers": [55]
+    },
+    {
+      "claimNumber": 58,
+      "claimText": "The boundary proximity determining system of claim 57 wherein said rover unit communicates with the computer by way of a network.",
+      "sourceXmlParentClaimNumbers": [57]
+    },
+    {
+      "claimNumber": 59,
+      "claimText": "The boundary proximity determining system of claim 57 wherein said rover unit communicates with the computer utilizing a modem.",
+      "sourceXmlParentClaimNumbers": [57]
+    },
+    {
+      "claimNumber": 60,
+      "claimText": "The boundary proximity determining system of claim 1 wherein said rover unit is carried by a human.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 61,
+      "claimText": "A boundary proximity determining system for wirelessly defining a boundary having a programmable shape and for indicating the location of a rover unit with respect to the boundary, said boundary proximity determining system comprising: a base station unit, said base station unit generates at least one pair of orthogonal magnetic fields, each magnetic field being separately identifiable and having a principal axis, the principal axes being mutually directionally diverse and lying substantially within a common two-dimensional plane of operation; and a rover unit being mobile and including an auxiliary communications module, said rover unit measures magnetic field properties of each respective magnetic field generated by said base station unit at the current location of said rover unit, said rover unit calculates the magnetic field properties of at least one pair of calculated magnetic fields at the current location of said rover unit based on the measured magnetic field properties of the magnetic fields generated by said base station unit, the magnetic field properties measured and calculated at the current location of said rover unit indicating the current location of said rover unit with respect to said base station unit, said rover unit operates in a first mode of operation and a second mode of operation, when said rover unit operates in the first mode of operation, said rover unit defines the boundary by measuring and calculating the magnetic field properties of each respective magnetic field at a multiplicity of sample locations along the contour of the boundary and by storing the magnetic field properties measured and calculated at the sample locations, the magnetic field properties measured and calculated at each sample location indicating the location of the respective sample location with respect to said base station unit, when said rover unit operates in the second mode of operation, said rover unit determines the current location of said rover unit with respect to the boundary by comparing the magnetic field properties measured and calculated at the current location of said rover unit to the magnetic field properties measured and calculated at the sample locations, the auxiliary communications module transmitting an indicator signal indicating the location of said rover unit with respect to the boundary.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 62,
+      "claimText": "The boundary proximity determining system of claim 61 wherein said rover unit measures the magnetic field properties by way of at least one magnetic field sensor, the magnetic field properties including the intensity and the polarity of each respective magnetic field as measured by each respective magnetic field sensor.",
+      "sourceXmlParentClaimNumbers": [61]
+    },
+    {
+      "claimNumber": 63,
+      "claimText": "The boundary proximity determining system of claim 62 wherein said rover unit calculates variables indicative of the current location of said rover unit based on the magnetic field properties measured and calculated at the current location of said rover unit, said rover unit calculates variables indicative of the respective location of each sample location of the multiplicity of sample locations based on the magnetic field properties measured and calculated at each respective sample location.",
+      "sourceXmlParentClaimNumbers": [62]
+    },
+    {
+      "claimNumber": 64,
+      "claimText": "The boundary proximity determining system of claim 63 wherein said rover unit determines the current location of said rover unit with respect to the boundary by comparing the variables indicative of the current location of said rover unit to the variables indicative of the location of each sample location of the multiplicity of sample locations.",
+      "sourceXmlParentClaimNumbers": [63]
+    },
+    {
+      "claimNumber": 65,
+      "claimText": "The boundary proximity determining system of claim 64 wherein said base station unit generates at least two pairs of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [64]
+    },
+    {
+      "claimNumber": 66,
+      "claimText": "The boundary proximity determining system of claim 66 wherein the variables indicative of the current location of said rover unit and the variables indicative of the location of each sample location of the multiplicity of sample locations include a sector variable, at least one angle-dependent variable, and a range-dependent variable.",
+      "sourceXmlParentClaimNumbers": [66]
+    },
+    {
+      "claimNumber": 67,
+      "claimText": "The boundary proximity determining system of claim 61 wherein said rover unit virtually rotates said base station unit by calculating the magnetic field properties of the at least one pair of orthogonal magnetic fields and the at least one pair of calculated magnetic fields at a particular location as the magnetic field properties would be at the particular location if said base station unit were actually rotated, said rover unit's virtual rotation calculations being based on the magnetic field properties of the least one pair of orthogonal magnetic fields measured at the particular location and the magnetic field properties of the at least one pair of calculated magnetic fields calculated at the particular location.",
+      "sourceXmlParentClaimNumbers": [61]
+    },
+    {
+      "claimNumber": 68,
+      "claimText": "A boundary proximity determining system for wirelessly defining a boundary having a programmable shape and for indicating the location of a rover unit with respect to the boundary, said boundary proximity determining system comprising: a base station unit including at least one pair of solenoidal coils and a coil driver, the coil driver being in electrical communication with the solenoidal coils, the coil driver drives the solenoidal coils such that the solenoidal coils generate at least one pair of magnetic fields, each magnetic field being separately identifiable and having a directionally diverse principal axis lying substantially within a common two-dimensional plane of operation; a rover unit including a first processor in electrical communication with a magnetic field sensor and a memory module, the magnetic field sensor including at least one coil sensor, said rover unit being mobile within the plane of operation, said rover unit operates in a boundary capture mode and a boundary proximity detection mode; and a user interface device in communication with said rover unit, said user interface device including a user interface in electrical communication with a second processor, the second processor being in communication with the magnetic field sensor and the memory module of said rover unit, a user of said boundary proximity determining system governs whether said rover unit operates in the boundary capture mode or the boundary proximity detection mode by way of the user interface, when said rover unit operates in the boundary capture mode, the magnetic field sensor of said rover unit detects magnetic field properties of each respective magnetic field at a plurality of sample locations along the contour of the boundary, the magnetic field properties include the intensity and the polarity of each respective magnetic field as measured by each respective coil sensor of the at least one coil sensor of the magnetic field sensor, the second processor receives and processes the magnetic field properties detected at the plurality of sample locations to generate variables indicative of the respective location of each of the plurality of sample locations, whereby the plurality of sample locations define the boundary, the memory module of said rover unit receives and stores the variables generated by the second processor; whereby, when said rover unit operates in the boundary proximity detection mode, the magnetic field sensor detects the magnetic field properties of each respective magnetic field at the current location of said rover unit, the first processor receives and processes the magnetic field properties detected at the current location of said rover unit to generate variables indicative of the current location of said rover unit, the first processor compares the variables indicative of the current location of said rover unit and the variables indicative of the respective location of each of the plurality of sample locations and determines the current location of said rover unit with respect to the boundary.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 69,
+      "claimText": "The boundary proximity determining system of claim 68 wherein said base station unit includes a first solenoidal coil and a second solenoidal coil, whereby the first solenoidal coil is orthogonal to the second solenoidal coil.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 70,
+      "claimText": "The boundary proximity determining system of claim 68 wherein the at least one pair of solenoidal coils of said base station unit generates at least one pair of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 71,
+      "claimText": "The boundary proximity determining system of claim 70 wherein the first processor virtually rotates said base station unit by calculating the magnetic field properties of the at least one pair of orthogonal magnetic fields at a particular location as they would be measured at the particular location if said base station unit were actually rotated, the first processor's calculations being based on the magnetic field properties of the at least one pair of orthogonal magnetic fields measured at the particular location.",
+      "sourceXmlParentClaimNumbers": [70]
+    },
+    {
+      "claimNumber": 72,
+      "claimText": "The boundary proximity determining system of claim 71 wherein the first processor virtually rotates said base station unit to an angle of rotation that minimizes the impact of localized magnetic field distortion.",
+      "sourceXmlParentClaimNumbers": [71]
+    },
+    {
+      "claimNumber": 73,
+      "claimText": "The boundary proximity determining system of claim 70 wherein the at least one pair of solenoidal coils of said base station unit generates a first pair of orthogonal magnetic fields and a second pair of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [70]
+    },
+    {
+      "claimNumber": 74,
+      "claimText": "The boundary proximity determining system of claim 73 wherein the principle axes of the first pair of orthogonal magnetic fields are situated 45 degrees (45°) from the principle axes of the second pair of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [73]
+    },
+    {
+      "claimNumber": 75,
+      "claimText": "The boundary proximity determining system of claim 73 wherein the at least one pair of solenoidal coils of said base station unit generates at least two pairs of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [73]
+    },
+    {
+      "claimNumber": 76,
+      "claimText": "The boundary proximity determining system of claim 75 wherein the variables indicative of the current location of said rover unit and the variables indicative of the respective location of each of the plurality of sample locations include a sector variable, at least one angle-dependent variable, and a range-dependent variable.",
+      "sourceXmlParentClaimNumbers": [75]
+    },
+    {
+      "claimNumber": 77,
+      "claimText": "The boundary proximity determining system of claim 76 wherein the value of the at least one angle-dependent variable and the value of the range-dependent variable are mutually independent.",
+      "sourceXmlParentClaimNumbers": [76]
+    },
+    {
+      "claimNumber": 78,
+      "claimText": "The boundary proximity determining system of claim 76 wherein the at least one angle-dependent variable includes a variable a, a variable b, and a (a+b) variable.",
+      "sourceXmlParentClaimNumbers": [76]
+    },
+    {
+      "claimNumber": 79,
+      "claimText": "The boundary proximity determining system of claim 68 wherein said base station unit includes a first solenoidal coil, a second solenoidal coil, a third solenoidal coil, and a fourth solenoidal coil, whereby the principal axes of the solenoidal coils lie substantially within the plane of operation, the first solenoidal coil and the fourth solenoidal coil being a first pair of solenoidal coils, the second solenoidal coil and the third solenoidal coil being a second pair of solenoidal coils, the first solenoidal coil being orthogonal to the fourth solenoidal coil, the second solenoidal coil being orthogonal to the third solenoidal coil, the first pair of solenoidal coils being shifted 45 degrees (45°) from the second pair of solenoidal coils.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 80,
+      "claimText": "The boundary proximity determining system of claim 79 wherein the first solenoidal coil, the second solenoidal coil, the third solenoidal coil, and the fourth solenoidal coil generate a first pair of orthogonal magnetic fields and a second pair of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [79]
+    },
+    {
+      "claimNumber": 81,
+      "claimText": "The boundary proximity determining system of claim 80 wherein the principle axes of the first pair of orthogonal magnetic fields are situated 45 degrees (45°) from principle axes of the second pair of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [80]
+    },
+    {
+      "claimNumber": 82,
+      "claimText": "The boundary proximity determining system of claim 68 wherein said base station unit includes a perpendicular solenoidal coil having a principal axis perpendicular to the plane of operation, the perpendicular solenoidal coil being in electrical communication with the coil driver, which drives the perpendicular solenoidal coil such that the perpendicular solenoidal coil generates a perpendicular magnetic field that is perpendicular to the at least one pair of magnetic fields generated by the at least one pair of solenoidal coils of said base station unit.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 83,
+      "claimText": "The boundary proximity determining system of claim 82 wherein the first processor calculates a variable indicative of the angle between the perpendicular magnetic field and a magnetic field of the at least one pair of magnetic fields to detect localized magnetic distortion.",
+      "sourceXmlParentClaimNumbers": [82]
+    },
+    {
+      "claimNumber": 84,
+      "claimText": "The boundary proximity determining system of claim 82 wherein the perpendicular magnetic field provides a reference signal utilized in measuring the magnetic field properties of the at least one pair of magnetic fields.",
+      "sourceXmlParentClaimNumbers": [82]
+    },
+    {
+      "claimNumber": 85,
+      "claimText": "The boundary proximity determining system of claim 68 wherein the magnetic field sensor of said rover unit includes three mutually orthogonal sensor coils.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 86,
+      "claimText": "The boundary proximity determining system of claim 68 wherein the boundary does not enclose said base station unit.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 87,
+      "claimText": "The boundary proximity determining system of claim 86 wherein two sample locations of the plurality of sample locations are endpoints such that when particular variables of the variables indicative of the current location of said rover unit most closely match particular variables of the variables indicative of the location of an endpoint, the first processor determines that said rover unit is within the boundary.",
+      "sourceXmlParentClaimNumbers": [86]
+    },
+    {
+      "claimNumber": 88,
+      "claimText": "The boundary proximity determining system of claim 86 wherein the first processor defines a sector of the plane of operation that does not include a sample location of the plurality of sample locations as an empty sector.",
+      "sourceXmlParentClaimNumbers": [86]
+    },
+    {
+      "claimNumber": 89,
+      "claimText": "The boundary proximity determining system of claim 88 wherein the first processor determines that said rover unit is within the boundary when the variables indicative of the current location of said rover unit indicate that said rover unit is within the empty sector.",
+      "sourceXmlParentClaimNumbers": [88]
+    },
+    {
+      "claimNumber": 90,
+      "claimText": "The boundary proximity determining system of claim 68 wherein the boundary encloses said base station unit.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 91,
+      "claimText": "The boundary proximity determining system of claim 68 wherein the first processor increases the preciseness of the boundary by effectively interpolating a sample location between each adjacent sample location of the plurality of sample locations, increasing the effective number of sample locations defining the boundary.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 92,
+      "claimText": "The boundary proximity determining system of claim 68 wherein said rover unit includes an auxiliary communications module in electrical communication with the first processor, the auxiliary communications module transmits an indicator signal.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 93,
+      "claimText": "The boundary proximity determining system of claim 92 wherein said rover unit is carried by an animal.",
+      "sourceXmlParentClaimNumbers": [92]
+    },
+    {
+      "claimNumber": 94,
+      "claimText": "The boundary proximity determining system of claim 93 wherein the first processor determines the animal's direction of motion by comparing the variables indicative of the current location of said rover unit to variables previously processed by the first processor indicating a previous location of said rover unit.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 95,
+      "claimText": "The boundary proximity determining system of claim 93 wherein said rover unit includes a rover unit rest feature.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 96,
+      "claimText": "The boundary proximity determining system of claim 95 wherein the magnetic field sensor periodically detects the magnetic field properties of each respective magnetic field at the current location of said rover unit at a current location update rate.",
+      "sourceXmlParentClaimNumbers": [95]
+    },
+    {
+      "claimNumber": 97,
+      "claimText": "The boundary proximity determining system of claim 96 wherein the first processor decreases the current location update rate when said rover unit is traveling at a substantially low speed.",
+      "sourceXmlParentClaimNumbers": [96]
+    },
+    {
+      "claimNumber": 98,
+      "claimText": "The boundary proximity determining system of claim 97 wherein the first processor decreases the current location update rate when said rover unit is not substantially close to the boundary.",
+      "sourceXmlParentClaimNumbers": [97]
+    },
+    {
+      "claimNumber": 99,
+      "claimText": "The boundary proximity determining system of claim 93 wherein the auxiliary communications module is in electrical communication with a stimulus delivery device such that when the indicator signal is transmitted, the stimulus delivery device delivers a stimulus to the animal.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 100,
+      "claimText": "The boundary proximity determining system of claim 92 wherein the auxiliary communications module of said rover unit transmits the indicator signal when the first processor determines that the current location of said rover unit is not within the boundary.",
+      "sourceXmlParentClaimNumbers": [92]
+    },
+    {
+      "claimNumber": 101,
+      "claimText": "The boundary proximity determining system of claim 92 wherein the auxiliary communications module of said rover unit transmits the indicator signal when the first processor determines that the current location of said rover unit is within the boundary.",
+      "sourceXmlParentClaimNumbers": [92]
+    },
+    {
+      "claimNumber": 102,
+      "claimText": "The boundary proximity determining system of claim 92 wherein the auxiliary communications module of said rover unit transmits the indicator signal when the first processor determines that said rover unit traversed the boundary.",
+      "sourceXmlParentClaimNumbers": [92]
+    },
+    {
+      "claimNumber": 103,
+      "claimText": "The boundary proximity determining system of claim 68 wherein said user interface device is mechanically coupled to said rover unit such that said user interface device is detachable from said rover unit, said user interface device being in electrical communication with said rover unit when said user interface device is mechanically coupled to said rover unit.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 104,
+      "claimText": "The boundary proximity determining system of claim 68 wherein said user interface device is in wired communication with said rover unit.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 105,
+      "claimText": "The boundary proximity determining system of claim 68 wherein said user interface device is in wireless communication with said rover unit.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 106,
+      "claimText": "The boundary proximity determining system of claim 68 wherein said user interface device includes a boundary storage module in electrical communication with the second processor, the boundary storage module receives and stores the variables indicative of the respective location of each of the plurality of sample locations generated by the second processor.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 107,
+      "claimText": "The boundary proximity determining system of claim 106 wherein the memory module of an additional rover unit receives from the boundary storage module of said user interface device the variables indicative of the respective location of each of the plurality of sample locations generated by the second processor, the additional rover unit being distinguishable from said rover unit.",
+      "sourceXmlParentClaimNumbers": [106]
+    },
+    {
+      "claimNumber": 108,
+      "claimText": "The boundary proximity determining system of claim 107 wherein the additional rover unit is calibrated by said user interface device.",
+      "sourceXmlParentClaimNumbers": [107]
+    },
+    {
+      "claimNumber": 109,
+      "claimText": "The boundary proximity determining system of claim 106 wherein the memory module of said rover unit receives from the boundary storage module of said user interface device the variables indicative of the respective location of each of the plurality of sample locations generated by the second processor.",
+      "sourceXmlParentClaimNumbers": [106]
+    },
+    {
+      "claimNumber": 110,
+      "claimText": "The boundary proximity determining system of claim 109 wherein said rover unit is calibrated by said user interface device.",
+      "sourceXmlParentClaimNumbers": [109]
+    },
+    {
+      "claimNumber": 111,
+      "claimText": "The boundary proximity determining system of claim 68 wherein the user induces the magnetic field sensor of said rover unit to detect the magnetic field properties of the at least one pair of magnetic fields at each sample location of the plurality of sample locations by way of the user interface of said user interface device.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 112,
+      "claimText": "The boundary proximity determining system of claim 111 wherein the user notifies the second processor of said user interface device when the magnetic field properties of the at least one pair of magnetic fields at each sample location of the plurality of sample locations have been detected.",
+      "sourceXmlParentClaimNumbers": [111]
+    },
+    {
+      "claimNumber": 113,
+      "claimText": "The boundary proximity determining system of claim 68 wherein said user interface device indicates the distance between said user interface device and the boundary.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 114,
+      "claimText": "The boundary proximity determining system of claim 68 wherein said user interface device generates a plot of the boundary based on the plurality of sample locations.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 115,
+      "claimText": "The boundary proximity determining system of claim 68 wherein the first processor of said rover unit determines whether a detection taken by the magnetic field sensor includes acceptable information.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 116,
+      "claimText": "The boundary proximity determining system of claim 115 wherein the first processor of said rover unit determines whether a detection taken by the magnetic field sensor satisfies a designated signal-to-noise ratio.",
+      "sourceXmlParentClaimNumbers": [115]
+    },
+    {
+      "claimNumber": 117,
+      "claimText": "The boundary proximity determining system of claim 68 wherein the second processor of said user interface device determines whether a detection taken by the magnetic field sensor of said rover unit includes acceptable information.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 118,
+      "claimText": "The boundary proximity determining system of claim 117 wherein the second processor of said user interface device determines whether the distance between adjacent sample locations of the plurality of sample locations exceeds a designated distance.",
+      "sourceXmlParentClaimNumbers": [117]
+    },
+    {
+      "claimNumber": 119,
+      "claimText": "The boundary proximity determining system of claim 68 wherein the second processor of said user interface device determines whether a detection taken by the magnetic field sensor satisfies a designated signal-to-noise ratio.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 120,
+      "claimText": "The boundary proximity determining system of claim 68 wherein said rover unit is carried by a human.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 121,
+      "claimText": "A boundary proximity determining method for wirelessly defining a boundary having a programmable shape and for indicating the location of a rover unit with respect to the boundary, said method comprising the steps of: generating at least one pair of magnetic fields by way of a base station unit, each magnetic field being separately identifiable and having a principal axis lying substantially within a common two-dimensional plane of operation, the principal axes being mutually directionally diverse; defining the respective locations of a plurality of sample locations along the contour of the boundary in terms of a plurality of variables, the plurality of variables corresponding to the respective locations of the plurality of sample locations being based on magnetic field properties of the at least one pair of magnetic fields at each respective sample location of the plurality of sample locations, the plurality of sample locations defining the boundary, the boundary being of a programmable shape; storing the plurality of sample locations in terms of the plurality of variables at a rover unit; defining the current location of the rover unit in terms of the plurality of variables, the plurality of variables corresponding to the current location of the rover unit being based on the magnetic field properties of the at least one pair of magnetic fields at the current location of the rover unit; determining the location of the rover unit with respect to the boundary by comparing the plurality of variables defining the current location of the rover unit and the plurality of variables defining the respective locations of the plurality of sample locations; and activating an auxiliary communications module to indicate the location of the rover unit with respect to the boundary.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 122,
+      "claimText": "The method of claim 121 wherein the magnetic field properties include particular components of the intensities and polarities of the at least one pair of magnetic fields.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 123,
+      "claimText": "The method of claim 121 wherein said step of generating at least one pair of magnetic fields includes generating at least one pair of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 124,
+      "claimText": "The method of claim 123 further comprising the step of calculating the magnetic field properties of a pair of orthogonal magnetic fields, the calculations being based on the magnetic fields generated at said step of generating at least one pair of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [123]
+    },
+    {
+      "claimNumber": 125,
+      "claimText": "The method of claim 123 further comprising the step of virtually rotating the base station unit to an angle of rotation by calculating the plurality of variables corresponding to a particular location as they would be at the particular location if the base station unit were actually rotated to the angle of rotation.",
+      "sourceXmlParentClaimNumbers": [123]
+    },
+    {
+      "claimNumber": 126,
+      "claimText": "The method of claim 125 wherein said step of virtually rotating the base station unit to an angle of rotation includes virtually rotating the base station unit to an optimal angle of rotation, rotating the base station unit to the optimal angle of rotation minimizing coupling between the at least one pair of orthogonal magnetic fields and a parasitic current.",
+      "sourceXmlParentClaimNumbers": [125]
+    },
+    {
+      "claimNumber": 127,
+      "claimText": "The method of claim 126 wherein said step of virtually rotating the base station unit includes virtually rotating the base station unit to various angles of rotation at increments across a range.",
+      "sourceXmlParentClaimNumbers": [126]
+    },
+    {
+      "claimNumber": 128,
+      "claimText": "The method of claim 127 wherein said step of virtually rotating the base station unit includes virtually rotating the base station unit to various angles of rotation at one degree (1°) increments across a range of one hundred and eighty degrees (180°).",
+      "sourceXmlParentClaimNumbers": [127]
+    },
+    {
+      "claimNumber": 129,
+      "claimText": "The method of claim 127 wherein said step of virtually rotating the base station unit includes identifying the calculated plurality of variables corresponding to the particular location at angles of rotation where a variable of the calculated plurality of variables has a particular value exactly four (4) times.",
+      "sourceXmlParentClaimNumbers": [127]
+    },
+    {
+      "claimNumber": 130,
+      "claimText": "The method of claim 129 wherein said step of virtually rotating the base station unit includes calculating a goodness measurement based on the calculated plurality of variables corresponding to the particular location at angles of rotation where a variable of the calculated plurality of variables has a particular value exactly four (4) times.",
+      "sourceXmlParentClaimNumbers": [129]
+    },
+    {
+      "claimNumber": 131,
+      "claimText": "The method of claim 130 wherein said step of virtually rotating the base station unit includes identifying the calculated plurality of variables rendering the most desirable goodness measurement as corresponding to the optimal angle of rotation.",
+      "sourceXmlParentClaimNumbers": [130]
+    },
+    {
+      "claimNumber": 132,
+      "claimText": "The method of claim 123 wherein said step of generating at least one pair of magnetic fields includes generating at least two pairs of orthogonal magnetic fields.",
+      "sourceXmlParentClaimNumbers": [123]
+    },
+    {
+      "claimNumber": 133,
+      "claimText": "The method of claim 132 wherein the plurality of variables includes a sector variable, at least one angle-dependent variable, and a range-dependent variable.",
+      "sourceXmlParentClaimNumbers": [132]
+    },
+    {
+      "claimNumber": 134,
+      "claimText": "The method of claim 133 wherein said step of determining the location of the rover unit with respect to the boundary includes comparing the at least one angle-dependent variable defining the respective locations of the sample locations of the plurality of sample locations having the sector variable that matches the sector variable defining the current location of the rover unit and the at least one angle-dependent variable defining the current location of the rover unit.",
+      "sourceXmlParentClaimNumbers": [133]
+    },
+    {
+      "claimNumber": 135,
+      "claimText": "The method of claim 134 wherein said step of determining the location of the rover unit with respect to the boundary includes comparing the range-dependent variable defining the location of the sample location of the plurality of sample locations having the at least one angle-dependent variable that most closely matches the at least one angle-dependent variable defining the current location of the rover unit and the range-dependent variable defining the location of the rover unit.",
+      "sourceXmlParentClaimNumbers": [134]
+    },
+    {
+      "claimNumber": 136,
+      "claimText": "The method of claim 133 further comprising the step of dividing the plane of operation into a multiplicity of sectors, each sector of the multiplicity of sectors encompassing a separate and identifiable portion of the plane of operation, whereby the sector variable corresponding to a particular location indicates the sector of the multiplicity of sectors within which the particular location is located.",
+      "sourceXmlParentClaimNumbers": [133]
+    },
+    {
+      "claimNumber": 137,
+      "claimText": "The method of claim 136 further comprising the step of determining the direction of the radial components of each magnetic field of the at least one pair of magnetic fields with respect to the base station unit.",
+      "sourceXmlParentClaimNumbers": [136]
+    },
+    {
+      "claimNumber": 138,
+      "claimText": "The method of claim 137 further comprising the step of determining the orientation of the rover unit with respect to the base station unit.",
+      "sourceXmlParentClaimNumbers": [137]
+    },
+    {
+      "claimNumber": 139,
+      "claimText": "The method of claim 138 wherein the orientation of the rover unit is determined by orienting the rover unit on an animal such that the determination of the orientation of the rover unit is based on the direction of motion of the animal and by determining the animal's direction of motion by comparing the plurality of variables corresponding to the current location of the rover unit to the plurality of variables corresponding to a previous location of the rover unit.",
+      "sourceXmlParentClaimNumbers": [138]
+    },
+    {
+      "claimNumber": 140,
+      "claimText": "The method of claim 138 wherein said step of defining the respective locations of a plurality of sample locations includes defining the sector variable corresponding to a sample location of the plurality of sample locations by identifying the magnetic field of the at least one pair of magnetic fields that has radial components that most dominate its tangential components at the sample location and by determining the relative polarity of the radial components with respect to the orientation of the rover unit.",
+      "sourceXmlParentClaimNumbers": [138]
+    },
+    {
+      "claimNumber": 141,
+      "claimText": "The method of claim 138 wherein said step of defining the current location of the rover unit includes defining the sector variable corresponding to the current location of the rover unit by identifying the magnetic field of the at least one pair of magnetic fields that has radial components that most dominate its tangential components at the current location of the rover unit and by determining the relative polarity of the radial components with respect to the orientation of the rover unit.",
+      "sourceXmlParentClaimNumbers": [138]
+    },
+    {
+      "claimNumber": 142,
+      "claimText": "The method of claim 121 further comprising the step of generating a perpendicular magnetic field orthogonal to the plane of operation.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 143,
+      "claimText": "The method of claim 142 wherein said step of defining the location of the rover unit includes calculating a localized magnetic field distortion detecting variable indicative of the angle between the perpendicular magnetic field and a magnetic field of the at least one pair of magnetic fields, the localized magnetic field distortion detecting variable indicating the presence of localized magnetic field distortion.",
+      "sourceXmlParentClaimNumbers": [142]
+    },
+    {
+      "claimNumber": 144,
+      "claimText": "The method of claim 121 wherein said step of defining the respective locations of a plurality of sample locations includes measuring the magnetic field properties of the at least one pair of magnetic fields at each sample location of the plurality of sample locations.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 145,
+      "claimText": "The method of claim 144 wherein said step of defining the respective locations of a plurality of sample locations includes sequentially measuring the magnetic field properties of the at least one pair of magnetic fields at the plurality of sample locations along the contour of the boundary.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 146,
+      "claimText": "The method of claim 121 wherein said step of defining the current location of the rover unit includes measuring the magnetic field properties of the at least one pair of magnetic fields at the current location of the rover unit.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 147,
+      "claimText": "The method of claim 121 wherein said step of storing includes storing the variables as an indexed series of entries.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 148,
+      "claimText": "The method of claim 121 further comprising the step of calibrating an additional rover unit, the additional rover unit being distinguishable from the rover unit.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 149,
+      "claimText": "The method of claim 148 wherein said step of calibrating an additional rover unit includes defining a reference location in terms of a range-dependent variable of the plurality of variables utilizing the rover unit, the range-dependent variable being based on one or more of the magnetic field properties of the at least one pair of magnetic fields at the reference location, the reference location as defined by the rover unit being stored at a user interface device in communication with the rover unit.",
+      "sourceXmlParentClaimNumbers": [148]
+    },
+    {
+      "claimNumber": 150,
+      "claimText": "The method of claim 149 wherein said step of calibrating an additional rover unit includes establishing communication between the user interface device and the additional rover unit, defining the reference location in terms of the range-dependent variable of the plurality of variables utilizing the additional rover unit, calculating a calibration coefficient based on the range-dependent variable corresponding to the reference location as defined by the rover unit and the range-dependent variable corresponding to the reference location as defined by the additional rover unit, and applying the calibration coefficient to the plurality of variables defining the current location of the additional rover unit.",
+      "sourceXmlParentClaimNumbers": [149]
+    },
+    {
+      "claimNumber": 151,
+      "claimText": "The method of claim 121 further comprising the step of calibrating the rover unit.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 152,
+      "claimText": "The method of claim 151 wherein said step of calibrating the rover unit includes defining a reference location in terms of a range-dependent variable of the plurality of variables utilizing the rover unit, the range-dependent variable being based on one or more of the magnetic field properties of the at least one pair of magnetic fields at the reference location, the reference location being stored at a user interface device in communication with the rover unit.",
+      "sourceXmlParentClaimNumbers": [151]
+    },
+    {
+      "claimNumber": 153,
+      "claimText": "The method of claim 152 wherein said step of calibrating the rover unit includes establishing communication between the user interface device and the rover unit, defining the reference location a second time in terms of the range-dependent variable of the plurality of variables utilizing the rover unit, calculating a calibration coefficient based on the range-dependent variable corresponding to the reference location as defined by the rover unit and the range-dependent variable corresponding to the reference location as defined by the rover unit the second time, and applying the calibration coefficient to the plurality of variables defining the current location of the rover unit.",
+      "sourceXmlParentClaimNumbers": [152]
+    },
+    {
+      "claimNumber": 154,
+      "claimText": "The method of claim 121 further comprising the step of decreasing a current location update rate when the rover unit is a substantial distance from the boundary and is traveling at a substantially low speed.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 155,
+      "claimText": "The method of claim 121 wherein the boundary encloses the base station unit.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 156,
+      "claimText": "The method of claim 121 wherein the boundary does not enclose the base station unit.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 157,
+      "claimText": "The method of claim 121 wherein said step of activating an auxiliary communications module includes activating the auxiliary communications module when the rover unit is within the boundary.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 158,
+      "claimText": "The method of claim 121 wherein said step of activating an auxiliary communications module includes activating the auxiliary communications module when the rover unit is not within the boundary.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 159,
+      "claimText": "The method of claim 121 wherein said step of activating an auxiliary communications module includes activating the auxiliary communications module when the rover unit traverses the boundary.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 160,
+      "claimText": "The method of claim 121 wherein said step of activating an auxiliary communications module includes inducing the auxiliary communications module to transmit an indicator signal.",
+      "sourceXmlParentClaimNumbers": [121]
+    },
+    {
+      "claimNumber": 161,
+      "claimText": "The method of claim 160 wherein transmitting the indicator signal includes delivering a stimulus to an animal carrying the rover unit.",
+      "sourceXmlParentClaimNumbers": [160]
+    },
+    {
+      "claimNumber": 162,
+      "claimText": "A boundary proximity determining system for wirelessly defining a boundary having a programmable shape and for indicating the location of a rover unit with respect to the boundary, said boundary proximity determining system comprising: a base station unit, said base station unit generates at least one pair of magnetic fields, each magnetic field being separately identifiable and having a principal axis, the principal axes being mutually directionally diverse and lying substantially within a common two-dimensional plane of operation; a user interface device, said user interface device measures magnetic field properties of each respective magnetic field at the current location of said user interface device, the magnetic field properties measured at the current location of said user interface device indicating the current location of said user interface device with respect to said base station unit, said user interface device defines the boundary by measuring the magnetic field properties at sample locations along the contour of the boundary and by storing the magnetic field properties measured at the sample locations; and a rover unit including an auxiliary communications module and in temporary communication with said user interface device, said rover unit receives the magnetic field properties measured at the sample locations and stored by said user interface device, said rover unit measures the magnetic field properties of each respective magnetic field at the current location of said rover unit, the magnetic field properties measured at the current location of said rover unit indicating the current location of said rover unit with respect to said base station unit, said rover unit determines the current location of said rover unit with respect to the boundary by comparing the magnetic field properties measured at the current location of said rover unit to the magnetic field properties measured at the sample locations, the auxiliary communications module transmitting an indicator signal indicating the location of said rover unit with respect to the boundary.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 163,
+      "claimText": "The boundary proximity determining system of claim 162 wherein said rover unit is in temporary wireless communication with said user interface device.",
+      "sourceXmlParentClaimNumbers": [162]
+    },
+    {
+      "claimNumber": 164,
+      "claimText": "The boundary proximity determining system of claim 162 wherein said rover unit is detachably and mechanically engaged with said user interface device, whereby said rover unit is in electrical communication with said user interface device when said rover is engaged with said user interface device.",
+      "sourceXmlParentClaimNumbers": [162]
+    }
+  ]
+}

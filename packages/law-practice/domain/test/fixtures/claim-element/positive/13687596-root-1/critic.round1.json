@@ -1,0 +1,80 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13687596-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "confidenceScope": "Independent semantic structure/identified corrections; source acceptance is a separate source-critic result and attorney adjudication remains pending.",
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "findings": [
+    {
+      "severity": "actionable",
+      "claimNumber": 1,
+      "path": "1",
+      "quote": "said method comprising",
+      "span": [142, 164],
+      "issue": "The explicit resumptive main subject said method [142,153) is omitted from every element/term; the same omission occurs for said assembly [83,96) before comprising in claim6. Their identities are clear from the existing preamble introductions. The protocol does not authorize dropping determiner-bearing subject references with the transition.",
+      "requiredCorrection": "Represent said method in claim1 and said assembly in claim6 as exact owned terms, normally by extending the corresponding preamble anchor through the resumptive subject before comprising, and add local antecedents to A method / An assembly. If choosing another source-coherent boundary, explain it and still retain these explicit phrases. Do not change the actual method/assembly subjects or select incidental earlier comprising."
+    },
+    {
+      "severity": "actionable",
+      "claimNumber": 12,
+      "path": "12.e",
+      "quote": "a tab, said tab",
+      "span": [969, 984],
+      "issue": "Current said tab [976,984) edge chooses a locking tab [830,843), bypassing the immediately preceding a tab [969,974). The latter is a separately annotated introducing term. The receipt does not establish that both introductions identify one entity or acknowledge this competing anchor.",
+      "requiredCorrection": "Independently adjudicate source identity of the two tab introductions. If the immediate said tab refers to a tab in12.d, point to that exact introduction and use a consistent owner for subsequent the tab; if source grammar establishes both introductions as the same locking tab, state why and encode consistently. If this remains genuinely ambiguous, remove unjustified single-target edges and record the exact ambiguity for attorney review. Do not choose solely by exact-head matching or distance."
+    }
+  ],
+  "sourceEligibility": "Independent source critic accepted at0.98; this semantic review preserves that source decision without claiming attorney agreement.",
+  "audit": {
+    "treesReviewed": 12,
+    "elementsReviewed": 52,
+    "termsReviewed": 246,
+    "typedEdgesReviewed": 192,
+    "edgeKinds": {
+      "antecedent": 113,
+      "part-of": 40,
+      "functional": 28,
+      "depends-on-element": 11
+    },
+    "allElementAndTermUtf16SlicesVerified": true,
+    "allFunctionalTextSlicesVerified": true,
+    "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+    "allLocalAndCrossClaimTermEndpointsVerified": true,
+    "schemaDecode": "passed for every proposed tree",
+    "selectedScopeComplete": true
+  },
+  "independence": "Independent critic of these three families; did not produce their expected/extractor proposals. Reviewed exact canonical claims/context, provenance, source audit/source critic, semantic-reference/v2 and ClaimElement schema contracts. No implementation rules, predictions, synthetic fixtures, archived conformance, source repair, network, secrets, git or delegation. Helpers verified only supplied spans/schema/reference geometry.",
+  "attorneyAdjudication": "pending",
+  "rationale": [
+    "Reviewed52 elements/246 terms/192 typed edges and28 functional relationships. All supplied spans, term ownership, functional ordering and edge endpoints pass schema/geometry checks; those checks do not detect omitted source terms or competing semantic introductions.",
+    "Actual root1 subject remains the method and root12 the sub-assembly despite incidental earlier comprising. Claims6/12 technical references are source-grounded without deciding formal legal dependency.",
+    "Full compound heads preserve male/female mating connectors and slash-type terms. No standalone aperture or interlock noun introduction should be fabricated by splitting type modifiers or converting interlocking into a recited noun."
+  ],
+  "ambiguityResolution": [
+    {
+      "claimNumber": 5,
+      "quote": "said apertures",
+      "resolution": "Tab/aperture and stud/aperture are compound type descriptions; the current terms do not include an explicit aperture noun introduction. Do not manufacture an antecedent solely from a substring."
+    },
+    {
+      "claimNumber": 8,
+      "quote": "the composite structure metal interface part",
+      "resolution": "Retain exact malformed combined source noun phrase. Neither insert and nor import an invented source entity."
+    },
+    {
+      "claimNumber": 12,
+      "quote": "said part",
+      "resolution": "Its singular wording following distributed composite/interface relations is not resolved by automatically forcing a plural parts antecedent. Preserve the recorded ambiguity."
+    },
+    {
+      "claimNumber": 3,
+      "quote": "the V",
+      "resolution": "Flattening follows a V-shaped cross-section on the same locking tab; shorthand to that introduced cross-section is source-clear, so the existing alias edge is justified."
+    }
+  ]
+}

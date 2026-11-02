@@ -16,7 +16,7 @@ import * as Str from "effect/String";
 import { SkillMaterializeRefusal, SkillsCommandError } from "../Skills.errors.ts";
 import { PATCH_ROOT } from "./PatchStaging.ts";
 import { hashBytes, patchSetHashOf, validateRelativePath } from "./SkillTree.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { VendoredSkillLockEntry } from "../SkillsLock.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Skills/internal/PatchSeries");
@@ -87,7 +87,7 @@ export const readVerifiedPatchSeries = Effect.fn("SkillsMaterialize.readVerified
 ): Effect.fn.Return<
   ReadonlyArray<PatchSeriesFile>,
   SkillsCommandError | SkillMaterializeRefusal,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const patches = yield* Effect.forEach(entry.patches.series, (patch) => readPatch(repoRoot, skill, patch));
   const patchSetHash = yield* patchSetHashOf(patches, skill);

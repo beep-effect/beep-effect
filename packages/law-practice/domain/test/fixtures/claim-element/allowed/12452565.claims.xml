@@ -1,0 +1,99 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A computer implemented method for determining an end-to-end service path, comprising:
+<claim-text>(a) assembling a prompt comprising (i) a plurality of example circuit names, (ii) for each example circuit name in the plurality of example circuit names, data points corresponding to circuit endpoints of a service corresponding to a respective example circuit name, and (iii) a circuit name for interpretation;</claim-text>
+<claim-text>(b) sending the assembled prompt to a large language model (LLM) to determine first data points of a first endpoint and second data points of a second endpoint, wherein the first endpoint and the second endpoint belong to a service path corresponding to the circuit name; and</claim-text>
+<claim-text>(c) deriving using the first data points, a first neighbor connection to be created corresponding to the first endpoint, and using the second data points, a second neighbor connection to be created corresponding to the second endpoint,</claim-text>
+<claim-text>(d) wherein the first neighbor connection to be created corresponding to the first endpoint and the second neighbor connection to be created corresponding to the second endpoint enable determination of the service path.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The computer implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising, transmitting to an inventory database comprising inventory data, the first neighbor connection based on first neighbor ports and the second neighbor connection based on second neighbor ports.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The computer implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising, transmitting to a controller, the first neighbor connection based on first neighbor ports and the second neighbor connection based on second neighbor ports.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The computer implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the data points corresponding to the circuit endpoints of the service corresponding to the respective example circuit name (a)(ii) comprise:
+<claim-text>(a) a target identifier (TID) found in the respective example circuit name; and</claim-text>
+<claim-text>(b) a wavelength-division multiplexing (WDM) side of the TID.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The computer implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the sending (b) comprises a comma-separated values (CSV) file comprising the circuit name, the computer implemented method further comprising receiving a JavaScript Object Notation (JSON) file comprising the first data points and the second data points.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The computer implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>(a) extracting circuit names from sources including the plurality of example circuit names and the circuit name; and</claim-text>
+<claim-text>(b) outputting the circuit names in a comma-separated values (CSV) file, wherein each example circuit name in the plurality of example circuit names is unique.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The computer implemented method of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the sources comprise:
+<claim-text>descriptions on ports, connections discovered from a network, a spreadsheet, or an external inventory management system.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The computer implemented method of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the outputting further comprises information indicating whether the circuit name is provisioned or reserved for future use.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. A non-transitory computer-readable medium having instructions stored thereon that, when executed by a processor of a computing device, cause the computing device to perform operations for determining an end-to-end service path, the operations comprising:
+<claim-text>(a) assembling a prompt comprising (i) a plurality of example circuit names, (ii) for each example circuit name in the plurality of example circuit names, data points corresponding to circuit endpoints of a service corresponding to a respective example circuit name, and (iii) a circuit name for interpretation;</claim-text>
+<claim-text>(b) sending the assembled prompt to a large language model (LLM) to determine first data points of a first endpoint and second data points of a second endpoint, wherein the first endpoint and the second endpoint belong to a service path corresponding to the circuit name; and</claim-text>
+<claim-text>(c) deriving using the first data points, a first neighbor connection to be created corresponding to the first endpoint, and using the second data points, a second neighbor connection to be created corresponding to the second endpoint,</claim-text>
+<claim-text>(d) wherein the first neighbor connection to be created corresponding to the first endpoint and the second neighbor connection to be created corresponding to the second endpoint enable determination of the service path.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The non-transitory computer-readable medium of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the operations further comprise transmitting to an inventory database comprising inventory data, the first neighbor connection based on first neighbor ports and the second neighbor connection based on second neighbor ports.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The non-transitory computer-readable medium of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the operations further comprise transmitting to a controller, the first neighbor connection based on first neighbor ports and the second neighbor connection based on second neighbor ports.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. The non-transitory computer-readable medium of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the data points corresponding to the circuit endpoints of the service corresponding to the respective example circuit name (a)(ii) comprise:
+<claim-text>(a) a target identifier (TID) found in the respective example circuit name; and</claim-text>
+<claim-text>(b) a wavelength-division multiplexing (WDM) side of the TID.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The non-transitory computer-readable medium of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the sending (b) operation comprises a comma-separated values (CSV) file comprising the circuit name, the operations further comprising receiving a JavaScript Object Notation (JSON) file comprising the first data points and the second data points.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. The non-transitory computer-readable medium of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the operations further comprise:
+<claim-text>(a) extracting circuit names from sources including the plurality of example circuit names and the circuit name; and</claim-text>
+<claim-text>(b) outputting the circuit names in a comma-separated values (CSV) file, wherein each example circuit name in the plurality of example circuit names is unique.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. The non-transitory computer-readable medium of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the sources comprise: descriptions on ports, connections discovered from a network, a spreadsheet, or an external inventory management system.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. The non-transitory computer-readable medium of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the outputting further comprises information indicating whether the circuit name is provisioned or reserved for future use.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text>17. A system for determining an end-to-end service path, comprising:
+<claim-text>a memory; and</claim-text>
+<claim-text>a processor communicatively coupled to the memory, configured to:</claim-text>
+<claim-text>(a) assemble a prompt comprising (i) a plurality of example circuit names, (ii) for each example circuit name in the plurality of example circuit names, data points corresponding to circuit endpoints of a service corresponding to a respective example circuit name, and (iii) a circuit name for interpretation;</claim-text>
+<claim-text>(b) send the assembled prompt to a large language model (LLM) to determine first data points of a first endpoint and second data points of a second endpoint, wherein the first endpoint and the second endpoint belong to a service path corresponding to the circuit name; and</claim-text>
+<claim-text>(c) derive using the first data points, a first neighbor connection to be created corresponding to the first endpoint, and using the second data points, a second neighbor connection to be created corresponding to the second endpoint,</claim-text>
+<claim-text>(d) wherein the first neighbor connection to be created corresponding to the first endpoint and the second neighbor connection to be created corresponding to the second endpoint enable determination of the service path.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text>18. The system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the processor is further configured to transmit to an inventory database comprising inventory data, the first neighbor connection based on first neighbor ports and the second neighbor connection based on second neighbor ports.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text>19. The system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the data points corresponding to the circuit endpoints of the service corresponding to the respective example circuit name comprise:
+<claim-text>(a) a target identifier (TID) found in the example circuit name; and</claim-text>
+<claim-text>(b) a wavelength-division multiplexing (WDM) side of the TID.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text>20. The system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the processor is further configured to:
+<claim-text>(a) extract circuit names from sources including the plurality of example circuit names and the circuit name; and</claim-text>
+<claim-text>(b) output the circuit names in a comma-separated values (CSV) file, wherein each example circuit name in the plurality of example circuit names is unique.</claim-text>
+</claim-text>
+</claim>
+</claims>

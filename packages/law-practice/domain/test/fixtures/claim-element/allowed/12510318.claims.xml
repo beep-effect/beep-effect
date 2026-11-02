@@ -1,0 +1,72 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A trigger mechanism for a firearm, comprising:
+<claim-text>a trigger housing configured to couple with a fire control unit of the firearm;</claim-text>
+<claim-text>a trigger slideably coupled with the trigger housing and movable along a linear path; and</claim-text>
+<claim-text>a trigger bar having a first end coupled with the trigger and a second end coupled with a sear activation module, where the sear activation module is moveable with respect to the fire control unit along a longitudinal path with the trigger bar, and where the sear activation module is moveable laterally with respect to the trigger bar.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The trigger mechanism of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a trigger safety slideably coupled with the trigger and moveable between a first position and a second position with reference to the trigger.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The trigger mechanism of <claim-ref idref="CLM-00002">claim 2</claim-ref>, further comprising a blocking lever pivotally coupled with the trigger and moveable between a blocking position that prevents linear movement of the trigger and an allow position that allows linear movement of the trigger.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The trigger mechanism of <claim-ref idref="CLM-00003">claim 3</claim-ref>, where the trigger safety is configured to actuate the blocking lever and move the blocking lever from the blocking position to the allow position when the trigger safety is moved to the second position.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The trigger mechanism of <claim-ref idref="CLM-00004">claim 4</claim-ref>, further comprising a compression spring configured to bias the blocking lever to blocking position.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The trigger mechanism of <claim-ref idref="CLM-00001">claim 1</claim-ref>, where the sear activation module comprises an arm for one of preventing rotation of a sear module or rotating the sear module to a position that disengages the sear module from a striker.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The trigger mechanism of <claim-ref idref="CLM-00006">claim 6</claim-ref>, where the sear module further comprising a pocket for receiving the arm of the sear activation module, and where the pocket is defined by an upper leg and a lower leg.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The trigger mechanism of <claim-ref idref="CLM-00007">claim 7</claim-ref>, where the pocket is disposed at one end of the sear module and a pivot point is disposed at an opposite end of the sear module.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The trigger mechanism of <claim-ref idref="CLM-00001">claim 1</claim-ref>, where the trigger housing comprises a slotted channel configured to define a path of travel of the trigger.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The trigger mechanism of <claim-ref idref="CLM-00009">claim 9</claim-ref>, where the trigger comprises a slotted tab configured to engage the slotted channel.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The trigger mechanism of <claim-ref idref="CLM-00009">claim 9</claim-ref>, where the path of travel is linear and substantially parallel with a bore axis of the firearm.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A firearm having a linearly moveable trigger with respect to the firearm, the firearm comprising:
+<claim-text>a frame;</claim-text>
+<claim-text>a barrel disposed in a slide, where the slide is slideably coupled with the frame;</claim-text>
+<claim-text>a trigger housing configured to couple with a fire control unit of the firearm;</claim-text>
+<claim-text>a trigger slideably coupled with the trigger housing and movable along a linear path; and</claim-text>
+<claim-text>a trigger bar having a first end coupled with the trigger and a second end coupled with a sear activation module, where the sear activation module is moveable with respect to the fire control unit along a longitudinal path with the trigger bar, and where the sear activation module is moveable laterally with respect to the trigger bar.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The firearm of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising a trigger safety slideably coupled with the trigger and moveable between a first position and a second position with reference to the trigger.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The firearm of <claim-ref idref="CLM-00013">claim 13</claim-ref>, further comprising a blocking lever pivotally coupled with the trigger and moveable between a blocking position that prevents linear movement of the trigger and an allow position that allows linear movement of the trigger.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The firearm of <claim-ref idref="CLM-00014">claim 14</claim-ref>, where the trigger safety is configured to actuate the blocking lever and move the blocking lever from the blocking position to the allow position when the trigger safety is moved to the second position.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The firearm of <claim-ref idref="CLM-00015">claim 15</claim-ref>, further comprising a compression spring configured to bias the blocking lever to blocking position.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The firearm of <claim-ref idref="CLM-00012">claim 12</claim-ref>, where the sear activation module comprises an arm for one of preventing rotation of a sear module or rotating the sear module to a position that disengages the sear module from a striker.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The firearm of <claim-ref idref="CLM-00017">claim 17</claim-ref>, where the sear module further comprising a pocket for receiving the arm of the sear activation module, and where the pocket is defined by an upper leg and a lower leg.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The firearm of <claim-ref idref="CLM-00012">claim 12</claim-ref>, where the trigger housing comprises a slotted channel configured to define a path of travel of the trigger.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The firearm of <claim-ref idref="CLM-00019">claim 19</claim-ref>, where the trigger comprises a slotted tab configured to engage the slotted channel.</claim-text>
+</claim>
+</claims>

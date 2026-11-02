@@ -1,0 +1,41 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. Method for non-destructive ultrasound inspection, wherein at least one ultrasonic pulse is radiated by means of at least one ultrasonic transmitter into a workpiece to be inspected and the ultrasonic pulse is reflected on boundary surfaces in the workpiece, the reflected ultrasound is received by means of at least one ultrasonic receiver and the associated signals are evaluated, and the ultrasound in the process passes through a leading body which is disposed between the workpiece and the transmitter or receiver, wherein the method comprises at least one step for determining sound velocity in the leading body by means of a phased array comprised of selectively controllable transducers, wherein at least one first transducer of the phased array acts as a transmitter of at least one ultrasonic pulse, and at least one second transducer of the phased array acts as a receiver of the ultrasonic pulse, respectively, and the sound velocity in the leading body is determined at least by means of a travel time measurement of the ultrasound along the shortest sound path of the ultrasound between said spaced transducers.</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. Method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, in the step for determining the sound velocity in the leading body, the sound velocity is determined by means of at least one back-face echo of the leading body.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. Method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the shortest sound path is calculated geometrically or by numerical simulation.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. Method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the leading body is wedge-shaped or has two plane-parallel surfaces.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. Method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the leading body comprises a thermoplastic synthetic material.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. Method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, in the step for determining the sound velocity in the leading body, the latter is uncoupled.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. Method according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the method comprises at least one further step in which travel time of the back-face echo of the leading body's coupling surface adjoining, or to be adjoined to, the workpiece is determined for at least one transducer of the phased array acting as a transmitter or receiver.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. Method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the phased array comprises the at least one ultrasonic transmitter which, for the non-destructive ultrasound inspection, emits at least one ultrasonic pulse into the workpiece to be inspected, and the at least one ultrasonic receiver which receives the ultrasonic pulses.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. Method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the phased array comprises more than two selectively controllable transducers.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. Method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the sound velocity in the leading body determined in the step for determining the sound velocity is used in the evaluation of the signals from the ultrasound inspection of the workpiece.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. Method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the outermost transducers of the phased array are used in the step for determining the sound velocity.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. Method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the evaluation in the step for determining the sound velocity is carried out by means of triggering to a pulse peak of the received pulse echo.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. Device for carrying out the method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, comprising at least one ultrasonic transmitter for emitting at least one ultrasonic pulse into a workpiece to be inspected, with the ultrasonic pulses being reflected on boundary surfaces in the workpiece, and at least one ultrasonic receiver for receiving the reflected ultrasound, an evaluation unit for evaluating the associated signals, and a leading body which is disposed between the workpiece and the transmitter or receiver such that the ultrasound passes through it, wherein the device comprises a phased array of selectively controllable transducers for carrying out the at least one step for determining the sound velocity in the leading body, wherein, respectively, at least one first transducer of the phased array acts as a transmitter of at least one ultrasonic pulse, and at least one second transducer of the phased array acts as a receiver of the ultrasonic pulse, and the sound velocity in the leading body is determined at least by means of a travel time measurement of the ultrasound along the shortest sound path of the ultrasound between said spaced transducers. </claim-text>
+</claim>
+</claims>

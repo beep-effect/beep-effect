@@ -1,0 +1,20 @@
+{
+  "previous": "d71a187f4ce9c9da50ea08a185ac700d78d51df5529b3b1487a2b3ac54ff582f",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (hold-ledger-sweep, feat/hold-ledger-sweep)",
+    "reason": "Re-record the root subject after deps:update gains the beep holds update pre-step and the syncpack held-group comment changes (goals/hold-ledger slice 3); root input bytes only, no new computations, no qualification granted.",
+    "basis": {
+      "path": "goals/hold-ledger/research/cache-baseline-review-2026-11-01-sweep.md",
+      "sha256": "0a20404baa771558ecbb11104f55b0da01a2f19f6a3cccf7721bbccbc95e13ee"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

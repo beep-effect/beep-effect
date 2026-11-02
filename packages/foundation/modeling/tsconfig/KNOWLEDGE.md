@@ -10,8 +10,7 @@ Here the pure half of upstream `@effected/tsconfig-json` is `@beep/tsconfig` at
 `src/` for `CompilerOptions`, `CompilerOptionsFromProgrammatic`, `JsxConfig`,
 `PortableTsconfig`, `ResolvedTsconfig`, `TsconfigJson` and `TsEnumCodec`, and
 `__test__/` maps to `test/`. The filesystem half (`TsconfigLoader`, `TsconfigLoaderSync`,
-`TsconfigDiscovery`, `internal/extendsTarget`) stays in `scratchpad/effected/tsconfig-json`
-until wave 3 promotes it as `@beep/repo-tsconfig`. Upstream `@effected/jsonc` is
+`TsconfigDiscovery`, `internal/extendsTarget`) is `@beep/repo-tsconfig` since wave 3-2. Upstream `@effected/jsonc` is
 `@beep/jsonc`, `@effected/memfs` is `@beep/memfs` and `@effected/walker` is `@beep/walker`. The upstream `pnpm vitest` /
 `pnpm build` commands map to `bun run test` / `bun run build` in the package, or
 `bun run beep quality package-verify @beep/tsconfig` from the repository root.

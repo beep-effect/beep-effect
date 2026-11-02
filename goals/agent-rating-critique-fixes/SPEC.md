@@ -35,7 +35,7 @@ improved. The rating is the baseline; this packet is the fix programme.
 - P0 (this packet): `goals/agent-rating-critique-fixes/**` only, plus the
   generated `goals/INDEX.md` projection.
 - P1: `AGENTS.md` (pin dedup), `docs/runbooks/agent-pools.md`,
-  `.agents/skills/graft/SKILL.md`, `README.md` (stale model names),
+  the graft skill (retired 2026-10-28), `README.md` (stale model names),
   skill frontmatter under `.agents/skills/`, root `vitest.config.ts`.
 - P2: `.github/workflows/check.yml` + `.oxlintrc.json` + `biome.jsonc`
   (warn-only promotion candidates), S11 evidence note in `AGENTS.md`

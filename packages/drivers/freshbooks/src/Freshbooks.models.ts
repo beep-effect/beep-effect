@@ -1,15 +1,15 @@
 /**
  * Schema-decoded FreshBooks domain models and response envelopes.
  *
- * FreshBooks accounting endpoints wrap payloads in a
- * `{ response: { result: ... } }` envelope; list results additionally carry
- * `page` / `pages` / `per_page` / `total` pagination fields alongside the
- * resource array. Every model here is an annotated `S.Class` that decodes a
- * deliberate subset of the wire shape — the API returns far more fields than
- * the driver commits to, and unmodeled keys are dropped at the boundary.
- * Field names mirror the FreshBooks wire keys (following the driver
- * convention, e.g. `@beep/discord`, `@beep/ffmpeg`); the distinct `account_id`
- * and `business_id` namespaces are modeled as separate branded types.
+ * **Details**
+ *
+ * FreshBooks accounting endpoints wrap payloads in a `{ response: { result: ... } }` envelope;
+ * list results additionally carry `page` / `pages` / `per_page` / `total` pagination fields
+ * alongside the resource array. Every model here is an annotated `S.Opaque` schema that decodes a
+ * deliberate subset of the wire shape — the API returns far more fields than the driver commits
+ * to, and unmodeled keys are dropped at the boundary. Field names mirror the FreshBooks wire keys
+ * (following the driver convention, e.g. `@beep/discord`, `@beep/ffmpeg`); the distinct
+ * `account_id` and `business_id` namespaces are modeled as separate branded types.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -568,6 +568,22 @@ const paymentListBody = AccountingResult(S.Struct({ payments: S.Array(Freshbooks
  * Boundary decoders for the FreshBooks response envelopes. Each unwraps the
  * `response.result` (or bare `response`) shell before the service reshapes it
  * into a domain value or {@link FreshbooksPage}.
+ *
+ * **Example** (Decode an identity envelope)
+ *
+ * ```ts
+ * import { FreshbooksDecode } from "@beep/freshbooks"
+ * import * as Effect from "effect/Effect"
+ * import * as Exit from "effect/Exit"
+ *
+ * const decoded = Effect.runSyncExit(
+ *   FreshbooksDecode.identity({ response: { id: 7, business_memberships: [] } })
+ * )
+ * const rejected = Effect.runSyncExit(FreshbooksDecode.identity({ response: {} }))
+ *
+ * console.log(Exit.isSuccess(decoded)) // true
+ * console.log(Exit.isFailure(rejected)) // true
+ * ```
  *
  * @category decoding
  * @since 0.0.0

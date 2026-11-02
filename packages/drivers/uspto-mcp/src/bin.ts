@@ -1,6 +1,8 @@
 /**
  * stdio entrypoint for the `@beep/uspto` MCP proving host.
  *
+ * **Details**
+ *
  * Launches {@link makeServerLayer}'s stdio-transport MCP server so an MCP
  * client (e.g. an editor or agent runtime) can call the USPTO tools over
  * standard input/output. Register in an MCP client config by pointing it at

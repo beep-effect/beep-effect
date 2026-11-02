@@ -1,0 +1,2914 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 18,
+          "quote": "An inertial sensor"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 18,
+              "quote": "An inertial sensor"
+            },
+            "determiner": "an",
+            "head": "inertial sensor"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 55,
+          "quote": "a plate-shaped membrane"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 55,
+              "quote": "a plate-shaped membrane"
+            },
+            "determiner": "a",
+            "head": "plate-shaped membrane"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 57,
+          "endChar": 117,
+          "quote": "a mass body disposed under a central portion of the membrane"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 57,
+              "endChar": 68,
+              "quote": "a mass body"
+            },
+            "determiner": "a",
+            "head": "mass body"
+          },
+          {
+            "anchor": {
+              "startChar": 84,
+              "endChar": 101,
+              "quote": "a central portion"
+            },
+            "determiner": "a",
+            "head": "central portion"
+          },
+          {
+            "anchor": {
+              "startChar": 105,
+              "endChar": 117,
+              "quote": "the membrane"
+            },
+            "determiner": "the",
+            "head": "membrane"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 119,
+          "endChar": 194,
+          "quote": "a post disposed under an edge of the membrane so as to support the membrane"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 125,
+              "quote": "a post"
+            },
+            "determiner": "a",
+            "head": "post"
+          },
+          {
+            "anchor": {
+              "startChar": 141,
+              "endChar": 148,
+              "quote": "an edge"
+            },
+            "determiner": "an",
+            "head": "edge"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 164,
+              "quote": "the membrane"
+            },
+            "determiner": "the",
+            "head": "membrane"
+          },
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 194,
+              "quote": "the membrane"
+            },
+            "determiner": "the",
+            "head": "membrane"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 200,
+          "endChar": 404,
+          "quote": "a bottom cap of which the edge is provided with a first cavity into which an adhesive is introduced, the adhesive bonding the edge to a bottom surface of the post so as to cover the mass body and the post"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 200,
+              "endChar": 212,
+              "quote": "a bottom cap"
+            },
+            "determiner": "a",
+            "head": "bottom cap"
+          },
+          {
+            "anchor": {
+              "startChar": 222,
+              "endChar": 230,
+              "quote": "the edge"
+            },
+            "determiner": "the",
+            "head": "edge"
+          },
+          {
+            "anchor": {
+              "startChar": 248,
+              "endChar": 262,
+              "quote": "a first cavity"
+            },
+            "determiner": "a",
+            "head": "first cavity"
+          },
+          {
+            "anchor": {
+              "startChar": 274,
+              "endChar": 285,
+              "quote": "an adhesive"
+            },
+            "determiner": "an",
+            "head": "adhesive"
+          },
+          {
+            "anchor": {
+              "startChar": 301,
+              "endChar": 313,
+              "quote": "the adhesive"
+            },
+            "determiner": "the",
+            "head": "adhesive"
+          },
+          {
+            "anchor": {
+              "startChar": 322,
+              "endChar": 330,
+              "quote": "the edge"
+            },
+            "determiner": "the",
+            "head": "edge"
+          },
+          {
+            "anchor": {
+              "startChar": 334,
+              "endChar": 350,
+              "quote": "a bottom surface"
+            },
+            "determiner": "a",
+            "head": "bottom surface"
+          },
+          {
+            "anchor": {
+              "startChar": 354,
+              "endChar": 362,
+              "quote": "the post"
+            },
+            "determiner": "the",
+            "head": "post"
+          },
+          {
+            "anchor": {
+              "startChar": 378,
+              "endChar": 391,
+              "quote": "the mass body"
+            },
+            "determiner": "the",
+            "head": "mass body"
+          },
+          {
+            "anchor": {
+              "startChar": 396,
+              "endChar": 404,
+              "quote": "the post"
+            },
+            "determiner": "the",
+            "head": "post"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 68,
+                "quote": "a mass body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 68,
+              "endChar": 84,
+              "quote": " disposed under "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 84,
+                "endChar": 101,
+                "quote": "a central portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 101,
+              "endChar": 105,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 105,
+                "endChar": 117,
+                "quote": "the membrane"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 125,
+                "quote": "a post"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 125,
+              "endChar": 141,
+              "quote": " disposed under "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 141,
+                "endChar": 148,
+                "quote": "an edge"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 148,
+              "endChar": 152,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 152,
+                "endChar": 164,
+                "quote": "the membrane"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 164,
+              "endChar": 182,
+              "quote": " so as to support "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 182,
+                "endChar": 194,
+                "quote": "the membrane"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 200,
+                "endChar": 212,
+                "quote": "a bottom cap"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 212,
+              "endChar": 222,
+              "quote": " of which "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 222,
+                "endChar": 230,
+                "quote": "the edge"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 230,
+              "endChar": 248,
+              "quote": " is provided with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 248,
+                "endChar": 262,
+                "quote": "a first cavity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 262,
+              "endChar": 274,
+              "quote": " into which "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 274,
+                "endChar": 285,
+                "quote": "an adhesive"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 285,
+              "endChar": 301,
+              "quote": " is introduced, "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 301,
+                "endChar": 313,
+                "quote": "the adhesive"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 313,
+              "endChar": 322,
+              "quote": " bonding "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 322,
+                "endChar": 330,
+                "quote": "the edge"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 330,
+              "endChar": 334,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 334,
+                "endChar": 350,
+                "quote": "a bottom surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 350,
+              "endChar": 354,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 354,
+                "endChar": 362,
+                "quote": "the post"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 362,
+              "endChar": 378,
+              "quote": " so as to cover "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 378,
+                "endChar": 391,
+                "quote": "the mass body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 391,
+              "endChar": 396,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 396,
+                "endChar": 404,
+                "quote": "the post"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 105,
+            "endChar": 117,
+            "quote": "the membrane"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 55,
+            "quote": "a plate-shaped membrane"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 152,
+            "endChar": 164,
+            "quote": "the membrane"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 55,
+            "quote": "a plate-shaped membrane"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 182,
+            "endChar": 194,
+            "quote": "the membrane"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 55,
+            "quote": "a plate-shaped membrane"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 301,
+            "endChar": 313,
+            "quote": "the adhesive"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 274,
+            "endChar": 285,
+            "quote": "an adhesive"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 354,
+            "endChar": 362,
+            "quote": "the post"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 125,
+            "quote": "a post"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 378,
+            "endChar": 391,
+            "quote": "the mass body"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 68,
+            "quote": "a mass body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 396,
+            "endChar": 404,
+            "quote": "the post"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 125,
+            "quote": "a post"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 43,
+          "quote": "The inertial sensor as set forth in claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The inertial sensor"
+            },
+            "determiner": "the",
+            "head": "inertial sensor"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 64,
+          "endChar": 150,
+          "quote": "a spacer having a predetermined thickness disposed between the post and the bottom cap"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 64,
+              "endChar": 72,
+              "quote": "a spacer"
+            },
+            "determiner": "a",
+            "head": "spacer"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 105,
+              "quote": "a predetermined thickness"
+            },
+            "determiner": "a",
+            "head": "predetermined thickness"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 131,
+              "quote": "the post"
+            },
+            "determiner": "the",
+            "head": "post"
+          },
+          {
+            "anchor": {
+              "startChar": 136,
+              "endChar": 150,
+              "quote": "the bottom cap"
+            },
+            "determiner": "the",
+            "head": "bottom cap"
+          }
+        ]
+      },
+      {
+        "path": "2.b",
+        "anchor": {
+          "startChar": 160,
+          "endChar": 280,
+          "quote": "a gap between the bottom surface of the post and a top surface of the bottom cap is equal to the predetermined thickness"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 160,
+              "endChar": 165,
+              "quote": "a gap"
+            },
+            "determiner": "a",
+            "head": "gap"
+          },
+          {
+            "anchor": {
+              "startChar": 174,
+              "endChar": 192,
+              "quote": "the bottom surface"
+            },
+            "determiner": "the",
+            "head": "bottom surface"
+          },
+          {
+            "anchor": {
+              "startChar": 196,
+              "endChar": 204,
+              "quote": "the post"
+            },
+            "determiner": "the",
+            "head": "post"
+          },
+          {
+            "anchor": {
+              "startChar": 209,
+              "endChar": 222,
+              "quote": "a top surface"
+            },
+            "determiner": "a",
+            "head": "top surface"
+          },
+          {
+            "anchor": {
+              "startChar": 226,
+              "endChar": 240,
+              "quote": "the bottom cap"
+            },
+            "determiner": "the",
+            "head": "bottom cap"
+          },
+          {
+            "anchor": {
+              "startChar": 253,
+              "endChar": 280,
+              "quote": "the predetermined thickness"
+            },
+            "determiner": "the",
+            "head": "predetermined thickness"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 64,
+                "endChar": 72,
+                "quote": "a spacer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 72,
+              "endChar": 80,
+              "quote": " having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 105,
+                "quote": "a predetermined thickness"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 105,
+              "endChar": 123,
+              "quote": " disposed between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 131,
+                "quote": "the post"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 131,
+              "endChar": 136,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 136,
+                "endChar": 150,
+                "quote": "the bottom cap"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.b",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 160,
+                "endChar": 165,
+                "quote": "a gap"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 165,
+              "endChar": 174,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 174,
+                "endChar": 192,
+                "quote": "the bottom surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 192,
+              "endChar": 196,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 196,
+                "endChar": 204,
+                "quote": "the post"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 204,
+              "endChar": 209,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 209,
+                "endChar": 222,
+                "quote": "a top surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 222,
+              "endChar": 226,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 226,
+                "endChar": 240,
+                "quote": "the bottom cap"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 240,
+              "endChar": 253,
+              "quote": " is equal to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 253,
+                "endChar": 280,
+                "quote": "the predetermined thickness"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2.a",
+        "ancestor": "1.c"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2.b",
+        "ancestor": "1.d"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 131,
+            "quote": "the post"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 125,
+            "quote": "a post"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 136,
+            "endChar": 150,
+            "quote": "the bottom cap"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 212,
+            "quote": "a bottom cap"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 174,
+            "endChar": 192,
+            "quote": "the bottom surface"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 334,
+            "endChar": 350,
+            "quote": "a bottom surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 196,
+            "endChar": 204,
+            "quote": "the post"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 125,
+            "quote": "a post"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 226,
+            "endChar": 240,
+            "quote": "the bottom cap"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 212,
+            "quote": "a bottom cap"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 253,
+            "endChar": 280,
+            "quote": "the predetermined thickness"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 105,
+            "quote": "a predetermined thickness"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The inertial sensor"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "An inertial sensor"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 43,
+          "quote": "The inertial sensor as set forth in claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The inertial sensor"
+            },
+            "determiner": "the",
+            "head": "inertial sensor"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 53,
+          "endChar": 158,
+          "quote": "the spacer is disposed along the outermost side or the innermost side between the post and the bottom cap"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 53,
+              "endChar": 63,
+              "quote": "the spacer"
+            },
+            "determiner": "the",
+            "head": "spacer"
+          },
+          {
+            "anchor": {
+              "startChar": 82,
+              "endChar": 100,
+              "quote": "the outermost side"
+            },
+            "determiner": "the",
+            "head": "outermost side"
+          },
+          {
+            "anchor": {
+              "startChar": 104,
+              "endChar": 122,
+              "quote": "the innermost side"
+            },
+            "determiner": "the",
+            "head": "innermost side"
+          },
+          {
+            "anchor": {
+              "startChar": 131,
+              "endChar": 139,
+              "quote": "the post"
+            },
+            "determiner": "the",
+            "head": "post"
+          },
+          {
+            "anchor": {
+              "startChar": 144,
+              "endChar": 158,
+              "quote": "the bottom cap"
+            },
+            "determiner": "the",
+            "head": "bottom cap"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 53,
+                "endChar": 63,
+                "quote": "the spacer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 82,
+              "quote": " is disposed along "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 82,
+                "endChar": 100,
+                "quote": "the outermost side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 100,
+              "endChar": 104,
+              "quote": " or "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 104,
+                "endChar": 122,
+                "quote": "the innermost side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 122,
+              "endChar": 131,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 131,
+                "endChar": 139,
+                "quote": "the post"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 139,
+              "endChar": 144,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 144,
+                "endChar": 158,
+                "quote": "the bottom cap"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.a",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 53,
+            "endChar": 63,
+            "quote": "the spacer"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 64,
+            "endChar": 72,
+            "quote": "a spacer"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 131,
+            "endChar": 139,
+            "quote": "the post"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 125,
+            "quote": "a post"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 144,
+            "endChar": 158,
+            "quote": "the bottom cap"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 212,
+            "quote": "a bottom cap"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The inertial sensor"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "An inertial sensor"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 43,
+          "quote": "The inertial sensor as set forth in claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The inertial sensor"
+            },
+            "determiner": "the",
+            "head": "inertial sensor"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 53,
+          "endChar": 116,
+          "quote": "the bottom cap is provided with at least the two first cavities"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 53,
+              "endChar": 67,
+              "quote": "the bottom cap"
+            },
+            "determiner": "the",
+            "head": "bottom cap"
+          },
+          {
+            "anchor": {
+              "startChar": 94,
+              "endChar": 116,
+              "quote": "the two first cavities"
+            },
+            "determiner": "the",
+            "head": "two first cavities"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 53,
+                "endChar": 67,
+                "quote": "the bottom cap"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 67,
+              "endChar": 94,
+              "quote": " is provided with at least "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 94,
+                "endChar": 116,
+                "quote": "the two first cavities"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4.a",
+        "ancestor": "1.d"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 53,
+            "endChar": 67,
+            "quote": "the bottom cap"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 212,
+            "quote": "a bottom cap"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The inertial sensor"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "An inertial sensor"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 43,
+          "quote": "The inertial sensor as set forth in claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The inertial sensor"
+            },
+            "determiner": "the",
+            "head": "inertial sensor"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 53,
+          "endChar": 202,
+          "quote": "a central portion of the bottom cap is provided with a concave portion depressed in a thickness direction so as to be spaced apart from the mass body"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 53,
+              "endChar": 70,
+              "quote": "a central portion"
+            },
+            "determiner": "a",
+            "head": "central portion"
+          },
+          {
+            "anchor": {
+              "startChar": 74,
+              "endChar": 88,
+              "quote": "the bottom cap"
+            },
+            "determiner": "the",
+            "head": "bottom cap"
+          },
+          {
+            "anchor": {
+              "startChar": 106,
+              "endChar": 123,
+              "quote": "a concave portion"
+            },
+            "determiner": "a",
+            "head": "concave portion"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 158,
+              "quote": "a thickness direction"
+            },
+            "determiner": "a",
+            "head": "thickness direction"
+          },
+          {
+            "anchor": {
+              "startChar": 189,
+              "endChar": 202,
+              "quote": "the mass body"
+            },
+            "determiner": "the",
+            "head": "mass body"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 53,
+                "endChar": 70,
+                "quote": "a central portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 70,
+              "endChar": 74,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 74,
+                "endChar": 88,
+                "quote": "the bottom cap"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 88,
+              "endChar": 106,
+              "quote": " is provided with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 106,
+                "endChar": 123,
+                "quote": "a concave portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 123,
+              "endChar": 137,
+              "quote": " depressed in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 137,
+                "endChar": 158,
+                "quote": "a thickness direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 158,
+              "endChar": 189,
+              "quote": " so as to be spaced apart from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 189,
+                "endChar": 202,
+                "quote": "the mass body"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5.a",
+        "ancestor": "1.d"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 88,
+            "quote": "the bottom cap"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 212,
+            "quote": "a bottom cap"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 189,
+            "endChar": 202,
+            "quote": "the mass body"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 68,
+            "quote": "a mass body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The inertial sensor"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "An inertial sensor"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 43,
+          "quote": "The inertial sensor as set forth in claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The inertial sensor"
+            },
+            "determiner": "the",
+            "head": "inertial sensor"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 53,
+          "endChar": 141,
+          "quote": "the concave portion is provided with a stopper protruded in a direction of the mass body"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 53,
+              "endChar": 72,
+              "quote": "the concave portion"
+            },
+            "determiner": "the",
+            "head": "concave portion"
+          },
+          {
+            "anchor": {
+              "startChar": 90,
+              "endChar": 99,
+              "quote": "a stopper"
+            },
+            "determiner": "a",
+            "head": "stopper"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 124,
+              "quote": "a direction"
+            },
+            "determiner": "a",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 128,
+              "endChar": 141,
+              "quote": "the mass body"
+            },
+            "determiner": "the",
+            "head": "mass body"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 53,
+                "endChar": 72,
+                "quote": "the concave portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 72,
+              "endChar": 90,
+              "quote": " is provided with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 90,
+                "endChar": 99,
+                "quote": "a stopper"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 99,
+              "endChar": 113,
+              "quote": " protruded in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 113,
+                "endChar": 124,
+                "quote": "a direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 124,
+              "endChar": 128,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 128,
+                "endChar": 141,
+                "quote": "the mass body"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6.a",
+        "ancestor": "5.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 53,
+            "endChar": 72,
+            "quote": "the concave portion"
+          }
+        },
+        "introducing": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 106,
+            "endChar": 123,
+            "quote": "a concave portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 128,
+            "endChar": 141,
+            "quote": "the mass body"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 68,
+            "quote": "a mass body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The inertial sensor"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "An inertial sensor"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 43,
+          "quote": "The inertial sensor as set forth in claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The inertial sensor"
+            },
+            "determiner": "the",
+            "head": "inertial sensor"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 53,
+          "endChar": 146,
+          "quote": "the spacer having the predetermined thickness is disposed between the post and the bottom cap"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 53,
+              "endChar": 63,
+              "quote": "the spacer"
+            },
+            "determiner": "the",
+            "head": "spacer"
+          },
+          {
+            "anchor": {
+              "startChar": 71,
+              "endChar": 98,
+              "quote": "the predetermined thickness"
+            },
+            "determiner": "the",
+            "head": "predetermined thickness"
+          },
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 127,
+              "quote": "the post"
+            },
+            "determiner": "the",
+            "head": "post"
+          },
+          {
+            "anchor": {
+              "startChar": 132,
+              "endChar": 146,
+              "quote": "the bottom cap"
+            },
+            "determiner": "the",
+            "head": "bottom cap"
+          }
+        ]
+      },
+      {
+        "path": "7.b",
+        "anchor": {
+          "startChar": 148,
+          "endChar": 272,
+          "quote": "the gap between the bottom surface of the post and the top surface of the bottom cap is equal to the predetermined thickness"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 148,
+              "endChar": 155,
+              "quote": "the gap"
+            },
+            "determiner": "the",
+            "head": "gap"
+          },
+          {
+            "anchor": {
+              "startChar": 164,
+              "endChar": 182,
+              "quote": "the bottom surface"
+            },
+            "determiner": "the",
+            "head": "bottom surface"
+          },
+          {
+            "anchor": {
+              "startChar": 186,
+              "endChar": 194,
+              "quote": "the post"
+            },
+            "determiner": "the",
+            "head": "post"
+          },
+          {
+            "anchor": {
+              "startChar": 199,
+              "endChar": 214,
+              "quote": "the top surface"
+            },
+            "determiner": "the",
+            "head": "top surface"
+          },
+          {
+            "anchor": {
+              "startChar": 218,
+              "endChar": 232,
+              "quote": "the bottom cap"
+            },
+            "determiner": "the",
+            "head": "bottom cap"
+          },
+          {
+            "anchor": {
+              "startChar": 245,
+              "endChar": 272,
+              "quote": "the predetermined thickness"
+            },
+            "determiner": "the",
+            "head": "predetermined thickness"
+          }
+        ]
+      },
+      {
+        "path": "7.c",
+        "anchor": {
+          "startChar": 274,
+          "endChar": 366,
+          "quote": "the concave portion is provided with the stopper protruded in the direction of the mass body"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 274,
+              "endChar": 293,
+              "quote": "the concave portion"
+            },
+            "determiner": "the",
+            "head": "concave portion"
+          },
+          {
+            "anchor": {
+              "startChar": 311,
+              "endChar": 322,
+              "quote": "the stopper"
+            },
+            "determiner": "the",
+            "head": "stopper"
+          },
+          {
+            "anchor": {
+              "startChar": 336,
+              "endChar": 349,
+              "quote": "the direction"
+            },
+            "determiner": "the",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 353,
+              "endChar": 366,
+              "quote": "the mass body"
+            },
+            "determiner": "the",
+            "head": "mass body"
+          }
+        ]
+      },
+      {
+        "path": "7.d",
+        "anchor": {
+          "startChar": 372,
+          "endChar": 498,
+          "quote": "the gap between the bottom surface of the mass body and the top surface of the stopper is equal to the predetermined thickness"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 372,
+              "endChar": 379,
+              "quote": "the gap"
+            },
+            "determiner": "the",
+            "head": "gap"
+          },
+          {
+            "anchor": {
+              "startChar": 388,
+              "endChar": 406,
+              "quote": "the bottom surface"
+            },
+            "determiner": "the",
+            "head": "bottom surface"
+          },
+          {
+            "anchor": {
+              "startChar": 410,
+              "endChar": 423,
+              "quote": "the mass body"
+            },
+            "determiner": "the",
+            "head": "mass body"
+          },
+          {
+            "anchor": {
+              "startChar": 428,
+              "endChar": 443,
+              "quote": "the top surface"
+            },
+            "determiner": "the",
+            "head": "top surface"
+          },
+          {
+            "anchor": {
+              "startChar": 447,
+              "endChar": 458,
+              "quote": "the stopper"
+            },
+            "determiner": "the",
+            "head": "stopper"
+          },
+          {
+            "anchor": {
+              "startChar": 471,
+              "endChar": 498,
+              "quote": "the predetermined thickness"
+            },
+            "determiner": "the",
+            "head": "predetermined thickness"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 53,
+                "endChar": 63,
+                "quote": "the spacer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 71,
+              "quote": " having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 71,
+                "endChar": 98,
+                "quote": "the predetermined thickness"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 98,
+              "endChar": 119,
+              "quote": " is disposed between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 127,
+                "quote": "the post"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 127,
+              "endChar": 132,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 132,
+                "endChar": 146,
+                "quote": "the bottom cap"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "7.b",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 148,
+                "endChar": 155,
+                "quote": "the gap"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 155,
+              "endChar": 164,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 164,
+                "endChar": 182,
+                "quote": "the bottom surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 182,
+              "endChar": 186,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 186,
+                "endChar": 194,
+                "quote": "the post"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 194,
+              "endChar": 199,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 199,
+                "endChar": 214,
+                "quote": "the top surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 214,
+              "endChar": 218,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 218,
+                "endChar": 232,
+                "quote": "the bottom cap"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 232,
+              "endChar": 245,
+              "quote": " is equal to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 245,
+                "endChar": 272,
+                "quote": "the predetermined thickness"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "7.c",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.c",
+              "anchor": {
+                "startChar": 274,
+                "endChar": 293,
+                "quote": "the concave portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 293,
+              "endChar": 311,
+              "quote": " is provided with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.c",
+              "anchor": {
+                "startChar": 311,
+                "endChar": 322,
+                "quote": "the stopper"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 322,
+              "endChar": 336,
+              "quote": " protruded in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.c",
+              "anchor": {
+                "startChar": 336,
+                "endChar": 349,
+                "quote": "the direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 349,
+              "endChar": 353,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.c",
+              "anchor": {
+                "startChar": 353,
+                "endChar": 366,
+                "quote": "the mass body"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "7.d",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.d",
+              "anchor": {
+                "startChar": 372,
+                "endChar": 379,
+                "quote": "the gap"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 379,
+              "endChar": 388,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.d",
+              "anchor": {
+                "startChar": 388,
+                "endChar": 406,
+                "quote": "the bottom surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 406,
+              "endChar": 410,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.d",
+              "anchor": {
+                "startChar": 410,
+                "endChar": 423,
+                "quote": "the mass body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 423,
+              "endChar": 428,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.d",
+              "anchor": {
+                "startChar": 428,
+                "endChar": 443,
+                "quote": "the top surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 443,
+              "endChar": 447,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.d",
+              "anchor": {
+                "startChar": 447,
+                "endChar": 458,
+                "quote": "the stopper"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 458,
+              "endChar": 471,
+              "quote": " is equal to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.d",
+              "anchor": {
+                "startChar": 471,
+                "endChar": 498,
+                "quote": "the predetermined thickness"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7.a",
+        "ancestor": "1.c"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7.b",
+        "ancestor": "1.d"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7.c",
+        "ancestor": "5.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7.d",
+        "ancestor": "1.b"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 127,
+            "quote": "the post"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 125,
+            "quote": "a post"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 132,
+            "endChar": 146,
+            "quote": "the bottom cap"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 212,
+            "quote": "a bottom cap"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.b",
+          "anchor": {
+            "startChar": 164,
+            "endChar": 182,
+            "quote": "the bottom surface"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 334,
+            "endChar": 350,
+            "quote": "a bottom surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.b",
+          "anchor": {
+            "startChar": 186,
+            "endChar": 194,
+            "quote": "the post"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 125,
+            "quote": "a post"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.b",
+          "anchor": {
+            "startChar": 218,
+            "endChar": 232,
+            "quote": "the bottom cap"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 212,
+            "quote": "a bottom cap"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.c",
+          "anchor": {
+            "startChar": 274,
+            "endChar": 293,
+            "quote": "the concave portion"
+          }
+        },
+        "introducing": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 106,
+            "endChar": 123,
+            "quote": "a concave portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.c",
+          "anchor": {
+            "startChar": 353,
+            "endChar": 366,
+            "quote": "the mass body"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 68,
+            "quote": "a mass body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.d",
+          "anchor": {
+            "startChar": 410,
+            "endChar": 423,
+            "quote": "the mass body"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 68,
+            "quote": "a mass body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The inertial sensor"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "An inertial sensor"
+          }
+        }
+      }
+    ]
+  }
+]

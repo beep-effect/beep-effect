@@ -1855,7 +1855,7 @@ const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta => {
   return Object.freeze(value);
 };
 
-const elementMetaSource: Readonly<Record<HtmlTag, S.Codec.Encoded<typeof HtmlElementMeta>>> = {
+const elementMetaSource: Readonly<Record<HtmlTag, typeof HtmlElementMeta.Encoded>> = {
   a: {
     tag: "a",
     interface: "HTMLAnchorElement",
@@ -4952,7 +4952,7 @@ const elementMetaSource: Readonly<Record<HtmlTag, S.Codec.Encoded<typeof HtmlEle
 };
 
 const decodeElementMetaResult = S.decodeResult(HtmlElementMeta);
-const decodeElementMeta = (value: S.Codec.Encoded<typeof HtmlElementMeta>): HtmlElementMeta =>
+const decodeElementMeta = (value: typeof HtmlElementMeta.Encoded): HtmlElementMeta =>
   Result.getOrThrow(decodeElementMetaResult(value));
 
 /**

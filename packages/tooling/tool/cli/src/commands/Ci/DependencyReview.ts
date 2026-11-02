@@ -85,7 +85,7 @@ const matchSegments = (pattern: ReadonlyArray<string>, path: ReadonlyArray<strin
  * import { dependencyReviewFixturePolicy, isFixtureManifest } from "@beep/repo-cli/commands/Ci"
  *
  * const isFixture = isFixtureManifest(dependencyReviewFixturePolicy)
- * console.log(isFixture("scratchpad/test/workspaces/fixtures/peers/npm/package-lock.json")) // true
+ * console.log(isFixture("packages/tooling/library/repo-workspaces/test/fixtures/peers/npm/package-lock.json")) // true
  * console.log(isFixture("packages/tooling/test-fixtures/package-lock.json")) // false
  * ```
  *

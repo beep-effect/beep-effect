@@ -10,7 +10,8 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -194,7 +195,11 @@ export const proofLockPathForContext = Effect.fn("Yeet.proofLockPathForContext")
 ): Effect.fn.Return<
   string,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const repositoryIdentity = yield* runGitOutput(context.repoRoot, ["config", "--get", "remote.origin.url"]);
   return yield* proofCoordinatorLockPath(repositoryIdentity);
@@ -249,7 +254,11 @@ export const collectGitDiffBytes = Effect.fn("Yeet.collectGitDiffBytes")(functio
 ): Effect.fn.Return<
   Uint8Array,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -305,18 +314,20 @@ export const collectDiffFingerprint = Effect.fn("Yeet.collectDiffFingerprint")(f
 ): Effect.fn.Return<
   string,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const status = yield* runGitOutput(context.repoRoot, ["status", "--short"]);
   const unstagedDiff = yield* collectGitDiffBytes(context, ["HEAD"], "worktree");
   const stagedDiff = yield* collectGitDiffBytes(context, ["--cached"], "index");
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto
-    .digest(
-      "SHA-256",
-      concatBytes([textEncoder.encode(status), fingerprintSeparator, unstagedDiff, fingerprintSeparator, stagedDiff])
-    )
-    .pipe(YeetCommandError.mapError("Failed to hash Yeet worktree fingerprint."));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(
+    Digest.sha256,
+    concatBytes([textEncoder.encode(status), fingerprintSeparator, unstagedDiff, fingerprintSeparator, stagedDiff])
+  );
   return Hex.encode(digest);
 });
 
@@ -353,13 +364,9 @@ const proofCommandForSteps: (steps: ReadonlyArray<RepoPlanStep>) => string = flo
   A.join(" && ")
 );
 
-const hashText = Effect.fn("Yeet.hashText")(function* (
-  value: string
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto
-    .digest("SHA-256", textEncoder.encode(value))
-    .pipe(YeetCommandError.mapError("Failed to hash Yeet proof command."));
+const hashText = Effect.fn("Yeet.hashText")(function* (value: string): Effect.fn.Return<string, never, Digest.Digest> {
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, textEncoder.encode(value));
   return Hex.encode(digest);
 });
 
@@ -510,24 +517,22 @@ const tryClaimProofLockExclusive = Effect.fn("Yeet.tryClaimProofLockExclusive")(
 const proofLockReapClaimPath = Effect.fn("Yeet.proofLockReapClaimPath")(function* (
   lockPath: string,
   observedText: string
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+): Effect.fn.Return<string, YeetCommandError, Digest.Digest> {
   return `${lockPath}.reap-${yield* hashText(observedText)}.claim`;
 });
 
 const proofLockReapClaimTombstonePath = Effect.fn("Yeet.proofLockReapClaimTombstonePath")(function* (
   claimPath: string,
   observedText: string
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+): Effect.fn.Return<string, YeetCommandError, Digest.Digest> {
   return `${claimPath}.reap-${yield* hashText(observedText)}.claim`;
 });
 
 const proofLockReapPath = Effect.fn("Yeet.proofLockReapPath")(function* (
   lockPath: string
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
-  const crypto = yield* Crypto.Crypto;
-  const uuid = yield* crypto
-    .randomUUIDv4()
-    .pipe(YeetCommandError.mapError("Failed to generate Yeet proof-lock reap identifier."));
+): Effect.fn.Return<string, never, SecureRandom.SecureRandom> {
+  const crypto = yield* SecureRandom.SecureRandom;
+  const uuid = yield* crypto.uuidV4();
   return `${lockPath}.reap-${process.pid}-${uuid}`;
 });
 
@@ -557,7 +562,7 @@ const tryRecoverObservedProofLockReapClaim = Effect.fn("Yeet.tryRecoverObservedP
   claimPath: string,
   claimText: string,
   observedClaimText: string
-): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   const tombstonePath = yield* proofLockReapClaimTombstonePath(claimPath, observedClaimText);
   if (!(yield* tryClaimProofLockExclusive(tombstonePath, claimText))) {
@@ -646,7 +651,7 @@ export const tryRecoverObservedProofLockReapClaimForTesting = tryRecoverObserved
 const tryClaimProofLockReapClaim = Effect.fn("Yeet.tryClaimProofLockReapClaim")(function* (
   claimPath: string,
   claimText: string
-): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem | Digest.Digest> {
   if (yield* tryClaimProofLockExclusive(claimPath, claimText)) {
     return true;
   }
@@ -683,7 +688,7 @@ const tryClaimProofLockReapClaim = Effect.fn("Yeet.tryClaimProofLockReapClaim")(
 const tryMoveObservedProofLock = Effect.fn("Yeet.tryMoveObservedProofLock")(function* (
   lockPath: string,
   observedText: string
-): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   const claimPath = yield* proofLockReapClaimPath(lockPath, observedText);
   const claimText = `${yield* renderJson(
@@ -728,7 +733,7 @@ const tryReclaimStaleProofLock = Effect.fn("Yeet.tryReclaimStaleProofLock")(func
   lockPath: string,
   observedText: string,
   replacementText: string
-): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest> {
   if (!(yield* tryMoveObservedProofLock(lockPath, observedText))) {
     return false;
   }
@@ -795,7 +800,7 @@ const tryReplaceStaleProofLock = Effect.fn("Yeet.tryReplaceStaleProofLock")(func
   lockPath: string,
   staleText: string,
   lockText: string
-): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, YeetCommandError, FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest> {
   if (yield* tryReclaimStaleProofLock(lockPath, staleText, lockText)) {
     return true;
   }
@@ -893,7 +898,11 @@ const replaceStaleProofLockContention = Effect.fn("Yeet.replaceStaleProofLockCon
   lease: YeetProofLockLease,
   observed: ObservedProofLockState,
   owner: YeetProofLockState
-): Effect.fn.Return<FullProofLockContention, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<
+  FullProofLockContention,
+  YeetCommandError,
+  FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest
+> {
   yield* Console.error(
     `[yeet] reaping stale full-proof lock (pid ${owner.pid}, started ${owner.startedAt}, is no longer the recorded process identity)`
   );
@@ -914,7 +923,11 @@ const contendForFullProofLockCore = Effect.fn("Yeet.contendForFullProofLockCore"
   lockPath: string,
   lockText: string,
   lease: YeetProofLockLease
-): Effect.fn.Return<FullProofLockContention, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<
+  FullProofLockContention,
+  YeetCommandError,
+  FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest
+> {
   const observed = yield* observeProofLockState(lockPath);
   const disposition = proofLockDisposition(observed.state, observed.ownerStatus, O.isSome(observed.legacyState));
   return yield* ProofLockDisposition.match(disposition, {
@@ -931,7 +944,11 @@ const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(functi
   lockPath: string,
   lockText: string,
   lease: YeetProofLockLease
-): Effect.fn.Return<YeetProofLockLease, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<
+  YeetProofLockLease,
+  YeetCommandError,
+  FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest
+> {
   const contention = yield* contendForFullProofLockCore(lockPath, lockText, lease);
   return yield* O.match(contention.lease, {
     onNone: () => activeProofLockRefusal(lockPath, contention.observed.state),
@@ -987,7 +1004,11 @@ const acquireFullProofLock = Effect.fn("Yeet.acquireFullProofLock")(function* (
 ): Effect.fn.Return<
   YeetProofLockLease,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const prepared = yield* prepareFullProofLockLease(context, proofSteps);
   if (yield* tryClaimProofLockExclusive(prepared.lockPath, prepared.lockText)) {
@@ -1024,7 +1045,11 @@ const prepareFullProofLockLease = Effect.fn("Yeet.prepareFullProofLockLease")(fu
 ): Effect.fn.Return<
   PreparedFullProofLockLease,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const lockPath = yield* proofLockPathForContext(context);
   return yield* prepareFullProofLockLeaseAt(lockPath, context, proofSteps);
@@ -1034,7 +1059,11 @@ const prepareFullProofLockLeaseAt = Effect.fn("Yeet.prepareFullProofLockLeaseAt"
   lockPath: string,
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
-): Effect.fn.Return<PreparedFullProofLockLease, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  PreparedFullProofLockLease,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
+> {
   return yield* prepareFullProofLockLeaseForCommandAt(
     lockPath,
     context,
@@ -1048,7 +1077,11 @@ const prepareFullProofLockLeaseForCommandAt = Effect.fn("Yeet.prepareFullProofLo
   context: RepoRunContext,
   command: string,
   procStart: string
-): Effect.fn.Return<PreparedFullProofLockLease, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  PreparedFullProofLockLease,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
+> {
   const path = yield* Path.Path;
   yield* ensureProofCoordinatorDirectory(path.dirname(lockPath));
   const lockState = YeetProofLockState.make({
@@ -1074,7 +1107,11 @@ const contendOrObserveFullProofLock = Effect.fn("Yeet.contendOrObserveFullProofL
   lockPath: string,
   lockText: string,
   lease: YeetProofLockLease
-): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<
+  O.Option<YeetProofLockLease>,
+  YeetCommandError,
+  FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest
+> {
   const contention = yield* contendForFullProofLockCore(lockPath, lockText, lease);
   const unreadable =
     O.isNone(contention.lease) && O.isNone(contention.observed.state) && Str.isNonEmpty(contention.observed.text);
@@ -1086,7 +1123,11 @@ const contendOrObserveFullProofLock = Effect.fn("Yeet.contendOrObserveFullProofL
 
 const tryAcquirePreparedFullProofLock = Effect.fn("Yeet.tryAcquirePreparedFullProofLock")(function* (
   prepared: PreparedFullProofLockLease
-): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<
+  O.Option<YeetProofLockLease>,
+  YeetCommandError,
+  FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest
+> {
   if (yield* tryClaimProofLockExclusive(prepared.lockPath, prepared.lockText)) {
     return O.some(prepared.lease);
   }
@@ -1148,7 +1189,11 @@ const acquireFullProofLockOrObserve = Effect.fn("Yeet.acquireFullProofLockOrObse
 ): Effect.fn.Return<
   O.Option<YeetProofLockLease>,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const lockPath = yield* proofLockPathForContext(context);
   return yield* acquireFullProofLockOrObserveAtPath(lockPath, context, proofSteps);
@@ -1195,7 +1240,11 @@ const acquireFullProofLockOrObserveAtPath = Effect.fn("Yeet.acquireFullProofLock
   lockPath: string,
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
-): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  O.Option<YeetProofLockLease>,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   const prepared = yield* prepareFullProofLockLeaseAt(lockPath, context, proofSteps);
   return yield* tryAcquirePreparedFullProofLock(prepared);
 });
@@ -1237,7 +1286,11 @@ const replaceStaleProofLockWithRetirement = Effect.fn("Yeet.replaceStaleProofLoc
   retirementText: string,
   owner: YeetProofLockState,
   observed: ObservedProofLockState
-): Effect.fn.Return<O.Option<boolean>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<
+  O.Option<boolean>,
+  YeetCommandError,
+  FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest
+> {
   yield* Console.error(
     `[yeet] retiring stale v3 full-proof lock (pid ${owner.pid}, started ${owner.startedAt}, is no longer the recorded process identity)`
   );
@@ -1251,7 +1304,11 @@ const retireObservedProofLock = Effect.fn("Yeet.retireObservedProofLock")(functi
   lockPath: string,
   retirementText: string,
   observed: ObservedProofLockState
-): Effect.fn.Return<O.Option<boolean>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<
+  O.Option<boolean>,
+  YeetCommandError,
+  FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest
+> {
   if (O.isSome(observed.retirementState)) {
     return O.some(true);
   }
@@ -1303,7 +1360,11 @@ const retireObservedProofLock = Effect.fn("Yeet.retireObservedProofLock")(functi
  */
 export const retireFullProofLockOrObserveAtPath = Effect.fn("Yeet.retireFullProofLockOrObserveAtPath")(function* (
   lockPath: string
-): Effect.fn.Return<O.Option<boolean>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  O.Option<boolean>,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   const path = yield* Path.Path;
   yield* ensureProofCoordinatorDirectory(path.dirname(lockPath));
   const retirementText = `${yield* renderJson(
@@ -1326,7 +1387,11 @@ const acquireFullProofFallbackLockOrObserveAtPathWithProcessStart = Effect.fn(
   context: RepoRunContext,
   command: string,
   processStart: O.Option<string>
-): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  O.Option<YeetProofLockLease>,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   const path = yield* Path.Path;
   const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
   const procStart = yield* pipe(
@@ -1378,7 +1443,11 @@ export const acquireFullProofFallbackLockOrObserveAtPath = Effect.fn(
   lockPath: string,
   context: RepoRunContext,
   command: string
-): Effect.fn.Return<O.Option<YeetProofLockLease>, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  O.Option<YeetProofLockLease>,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   return yield* acquireFullProofFallbackLockOrObserveAtPathWithProcessStart(
     lockPath,
     context,
@@ -1528,7 +1597,11 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const artifactDir = yield* artifactDirForContext(context);
   const statePath = yield* runStatePathForContext(context);
@@ -1621,7 +1694,7 @@ const verifiedStateArtifactForPath =
  */
 export const loadVerifiedState = Effect.fn("Yeet.loadVerifiedState")(function* (
   context: RepoRunContext
-): Effect.fn.Return<YeetRunState, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<YeetRunState, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   const statePath = yield* runStatePathForContext(context);
   const legacyStatePath = yield* legacyRunStatePathForContext(context);
@@ -1709,7 +1782,11 @@ export const assertReusableVerifiedState = Effect.fn("Yeet.assertReusableVerifie
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const state = yield* loadVerifiedState(context);
   const expectedCommitSha = yield* currentCommitSha(context);

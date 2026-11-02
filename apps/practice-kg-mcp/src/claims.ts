@@ -43,7 +43,9 @@ const carryClaims = Effect.fnUntraced(function* (sourceBundle: string, destinati
     Effect.flatMap((context) => readPracticeKgClaimsCarry.pipe(Effect.provide(context))),
     Effect.scoped
   );
-  const summary = yield* Layer.build(makePracticeKgPgliteLayer(path.join(destinationBundle, "kg.pglite"))).pipe(
+  const summary = yield* Layer.build(
+    Layer.merge(makePracticeKgPgliteLayer(path.join(destinationBundle, "kg.pglite")), BunCrypto.layer)
+  ).pipe(
     Effect.flatMap((context) =>
       writePracticeKgClaimsCarry(PracticeKgClaimsCarryWrite.make({ bundleOut: destinationBundle, carry })).pipe(
         Effect.provide(context)
@@ -62,7 +64,8 @@ const extractClaims = Effect.fnUntraced(function* (inputsDir: string, destinatio
   const path = yield* Path.Path;
   const claimsLayer = Layer.mergeAll(
     LawPracticeServerLive.pipe(Layer.provide(AnthropicLanguageModelLive), Layer.provide(BunCrypto.layer)),
-    makePracticeKgPgliteLayer(path.join(destinationBundle, "kg.pglite"))
+    makePracticeKgPgliteLayer(path.join(destinationBundle, "kg.pglite")),
+    BunCrypto.layer
   );
   yield* runPracticeKgClaimsBatch(
     PracticeKgClaimsOptions.make({ bundleOut: destinationBundle, inputs: inputsDir })

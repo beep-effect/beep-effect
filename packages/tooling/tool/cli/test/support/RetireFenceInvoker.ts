@@ -11,17 +11,11 @@
  * line `{ ok, message }` and exits 0 when the lane was retired.
  */
 
-import { WorktreeRemovalServiceLive } from "@beep/repo-cli/commands/Worktree";
 import { retireInvokingWorktree, SweepGitState, YeetRetirePlan } from "@beep/repo-cli/test/Yeet";
-import { NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
-import * as Console from "effect/Console";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import * as ManagedRuntime from "effect/ManagedRuntime";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
-import * as S from "effect/Schema";
+import { FenceInvokerLayer, reportFenceOutcome } from "./FenceInvoker.ts";
 
 const argument = (index: number): string => O.getOrThrow(A.get(process.argv, index + 2));
 
@@ -54,18 +48,10 @@ const state = SweepGitState.make({
   pullRequestHeadOid: O.none(),
 });
 
-const layer = Layer.mergeAll(NodeServices.layer, WorktreeRemovalServiceLive.pipe(Layer.provide(NodeServices.layer)));
-await using runtime = ManagedRuntime.make(layer);
-
-const program = Effect.result(retireInvokingWorktree(plan, state)).pipe(
-  Effect.map(
-    Result.match({
-      onFailure: (error) => ({ ok: false, message: error.message }),
-      onSuccess: (receipt) => ({ ok: true, message: receipt.reason }),
-    })
+await using runtime = ManagedRuntime.make(FenceInvokerLayer);
+const ok = await runtime.runPromise(
+  retireInvokingWorktree(plan, state).pipe(
+    reportFenceOutcome({ onFailure: (error) => error.message, onSuccess: (receipt) => receipt.reason })
   )
 );
-
-const outcome = await runtime.runPromise(program);
-await Effect.runPromise(S.encodeEffect(S.fromJsonString(S.Unknown))(outcome).pipe(Effect.flatMap(Console.log)));
-process.exitCode = outcome.ok ? 0 : 1;
+process.exitCode = ok ? 0 : 1;

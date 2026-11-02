@@ -26,6 +26,7 @@
     {"name":"ClaimSelfCheck.check","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"ClaimSelfCheck.checkPublished","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"ClaimSelfCheck.findingCandidate","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
+    {"name":"ClaimSelfCheck.review","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"DailyNotice.sendIfDue","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"DocketIntake.pollOnce","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"DocketIntake.processMessage","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},

@@ -1,12 +1,10 @@
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import * as Crypto from "effect/Crypto";
-import * as Effect from "effect/Effect";
+import * as ManagedRuntime from "effect/ManagedRuntime";
 import { loadOpenClawStackArgs, makeOpenClawGeneration, OpenClawStack } from "../OpenClaw.ts";
 
+// The Pulumi program's entry point: one runtime over the digest layer runs the generation once.
 const args = loadOpenClawStackArgs();
-const openClawGeneration = Effect.runSync(
-  makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make))
-);
+const openClawGeneration = ManagedRuntime.make(NodeCrypto.layerDigest).runSync(makeOpenClawGeneration(args));
 const openclaw = new OpenClawStack("openclaw", args, openClawGeneration);
 
 export const applyStdout = openclaw.applyStdout;

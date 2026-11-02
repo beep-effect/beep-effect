@@ -1,0 +1,47 @@
+name: Hub pipe security
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - apps/practice-review-hub/deploy/windows/**
+      - .github/workflows/hub-pipe-security.yml
+  push:
+    branches: [main]
+    paths:
+      - apps/practice-review-hub/deploy/windows/**
+      - .github/workflows/hub-pipe-security.yml
+
+permissions:
+  contents: read
+
+jobs:
+  pipe-scripts:
+    name: Collect Windows pipe scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: /apps/practice-review-hub/deploy/windows/
+          sparse-checkout-cone-mode: false
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-pipe-scripts
+          path: apps/practice-review-hub/deploy/windows/*.ps1
+          if-no-files-found: error
+          retention-days: 1
+  windows-pipe:
+    name: Windows pipe owner authentication
+    needs: pipe-scripts
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: windows-pipe-scripts
+          path: apps/practice-review-hub/deploy/windows
+      - name: Check same-user transfer and foreign-owned replacements
+        shell: powershell
+        run: ./apps/practice-review-hub/deploy/windows/test-send-token.ps1

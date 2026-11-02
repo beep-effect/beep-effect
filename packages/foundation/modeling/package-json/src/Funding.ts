@@ -113,12 +113,14 @@ const decodeEntry = (input: EntryWire): Effect.Effect<Funding, SchemaIssue.Issue
     return Effect.succeed(funding);
   }
   return decodeFundingFields(input).pipe(
-    Effect.mapError((error) => error.issue),
-    Effect.map((fields) => {
-      const rest = restOf(input, KNOWN_FUNDING_KEYS);
-      const funding = Funding.make({ ...fields, ...(!R.isEmptyRecord(rest) ? { rest } : {}) });
-      Funding.rememberWire(funding, input);
-      return funding;
+    Effect.mapBoth({
+      onFailure: (error) => error.issue,
+      onSuccess: (fields) => {
+        const rest = restOf(input, KNOWN_FUNDING_KEYS);
+        const funding = Funding.make({ ...fields, ...(!R.isEmptyRecord(rest) ? { rest } : {}) });
+        Funding.rememberWire(funding, input);
+        return funding;
+      },
     })
   );
 };

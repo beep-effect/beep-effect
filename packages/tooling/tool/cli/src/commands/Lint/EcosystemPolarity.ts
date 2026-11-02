@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
+import { SourceBoundary } from "@beep/repo-workspaces/SourceBoundary";
 import { normalizePath } from "@beep/schema";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -22,13 +23,15 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Node, Project, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import type { BoundaryRule } from "@beep/repo-workspaces/SourceBoundary";
 import type * as HashMap from "effect/HashMap";
 
 const $I = $RepoCliId.create("commands/Lint/EcosystemPolarity");
 const ECOSYSTEM_ROOT = "packages/ecosystem";
-const SOURCE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts"] as const;
+const SOURCE_EXTENSIONS: ReadonlyArray<string> = [".ts", ".tsx", ".mts", ".cts"];
+/** Every `@beep/*` module specifier is a forbidden repo-internal edge (`forbidImports` is a prefix match before `*`). */
+const SOURCE_IMPORT_RULES: ReadonlyArray<BoundaryRule.Encoded> = [{ forbidImports: ["@beep/*"] }];
 
 /**
  * Runtime options for the ecosystem-polarity lint.
@@ -157,9 +160,6 @@ class EcosystemMember extends S.Opaque<EcosystemMember, { readonly brand: unique
   )
 ) {}
 
-const isSourceFile = (filePath: string): boolean =>
-  A.some(SOURCE_EXTENSIONS, (extension) => Str.endsWith(extension)(filePath));
-
 const changedMemberName = (filePath: string): O.Option<string> => {
   const segments = Str.split(normalizePath(filePath), "/");
   const member = A.get(segments, 2);
@@ -204,105 +204,43 @@ const discoverMembers = Effect.fn("EcosystemPolarity.discoverMembers")(function*
   );
 });
 
-const collectSourceFiles: (
-  root: string
-) => Effect.Effect<ReadonlyArray<string>, EcosystemPolarityError, FileSystem.FileSystem | Path.Path> = Effect.fn(
-  "EcosystemPolarity.collectSourceFiles"
-)(function* (root) {
+const sourceViolations = Effect.fn("EcosystemPolarity.sourceViolations")(function* (
+  member: EcosystemMember,
+  repoRoot: string
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const rootExists = yield* fs.exists(root).pipe(Effect.orElseSucceed(thunkFalse));
+  const sourceRoot = path.join(member.root, "src");
+  const sourceRootStat = yield* fs.stat(sourceRoot).pipe(Effect.option);
 
-  if (!rootExists) {
-    return A.empty<string>();
+  if (!O.exists(sourceRootStat, (stat) => stat.type === "Directory")) {
+    return { scannedSourceFiles: 0, violations: A.empty<EcosystemPolarityViolation>() };
   }
 
-  const stat = yield* fs
-    .stat(root)
-    .pipe(Effect.mapError(() => EcosystemPolarityError.new(`Failed to inspect ecosystem source path "${root}".`)));
+  const scan = yield* SourceBoundary.scan({
+    root: sourceRoot,
+    rules: SOURCE_IMPORT_RULES,
+    extensions: SOURCE_EXTENSIONS,
+  }).pipe(
+    Effect.mapError(() =>
+      EcosystemPolarityError.new(
+        `Failed to scan ecosystem source directory "${normalizePath(path.relative(repoRoot, sourceRoot))}".`
+      )
+    )
+  );
 
-  if (stat.type === "File") {
-    return isSourceFile(root) ? A.of(root) : A.empty<string>();
-  }
-
-  if (stat.type !== "Directory") {
-    return A.empty<string>();
-  }
-
-  const entries = yield* fs
-    .readDirectory(root)
-    .pipe(Effect.mapError(() => EcosystemPolarityError.new(`Failed to list ecosystem source directory "${root}".`)));
-  let files = A.empty<string>();
-
-  for (const entry of entries) {
-    files = A.appendAll(files, yield* collectSourceFiles(path.join(root, entry)));
-  }
-
-  return A.sort(files, Order.String);
-});
-
-const literalSpecifier = (node: Node): O.Option<string> => {
-  if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) {
-    return O.some(node.getLiteralText());
-  }
-  return Node.isTemplateExpression(node) ? O.some(node.getHead().getLiteralText()) : O.none();
-};
-
-const collectSourceViolations = (
-  project: Project,
-  relativeFilePath: string,
-  content: string
-): ReadonlyArray<EcosystemPolarityViolation> => {
-  const sourceFile = project.createSourceFile(relativeFilePath, content, { overwrite: true });
-  let violations = A.empty<EcosystemPolarityViolation>();
-  const appendSpecifier = (specifier: string, line: number): void => {
-    if (Str.startsWith("@beep/")(specifier)) {
-      violations = A.append(
-        violations,
-        EcosystemPolarityViolation.make({
-          file: relativeFilePath,
-          line,
-          kind: "source-import",
-          detail: specifier,
-        })
-      );
-    }
+  return {
+    scannedSourceFiles: A.length(scan.files),
+    violations: A.map(scan.offences, (offence) =>
+      EcosystemPolarityViolation.make({
+        file: normalizePath(path.relative(repoRoot, path.join(sourceRoot, offence.file))),
+        line: offence.line,
+        kind: "source-import",
+        detail: offence.detail,
+      })
+    ),
   };
-
-  for (const declaration of sourceFile.getImportDeclarations()) {
-    const specifier = declaration.getModuleSpecifier();
-    appendSpecifier(specifier.getLiteralText(), specifier.getStartLineNumber());
-  }
-
-  for (const declaration of sourceFile.getExportDeclarations()) {
-    const specifier = declaration.getModuleSpecifier();
-    if (specifier !== undefined) {
-      appendSpecifier(specifier.getLiteralText(), specifier.getStartLineNumber());
-    }
-  }
-
-  sourceFile.forEachDescendant((node) => {
-    if (!Node.isCallExpression(node)) {
-      return;
-    }
-
-    const expression = node.getExpression();
-    const isDynamicImport = expression.getKind() === SyntaxKind.ImportKeyword;
-    const isRequire = Node.isIdentifier(expression) && Str.equivalence(expression.getText(), "require");
-    if (!isDynamicImport && !isRequire) {
-      return;
-    }
-
-    pipe(
-      node.getArguments(),
-      A.head,
-      O.flatMap(literalSpecifier),
-      O.map((specifier) => appendSpecifier(specifier, node.getStartLineNumber()))
-    );
-  });
-
-  return violations;
-};
+});
 
 const runtimeDependencyViolations = (
   relativeManifestPath: string,
@@ -396,8 +334,6 @@ const manifestViolations = Effect.fn("EcosystemPolarity.manifestViolations")(fun
 export const runEcosystemPolarityCheck = Effect.fn("EcosystemPolarity.runEcosystemPolarityCheck")(function* (
   options: EcosystemPolarityOptions
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(
     Effect.mapError(() => EcosystemPolarityError.new("Could not locate the repository root."))
   );
@@ -409,22 +345,14 @@ export const runEcosystemPolarityCheck = Effect.fn("EcosystemPolarity.runEcosyst
     onNone: () => discoveredMembers,
     onSome: (names) => A.filter(discoveredMembers, (member) => HashSet.has(names, member.name)),
   });
-  const project = new Project({ skipAddingFilesFromTsConfig: true });
   let scannedSourceFiles = 0;
   let violations = A.empty<EcosystemPolarityViolation>();
 
   for (const member of members) {
     violations = A.appendAll(violations, yield* manifestViolations(member, repoRoot));
-    const sourceFiles = yield* collectSourceFiles(path.join(member.root, "src"));
-    scannedSourceFiles += A.length(sourceFiles);
-
-    for (const sourceFile of sourceFiles) {
-      const content = yield* fs
-        .readFileString(sourceFile)
-        .pipe(Effect.mapError(() => EcosystemPolarityError.new(`Failed to read ecosystem source "${sourceFile}".`)));
-      const relativeFilePath = normalizePath(path.relative(repoRoot, sourceFile));
-      violations = A.appendAll(violations, collectSourceViolations(project, relativeFilePath, content));
-    }
+    const sources = yield* sourceViolations(member, repoRoot);
+    scannedSourceFiles += sources.scannedSourceFiles;
+    violations = A.appendAll(violations, sources.violations);
   }
 
   return EcosystemPolaritySummary.make({

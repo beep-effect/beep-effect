@@ -1,0 +1,93 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for implementing variable length packets to embed extra control information in an interconnect system comprising:
+<claim-text>defining packets to include an End-to-End (ETE) Flow Unit within packet (Flit) count field in a packet header;</claim-text>
+<claim-text>receiving an incoming packet from an incoming link;</claim-text>
+<claim-text>checking said ETE flit count field, and responsive to an identified nonzero value in said ETE flit count field, removing a specified number of embedded ETE flits from the packet; and</claim-text>
+<claim-text>using control information from said removed embedded ETE flits.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method as recited in <claim-ref idref="CLM-00001">claim 1</claim-ref> includes sending an ETE cyclic redundancy check (CRC) flit with said embedded ETE flits, ETE CRC flit covers only said embedded ETE flits.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method as recited in <claim-ref idref="CLM-00001">claim 1</claim-ref> includes identifying an ETE cyclic redundancy check (CRC) flit, and validating said embedded ETE flits responsive to a correct ETE CRC flit.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method as recited in <claim-ref idref="CLM-00001">claim 1</claim-ref> includes determining when to embed ETE flits based upon predetermined configuration settings and available ETE messages in an outgoing ETE buffer.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method as recited in <claim-ref idref="CLM-00004">claim 4</claim-ref> wherein said predetermined configuration settings include a maximum flits allowed to be embedded for each packet type.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method as recited in <claim-ref idref="CLM-00004">claim 4</claim-ref> wherein said predetermined configuration settings include whether embedded flits include a cyclic redundancy check (CRC).</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method as recited in <claim-ref idref="CLM-00001">claim 1</claim-ref> includes creating said packet header including a header cyclic redundancy check (CRC) for transmitting on an outgoing link.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method as recited in <claim-ref idref="CLM-00007">claim 7</claim-ref> includes removing a number of ETE messages from an ETE buffer corresponding to said nonzero value in said ETE flit count field, converting said ETE messages to ETE flits, and inserting said ETE flits into the packet after said packet header.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method as recited in <claim-ref idref="CLM-00008">claim 8</claim-ref> includes inserting an ETE cyclic redundancy check (CRC) flit with said embedded ETE flits, ETE CRC flit covers only said embedded ETE flits.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method as recited in <claim-ref idref="CLM-00001">claim 1</claim-ref> includes checking a packet header cyclic redundancy check (CRC), and discarding said embedded ETE flits responsive to an incorrect packet header CRC.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A circuit for implementing variable length packets to embed extra control information in an interconnect system comprising:
+<claim-text>an interconnect link send circuit transferring an outgoing packet onto an outgoing link, said interconnect link send circuit building a packet header; creating an End-to-End (ETE) Flow Unit within packet (Flit) count field in said packet header;</claim-text>
+<claim-text>converting ETE messages into ETE flits, and embedding ETE flits into the outgoing packet after the packet header; and</claim-text>
+<claim-text>an interconnect link receive circuit receiving an incoming packet from an incoming link; checking said ETE flit count field, and responsive to an identified nonzero value in said ETE flit count field, removing a specified number of embedded ETE flits from the packet; and using control information from said removed embedded ETE flits.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The circuit as recited in <claim-ref idref="CLM-00011">claim 11</claim-ref> wherein said interconnect link send circuit creating said packet header includes generating a header cyclic redundancy check (CRC) for said packet header.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The circuit as recited in <claim-ref idref="CLM-00012">claim 12</claim-ref> wherein said interconnect link receive circuit checks said packet header cyclic redundancy check (CRC), and discarding said embedded ETE flits responsive to an incorrect packet header CRC.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The circuit as recited in <claim-ref idref="CLM-00011">claim 11</claim-ref> wherein said interconnect link send circuit generates an ETE cyclic redundancy check (CRC) for said embedded ETE flits, and inserts said ETE CRC flit flits into the outgoing packet after said embedded ETE flits.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The circuit as recited in <claim-ref idref="CLM-00011">claim 11</claim-ref> wherein said interconnect link receive circuit identifies said ETE cyclic redundancy check (CRC) flit, and validating said embedded ETE flits responsive to a correct ETE CRC flit.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The circuit as recited in <claim-ref idref="CLM-00011">claim 11</claim-ref> wherein said interconnect link send circuit determines when to embed ETE flits based upon predetermined configuration settings and available ETE messages in an outgoing ETE buffer.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. A multiple-path local rack interconnect system comprising:
+<claim-text>a plurality of interconnect chips;</claim-text>
+<claim-text>a plurality of serial links connected between each of said plurality of interconnect chips;</claim-text>
+<claim-text>each of said interconnect chips including a circuit for implementing variable length packets to embed extra control information, said circuit comprising:</claim-text>
+<claim-text>an interconnect link send circuit transferring an outgoing packet onto an outgoing link, said interconnect link send circuit building a packet header; creating an End-to-End (ETE) Flow Unit within packet (Flit) count field in said packet header; converting ETE messages into ETE flits, and embedding ETE flits into the outgoing packet after the packet header; and</claim-text>
+<claim-text>an interconnect link receive circuit receiving an incoming packet from an incoming link; checking said ETE flit count field, and responsive to an identified nonzero value in said ETE flit count field, removing a specified number of embedded ETE flits from the packet; and using control information from said removed embedded ETE flits.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The multiple-path local rack interconnect system as recited in <claim-ref idref="CLM-00017">claim 17</claim-ref> wherein said interconnect link send circuit generates an ETE cyclic redundancy check (CRC) for said embedded ETE flits, and inserts said ETE CRC flit flits into the outgoing packet after said embedded ETE flits.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The multiple-path local rack interconnect system as recited in <claim-ref idref="CLM-00018">claim 18</claim-ref> wherein said interconnect link receive circuit identifies said ETE cyclic redundancy check (CRC) flit, and validating said embedded ETE flits responsive to a correct ETE CRC flit.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A design structure embodied in a machine readable medium used in a design process, the design structure comprising:
+<claim-text>a circuit tangibly embodied in the machine readable medium used in the design process, said circuit for implementing variable length packets to embed extra control information, said circuit comprising:</claim-text>
+<claim-text>an interconnect link send circuit transferring an outgoing packet onto an outgoing link, said interconnect link send circuit building a packet header; creating an End-to-End (ETE) Flow Unit within packet (Flit) count field in said packet header; converting ETE messages into ETE flits, and embedding ETE flits into the outgoing packet after the packet header; and</claim-text>
+<claim-text>an interconnect link receive circuit receiving an incoming packet from an incoming link; checking said ETE flit count field, and responsive to an identified nonzero value in said ETE flit count field, removing a specified number of embedded ETE flits from the packet; and using control information from said removed embedded ETE flits, wherein the design structure, when read and used in the manufacture of a semiconductor chip produces a chip comprising said circuit.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The design structure of <claim-ref idref="CLM-00020">claim 20</claim-ref>, wherein the design structure comprises a netlist, which describes said circuit.</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The design structure of <claim-ref idref="CLM-00020">claim 20</claim-ref>, wherein the design structure resides on storage medium as a data format used for the exchange of layout data of integrated circuits.</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The design structure of <claim-ref idref="CLM-00020">claim 20</claim-ref>, wherein the design structure includes at least one of test data files, characterization data, verification data, or design specifications.</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. The design structure of <claim-ref idref="CLM-00020">claim 20</claim-ref>, wherein said interconnect link receive circuit checks an ETE cyclic redundancy check (CRC) flit for said embedded ETE flits, and validates said embedded ETE flits responsive to a correct ETE CRC flit.</claim-text>
+</claim>
+</claims>

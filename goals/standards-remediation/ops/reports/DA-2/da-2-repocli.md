@@ -143,7 +143,7 @@ it as a silent behavior preservation.
 
 A transient blocker during this scope addition: the first two `fallow audit`
 attempts failed with a Bun `ReferenceError` inside
-`packages/tooling/library/repo-utils/src/schemas/TSConfig.ts` (outside this
+`packages/tooling/library/repo-tsconfig/src/TsconfigValidator.ts` (formerly repo-utils `src/schemas/TSConfig.ts`, deleted in effected-promotion 3-A6) (outside this
 lane's fence, a dirty/uncommitted file from concurrent lane activity) —
 resolved on retry once that file's mid-edit state settled; not caused by
 and not fixed by this lane.
@@ -312,7 +312,7 @@ inventory `--write`, no `standards/*.jsonc` edit.
 Driver-accepted addendum (`research/decisions.md` "R15 addendum", evidence
 `ops/reports/SF-1/sf-1-repoutils.md`). Extended
 `PERMANENT_SCHEMA_FIRST_EXCLUSIONS` with the 3 residue entries from the
-`sf1-repoutils` lane, all in `packages/tooling/library/repo-utils/src/schemas/TSConfig.ts`:
+`sf1-repoutils` lane, all in `packages/tooling/library/repo-tsconfig/src/TsconfigValidator.ts` (formerly repo-utils `src/schemas/TSConfig.ts`, deleted in effected-promotion 3-A6):
 `makeTypeStruct`, `makeEncodedStruct` (both top-level generic factories,
 confirmed via `rg`), and `strict` (the local `const strict = S.Struct(fields);`
 inside `makeLooseJsonObject`, confirmed via `rg`). Reasons cite the lane's two

@@ -6,10 +6,10 @@ import { ReferenceFixture, referenceFixtureLayer, workspace, writeExecutable } f
 
 describe("reference refresh timer", () => {
   it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "renders the complete service and calendar without optional environment files",
+    "renders the complete service and calendar without ordering or environment files",
     (it) => {
       it.effect(
-        "renders the complete service and calendar without optional environment files",
+        "renders the complete service and calendar without ordering or environment files",
         Effect.fnUntraced(function* () {
           const f = yield* ReferenceFixture;
           const units = yield* workspace.use((service) =>
@@ -20,16 +20,14 @@ describe("reference refresh timer", () => {
               [
                 "[Unit]",
                 "Description=beep reference workspace refresh",
-                "After=beep-graft-deep-refresh.service",
                 "",
                 "[Service]",
                 "Type=oneshot",
                 `WorkingDirectory=${f.owner}`,
                 "Environment=PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin",
                 "Environment=CI=true",
-                `EnvironmentFile=${f.home}/.config/beep-graft/env`,
                 'ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true "/opt/bun runtime/bun" install --frozen-lockfile --ignore-scripts',
-                `ExecStart="/opt/bun runtime/bun" run beep refs refresh --root "${f.root}" --jobs 16`,
+                `ExecStart="/opt/bun runtime/bun" run beep refs refresh --root "${f.root}"`,
                 "TimeoutStartSec=12h",
                 "TimeoutStopSec=90",
                 "KillMode=mixed",
@@ -58,8 +56,7 @@ describe("reference refresh timer", () => {
               "\n"
             )
           );
-          // Ordering only: refs must still run when the beep deep unit is not installed.
-          expect(units[0]?.text).not.toMatch(/^(?:Wants|Requires|BindsTo|Requisite)=/mu);
+          expect(units[0]?.text).not.toMatch(/^(?:After|Wants|Requires|BindsTo|Requisite|EnvironmentFile)=/mu);
           expect(yield* f.fs.exists(f.path.join(f.home, ".config"))).toBe(false);
         })
       );
@@ -77,8 +74,6 @@ describe("reference refresh timer", () => {
             f.path.join(f.bin, "systemctl"),
             '#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/systemctl.log"\n'
           );
-          yield* f.fs.makeDirectory(f.path.join(f.home, ".config/beep-graft"), { recursive: true });
-          yield* f.fs.writeFileString(f.path.join(f.home, ".config/beep-graft/env"), "DO_NOT_TRACK=1\n");
           const shim = f.path.join(f.home, ".local/share/mise/shims/bun");
           yield* f.fs.makeDirectory(f.path.dirname(shim), { recursive: true });
           yield* writeExecutable(shim, "#!/bin/sh\nexit 0\n");
@@ -89,6 +84,7 @@ describe("reference refresh timer", () => {
           expect(serviceText).toContain(`ExecStart="${shim}"`);
           expect(serviceText).toContain(`WorkingDirectory=${f.owner}`);
           expect(serviceText).toContain(`--root "${f.root}"`);
+          expect(serviceText).not.toContain("--jobs");
           expect(yield* f.fs.readFileString(f.path.join(unitDir, "beep-refs-refresh.timer"))).toContain(
             "OnCalendar=*-*-* 04:20:00"
           );
@@ -117,27 +113,71 @@ describe("reference refresh timer", () => {
   );
 
   it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "refuses unit injection and a missing environment file before writing",
+    "re-renders units installed by the previous renderer without their ordering, env file, or jobs flag",
     (it) => {
       it.effect(
-        "refuses unit injection and a missing environment file before writing",
+        "re-renders units installed by the previous renderer without their ordering, env file, or jobs flag",
         Effect.fnUntraced(function* () {
           const f = yield* ReferenceFixture;
-          for (const unsafe of ["/bad\npath", "/bad%h", '/bad"path', "/bad$HOME"]) {
-            const result = yield* workspace
-              .use((service) => service.renderTimerUnits(f.home, unsafe, "*-*-* 03:30:00", "/bin/bun"))
-              .pipe(Effect.result);
-            expect(result._tag).toBe("Failure");
-          }
-          const missing = yield* workspace
-            .use((service) => service.installTimer(f.home, f.root, "*-*-* 03:30:00", "/bin/bun"))
-            .pipe(Effect.result);
-          expect(missing._tag).toBe("Failure");
-          expect(yield* f.fs.exists(f.path.join(f.home, ".config/systemd"))).toBe(false);
+          yield* writeExecutable(
+            f.path.join(f.bin, "systemctl"),
+            '#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/systemctl.log"\n'
+          );
+          const unitDir = f.path.join(f.home, ".config/systemd/user");
+          yield* f.fs.makeDirectory(unitDir, { recursive: true });
+          yield* f.fs.writeFileString(
+            f.path.join(unitDir, "beep-refs-refresh.service"),
+            A.join(
+              [
+                "[Unit]",
+                "After=legacy-ordering.service",
+                "",
+                "[Service]",
+                `WorkingDirectory=${f.owner}`,
+                `EnvironmentFile=${f.home}/.config/legacy/env`,
+                `ExecStart="/old/bun" run beep refs refresh --root "${f.root}" --jobs 16`,
+                "",
+              ],
+              "\n"
+            )
+          );
+          yield* f.fs.writeFileString(
+            f.path.join(unitDir, "beep-refs-refresh.timer"),
+            "[Timer]\nOnCalendar=*-*-* 05:10:00\n"
+          );
+          yield* workspace.use((service) => service.refreshTimer(f.home, O.some("/pinned/bun")));
+          const serviceText = yield* f.fs.readFileString(f.path.join(unitDir, "beep-refs-refresh.service"));
+          expect(serviceText).toContain(`ExecStart="/pinned/bun" run beep refs refresh --root "${f.root}"\n`);
+          expect(serviceText).toContain(`WorkingDirectory=${f.owner}`);
+          expect(serviceText).not.toMatch(/^(?:After|EnvironmentFile)=/mu);
+          expect(serviceText).not.toContain("--jobs");
+          expect(yield* f.fs.readFileString(f.path.join(unitDir, "beep-refs-refresh.timer"))).toContain(
+            "OnCalendar=*-*-* 05:10:00"
+          );
         })
       );
     }
   );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })("refuses unit injection before writing", (it) => {
+    it.effect(
+      "refuses unit injection before writing",
+      Effect.fnUntraced(function* () {
+        const f = yield* ReferenceFixture;
+        for (const unsafe of ["/bad\npath", "/bad%h", '/bad"path', "/bad$HOME"]) {
+          const result = yield* workspace
+            .use((service) => service.renderTimerUnits(f.home, unsafe, "*-*-* 03:30:00", "/bin/bun"))
+            .pipe(Effect.result);
+          expect(result._tag).toBe("Failure");
+        }
+        const injected = yield* workspace
+          .use((service) => service.installTimer(f.home, "/bad\npath", "*-*-* 03:30:00", "/bin/bun"))
+          .pipe(Effect.result);
+        expect(injected._tag).toBe("Failure");
+        expect(yield* f.fs.exists(f.path.join(f.home, ".config/systemd"))).toBe(false);
+      })
+    );
+  });
 
   it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
     "fails uninstall with systemctl's output when disabling the timer fails",

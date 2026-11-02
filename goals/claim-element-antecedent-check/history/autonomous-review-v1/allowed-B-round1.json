@@ -1,0 +1,3668 @@
+{
+  "schemaVersion": "claim-automated-finding-review/v1",
+  "reviewAuthority": "automated",
+  "reviewerRole": "critic-B",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "inputBundleDigest": "ac18afc16f167638d14dc986600282fd105ab19e6de112db73fd2cf67d46ce27",
+  "inputFileSha256": "30e929141ceea303c60e3bb5052cf170295390ce14ffe8329229d62abcc99b2a",
+  "runtimeVersion": "v16",
+  "implementationDigest": "63d2b7a823f56d33620fbd651e9b30bd4f5f986a761bd92607e39d969eb85f47",
+  "resultsSha256": "3e0bfb2c8aee5ee18ec647d2ac4ae9ba1101469e3f0648ef1b2437c69e52318c",
+  "actualAttorneyAdjudicationRecorded": false,
+  "actualAttorneyAgreementRecorded": false,
+  "createdAt": "2026-10-31T09:39:09.597725+00:00",
+  "independence": {
+    "otherAllowedReviewerOutputInspected": false,
+    "runtimeImplementationInspected": false,
+    "positiveExpectedTreesInspectedForAllowedReview": false,
+    "reviewScope": "All 115 questions, 30 sampled claims and actual canonical dependency context. Earlier independent reference criticism was a separate completed lane."
+  },
+  "confidenceInterpretation": "Self-assessed and uncalibrated; not attorney validation. Accepted right/wrong conclusions require >=0.95. Uncertain decisions remain unknown.",
+  "coverageWarningInterpretation": "Right for a genuine bare/distributive entity phrase means only that limited unsupported-surface coverage advice is source-grounded. It is not a legal-antecedent defect. Predicate/operator/name fragments are assessed as parser noise. Chain-work-limit events cannot be verified from source text alone.",
+  "verdicts": [
+    {
+      "id": "12477359:12:finding:0",
+      "claimId": "12477359:12",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The parent claim explicitly recites bare operations performed by the chipset. The operations in claim 12 refers to those same operations; no new operation noun needs to be inferred from a verb.",
+      "evidence": [
+        {
+          "patent": "12477359",
+          "claimNumber": 12,
+          "quote": "the operations",
+          "startChar": 46,
+          "endChar": 60
+        },
+        {
+          "patent": "12477359",
+          "claimNumber": 9,
+          "quote": "wherein operations, performed when the instructions are executed",
+          "startChar": 190,
+          "endChar": 254
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        12,
+        9
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12477359:12:finding:1",
+      "claimId": "12477359:12",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "Input is a genuine bare nominal role for the NAS count in the ciphering relationship. A limited coverage warning for an unsupported bare term is defensible; it is not a missing-antecedent allegation or a legal defect.",
+      "evidence": [
+        {
+          "patent": "12477359",
+          "claimNumber": 12,
+          "quote": "input",
+          "startChar": 117,
+          "endChar": 122
+        },
+        {
+          "patent": "12477359",
+          "claimNumber": 12,
+          "quote": "using a locally stored NAS count as input to the ciphering algorithm",
+          "startChar": 81,
+          "endChar": 149
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        12,
+        9
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:0",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "The manufacturing method",
+          "startChar": 0,
+          "endChar": 24
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:1",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "the GaN-based device",
+          "startChar": 28,
+          "endChar": 48
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:2",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "patterned ohmic contact",
+          "startChar": 58,
+          "endChar": 81
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:3",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "the step 7",
+          "startChar": 113,
+          "endChar": 123
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:4",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "step 71",
+          "startChar": 135,
+          "endChar": 142
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:5",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "the epitaxial layers",
+          "startChar": 223,
+          "endChar": 243
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:6",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "step 72",
+          "startChar": 258,
+          "endChar": 265
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:7",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "evaporating titanium/gold",
+          "startChar": 267,
+          "endChar": 292
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:8",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "metal electrodes",
+          "startChar": 301,
+          "endChar": 317
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:9",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "step 73",
+          "startChar": 367,
+          "endChar": 374
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:10",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "stripping metals",
+          "startChar": 376,
+          "endChar": 392
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:11",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "unexposed regions",
+          "startChar": 396,
+          "endChar": 413
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:12",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "the source electrode",
+          "startChar": 422,
+          "endChar": 442
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12457782:4:finding:13",
+      "claimId": "12457782:4",
+      "verdict": "uncertain",
+      "confidence": 0.8,
+      "reason": "This is expressly a chain-work-limit coverage warning, not an allegation that this source expression lacks antecedent basis. Claim 4 and its claim-1 context are available, but source wording cannot verify that a runtime work limit was actually reached or that this occurrence was beyond it. Preserve the operational-warning uncertainty rather than infer a legal defect.",
+      "evidence": [
+        {
+          "patent": "12457782",
+          "claimNumber": 4,
+          "quote": "the drain electrode",
+          "startChar": 447,
+          "endChar": 466
+        },
+        {
+          "patent": "12457782",
+          "claimNumber": 1,
+          "quote": "step 7, preparing a source electrode and a drain electrode on the epitaxial layers",
+          "startChar": 1415,
+          "endChar": 1497
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        4,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12458116:12:finding:0",
+      "claimId": "12458116:12",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Least some is a parser fragment of at least some of, a quantifier connecting the represented group. It is not an independent entity phrase warranting an unsupported-determiner advisory.",
+      "evidence": [
+        {
+          "patent": "12458116",
+          "claimNumber": 12,
+          "quote": "least some",
+          "startChar": 32,
+          "endChar": 42
+        },
+        {
+          "patent": "12458116",
+          "claimNumber": 12,
+          "quote": "at least some of the plurality of links comprise bistable compliant links",
+          "startChar": 29,
+          "endChar": 102
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        12,
+        11,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12458116:12:finding:1",
+      "claimId": "12458116:12",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The anchored supposed term swallows comprise bistable compliant links, which is the predicate. The actual plurality of links is explicitly introduced in parent claim 11. The alleged missing referent is parser noise.",
+      "evidence": [
+        {
+          "patent": "12458116",
+          "claimNumber": 12,
+          "quote": "the plurality of links comprise bistable compliant links",
+          "startChar": 46,
+          "endChar": 102
+        },
+        {
+          "patent": "12458116",
+          "claimNumber": 11,
+          "quote": "comprises a plurality of links",
+          "startChar": 83,
+          "endChar": 113
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        12,
+        11,
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12452296:7:finding:0",
+      "claimId": "12452296:7",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Removed modifies the already introduced electronic communication and is not part of its lexical name. Parent claim 1 expressly introduces an electronic communication; claim 7 repeatedly acts on that communication.",
+      "evidence": [
+        {
+          "patent": "12452296",
+          "claimNumber": 7,
+          "quote": "the electronic communication removed",
+          "startChar": 353,
+          "endChar": 389
+        },
+        {
+          "patent": "12452296",
+          "claimNumber": 1,
+          "quote": "an electronic communication transmitted to a message storage repository",
+          "startChar": 201,
+          "endChar": 272
+        },
+        {
+          "patent": "12452296",
+          "claimNumber": 7,
+          "quote": "automatically removing the electronic communication",
+          "startChar": 213,
+          "endChar": 264
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        7,
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12446668:16:finding:0",
+      "claimId": "12446668:16",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Parent claim 12 explicitly introduces a plurality of bistable compliant links and subsequently names said plurality of links. The dependent shorter group phrase refers to that same group; dropping descriptive modifiers does not remove its introduction.",
+      "evidence": [
+        {
+          "patent": "12446668",
+          "claimNumber": 16,
+          "quote": "said plurality of links",
+          "startChar": 42,
+          "endChar": 65
+        },
+        {
+          "patent": "12446668",
+          "claimNumber": 12,
+          "quote": "a plurality of bistable compliant links pivotally attached to one another",
+          "startChar": 326,
+          "endChar": 399
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        12
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12446668:16:finding:1",
+      "claimId": "12446668:16",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "Separate elements is a real bare plural nominal phrase describing how the three named sections are formed. A restricted coverage warning for this bare surface is defensible and does not allege that the sections lack antecedents.",
+      "evidence": [
+        {
+          "patent": "12446668",
+          "claimNumber": 16,
+          "quote": "separate elements",
+          "startChar": 160,
+          "endChar": 177
+        },
+        {
+          "patent": "12446668",
+          "claimNumber": 16,
+          "quote": "are formed as separate elements that are connected",
+          "startChar": 146,
+          "endChar": 196
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        12
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12446668:16:finding:2",
+      "claimId": "12446668:16",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "One another expresses reciprocity among the explicit separate elements; it is connecting relationship language, not an additional entity with an unsupported determiner.",
+      "evidence": [
+        {
+          "patent": "12446668",
+          "claimNumber": 16,
+          "quote": "one another",
+          "startChar": 200,
+          "endChar": 211
+        },
+        {
+          "patent": "12446668",
+          "claimNumber": 16,
+          "quote": "separate elements that are connected to one another",
+          "startChar": 160,
+          "endChar": 211
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        12
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12510001:8:finding:0",
+      "claimId": "12510001:8",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Least two second plenums is a truncated fragment of the at least two second plenums phrase, omitting at. Parent claim 6 explicitly introduces the bounded group, so this fragment is parser noise rather than a genuine unsupported referent.",
+      "evidence": [
+        {
+          "patent": "12510001",
+          "claimNumber": 8,
+          "quote": "least two second plenums",
+          "startChar": 53,
+          "endChar": 77
+        },
+        {
+          "patent": "12510001",
+          "claimNumber": 6,
+          "quote": "at least two second plenums fluidly coupled to the first plenum",
+          "startChar": 76,
+          "endChar": 139
+        },
+        {
+          "patent": "12510001",
+          "claimNumber": 8,
+          "quote": "one of the at least two second plenums",
+          "startChar": 39,
+          "endChar": 77
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        8,
+        6,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12510001:8:finding:1",
+      "claimId": "12510001:8",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Least two second plenums is a truncated fragment of the at least two second plenums phrase, omitting at. Parent claim 6 explicitly introduces the bounded group, so this fragment is parser noise rather than a genuine unsupported referent.",
+      "evidence": [
+        {
+          "patent": "12510001",
+          "claimNumber": 8,
+          "quote": "least two second plenums",
+          "startChar": 53,
+          "endChar": 77
+        },
+        {
+          "patent": "12510001",
+          "claimNumber": 6,
+          "quote": "at least two second plenums fluidly coupled to the first plenum",
+          "startChar": 76,
+          "endChar": 139
+        },
+        {
+          "patent": "12510001",
+          "claimNumber": 8,
+          "quote": "one of the at least two second plenums",
+          "startChar": 39,
+          "endChar": 77
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        8,
+        6,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12456380:2:finding:0",
+      "claimId": "12456380:2",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Calculate is a verb governing an average probability, not a noun phrase with an unsupported determiner. The advisory marks connecting action language as a term.",
+      "evidence": [
+        {
+          "patent": "12456380",
+          "claimNumber": 2,
+          "quote": "calculate",
+          "startChar": 73,
+          "endChar": 82
+        },
+        {
+          "patent": "12456380",
+          "claimNumber": 2,
+          "quote": "operable to calculate an average probability",
+          "startChar": 61,
+          "endChar": 105
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        2,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12511749:2:finding:0",
+      "claimId": "12511749:2",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The named parent introduces a portable diagnostic assistance system. The shorter dependent subject the system uniquely refers to that system through its express dependency.",
+      "evidence": [
+        {
+          "patent": "12511749",
+          "claimNumber": 2,
+          "quote": "The system",
+          "startChar": 0,
+          "endChar": 10
+        },
+        {
+          "patent": "12511749",
+          "claimNumber": 1,
+          "quote": "A portable diagnostic assistance system",
+          "startChar": 0,
+          "endChar": 39
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        2,
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12511749:2:finding:1",
+      "claimId": "12511749:2",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The quote includes generates learned features obtained, which is predicate/modifying language. Parent claim 1 expressly introduces a skip connection configured with a kernel. There is no absent skip-connection referent.",
+      "evidence": [
+        {
+          "patent": "12511749",
+          "claimNumber": 2,
+          "quote": "the skip connection generates learned features obtained",
+          "startChar": 52,
+          "endChar": 107
+        },
+        {
+          "patent": "12511749",
+          "claimNumber": 1,
+          "quote": "a skip connection configured with a 1×1 kernel",
+          "startChar": 799,
+          "endChar": 845
+        },
+        {
+          "patent": "12511749",
+          "claimNumber": 2,
+          "quote": "the skip connection generates learned features obtained",
+          "startChar": 52,
+          "endChar": 107
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        2,
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12511749:2:finding:2",
+      "claimId": "12511749:2",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Global features are explicitly introduced as a bare nominal object in parent claim 1, then referenced repeatedly there. Claim 2 uses the same features, so a new indefinite introduction is unnecessary.",
+      "evidence": [
+        {
+          "patent": "12511749",
+          "claimNumber": 2,
+          "quote": "the global features",
+          "startChar": 113,
+          "endChar": 132
+        },
+        {
+          "patent": "12511749",
+          "claimNumber": 1,
+          "quote": "extracts global features of the histopathological image",
+          "startChar": 369,
+          "endChar": 424
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        2,
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12511749:2:finding:3",
+      "claimId": "12511749:2",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "Each pixel location is a genuine distributively quantified noun phrase. Each is outside the enumerated supported determiner surfaces, making a limited coverage warning defensible without asserting missing antecedent basis.",
+      "evidence": [
+        {
+          "patent": "12511749",
+          "claimNumber": 2,
+          "quote": "each pixel location",
+          "startChar": 136,
+          "endChar": 155
+        },
+        {
+          "patent": "12511749",
+          "claimNumber": 2,
+          "quote": "at each pixel location in the histopathological image",
+          "startChar": 133,
+          "endChar": 186
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        2,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:0",
+      "claimId": "12449773:16",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The anchor appends and/or to a sensor phrase, and parent claim 15 explicitly introduces both first and second sensors. The first sensor is not missing merely because the parser swallows its coordination operator.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "the at least one first sensor and/or",
+          "startChar": 32,
+          "endChar": 68
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 15,
+          "quote": "at least one first sensor of a first sensor type",
+          "startChar": 286,
+          "endChar": 334
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "the at least one first sensor and/or the at least one second sensor",
+          "startChar": 32,
+          "endChar": 99
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:1",
+      "claimId": "12449773:16",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Ranging and the isolated sensor after the acronym are fragments of the single lexical term a Light Detection and Ranging (LiDAR) sensor. Splitting its name/acronym does not reveal a separate unsupported entity.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "Ranging",
+          "startChar": 347,
+          "endChar": 354
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "a Light Detection and Ranging (LiDAR) sensor",
+          "startChar": 325,
+          "endChar": 369
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:2",
+      "claimId": "12449773:16",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Ranging and the isolated sensor after the acronym are fragments of the single lexical term a Light Detection and Ranging (LiDAR) sensor. Splitting its name/acronym does not reveal a separate unsupported entity.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "sensor",
+          "startChar": 55,
+          "endChar": 61
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "a Light Detection and Ranging (LiDAR) sensor",
+          "startChar": 325,
+          "endChar": 369
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:3",
+      "claimId": "12449773:16",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "The explicitly listed radar sensor is a genuine bare alternative sensor/entity noun phrase. A limited unsupported-surface coverage warning is defensible; enumeration does not make it an allegation of a missing antecedent or a legal defect.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "radar sensor",
+          "startChar": 371,
+          "endChar": 383
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "radar sensor",
+          "startChar": 371,
+          "endChar": 383
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:4",
+      "claimId": "12449773:16",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "The explicitly listed ultrasonic sensor is a genuine bare alternative sensor/entity noun phrase. A limited unsupported-surface coverage warning is defensible; enumeration does not make it an allegation of a missing antecedent or a legal defect.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "ultrasonic sensor",
+          "startChar": 385,
+          "endChar": 402
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "ultrasonic sensor",
+          "startChar": 385,
+          "endChar": 402
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:5",
+      "claimId": "12449773:16",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "The explicitly listed visible spectrum camera is a genuine bare alternative sensor/entity noun phrase. A limited unsupported-surface coverage warning is defensible; enumeration does not make it an allegation of a missing antecedent or a legal defect.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "visible spectrum camera",
+          "startChar": 404,
+          "endChar": 427
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "visible spectrum camera",
+          "startChar": 404,
+          "endChar": 427
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:6",
+      "claimId": "12449773:16",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "The explicitly listed Global Positioning System (GPS) sensor is a genuine bare alternative sensor/entity noun phrase. A limited unsupported-surface coverage warning is defensible; enumeration does not make it an allegation of a missing antecedent or a legal defect.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "Global Positioning System (GPS) sensor",
+          "startChar": 429,
+          "endChar": 467
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "Global Positioning System (GPS) sensor",
+          "startChar": 429,
+          "endChar": 467
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:7",
+      "claimId": "12449773:16",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "The explicitly listed inertial measurement unit is a genuine bare alternative sensor/entity noun phrase. A limited unsupported-surface coverage warning is defensible; enumeration does not make it an allegation of a missing antecedent or a legal defect.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "inertial measurement unit",
+          "startChar": 469,
+          "endChar": 494
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "inertial measurement unit",
+          "startChar": 469,
+          "endChar": 494
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:8",
+      "claimId": "12449773:16",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "The explicitly listed infrared sensor is a genuine bare alternative sensor/entity noun phrase. A limited unsupported-surface coverage warning is defensible; enumeration does not make it an allegation of a missing antecedent or a legal defect.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "infrared sensor",
+          "startChar": 496,
+          "endChar": 511
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "infrared sensor",
+          "startChar": 496,
+          "endChar": 511
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:9",
+      "claimId": "12449773:16",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "The explicitly listed depth camera is a genuine bare alternative sensor/entity noun phrase. A limited unsupported-surface coverage warning is defensible; enumeration does not make it an allegation of a missing antecedent or a legal defect.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "depth camera",
+          "startChar": 513,
+          "endChar": 525
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "depth camera",
+          "startChar": 513,
+          "endChar": 525
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:10",
+      "claimId": "12449773:16",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "The explicitly listed load sensor is a genuine bare alternative sensor/entity noun phrase. A limited unsupported-surface coverage warning is defensible; enumeration does not make it an allegation of a missing antecedent or a legal defect.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "load sensor",
+          "startChar": 527,
+          "endChar": 538
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "load sensor",
+          "startChar": 527,
+          "endChar": 538
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:16:finding:11",
+      "claimId": "12449773:16",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "And/or is the list coordination operator between explicit alternatives, not an additional entity term.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "and/or",
+          "startChar": 62,
+          "endChar": 68
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 16,
+          "quote": "a diode detector, and/or a spectrometer",
+          "startChar": 564,
+          "endChar": 603
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12459604:9:no-emitted-findings",
+      "claimId": "12459604:9",
+      "verdict": "right",
+      "confidence": 0.99,
+      "reason": "The supplied current-runtime record is checked and contains this no-emitted-findings confirmation with no finding question for this claim. This confirms only the recorded absence of emitted advisories; it does not certify legal cleanliness, structural completeness, or absence of unreported defects.",
+      "evidence": [
+        {
+          "patent": "12459604",
+          "claimNumber": 9,
+          "quote": "The adjustable tethering system of claim 1, wherein the capsule comprises a polymeric material.",
+          "startChar": 0,
+          "endChar": 95
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        9,
+        1
+      ],
+      "statementCategory": "no-finding-record-confirmation",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12507313:13:finding:0",
+      "claimId": "12507313:13",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Transmit is the verb of the apparatus operation, not a determiner-bearing or bare entity noun.",
+      "evidence": [
+        {
+          "patent": "12507313",
+          "claimNumber": 13,
+          "quote": "transmit",
+          "startChar": 71,
+          "endChar": 79
+        },
+        {
+          "patent": "12507313",
+          "claimNumber": 13,
+          "quote": "transmit, to the terminal device, a configuration",
+          "startChar": 71,
+          "endChar": 120
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        13,
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12507313:13:finding:1",
+      "claimId": "12507313:13",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Parent claim 11 expressly describes the data belonging/not belonging to MT-SDT bearers. Claim 13 repeats those same alternatives, so the data is grounded in explicit nominal mentions rather than invented from an action.",
+      "evidence": [
+        {
+          "patent": "12507313",
+          "claimNumber": 13,
+          "quote": "the data",
+          "startChar": 143,
+          "endChar": 151
+        },
+        {
+          "patent": "12507313",
+          "claimNumber": 11,
+          "quote": "presence of data not belonging to a Mobile Terminated Small Data Transmission",
+          "startChar": 245,
+          "endChar": 322
+        },
+        {
+          "patent": "12507313",
+          "claimNumber": 11,
+          "quote": "or data belonging to a MT-SDT bearer",
+          "startChar": 379,
+          "endChar": 415
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        13,
+        11
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12507313:13:finding:2",
+      "claimId": "12507313:13",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Claim 11 explicitly introduces an MT-SDT procedure and repeats the same procedure after completion. Claim 13 uses that exact procedural referent.",
+      "evidence": [
+        {
+          "patent": "12507313",
+          "claimNumber": 13,
+          "quote": "the MT-SDT procedure",
+          "startChar": 193,
+          "endChar": 213
+        },
+        {
+          "patent": "12507313",
+          "claimNumber": 11,
+          "quote": "during an MT-SDT procedure",
+          "startChar": 352,
+          "endChar": 378
+        },
+        {
+          "patent": "12507313",
+          "claimNumber": 11,
+          "quote": "after the MT-SDT procedure is completed",
+          "startChar": 537,
+          "endChar": 576
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        13,
+        11
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12507313:13:finding:3",
+      "claimId": "12507313:13",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Parent claim 11 expressly describes the data belonging/not belonging to MT-SDT bearers. Claim 13 repeats those same alternatives, so the data is grounded in explicit nominal mentions rather than invented from an action.",
+      "evidence": [
+        {
+          "patent": "12507313",
+          "claimNumber": 13,
+          "quote": "the data",
+          "startChar": 143,
+          "endChar": 151
+        },
+        {
+          "patent": "12507313",
+          "claimNumber": 11,
+          "quote": "presence of data not belonging to a Mobile Terminated Small Data Transmission",
+          "startChar": 245,
+          "endChar": 322
+        },
+        {
+          "patent": "12507313",
+          "claimNumber": 11,
+          "quote": "or data belonging to a MT-SDT bearer",
+          "startChar": 379,
+          "endChar": 415
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        13,
+        11
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12507313:13:finding:4",
+      "claimId": "12507313:13",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Claim 11 explicitly introduces a Mobile Oriented Small Data Transmission, MO-SDT, procedure, then repeats the abbreviated name. Claim 13 references that same nominal procedure.",
+      "evidence": [
+        {
+          "patent": "12507313",
+          "claimNumber": 13,
+          "quote": "the MO-SDT procedure",
+          "startChar": 276,
+          "endChar": 296
+        },
+        {
+          "patent": "12507313",
+          "claimNumber": 11,
+          "quote": "a Mobile Oriented Small Data Transmission, MO-SDT, procedure",
+          "startChar": 436,
+          "endChar": 496
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        13,
+        11
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12495342:6:finding:0",
+      "claimId": "12495342:6",
+      "verdict": "wrong",
+      "confidence": 0.98,
+      "reason": "Parent claim 1 introduces one or more tracking area (TAs) of a registration area. TAs is the source-supplied acronym for those areas; claim 6 uses the same quantified group, despite the source singular/plural drafting mismatch.",
+      "evidence": [
+        {
+          "patent": "12495342",
+          "claimNumber": 6,
+          "quote": "the one or more TAs",
+          "startChar": 102,
+          "endChar": 121
+        },
+        {
+          "patent": "12495342",
+          "claimNumber": 1,
+          "quote": "one or more tracking area (TAs) of a registration area (RA)",
+          "startChar": 338,
+          "endChar": 397
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        6,
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:18:finding:0",
+      "claimId": "12449773:18",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Instruct modification is the action and its object, not a single lexical noun phrase. The warning marks parser-contaminated verbal language as an unsupported term.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 18,
+          "quote": "instruct modification",
+          "startChar": 83,
+          "endChar": 104
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 18,
+          "quote": "operable to instruct modification of the environment",
+          "startChar": 71,
+          "endChar": 123
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        18,
+        15
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12449773:18:finding:1",
+      "claimId": "12449773:18",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Parent claim 15 explicitly introduces fused data as the nominal result and then says wherein the fused data includes. Claim 18 has that actual noun phrase on its dependency chain.",
+      "evidence": [
+        {
+          "patent": "12449773",
+          "claimNumber": 18,
+          "quote": "the fused data",
+          "startChar": 152,
+          "endChar": 166
+        },
+        {
+          "patent": "12449773",
+          "claimNumber": 15,
+          "quote": "thereby creating fused data; wherein the fused data includes",
+          "startChar": 1653,
+          "endChar": 1713
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        18,
+        15
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12446668:2:finding:0",
+      "claimId": "12446668:2",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "Each actuator linkage is a genuine distributively quantified entity phrase, grounded in the parent actuator-linkage introduction. Each is outside the narrow supported determiner surfaces, so a limited coverage warning is defensible; it does not allege that the linkage is unintroduced.",
+      "evidence": [
+        {
+          "patent": "12446668",
+          "claimNumber": 2,
+          "quote": "each actuator linkage",
+          "startChar": 29,
+          "endChar": 50
+        },
+        {
+          "patent": "12446668",
+          "claimNumber": 1,
+          "quote": "an actuator linkage pivotally connected",
+          "startChar": 1010,
+          "endChar": 1049
+        },
+        {
+          "patent": "12446668",
+          "claimNumber": 2,
+          "quote": "each actuator linkage comprises",
+          "startChar": 29,
+          "endChar": 60
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        2,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12446668:2:finding:1",
+      "claimId": "12446668:2",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Least two pivot points drops at from at least two pivot points. It is a truncated quantifier fragment, not the actual complete term surface.",
+      "evidence": [
+        {
+          "patent": "12446668",
+          "claimNumber": 2,
+          "quote": "least two pivot points",
+          "startChar": 64,
+          "endChar": 86
+        },
+        {
+          "patent": "12446668",
+          "claimNumber": 2,
+          "quote": "at least two pivot points pivotably connecting",
+          "startChar": 61,
+          "endChar": 107
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        2,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12446668:2:finding:2",
+      "claimId": "12446668:2",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Pivotably connecting is relational/predicate language connecting the pivot points to linkages and links; it is not another entity term.",
+      "evidence": [
+        {
+          "patent": "12446668",
+          "claimNumber": 2,
+          "quote": "pivotably connecting",
+          "startChar": 87,
+          "endChar": 107
+        },
+        {
+          "patent": "12446668",
+          "claimNumber": 2,
+          "quote": "pivot points pivotably connecting each actuator linkage",
+          "startChar": 74,
+          "endChar": 129
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        2,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12446668:2:finding:3",
+      "claimId": "12446668:2",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "Each actuator linkage is a genuine distributively quantified entity phrase, grounded in the parent actuator-linkage introduction. Each is outside the narrow supported determiner surfaces, so a limited coverage warning is defensible; it does not allege that the linkage is unintroduced.",
+      "evidence": [
+        {
+          "patent": "12446668",
+          "claimNumber": 2,
+          "quote": "each actuator linkage",
+          "startChar": 29,
+          "endChar": 50
+        },
+        {
+          "patent": "12446668",
+          "claimNumber": 1,
+          "quote": "an actuator linkage pivotally connected",
+          "startChar": 1010,
+          "endChar": 1049
+        },
+        {
+          "patent": "12446668",
+          "claimNumber": 2,
+          "quote": "each actuator linkage comprises",
+          "startChar": 29,
+          "endChar": 60
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        2,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12446668:2:finding:4",
+      "claimId": "12446668:2",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Parent claim 1 explicitly introduces a plurality of bistable compliant links and repeatedly calls it the plurality of links. Claim 2 refers to that actual group.",
+      "evidence": [
+        {
+          "patent": "12446668",
+          "claimNumber": 2,
+          "quote": "the plurality of links",
+          "startChar": 133,
+          "endChar": 155
+        },
+        {
+          "patent": "12446668",
+          "claimNumber": 1,
+          "quote": "a plurality of bistable compliant links pivotally attached",
+          "startChar": 326,
+          "endChar": 384
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        2,
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489902:7:finding:0",
+      "claimId": "12489902:7",
+      "verdict": "wrong",
+      "confidence": 0.98,
+      "reason": "The anchored phrase drops context-based from the complete newly specified coding name context-based adaptive binary arithmetic coding (CABAC). It is a fragment created at an internal modifier boundary, not an independently unsupported entity.",
+      "evidence": [
+        {
+          "patent": "12489902",
+          "claimNumber": 7,
+          "quote": "adaptive binary arithmetic coding (CABAC)",
+          "startChar": 85,
+          "endChar": 126
+        },
+        {
+          "patent": "12489902",
+          "claimNumber": 7,
+          "quote": "context-based adaptive binary arithmetic coding (CABAC)",
+          "startChar": 71,
+          "endChar": 126
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        7,
+        5
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12512209:8:no-emitted-findings",
+      "claimId": "12512209:8",
+      "verdict": "right",
+      "confidence": 0.99,
+      "reason": "The supplied current-runtime record is checked and contains this no-emitted-findings confirmation with no finding question for this claim. This confirms only the recorded absence of emitted advisories; it does not certify legal cleanliness, structural completeness, or absence of unreported defects.",
+      "evidence": [
+        {
+          "patent": "12512209",
+          "claimNumber": 8,
+          "quote": "The gateway edge system of claim 1, wherein the gateway edge system is configured to provide a standardized connection between the healthcare system and the one or more entities.",
+          "startChar": 0,
+          "endChar": 178
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        8,
+        1
+      ],
+      "statementCategory": "no-finding-record-confirmation",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489521:11:finding:0",
+      "claimId": "12489521:11",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Storing instructions combines the action storing with its nominal object. Instructions is real, but the emitted quote is predicate-contaminated rather than its complete lexical term.",
+      "evidence": [
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "storing instructions",
+          "startChar": 96,
+          "endChar": 116
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "memory capable of storing instructions and being connected",
+          "startChar": 78,
+          "endChar": 136
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489521:11:finding:1",
+      "claimId": "12489521:11",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "Operations is an actual bare nominal subject, qualified by performed when instructions execute. A coverage warning for this bare nominal surface is defensible and is not a missing-antecedent allegation.",
+      "evidence": [
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "operations",
+          "startChar": 198,
+          "endChar": 208
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "wherein operations, performed when the instructions are executed",
+          "startChar": 190,
+          "endChar": 254
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489521:11:finding:2",
+      "claimId": "12489521:11",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Performed is a modifying participle/predicate for operations, not a separate entity noun.",
+      "evidence": [
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "performed",
+          "startChar": 210,
+          "endChar": 219
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "operations, performed when the instructions are executed",
+          "startChar": 198,
+          "endChar": 254
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489521:11:finding:3",
+      "claimId": "12489521:11",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Instructions is explicitly introduced as a bare nominal object of storing earlier in the same claim. The later the instructions refers to that actual noun phrase.",
+      "evidence": [
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "the instructions",
+          "startChar": 225,
+          "endChar": 241
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "memory capable of storing instructions",
+          "startChar": 78,
+          "endChar": 116
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        11
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489521:11:finding:4",
+      "claimId": "12489521:11",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Forward, F and the stripped satellite operation parameter are fragments of the one introduced lexical term a Store and Forward (S & F) satellite operation parameter. Internal acronym/name splitting does not identify separately unsupported entities.",
+      "evidence": [
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "Forward",
+          "startChar": 318,
+          "endChar": 325
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "a Store and Forward (S & F) satellite operation parameter",
+          "startChar": 306,
+          "endChar": 363
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489521:11:finding:5",
+      "claimId": "12489521:11",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Forward, F and the stripped satellite operation parameter are fragments of the one introduced lexical term a Store and Forward (S & F) satellite operation parameter. Internal acronym/name splitting does not identify separately unsupported entities.",
+      "evidence": [
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "F",
+          "startChar": 318,
+          "endChar": 319
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "a Store and Forward (S & F) satellite operation parameter",
+          "startChar": 306,
+          "endChar": 363
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489521:11:finding:6",
+      "claimId": "12489521:11",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Forward, F and the stripped satellite operation parameter are fragments of the one introduced lexical term a Store and Forward (S & F) satellite operation parameter. Internal acronym/name splitting does not identify separately unsupported entities.",
+      "evidence": [
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "satellite operation parameter",
+          "startChar": 334,
+          "endChar": 363
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "a Store and Forward (S & F) satellite operation parameter",
+          "startChar": 306,
+          "endChar": 363
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489521:11:finding:7",
+      "claimId": "12489521:11",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The full-name introduction explicitly defines the S & F abbreviation for the satellite operation parameter. The later abbreviated nominal phrase has that actual local introduction.",
+      "evidence": [
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "the S & F satellite operation parameter",
+          "startChar": 439,
+          "endChar": 478
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "a Store and Forward (S & F) satellite operation parameter",
+          "startChar": 306,
+          "endChar": 363
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        11
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489521:11:finding:8",
+      "claimId": "12489521:11",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "While and unless are temporal/conditional connecting words, not entity terms with unsupported determiners.",
+      "evidence": [
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "while",
+          "startChar": 484,
+          "endChar": 489
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "while the timer T3451 is running",
+          "startChar": 484,
+          "endChar": 516
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "unless the S & F satellite cell broadcasts",
+          "startChar": 640,
+          "endChar": 682
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489521:11:finding:9",
+      "claimId": "12489521:11",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "While and unless are temporal/conditional connecting words, not entity terms with unsupported determiners.",
+      "evidence": [
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "unless",
+          "startChar": 640,
+          "endChar": 646
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "while the timer T3451 is running",
+          "startChar": 484,
+          "endChar": 516
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "unless the S & F satellite cell broadcasts",
+          "startChar": 640,
+          "endChar": 682
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12489521:11:finding:10",
+      "claimId": "12489521:11",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The quote improperly includes broadcasts as part of a satellite-cell term. The same claim earlier explicitly introduces a S & F satellite cell; the conditional later acts on that cell.",
+      "evidence": [
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "the S & F satellite cell broadcasts",
+          "startChar": 647,
+          "endChar": 682
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "over a S & F satellite cell in a tracking area identifier",
+          "startChar": 570,
+          "endChar": 627
+        },
+        {
+          "patent": "12489521",
+          "claimNumber": 11,
+          "quote": "the S & F satellite cell broadcasts",
+          "startChar": 647,
+          "endChar": 682
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        11
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12494662:7:no-emitted-findings",
+      "claimId": "12494662:7",
+      "verdict": "right",
+      "confidence": 0.99,
+      "reason": "The supplied current-runtime record is checked and contains this no-emitted-findings confirmation with no finding question for this claim. This confirms only the recorded absence of emitted advisories; it does not certify legal cleanliness, structural completeness, or absence of unreported defects.",
+      "evidence": [
+        {
+          "patent": "12494662",
+          "claimNumber": 7,
+          "quote": "The charging system according to claim 6, wherein the charging system comprises a protocol chip, and the protocol chip is electrically connected to the third pin.",
+          "startChar": 0,
+          "endChar": 162
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        7,
+        6,
+        5,
+        1
+      ],
+      "statementCategory": "no-finding-record-confirmation",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12482341:16:finding:0",
+      "claimId": "12482341:16",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Utilize edge and classify are predicate fragments. The actual phrase is utilize edge processing to classify the drone, with entity noun edge processing following the verb; no unsupported referent is exposed by these fragments.",
+      "evidence": [
+        {
+          "patent": "12482341",
+          "claimNumber": 16,
+          "quote": "utilize edge",
+          "startChar": 77,
+          "endChar": 89
+        },
+        {
+          "patent": "12482341",
+          "claimNumber": 16,
+          "quote": "utilize edge processing to classify the at least one drone",
+          "startChar": 77,
+          "endChar": 135
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15,
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12482341:16:finding:1",
+      "claimId": "12482341:16",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Utilize edge and classify are predicate fragments. The actual phrase is utilize edge processing to classify the drone, with entity noun edge processing following the verb; no unsupported referent is exposed by these fragments.",
+      "evidence": [
+        {
+          "patent": "12482341",
+          "claimNumber": 16,
+          "quote": "classify",
+          "startChar": 104,
+          "endChar": 112
+        },
+        {
+          "patent": "12482341",
+          "claimNumber": 16,
+          "quote": "utilize edge processing to classify the at least one drone",
+          "startChar": 77,
+          "endChar": 135
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15,
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12483343:6:no-emitted-findings",
+      "claimId": "12483343:6",
+      "verdict": "right",
+      "confidence": 0.99,
+      "reason": "The supplied current-runtime record is checked and contains this no-emitted-findings confirmation with no finding question for this claim. This confirms only the recorded absence of emitted advisories; it does not certify legal cleanliness, structural completeness, or absence of unreported defects.",
+      "evidence": [
+        {
+          "patent": "12483343",
+          "claimNumber": 6,
+          "quote": "The apparatus of claim 1, wherein the at least one signal includes an anomalous signal.",
+          "startChar": 0,
+          "endChar": 87
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        6,
+        1
+      ],
+      "statementCategory": "no-finding-record-confirmation",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12420230:16:finding:0",
+      "claimId": "12420230:16",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "Fluid paths is a genuine bare plural noun phrase specifying what the sorbent layer provides. A limited bare-surface coverage warning is defensible and does not allege a legal defect.",
+      "evidence": [
+        {
+          "patent": "12420230",
+          "claimNumber": 16,
+          "quote": "fluid paths",
+          "startChar": 190,
+          "endChar": 201
+        },
+        {
+          "patent": "12420230",
+          "claimNumber": 16,
+          "quote": "provide fluid paths for water to flow",
+          "startChar": 182,
+          "endChar": 219
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12420230:16:finding:1",
+      "claimId": "12420230:16",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "Water is a genuine bare substance noun participating in the flow relation. A limited bare-surface coverage warning is defensible, irrespective of the water-generation unit already being named.",
+      "evidence": [
+        {
+          "patent": "12420230",
+          "claimNumber": 16,
+          "quote": "water",
+          "startChar": 4,
+          "endChar": 9
+        },
+        {
+          "patent": "12420230",
+          "claimNumber": 16,
+          "quote": "fluid paths for water to flow therethrough",
+          "startChar": 190,
+          "endChar": 232
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12420230:16:finding:2",
+      "claimId": "12420230:16",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Flow therethrough is a verb plus locative proform specifying the water movement; the anchored combination is not a lexical noun phrase.",
+      "evidence": [
+        {
+          "patent": "12420230",
+          "claimNumber": 16,
+          "quote": "flow therethrough",
+          "startChar": 215,
+          "endChar": 232
+        },
+        {
+          "patent": "12420230",
+          "claimNumber": 16,
+          "quote": "water to flow therethrough to the perforated plate",
+          "startChar": 206,
+          "endChar": 256
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        15,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12512977:5:no-emitted-findings",
+      "claimId": "12512977:5",
+      "verdict": "right",
+      "confidence": 0.99,
+      "reason": "The supplied current-runtime record is checked and contains this no-emitted-findings confirmation with no finding question for this claim. This confirms only the recorded absence of emitted advisories; it does not certify legal cleanliness, structural completeness, or absence of unreported defects.",
+      "evidence": [
+        {
+          "patent": "12512977",
+          "claimNumber": 5,
+          "quote": "The method of claim 4, wherein: the one or more recovery tokens each comprises a counter value.",
+          "startChar": 0,
+          "endChar": 95
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        5,
+        4,
+        1
+      ],
+      "statementCategory": "no-finding-record-confirmation",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12499172:14:finding:0",
+      "claimId": "12499172:14",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The quote is a render/generate/load action or a verb combined with its object, not a standalone lexical noun phrase. The full procedural context makes this a parser warning artifact.",
+      "evidence": [
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "render",
+          "startChar": 34,
+          "endChar": 40
+        },
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "load website components based on the data structure; generate a Document Object Model",
+          "startChar": 87,
+          "endChar": 172
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        14,
+        8
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12499172:14:finding:1",
+      "claimId": "12499172:14",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "Instructions is a genuine bare noun in comprises instructions to. A limited bare-term coverage warning is defensible; it is not a missing-antecedent accusation.",
+      "evidence": [
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "instructions",
+          "startChar": 70,
+          "endChar": 82
+        },
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "comprises instructions to: load website components",
+          "startChar": 60,
+          "endChar": 110
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        14,
+        8
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12499172:14:finding:2",
+      "claimId": "12499172:14",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The quote is a render/generate/load action or a verb combined with its object, not a standalone lexical noun phrase. The full procedural context makes this a parser warning artifact.",
+      "evidence": [
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "load website components",
+          "startChar": 87,
+          "endChar": 110
+        },
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "load website components based on the data structure; generate a Document Object Model",
+          "startChar": 87,
+          "endChar": 172
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        14,
+        8
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12499172:14:finding:3",
+      "claimId": "12499172:14",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The quote is a render/generate/load action or a verb combined with its object, not a standalone lexical noun phrase. The full procedural context makes this a parser warning artifact.",
+      "evidence": [
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "generate",
+          "startChar": 140,
+          "endChar": 148
+        },
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "load website components based on the data structure; generate a Document Object Model",
+          "startChar": 87,
+          "endChar": 172
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        14,
+        8
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12499172:14:finding:4",
+      "claimId": "12499172:14",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Website components is explicitly introduced as the bare nominal object of load earlier in the same claim. The later the website components refers directly to that noun phrase, regardless of whether the action verb was mistakenly included by the parser.",
+      "evidence": [
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "the website components",
+          "startChar": 188,
+          "endChar": 210
+        },
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "load website components based on the data structure",
+          "startChar": 87,
+          "endChar": 138
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        14,
+        8
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12499172:14:finding:5",
+      "claimId": "12499172:14",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The quote is a render/generate/load action or a verb combined with its object, not a standalone lexical noun phrase. The full procedural context makes this a parser warning artifact.",
+      "evidence": [
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "render",
+          "startChar": 34,
+          "endChar": 40
+        },
+        {
+          "patent": "12499172",
+          "claimNumber": 14,
+          "quote": "load website components based on the data structure; generate a Document Object Model",
+          "startChar": 87,
+          "endChar": 172
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        14,
+        8
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12481627:16:finding:0",
+      "claimId": "12481627:16",
+      "verdict": "right",
+      "confidence": 0.95,
+      "reason": "The quoted schema elements is a genuine bare nominal phrase, including nested phrases within the sub-plurality relationship where present. A limited bare-surface coverage warning is defensible. It does not establish a missing entity or a legal defect; the source also supplies explicit schema-element/embedding context.",
+      "evidence": [
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "schema elements",
+          "startChar": 45,
+          "endChar": 60
+        },
+        {
+          "patent": "12481627",
+          "claimNumber": 11,
+          "quote": "a plurality of schema elements",
+          "startChar": 468,
+          "endChar": 498
+        },
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "schema elements",
+          "startChar": 45,
+          "endChar": 60
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12481627:16:finding:1",
+      "claimId": "12481627:16",
+      "verdict": "right",
+      "confidence": 0.95,
+      "reason": "The quoted schema element kinds is a genuine bare nominal phrase, including nested phrases within the sub-plurality relationship where present. A limited bare-surface coverage warning is defensible. It does not establish a missing entity or a legal defect; the source also supplies explicit schema-element/embedding context.",
+      "evidence": [
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "schema element kinds",
+          "startChar": 173,
+          "endChar": 193
+        },
+        {
+          "patent": "12481627",
+          "claimNumber": 11,
+          "quote": "a plurality of schema elements",
+          "startChar": 468,
+          "endChar": 498
+        },
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "schema element kinds",
+          "startChar": 173,
+          "endChar": 193
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12481627:16:finding:2",
+      "claimId": "12481627:16",
+      "verdict": "right",
+      "confidence": 0.95,
+      "reason": "The quoted schema elements is a genuine bare nominal phrase, including nested phrases within the sub-plurality relationship where present. A limited bare-surface coverage warning is defensible. It does not establish a missing entity or a legal defect; the source also supplies explicit schema-element/embedding context.",
+      "evidence": [
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "schema elements",
+          "startChar": 45,
+          "endChar": 60
+        },
+        {
+          "patent": "12481627",
+          "claimNumber": 11,
+          "quote": "a plurality of schema elements",
+          "startChar": 468,
+          "endChar": 498
+        },
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "schema elements",
+          "startChar": 45,
+          "endChar": 60
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12481627:16:finding:3",
+      "claimId": "12481627:16",
+      "verdict": "right",
+      "confidence": 0.95,
+      "reason": "The quoted schema elements is a genuine bare nominal phrase, including nested phrases within the sub-plurality relationship where present. A limited bare-surface coverage warning is defensible. It does not establish a missing entity or a legal defect; the source also supplies explicit schema-element/embedding context.",
+      "evidence": [
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "schema elements",
+          "startChar": 45,
+          "endChar": 60
+        },
+        {
+          "patent": "12481627",
+          "claimNumber": 11,
+          "quote": "a plurality of schema elements",
+          "startChar": 468,
+          "endChar": 498
+        },
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "schema elements",
+          "startChar": 45,
+          "endChar": 60
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12481627:16:finding:4",
+      "claimId": "12481627:16",
+      "verdict": "right",
+      "confidence": 0.95,
+      "reason": "The quoted corresponding schema element embeddings is a genuine bare nominal phrase, including nested phrases within the sub-plurality relationship where present. A limited bare-surface coverage warning is defensible. It does not establish a missing entity or a legal defect; the source also supplies explicit schema-element/embedding context.",
+      "evidence": [
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "corresponding schema element embeddings",
+          "startChar": 287,
+          "endChar": 326
+        },
+        {
+          "patent": "12481627",
+          "claimNumber": 11,
+          "quote": "a plurality of schema elements",
+          "startChar": 468,
+          "endChar": 498
+        },
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "corresponding schema element embeddings",
+          "startChar": 287,
+          "endChar": 326
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12481627:16:finding:5",
+      "claimId": "12481627:16",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Obtain is the purpose/result verb before the plurality of categories, not an entity noun.",
+      "evidence": [
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "obtain",
+          "startChar": 345,
+          "endChar": 351
+        },
+        {
+          "patent": "12481627",
+          "claimNumber": 16,
+          "quote": "to obtain the plurality of categories",
+          "startChar": 342,
+          "endChar": 379
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        16,
+        11
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12444032:17:finding:0",
+      "claimId": "12444032:17",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Modifying and generating introduce procedural actions followed by using clauses and their objects. These quoted action verbs are not independent noun phrases with unsupported determiners.",
+      "evidence": [
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "modifying",
+          "startChar": 43,
+          "endChar": 52
+        },
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "modifying, using the processing device",
+          "startChar": 43,
+          "endChar": 81
+        },
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "generating, using the processing device",
+          "startChar": 208,
+          "endChar": 247
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        17,
+        10
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12444032:17:finding:1",
+      "claimId": "12444032:17",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Parent claim 10 expressly recites performing the operation and already uses the exact nominal phrase the performing of the at least one operation. Claim 17 repeats that actual nominal reference on its chain.",
+      "evidence": [
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "the performing",
+          "startChar": 158,
+          "endChar": 172
+        },
+        {
+          "patent": "12444032",
+          "claimNumber": 10,
+          "quote": "based on the performing of the at least one operation",
+          "startChar": 2419,
+          "endChar": 2472
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        17,
+        10
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12444032:17:finding:2",
+      "claimId": "12444032:17",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Modifying and generating introduce procedural actions followed by using clauses and their objects. These quoted action verbs are not independent noun phrases with unsupported determiners.",
+      "evidence": [
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "generating",
+          "startChar": 208,
+          "endChar": 218
+        },
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "modifying, using the processing device",
+          "startChar": 43,
+          "endChar": 81
+        },
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "generating, using the processing device",
+          "startChar": 208,
+          "endChar": 247
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        17,
+        10
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12444032:17:finding:3",
+      "claimId": "12444032:17",
+      "verdict": "uncertain",
+      "confidence": 0.91,
+      "reason": "The same claim expressly defines a modifying step before saying based on the modifying of the graphical representation. This looks like a reference to that very operation, but whether an action gerund without an earlier nominal term counts as an introducing anchor is not fixed by the packet. Do not manufacture a distinct noun or accept a missing-reference allegation with high confidence.",
+      "evidence": [
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "the modifying",
+          "startChar": 329,
+          "endChar": 342
+        },
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "modifying, using the processing device",
+          "startChar": 43,
+          "endChar": 81
+        },
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "based on the modifying of the at least one graphical representation",
+          "startChar": 320,
+          "endChar": 387
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        17,
+        10
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12444032:17:finding:4",
+      "claimId": "12444032:17",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Area is the final fragment of the complete the at least one display area phrase. Parent claim 10 explicitly introduces at least one display area, so the isolated tail is parser noise.",
+      "evidence": [
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "area",
+          "startChar": 489,
+          "endChar": 493
+        },
+        {
+          "patent": "12444032",
+          "claimNumber": 10,
+          "quote": "at least one display area",
+          "startChar": 1546,
+          "endChar": 1571
+        },
+        {
+          "patent": "12444032",
+          "claimNumber": 17,
+          "quote": "the at least one display area",
+          "startChar": 464,
+          "endChar": 493
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        17,
+        10
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12485924:8:finding:0",
+      "claimId": "12485924:8",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "The express dependency chain reaches an autonomous vehicle control system in claim 1. The system is the shortened reference to that same introduced system, not a missing entity.",
+      "evidence": [
+        {
+          "patent": "12485924",
+          "claimNumber": 8,
+          "quote": "The system",
+          "startChar": 0,
+          "endChar": 10
+        },
+        {
+          "patent": "12485924",
+          "claimNumber": 1,
+          "quote": "An autonomous vehicle control system",
+          "startChar": 0,
+          "endChar": 36
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        8,
+        6,
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12485924:8:finding:1",
+      "claimId": "12485924:8",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Assess and calculating vehicle density are verbal action language. Vehicle density may be a nominal object, but the emitted quote including calculating is not its lexical term.",
+      "evidence": [
+        {
+          "patent": "12485924",
+          "claimNumber": 8,
+          "quote": "assess",
+          "startChar": 99,
+          "endChar": 105
+        },
+        {
+          "patent": "12485924",
+          "claimNumber": 8,
+          "quote": "assess a congestion level at the intersection by calculating vehicle density",
+          "startChar": 99,
+          "endChar": 175
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        8,
+        6,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12485924:8:finding:2",
+      "claimId": "12485924:8",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Assess and calculating vehicle density are verbal action language. Vehicle density may be a nominal object, but the emitted quote including calculating is not its lexical term.",
+      "evidence": [
+        {
+          "patent": "12485924",
+          "claimNumber": 8,
+          "quote": "calculating vehicle density",
+          "startChar": 148,
+          "endChar": 175
+        },
+        {
+          "patent": "12485924",
+          "claimNumber": 8,
+          "quote": "assess a congestion level at the intersection by calculating vehicle density",
+          "startChar": 99,
+          "endChar": 175
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        8,
+        6,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:0",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Farther is a comparative adverb in the central portion extends farther relationship, not an additional entity term.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "farther",
+          "startChar": 308,
+          "endChar": 315
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "the central portion extends farther in the longitudinal direction",
+          "startChar": 280,
+          "endChar": 345
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:1",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.97,
+      "reason": "The preamble describes the primer, its pocket and projectile casing as the objects of the seating method; the operational steps then provide that casing/pocket, align the primer and seat it. Repeating their indefinite descriptions in those defining steps does not establish rival physical objects. In this full coherent sequence, the later definite phrase refers to the same working primer/pocket/casing, so mere repeated textual introductions do not justify an ambiguous-antecedent advisory.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "the primer pocket",
+          "startChar": 486,
+          "endChar": 503
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "A method of seating a primer in a primer pocket of a projectile casing",
+          "startChar": 0,
+          "endChar": 70
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "providing a projectile casing including a base and a primer pocket with a first depth",
+          "startChar": 376,
+          "endChar": 461
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "aligning a primer with the primer pocket of the projectile casing",
+          "startChar": 463,
+          "endChar": 528
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:2",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.97,
+      "reason": "The preamble describes the primer, its pocket and projectile casing as the objects of the seating method; the operational steps then provide that casing/pocket, align the primer and seat it. Repeating their indefinite descriptions in those defining steps does not establish rival physical objects. In this full coherent sequence, the later definite phrase refers to the same working primer/pocket/casing, so mere repeated textual introductions do not justify an ambiguous-antecedent advisory.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "the projectile casing",
+          "startChar": 507,
+          "endChar": 528
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "A method of seating a primer in a primer pocket of a projectile casing",
+          "startChar": 0,
+          "endChar": 70
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "providing a projectile casing including a base and a primer pocket with a first depth",
+          "startChar": 376,
+          "endChar": 461
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "aligning a primer with the primer pocket of the projectile casing",
+          "startChar": 463,
+          "endChar": 528
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:3",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.97,
+      "reason": "The preamble describes the primer, its pocket and projectile casing as the objects of the seating method; the operational steps then provide that casing/pocket, align the primer and seat it. Repeating their indefinite descriptions in those defining steps does not establish rival physical objects. In this full coherent sequence, the later definite phrase refers to the same working primer/pocket/casing, so mere repeated textual introductions do not justify an ambiguous-antecedent advisory.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "the primer",
+          "startChar": 486,
+          "endChar": 496
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "A method of seating a primer in a primer pocket of a projectile casing",
+          "startChar": 0,
+          "endChar": 70
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "providing a projectile casing including a base and a primer pocket with a first depth",
+          "startChar": 376,
+          "endChar": 461
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "aligning a primer with the primer pocket of the projectile casing",
+          "startChar": 463,
+          "endChar": 528
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:4",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.97,
+      "reason": "The preamble describes the primer, its pocket and projectile casing as the objects of the seating method; the operational steps then provide that casing/pocket, align the primer and seat it. Repeating their indefinite descriptions in those defining steps does not establish rival physical objects. In this full coherent sequence, the later definite phrase refers to the same working primer/pocket/casing, so mere repeated textual introductions do not justify an ambiguous-antecedent advisory.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "the primer pocket",
+          "startChar": 486,
+          "endChar": 503
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "A method of seating a primer in a primer pocket of a projectile casing",
+          "startChar": 0,
+          "endChar": 70
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "providing a projectile casing including a base and a primer pocket with a first depth",
+          "startChar": 376,
+          "endChar": 461
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "aligning a primer with the primer pocket of the projectile casing",
+          "startChar": 463,
+          "endChar": 528
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:5",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Toward belongs to the motion relationship, not the lexical name longitudinal direction. The source explicitly introduces a longitudinal direction in the primer rod and repeats it throughout.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "the longitudinal direction toward",
+          "startChar": 625,
+          "endChar": 658
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "a central portion extending in a longitudinal direction",
+          "startChar": 129,
+          "endChar": 184
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "in the longitudinal direction toward the base",
+          "startChar": 622,
+          "endChar": 667
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:6",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.97,
+      "reason": "The preamble describes the primer, its pocket and projectile casing as the objects of the seating method; the operational steps then provide that casing/pocket, align the primer and seat it. Repeating their indefinite descriptions in those defining steps does not establish rival physical objects. In this full coherent sequence, the later definite phrase refers to the same working primer/pocket/casing, so mere repeated textual introductions do not justify an ambiguous-antecedent advisory.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "the projectile casing",
+          "startChar": 507,
+          "endChar": 528
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "A method of seating a primer in a primer pocket of a projectile casing",
+          "startChar": 0,
+          "endChar": 70
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "providing a projectile casing including a base and a primer pocket with a first depth",
+          "startChar": 376,
+          "endChar": 461
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "aligning a primer with the primer pocket of the projectile casing",
+          "startChar": 463,
+          "endChar": 528
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:7",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Stopping movement is a verb-object action, least is a fragment of at least partially, and thereby is a result connector. None is an independently unsupported entity phrase.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "stopping movement",
+          "startChar": 698,
+          "endChar": 715
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "stopping movement of the central portion",
+          "startChar": 698,
+          "endChar": 738
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "at least partially contacting the base",
+          "startChar": 778,
+          "endChar": 816
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "thereby seating the primer",
+          "startChar": 843,
+          "endChar": 869
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:8",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Stopping movement is a verb-object action, least is a fragment of at least partially, and thereby is a result connector. None is an independently unsupported entity phrase.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "least",
+          "startChar": 781,
+          "endChar": 786
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "stopping movement of the central portion",
+          "startChar": 698,
+          "endChar": 738
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "at least partially contacting the base",
+          "startChar": 778,
+          "endChar": 816
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "thereby seating the primer",
+          "startChar": 843,
+          "endChar": 869
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:9",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.97,
+      "reason": "The preamble describes the primer, its pocket and projectile casing as the objects of the seating method; the operational steps then provide that casing/pocket, align the primer and seat it. Repeating their indefinite descriptions in those defining steps does not establish rival physical objects. In this full coherent sequence, the later definite phrase refers to the same working primer/pocket/casing, so mere repeated textual introductions do not justify an ambiguous-antecedent advisory.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "the projectile casing",
+          "startChar": 507,
+          "endChar": 528
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "A method of seating a primer in a primer pocket of a projectile casing",
+          "startChar": 0,
+          "endChar": 70
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "providing a projectile casing including a base and a primer pocket with a first depth",
+          "startChar": 376,
+          "endChar": 461
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "aligning a primer with the primer pocket of the projectile casing",
+          "startChar": 463,
+          "endChar": 528
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:10",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Stopping movement is a verb-object action, least is a fragment of at least partially, and thereby is a result connector. None is an independently unsupported entity phrase.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "thereby",
+          "startChar": 843,
+          "endChar": 850
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "stopping movement of the central portion",
+          "startChar": 698,
+          "endChar": 738
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "at least partially contacting the base",
+          "startChar": 778,
+          "endChar": 816
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "thereby seating the primer",
+          "startChar": 843,
+          "endChar": 869
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:11",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.97,
+      "reason": "The preamble describes the primer, its pocket and projectile casing as the objects of the seating method; the operational steps then provide that casing/pocket, align the primer and seat it. Repeating their indefinite descriptions in those defining steps does not establish rival physical objects. In this full coherent sequence, the later definite phrase refers to the same working primer/pocket/casing, so mere repeated textual introductions do not justify an ambiguous-antecedent advisory.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "the primer",
+          "startChar": 486,
+          "endChar": 496
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "A method of seating a primer in a primer pocket of a projectile casing",
+          "startChar": 0,
+          "endChar": 70
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "providing a projectile casing including a base and a primer pocket with a first depth",
+          "startChar": 376,
+          "endChar": 461
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "aligning a primer with the primer pocket of the projectile casing",
+          "startChar": 463,
+          "endChar": 528
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:12",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.97,
+      "reason": "The preamble describes the primer, its pocket and projectile casing as the objects of the seating method; the operational steps then provide that casing/pocket, align the primer and seat it. Repeating their indefinite descriptions in those defining steps does not establish rival physical objects. In this full coherent sequence, the later definite phrase refers to the same working primer/pocket/casing, so mere repeated textual introductions do not justify an ambiguous-antecedent advisory.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "the primer pocket",
+          "startChar": 486,
+          "endChar": 503
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "A method of seating a primer in a primer pocket of a projectile casing",
+          "startChar": 0,
+          "endChar": 70
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "providing a projectile casing including a base and a primer pocket with a first depth",
+          "startChar": 376,
+          "endChar": 461
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "aligning a primer with the primer pocket of the projectile casing",
+          "startChar": 463,
+          "endChar": 528
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12498206:1:finding:13",
+      "claimId": "12498206:1",
+      "verdict": "wrong",
+      "confidence": 0.97,
+      "reason": "The preamble describes the primer, its pocket and projectile casing as the objects of the seating method; the operational steps then provide that casing/pocket, align the primer and seat it. Repeating their indefinite descriptions in those defining steps does not establish rival physical objects. In this full coherent sequence, the later definite phrase refers to the same working primer/pocket/casing, so mere repeated textual introductions do not justify an ambiguous-antecedent advisory.",
+      "evidence": [
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "the projectile casing",
+          "startChar": 507,
+          "endChar": 528
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "A method of seating a primer in a primer pocket of a projectile casing",
+          "startChar": 0,
+          "endChar": 70
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "providing a projectile casing including a base and a primer pocket with a first depth",
+          "startChar": 376,
+          "endChar": 461
+        },
+        {
+          "patent": "12498206",
+          "claimNumber": 1,
+          "quote": "aligning a primer with the primer pocket of the projectile casing",
+          "startChar": 463,
+          "endChar": 528
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12491073:12:no-emitted-findings",
+      "claimId": "12491073:12",
+      "verdict": "right",
+      "confidence": 0.99,
+      "reason": "The supplied current-runtime record is checked and contains this no-emitted-findings confirmation with no finding question for this claim. This confirms only the recorded absence of emitted advisories; it does not certify legal cleanliness, structural completeness, or absence of unreported defects.",
+      "evidence": [
+        {
+          "patent": "12491073",
+          "claimNumber": 12,
+          "quote": "The implant of claim 11, wherein the frame portion comprises a straight segment aligned along the length of the implant.",
+          "startChar": 0,
+          "endChar": 120
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        12,
+        11,
+        1
+      ],
+      "statementCategory": "no-finding-record-confirmation",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12447068:19:finding:0",
+      "claimId": "12447068:19",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "The quote is a genuine bare plural noun phrase in the assembly orientation relationship. Adjacent modifies the collection devices and alternating up-down modifies orientations; these are real entity/property phrases, not standalone verbs. A limited bare-surface coverage warning is defensible and does not allege a legal defect.",
+      "evidence": [
+        {
+          "patent": "12447068",
+          "claimNumber": 19,
+          "quote": "adjacent vaginal discharge collection devices",
+          "startChar": 276,
+          "endChar": 321
+        },
+        {
+          "patent": "12447068",
+          "claimNumber": 19,
+          "quote": "adjacent vaginal discharge collection devices have alternating up-down orientations",
+          "startChar": 276,
+          "endChar": 359
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        19,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12447068:19:finding:1",
+      "claimId": "12447068:19",
+      "verdict": "right",
+      "confidence": 0.96,
+      "reason": "The quote is a genuine bare plural noun phrase in the assembly orientation relationship. Adjacent modifies the collection devices and alternating up-down modifies orientations; these are real entity/property phrases, not standalone verbs. A limited bare-surface coverage warning is defensible and does not allege a legal defect.",
+      "evidence": [
+        {
+          "patent": "12447068",
+          "claimNumber": 19,
+          "quote": "alternating up-down orientations",
+          "startChar": 327,
+          "endChar": 359
+        },
+        {
+          "patent": "12447068",
+          "claimNumber": 19,
+          "quote": "adjacent vaginal discharge collection devices have alternating up-down orientations",
+          "startChar": 276,
+          "endChar": 359
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        19,
+        1
+      ],
+      "statementCategory": "coverage-warning",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12479352:15:finding:0",
+      "claimId": "12479352:15",
+      "verdict": "uncertain",
+      "confidence": 0.89,
+      "reason": "The chain explicitly introduces a mounting device inside a system for anchoring goods, while claim 15 uses the mounting system. This can denote the mounting assembly/system already described, but the wording also leaves device-versus-whole-system identity unclear. The source supports neither confident missing-reference nor confident unique-equivalence adjudication.",
+      "evidence": [
+        {
+          "patent": "12479352",
+          "claimNumber": 15,
+          "quote": "the mounting system",
+          "startChar": 33,
+          "endChar": 52
+        },
+        {
+          "patent": "12479352",
+          "claimNumber": 10,
+          "quote": "A system for anchoring goods to a truck bed",
+          "startChar": 0,
+          "endChar": 43
+        },
+        {
+          "patent": "12479352",
+          "claimNumber": 10,
+          "quote": "the mounting device of claim 1",
+          "startChar": 68,
+          "endChar": 98
+        },
+        {
+          "patent": "12479352",
+          "claimNumber": 15,
+          "quote": "the mounting system further comprises a spacer washer",
+          "startChar": 33,
+          "endChar": 86
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        15,
+        10,
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    },
+    {
+      "id": "12479352:15:finding:1",
+      "claimId": "12479352:15",
+      "verdict": "wrong",
+      "confidence": 0.99,
+      "reason": "Claim 1 explicitly introduces two ear portions and uses first/second selectors from that pair. Claim 15 names the same two ear portions through its 15 to 10 to 1 chain.",
+      "evidence": [
+        {
+          "patent": "12479352",
+          "claimNumber": 15,
+          "quote": "the two ear portions",
+          "startChar": 112,
+          "endChar": 132
+        },
+        {
+          "patent": "12479352",
+          "claimNumber": 1,
+          "quote": "a bracket having two ear portions",
+          "startChar": 62,
+          "endChar": 95
+        }
+      ],
+      "sourceDependencyContextReviewed": [
+        15,
+        10,
+        1
+      ],
+      "statementCategory": "substantive-advisory",
+      "legalCleanlinessCertified": false
+    }
+  ],
+  "coverage": {
+    "claimCount": 30,
+    "questionCount": 115,
+    "allQuestionIdsExactlyOnce": true,
+    "allEvidenceQuotesFoundInCanonicalContext": true,
+    "evidenceQuoteCount": 273,
+    "verdictCounts": {
+      "right": 30,
+      "wrong": 69,
+      "uncertain": 16
+    }
+  },
+  "preservation": "Only this new receipt written; no input, baseline, runtime or prior result changed."
+}

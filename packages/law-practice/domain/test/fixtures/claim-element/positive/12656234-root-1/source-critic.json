@@ -1,0 +1,349 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12656234-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20110178950", "A1", "20110721"],
+    "applicationReference": ["US", "12656234", "20100121"],
+    "officeActionDocumentIdentifiers": ["H5WNMLJZPXXIFW4"],
+    "officeActionMailDate": "2012-08-17"
+  },
+  "digestEvidence": [
+    {
+      "file": "12656234.publication.xml",
+      "sha256": "1c6364c7341c6923def1f831d1598a8ff9cc6219d5a01edeb4982894d32f18bd",
+      "matchesProvenance": true
+    },
+    {
+      "file": "12656234.claims.xml",
+      "sha256": "d170c033eaed8c8abcc41ee7478140c5d6a6b43685ccd26ec9f3214f25195f3a",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "d170c033eaed8c8abcc41ee7478140c5d6a6b43685ccd26ec9f3214f25195f3a",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "G4YD8YCPPPOPPY5",
+      "xmlAvailable": true,
+      "sha256": "2117b45c26ec57b32fddc755703588571832a38354727289db43a0ea600b29ce",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 69,
+    "actualRows": 69,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2010-01-21T00:00:00.000-0500",
+        "documentCode": "A.PE",
+        "documentIdentifier": "G4YD8YAYPPOPPY5"
+      },
+      {
+        "officialDate": "2010-01-21T00:00:00.000-0500",
+        "documentCode": "REM",
+        "documentIdentifier": "G4YD8YC0PPOPPY5"
+      },
+      {
+        "officialDate": "2010-01-21T00:00:00.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "G4YD8YCPPPOPPY5"
+      },
+      {
+        "officialDate": "2010-01-21T00:00:00.000-0500",
+        "documentCode": "REM",
+        "documentIdentifier": "G4YD8YIEPPOPPY5"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "7. claims 1-10 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the first sell level of the order book",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first sell level of the order book"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the first sell buy of the order book",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": false,
+      "nativeQuote": "the first buy level of the order book"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "determining the value",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "determining the value"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the value \u201c1",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the value \u201c1"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the value \u201c2",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the value \u201c2"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the evolution in time of the buy limit price",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the evolution in time of the buy limit price"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the sell orders of the book (ask)",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the sell orders of the book (ASK)"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the sum of the executed volumes",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the sum of the executed volumes"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the minimum representation time period",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the minimum representation time period"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the evolution in time of the real bid/ask pressure",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the evolution in time of the real Bid/Ask pressure"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the representation made for the time evolution of the buy limit price",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the representation made for the time evolution of the buy limit price"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the side variable",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the side variable"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the absolute value of pr",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the absolute value of PR"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the evolution in time of the volume of each buy and sell level of the price limit order book",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the evolution in time of the volume of each buy and sell level of the price limit order book"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the buy volumes",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the buy volumes"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the price axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the price axis"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the accumulated by price real bid/ask pressure",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the accumulated by price real Bid/Ask pressure"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the stock price",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the stock price"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the absolute value of pra",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the absolute value of PRA"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the user",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the user"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the volume imbalance",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the volume imbalance"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the immediate evolution",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the immediate evolution"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the volume of each registered level in the order book",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the volume of each registered level in the order book"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the total number of levels",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the total number of levels"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the number of time periods",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the number of time periods"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the normalization",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the normalization"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the normalized sell volumes",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the normalized sell volumes"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the gradient of level i for the period t",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the gradient of level i for the period t"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the normalized volume of level i",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the normalized volume of level i"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the absolute value of the gradient",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the absolute value of the gradient"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the transaction information",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the transaction information"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the two codes of the two members carrying out the transaction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the two codes of the two members carrying out the transaction"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the radius",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the radius"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the variation",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the variation"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the upper right and lower left quadrants",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the upper right and lower left quadrants"
+    }
+  ],
+  "assessment": "Original PDF1-5 (printed16-20) corroborates complete selected1-10 prose, dependencies and formulas against full native XML. Apparent original2 S is visually subscript t. Formula7 ratio uses native mfrac;8 double sum includes N-1 and k1..K;9 gradient agrees;10 original square root and fraction are preserved by native msqrt/mfrac. Quotation/subscript OCR differences therefore do not show a version conflict. Actual second-paragraph rejection covers1-10, including dependency rejection2-10.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used.",
+  "previousRounds": [
+    {
+      "round": 1,
+      "verdict": "unresolved",
+      "confidence": 0.98,
+      "assessment": "Original stock-transaction claims match surrounding prose but selected formulas differ in subscript/MathML and serialized private-use glyphs, including original2 apparent S versus native t and original7-9 formula layout. Wording agreement alone does not reconcile every material formula before in-force acceptance.",
+      "findings": [
+        {
+          "severity": "blocking",
+          "evidence": "Original stock-transaction claims match surrounding prose but selected formulas differ in subscript/MathML and serialized private-use glyphs, including original2 apparent S versus native t and original7-9 formula layout. Wording agreement alone does not reconcile every material formula before in-force acceptance.",
+          "requiredAction": "Supply authoritative source evidence resolving this identified ground or operative-version gap; do not alter native source to force correspondence."
+        }
+      ]
+    }
+  ],
+  "pdfCorroboration": {
+    "documentIdentifier": "G4YD8YCPPPOPPY5",
+    "sha256": "4cd5da532b31b0c92f4216215d9fa789e1158d9098c295cde6bed53c0c6f8c6a",
+    "pdfPagesInspected": [1, 2, 3, 4, 5],
+    "printedPages": [16, 17, 18, 19, 20],
+    "purpose": "Independent visual corroboration only."
+  },
+  "separateNormalizationConcern": "Canonical claims.json linearizes MathML text and does not display native mfrac division or msqrt radical (notably10 radius). This is representational/normalization coverage, not original/native source-version ambiguity; raw native XML preserves the math. Preserve exact canonical source and report such coverage separately rather than treating it as gold uncertainty."
+}

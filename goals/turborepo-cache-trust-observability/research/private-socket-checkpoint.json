@@ -1,0 +1,328 @@
+{
+  "schemaVersion": "cache-private-socket-checkpoint/v1",
+  "recordedAt": "2026-10-29T23:13:34.389000+00:00",
+  "authority": "Source-bound transport component observations only; no protected producer, qualification, deployed signing or observation-window authority.",
+  "sourceBaseRevision": "098770ea2c41e13797cbf6da04bdcc1fa8278977",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts": "ed56ccf23a727041b8c46a8d4992df9d435e6328cd72f929780ec7772ae479f3",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "c72ee0f1d1be185f333cadccdfda3a09adf6149dd65c233db2fc6099788204a6",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "a83e92ca5531dbd1cce86fd66c8145d4e000cf87ba88dc363a0991f30bf8fbd6",
+    "packages/tooling/tool/cli/test/cache-private-socket.test.ts": "1abd6e27ed1d78f5f91240788b80d08a88043a95bdea9121c3d53da0f37e1abe",
+    "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts": "78d62f94315057a2782e3549aaf54b77c6d9247c9a0c83f738d48a9a32b5ce0b"
+  },
+  "component": {
+    "existingOwner": "Cache conformance observer and protocol fixture roles",
+    "existingTransport": "Original loopback API and error boundary preserved",
+    "newTransport": "Scoped owner-only Unix endpoint with redacted upstream NetAddress value",
+    "lifetime": "Fresh directory0700, socket0600; scope closes server then removes endpoint and parent directory",
+    "publicSurface": "Source-only Cache test facade; no command facade expansion",
+    "runtime": "Listener runs in actual Bun; Node driver delegates the lifecycle assertion to that native runtime and clients use the existing platform HTTP agent",
+    "authorization": "Fixed upstream still enforces role and tenant; transport grants no role or producer identity"
+  },
+  "verification": {
+    "nodeFocused": {
+      "exit": 0,
+      "tests": 48,
+      "files": 3,
+      "seconds": 29.598
+    },
+    "bunFocused": {
+      "exit": 0,
+      "tests": 48,
+      "files": 3,
+      "seconds": 19.03
+    },
+    "addedRequestBudgetControl": {
+      "nodeExit": 0,
+      "nodeSeconds": 8.977,
+      "bunExit": 0,
+      "bunSeconds": 2.685,
+      "behavior": "Four requests are observed; later request returns503 and evidence read fails closed. A canonical Result assertion rewrite follows these focused runs and is included in the passing full package audit."
+    },
+    "quick": {
+      "exit": 0,
+      "seconds": 13.486,
+      "lintSeconds": 5.6,
+      "checkSeconds": 11.9
+    },
+    "fullPackage": {
+      "command": "bun run beep quality package-verify @beep/repo-cli",
+      "exit": 0,
+      "seconds": 1244.41,
+      "auditSeconds": 1191.0,
+      "docgenSeconds": 51.9,
+      "sourceFiles": {
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts": "ed56ccf23a727041b8c46a8d4992df9d435e6328cd72f929780ec7772ae479f3",
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "c72ee0f1d1be185f333cadccdfda3a09adf6149dd65c233db2fc6099788204a6",
+        "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "a83e92ca5531dbd1cce86fd66c8145d4e000cf87ba88dc363a0991f30bf8fbd6",
+        "packages/tooling/tool/cli/test/cache-private-socket.test.ts": "0a7c016d544b2120de303488cdfa868c08c819534aa350b3ddcdce4bb014d50a"
+      },
+      "scope": "Historical complete default package audit and Docgen cover the unchanged production files and original native test. The added control file has current51-test provider coverage and quick package proof. Fresh complete integrated final proof remains required."
+    },
+    "physicalControls": [
+      "writer PUT200",
+      "reader GET200 exact body and opaque tag",
+      "reader PUT403 preserves contradictory-result invalid-evidence classification",
+      "request-body/tag SHA capture",
+      "encoded events omit bearer, tag, payload and socket path",
+      "directory/socket modes and redacted address",
+      "budget exhaustion refuses traffic and incomplete evidence",
+      "socket and parent directory removed after scope"
+    ],
+    "currentParentReplay": {
+      "landedParent": "af8468dc177feb1c1e9ede73bbc8154a8ef9be2f",
+      "ownedOnlyReplay": true,
+      "originalSourceFilesUnchanged": true,
+      "nodeFocused": {
+        "exit": 0,
+        "tests": 48,
+        "seconds": 24.076
+      },
+      "bunFocused": {
+        "exit": 0,
+        "tests": 48,
+        "seconds": 17.468
+      },
+      "quick": {
+        "exit": 0,
+        "seconds": 16.865
+      }
+    },
+    "coverageRepair": {
+      "authority": "Constructor-double controls exercise common owner bookkeeping in-process; the retained native lifecycle proves actual Bun transport. Neither is protected R2 producer proof.",
+      "sourceFiles": {
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts": "ed56ccf23a727041b8c46a8d4992df9d435e6328cd72f929780ec7772ae479f3",
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "c72ee0f1d1be185f333cadccdfda3a09adf6149dd65c233db2fc6099788204a6",
+        "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "a83e92ca5531dbd1cce86fd66c8145d4e000cf87ba88dc363a0991f30bf8fbd6",
+        "packages/tooling/tool/cli/test/cache-private-socket.test.ts": "0a7c016d544b2120de303488cdfa868c08c819534aa350b3ddcdce4bb014d50a",
+        "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts": "78d62f94315057a2782e3549aaf54b77c6d9247c9a0c83f738d48a9a32b5ce0b"
+      },
+      "providers": {
+        "node": {
+          "coverageSummarySha256": "26d34af4addc7fe4ed40d5c95285eae7dcbcdd09fc995f690dc619625b8bf7af",
+          "metrics": {
+            "Cache.conformance.proxy.ts": {
+              "lines": {
+                "total": 180,
+                "covered": 163,
+                "skipped": 0,
+                "pct": 90.55
+              },
+              "statements": {
+                "total": 195,
+                "covered": 175,
+                "skipped": 0,
+                "pct": 89.74
+              },
+              "functions": {
+                "total": 82,
+                "covered": 65,
+                "skipped": 0,
+                "pct": 79.26
+              },
+              "branches": {
+                "total": 76,
+                "covered": 68,
+                "skipped": 0,
+                "pct": 89.47
+              }
+            },
+            "Cache.protocol.fixture.ts": {
+              "lines": {
+                "total": 129,
+                "covered": 129,
+                "skipped": 0,
+                "pct": 100
+              },
+              "statements": {
+                "total": 153,
+                "covered": 153,
+                "skipped": 0,
+                "pct": 100
+              },
+              "functions": {
+                "total": 35,
+                "covered": 35,
+                "skipped": 0,
+                "pct": 100
+              },
+              "branches": {
+                "total": 92,
+                "covered": 92,
+                "skipped": 0,
+                "pct": 100
+              }
+            }
+          },
+          "testsPassed": 51,
+          "files": 4,
+          "exit": 0
+        },
+        "bun": {
+          "coverageSummarySha256": "06d3c5992b97f5cfc31cbcc4af8a180f53675ecbf1402ccbb2835b928b6a6c6f",
+          "metrics": {
+            "Cache.conformance.proxy.ts": {
+              "lines": {
+                "total": 180,
+                "covered": 163,
+                "skipped": 0,
+                "pct": 90.55
+              },
+              "statements": {
+                "total": 195,
+                "covered": 176,
+                "skipped": 0,
+                "pct": 90.25
+              },
+              "functions": {
+                "total": 82,
+                "covered": 65,
+                "skipped": 0,
+                "pct": 79.26
+              },
+              "branches": {
+                "total": 76,
+                "covered": 67,
+                "skipped": 0,
+                "pct": 88.15
+              }
+            },
+            "Cache.protocol.fixture.ts": {
+              "lines": {
+                "total": 129,
+                "covered": 129,
+                "skipped": 0,
+                "pct": 100
+              },
+              "statements": {
+                "total": 153,
+                "covered": 153,
+                "skipped": 0,
+                "pct": 100
+              },
+              "functions": {
+                "total": 35,
+                "covered": 35,
+                "skipped": 0,
+                "pct": 100
+              },
+              "branches": {
+                "total": 92,
+                "covered": 92,
+                "skipped": 0,
+                "pct": 100
+              }
+            }
+          },
+          "testsPassed": 51,
+          "files": 4,
+          "exit": 0
+        }
+      },
+      "nodeSeconds": 38.595,
+      "bunSeconds": 57.98,
+      "quick": {
+        "exit": 0,
+        "seconds": 13.606,
+        "lintSeconds": 6.5,
+        "checkSeconds": 12.1
+      },
+      "guardRemovalControls": {
+        "schemaVersion": "cache-private-socket-guard-controls/v1",
+        "recordedAt": "2026-10-29T22:03:07.413834+00:00",
+        "authority": "Actual intended-failure source-removal controls in the owned test checkout; no qualification or runtime activation",
+        "rows": [
+          {
+            "control": "unix-address-guard",
+            "source": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts",
+            "originalSha256": "ed56ccf23a727041b8c46a8d4992df9d435e6328cd72f929780ec7772ae479f3",
+            "mutantSha256": "2ff5fe076332578951e22246186b6fdaeb3319141471bf8ddd8a29a9e687f007",
+            "exit": 1,
+            "failedTests": 1,
+            "selectedTest": "rejects a TCP address and removes the allocated directory",
+            "intendedAssertionVerified": true,
+            "rawOutputSha256": "f1cda88948dd5229c2b7bdbab8cc483ca3dd0f11d07d251a5b03013504a083a8"
+          },
+          {
+            "control": "socket-owner-mode",
+            "source": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts",
+            "originalSha256": "ed56ccf23a727041b8c46a8d4992df9d435e6328cd72f929780ec7772ae479f3",
+            "mutantSha256": "d36884f794db19578d761c28291609b7cf09ee051961c25df62601cf5a650876",
+            "exit": 1,
+            "failedTests": 1,
+            "selectedTest": "owns socket modes and cleanup with an injected server constructor",
+            "intendedAssertionVerified": true,
+            "rawOutputSha256": "6f9204b172e8c34e47088b791d535adc7f815ee96f9aff16da48fea8171b6df9"
+          }
+        ],
+        "sourceRestoredExactly": true,
+        "sourceSha256After": "ed56ccf23a727041b8c46a8d4992df9d435e6328cd72f929780ec7772ae479f3",
+        "coverageFloorChanged": false
+      },
+      "coverageFloorChanged": false
+    },
+    "currentScopeReview": {
+      "path": "research/private-socket-scope-review.json",
+      "sha256": "718963d3bd9b4ae174654de83d4f70bb7e9885eaa9b6e05a0788377173a273d3",
+      "scope": "One equivalent assertion repair; current 51 tests/four files both runtimes, unchanged four-metric coverage, four actual shorter-scope removal failures. Old package/provider receipts retain their exact earlier source scope.",
+      "metrics": {
+        "node": {
+          "Cache.conformance.proxy.ts": {
+            "lines": 90.55,
+            "statements": 89.74,
+            "branches": 89.47,
+            "functions": 79.26
+          },
+          "Cache.protocol.fixture.ts": {
+            "lines": 100,
+            "statements": 100,
+            "branches": 100,
+            "functions": 100
+          }
+        },
+        "bun": {
+          "Cache.conformance.proxy.ts": {
+            "lines": 90.55,
+            "statements": 90.25,
+            "branches": 88.15,
+            "functions": 79.26
+          },
+          "Cache.protocol.fixture.ts": {
+            "lines": 100,
+            "statements": 100,
+            "branches": 100,
+            "functions": 100
+          }
+        }
+      },
+      "coverageFloorChanged": false
+    }
+  },
+  "retainedFailures": [
+    "First new test expected absent result for a denied response with an inconsistent allowed header; existing invalid-evidence classifier was correct, so the assertion was fixed.",
+    "Test service wiring and nested pipeable assertions were corrected; no production classifier or baseline was weakened.",
+    "A copied documentation import line and duplicate test facade import were removed before the full package replay.",
+    "Actual Node coverage left the new listener function unexecuted because the physical lifecycle ran in a separate Bun process. The initial48-test pass was not complete file-floor proof.",
+    "First in-process controls attempted to spy on native immutable ESM exports and used a prohibited native HTTP import; use framework module replacement and the existing Effect server interface.",
+    "Corrected missing target options and a test mock filesystem error-channel mismatch. Test-only formatting failures were repaired before current quick and provider checks passed.",
+    "The first source-removal receipt wrapper expected untruncated assertion messages; selected guard assertion did fail and source restored. The corrected wrapper verifies the selected test and identifying assertion prefixes."
+  ],
+  "activationChanged": false,
+  "qualificationChanged": false,
+  "remaining": [
+    "Wire actual reviewed adapter and role-selected mounted sockets into the closed native producer.",
+    "Join actual complete native graph/bytes and explicit backend results to independent approval and immutable protected workflow publication.",
+    "Complete current real-computation qualification and all eligible computation dispositions/adoption.",
+    "Prove runtime credentials, signed epochs, rotation/rollback and actual7/7/14-day representative windows."
+  ],
+  "priorRecordedAtAtDefaultPackage": "2026-10-29T20:39:37.280982+00:00",
+  "priorSourceBaseRevisionBeforeCoverageControls": "11c6a3dc9a8d42cfc4264290c89b5ca6e8adf86f",
+  "priorRecordedAtAtScopeReview": "2026-10-29T22:04:30.269986+00:00",
+  "priorSourceFilesAtScopeReview": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts": "ed56ccf23a727041b8c46a8d4992df9d435e6328cd72f929780ec7772ae479f3",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "c72ee0f1d1be185f333cadccdfda3a09adf6149dd65c233db2fc6099788204a6",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "a83e92ca5531dbd1cce86fd66c8145d4e000cf87ba88dc363a0991f30bf8fbd6",
+    "packages/tooling/tool/cli/test/cache-private-socket.test.ts": "0a7c016d544b2120de303488cdfa868c08c819534aa350b3ddcdce4bb014d50a",
+    "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts": "78d62f94315057a2782e3549aaf54b77c6d9247c9a0c83f738d48a9a32b5ce0b"
+  }
+}

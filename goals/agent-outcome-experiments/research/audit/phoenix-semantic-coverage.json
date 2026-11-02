@@ -1,0 +1,60 @@
+{
+  "query": "{ projects { edges { node { name session_dotted:recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"session.id is not None\") session_nested:recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"attributes[\\\"session\\\"][\\\"id\\\"] is not None\") model_dotted:recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"llm.model_name is not None\") model_nested:recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"attributes[\\\"llm\\\"][\\\"model_name\\\"] is not None\") repo_nested:recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"attributes[\\\"beep\\\"][\\\"repo\\\"] is not None\") native_input:recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"input_tokens is not None\") normalized_tokens:recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"llm.token_count.total is not None\") normalized_input:recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"llm.token_count.prompt is not None\") } } } }",
+  "filters": {
+    "session_dotted": "session.id is not None",
+    "session_nested": "attributes[\"session\"][\"id\"] is not None",
+    "model_dotted": "llm.model_name is not None",
+    "model_nested": "attributes[\"llm\"][\"model_name\"] is not None",
+    "repo_nested": "attributes[\"beep\"][\"repo\"] is not None",
+    "native_input": "input_tokens is not None",
+    "normalized_tokens": "llm.token_count.total is not None",
+    "normalized_input": "llm.token_count.prompt is not None"
+  },
+  "response": {
+    "data": {
+      "projects": {
+        "edges": [
+          {
+            "node": {
+              "name": "default",
+              "session_dotted": 0,
+              "session_nested": 0,
+              "model_dotted": 0,
+              "model_nested": 0,
+              "repo_nested": 0,
+              "native_input": 0,
+              "normalized_tokens": 0,
+              "normalized_input": 0
+            }
+          },
+          {
+            "node": {
+              "name": "harness-otel",
+              "session_dotted": 359131,
+              "session_nested": 359131,
+              "model_dotted": 91803,
+              "model_nested": 91803,
+              "repo_nested": 37616,
+              "native_input": 91499,
+              "normalized_tokens": 0,
+              "normalized_input": 0
+            }
+          },
+          {
+            "node": {
+              "name": "beep-agent-effectiveness",
+              "session_dotted": 0,
+              "session_nested": 0,
+              "model_dotted": 0,
+              "model_nested": 0,
+              "repo_nested": 0,
+              "native_input": 0,
+              "normalized_tokens": 0,
+              "normalized_input": 0
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -241,14 +241,15 @@ const listImpl = Effect.fn("HarnessLedger.list")(function* (options: HarnessLedg
         harnessBaselineHash: current.harnessBaselineHash,
       })
     ).pipe(
-      Effect.mapError(HarnessLedgerIoError.wrap("Failed to derive the row's current harness fingerprint.")),
-      Effect.map((fingerprint) =>
-        HarnessLedgerListEntry.make({
-          row: head,
-          stale: isStale(head, fingerprint),
-          chainLength: chainLength(rows, head),
-        })
-      )
+      Effect.mapBoth({
+        onFailure: HarnessLedgerIoError.wrap("Failed to derive the row's current harness fingerprint."),
+        onSuccess: (fingerprint) =>
+          HarnessLedgerListEntry.make({
+            row: head,
+            stale: isStale(head, fingerprint),
+            chainLength: chainLength(rows, head),
+          }),
+      })
     )
   );
   return pipe(

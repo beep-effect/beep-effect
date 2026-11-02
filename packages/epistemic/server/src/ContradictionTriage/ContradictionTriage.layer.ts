@@ -42,7 +42,7 @@ import {
 } from "@beep/provenance/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { pipe } from "effect/Function";
@@ -186,7 +186,7 @@ const findCandidateEvidence = (
 
 const makeContradictionTriageService = Effect.fnUntraced(function* () {
   const repository = yield* ContradictionTriageRepository;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const reviewer = yield* ContradictionReviewer;
   const scope = yield* ContradictionReviewScope;
   const sourceTextResolver = yield* SourceTextResolver;
@@ -329,7 +329,7 @@ const makeContradictionTriageService = Effect.fnUntraced(function* () {
             sourceText: source.text,
           })
         ).pipe(
-          Effect.provideService(Crypto.Crypto, crypto),
+          Effect.provideService(Digest.Digest, crypto),
           Effect.catchTag(
             "VerifiedTextAnchorError",
             dropInternalFailure(

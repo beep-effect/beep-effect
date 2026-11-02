@@ -7,7 +7,7 @@ decisions live in README.md → Port notes, not here.
 This is the reporting interface document of upstream `@effected/github-actions`
 (`okf/interfaces/actions-reporting.md`), which moved here when wave 3-1 of
 `goals/effected-promotion` promoted the reporting suite. The rest of that package's
-bundle stays with its driver half at `scratchpad/effected/github-actions/KNOWLEDGE.md`.
+bundle moved with its driver half to `packages/drivers/github-actions/KNOWLEDGE.md` (wave 5).
 
 Upstream paths map onto this package as follows: `packages/github-actions/src/{CheckState,
 ManagedDocument,GitHubMarkdown,CheckDocument}.ts` are `src/` here and their `__test__/`

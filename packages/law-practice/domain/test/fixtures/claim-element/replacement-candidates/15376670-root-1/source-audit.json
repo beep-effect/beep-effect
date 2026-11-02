@@ -1,0 +1,239 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "15376670-root-1",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "candidateStatus": "Source-only replacement candidate; no active slot changed; independent source critic and semantic references pending.",
+  "reviewedClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "15376670",
+    "publicationNumber": "US20170311767A1",
+    "publicationReference": ["US", "20170311767", "A1", "20171102"],
+    "applicationReference": ["US", "15376670", "20161213"],
+    "officeActionDocumentIdentifiers": ["JC83NSXRRXEAPX4"],
+    "officeActionMailDate": "2018-01-11"
+  },
+  "digestEvidence": [
+    {
+      "file": "15376670.publication.xml",
+      "sha256": "8e3c4e2b57d4506cb1e80f1a995bbf8430f40ffba78369dfbe12eb50526aa3ce",
+      "matchesProvenance": true
+    },
+    {
+      "file": "15376670.claims.xml",
+      "sha256": "69ce124fecc6b22322bfa87d5142909b6cf49959e2b4a3aa98515f4ef5ee1e24",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "69ce124fecc6b22322bfa87d5142909b6cf49959e2b4a3aa98515f4ef5ee1e24",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "IWNF1H1YRXEAPX3",
+      "officialDate": "2016-12-13T00:00:00.000-0500",
+      "xmlAvailable": true,
+      "sha256": "a35004ac6514863d71ef319982a5861d91a17e5122dbe8c398534ea4a236733b",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 42,
+    "actualRows": 42,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2016-12-13T00:00:00.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "IWNF1H1YRXEAPX3"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "JC83NSXRRXEAPX4",
+        "documentCode": "CTNF",
+        "officialDate": "2018-01-11T00:00:00.000-0500"
+      }
+    ]
+  },
+  "officeActionGroundQuote": "5. claims 1-19 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the barrel body edge",
+      "nativeQuote": "the barrel body edge",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the tooth groove",
+      "nativeQuote": "the tooth groove",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the inner cavity",
+      "nativeQuote": "the inner cavity",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the center roller",
+      "nativeQuote": "the center roller",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the movable blade",
+      "nativeQuote": "the movable blade",
+      "literalMatch": true
+    }
+  ],
+  "rationale": "Complete original PDF1-5 confirms separately printed claims1-19 and resolves the XML node-count/merged-number concern. It also confirms a real original/native entity-name conflict: original1 says barrel body where native1 says batter body; original2 says roller brush assembly while native2 says roller blush assembly. These are differences in the raw native wording, not merely original OCR. Preserve the hold because potential entity-identity changes cannot be waived as typography. All actual statutory-ground and natural-family evidence remains valid, but operative source fidelity is not accepted.",
+  "concerns": [
+    "Native/original entity-name discrepancies in selected1/2 remain material; obtain authoritative correction/version adjudication or replace this candidate. Do not repair native text to qualify it."
+  ],
+  "pdfNeeds": [],
+  "attorneyAdjudication": "pending",
+  "independence": "Source-extractor only for these candidates. No source/provenance/expected/active sample changes, predictions, production/rules, network, secrets, git or delegation.",
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "15376670-root-1",
+      "role": "extractor-source-audit",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.98,
+      "verdict": "unresolved",
+      "candidateStatus": "Source-only replacement candidate; no active slot changed; independent source critic and semantic references pending.",
+      "reviewedClaimNumbers": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+      ],
+      "sourceIdentity": {
+        "applicationNumber": "15376670",
+        "publicationNumber": "US20170311767A1",
+        "publicationReference": ["US", "20170311767", "A1", "20171102"],
+        "applicationReference": ["US", "15376670", "20161213"],
+        "officeActionDocumentIdentifiers": ["JC83NSXRRXEAPX4"],
+        "officeActionMailDate": "2018-01-11"
+      },
+      "digestEvidence": [
+        {
+          "file": "15376670.publication.xml",
+          "sha256": "8e3c4e2b57d4506cb1e80f1a995bbf8430f40ffba78369dfbe12eb50526aa3ce",
+          "matchesProvenance": true
+        },
+        {
+          "file": "15376670.claims.xml",
+          "sha256": "69ce124fecc6b22322bfa87d5142909b6cf49959e2b4a3aa98515f4ef5ee1e24",
+          "matchesProvenance": true
+        },
+        {
+          "file": "source.claims.xml",
+          "sha256": "69ce124fecc6b22322bfa87d5142909b6cf49959e2b4a3aa98515f4ef5ee1e24",
+          "matchesProvenance": true
+        }
+      ],
+      "originalEvidence": [
+        {
+          "documentIdentifier": "IWNF1H1YRXEAPX3",
+          "officialDate": "2016-12-13T00:00:00.000-0500",
+          "xmlAvailable": true,
+          "sha256": "a35004ac6514863d71ef319982a5861d91a17e5122dbe8c398534ea4a236733b",
+          "matchesProvenance": true
+        }
+      ],
+      "inventoryEvidence": {
+        "declaredCount": 42,
+        "actualRows": 42,
+        "preOrOnActionClaimOrAmendmentRows": [
+          {
+            "officialDate": "2016-12-13T00:00:00.000-0500",
+            "documentCode": "CLM",
+            "documentIdentifier": "IWNF1H1YRXEAPX3"
+          }
+        ],
+        "citedOfficeActionRows": [
+          {
+            "documentIdentifier": "JC83NSXRRXEAPX4",
+            "documentCode": "CTNF",
+            "officialDate": "2018-01-11T00:00:00.000-0500"
+          }
+        ]
+      },
+      "officeActionGroundQuote": "5. claims 1-19 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.",
+      "quotedEvidence": [
+        {
+          "claimNumber": 1,
+          "examinerPhrase": "the barrel body edge",
+          "nativeQuote": "the barrel body edge",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 1,
+          "examinerPhrase": "the tooth groove",
+          "nativeQuote": "the tooth groove",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 6,
+          "examinerPhrase": "the inner cavity",
+          "nativeQuote": "the inner cavity",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 10,
+          "examinerPhrase": "the center roller",
+          "nativeQuote": "the center roller",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 14,
+          "examinerPhrase": "the movable blade",
+          "nativeQuote": "the movable blade",
+          "literalMatch": true
+        }
+      ],
+      "rationale": "The actual 112(b)/second-paragraph ground expressly rejects claims 1-19, with root 1 and selected claims 6-17 discussed by number. Natural dependencies connect all selected claims 1-19 to independent claim 1. Original IWNF1H1YRXEAPX3 parses 13 Claim nodes, but printed claim 10 occurs inside 9 and printed claims 15-19 inside 14. These are possible segmentation merges. Root 1 original barrel body versus native batter body, and claim 2 original brush versus native blush, require visual corroboration because body-name differences may affect entity identity. Do not assume every wording difference is OCR. The full 42-row inventory contains only this original CLM before the OA.",
+      "concerns": [
+        "Inspect original IWNF1H1YRXEAPX3 PDF for complete selected claims 1-19, especially numbered claims 10/15-19 and root 1 barrel/batter and claim 2 brush/blush word fidelity."
+      ],
+      "pdfNeeds": [
+        "Inspect original IWNF1H1YRXEAPX3 PDF for complete selected claims 1-19, especially numbered claims 10/15-19 and root 1 barrel/batter and claim 2 brush/blush word fidelity."
+      ],
+      "attorneyAdjudication": "pending",
+      "independence": "Source-extractor only for these candidates. No source/provenance/expected/active sample changes, predictions, production/rules, network, secrets, git or delegation."
+    }
+  ],
+  "pdfCorroboration": [
+    {
+      "documentIdentifier": "IWNF1H1YRXEAPX3",
+      "sha256": "131aa7d4e0a745175a8a6c3e35577caeb90551d7f1d3cebebfbd2c6c51b3baed",
+      "pdfPagesInspected": [1, 2, 3, 4, 5],
+      "printedPages": [14, 15, 16, 17, 18],
+      "purpose": "Visual original corroboration only; native source unchanged."
+    }
+  ],
+  "pdfQuotedEvidence": [
+    {
+      "claimNumber": 1,
+      "nativeQuote": "the batter body",
+      "originalQuote": "the barrel body",
+      "pdfPage": 1
+    },
+    {
+      "claimNumber": 2,
+      "nativeQuote": "The roller blush assembly",
+      "originalQuote": "The roller brush assembly",
+      "pdfPage": 1
+    }
+  ]
+}

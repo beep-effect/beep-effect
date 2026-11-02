@@ -3,7 +3,6 @@ import {
   DerivationEvidence,
   ImplScriptDrift,
   PackageScriptsPolicy,
-  policyToolsFingerprint,
   ScriptsRecord,
   scriptsBlockFromRecord,
 } from "@beep/repo-cli/test/PackageScripts";
@@ -444,63 +443,6 @@ describe("package scripts policy", () => {
         assertSome(HashMap.get(missing.drift, "packages/drivers/gov-legal-mcp/package.json"), [
           { _tag: "missing-task", name: "codegen" },
         ]);
-      })
-    );
-  });
-  it.layer(platform, { timeout: "30 seconds" })((it) => {
-    it.effect(
-      "declares inputs independently of source contents with fresh dependency closure discovery",
-      Effect.fnUntraced(function* () {
-        const files: Record<string, unknown> = {
-          "package.json": { name: "root", workspaces: ["packages/*"] },
-          "packages/cli/package.json": { name: "@beep/repo-cli", dependencies: { "@beep/helper": "workspace:*" } },
-          "packages/cli/src/index.ts": "cli",
-          "packages/helper/package.json": { name: "@beep/helper", dependencies: { "@beep/nested": "workspace:*" } },
-          "packages/helper/src/index.ts": "helper",
-          "packages/nested/package.json": { name: "@beep/nested" },
-          "packages/nested/src/index.ts": "nested",
-          "packages/unrelated/package.json": { name: "@beep/unrelated" },
-          "packages/unrelated/src/index.ts": "unrelated",
-        };
-        for (const name of [
-          "tsdoc.json",
-          ".oxlintrc.json",
-          "_typos.toml",
-          ".fallowrc.jsonc",
-          "biome.jsonc",
-          "tsconfig.base.json",
-          "tsconfig.json",
-        ])
-          files[name] = "config";
-        const root = yield* fixture(files);
-        const fs = yield* FileSystem.FileSystem;
-        const first = yield* policyToolsFingerprint(root);
-        expect(first.inputs).toContain("packages/nested/src/**");
-        expect(first.inputs).toContain("packages/nested/package.json");
-        expect(first.inputs).toContain("packages/cli/package.json");
-        expect(first.inputs).toContain("packages/helper/package.json");
-        expect(first.inputs).toContain("package.json");
-        expect(first.inputs).not.toContain("**/package.json");
-        expect(first.inputs).not.toContain("packages/unrelated/package.json");
-        expect(first.inputs).not.toContain("packages/unrelated/src/**");
-        expect(yield* policyToolsFingerprint(root)).toEqual(first);
-        yield* fs.writeFileString(`${root}/packages/unrelated/src/index.ts`, "unrelated edit");
-        expect(yield* policyToolsFingerprint(root)).toEqual(first);
-        yield* fs.writeFileString(`${root}/packages/nested/src/index.ts`, "nested edit");
-        const second = yield* policyToolsFingerprint(root);
-        expect(second).toEqual(first);
-        yield* fs.writeFileString(`${root}/.oxlintrc.docs.json`, "config edit");
-        expect(yield* policyToolsFingerprint(root)).toEqual(first);
-        yield* fs.writeFileString(`${root}/packages/nested/src/new.ts`, "new source");
-        expect(yield* policyToolsFingerprint(root)).toEqual(first);
-        expect(R.keys(first)).toEqual(["schemaVersion", "inputs"]);
-        yield* fs.writeFileString(
-          `${root}/packages/nested/package.json`,
-          '{"name":"@beep/nested","dependencies":{"@beep/unrelated":"workspace:*"}}'
-        );
-        const expanded = yield* policyToolsFingerprint(root);
-        expect(expanded.inputs).toContain("packages/unrelated/src/**");
-        expect(expanded.inputs).not.toEqual(first.inputs);
       })
     );
   });

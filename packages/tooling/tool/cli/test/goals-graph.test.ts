@@ -23,7 +23,7 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -33,6 +33,7 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
@@ -157,7 +158,7 @@ const gitPorcelain = Effect.fn("GoalsGraphTest.gitPorcelain")(function* (repoRoo
 const explain = (projection: CapabilityProjection, answers: CapabilityGraphAnswers, slug: string) =>
   O.getOrThrow(buildExplainReport(projection, answers, slug));
 
-it.layer(NodeServices.layer, { concurrent: false, timeout: "60 seconds" })((it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: false, timeout: "60 seconds" })((it) => {
   describe("goals capability graph — sealed differential fixtures", { concurrent: false }, () => {
     it.effect("1. AND gate: blocked until every required capability is available", () =>
       Effect.gen(function* () {

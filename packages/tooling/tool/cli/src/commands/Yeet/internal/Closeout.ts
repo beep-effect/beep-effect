@@ -32,7 +32,8 @@ import {
 } from "./closeout/GreptileSignal.ts";
 import { closeoutWritePlan } from "./closeout/WritePlan.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -77,7 +78,11 @@ export { closeoutWritePlanForTesting } from "./closeout/WritePlan.ts";
 export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
   context: RepoRunContext,
   options: PrCloseoutOptions
-): Effect.fn.Return<PrCloseoutReport, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  PrCloseoutReport,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
   let { pullRequest, pr } = yield* collectPrCloseoutPayload(context);
   const writeRequested =
     Str.isNonEmpty(Str.trim(options.replyThread)) ||
@@ -229,7 +234,7 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
 export const writePrCloseoutReport = Effect.fn("Yeet.writePrCloseoutReport")(function* (
   context: RepoRunContext,
   report: PrCloseoutReport
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const reportPath = yield* runArtifactPathForContext(context, "pr-closeout.json");
   const json = yield* PrCloseoutReportJson.encode(report).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode yeet PR closeout report."))
@@ -304,7 +309,11 @@ export const runYeetAutomaticCloseout = Effect.fn("Yeet.runYeetAutomaticCloseout
 ): Effect.fn.Return<
   { readonly report: PrCloseoutReport; readonly reportPath: string },
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const report = yield* runPrCloseout(context, yeetAutomaticCloseoutOptions);
   const reportPath = yield* writePrCloseoutReport(context, report);

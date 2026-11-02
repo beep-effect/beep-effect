@@ -1,0 +1,169 @@
+{
+  "scope": "Local native collector persistence/refusal/crash replay/self-metrics alerts, collision proof, backup reporting and exact Phoenix retention identity/assignment; no production deployment",
+  "repository": "dankserver",
+  "baseRevision": "33d932c7abfc132b0ced363f77cb1a0fe43da493",
+  "branch": "feat/agent-observability-foundation",
+  "image": "otel/opentelemetry-collector-contrib:0.163.1",
+  "resolvedDigest": "sha256:1175b03003053962012f5a231f5567f66a3e8fdb960c7835c0e48f7aa1555806",
+  "baseline": {
+    "result": "expected-failure",
+    "reason": "colliding resource does not survive Prometheus export",
+    "durationSeconds": 25.683
+  },
+  "verification": {
+    "command": "FOUNDATION_OTEL_INTEGRATION=1 /usr/bin/python -m unittest discover -s ansible/roles/monitoring/tests -v",
+    "testsPassed": 6,
+    "testsSkipped": 0,
+    "exitCode": 0,
+    "durationSeconds": 24.359
+  },
+  "sourceSha256": {
+    "ansible/roles/monitoring/templates/otel-config.yaml.j2": "7546a1b24bb01a8d0c061054264e71d462f6f7643add2ed1c70151c20c0e51d6",
+    "ansible/roles/monitoring/tests/test_otel_config.py": "eb4e9b0fecff389bf1e8a8f9acc1235231518a5463dd1748286d414f6547bb5d",
+    "ansible/roles/monitoring/tests/README.md": "663f19ca99f7ce5f044066c3076d818d17dbb1a3a148f2923a1dee4f72d2ff06",
+    "ansible/roles/phoenix_backup/templates/dankserver-phoenix-backup.sh.j2": "f1e919af72414c6be0a49c0101d71dad429333262633a60b4858cf0436381435",
+    "ansible/roles/phoenix_backup/tests/test_backup_metrics.py": "09963eeb6f6c3f0391323bbf0b3fa87c3290e72d6bc602f81fe6947dac222358",
+    "ansible/roles/phoenix_backup/tests/README.md": "c85ee411d56cfda0c6f9368a18705f09cf9450215374db864b80fd184414a378",
+    "ansible/group_vars/all.yml": "f642b232bc522e4d57040c8a5813749de4e756bb2ba90a0fd47f3f35eba3bb45",
+    "ansible/roles/phoenix/tasks/main.yml": "c19613de375eee9e9c0dd90f8de9a9564e548192bdfb7b43e2256ce7fddcec41",
+    "ansible/roles/phoenix/files/reconcile-retention.py": "8706b97d17fbb22efcf7e861cc1621e446371ab28d3cd9c683f6db69e66b7d38",
+    "ansible/roles/phoenix/tests/test_retention.py": "d342a9e78a02d9609e948fce5fc71a797501e246c3bfa02294cbf75eed059152",
+    "ansible/roles/phoenix/tests/verify_retention_backend.py": "20d465b280575bbc3bd88fc4378c5f50a13e5844052bb2cf2f5c56a3a5d121c4",
+    "ansible/roles/phoenix/tests/README.md": "a1033863f7b1b2e1894fd7a625dbc1570ed9377afe325946dbfb6a17865b1561",
+    "ansible/roles/monitoring/tasks/main.yml": "2836af0ecdfd6a8e304f6cc720d1672b0c3261b7312cc3ca373e8902cfe8216c",
+    "ansible/roles/monitoring/templates/compose.yaml.j2": "3acb357be78ef19021439519cebe917245808e000d26b676bef2b4311133a96c",
+    "ansible/roles/monitoring/templates/prometheus.yml.j2": "e682d61eab92559e0dc73aef6c36811ca7d7e7dfcb91dbb633effd3d3a37d177",
+    "ansible/roles/monitoring/templates/prometheus-alerts.yml.j2": "eac675e817239d556c52106dd71f479027c97b7332906806cd39276f9caf89f3",
+    "ansible/roles/monitoring/tests/test_otel_queue.py": "ec0538f64d41491c921ef02e805d6ffdc2be3cda960bb2b58d4aa11801fb019b",
+    "ansible/roles/monitoring/tests/test_otel_alerts.py": "65a0488ac2228633d45fa2ee27e4edde75ac498c955ab22855b5e60530f0a8e3"
+  },
+  "resourceLimits": {
+    "collisionFixtureMemoryMiB": 256,
+    "queueFixtureMemoryMiB": 512,
+    "additionalSwapMiB": 0,
+    "cpus": 1,
+    "collisionFixturePids": 64,
+    "queueFixturePids": 128,
+    "listeningInterfaces": ["127.0.0.1"],
+    "productionTraceDestination": false
+  },
+  "containersCleanedUp": true,
+  "productionRollout": false,
+  "backupVerification": {
+    "command": "/usr/bin/python -m unittest discover -s ansible/roles/phoenix_backup/tests -v",
+    "testsPassed": 5,
+    "exitCode": 0,
+    "durationSeconds": 0.096,
+    "baselineRegressions": [
+      "restart failure left backup success at one",
+      "repository failure reset prior success timestamp to zero",
+      "failed start command hidden by successful HTTP health response"
+    ],
+    "realServiceOrArchiveAccess": false
+  },
+  "retentionVerification": {
+    "unitTestCommand": "/usr/bin/python -m unittest discover -s ansible/roles/phoenix/tests -v",
+    "testsPassed": 10,
+    "exitCode": 0,
+    "ansibleSyntaxCheck": "ansible/playbooks/phoenix-host.yml passed",
+    "actualBackendProof": "ops/phoenix-retention-backend-verification.json",
+    "exactPolicyId": true,
+    "declaredProjectAssignments": true,
+    "freshReadBackAfterMutationAndNoOp": true,
+    "lostMutationReplyNotRetried": true,
+    "originalSyntheticPolicyRestored": true,
+    "productionPolicyChanged": false,
+    "schedulePreserved": "0 0 * * 0; eligibility at 14 days does not mean deletion at exactly day 14"
+  },
+  "retentionRecordedAt": "2026-10-28T19:53:38.863087+00:00",
+  "queueHealthVerification": {
+    "recordedAt": "2026-10-28T20:57:45.700203+00:00",
+    "queueCapacityBytes": 16777216,
+    "databaseMaxBytes": 67108864,
+    "fsync": true,
+    "asyncTraceBatchBeforeStorage": false,
+    "fixtures": [
+      {
+        "proof": "persistent-native-queue",
+        "acceptedSpans": 16,
+        "boundary": "disk-capacity",
+        "queueCapacityBytes": 16777216,
+        "diskCapacityBytes": 65536,
+        "crashSurvived": true,
+        "refusalObservable": true,
+        "permanentFailureObservable": true,
+        "outOfMemory": false,
+        "backend": "synthetic-otlp-receiver"
+      },
+      {
+        "proof": "persistent-native-queue",
+        "acceptedSpans": 4,
+        "boundary": "queue-capacity",
+        "queueCapacityBytes": 4096,
+        "diskCapacityBytes": 67108864,
+        "crashSurvived": true,
+        "refusalObservable": true,
+        "permanentFailureObservable": true,
+        "outOfMemory": false,
+        "backend": "synthetic-otlp-receiver"
+      }
+    ],
+    "alertScenariosPassed": 10,
+    "promtoolVersion": "3.15.1",
+    "productionPrometheusVersion": "3.15.0",
+    "exactPrometheusImageRuntimeProof": false,
+    "ansibleSyntaxCheck": "ansible/playbooks/monitoring-host.yml passed",
+    "productionDeploymentChecksAdded": [
+      "queue mount and resource limits",
+      "self-metrics target up",
+      "queue capacity metric",
+      "managed alert names"
+    ],
+    "deploymentChecksRunOnLiveHost": false,
+    "positiveMetadataBoundaryQualifiedForLegacyCollector": false,
+    "actualPhoenixReadBackInThisFixture": false,
+    "notificationDeliveryQualified": false,
+    "missingSourceAndExactEventLagQualified": false,
+    "deliberateOomExercise": false,
+    "report": "research/COLLECTOR-QUEUE-HEALTH.md"
+  },
+  "nativeMetadataRouteVerification": {
+    "receipt": "ops/native-collector-route-verification.json",
+    "report": "research/NATIVE-COLLECTOR-ROUTE.md",
+    "workerOwnsPositiveProjection": true,
+    "collectorGuardIsSanitizer": false,
+    "collectorGuardIsAuthentication": false,
+    "rawTraceEndpointEnabled": false,
+    "metadataReceiverPort": 4319,
+    "metadataReceiverHostPublished": false,
+    "liveProducerMigrationRequired": true,
+    "liveProducerMigrationPerformed": false,
+    "actualHarnessEnrollment": false,
+    "priorTopologyReceipt": "ops/dankserver-pre-metadata-route-verification.json"
+  },
+  "mixedCollectorRouteVerification": {
+    "receipt": "ops/reconstructed-collector-route-verification.json",
+    "report": "research/MIXED-COLLECTOR-ROUTE.md",
+    "result": "passed",
+    "nativeSpans": 3,
+    "reconstructedSpans": 6,
+    "actualImageAggregateQueries": true,
+    "productionEnrolled": false,
+    "fullSpecAcceptanceStillOpen": true
+  },
+  "latestMonitoringVerification": {
+    "defaultSuite": {
+      "tests": 6,
+      "skipped": 3,
+      "result": "passed",
+      "note": "Skipped Docker cases remain separately qualified; counts include skipped cases."
+    },
+    "renderedCollectorRuntime": {
+      "tests": 2,
+      "skipped": 0,
+      "result": "passed",
+      "seconds": 7.578,
+      "metricsCollisionAndScrubbing": true
+    }
+  }
+}

@@ -2,6 +2,8 @@
  * PACER Authentication service over the lower-level `effect/http`
  * client.
  *
+ * **Details**
+ *
  * The Authentication API returns failures as HTTP 200 with a body-level
  * `loginResult` code, so this path does NOT use `httpapi` (whose error model is
  * status-driven). {@link PacerAuth} exposes raw `login`/`logout`; {@link

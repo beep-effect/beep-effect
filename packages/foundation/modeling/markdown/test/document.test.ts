@@ -518,6 +518,56 @@ describe("MarkdownDocument.headingSource", () => {
     assert.strictEqual(document.headingSource(heading.node), "Goal *Title*\nsecond line");
   });
 
+  it("reads a heading's content without its continuation lines' container prefixes", () => {
+    const content = (source: string): string => {
+      const document = parseDocument(source);
+      const [heading] = document.headings;
+      return heading === undefined ? "" : document.headingContent(heading.node);
+    };
+    assert.strictEqual(content("> Foo\n> bar\n> ===\n"), "Foo\nbar");
+    assert.strictEqual(content("Foo\n    > bar\n===\n"), "Foo\n> bar");
+    assert.strictEqual(content("- > Foo\n  > *bar* `c`\n  > ===\n"), "Foo\n*bar* `c`");
+    assert.strictEqual(content("> Foo\n  bar &amp; baz\n> ===\n"), "Foo\nbar &amp; baz");
+    assert.strictEqual(content("> Foo\n> \\> bar\n> ===\n"), "Foo\n\\> bar");
+    assert.strictEqual(content("# Use `Effect.gen` <b>now</b>\n"), "Use `Effect.gen` <b>now</b>");
+    assert.strictEqual(content("#\n"), "");
+  });
+
+  it("keeps a code span or link that crosses the line break whole, with the text after it", () => {
+    const content = (source: string): string => {
+      const document = parseDocument(source);
+      const [heading] = document.headings;
+      return heading === undefined ? "" : document.headingContent(heading.node);
+    };
+    assert.strictEqual(content("> Foo `a\n> b` c\n> ===\n"), "Foo `a\nb` c");
+    assert.strictEqual(content("> Foo [a\n> b](u) c\n> ===\n"), "Foo [a\nb](u) c");
+  });
+
+  it("drops the container marker before an escaped or entity `>` on a line with more escapes", () => {
+    const content = (source: string): string => {
+      const document = parseDocument(source);
+      const [heading] = document.headings;
+      return heading === undefined ? "" : document.headingContent(heading.node);
+    };
+    assert.strictEqual(content("> Foo\n> \\> bar &amp; baz\n> ===\n"), "Foo\n\\> bar &amp; baz");
+    assert.strictEqual(content("> Foo\n> &gt; bar &amp; baz\n> ===\n"), "Foo\n&gt; bar &amp; baz");
+  });
+
+  it("falls back to the source slice when the document's source no longer parses", () => {
+    const parsed = parseDocument("Foo\nbar\n===\n");
+    const { source: _source, ...fields } = parsed;
+    const forged = MarkdownDocument.make({ ...fields, source: `Foo\nbar\n===\n${nestingBomb}` });
+    const [heading] = forged.headings;
+    assert.isDefined(heading);
+    assert.strictEqual(forged.headingContent(heading.node), "Foo\nbar");
+    assert.deepStrictEqual(forged.headingContents, ["Foo\nbar"]);
+  });
+
+  it("reads every heading's content in document order from one pass", () => {
+    const document = parseDocument("# One\n\n> Two\n> lines\n> ===\n\n- Three\n  four\n  ---\n");
+    assert.deepStrictEqual(document.headingContents, ["One", "Two\nlines", "Three\nfour"]);
+  });
+
   it("reads nested headings and reads an empty heading as the empty string", () => {
     const document = parseDocument("> ## <Goal Title>\n\n#\n");
     assert.deepStrictEqual(

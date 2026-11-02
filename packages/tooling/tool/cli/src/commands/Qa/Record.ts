@@ -53,7 +53,7 @@ import {
   writeRecordStartHint,
 } from "./Qa.session.ts";
 import type { CollectorRunning, RoundLayout, RoundNumber } from "@beep/qa-capture";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -294,7 +294,7 @@ const runPlaywrightLane = Effect.fn("QaRecord.runPlaywrightLane")(function* (
 ): Effect.fn.Return<
   RecordOutcome,
   QaCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const path = yield* Path.Path;
   const startedAtEpochMs = yield* Clock.currentTimeMillis;
@@ -397,7 +397,7 @@ const runObsLane = Effect.fn("QaRecord.runObsLane")(function* (
 ): Effect.fn.Return<
   RecordOutcome,
   QaCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | Scope.Scope
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Scope.Scope
 > {
   const layer = yield* obsLayer();
   // The OBS connection is built into the round's own scope rather than at the
@@ -481,7 +481,12 @@ export const runQaRecord = Effect.fn("QaRecord.run")(function* (
 ): Effect.fn.Return<
   void,
   CliReportedExit | QaCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | Collector | FileSystem.FileSystem | Path.Path | SessionStore
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Collector
+  | FileSystem.FileSystem
+  | Path.Path
+  | SessionStore
 > {
   const path = yield* Path.Path;
   const store = yield* SessionStore;

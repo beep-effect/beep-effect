@@ -1,0 +1,107 @@
+{
+  "familyId": "17139442-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A dialysis treatment device configured to be used during a treatment session at a first location, the dialysis treatment device comprising: a medical treatment component configured to perform at least one of hemodialysis, hemofiltration, and peritoneal dialysis on a patient during the treatment session at the first location; and a monitoring system configured to receive data from one or more sensors connected to the monitoring system, wherein a medical treatment component includes a controller connected to a network or the Internet and communicating with information servers and/or remote terminals, the controller being configured to obtain instructions from the servers, to report status, and/or notify of conditions of the medical treatment component, the dialysis treatment device further comprises a user interface adapted for permitting an operator to control functions of the medical treatment device component, and the medical treatment component includes data storage for storing an internal representation of a prescription for treatment of the patient, and the controller is configured to report a use of the medical treatment component to a remote supervisor by said Internet or remote terminals.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The dialysis treatment device of claim 1, wherein the monitoring system is configured to confirm presence of a helper at the first location, the helper being different from the patient receiving treatment by the medical treatment component; the monitoring system being further configured to automatically and at predefined time intervals during the treatment session, generate one or more verification request signals requesting the helper to manually input of a verification response into a user interface of the monitoring system in response to the one or more verification request signals, the verification response verifying that the helper is present at the first location, and identifying that the helper is an authorized helper to be at the first location; the monitoring system being further configured to confirm a pattern of presences of the helper over a plurality of said predefined time intervals during of said treatment session in which said medical treatment component is operative to deliver therapy to the patient based on said verifying and identifying; and the monitoring system generating a signal indicative of an abnormal condition when the pattern of presences of the authorized helper is not confirmed and causing the medical treatment component to go into a failsafe operational mode to reduce risks to the patient during said treatment session.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The dialysis treatment device of claim 1, wherein the monitoring system includes a video camera and a video classification engine that monitors a scene that includes the patient and a helper to confirm that the helper is authorized to be present at the first location and is actually present.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The dialysis treatment device of claim 1, wherein the one or more sensors include an authentication device including at least one of a key code receiver, an RFID reader, mechanical lock, a biometric reader, a magnetic stripe reader, a nonvolatile memory card reader, a smart card reader, a video camera, or a bar code reader.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The dialysis treatment device of claim 1, wherein the monitoring system goes into a failsafe operational mode in response to an abnormal condition.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The dialysis treatment device of claim 1, wherein the monitoring system generates an alert signal in response to an abnormal condition.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The dialysis treatment device of claim 1, wherein the monitoring system generates an alert signal and waits for a reception of an alert-cancel command after generating the alert signal, the monitoring system causing the medical treatment component to go into a failsafe operational mode in response to an abnormal condition and a failure of an alert-cancel signal command being received.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "A method for controlling an extracorporeal blood treatment machine at a first location to reduce risk of continuing blood treatment of a patient in the absence of an authorized helper other than the patient received the blood treatment in an immediate vicinity of the extracorporeal blood treatment machine, comprising: providing the extracorporeal blood treatment machine at the first location, the extracorporeal blood treatment machine having controller connected to a network or the Internet and communicating with information servers and/or remote terminals at a second location remote from the first location; obtaining instructions by the controller from the servers, the instructions including at least prescription information specific to the patient at the first location; reporting status and/or notifying of conditions of the extracorporeal blood treatment machine by the controller to the information servers and/or remote terminals at the second location; and receiving at a user interface of the extracorporeal treatment machine instructions from an operator to control medical treatment functions of the extracorporeal machine.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method according to claim 8, wherein the status includes notifications requiring special or immediate attention and to transmit information and receive commands to/from the servers and/or remote terminals.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method according to claim 8, further comprising: prompting, by the extracorporeal blood treatment machine, at predetermined time intervals after starting the treatment, for an input, manually entered by an authorized helper into the user interface of the extracorporeal blood treatment machine, effective to confirm presence and identity of the helper at the treatment location of the extracorporeal blood treatment machine and: (1) responsively to a receipt and confirmation of the input to determine that the helper is present at the treatment location and that the helper is the helper authorized to be present at the treatment location, continuing a blood treatment process by the extracorporeal blood treatment machine; and (2) responsively to any absence of a receipt and confirmation of the input to determine that the helper is present at the treatment location and that the helper is the helper authorized to be present at the treatment location, implementing a failsafe operational mode which includes discontinuing the normal blood treatment process to cause the extracorporeal blood treatment machine to go into the failsafe operational mode to reduce risks to said patient during said treatment session; and continuing the prompting, by the extracorporeal blood treatment machine, for the input at the predetermined time intervals to receive a subsequent input entered by the authorized helper into the user interface of the extracorporeal blood treatment machine throughout the blood treatment process until the blood treatment process is complete or an absence of a receipt and confirmation of the subsequent input is determined, wherein the subsequent input is of a type that requires an action by the helper such that the identity and presence of the helper is confirmed.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The method of claim 8, wherein the subsequent input includes a manual entry through a user interface of the extracorporeal blood treatment machine that requires the physical presence of the authorized helper.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The method of claim 8, wherein the subsequent input includes bio-authentication input through a user interface of the extracorporeal blood treatment machine that requires the physical presence of the authorized helper.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The method of claim 8, wherein the subsequent input includes authenticating the identity of the authorized helper to ensure it is the authorized helper.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The method of claim 10, wherein the blood treatment process is a renal replacement therapy.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The method of claim 8, wherein the controlling said extracorporeal blood treatment machine to implement said failsafe operational mode includes clamping blood lines of the extracorporeal blood treatment machine.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The method of claim 8, wherein implementing said failsafe operational mode includes generating one of an automated cellular message and an automated telephonic message to an ambulance service.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The method of claim 8, wherein implementing said failsafe operational mode includes slowing a pumping rate through blood lines of the extracorporeal blood treatment machine or terminating said blood treatment process.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The method of claim 8, wherein said extracorporeal blood processing machine performs a warning procedure responsively to said absence of the receipt and confirmation of said subsequent input, said warning procedure including generating a first notification signal to indicate that the failsafe operational mode will be implemented within a predefined time if the subsequent input is not received within the predefined time, and controlling said extracorporeal blood treatment machine to implement the failsafe operational mode responsively to the lapse of the predefined time.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The method of claim 8, wherein the subsequent input is applied using a direct input/output interface including one of a keyboard, keypad, speech interface, touchscreen, or a mechanical interface.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The method of claim 8, wherein the receiving subsequent input includes authenticating the authorized helper at least three times during the treatment session, the three times being spaced apart such that the third time is more than half-way through the blood treatment process.",
+      "sourceXmlParentClaimNumbers": [8]
+    }
+  ]
+}

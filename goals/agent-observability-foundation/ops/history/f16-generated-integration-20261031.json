@@ -1,0 +1,103 @@
+{
+  "kind": "accepted-f16-canonical-generated-integration",
+  "incomingMain": "f16d82e9f16d72f64d42b40284bf2867566e796b",
+  "sourceResolution": "Both policy implementation conflicts use exact accepted incoming main; the earlier duplicate DTO implementation is replaced, not combined.",
+  "schemaFirst": {
+    "writerCompleted": true,
+    "removedStaleEntries": [
+      "PolicyCliLayout",
+      "PolicyClosure",
+      "PolicyCommandNode",
+      "PolicyGraphOptions",
+      "PolicyWorkspace"
+    ],
+    "missingEntries": 0,
+    "enforcedCandidates": 0,
+    "scope": "Writer completed before a following catalog phase was host-pressure stopped; whole initial pipeline is incomplete, not a passing lint gate."
+  },
+  "canonicalSmallWriters": {
+    "instrumentationCatalogPassed": true,
+    "jsdoc": {
+      "packages": 183,
+      "openPackages": 16,
+      "openExports": 97,
+      "openModules": 166,
+      "rootPolicyOpen": 0
+    },
+    "guard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-f16-small-writers-20261031.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 39147577344,
+      "peakObservedBytes": 5784870912,
+      "minimumAvailableBytes": 22440378368,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 71,
+      "pidsLimitEvents": 0,
+      "observedPhases": [],
+      "exitCode": 0,
+      "orphanCleanup": []
+    }
+  },
+  "schemaCatalog": {
+    "entries": 9465,
+    "shards": 173,
+    "guard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-f16-schema-catalog-20261031.service",
+      "profile": "catalog",
+      "memoryStopBytes": 17179869184,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 53368582144,
+      "peakObservedBytes": 13039075328,
+      "minimumAvailableBytes": 33674817536,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 59,
+      "pidsLimitEvents": 0,
+      "observedPhases": [],
+      "exitCode": 0,
+      "orphanCleanup": []
+    }
+  },
+  "generatedSha256": {
+    "standards/jsdoc-documentation.inventory.jsonc": "764312a68eba102d90dda6d7eabf4aaa487d23775f2cdb8043939ee6e8b493f9",
+    "standards/jsdoc-documentation.inventory.md": "b97e3cee06355ff8496fef3fd39095e44a557dfd32d2200ae2122c90299e4d88",
+    "standards/schema-first.inventory.jsonc": "3ee71b893a61f4fcc15139557e6ce0a6abcc9b929144ed35aa22883515a79fa5",
+    "standards/schema-catalog/@beep/repo-cli.generated.jsonc": "0eae8d9682cc53bcd4a67e0aad674b6e448eec3b36f1fa9863d6a3c6f6f7bd0d",
+    "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc": "a55c6ad24027563b3bff81e32ce0ffa8dcf610307f4e60350bd225f5543ee4f0"
+  },
+  "canarySourceBindings": {
+    "current-disposable": {
+      "bindings": 88,
+      "mismatches": 0
+    },
+    "current-live": {
+      "bindings": 87,
+      "mismatches": 0
+    }
+  },
+  "cacheEvidence": "f16-cache-integration-20261031.json",
+  "inheritedCoverage": "Three repository CLI coverage gaps remain owned by security PR2389; no duplicate tests or lowered floors. Final hosted results remain required.",
+  "resourceAttempts": {
+    "incompleteHostPressureStops": [
+      "foundation-pr2364-f16-refresh-20261031b",
+      "foundation-pr2364-f16-refresh-20261031d",
+      "foundation-pr2364-f16-remaining-20261031b"
+    ],
+    "declinedBeforeLaunch": [
+      "foundation-pr2364-f16-refresh-20261031",
+      "foundation-pr2364-f16-refresh-20261031c",
+      "foundation-pr2364-f16-remaining-20261031"
+    ],
+    "unrelatedProcessesTerminated": false,
+    "reservesWeakened": false,
+    "originalLogsAndGuardsRetained": true
+  },
+  "recoveryHold": "Forwarder service and timer freshly verified masked/inactive/MainPID0; no enrollment, deployment, archived-source read or hold release.",
+  "delivery": "Operator instructions require immediate push after reconciliation, hosted CI proof and coordinator merge ownership; no new verify/publish/local-final-check publication gate. Existing local receipts retain their original source scope.",
+  "privateArtifacts": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/worker-followup"
+}

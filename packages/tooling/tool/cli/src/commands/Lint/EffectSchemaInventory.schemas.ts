@@ -599,117 +599,6 @@ export class EffectSchemaInventoryCheckReport extends S.Opaque<
 ) {}
 
 /**
- * One `graft skeleton --json` entry for a module source file.
- *
- * **Example** (Decode a skeleton entry)
- *
- * ```ts
- * import { EffectSchemaInventoryGraftEntry } from "@beep/repo-cli/commands/Lint"
- * import * as O from "effect/Option"
- *
- * const entry = EffectSchemaInventoryGraftEntry.make({
- *   name: "isIssue",
- *   kind: "function",
- *   span: "L51-L53",
- *   signature: O.none(),
- *   summary: O.some("Narrows an unknown value to a schema Issue.")
- * })
- * console.log(entry.span) // "L51-L53"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class EffectSchemaInventoryGraftEntry extends S.Opaque<
-  EffectSchemaInventoryGraftEntry,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    name: S.String,
-    kind: S.String,
-    span: S.String,
-    signature: S.OptionFromOptionalKey(S.String),
-    summary: S.OptionFromOptionalKey(S.String),
-  }).pipe(
-    $I.annoteSchema("EffectSchemaInventoryGraftEntry", {
-      description: "Name, kind, line span, signature, and summary graft reports for one declaration.",
-    })
-  )
-) {}
-
-/**
- * The `graft skeleton --json` document for one module source file.
- *
- * **Example** (Build an empty skeleton)
- *
- * ```ts
- * import { EffectSchemaInventoryGraftSkeleton } from "@beep/repo-cli/commands/Lint"
- *
- * const skeleton = EffectSchemaInventoryGraftSkeleton.make({ file: "packages/effect/src/SchemaIssue.ts", entries: [] })
- * console.log(skeleton.entries.length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class EffectSchemaInventoryGraftSkeleton extends S.Opaque<
-  EffectSchemaInventoryGraftSkeleton,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    file: S.String,
-    entries: S.Array(EffectSchemaInventoryGraftEntry),
-  }).pipe(
-    $I.annoteSchema("EffectSchemaInventoryGraftSkeleton", {
-      description: "Declarations graft reports for one module source file.",
-    })
-  )
-) {}
-
-/**
- * Local graft context for a lane prompt: the skeleton of one module file in the reference working
- * tree.
- *
- * **Details**
- *
- * Graft indexes the reference working tree, not the pin. `workingTreeMatchesPin` records whether
- * the working-tree file hashes (`git hash-object`) to the same blob as the file at the pin; only
- * then do graft's spans line up with the inlined source. Graft is local-only and never a
- * hosted-CI input; when it cannot be read, prompt generation fails instead of building a context.
- *
- * **Example** (Record a matching working tree)
- *
- * ```ts
- * import { EffectSchemaInventoryGraftContext } from "@beep/repo-cli/commands/Lint"
- *
- * const context = EffectSchemaInventoryGraftContext.make({
- *   head: "e5f7d12af9abef188f7dc39b0207af1801b03ffd",
- *   workingTreeMatchesPin: true,
- *   entries: []
- * })
- * console.log(context.workingTreeMatchesPin) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class EffectSchemaInventoryGraftContext extends S.Opaque<
-  EffectSchemaInventoryGraftContext,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    head: EffectSchemaInventoryPin,
-    workingTreeMatchesPin: S.Boolean,
-    entries: S.Array(EffectSchemaInventoryGraftEntry),
-  }).pipe(
-    $I.annoteSchema("EffectSchemaInventoryGraftContext", {
-      description:
-        "Graft skeleton of a module in the reference working tree, its HEAD, and whether the working-tree file equals the pin blob.",
-    })
-  )
-) {}
-
-/**
  * Outcome of one lane prompt generation.
  *
  * **Example** (Describe a written prompt)
@@ -720,8 +609,7 @@ export class EffectSchemaInventoryGraftContext extends S.Opaque<
  * const receipt = EffectSchemaInventoryPromptReceipt.make({
  *   module: "effect/SchemaIssue",
  *   target: "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
- *   rows: 65,
- *   workingTreeMatchesPin: true
+ *   rows: 65
  * })
  * console.log(receipt.rows) // 65
  * ```
@@ -737,11 +625,9 @@ export class EffectSchemaInventoryPromptReceipt extends S.Opaque<
     module: EffectSchemaInventoryModuleName,
     target: S.NonEmptyString,
     rows: EffectSchemaInventoryCount,
-    workingTreeMatchesPin: S.Boolean,
   }).pipe(
     $I.annoteSchema("EffectSchemaInventoryPromptReceipt", {
-      description:
-        "Module, output path, row count, and whether graft's working-tree file matched the pin for a written lane prompt.",
+      description: "Module, output path, and row count for a written lane prompt.",
     })
   )
 ) {}

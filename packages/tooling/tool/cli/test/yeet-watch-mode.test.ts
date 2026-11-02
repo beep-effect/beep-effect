@@ -47,8 +47,10 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { YeetCheckFailedRow } from "@beep/repo-cli/test/Yeet";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Path from "effect/Path";
 
 const decodeUnknownYeetWatchEventJson = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
@@ -203,7 +205,7 @@ const emptyCollection: ScriptedAnswer = { exitCode: 0, output: "[[]]" };
 const scriptedSpawnerLayer = (
   scripts: ReadonlyArray<PollScript>,
   diff: string = codeDiff,
-  platform: Layer.Layer<Crypto.Crypto | FileSystem.FileSystem | Path.Path> = PlatformLayer
+  platform: Layer.Layer<Digest.Digest | SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> = PlatformLayer
 ) =>
   Layer.mergeAll(
     platform,
@@ -218,12 +220,16 @@ const scriptedSpawnerLayer = (
           if (!ChildProcess.isStandardCommand(command)) {
             return Effect.die("the watch never spawns a piped command");
           }
-          const line = A.join([command.command, ...command.args], " ");
+          const line = A.join([command.command, ...commandArgs(command)], " ");
           // fallow-ignore-next-line complexity -- scripted command router keeps independent per-family poll cursors in one fixture. Owner: @beep/repo-cli. Exit: split per command family when the router gains another family.
           return Effect.gen(function* () {
             if (Str.includes("rules/branches/")(line)) return stubHandle(1, "rules unavailable");
             // The once-per-head merge-base diff owns no poll index: it answers by argv prefix.
-            if (command.command === "git" && command.args[0] === "diff" && command.args[1] === "--name-only")
+            if (
+              command.command === "git" &&
+              commandArgs(command)[0] === "diff" &&
+              commandArgs(command)[1] === "--name-only"
+            )
               return stubHandle(0, diff);
             // The review-body collection rides the same poll; this watch has
             // no use for it, so it answers with an empty page rather than
@@ -244,7 +250,7 @@ const scriptedSpawnerLayer = (
               return stubHandle(script.view.exitCode, script.view.output);
             }
             if (Str.includes("pr checks")(line)) {
-              const checks = A.contains(command.args, "--required")
+              const checks = A.contains(commandArgs(command), "--required")
                 ? (script.requiredChecks ?? script.checks)
                 : script.checks;
               return stubHandle(checks.exitCode, checks.output);

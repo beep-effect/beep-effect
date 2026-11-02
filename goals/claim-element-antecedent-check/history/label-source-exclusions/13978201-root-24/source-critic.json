@@ -1,0 +1,138 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13978201-root-24",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "ineligible",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35
+  ],
+  "sourceIdentity": {
+    "publicationReference": [
+      "US",
+      "20130276306",
+      "A1",
+      "20131024"
+    ],
+    "applicationReference": [
+      "US",
+      "13978201",
+      "20120112"
+    ],
+    "officeActionDocumentIdentifiers": [
+      "I7VYYE2LPXXIFW4"
+    ],
+    "officeActionMailDate": "2015-03-30"
+  },
+  "digestEvidence": [
+    {
+      "file": "13978201.publication.xml",
+      "sha256": "e6709e6e8e093e0cc52682db86ba976181ace668eb1c8f70abf2d56d906cb75e",
+      "matchesProvenance": true
+    },
+    {
+      "file": "13978201.claims.xml",
+      "sha256": "4ba89eb934ce1212848545636712e8b95eb86946552fd368081af34fd78b9df7",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "4ba89eb934ce1212848545636712e8b95eb86946552fd368081af34fd78b9df7",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "HIOQHRMRPXXIFW3",
+      "available": true,
+      "sha256": "d01aa0033acf559be98bfb7b3c880417301b44ba4970fddf86018ab80a0490e7",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "HIQ1V4H3PXXIFW4",
+      "available": true,
+      "sha256": "82d7ce7a25962a524d4fb8309d6e512db1cf908b186f075d1e89039212316493",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 53,
+    "actualRows": 53,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2013-07-03T00:00:00.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "HIOQHRM9PXXIFW3"
+      },
+      {
+        "officialDate": "2013-07-03T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "HIOQHRMRPXXIFW3"
+      },
+      {
+        "officialDate": "2013-07-03T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "HIOQHRN4PXXIFW3"
+      },
+      {
+        "officialDate": "2013-07-03T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "HIQ1V4H3PXXIFW4"
+      }
+    ]
+  },
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the locations",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": false,
+      "nativeQuote": null
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the wheel retaining nuts",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": false,
+      "nativeQuote": null
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the angular orientation",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": false,
+      "nativeQuote": null
+    }
+  ],
+  "assessment": "Native26 is apparatus with scanner tool holder on vehicle/trolley, lacking OA26 the locations, the wheel retaining nuts, the angular orientation. HIOQHRMRPXXIFW3 instead contains amended method24-27; HIQ1V4H3PXXIFW4 retains publication apparatus numbering. Substantive operative-version conflict; quarantine stands.",
+  "findings": [
+    {
+      "severity": "blocking",
+      "evidence": "Native26 is apparatus with scanner tool holder on vehicle/trolley, lacking OA26 the locations, the wheel retaining nuts, the angular orientation. HIOQHRMRPXXIFW3 instead contains amended method24-27; HIQ1V4H3PXXIFW4 retains publication apparatus numbering. Substantive operative-version conflict; quarantine stands.",
+      "requiredAction": "Replace source in same CPC stratum without predictions, or obtain authoritative operative amendment and rebuild qualified family separately."
+    }
+  ],
+  "limitations": [
+    "Cached public evidence only; original OCR corroboration only, never repaired into reference. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation inspected/performed.",
+  "officeActionGroundQuotes": [
+    "claims 1-5,7,9-17,19,24-27 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ]
+}

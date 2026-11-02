@@ -7,6 +7,7 @@
   "instruments": [],
   "spans": [
     {"name":"FFmpeg.collectProgressText","owner":"@beep/ffmpeg","family":"driver","conforms":true},
+    {"name":"FFmpeg.commitFrameOutput","owner":"@beep/ffmpeg","family":"driver","conforms":true},
     {"name":"FFmpeg.commitFrames","owner":"@beep/ffmpeg","family":"driver","conforms":true},
     {"name":"FFmpeg.commitTimestampedFrames","owner":"@beep/ffmpeg","family":"driver","conforms":true},
     {"name":"FFmpeg.ensureDirectory","owner":"@beep/ffmpeg","family":"driver","conforms":true},
@@ -17,6 +18,7 @@
     {"name":"FFmpeg.extractFramesAt","owner":"@beep/ffmpeg","family":"driver","conforms":true},
     {"name":"FFmpeg.make","owner":"@beep/ffmpeg","family":"driver","conforms":true},
     {"name":"FFmpeg.makeExtractContext","owner":"@beep/ffmpeg","family":"driver","conforms":true},
+    {"name":"FFmpeg.parkPreviousManifest","owner":"@beep/ffmpeg","family":"driver","conforms":true},
     {"name":"FFmpeg.preflightWritable","owner":"@beep/ffmpeg","family":"driver","conforms":true},
     {"name":"FFmpeg.probeRegionLuminance","owner":"@beep/ffmpeg","family":"driver","conforms":true},
     {"name":"FFmpeg.probeVideo","owner":"@beep/ffmpeg","family":"driver","conforms":true},
@@ -26,6 +28,7 @@
     {"name":"FFmpeg.renderGif","owner":"@beep/ffmpeg","family":"driver","conforms":true},
     {"name":"FFmpeg.renderManifest","owner":"@beep/ffmpeg","family":"driver","conforms":true},
     {"name":"FFmpeg.runCaptureOutput","owner":"@beep/ffmpeg","family":"driver","conforms":true},
+    {"name":"FFmpeg.withStagingDirectory","owner":"@beep/ffmpeg","family":"driver","conforms":true},
     {"name":"FFmpeg.writeContainerMetadata","owner":"@beep/ffmpeg","family":"driver","conforms":true}
   ]
 }

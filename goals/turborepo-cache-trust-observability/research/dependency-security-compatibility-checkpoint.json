@@ -1,0 +1,309 @@
+{
+  "schemaVersion": "dependency-security-compatibility-checkpoint/v1",
+  "authority": "Component compatibility and local source proof only; no qualification or deployment authority.",
+  "recordedAt": "2026-10-31T04:13:11.847337+00:00",
+  "baseRevision": "0e601a3d55f88d875ca49d47931e216a5a328aa2",
+  "initialPublishedRepairHead": "3b482fbe6a4d2de26833c4dd15c1826e08338a8c",
+  "pullRequest": 2373,
+  "advisories": ["GHSA-3g3m-2fjr-6pw4", "GHSA-g3hv-75wg-m249"],
+  "tools": {
+    "node": "v24.22.1",
+    "effect": "4.0.6",
+    "glob": "14.0.3",
+    "minimatch": "11.0.3",
+    "bun": "1.4.4"
+  },
+  "guardSourceSha256": "fcce6e00d72f6c64cbf3e63a9aa1dd2edbdc6883846b8920ad6235d7030a05c6",
+  "sourceSha256": {
+    "packages/foundation/modeling/glob/README.md": "db90c63079f083154a71ee3e15281ebe3001ae52eeb729f8d82a1feef0cd9613",
+    "packages/foundation/modeling/glob/package.json": "5fb6e89dee7d251d8c859befe4cb6a67ae9b3653121670279ed9492434db01f2",
+    "packages/foundation/modeling/glob/src/GlobPattern.ts": "15aa31baaadf70a5422e4be7d56b8d7990adc1878621f4d666c8643da768f1c8",
+    "packages/foundation/modeling/glob/src/GlobSet.ts": "669d7151090225648241c37fe5a01af539bccc109068bb04594c288bb246a94c",
+    "packages/foundation/modeling/glob/src/GlobString.ts": "b74635a0778722637d3c0c91ccadb8a48872e208ba16237e6b8513154d920a6f",
+    "packages/foundation/modeling/glob/src/index.ts": "df5368c55efcddcd9797b97b4f582b0a7262bdc10f57c1d8668a24982876702d",
+    "packages/foundation/modeling/glob/src/internal/assertValidPattern.ts": "16c3565802060a49fe45cf2ea36f495d425932ed2dad890befe25ccf89882f4a",
+    "packages/foundation/modeling/glob/src/internal/ast.ts": "1b29103d0c86f378fb02a3447b855c7840ccd27d2ab731eaaf872e604b2be868",
+    "packages/foundation/modeling/glob/src/internal/balancedMatch.ts": "4d66a8be43dc1e893efd146b1d495388d69070efa78569a8c44d60673c5efb6a",
+    "packages/foundation/modeling/glob/src/internal/braceExpansion.ts": "3a693fac87fd8923b64333828b5656c5bbe80833f1051e4e250d501937290616",
+    "packages/foundation/modeling/glob/src/internal/braceExpressions.ts": "62e301233bc60b2ab3bb8b69c7366b18dd61691153b601ecf23dcab3df85bd3d",
+    "packages/foundation/modeling/glob/src/internal/escape.ts": "c99ac0e1a7911d31273b5ef0f1b283a2038fc47515d729c8132993d2d39614fe",
+    "packages/foundation/modeling/glob/src/internal/limits.ts": "fa87e702168d813f2cb49e47bba1efa871aa2fa6a7e8faf57042788433c82bd8",
+    "packages/foundation/modeling/glob/src/internal/minimatch.ts": "fcce6e00d72f6c64cbf3e63a9aa1dd2edbdc6883846b8920ad6235d7030a05c6",
+    "packages/foundation/modeling/glob/src/internal/types.ts": "3768fdd1633e596d5fa1952944129e6dacbcacbb0bd1340f3a2a175e8a62344c",
+    "packages/foundation/modeling/glob/src/internal/unescape.ts": "6fe511911e4aecc278f3de912ee4266c0afbdf59ebac5f311804ab65ac45a2b9",
+    "packages/foundation/modeling/glob/test/GlobPattern.coverage.test.ts": "e2ad70285525213cc91a7e19e159802b693a2de0dc8d0e2338f2e4b1d792b39d",
+    "packages/foundation/modeling/glob/test/GlobPattern.property.test.ts": "910c7ec3aaa94204a4bdb00dc2db824e402c9d9cae60ce46ed03d56d1170d592",
+    "packages/foundation/modeling/glob/test/GlobPattern.test.ts": "0c89044650fb892032293558cfd496e3c6ec819501f755943d1178c461db517c",
+    "packages/foundation/modeling/glob/test/GlobSet.coverage.test.ts": "01f78e74ab1be7d2c1132d4d5b24910eb4f7b07f7704e9783031545035ca74b0",
+    "packages/foundation/modeling/glob/test/GlobSet.property.test.ts": "fa0fa9c4056fc79ed1c67b80f79aa58d6780e292404fa23056fd92a410d7072f",
+    "packages/foundation/modeling/glob/test/GlobSet.test.ts": "1c58710f8730bcef1f2cfac8d3341725e61e460e3c3bb069f1aff10915295fde",
+    "packages/foundation/modeling/glob/test/GlobString.test.ts": "bb22e7a4ca015da2d6de571d8b2f780d09a2641ce2c1b96734c1b4c54ec9a83d",
+    "packages/foundation/modeling/glob/test/braceExpansion.test.ts": "df55877aaa9a3b5e91b5a98309140c605d0cc96f2c015db618f650220f51a0ed",
+    "packages/foundation/modeling/glob/test/compliance.test.ts": "a13a8c5346e0ada30cb0b51253060c77efc6ee0b9f8a68235dd1ece4961f8c6c",
+    "packages/foundation/modeling/glob/test/deliberatelyInvalid.ts": "7749bac6a160366305714a95b3de442daf536f9d6c4cad50c8678a360309a2d5",
+    "packages/foundation/modeling/glob/test/engine.test.ts": "b18b9dad2948a9dc657e1dda81e696864c2406c1c0d97ff6ae089b8c2746badc",
+    "packages/foundation/modeling/glob/test/fixtures/README.md": "857e5fe833afde853a6902c11b7f3d17faac94cda61b2e730a92f8446192f909",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-compliance-default.json": "5ee408c4d1f3cd7a540679ba9aef5fa8b334cce6cbb381ce5ca4fa71b28bfe18",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-compliance-options.json": "bcc0b191590a964e3dace68da077a5b1092135c9eb6d6e5bda6b94736fc326f2",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-fragments-1.json": "34548d7894be77768cd7d5bccd2593893279d7e7e5a36bc552403c1b73ee67e7",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-fragments-2.json": "0b8cc8c46afc4693bd244790cfec27d780f7ff36130550ff3a310a6c4b4524e3",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-fragments-3.json": "8047f820ce6bbe0cb7db949c04f00c81464533e82c7cd074a566cad1fc74aeed",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-matches.json": "22ed9b520900305bb6fa343feaf1e26ae4b9d49753d578a98264d47077bc960c",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-minimatch-property.json": "ef9db742af0bab61b8674208a24816b52c05e0d0d51fdd9f78b02ac0df71d70e",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-optimizer.json": "d774340e6a99c3935a755313997d4c0006b2491c9575c7bbb08dd4f88a62b642",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-patterns.json": "2a2d5b4b1be754e3cc418e7df799ba07fb3135aac8276ce1678b8d73169025b0",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-provenance.json": "5982ccca5d25d8d6e58ef197f9e1e8d1c385ab4f1c83899a2172a4da10b449ad",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-public-facade.json": "59ae571f06a567c09daca3a74eefbbbd320f905220a36d5a3f0013c06ae93bc5",
+    "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-regexp.json": "185483553962a63837634ad97ed4c50e0c42696d1f06191e0669e10a82c426fc",
+    "packages/foundation/modeling/glob/test/hostility.test.ts": "8d851e0e1c0ecdcffd214876a63fb1d09f187ec8e7cbc341c19c2b361183e401",
+    "packages/foundation/modeling/glob/test/internal/assertValidPattern.property.test.ts": "6d9ebc33803ec7d6f79f234e4b185316a0db4c751e437ffe9d3cd317f5448a68",
+    "packages/foundation/modeling/glob/test/internal/ast.coverage.test.ts": "9ced0596ea1062a156c92552c261d62907c6f9047b73521e24af5fff9a31e720",
+    "packages/foundation/modeling/glob/test/internal/ast.property.test.ts": "bb46f2b7378cc9b3b5c637d3cb6cf7f5fde351e664b0be9451cde55610455026",
+    "packages/foundation/modeling/glob/test/internal/balancedMatch.coverage.test.ts": "d480042756e9fef2e73437b50f588fbd0d9afd8e06a16ad1b7635a86fb4222e0",
+    "packages/foundation/modeling/glob/test/internal/balancedMatch.property.test.ts": "b80d6a022f1c48522a290775072acff4dae9021f45c2d6b95aafe6e39e675710",
+    "packages/foundation/modeling/glob/test/internal/braceExpansion.coverage.test.ts": "6449a2afcabdef1c962bd77390cc2db0e53d695358e9e2208bec16d1b499d865",
+    "packages/foundation/modeling/glob/test/internal/braceExpansion.property.test.ts": "6500acf88fa093070f49a153fa09d0f5db6aa7cf0ac269f0a21a47edf5822d00",
+    "packages/foundation/modeling/glob/test/internal/braceExpressions.coverage.test.ts": "f191d470cab2d9a8f532dee751daec1420e60a9cbc0077054153ec43c48f960e",
+    "packages/foundation/modeling/glob/test/internal/braceExpressions.property.test.ts": "2c06ac0cdcb59ac5bb7b5aae1c9252b351410cdaf9c0849424a30ef11cf98a23",
+    "packages/foundation/modeling/glob/test/internal/escape.property.test.ts": "e95044e8abb6b6a056c8b965b32fffc0090aafe938ea4fb04d22c8beb13d0b04",
+    "packages/foundation/modeling/glob/test/internal/limits.property.test.ts": "a2df09aa9cc07cdecd05b0cc14fe2f96e526492530a84378412f7956762f4772",
+    "packages/foundation/modeling/glob/test/internal/minimatch.coverage.test.ts": "f286468edd204a669da8a63e0ac4ae36cb2de4c5bb10a77d1e2c9ac97a3fc449",
+    "packages/foundation/modeling/glob/test/internal/minimatch.property.test.ts": "e0868bedb88507e66a39aee607d00bab5e65cb1a0004c0a3d5b6c9f92f5a438c",
+    "packages/foundation/modeling/glob/test/internal/segmentMatcher.test.ts": "7164ce1921aa391d3b77d496908d446254408b2c5a325d9613d32d67957f0694",
+    "packages/foundation/modeling/glob/test/internal/types.property.test.ts": "9477e617127356d44e44030734794808c922ca6e6d2af2dbacf1d6e784bf2173",
+    "packages/foundation/modeling/glob/test/internal/unescape.coverage.test.ts": "a804f6e12121d5df4f33d3b6c04c8bc0577691b7b157775354202362b445ece5",
+    "packages/foundation/modeling/glob/test/internal/unescape.property.test.ts": "72e4ce013053ba9e9ba701ae4df8e8e2831a81e8a130eaad0da19ee904aa711a",
+    "packages/foundation/modeling/glob/test/legacyOracle.test.ts": "1c1f83086c712ec5ec9ad27ed66c1c791f37cbe310a15aa671f1f900f6960664",
+    "packages/foundation/modeling/glob/test/legacyOracle.ts": "1807e127a3d4b497cf4534f93b5e6bd7d53c0907ece2e42a6586624d39dd922e"
+  },
+  "specBinding": {
+    "prior": "98f7ff8cee753d056cd178f5e90d5bd0534fc3444836bc62998a4da7bc7d77e6",
+    "current": "35423c3fba45ba4be7c3f22126060d94f7165c57c8358fd07fbc622d345a73e2",
+    "acceptanceAndContractUnchanged": true
+  },
+  "oracle": {
+    "origin": {
+      "package": "minimatch",
+      "version": "10.2.6",
+      "entrySha256": "d224f71f20d7c206fcc5b7e9f747324c7698345a0b2c28d717dd9cf698306783",
+      "publishedTarballIntegrity": "sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==",
+      "publishedTarballSha256": "5a3d2c8074a28229665727e47b8a1090941856a7962905efe05d20d3760355f8",
+      "publishedSourceFilesVerified": 12
+    },
+    "referenceHead": "0e601a3d55f88d875ca49d47931e216a5a328aa2",
+    "counts": {
+      "fragments": 5403,
+      "matching": 2043,
+      "regularExpressions": 495,
+      "optimizer": 108,
+      "propertyPatterns": 2541,
+      "samples": 8000
+    },
+    "samplePlans": [
+      {
+        "name": "compliance-default",
+        "count": 2000,
+        "size": 30,
+        "seed": "beep-minimatch-10.2.6-compliance-default-v1"
+      },
+      {
+        "name": "compliance-options",
+        "count": 2000,
+        "size": 30,
+        "seed": "beep-minimatch-10.2.6-compliance-options-v1"
+      },
+      {
+        "name": "public-facade",
+        "count": 2000,
+        "size": 30,
+        "seed": "beep-minimatch-10.2.6-public-facade-v1"
+      },
+      {
+        "name": "minimatch-property",
+        "count": 2000,
+        "size": 30,
+        "seed": "beep-minimatch-10.2.6-minimatch-property-v1"
+      },
+      {
+        "name": "ast-property",
+        "count": 2000,
+        "size": 30,
+        "seed": "beep-minimatch-10.2.6-ast-property-v1"
+      }
+    ],
+    "metadataSha256": "5982ccca5d25d8d6e58ef197f9e1e8d1c385ab4f1c83899a2172a4da10b449ad",
+    "expectedValuesDerivedFromPort": false,
+    "newExecutableLegacyDependency": false,
+    "freshFragmentCandidateMaxLength": 12
+  },
+  "verification": {
+    "completePackage": {
+      "exit": 0,
+      "elapsedSeconds": 18.414,
+      "finishedAt": "2026-10-31T04:06:40.955225+00:00"
+    },
+    "nodeCoverage": {
+      "exit": 0,
+      "elapsedSeconds": 8.311,
+      "finishedAt": "2026-10-31T04:11:58.124798+00:00"
+    },
+    "bunCoverage": {
+      "exit": 0,
+      "elapsedSeconds": 4.858,
+      "finishedAt": "2026-10-31T04:12:22.562450+00:00"
+    }
+  },
+  "testScope": {
+    "node": {
+      "files": 29,
+      "tests": 273
+    },
+    "bunCoverage": {
+      "files": 29,
+      "tests": 273
+    },
+    "allOriginalDirectedMatchingCasesRetained": 2043,
+    "allReferenceSamplesExecuted": 8000,
+    "publicSamplesThroughBothCompilationAPIs": 2000,
+    "fragmentBoundaryComparisons": 64836,
+    "optimizerPairControls": 5832
+  },
+  "coverage": {
+    "node": {
+      "provider": "v8",
+      "overall": {
+        "statements": 99.88,
+        "branches": 99.65,
+        "functions": 99.71,
+        "lines": 99.92
+      }
+    },
+    "bun": {
+      "provider": "istanbul",
+      "overall": {
+        "statements": 99.88,
+        "branches": 99.57,
+        "functions": 99.63,
+        "lines": 99.92
+      }
+    },
+    "minimatchBoth": {
+      "statements": 100,
+      "lines": 100,
+      "functions": 100,
+      "branches": 99.57
+    }
+  },
+  "causalControls": {
+    "schemaVersion": 1,
+    "source": "packages/foundation/modeling/glob/src/internal/minimatch.ts",
+    "restoredSha256": "fcce6e00d72f6c64cbf3e63a9aa1dd2edbdc6883846b8920ad6235d7030a05c6",
+    "controls": [
+      {
+        "name": "first-excess-budget",
+        "exit": 1,
+        "oneIntendedFailure": true,
+        "seconds": 0.688
+      },
+      {
+        "name": "second-phase-pairwise-bound",
+        "exit": 1,
+        "oneIntendedFailure": true,
+        "seconds": 0.589
+      },
+      {
+        "name": "independent-reference",
+        "exit": 1,
+        "oneIntendedFailure": true,
+        "seconds": 0.668
+      }
+    ],
+    "restoredExactly": true
+  },
+  "hostedSnapshot": {
+    "head": "ac3833ec76e2a53718c4d30579cec089ae967f53",
+    "security": "success",
+    "propertyLaws": "Inherited unchanged DuckDB held-message readiness race; focused repair PR2374 is separately published. Fresh checks required for this security wave.",
+    "currentWave": "Unpublished; no current hosted or full-final acceptance yet."
+  },
+  "preserved": {
+    "scannerExceptionsChanged": false,
+    "qualityFloorsChanged": false,
+    "diagnosticSuppressionsAdded": false,
+    "qualificationLedgerChanged": false,
+    "signedTrialActivated": false,
+    "fullGoalAcceptanceCriteriaProven": false,
+    "goalLifecycle": "active"
+  },
+  "populationSnapshot": {
+    "refreshedByThisRepair": false,
+    "priorSourceSnapshotAndDispositionsRetained": true,
+    "mustRefreshBeforeProfilePromotion": true
+  },
+  "remaining": [
+    "Publish and prove the current source through final-check and fresh hosted/review/window gates.",
+    "Merge the dependency repair once on main, then join the accepted dependency in the producer parent.",
+    "Actual protected publication, independent approvals, all eligible profiles, key/epoch drills and representative observation remain required."
+  ],
+  "privateRawEvidence": "~/.local/state/beep/r2-pilot/completion-2026-10-29/security-repair/",
+  "priorCheckpointAtUnpublishedHead": {
+    "head": "8ee72f51c57d975b1de23b25f209909272c21e38",
+    "sha256": "788aa8bcd469e6f8de9dcd33827d22d959dc2ccac21dff20917ca5466a95da6e",
+    "publicationExit": 1,
+    "nothingPushed": true,
+    "failure": "Repository lint rejected .js helper imports and inline schema compilation; Node URL namespace alias also corrected."
+  },
+  "repositoryLint": {
+    "exit": 0,
+    "warnings": 0,
+    "diagnosticSuppressionsAdded": false,
+    "fix": "Explicit .ts helper imports, NodeURL alias and a hoisted JSON reference codec."
+  },
+  "priorPublishedSourceProof": {
+    "sourceHead": "4bff49f293bb048fae3e471d8a59fc6dcb5c1080",
+    "verification": {
+      "completePackage": {
+        "exit": 0,
+        "elapsedSeconds": 15.993,
+        "finishedAt": "2026-10-31T02:16:03.389629+00:00"
+      },
+      "nodeCoverage": {
+        "exit": 0,
+        "elapsedSeconds": 8.386,
+        "finishedAt": "2026-10-31T02:16:11.797386+00:00"
+      },
+      "bunCoverage": {
+        "exit": 0,
+        "elapsedSeconds": 4.864,
+        "finishedAt": "2026-10-31T02:16:16.677433+00:00"
+      }
+    },
+    "testsPerRuntime": 270,
+    "fullFinal": {
+      "exit": 0,
+      "elapsedSeconds": 2878.108,
+      "complete": true,
+      "skips": 0
+    },
+    "hosted": {
+      "requiredGreen": 15,
+      "optionalGreen": 21,
+      "head": "4bff49f293bb048fae3e471d8a59fc6dcb5c1080"
+    },
+    "authority": "Historical proof only; does not prove the current review wave.",
+    "checkpointSha256": "586dcb2a17db329fcf0cacb15edc815472e77055dfd64d1a8c4c68891b9aae87"
+  },
+  "secondPhaseGuard": {
+    "upstreamAdvisory": "https://github.com/advisories/GHSA-g3hv-75wg-m249",
+    "upstreamInspectedVersion": "11.0.3",
+    "pairwiseAlternativeCeiling": 1000,
+    "aboveCeiling": "Return every input alternative unchanged without pairwise deduplication.",
+    "controls": {
+      "atCeilingDeduplicates": 1000,
+      "aboveCeilingNoPairwiseCalls": 1001,
+      "watchdogPreservesAlternatives": 4096
+    },
+    "currentPublicationAndFullFinal": "Pending; prior complete proof remains historical.",
+    "reviewThreads": ["PRRT_kwDOPbO_N86yNUv8", "PRRT_kwDOPbO_N86yNUv-"]
+  }
+}

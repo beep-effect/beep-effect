@@ -1,0 +1,109 @@
+{
+  "familyId": "14659462-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method of fastening two items comprising the steps of: placing a barrel nut in a hole of the first item so that a threaded shaft of the barrel nut is positioned (a) transverse to the axis of said hole of the first item and (b) aligned with a access hole in the second item; ensuring that said barrel nut has at least one chamfered flange at the base of said shaft; and, ensuring that the threaded shaft of said barrel nut is floatably retained in said barrel nut via pins positioned thereover said chamfered flange.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1 wherein the barrel nut unit comprises: a nut with a cylindrical bore floatably seated in a slug; said nut further comprising a flange at its base featuring at least one chamfer; a plurality of pins connecting opposite ends of said slug; and, wherein said pins are operably configured to retain said nut in a floatably seated position.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method of claim 2 wherein said plurality of pins are bowed.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method of claim 2 wherein said nut features an indentation.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method of claim 3 wherein said nut features an indentation.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method of claim 4 wherein said indentation is at the base portion of said nut that meets said flange.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method of claim 2 wherein said flange features two chamfers.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The method of claim 2 wherein said pins are connected at the opposite ends of said slugs and at points along the periphery of said ends.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method of claim 7 wherein the distance from the periphery and the axis of said pin holes is within the range of 0.057 inch to 0.0967 inch.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method of claim 1 further wherein the barrel nut assembly comprises: a nut with a cylindrical shaft, said nut being floatably seated in a slug; said nut further comprising indentations on opposite sides of the shaft; and, a plurality of pins that are connected to opposites ends of the slug so that (a) said nut is in said floatably seated position in said slug and (b) a portion of said pins is positioned near said indentations.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The method of claim 10 wherein said plurality of pins are bowed.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The method of claim 10 wherein said nut further comprises a chamfered flange at a base of the shaft.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The method of claim 7 there the chamfered flange is defined by two chamfers on opposite sides of the flange base.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The method of claim 1 wherein the barrel nut assembly comprises: a nut with a cylindrical bore seated in a slug; said nut further comprising a flange at its base; at least two pins connecting opposite ends of said slug; and, said pins being fixed in apertures located along the outer periphery of each of the opposite ends of said slug.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The method of claim 14 wherein the distance from the center point of the apertures located along the outer periphery of the barrel nut assembly to the edge of the slug end of the barrel nut assembly is in the range of 0.057 inch to 0.0967 inch.",
+      "sourceXmlParentClaimNumbers": [14]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The method of claim 14 wherein the flange of the barrel nut assembly features a chamfer.",
+      "sourceXmlParentClaimNumbers": [14]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The method of claim 14 further comprising two indentations in opposite sides of the nut.",
+      "sourceXmlParentClaimNumbers": [14]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The method of claim 17 wherein the nut transversely floats between said pins located in an indentation.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The method of claim 14 wherein said pins are bowed.",
+      "sourceXmlParentClaimNumbers": [14]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The method of claim 18 wherein said pins are bowed.",
+      "sourceXmlParentClaimNumbers": [18]
+    }
+  ]
+}

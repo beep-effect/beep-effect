@@ -329,22 +329,23 @@ const makeMailbox = Effect.gen(function* () {
         }),
         m365.ensureMasterCategories
       ).pipe(
-        Effect.map((ensured) => ensured.created.length),
-        Effect.mapError(portFailure("ensureMasterCategories"))
+        Effect.mapBoth({
+          onFailure: portFailure("ensureMasterCategories"),
+          onSuccess: (ensured) => ensured.created.length,
+        })
       ),
     listAttachments: (messageId: MailMessageId) =>
       Effect.flatMap(encoded(decodeAttachmentsRequest)({ userId, messageId }), m365.listMessageAttachments).pipe(
-        Effect.map((attachments) => A.getSomes(A.map(attachments.value, attachmentMetaOf))),
-        Effect.mapError(portFailure("listAttachments"))
+        Effect.mapBoth({
+          onFailure: portFailure("listAttachments"),
+          onSuccess: (attachments) => A.getSomes(A.map(attachments.value, attachmentMetaOf)),
+        })
       ),
     downloadAttachment: (request: DownloadAttachmentRequest) =>
       Effect.flatMap(
         encoded(decodeDownloadRequest)({ userId, messageId: request.messageId, attachmentId: request.attachmentId }),
         m365.downloadMessageAttachment
-      ).pipe(
-        Effect.map((content) => content.bytes),
-        Effect.mapError(portFailure("downloadAttachment"))
-      ),
+      ).pipe(Effect.mapBoth({ onFailure: portFailure("downloadAttachment"), onSuccess: (content) => content.bytes })),
   });
 });
 

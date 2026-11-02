@@ -76,6 +76,7 @@ TypeScript 7's native `tsc` ships a version-only stub as its `.` export, with no
 
 - `TsconfigJson` / `TsconfigJsonFromString`: the document schema and its JSONC string codec. A malformed document fails as `TsconfigParseError`.
 - `CompilerOptions`: string-level schemas for `compilerOptions`. Enum values decode case-insensitively and encode to canonical lowercase; unknown or removed options survive a round trip as passthrough.
+- `ClosedCompilerOptions` and `ClosedTsconfigJson`: the same typed fields with no passthrough record at any level, so an unknown key is an excess property (rejected under `onExcessProperty: "error"`, dropped by default). `@beep/repo-tsconfig`'s `TsconfigValidator` builds the strict model on these views, so the strict and the passthrough key universe is one.
 - `ResolvedTsconfig`: the pure merge engine. `absolutize` resolves path options against the declaring config's directory, `merge` applies tsc's per-field rules (paths replaced wholesale, `files`/`include`/`exclude` re-rooted, `references` and `typeAcquisition` never inherited, `pathsBase` provenance), and `substituteConfigDir` runs the final `${configDir}` phase.
 - `PortableTsconfig.make`: an allow-list projection down to machine-independent type-semantics options with `composite: false` and `noEmit: true` forced, the slice Twoslash, API Extractor or an in-memory language service can inherit.
 - `JsxConfig.fromCompilerOptions`: the JSX transform a bundler can configure (`react-jsx` / `react-jsxdev` select the automatic runtime with its import source, `react` selects classic, anything else yields `Option.none()`).
@@ -102,7 +103,7 @@ Ported from upstream `@effected/tsconfig-json` (MIT, C. Spencer Beggs) through t
 
 Promoted here, the pure half: `CompilerOptions`, `CompilerOptionsFromProgrammatic`, `JsxConfig`, `PortableTsconfig`, `ResolvedTsconfig`, `TsconfigJson` and `TsEnumCodec`, with their tests.
 
-Still in `scratchpad/effected/tsconfig-json`, the filesystem half: `TsconfigLoader`, `TsconfigLoaderSync`, `TsconfigDiscovery` and `internal/extendsTarget`. They read configs through `FileSystem` and `Path`, and discovery walks ancestor directories through the upstream walker, which has no `@beep` home yet. Wave 3 promotes them as `@beep/repo-tsconfig` in the tooling library family once `@beep/walker` exists; until then they import this package's modules by subpath.
+The filesystem half, `TsconfigLoader`, `TsconfigLoaderSync`, `TsconfigDiscovery` and `internal/extendsTarget`, reads configs through `FileSystem` and `Path` and walks ancestor directories through `@beep/walker`. Wave 3-2 promoted it as `@beep/repo-tsconfig` in the tooling library family; it imports this package's modules by subpath.
 
 ## Port notes
 

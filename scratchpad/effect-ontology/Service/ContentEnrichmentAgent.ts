@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 /**
  * Service: Content Enrichment Agent
  *
@@ -176,7 +176,7 @@ ${truncatedContent}`;
  */
 export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAgent>()($I`ContentEnrichmentAgent`, {
   make: Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     const llm = yield* LanguageModel.LanguageModel;
     const config = yield* ConfigService;
 
@@ -231,7 +231,7 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
           "content.wordCount": wordCount,
         },
       }).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.provideService(LanguageModel.LanguageModel, llm),
         Effect.mapError((error) =>
           ContentEnrichmentError.make({

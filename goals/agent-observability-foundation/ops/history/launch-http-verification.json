@@ -1,0 +1,65 @@
+{
+  "scope": "Private metadata-only launch HTTP admission and actual owned-worker restart proof",
+  "recordedAt": "2026-10-28T19:41:40.741311-05:00",
+  "result": "passed",
+  "syntheticOnly": true,
+  "actualHarnessLaunches": 0,
+  "productionRollout": false,
+  "recoveryHoldPreserved": true,
+  "goalComplete": false,
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/observation-launch-http.ts": "df8dfcf0dfd040532c1ac77717438968952b6c4e72332905d50a109d44672fc1",
+    "packages/tooling/library/ai-metrics/src/internal/observation-http-body.ts": "ab77912fe98eacf0a7a992d9e2044f0a2a7f352cbc23530b3beef4a4999ae4c4",
+    "packages/tooling/library/ai-metrics/src/native-http.ts": "f570e42e68d7920625ba1f313d41f4b6de03da1b222a8631e379c0660912f0cd",
+    "packages/tooling/library/ai-metrics/src/observation-worker.ts": "2d94a9b01e7f6655b41bce8b9002ce1929308b0eb38271e7a497cff37a3bc8de",
+    "packages/tooling/library/ai-metrics/src/observation-launch.ts": "0ee97d21e201eed5b19a99f8c61a3d89063a5d1988bbcbfbde7a8f30dd1d59b6",
+    "packages/tooling/library/ai-metrics/src/index.ts": "fcff468a7a380d8268ae1a074554665851aa3736c6e1b028d6bbc3bf3460ce53",
+    "packages/tooling/library/ai-metrics/test/observation-launch-http.test.ts": "baf5c38ba7f462caf37cc7e7343b3680901638f3ad5bc9ffd6702ddc73481b07",
+    "packages/tooling/library/ai-metrics/test/fixtures/write-observation-launch.ts": "f0f951c0e8f5c1814f6f31b6eb1b5660d1481b2ce70844baf5bb1f72ee6f8cf9",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "483d0dea575a6a6f4927c9915a72345b8443c74faacae2882047f37978566640"
+  },
+  "focusedVerification": {
+    "files": 4,
+    "tests": 25,
+    "result": "passed",
+    "memoryPeakMiB": 498.6,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-launch-http-tests.log",
+    "note": "An additional rollback test subsequently passed in the 755-test full package run."
+  },
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 108.7,
+    "docgenSeconds": 14.9,
+    "runtimeSeconds": 125.175,
+    "memoryPeakGiB": 5.6,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-launch-http-quality-verified.log",
+    "execution": "One agent-runs.slice job, MemoryHigh 7 GiB, MemoryMax 8 GiB, zero additional swap, CPUQuota 200%, TasksMax 256, 360-second lifetime; RAYON_NUM_THREADS=2 and BIOME_THREADS=2."
+  },
+  "actualEntrypoint": {
+    "result": "passed",
+    "receipt": "goals/agent-observability-foundation/ops/launch-http-entrypoint-verification.json",
+    "cliMarkedFixtures": 1,
+    "desktopMarkedFixtures": 1,
+    "actualHarnessLaunches": 0,
+    "committedFacts": 8,
+    "exactReplayAfterRestart": true,
+    "privateFieldRefused": true,
+    "startsPaused": true
+  },
+  "diagnosticRepair": {
+    "failure": "Expected refusal was emitted without user-unit journal attribution",
+    "repair": "Owned 0600 per-invocation stderr file under 0700 directory; bounded diagnostic read",
+    "productionWorkerChanged": false
+  },
+  "remaining": [
+    "Private epoch-context read and typed Unix-socket client",
+    "Actual driver process/session evidence and producer failure reconciliation",
+    "Independent launch denominators and source-session joins",
+    "Production frontend route isolation, managed installation, live canary and rollback",
+    "Final acceptance review and repository delivery"
+  ]
+}

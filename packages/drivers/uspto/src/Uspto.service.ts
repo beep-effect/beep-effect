@@ -26,7 +26,9 @@ import {
   UsptoApplicationMetadata,
   UsptoApplicationNumber,
   UsptoContinuity,
+  UsptoDocumentDownloadOption,
   UsptoDocumentReference,
+  UsptoPublishedDocumentReference,
 } from "./Uspto.models.ts";
 import type { HttpClientResponse } from "effect/http/HttpClientResponse";
 
@@ -92,6 +94,8 @@ class MetadataEnvelopeWrapper extends S.Opaque<MetadataEnvelopeWrapper, { readon
   S.Struct({
     applicationMetaData: S.Record(S.String, S.Unknown).pipe(S.optionalKey),
     applicationNumberText: S.optionalKey(S.String),
+    grantDocumentMetaData: UsptoPublishedDocumentReference.pipe(S.optionalKey),
+    pgpubDocumentMetaData: UsptoPublishedDocumentReference.pipe(S.optionalKey),
   }).pipe(
     $I.annoteSchema("MetadataEnvelopeWrapper", {
       description: "USPTO file-wrapper metadata row carried inside an application response envelope.",
@@ -174,23 +178,22 @@ const optionalField = (record: Readonly<Record<string, unknown>>, key: string): 
     [key]: stringField(record, key),
   } as Record<string, O.Option<string>>) as Record<string, string>;
 
-type DownloadOptionRecord = Readonly<Record<string, unknown>> & {
-  readonly downloadUrl: string;
-};
-
-const isDownloadOptionRecord = (value: unknown): value is DownloadOptionRecord =>
-  P.isObject(value) && P.hasProperty(value, "downloadUrl") && P.isString(value.downloadUrl);
-
 const metadataFromWrapper = (
   wrapper: {
     readonly applicationMetaData?: Readonly<Record<string, unknown>>;
     readonly applicationNumberText?: string;
+    readonly grantDocumentMetaData?: UsptoPublishedDocumentReference;
+    readonly pgpubDocumentMetaData?: UsptoPublishedDocumentReference;
   },
   fallbackApplicationNumber: string
 ): Effect.Effect<UsptoApplicationMetadata, UsptoError> => {
   const meta = wrapper.applicationMetaData ?? {};
   return UsptoApplicationMetadata.decodeEffect({
     applicationNumberText: wrapper.applicationNumberText ?? fallbackApplicationNumber,
+    ...O.getSomesStruct({
+      grantDocumentMetaData: O.fromUndefinedOr(wrapper.grantDocumentMetaData),
+      pgpubDocumentMetaData: O.fromUndefinedOr(wrapper.pgpubDocumentMetaData),
+    }),
     ...optionalField(meta, "applicationStatusDescriptionText"),
     ...optionalField(meta, "applicationTypeLabelName"),
     ...optionalField(meta, "docketNumber"),
@@ -224,15 +227,19 @@ const documentFromRecord = (
   }
   const downloadOptions = O.fromUndefinedOr(record.downloadOptionBag).pipe(
     O.filter((value): value is ReadonlyArray<unknown> => A.isArray(value)),
-    O.flatMap((options) => A.findFirst(options, isDownloadOptionRecord)),
-    O.map((option) => option.downloadUrl)
+    O.map((options) =>
+      A.getSomes(A.map(options, (option) => S.decodeUnknownOption(UsptoDocumentDownloadOption)(option)))
+    )
   );
   return UsptoDocumentReference.decodeEffect({
     documentIdentifier: identifier.value,
     ...optionalField(record, "documentCode"),
     ...optionalField(record, "documentCodeDescriptionText"),
     ...optionalField(record, "officialDate"),
-    ...O.getSomesStruct({ downloadUrl: downloadOptions }),
+    ...O.getSomesStruct({
+      downloadOptions,
+      downloadUrl: O.flatMap(downloadOptions, A.head).pipe(O.map((option) => option.downloadUrl)),
+    }),
   }).pipe(
     Effect.asSome,
     Effect.mapError(() => UsptoError.fromReason("response-decoding"))
@@ -316,6 +323,37 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedUsptoConfig)
     return yield* response.text.pipe(Effect.mapError(() => UsptoError.fromReason("response-decoding")));
   });
 
+  const downloadResponse = Effect.fn("Uspto.downloadResponse")(function* (
+    url: string,
+    redirectsRemaining: number
+  ): Effect.fn.Return<HttpClientResponse, UsptoError> {
+    const response = yield* client.execute(requestFor(url)).pipe(
+      Effect.provideService(FetchHttpClient.RequestInit, { redirect: "manual" }),
+      Effect.mapError(() => UsptoError.fromReason("transport"))
+    );
+    if (response.status >= 300 && response.status < 400) {
+      const location = yield* Effect.fromOption(O.fromUndefinedOr(response.headers.location), () =>
+        UsptoError.fromReason("response-status")
+      );
+      // ODP's native XML and file-wrapper downloads use these official document
+      // hosts. Validate each hop and rebuild the request so the API key stays
+      // on the API host; never let fetch forward the custom header implicitly.
+      if (
+        redirectsRemaining <= 0 ||
+        !A.some(["https://data-documents.uspto.gov/", "https://data.uspto.gov/"], (prefix) =>
+          Str.startsWith(prefix)(location)
+        )
+      ) {
+        return yield* UsptoError.fromReason("transport");
+      }
+      return yield* downloadResponse(location, redirectsRemaining - 1);
+    }
+    if (response.status < 200 || response.status >= 300) {
+      return yield* statusError(response.status);
+    }
+    return response;
+  });
+
   const applicationsUrl = (applicationNumber: string): string =>
     `${config.apiUrl}/api/v1/patent/applications/${encodeURIComponent(applicationNumber)}`;
 
@@ -333,7 +371,7 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedUsptoConfig)
       if (!isSameUsptoHost(downloadUrl, usptoHost)) {
         return yield* UsptoError.fromReason("transport");
       }
-      const response = yield* executeForResponse(downloadUrl);
+      const response = yield* downloadResponse(downloadUrl, 3);
       const buffer = yield* response.arrayBuffer.pipe(
         Effect.mapError(() => UsptoError.fromReason("response-decoding"))
       );

@@ -18,7 +18,8 @@ import { A, R, Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { cast } from "effect/Function";
@@ -56,12 +57,12 @@ const CustomDocumentId = makeSharedId("document", {
 });
 
 const decodeEffect = <Schema extends S.Top>(schema: Schema) => S.decodeUnknownEffect(schema);
-const TestCryptoLayer = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: (_algorithm, data) => Effect.succeed(data),
-    randomBytes: (size) => new Uint8Array(size).fill(1),
-  })
+const TestCryptoLayer = Layer.mergeAll(
+  Layer.mock(Digest.Digest)({ digest: (_algorithm, data) => Effect.succeed(data) }),
+  Layer.succeed(
+    SecureRandom.SecureRandom,
+    SecureRandom.make((size) => new Uint8Array(size).fill(1))
+  )
 );
 const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(TestCryptoLayer));
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {

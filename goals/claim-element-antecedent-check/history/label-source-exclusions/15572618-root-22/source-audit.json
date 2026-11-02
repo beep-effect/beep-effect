@@ -1,0 +1,293 @@
+{
+  "familyId": "15572618-root-22",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.7,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "the input portion",
+      "nativeQuote": "the input portion",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "the first input direction",
+      "nativeQuote": "the first input direction",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "the second input direction",
+      "nativeQuote": "the second input direction",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "the third input direction",
+      "nativeQuote": "the third input direction",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "the first input direction",
+      "nativeQuote": "the first input direction",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "the second input direction",
+      "nativeQuote": "the second input direction",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "the third input direction",
+      "nativeQuote": "the third input direction",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the transmission ratio",
+      "nativeQuote": "the transmission ratio",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the hydraulic transmission system",
+      "nativeQuote": "the hydraulic transmission system",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the first optical sensor",
+      "nativeQuote": "the first optical sensor",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the second and third optical sensors",
+      "nativeQuote": "the second and third optical sensors",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the transmission ratio",
+      "nativeQuote": "the transmission ratio",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the hydraulic transmission system",
+      "nativeQuote": "the hydraulic transmission system",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the first optical sensor",
+      "nativeQuote": "the first optical sensor",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the second and third optical sensors",
+      "nativeQuote": "the second and third optical sensors",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 29,
+      "examinerPhrase": "the hydraulic transmission system",
+      "nativeQuote": "the hydraulic transmission system",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 29,
+      "examinerPhrase": "the input portion",
+      "nativeQuote": "the input portion",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 29,
+      "examinerPhrase": "the output portion",
+      "nativeQuote": "the output portion",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 29,
+      "examinerPhrase": "the respective hydraulic transmission system",
+      "nativeQuote": "the respective hydraulic transmission system",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the hydraulic transmission system",
+      "nativeQuote": "the hydraulic transmission system",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the input portion",
+      "nativeQuote": "the input portion",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the output portion",
+      "nativeQuote": "the output portion",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the respective hydraulic transmission system",
+      "nativeQuote": "the respective hydraulic transmission system",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the hydraulic transmission system",
+      "nativeQuote": "the hydraulic transmission system",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the input portion",
+      "nativeQuote": "the input portion",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the output portion",
+      "nativeQuote": "the output portion",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the respective hydraulic transmission system",
+      "nativeQuote": "the respective hydraulic transmission system",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    }
+  ],
+  "concerns": [
+    "MATERIAL ORIGINAL-VERSION CONFLICT. Three same-date originals2017-11-08 have substantive forms: clean originals22 include each sensor device according to any one of claims1–20, native22 omits those references. Original29 depends any one22–28 and says hydraulic fluid may flow plus or includes means for exerting a balancing force; native29 depends22 alone and says flows, omitting alternative means. Marked Currently Amended original shows both forms with deletion markup, but source/OCR text does not establish adopted version. Examiner quoted phrases match both, so cannot reconcile version from chronology/quotes alone. Quarantine pending version resolution."
+  ],
+  "rationale": "Actual112(b)/second-paragraph ground read; selected natural dependencies manually checked. Native identity and retained inventory evidence supplement, never replace, numbered examiner correspondence and conflicting-version investigation. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "15572618",
+    "nativePublicationNumber": "US20180136250A1",
+    "nativePublicationDate": "20180517",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "9189a207425172ea86955ebb0111c3b770ec677e733c88eaea84f344c0569489",
+    "sourceClaimsXmlSha256": "9a9ac0f4064773dc5ed4abe8fe40fa1538c7945a97f84b74cf64c816e47b66bc"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 58,
+    "retainedInventoryCount": 58,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "J9RFFD6QRXEAPX3",
+        "officialDate": "2017-11-08T00:00:00.000-0500"
+      },
+      {
+        "documentIdentifier": "J9RFFD6URXEAPX3",
+        "officialDate": "2017-11-08T00:00:00.000-0500"
+      },
+      {
+        "documentIdentifier": "J9S5JYATRXEAPX4",
+        "officialDate": "2017-11-08T00:00:00.000-0500"
+      }
+    ],
+    "officeActionMailDate": "2019-05-01",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "J9RFFD6QRXEAPX3",
+      "officialDate": "2017-11-08T00:00:00.000-0500",
+      "sha256": "34caf2257786be079274451a307d03762499a7474673798b43b84017202bd2b7",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 32
+    },
+    {
+      "documentIdentifier": "J9RFFD6URXEAPX3",
+      "officialDate": "2017-11-08T00:00:00.000-0500",
+      "sha256": "959038a103f03477179714411b1a01b83b35f6180f9b713df89679456770a61c",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 32
+    },
+    {
+      "documentIdentifier": "J9S5JYATRXEAPX4",
+      "officialDate": "2017-11-08T00:00:00.000-0500",
+      "sha256": "c7bfc757d901d4df678287875419f6a2c1457e3b724545a62d22c727df5dc71c",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 32
+    }
+  ],
+  "nativeContextClaimCount": 32,
+  "selectedClaimNumbers": [22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "J9RFFD6QRXEAPX3",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 32
+    },
+    {
+      "documentIdentifier": "J9RFFD6URXEAPX3",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 32
+    },
+    {
+      "documentIdentifier": "J9S5JYATRXEAPX4",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 32
+    }
+  ]
+}

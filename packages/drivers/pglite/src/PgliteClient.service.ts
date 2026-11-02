@@ -1,6 +1,8 @@
 /**
  * PGlite-backed Effect SQL client wiring.
  *
+ * **Details**
+ *
  * `@effect/sql-pglite` runs PGlite (embedded PostgreSQL) in-process and exposes
  * it as the generic Effect {@link SqlClient.SqlClient}. This module wraps it as a
  * `@beep/pglite` driver layer and aliases the client under the

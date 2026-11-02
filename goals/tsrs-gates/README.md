@@ -31,9 +31,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-PR 1 (#2260, ready, final a36dfffa74) swapped the gates; hosted Heavy / Check 3m36s and Heavy / Build 2m23s on tsrs. PR 2 (`feat/tsrs-gates-fold`, stacked on PR 1) folds the standalone Effect Diagnostics lane into Check.
+Complete. PR 1 (#2260) and PR 2 (#2262) merged the compiler migration and the lane fold. Closeout PR #2320 merged as `440e6d0052` from head `ec6d2cb783` with every required context green, and `bun run beep goals completion refresh --slug tsrs-gates` verified the `completed-retained` proposal on 2026-10-28 (`history/completion-verified-2026-11-01.md`). `initiative.status` reads `active` because completion is derived from clone-scoped receipts rather than written into the manifest.
 
 ## Latest Evidence
+
+- `history/completion-verified-2026-11-01.md`: the verified completion receipt for #2320 (hosted required checks and the exact-head Yeet verdict both verified) and where it lives.
+- `history/reflections/2026-11-01-claude.md`: completion-verification reflection.
+- `history/completion-audit-2026-10-28.md`: live completion refresh found two required reds at #2262 merge and an absent local Yeet verdict. The current ruleset has retired the diagnostics context. A fresh closeout PR must verify independently.
+- `history/reflections/2026-10-28-codex.md`: completion-audit reflection.
 
 - `history/reflections/2026-10-27-claude.md`: closeout reflection. PR 1 #2260 merged as e39244dbc5; PR 2 #2262 is the final PR (proposedCloseout `completed-retained`), final-check green including coverage; Security and Heavy / Effect Diagnostics stay red by design until the merge and the back-to-back ruleset edit.
 

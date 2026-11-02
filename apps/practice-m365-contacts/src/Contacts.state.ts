@@ -6,7 +6,7 @@ import { $PracticeM365ContactsId } from "@beep/identity/packages";
 import { XdgBase } from "@beep/xdg/XdgBase";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -53,7 +53,7 @@ export class ContactsState extends Context.Service<
 export const makeContactsState = Effect.fn("ContactsState.make")(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const secureDirectory = fs
     .makeDirectory(directory, { recursive: true, mode: 0o700 })
     .pipe(Effect.andThen(fs.chmod(directory, 0o700)), Effect.mapError(stateError));
@@ -76,7 +76,7 @@ export const makeContactsState = Effect.fn("ContactsState.make")(function* (dire
       const text = yield* S.encodeEffect(codec)(journal).pipe(Effect.mapError(stateError));
       const temporary = path.join(
         directory,
-        `${journal.runId}.${yield* crypto.randomUUIDv4().pipe(Effect.mapError(stateError))}.tmp`
+        `${journal.runId}.${yield* crypto.uuidV4().pipe(Effect.mapError(stateError))}.tmp`
       );
       const target = path.join(directory, `${journal.runId}.json`);
       yield* fs.writeFileString(temporary, text, { flag: "wx", mode: 0o600 }).pipe(Effect.mapError(stateError));

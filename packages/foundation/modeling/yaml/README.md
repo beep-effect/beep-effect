@@ -205,7 +205,7 @@ That combination — `lineWidth: 0` (no folding), `quoteCompat: "yaml-1.1"`, `qu
 
 ## Provenance
 
-`@beep/yaml` is ported from the upstream `@effected/yaml` package (MIT, C. Spencer Beggs). It was first ported into the repo's effected lab (`scratchpad/effected/yaml`, tests in `scratchpad/test/yaml`) under the effected port, then promoted into this workspace package by `goals/effected-promotion`. The promotion moved the sources to `src/` and the tests to `test/`, rewrote schema identities from `@beep/scratchpad/effected/yaml/<Module>` to `@beep/yaml/<Module>`, and points doc examples and tests at `@beep/yaml` imports; the behaviour is unchanged. The port's own deviations from upstream are recorded below.
+`@beep/yaml` is ported from the upstream `@effected/yaml` package (MIT, C. Spencer Beggs). It was first ported into the repo's effected lab (`scratchpad/effected/yaml`, tests in `scratchpad/test/yaml`, last held at `d02420ed7bb2a0e1008f80730a20c74ba38abb17`) under the effected port, then promoted into this workspace package by `goals/effected-promotion`. The promotion moved the sources to `src/` and the tests to `test/`, rewrote schema identities from `@beep/scratchpad/effected/yaml/<Module>` to `@beep/yaml/<Module>`, and points doc examples and tests at `@beep/yaml` imports; the behaviour is unchanged. The port's own deviations from upstream are recorded below.
 
 Run the package gates from this directory with `bun run check`, `bun run lint`, `bun run test` and `bun run docgen`, or all of them through `bun run beep quality package-verify @beep/yaml` from the repo root.
 

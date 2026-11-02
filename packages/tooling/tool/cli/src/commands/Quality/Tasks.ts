@@ -5,14 +5,18 @@
  * @since 0.0.0
  */
 
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
+import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
-import { StringListField, WorkspacesField } from "@beep/package-json/ManifestFields";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
+import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
+import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -27,6 +31,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   canUseTurboCacheSecretSession,
@@ -35,13 +40,12 @@ import {
   isCiSync,
   isUnresolvedSecretReference,
   readTurboCacheEnvironmentSync,
-  renderTurboEnvironmentHealthWarning,
+  renderTurboEnvironmentHealthWarnings,
   turboEnvExtendsAmbient,
   turboEnvironmentHealthWarnings,
   turboEnvOverrides,
   turboSecretSessionStep,
 } from "../../internal/cli/EnvConfig.ts";
-import { decodeJsoncTextAs } from "../../internal/cli/Jsonc.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
   hasRemoteTurboCacheArgs,
@@ -56,7 +60,6 @@ import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
 
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
 
-import { globMatches } from "../../internal/GlobPattern.ts";
 import { manifestParser } from "../../internal/ManifestRead.ts";
 import {
   CapturedStep,
@@ -129,9 +132,12 @@ import {
   QualityTaskName,
   RootAuditMode,
 } from "./Quality.schemas.ts";
+import type { GlobPatternError } from "@beep/glob/GlobPattern";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
+import type { EnumerationFailure } from "@beep/repo-workspaces/internal/enumerate";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
@@ -210,10 +216,10 @@ const capturedTimeoutResult = (error: CaptureCommandTimedOutError): CapturedStep
   });
 
 type QualityTaskEnvironment =
-  | Crypto.Crypto
+  | Digest.Digest
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner;
 
 type OptionalQualityTaskStep = {
@@ -371,60 +377,17 @@ const parseRootAuditSelection = (args: ReadonlyArray<string>): RootAuditSelectio
     },
   });
 
-const parsePackageJson = manifestParser(["name", "scripts", "workspaces"]);
-const decodeWorkspaces = S.decodeUnknownEffect(WorkspacesField);
-const isWorkspacePatternList = S.is(StringListField);
+const parsePackageJson = manifestParser(["name", "scripts"]);
 
 /**
- * Read the workspace glob patterns a quality-task root manifest declares.
+ * Read a quality-task `package.json` text: its `name` and `scripts`, each of
+ * which must keep its JSON shape when present.
  *
  * **Details**
  *
- * A string array is the pattern list. The object form's `packages` is optional:
- * Bun accepts a `workspaces` object that carries only `catalog`/`catalogs`, and
- * such a root declares no workspace packages, so it reads as an empty list
- * rather than failing. A present `workspaces` of any other shape fails.
- *
- * **Example** (Read a catalog-only object form as no workspaces)
- *
- * ```ts
- * import { readQualityTaskManifest, workspacePatternsFromPackageJson } from "@beep/repo-cli/test/Quality"
- * import * as Effect from "effect/Effect"
- *
- * const patterns = Effect.runSync(
- *   Effect.flatMap(readQualityTaskManifest('{"workspaces":{"catalog":{}}}', "package.json"), (manifest) =>
- *     workspacePatternsFromPackageJson(manifest, "package.json")
- *   )
- * )
- * console.log(patterns) // []
- * ```
- *
- * @param packageJson - Root manifest read by {@link readQualityTaskManifest}.
- * @param filePath - Path named in a failure.
- * @returns The declared workspace patterns.
- * @category parsing
- * @since 0.0.0
- */
-export const workspacePatternsFromPackageJson = Effect.fn("QualityTasks.workspacePatternsFromPackageJson")(function* (
-  packageJson: LenientManifest,
-  filePath: string
-): Effect.fn.Return<ReadonlyArray<string>, QualityTaskConfigurationError> {
-  if (packageJson.workspaces === undefined) {
-    return A.empty<string>();
-  }
-  const workspaces = yield* decodeWorkspaces(packageJson.workspaces).pipe(
-    QualityTaskConfigurationError.mapError(`Failed to parse ${filePath}`)
-  );
-  return isWorkspacePatternList(workspaces) ? workspaces : (workspaces.packages ?? A.empty());
-});
-
-/**
- * Read a quality-task `package.json` text: its `name`, `scripts` and
- * `workspaces`, each of which must keep its JSON shape when present.
- *
- * **Details**
- *
- * Strict JSON only: JSONC text fails.
+ * Strict JSON only: JSONC text fails. The root's workspace patterns are not
+ * read here: `workspaceTaskOwners` takes them from `@beep/repo-workspaces`
+ * `WorkspacePatterns` (4-A2).
  *
  * **Example** (Read a package's scripts)
  *
@@ -495,6 +458,16 @@ const isSafeWorkspacePattern = (pattern: string): boolean =>
   !Str.startsWith("/")(pattern) &&
   !A.some(Str.split("/")(pattern), (segment) => segment === "..");
 
+const isWorkspaceExclusion = Str.startsWith("!");
+
+const invalidWorkspacePattern = (error: GlobPatternError): QualityTaskConfigurationError =>
+  QualityTaskConfigurationError.new(`Invalid workspace pattern "${error.pattern}": ${error.message}`);
+
+const unenumerableWorkspacePattern = (failure: EnumerationFailure): QualityTaskConfigurationError =>
+  QualityTaskConfigurationError.new(
+    `Failed to enumerate workspace pattern "${failure.pattern}" (${failure.kind}: ${failure.detail})`
+  );
+
 const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandidateDirsForPattern")(function* (
   repoRoot: string,
   pattern: string
@@ -508,7 +481,15 @@ const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandid
     );
   }
 
-  if (Str.endsWith("/*")(pattern)) {
+  const compiled = yield* GlobPattern.compile(pattern).pipe(Effect.mapError(invalidWorkspacePattern));
+  // Only a pattern naming exactly one path is a literal member; a brace list
+  // without wildcards (`packages/{api,web}`) has no magic but names several.
+  if (O.isSome(compiled.literalPath)) {
+    return [path.join(repoRoot, compiled.literalPath.value)];
+  }
+
+  // `dir/*` over a literal `dir` keeps its one-level read and its failure text.
+  if (Str.endsWith("/*")(pattern) && compiled.enumerationPrefix === Str.slice(0, -1)(pattern)) {
     const base = path.join(repoRoot, Str.slice(0, -2)(pattern));
     const entries = yield* fs
       .readDirectory(base)
@@ -521,7 +502,11 @@ const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandid
     return A.map(entries, (entry) => path.join(base, entry));
   }
 
-  return [path.join(repoRoot, pattern)];
+  // Any other pattern (`packages/**`, `apps/*/web`, braces) walks through the
+  // workspace enumerator `WorkspaceDiscovery` uses, bounded and pruned.
+  const globs = yield* GlobSet.compile([pattern]).pipe(Effect.mapError(invalidWorkspacePattern));
+  const directories = yield* enumerate(repoRoot, globs).pipe(Effect.mapError(unenumerableWorkspacePattern));
+  return A.map(directories, (directory) => directory.path);
 });
 
 const workspaceTaskOwners = Effect.fn("QualityTasks.workspaceTaskOwners")(function* (
@@ -533,16 +518,24 @@ const workspaceTaskOwners = Effect.fn("QualityTasks.workspaceTaskOwners")(functi
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const rootPackageJsonPath = path.join(repoRoot, "package.json");
-  const rootPackageJson = yield* readPackageJsonFile(rootPackageJsonPath);
+  const patterns = yield* WorkspacePatterns.read(repoRoot).pipe(
+    QualityTaskConfigurationError.mapError(`Failed to read workspace patterns under ${repoRoot}`)
+  );
+  // A `!pattern` entry excludes, as pnpm and the package managers read it: it
+  // contributes no candidates and removes every candidate it matches.
+  const { excludes } = yield* GlobSet.compile(patterns).pipe(Effect.mapError(invalidWorkspacePattern));
+  const isExcludedDir = (packageDir: string): boolean => {
+    const relativeDir = path.relative(repoRoot, packageDir);
+    return A.some(excludes, (exclude) => exclude.matches(relativeDir));
+  };
   const candidateDirs = yield* Effect.forEach(
-    yield* workspacePatternsFromPackageJson(rootPackageJson, rootPackageJsonPath),
+    A.filter(patterns, P.not(isWorkspaceExclusion)),
     (pattern) => workspaceCandidateDirsForPattern(repoRoot, pattern),
     { concurrency: 4 }
   );
 
   const owners = yield* Effect.forEach(
-    pipe(A.flatten(candidateDirs), A.dedupe, A.sort(Order.String)),
+    pipe(A.flatten(candidateDirs), A.filter(P.not(isExcludedDir)), A.dedupe, A.sort(Order.String)),
     Effect.fn(function* (packageDir) {
       const packageJsonPath = path.join(packageDir, "package.json");
       const exists = yield* fs.exists(packageJsonPath).pipe(Effect.orElseSucceed(thunkFalse));
@@ -761,6 +754,12 @@ const resolveNonAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolveNon
   }
 );
 
+// The dot dialect keeps the previous matcher's behaviour, which let `*` match a dot-leading segment;
+// negation and comment prefixes stay the literal characters they were to it. `?`, `[..]`, `{a,b}`,
+// `+(..)`, `\` and an in-segment `**` (`src/**.ts`) are minimatch magic here where the old compiler
+// read them literally; no live pattern uses them (R2b oracle, `dialectMagic` section).
+const coverageSelectorGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
+
 const isResolvableCoverageSelector = S.is(
   S.String.check(S.isPattern(/^(?:\.\.\.\^?)?(?:\{\.\/[^{}![\]^]+\}|[^{}![\]^]+?)(?:\^?\.\.\.)?$/u))
 );
@@ -820,9 +819,11 @@ export const resolveCoverageSelector: {
   const pattern = Str.replace(/^(?:\.\.\.\^?)|(?:\^?\.\.\.)$/gu, "")(selector);
   const directory = Str.startsWith("./")(pattern) || Str.startsWith("{./")(pattern);
   const normalized = Str.replace(/^\{?|\}$/gu, "")(pattern);
-  const matches = globMatches(Str.replace(/^\.\//u, "")(normalized));
+  // A selector the glob compiler rejects is unsupported, like an unmatched one.
+  const compiled = GlobPattern.compileResult(Str.replace(/^\.\//u, "")(normalized), coverageSelectorGlob);
+  if (Result.isFailure(compiled)) return O.none();
   const seeds = A.map(
-    A.filter(owners, (owner) => matches(directory ? owner.packagePath : owner.packageName)),
+    A.filter(owners, (owner) => compiled.success.matches(directory ? owner.packagePath : owner.packageName)),
     (owner) => owner.packageName
   );
   if (A.isReadonlyArrayEmpty(seeds)) return O.none();
@@ -1338,8 +1339,9 @@ const withTurboSecretSession = Effect.fn("QualityTasks.withTurboSecretSession")(
   }
 
   const environmentWarnings = yield* turboEnvironmentHealthWarnings(step.cwd, Bun.env);
-  yield* Effect.forEach(environmentWarnings, flow(renderTurboEnvironmentHealthWarning, Console.warn), {
-    discard: true,
+  yield* O.match(renderTurboEnvironmentHealthWarnings(environmentWarnings), {
+    onNone: () => Effect.void,
+    onSome: Console.warn,
   });
 
   // A missing, expired, or denied 1Password session degrades the lane to
@@ -1686,7 +1688,7 @@ interface StreamingStepOutcome {
 type StreamingOutcomeObserver = (
   outcome: StreamingStepOutcome,
   index: number
-) => Effect.Effect<void, QualityTaskConfigurationError, Crypto.Crypto | FileSystem.FileSystem | Path.Path>;
+) => Effect.Effect<void, QualityTaskConfigurationError, Digest.Digest | FileSystem.FileSystem | Path.Path>;
 
 const ignoreStreamingOutcome: StreamingOutcomeObserver = () => Effect.void;
 
@@ -1957,7 +1959,7 @@ export const redSchedulingDecision = (
 
 type QualityTaskLaneRunObserver = (
   laneRun: QualityTaskLaneRun
-) => Effect.Effect<void, QualityTaskConfigurationError, Crypto.Crypto | FileSystem.FileSystem | Path.Path>;
+) => Effect.Effect<void, QualityTaskConfigurationError, Digest.Digest | FileSystem.FileSystem | Path.Path>;
 
 const ignoreQualityTaskLaneRun: QualityTaskLaneRunObserver = () => Effect.void;
 
@@ -2512,7 +2514,7 @@ const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOut
 ): Effect.fn.Return<
   QualityTaskStepOutput,
   QualityTaskConfigurationError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, step.env ?? {}).pipe(
     QualityTaskConfigurationError.mapError("Rejected a caller-provided cache runtime identity.")
@@ -2930,7 +2932,7 @@ const policyLintTurboStep = (
 const deprecatedApisTurboStep = (repoRoot: string, base?: string): QualityTaskStep =>
   policyLintTurboStep(repoRoot, "lint:deprecated-apis", ["lint:deprecated-apis"], base);
 
-const decodeLintPolicySweeps = decodeJsoncTextAs(LintPolicySweeps);
+const decodeLintPolicySweeps = Jsonc.bind(LintPolicySweeps).decode;
 const oxlintPolicySweeps = LintPolicySweeps.make({ schemaVersion: "lint-policy-sweeps/v1", deprecatedApis: "oxlint" });
 
 /**
@@ -2985,6 +2987,7 @@ const policyMediumTasks = [
   "lint:retired-effect-paths",
   "lint:retired-iri-authorities",
   "lint:schema-tag-idioms",
+  "lint:holds",
   "lint:tsconfig-overlay",
   "lint:package-test-typecheck",
   "lint:effect-vitest",
@@ -3067,7 +3070,7 @@ const listRootDocsCacheKeyFiles = Effect.fnUntraced(function* (repoRoot: string,
 export const rootDocsCacheKey = Effect.fn("QualityTasks.rootDocsCacheKey")(
   function* (repoRoot: string) {
     const fs = yield* FileSystem.FileSystem;
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     const files = pipe(
       yield* Effect.forEach(rootDocsCacheKeySources, (source) => listRootDocsCacheKeyFiles(repoRoot, source)),
       A.flatten,
@@ -3076,7 +3079,7 @@ export const rootDocsCacheKey = Effect.fn("QualityTasks.rootDocsCacheKey")(
     const parts = yield* Effect.forEach(files, (file) =>
       fs.readFileString(`${repoRoot}/${file}`).pipe(Effect.map((content) => `${file}\0${content}\0`))
     );
-    const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(A.join(parts, "")));
+    const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(A.join(parts, "")));
     return Str.slice(0, 16)(Hex.encode(digest));
   },
   Effect.orElseSucceed(() => UNKEYED_ROOT_DOCS_CACHE)

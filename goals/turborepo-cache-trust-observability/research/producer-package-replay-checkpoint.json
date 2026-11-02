@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "cache-producer-package-replay/v1",
+  "recordedAt": "2026-10-29T09:22:11.911717+00:00",
+  "authority": "source-bound-local-package-verification-only",
+  "sourceHead": "15ec49084f9857517f44cebe1df383aa663e599e",
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.schemas.ts",
+      "sha256": "f3c46b1de8ebd27961e0c15739b5faf99fbb018eb0b54e5d50e73314dcb36097"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts",
+      "sha256": "871578f5fb5abd6d4a80a49c344a2821cd8530030c019ad8f71a541232c2b590"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
+      "sha256": "3a2865c9610f3101873d13e281919a178e5ebea9e6a0c458f62d6bce7825f56f"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
+      "sha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts",
+      "sha256": "2f322dd3d9e02a2b6ea776b66804b9f5a9ed66010154585d776be38d906a7fc9"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+      "sha256": "0cf89599eaf90cfbce88f8dbe8012834045b164eec79a7647c6d8a620e616ca1"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-conformance.test.ts",
+      "sha256": "b1d831f7fa727f9209bdf9dcc0725731ff0ebe1c0b54dcbd6b081416cfd86dc9"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts",
+      "sha256": "e00745783ee14a6f202d22e4e2f8195d352f48689986098161e7b81159d8d380"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-producer-upload.test.ts",
+      "sha256": "f45978b959e0be5d163a7f2e8d227b173c58841b40653f4327f45fd26457d246"
+    }
+  ],
+  "workflowFixtureRepair": {
+    "path": "goals/turborepo-cache-trust-observability/research/workflow-git-fixture-checkpoint.json",
+    "sha256": "2d644f51d3c986807d5b2e0e80a69a32a75fb729a83eca79ce09bec0df0eb679"
+  },
+  "verification": {
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "exit": 0,
+    "auditSeconds": 1087.0,
+    "docgenSeconds": 41.5,
+    "logSha256": "8f873fa17dd37e0e3ec672faa13c0324bf4304f608a520c6d6aed718dfbdbd3b",
+    "manifestProfile": "committed and unchanged throughout execution",
+    "earlierFailuresRetained": true
+  },
+  "inbox": {
+    "unacked": 0,
+    "priorWholeAuditRows": "Both are acknowledged by the passing package replay at15ec49084f; original failed logs and attribution remain retained."
+  },
+  "scope": "This whole-package replay covers only the sourceHead and sourceFiles bytes recorded in this checkpoint. Later producer-coverage-repair-checkpoint.json and producer-review-repair-checkpoint.json describe separate changed-source regression evidence. No current full-CLI replay, protected publication, task qualification or production signing is inferred."
+}

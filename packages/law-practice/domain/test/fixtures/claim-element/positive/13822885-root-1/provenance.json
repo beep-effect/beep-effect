@@ -1,0 +1,59 @@
+{
+  "applicationNumber": "13822885",
+  "publicationNumber": "US20130183571A1",
+  "publicationDate": "2013-07-18",
+  "nativeXmlSha256": "5a9a95c87be66fc04ee09437c6fcc4f8661e58e5b41ea0038442bd84dc100e70",
+  "claimsXmlSha256": "48d2db856e0528556512d6a61440fd8c8dbd077bd2d8449187ed7b447ae12a2b",
+  "officeActionDocumentIdentifiers": [
+    "IC3CHHCXPXXIFW4"
+  ],
+  "officeActionMailDate": "2015-07-16",
+  "officeActionSection112Text": [
+    "8. claims 1-14 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nregarding claim 1, the following limitations are problematic:\r\na.) “the side-by-side arrangement directional end surfaces” in lines 4-5 lacks antecedent basis. the limitation is interpreted as a pair of endplates, wherein each end plate is arranged on a side surface at an end of the battery assembly.\r\nb.) “the both end parts” in lines 8-9 lacks antecedent basis. the limitation in lines 8-9 is interpreted as, “each of the bind bars includes bent parts that are formed by bending two end parts of the bind bars toward a common direction”. further, “the both end parts” in lines 10-11 and again in line 11 also lacks antecedent basis.\r\nc.) “the bind bar” in line 9 and 11 (twice) lacks antecedent basis. the limitation in line 9 is interpreted as “the bind bars are formed in …”\r\nd.) “the bar edge side” in line 10 lacks antecedent basis.\r\ne.) “said bent part” in lines 13 and 16 and “the bent part” in line 14 lacks antecedent basis. the limitation is interpreted as the “said bent parts”.\r\nf.) “the end plate” in line 15 lacks antecedent basis.\r\ng.)” said bent-part-side engagement structures” in lines 17-18 lacks antecedent basis.\r\nh.) “the end-plate-side engagement structures” in line 18 lacks antecedent basis.\r\nregarding claim 2, the following limitations are problematic:\r\ni.) “the bind bar” in line 1 of the claim lacks antecedent basis.\r\nj.) “the outside surface” in line 2 of the claim lacks antecedent basis.\r\nregarding claim 4, the following limitation is problematic:\r\nk.) “the end plate” in line 1 of the claim lacks antecedent basis.\r\nregarding claim 6, the following limitations are problematic:\r\nl.) “the end plate” in line 2 of the claim lacks antecedent basis.\r\nm.) “the outside surface” in line 2 of the claim lacks antecedent basis.\r\nn.) “the engagement side” in line 3 of the claim lacks antecedent basis.\r\no.) “the substantially rectangular u-shaped opening” in lines 3-4 and 4-5 of the claim lacks antecedent basis.\r\np.) “said bind bar” in lines 3-4 of the claim lacks antecedent basis.\r\nq.) “the inclined surface” in line 4 of the claim lacks antecedent basis.\r\nregarding claim 7, the following limitations are problematic:\r\nr.) “the end plate” in lines 2 and 5-6 of the claim lacks antecedent basis.\r\ns.) “the bent part” in line 5 of the claim lacks antecedent basis.\r\nt.) “said bind bar” in line 5 of the claim antecedent basis.\r\nregarding claim 8, the following limitations are problematic:\r\nu.) “the bent part” in lines 4 and 8 of the claim lacks antecedent basis.\r\nv.) “said bind bar” in lines 4 and 8-9 of the claim antecedent basis.\r\nw.) “said end plate” in line 9 of the claim lacks antecedent basis.\r\nregarding claim 9, the following limitations are problematic:\r\nx.) “the side surface” in line 2 of the claim lacks antecedent basis.\r\nregarding claim 10, the following limitations are problematic:\r\ny.) “the vertical direction” in line 2 of the claim lacks antecedent basis.\r\nz.) “the side surface” in lines 2-3 of the claim lacks antecedent basis.\r\nregarding claim 11, the following limitations are problematic:\r\naa.) “the height” in line 1 of the claim lacks antecedent basis.\r\nbb.) “the both ends” in line 2 of the claim lacks antecedent basis.\r\ncc.) “the bind bar” in lines 2 and 2-3 of the claim antecedent basis.\r\ndd.) “the strip-shaped main part” in line 2 of the claim antecedent basis.\r\nregarding claim 12, the following limitations are problematic:\r\nee.) “upper and lower bar portions” in line 1 of the claim lacks antecedent basis.\r\nff.) “the upper and lower parts” in line 2 of the claim lacks antecedent basis.\r\ngg.) “the side surface” in lines 2 and 4-5 of the claim lacks antecedent basis\r\nhh.) “the both ends” in line 3 (twice) of the claim lacks antecedent basis.\r\nii.) “said upper bar portion” in line 3 of the claim lacks antecedent basis.\r\njj.) “said lower bar portion” in lines 3-4 of the claim lacks antecedent basis.\r\nkk.) “said bind bar” in line 4 of the claim antecedent basis.\r\nll.) “the central part” in line 4 of the claim antecedent basis.\r\nregarding claim 13, the following limitations are problematic:\r\nmm.) “said bind bar” in line 1 of the claim antecedent basis.\r\nnn.) “the side surface” in line 2 of the claim lacks antecedent basis\r\noo.) “the upper surface” in lines 2-3 of the claim lacks antecedent basis.\r\npp.) “the bottom surfaces” in line 4 of the claim lacks antecedent basis.\r\nqq.) the limitation “dimensioned to cover” is indefinite. the structural dimensions of the bind bar have not been established; therefore, it is unclear how, or to what degree, the bind bar is “dimensioned to cover”. the limitation is interpreted broadly as discussed under “claim interpretation”.\r\nregarding claims 2-14, additionally, claims 2-14 depend from indefinite claims, thus are also rejected."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "HE8XIC5HPXXIFW3",
+      "officialDate": "2013-03-13T00:00:00.000-0400"
+    },
+    {
+      "documentIdentifier": "HE8XICWCPXXIFW3",
+      "officialDate": "2013-03-13T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "HE8XIC5HPXXIFW3",
+      "officialDate": "2013-03-13T00:00:00.000-0400",
+      "sha256": "9b351c9df385819b998fb012b2660e0d818f39989baf15f7300fe2166fbfefb8",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        2
+      ],
+      "sourceClaimCount": 13
+    },
+    {
+      "documentIdentifier": "HE8XICWCPXXIFW3",
+      "officialDate": "2013-03-13T00:00:00.000-0400",
+      "sha256": "b9b0daa187f3370e0bc0617daa1c4833f77f516ac7cf27d353a69498538e8f1f",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        10,
+        11,
+        12
+      ],
+      "sourceClaimCount": 8
+    }
+  ],
+  "documentInventoryCount": 101,
+  "documentInventoryRows": 101,
+  "primaryCpc": "H01M  10/613",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/13822885",
+    "https://api.uspto.gov/api/v1/patent/applications/13822885/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

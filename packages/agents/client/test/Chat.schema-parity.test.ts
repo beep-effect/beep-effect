@@ -13,7 +13,7 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
@@ -77,7 +77,7 @@ describe("@beep/agents-client schema parity", () => {
     expect(Result.getOrThrow(encodeStreamingTurnResult(defaultedStreamingTurn))).toStrictEqual(
       Result.getOrThrow(encodeStreamingTurnResult(explicitStreamingTurn))
     );
-    expect(Result.getOrThrow(encodeStreamingTurnResult(defaultedStreamingTurn))).toStrictEqual({
+    deepStrictEqual(Result.getOrThrow(encodeStreamingTurnResult(defaultedStreamingTurn)), {
       threadId: 10,
       requestId: O.none(),
       userContent: encodedContent,

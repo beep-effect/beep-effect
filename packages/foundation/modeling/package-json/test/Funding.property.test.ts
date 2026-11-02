@@ -37,7 +37,8 @@ const FieldsSample = S.Struct({
 const FundingSample = S.instanceOf(Funding, {
   toCodecArbitrary: () =>
     S.link<Funding>()(FieldsSample, {
-      decode: Getter.transform(Funding.make),
+      // Called through the class: since effect 4.1.0 a static `make` reads `this`.
+      decode: Getter.transform((fields) => Funding.make(fields)),
       encode: Getter.transform((entry) => ({ ...entry })),
     }),
 });

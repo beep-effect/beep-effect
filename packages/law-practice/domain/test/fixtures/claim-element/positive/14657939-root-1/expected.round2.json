@@ -1,0 +1,3940 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 94,
+          "quote": "A back-up roll device for conducting corner deformation on a chamfered continuous casting slab"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 21,
+              "quote": "A back-up roll device"
+            },
+            "determiner": "a",
+            "head": "back-up roll device"
+          },
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 55,
+              "quote": "corner deformation"
+            },
+            "determiner": "bare",
+            "head": "corner deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 59,
+              "endChar": 94,
+              "quote": "a chamfered continuous casting slab"
+            },
+            "determiner": "a",
+            "head": "chamfered continuous casting slab"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 96,
+          "endChar": 299,
+          "quote": "wherein the chamfered continuous casting slab is provided with two to four original chamfered bevels, and each original chamfered bevel has an obtuse angle on the wide face of the continuous casting slab"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 104,
+              "endChar": 141,
+              "quote": "the chamfered continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "chamfered continuous casting slab"
+          },
+          {
+            "anchor": {
+              "startChar": 159,
+              "endChar": 196,
+              "quote": "two to four original chamfered bevels"
+            },
+            "determiner": "bare",
+            "head": "original chamfered bevels"
+          },
+          {
+            "anchor": {
+              "startChar": 202,
+              "endChar": 231,
+              "quote": "each original chamfered bevel"
+            },
+            "determiner": "bare",
+            "head": "original chamfered bevel"
+          },
+          {
+            "anchor": {
+              "startChar": 236,
+              "endChar": 251,
+              "quote": "an obtuse angle"
+            },
+            "determiner": "an",
+            "head": "obtuse angle"
+          },
+          {
+            "anchor": {
+              "startChar": 255,
+              "endChar": 268,
+              "quote": "the wide face"
+            },
+            "determiner": "the",
+            "head": "wide face"
+          },
+          {
+            "anchor": {
+              "startChar": 272,
+              "endChar": 299,
+              "quote": "the continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "continuous casting slab"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 310,
+          "endChar": 523,
+          "quote": "the back-up roll device comprises back-up rolls with α-angle bevels, movable bearing seats, bearing seat moving rails, bearing seat motion holding mechanisms, and inner arc or outer arc frames of a casting machine"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 310,
+              "endChar": 333,
+              "quote": "the back-up roll device"
+            },
+            "determiner": "the",
+            "head": "back-up roll device"
+          },
+          {
+            "anchor": {
+              "startChar": 344,
+              "endChar": 357,
+              "quote": "back-up rolls"
+            },
+            "determiner": "bare",
+            "head": "back-up rolls"
+          },
+          {
+            "anchor": {
+              "startChar": 363,
+              "endChar": 377,
+              "quote": "α-angle bevels"
+            },
+            "determiner": "bare",
+            "head": "α-angle bevels"
+          },
+          {
+            "anchor": {
+              "startChar": 379,
+              "endChar": 400,
+              "quote": "movable bearing seats"
+            },
+            "determiner": "bare",
+            "head": "movable bearing seats"
+          },
+          {
+            "anchor": {
+              "startChar": 402,
+              "endChar": 427,
+              "quote": "bearing seat moving rails"
+            },
+            "determiner": "bare",
+            "head": "bearing seat moving rails"
+          },
+          {
+            "anchor": {
+              "startChar": 429,
+              "endChar": 467,
+              "quote": "bearing seat motion holding mechanisms"
+            },
+            "determiner": "bare",
+            "head": "bearing seat motion holding mechanisms"
+          },
+          {
+            "anchor": {
+              "startChar": 473,
+              "endChar": 502,
+              "quote": "inner arc or outer arc frames"
+            },
+            "determiner": "bare",
+            "head": "inner arc or outer arc frames"
+          },
+          {
+            "anchor": {
+              "startChar": 506,
+              "endChar": 523,
+              "quote": "a casting machine"
+            },
+            "determiner": "a",
+            "head": "casting machine"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 525,
+          "endChar": 665,
+          "quote": "the back-up rolls with α-angle bevels are arranged on the inner arc and/or outer arc frames of the horizontal segment of the casting machine"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 525,
+              "endChar": 542,
+              "quote": "the back-up rolls"
+            },
+            "determiner": "the",
+            "head": "back-up rolls"
+          },
+          {
+            "anchor": {
+              "startChar": 548,
+              "endChar": 562,
+              "quote": "α-angle bevels"
+            },
+            "determiner": "bare",
+            "head": "α-angle bevels"
+          },
+          {
+            "anchor": {
+              "startChar": 579,
+              "endChar": 616,
+              "quote": "the inner arc and/or outer arc frames"
+            },
+            "determiner": "the",
+            "head": "inner arc and/or outer arc frames"
+          },
+          {
+            "anchor": {
+              "startChar": 620,
+              "endChar": 642,
+              "quote": "the horizontal segment"
+            },
+            "determiner": "the",
+            "head": "horizontal segment"
+          },
+          {
+            "anchor": {
+              "startChar": 646,
+              "endChar": 665,
+              "quote": "the casting machine"
+            },
+            "determiner": "the",
+            "head": "casting machine"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 671,
+          "endChar": 934,
+          "quote": "support surfaces of the back-up rolls with α-angle bevels make contact with and squeeze obtuse angles adjacent to the wide face of the inner or outer arc on the chamfered continuous casting slab, so that each obtuse angle is squeezed into two larger obtuse angles"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 671,
+              "endChar": 687,
+              "quote": "support surfaces"
+            },
+            "determiner": "bare",
+            "head": "support surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 691,
+              "endChar": 708,
+              "quote": "the back-up rolls"
+            },
+            "determiner": "the",
+            "head": "back-up rolls"
+          },
+          {
+            "anchor": {
+              "startChar": 714,
+              "endChar": 728,
+              "quote": "α-angle bevels"
+            },
+            "determiner": "bare",
+            "head": "α-angle bevels"
+          },
+          {
+            "anchor": {
+              "startChar": 759,
+              "endChar": 772,
+              "quote": "obtuse angles"
+            },
+            "determiner": "bare",
+            "head": "obtuse angles"
+          },
+          {
+            "anchor": {
+              "startChar": 785,
+              "endChar": 798,
+              "quote": "the wide face"
+            },
+            "determiner": "the",
+            "head": "wide face"
+          },
+          {
+            "anchor": {
+              "startChar": 802,
+              "endChar": 824,
+              "quote": "the inner or outer arc"
+            },
+            "determiner": "the",
+            "head": "inner or outer arc"
+          },
+          {
+            "anchor": {
+              "startChar": 828,
+              "endChar": 865,
+              "quote": "the chamfered continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "chamfered continuous casting slab"
+          },
+          {
+            "anchor": {
+              "startChar": 875,
+              "endChar": 892,
+              "quote": "each obtuse angle"
+            },
+            "determiner": "bare",
+            "head": "obtuse angle"
+          },
+          {
+            "anchor": {
+              "startChar": 910,
+              "endChar": 934,
+              "quote": "two larger obtuse angles"
+            },
+            "determiner": "bare",
+            "head": "larger obtuse angles"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 104,
+            "endChar": 141,
+            "quote": "the chamfered continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 202,
+            "endChar": 231,
+            "quote": "each original chamfered bevel"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 159,
+            "endChar": 196,
+            "quote": "two to four original chamfered bevels"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 272,
+            "endChar": 299,
+            "quote": "the continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 310,
+            "endChar": 333,
+            "quote": "the back-up roll device"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "A back-up roll device"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 525,
+            "endChar": 542,
+            "quote": "the back-up rolls"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 344,
+            "endChar": 357,
+            "quote": "back-up rolls"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 548,
+            "endChar": 562,
+            "quote": "α-angle bevels"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 363,
+            "endChar": 377,
+            "quote": "α-angle bevels"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 579,
+            "endChar": 616,
+            "quote": "the inner arc and/or outer arc frames"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 473,
+            "endChar": 502,
+            "quote": "inner arc or outer arc frames"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 646,
+            "endChar": 665,
+            "quote": "the casting machine"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 506,
+            "endChar": 523,
+            "quote": "a casting machine"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 525,
+                "endChar": 542,
+                "quote": "the back-up rolls"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 542,
+              "endChar": 548,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 548,
+                "endChar": 562,
+                "quote": "α-angle bevels"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 562,
+              "endChar": 579,
+              "quote": " are arranged on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 579,
+                "endChar": 616,
+                "quote": "the inner arc and/or outer arc frames"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 616,
+              "endChar": 620,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 620,
+                "endChar": 642,
+                "quote": "the horizontal segment"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 642,
+              "endChar": 646,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 646,
+                "endChar": 665,
+                "quote": "the casting machine"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 691,
+            "endChar": 708,
+            "quote": "the back-up rolls"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 344,
+            "endChar": 357,
+            "quote": "back-up rolls"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 714,
+            "endChar": 728,
+            "quote": "α-angle bevels"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 363,
+            "endChar": 377,
+            "quote": "α-angle bevels"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 759,
+            "endChar": 772,
+            "quote": "obtuse angles"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 251,
+            "quote": "an obtuse angle"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 828,
+            "endChar": 865,
+            "quote": "the chamfered continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 875,
+            "endChar": 892,
+            "quote": "each obtuse angle"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 251,
+            "quote": "an obtuse angle"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 671,
+                "endChar": 687,
+                "quote": "support surfaces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 687,
+              "endChar": 691,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 691,
+                "endChar": 708,
+                "quote": "the back-up rolls"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 708,
+              "endChar": 714,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 714,
+                "endChar": 728,
+                "quote": "α-angle bevels"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 728,
+              "endChar": 759,
+              "quote": " make contact with and squeeze "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 759,
+                "endChar": 772,
+                "quote": "obtuse angles"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 772,
+              "endChar": 785,
+              "quote": " adjacent to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 785,
+                "endChar": 798,
+                "quote": "the wide face"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 798,
+              "endChar": 802,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 802,
+                "endChar": 824,
+                "quote": "the inner or outer arc"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 824,
+              "endChar": 828,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 828,
+                "endChar": 865,
+                "quote": "the chamfered continuous casting slab"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 865,
+              "endChar": 875,
+              "quote": ", so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 875,
+                "endChar": 892,
+                "quote": "each obtuse angle"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 892,
+              "endChar": 910,
+              "quote": " is squeezed into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 910,
+                "endChar": 934,
+                "quote": "two larger obtuse angles"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 109,
+          "quote": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 23,
+              "quote": "The back-up roll device"
+            },
+            "determiner": "the",
+            "head": "back-up roll device"
+          },
+          {
+            "anchor": {
+              "startChar": 39,
+              "endChar": 57,
+              "quote": "corner deformation"
+            },
+            "determiner": "bare",
+            "head": "corner deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 98,
+              "quote": "the chamfered continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "chamfered continuous casting slab"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 111,
+          "endChar": 293,
+          "quote": "wherein the corner deformation completed by squeezing the continuous casting slab with the back-up roll device is: each original chamfered bevel is squeezed into two chamfered bevels"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 141,
+              "quote": "the corner deformation"
+            },
+            "determiner": "the",
+            "head": "corner deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 165,
+              "endChar": 192,
+              "quote": "the continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "continuous casting slab"
+          },
+          {
+            "anchor": {
+              "startChar": 198,
+              "endChar": 221,
+              "quote": "the back-up roll device"
+            },
+            "determiner": "the",
+            "head": "back-up roll device"
+          },
+          {
+            "anchor": {
+              "startChar": 226,
+              "endChar": 255,
+              "quote": "each original chamfered bevel"
+            },
+            "determiner": "bare",
+            "head": "original chamfered bevel"
+          },
+          {
+            "anchor": {
+              "startChar": 273,
+              "endChar": 293,
+              "quote": "two chamfered bevels"
+            },
+            "determiner": "bare",
+            "head": "chamfered bevels"
+          }
+        ]
+      },
+      {
+        "path": "2.b",
+        "anchor": {
+          "startChar": 299,
+          "endChar": 421,
+          "quote": "the total length of L1+L2 of the two squeezed chamfered bevels is longer than the length S of the original chamfered bevel"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 299,
+              "endChar": 315,
+              "quote": "the total length"
+            },
+            "determiner": "the",
+            "head": "total length"
+          },
+          {
+            "anchor": {
+              "startChar": 319,
+              "endChar": 324,
+              "quote": "L1+L2"
+            },
+            "determiner": "bare",
+            "head": "l1+l2"
+          },
+          {
+            "anchor": {
+              "startChar": 328,
+              "endChar": 361,
+              "quote": "the two squeezed chamfered bevels"
+            },
+            "determiner": "the",
+            "head": "two squeezed chamfered bevels"
+          },
+          {
+            "anchor": {
+              "startChar": 377,
+              "endChar": 389,
+              "quote": "the length S"
+            },
+            "determiner": "the",
+            "head": "length s"
+          },
+          {
+            "anchor": {
+              "startChar": 393,
+              "endChar": 421,
+              "quote": "the original chamfered bevel"
+            },
+            "determiner": "the",
+            "head": "original chamfered bevel"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 23,
+            "quote": "The back-up roll device"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "A back-up roll device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 98,
+            "quote": "the chamfered continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 165,
+            "endChar": 192,
+            "quote": "the continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 198,
+            "endChar": 221,
+            "quote": "the back-up roll device"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "A back-up roll device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 226,
+            "endChar": 255,
+            "quote": "each original chamfered bevel"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 159,
+            "endChar": 196,
+            "quote": "two to four original chamfered bevels"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 111,
+              "endChar": 119,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 141,
+                "quote": "the corner deformation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 141,
+              "endChar": 165,
+              "quote": " completed by squeezing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 165,
+                "endChar": 192,
+                "quote": "the continuous casting slab"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 192,
+              "endChar": 198,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 198,
+                "endChar": 221,
+                "quote": "the back-up roll device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 221,
+              "endChar": 226,
+              "quote": " is: "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 226,
+                "endChar": 255,
+                "quote": "each original chamfered bevel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 255,
+              "endChar": 273,
+              "quote": " is squeezed into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 273,
+                "endChar": 293,
+                "quote": "two chamfered bevels"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 328,
+            "endChar": 361,
+            "quote": "the two squeezed chamfered bevels"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 273,
+            "endChar": 293,
+            "quote": "two chamfered bevels"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 393,
+            "endChar": 421,
+            "quote": "the original chamfered bevel"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 159,
+            "endChar": 196,
+            "quote": "two to four original chamfered bevels"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "2.b",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 299,
+                "endChar": 315,
+                "quote": "the total length"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 315,
+              "endChar": 319,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 319,
+                "endChar": 324,
+                "quote": "L1+L2"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 324,
+              "endChar": 328,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 328,
+                "endChar": 361,
+                "quote": "the two squeezed chamfered bevels"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 361,
+              "endChar": 377,
+              "quote": " is longer than "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 377,
+                "endChar": 389,
+                "quote": "the length S"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 389,
+              "endChar": 393,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 393,
+                "endChar": 421,
+                "quote": "the original chamfered bevel"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 109,
+          "quote": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 23,
+              "quote": "The back-up roll device"
+            },
+            "determiner": "the",
+            "head": "back-up roll device"
+          },
+          {
+            "anchor": {
+              "startChar": 39,
+              "endChar": 57,
+              "quote": "corner deformation"
+            },
+            "determiner": "bare",
+            "head": "corner deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 98,
+              "quote": "the chamfered continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "chamfered continuous casting slab"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 111,
+          "endChar": 284,
+          "quote": "wherein the angles α formed between the support surfaces of the back-up rolls with α-angle bevels and the horizontal plane (or the wide face of the casting slab) are 15°-30°"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 131,
+              "quote": "the angles α"
+            },
+            "determiner": "the",
+            "head": "angles α"
+          },
+          {
+            "anchor": {
+              "startChar": 147,
+              "endChar": 167,
+              "quote": "the support surfaces"
+            },
+            "determiner": "the",
+            "head": "support surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 188,
+              "quote": "the back-up rolls"
+            },
+            "determiner": "the",
+            "head": "back-up rolls"
+          },
+          {
+            "anchor": {
+              "startChar": 194,
+              "endChar": 208,
+              "quote": "α-angle bevels"
+            },
+            "determiner": "bare",
+            "head": "α-angle bevels"
+          },
+          {
+            "anchor": {
+              "startChar": 213,
+              "endChar": 233,
+              "quote": "the horizontal plane"
+            },
+            "determiner": "the",
+            "head": "horizontal plane"
+          },
+          {
+            "anchor": {
+              "startChar": 238,
+              "endChar": 251,
+              "quote": "the wide face"
+            },
+            "determiner": "the",
+            "head": "wide face"
+          },
+          {
+            "anchor": {
+              "startChar": 255,
+              "endChar": 271,
+              "quote": "the casting slab"
+            },
+            "determiner": "the",
+            "head": "casting slab"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 23,
+            "quote": "The back-up roll device"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "A back-up roll device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 98,
+            "quote": "the chamfered continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 147,
+            "endChar": 167,
+            "quote": "the support surfaces"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 671,
+            "endChar": 687,
+            "quote": "support surfaces"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 171,
+            "endChar": 188,
+            "quote": "the back-up rolls"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 344,
+            "endChar": 357,
+            "quote": "back-up rolls"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 194,
+            "endChar": 208,
+            "quote": "α-angle bevels"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 363,
+            "endChar": 377,
+            "quote": "α-angle bevels"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 255,
+            "endChar": 271,
+            "quote": "the casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 109,
+          "quote": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 23,
+              "quote": "The back-up roll device"
+            },
+            "determiner": "the",
+            "head": "back-up roll device"
+          },
+          {
+            "anchor": {
+              "startChar": 39,
+              "endChar": 57,
+              "quote": "corner deformation"
+            },
+            "determiner": "bare",
+            "head": "corner deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 98,
+              "quote": "the chamfered continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "chamfered continuous casting slab"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 111,
+          "endChar": 187,
+          "quote": "wherein the thickness of the chamfered continuous casting slab is 130-450 mm"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 132,
+              "quote": "the thickness"
+            },
+            "determiner": "the",
+            "head": "thickness"
+          },
+          {
+            "anchor": {
+              "startChar": 136,
+              "endChar": 173,
+              "quote": "the chamfered continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "chamfered continuous casting slab"
+          }
+        ]
+      },
+      {
+        "path": "4.b",
+        "anchor": {
+          "startChar": 189,
+          "endChar": 228,
+          "quote": "the original chamfer angle β is 25°-45°"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 189,
+              "endChar": 217,
+              "quote": "the original chamfer angle β"
+            },
+            "determiner": "the",
+            "head": "original chamfer angle β"
+          }
+        ]
+      },
+      {
+        "path": "4.c",
+        "anchor": {
+          "startChar": 234,
+          "endChar": 290,
+          "quote": "the length S of the original chamfered bevel is 30-85 mm"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 234,
+              "endChar": 246,
+              "quote": "the length S"
+            },
+            "determiner": "the",
+            "head": "length s"
+          },
+          {
+            "anchor": {
+              "startChar": 250,
+              "endChar": 278,
+              "quote": "the original chamfered bevel"
+            },
+            "determiner": "the",
+            "head": "original chamfered bevel"
+          }
+        ]
+      },
+      {
+        "path": "4.d",
+        "anchor": {
+          "startChar": 296,
+          "endChar": 353,
+          "quote": "the length L2 of the squeezed chamfered bevel is 10-50 mm"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 296,
+              "endChar": 309,
+              "quote": "the length L2"
+            },
+            "determiner": "the",
+            "head": "length l2"
+          },
+          {
+            "anchor": {
+              "startChar": 313,
+              "endChar": 341,
+              "quote": "the squeezed chamfered bevel"
+            },
+            "determiner": "the",
+            "head": "squeezed chamfered bevel"
+          }
+        ]
+      },
+      {
+        "path": "4.e",
+        "anchor": {
+          "startChar": 359,
+          "endChar": 382,
+          "quote": "the height H is 3-25 mm"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 359,
+              "endChar": 371,
+              "quote": "the height H"
+            },
+            "determiner": "the",
+            "head": "height h"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 23,
+            "quote": "The back-up roll device"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "A back-up roll device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 98,
+            "quote": "the chamfered continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 136,
+            "endChar": 173,
+            "quote": "the chamfered continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "part-of",
+        "child": "4.b",
+        "parent": "4"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.c",
+          "anchor": {
+            "startChar": 250,
+            "endChar": 278,
+            "quote": "the original chamfered bevel"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 159,
+            "endChar": 196,
+            "quote": "two to four original chamfered bevels"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.c",
+        "parent": "4"
+      },
+      {
+        "kind": "part-of",
+        "child": "4.d",
+        "parent": "4"
+      },
+      {
+        "kind": "part-of",
+        "child": "4.e",
+        "parent": "4"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 109,
+          "quote": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 23,
+              "quote": "The back-up roll device"
+            },
+            "determiner": "the",
+            "head": "back-up roll device"
+          },
+          {
+            "anchor": {
+              "startChar": 39,
+              "endChar": 57,
+              "quote": "corner deformation"
+            },
+            "determiner": "bare",
+            "head": "corner deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 98,
+              "quote": "the chamfered continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "chamfered continuous casting slab"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 111,
+          "endChar": 316,
+          "quote": "wherein the support surfaces of the back-up rolls with α-angle bevels are selected from one of the following conditions: a, bevels; b, curved surfaces; c, bevels and a plane; d, curved surfaces and a plane"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 139,
+              "quote": "the support surfaces"
+            },
+            "determiner": "the",
+            "head": "support surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 160,
+              "quote": "the back-up rolls"
+            },
+            "determiner": "the",
+            "head": "back-up rolls"
+          },
+          {
+            "anchor": {
+              "startChar": 166,
+              "endChar": 180,
+              "quote": "α-angle bevels"
+            },
+            "determiner": "bare",
+            "head": "α-angle bevels"
+          },
+          {
+            "anchor": {
+              "startChar": 206,
+              "endChar": 230,
+              "quote": "the following conditions"
+            },
+            "determiner": "the",
+            "head": "following conditions"
+          }
+        ]
+      },
+      {
+        "path": "5.a.i",
+        "anchor": {
+          "startChar": 232,
+          "endChar": 241,
+          "quote": "a, bevels"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 235,
+              "endChar": 241,
+              "quote": "bevels"
+            },
+            "determiner": "bare",
+            "head": "bevels"
+          }
+        ]
+      },
+      {
+        "path": "5.a.ii",
+        "anchor": {
+          "startChar": 243,
+          "endChar": 261,
+          "quote": "b, curved surfaces"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 246,
+              "endChar": 261,
+              "quote": "curved surfaces"
+            },
+            "determiner": "bare",
+            "head": "curved surfaces"
+          }
+        ]
+      },
+      {
+        "path": "5.a.iii",
+        "anchor": {
+          "startChar": 263,
+          "endChar": 284,
+          "quote": "c, bevels and a plane"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 266,
+              "endChar": 272,
+              "quote": "bevels"
+            },
+            "determiner": "bare",
+            "head": "bevels"
+          },
+          {
+            "anchor": {
+              "startChar": 277,
+              "endChar": 284,
+              "quote": "a plane"
+            },
+            "determiner": "a",
+            "head": "plane"
+          }
+        ]
+      },
+      {
+        "path": "5.a.iv",
+        "anchor": {
+          "startChar": 286,
+          "endChar": 316,
+          "quote": "d, curved surfaces and a plane"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 289,
+              "endChar": 304,
+              "quote": "curved surfaces"
+            },
+            "determiner": "bare",
+            "head": "curved surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 309,
+              "endChar": 316,
+              "quote": "a plane"
+            },
+            "determiner": "a",
+            "head": "plane"
+          }
+        ]
+      },
+      {
+        "path": "5.b",
+        "anchor": {
+          "startChar": 318,
+          "endChar": 557,
+          "quote": "in the conditions c and d, the height of the plane parts of the support surfaces are kept consistent with that of the supporting plane of the casting slab supported by the inner arc or outer arc of a roll arrangement of the casting machine"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 321,
+              "endChar": 343,
+              "quote": "the conditions c and d"
+            },
+            "determiner": "the",
+            "head": "conditions c and d"
+          },
+          {
+            "anchor": {
+              "startChar": 345,
+              "endChar": 355,
+              "quote": "the height"
+            },
+            "determiner": "the",
+            "head": "height"
+          },
+          {
+            "anchor": {
+              "startChar": 359,
+              "endChar": 374,
+              "quote": "the plane parts"
+            },
+            "determiner": "the",
+            "head": "plane parts"
+          },
+          {
+            "anchor": {
+              "startChar": 378,
+              "endChar": 398,
+              "quote": "the support surfaces"
+            },
+            "determiner": "the",
+            "head": "support surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 424,
+              "endChar": 428,
+              "quote": "that"
+            },
+            "determiner": "bare",
+            "head": "that"
+          },
+          {
+            "anchor": {
+              "startChar": 432,
+              "endChar": 452,
+              "quote": "the supporting plane"
+            },
+            "determiner": "the",
+            "head": "supporting plane"
+          },
+          {
+            "anchor": {
+              "startChar": 456,
+              "endChar": 472,
+              "quote": "the casting slab"
+            },
+            "determiner": "the",
+            "head": "casting slab"
+          },
+          {
+            "anchor": {
+              "startChar": 486,
+              "endChar": 512,
+              "quote": "the inner arc or outer arc"
+            },
+            "determiner": "the",
+            "head": "inner arc or outer arc"
+          },
+          {
+            "anchor": {
+              "startChar": 516,
+              "endChar": 534,
+              "quote": "a roll arrangement"
+            },
+            "determiner": "a",
+            "head": "roll arrangement"
+          },
+          {
+            "anchor": {
+              "startChar": 538,
+              "endChar": 557,
+              "quote": "the casting machine"
+            },
+            "determiner": "the",
+            "head": "casting machine"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 23,
+            "quote": "The back-up roll device"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "A back-up roll device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 98,
+            "quote": "the chamfered continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 139,
+            "quote": "the support surfaces"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 671,
+            "endChar": 687,
+            "quote": "support surfaces"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 160,
+            "quote": "the back-up rolls"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 344,
+            "endChar": 357,
+            "quote": "back-up rolls"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 166,
+            "endChar": 180,
+            "quote": "α-angle bevels"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 363,
+            "endChar": 377,
+            "quote": "α-angle bevels"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.i",
+        "parent": "5.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.ii",
+        "parent": "5.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.iii",
+        "parent": "5.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.iv",
+        "parent": "5.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 378,
+            "endChar": 398,
+            "quote": "the support surfaces"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 671,
+            "endChar": 687,
+            "quote": "support surfaces"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 456,
+            "endChar": 472,
+            "quote": "the casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 538,
+            "endChar": 557,
+            "quote": "the casting machine"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 506,
+            "endChar": 523,
+            "quote": "a casting machine"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.b",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 318,
+              "endChar": 321,
+              "quote": "in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 321,
+                "endChar": 343,
+                "quote": "the conditions c and d"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 343,
+              "endChar": 345,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 345,
+                "endChar": 355,
+                "quote": "the height"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 355,
+              "endChar": 359,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 359,
+                "endChar": 374,
+                "quote": "the plane parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 374,
+              "endChar": 378,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 378,
+                "endChar": 398,
+                "quote": "the support surfaces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 398,
+              "endChar": 424,
+              "quote": " are kept consistent with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 424,
+                "endChar": 428,
+                "quote": "that"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 428,
+              "endChar": 432,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 432,
+                "endChar": 452,
+                "quote": "the supporting plane"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 452,
+              "endChar": 456,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 456,
+                "endChar": 472,
+                "quote": "the casting slab"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 472,
+              "endChar": 486,
+              "quote": " supported by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 486,
+                "endChar": 512,
+                "quote": "the inner arc or outer arc"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 512,
+              "endChar": 516,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 516,
+                "endChar": 534,
+                "quote": "a roll arrangement"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 534,
+              "endChar": 538,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 538,
+                "endChar": 557,
+                "quote": "the casting machine"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 109,
+          "quote": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 23,
+              "quote": "The back-up roll device"
+            },
+            "determiner": "the",
+            "head": "back-up roll device"
+          },
+          {
+            "anchor": {
+              "startChar": 39,
+              "endChar": 57,
+              "quote": "corner deformation"
+            },
+            "determiner": "bare",
+            "head": "corner deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 98,
+              "quote": "the chamfered continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "chamfered continuous casting slab"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 111,
+          "endChar": 336,
+          "quote": "wherein the bearing seat motion holding mechanisms, which are used for holding and moving the bearing seats, have a structure of hydraulically driving a piston rod or a structure of electrically driving a lead screw to rotate"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 161,
+              "quote": "the bearing seat motion holding mechanisms"
+            },
+            "determiner": "the",
+            "head": "bearing seat motion holding mechanisms"
+          },
+          {
+            "anchor": {
+              "startChar": 201,
+              "endChar": 218,
+              "quote": "the bearing seats"
+            },
+            "determiner": "the",
+            "head": "bearing seats"
+          },
+          {
+            "anchor": {
+              "startChar": 225,
+              "endChar": 236,
+              "quote": "a structure"
+            },
+            "determiner": "a",
+            "head": "structure"
+          },
+          {
+            "anchor": {
+              "startChar": 262,
+              "endChar": 274,
+              "quote": "a piston rod"
+            },
+            "determiner": "a",
+            "head": "piston rod"
+          },
+          {
+            "anchor": {
+              "startChar": 278,
+              "endChar": 289,
+              "quote": "a structure"
+            },
+            "determiner": "a",
+            "head": "structure"
+          },
+          {
+            "anchor": {
+              "startChar": 314,
+              "endChar": 326,
+              "quote": "a lead screw"
+            },
+            "determiner": "a",
+            "head": "lead screw"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 23,
+            "quote": "The back-up roll device"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "A back-up roll device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 98,
+            "quote": "the chamfered continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 161,
+            "quote": "the bearing seat motion holding mechanisms"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 429,
+            "endChar": 467,
+            "quote": "bearing seat motion holding mechanisms"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 201,
+            "endChar": 218,
+            "quote": "the bearing seats"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 379,
+            "endChar": 400,
+            "quote": "movable bearing seats"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 111,
+              "endChar": 119,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 161,
+                "quote": "the bearing seat motion holding mechanisms"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 161,
+              "endChar": 201,
+              "quote": ", which are used for holding and moving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 201,
+                "endChar": 218,
+                "quote": "the bearing seats"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 218,
+              "endChar": 225,
+              "quote": ", have "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 225,
+                "endChar": 236,
+                "quote": "a structure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 236,
+              "endChar": 262,
+              "quote": " of hydraulically driving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 262,
+                "endChar": 274,
+                "quote": "a piston rod"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 274,
+              "endChar": 278,
+              "quote": " or "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 278,
+                "endChar": 289,
+                "quote": "a structure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 289,
+              "endChar": 314,
+              "quote": " of electrically driving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 314,
+                "endChar": 326,
+                "quote": "a lead screw"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 326,
+              "endChar": 336,
+              "quote": " to rotate"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 109,
+          "quote": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 23,
+              "quote": "The back-up roll device"
+            },
+            "determiner": "the",
+            "head": "back-up roll device"
+          },
+          {
+            "anchor": {
+              "startChar": 39,
+              "endChar": 57,
+              "quote": "corner deformation"
+            },
+            "determiner": "bare",
+            "head": "corner deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 98,
+              "quote": "the chamfered continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "chamfered continuous casting slab"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 111,
+          "endChar": 284,
+          "quote": "wherein displacement sensors for measuring the working positions of the back-up rolls with α-angle bevels are arranged in the holding mechanisms for moving the bearing seats"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 139,
+              "quote": "displacement sensors"
+            },
+            "determiner": "bare",
+            "head": "displacement sensors"
+          },
+          {
+            "anchor": {
+              "startChar": 154,
+              "endChar": 175,
+              "quote": "the working positions"
+            },
+            "determiner": "the",
+            "head": "working positions"
+          },
+          {
+            "anchor": {
+              "startChar": 179,
+              "endChar": 196,
+              "quote": "the back-up rolls"
+            },
+            "determiner": "the",
+            "head": "back-up rolls"
+          },
+          {
+            "anchor": {
+              "startChar": 202,
+              "endChar": 216,
+              "quote": "α-angle bevels"
+            },
+            "determiner": "bare",
+            "head": "α-angle bevels"
+          },
+          {
+            "anchor": {
+              "startChar": 233,
+              "endChar": 255,
+              "quote": "the holding mechanisms"
+            },
+            "determiner": "the",
+            "head": "holding mechanisms"
+          },
+          {
+            "anchor": {
+              "startChar": 267,
+              "endChar": 284,
+              "quote": "the bearing seats"
+            },
+            "determiner": "the",
+            "head": "bearing seats"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 23,
+            "quote": "The back-up roll device"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "A back-up roll device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 98,
+            "quote": "the chamfered continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 179,
+            "endChar": 196,
+            "quote": "the back-up rolls"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 344,
+            "endChar": 357,
+            "quote": "back-up rolls"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 202,
+            "endChar": 216,
+            "quote": "α-angle bevels"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 363,
+            "endChar": 377,
+            "quote": "α-angle bevels"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 233,
+            "endChar": 255,
+            "quote": "the holding mechanisms"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 429,
+            "endChar": 467,
+            "quote": "bearing seat motion holding mechanisms"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 267,
+            "endChar": 284,
+            "quote": "the bearing seats"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 379,
+            "endChar": 400,
+            "quote": "movable bearing seats"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 111,
+              "endChar": 119,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 139,
+                "quote": "displacement sensors"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 139,
+              "endChar": 154,
+              "quote": " for measuring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 154,
+                "endChar": 175,
+                "quote": "the working positions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 175,
+              "endChar": 179,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 179,
+                "endChar": 196,
+                "quote": "the back-up rolls"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 196,
+              "endChar": 202,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 202,
+                "endChar": 216,
+                "quote": "α-angle bevels"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 216,
+              "endChar": 233,
+              "quote": " are arranged in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 233,
+                "endChar": 255,
+                "quote": "the holding mechanisms"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 255,
+              "endChar": 267,
+              "quote": " for moving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 267,
+                "endChar": 284,
+                "quote": "the bearing seats"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 109,
+          "quote": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 23,
+              "quote": "The back-up roll device"
+            },
+            "determiner": "the",
+            "head": "back-up roll device"
+          },
+          {
+            "anchor": {
+              "startChar": 39,
+              "endChar": 57,
+              "quote": "corner deformation"
+            },
+            "determiner": "bare",
+            "head": "corner deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 98,
+              "quote": "the chamfered continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "chamfered continuous casting slab"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 111,
+          "endChar": 210,
+          "quote": "wherein the bearing seat moving rails for moving the movable bearing seats are square or dovetailed"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 148,
+              "quote": "the bearing seat moving rails"
+            },
+            "determiner": "the",
+            "head": "bearing seat moving rails"
+          },
+          {
+            "anchor": {
+              "startChar": 160,
+              "endChar": 185,
+              "quote": "the movable bearing seats"
+            },
+            "determiner": "the",
+            "head": "movable bearing seats"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 23,
+            "quote": "The back-up roll device"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "A back-up roll device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 98,
+            "quote": "the chamfered continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 148,
+            "quote": "the bearing seat moving rails"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 402,
+            "endChar": 427,
+            "quote": "bearing seat moving rails"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 160,
+            "endChar": 185,
+            "quote": "the movable bearing seats"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 379,
+            "endChar": 400,
+            "quote": "movable bearing seats"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 111,
+              "endChar": 119,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 148,
+                "quote": "the bearing seat moving rails"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 148,
+              "endChar": 160,
+              "quote": " for moving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 160,
+                "endChar": 185,
+                "quote": "the movable bearing seats"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 185,
+              "endChar": 210,
+              "quote": " are square or dovetailed"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 109,
+          "quote": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 23,
+              "quote": "The back-up roll device"
+            },
+            "determiner": "the",
+            "head": "back-up roll device"
+          },
+          {
+            "anchor": {
+              "startChar": 39,
+              "endChar": 57,
+              "quote": "corner deformation"
+            },
+            "determiner": "bare",
+            "head": "corner deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 98,
+              "quote": "the chamfered continuous casting slab"
+            },
+            "determiner": "the",
+            "head": "chamfered continuous casting slab"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 111,
+          "endChar": 390,
+          "quote": "wherein the back-up rolls with α-angle bevels are arranged on the position of the last back-up roll of the last horizontal segment of the casting machine, or hung over the outlet of the horizontal segment, or arranged on the position of any back-up roll of any horizontal segment"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 136,
+              "quote": "the back-up rolls"
+            },
+            "determiner": "the",
+            "head": "back-up rolls"
+          },
+          {
+            "anchor": {
+              "startChar": 142,
+              "endChar": 156,
+              "quote": "α-angle bevels"
+            },
+            "determiner": "bare",
+            "head": "α-angle bevels"
+          },
+          {
+            "anchor": {
+              "startChar": 173,
+              "endChar": 185,
+              "quote": "the position"
+            },
+            "determiner": "the",
+            "head": "position"
+          },
+          {
+            "anchor": {
+              "startChar": 189,
+              "endChar": 210,
+              "quote": "the last back-up roll"
+            },
+            "determiner": "the",
+            "head": "last back-up roll"
+          },
+          {
+            "anchor": {
+              "startChar": 214,
+              "endChar": 241,
+              "quote": "the last horizontal segment"
+            },
+            "determiner": "the",
+            "head": "last horizontal segment"
+          },
+          {
+            "anchor": {
+              "startChar": 245,
+              "endChar": 264,
+              "quote": "the casting machine"
+            },
+            "determiner": "the",
+            "head": "casting machine"
+          },
+          {
+            "anchor": {
+              "startChar": 279,
+              "endChar": 289,
+              "quote": "the outlet"
+            },
+            "determiner": "the",
+            "head": "outlet"
+          },
+          {
+            "anchor": {
+              "startChar": 293,
+              "endChar": 315,
+              "quote": "the horizontal segment"
+            },
+            "determiner": "the",
+            "head": "horizontal segment"
+          },
+          {
+            "anchor": {
+              "startChar": 332,
+              "endChar": 344,
+              "quote": "the position"
+            },
+            "determiner": "the",
+            "head": "position"
+          },
+          {
+            "anchor": {
+              "startChar": 348,
+              "endChar": 364,
+              "quote": "any back-up roll"
+            },
+            "determiner": "bare",
+            "head": "back-up roll"
+          },
+          {
+            "anchor": {
+              "startChar": 368,
+              "endChar": 390,
+              "quote": "any horizontal segment"
+            },
+            "determiner": "bare",
+            "head": "horizontal segment"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 23,
+            "quote": "The back-up roll device"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 21,
+            "quote": "A back-up roll device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 98,
+            "quote": "the chamfered continuous casting slab"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 94,
+            "quote": "a chamfered continuous casting slab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 136,
+            "quote": "the back-up rolls"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 344,
+            "endChar": 357,
+            "quote": "back-up rolls"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 142,
+            "endChar": 156,
+            "quote": "α-angle bevels"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 363,
+            "endChar": 377,
+            "quote": "α-angle bevels"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 245,
+            "endChar": 264,
+            "quote": "the casting machine"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 506,
+            "endChar": 523,
+            "quote": "a casting machine"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 111,
+              "endChar": 119,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 136,
+                "quote": "the back-up rolls"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 136,
+              "endChar": 142,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 142,
+                "endChar": 156,
+                "quote": "α-angle bevels"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 156,
+              "endChar": 173,
+              "quote": " are arranged on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 173,
+                "endChar": 185,
+                "quote": "the position"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 185,
+              "endChar": 189,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 189,
+                "endChar": 210,
+                "quote": "the last back-up roll"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 210,
+              "endChar": 214,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 214,
+                "endChar": 241,
+                "quote": "the last horizontal segment"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 241,
+              "endChar": 245,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 245,
+                "endChar": 264,
+                "quote": "the casting machine"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 264,
+              "endChar": 279,
+              "quote": ", or hung over "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 279,
+                "endChar": 289,
+                "quote": "the outlet"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 289,
+              "endChar": 293,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 293,
+                "endChar": 315,
+                "quote": "the horizontal segment"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 315,
+              "endChar": 332,
+              "quote": ", or arranged on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 332,
+                "endChar": 344,
+                "quote": "the position"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 344,
+              "endChar": 348,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 348,
+                "endChar": 364,
+                "quote": "any back-up roll"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 364,
+              "endChar": 368,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 368,
+                "endChar": 390,
+                "quote": "any horizontal segment"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "1"
+      }
+    ]
+  }
+]

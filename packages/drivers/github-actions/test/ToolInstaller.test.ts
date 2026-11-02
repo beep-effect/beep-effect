@@ -27,6 +27,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { commandArgs } from "./support/commandArgs.ts";
 import { nativePlatform } from "./support/host.ts";
 import { settle } from "./support/results.ts";
 
@@ -129,7 +130,7 @@ const countingSpawner = (script: { readonly exitCode: number; readonly output: s
   const service = ChildProcessSpawner.make((command) =>
     Effect.sync(() => {
       spawns += 1;
-      if (command._tag === "StandardCommand") argvs = A.append(argvs, [command.command, ...command.args]);
+      if (command._tag === "StandardCommand") argvs = A.append(argvs, [command.command, ...commandArgs(command)]);
       const bytes = new TextEncoder().encode(script.output);
       return ChildProcessSpawner.makeHandle({
         pid: ChildProcessSpawner.ProcessId(4321),

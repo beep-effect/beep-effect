@@ -19,6 +19,7 @@ const TestLayer = Layer.mergeAll(
     Terminal.make({
       columns: Effect.succeed(80),
       rows: Effect.succeed(24),
+      size: Effect.die("Flag parsing must not prompt."),
       readInput: Effect.die("Flag parsing must not prompt."),
       readLine: Effect.die("Flag parsing must not prompt."),
       display: () => Effect.void,

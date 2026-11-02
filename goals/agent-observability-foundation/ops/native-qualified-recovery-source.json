@@ -1,0 +1,19 @@
+{
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/native-schedule.ts": "216c4cea6f4b9aa6d00f33a3c5c3aa4a0bb03801fa9e93852f4457ba6049fce3",
+    "packages/tooling/library/ai-metrics/test/native-schedule.test.ts": "27cfe14cb219b8e36d24cebb7ae8e1d075aefab2af4333d4c8bd012e341ff4cc",
+    "packages/tooling/library/ai-metrics/test/fixtures/native-phoenix-proof.ts": "575d0cfb0f4571ed7e5c7b56728e66a2dc323b86ce4e0b5f9e0c1004f1042571",
+    "goals/agent-observability-foundation/ops/verify-native-collector-route.py": "56ff99771cf268e87de18c92bf0dabdee9677b2b577f8ec7b920bdd8e4242c8a"
+  },
+  "focusedTestResult": {
+    "unit": "foundation-review-replay-schedule-green.service",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 8589934592,
+    "initialAvailableBytes": 77291077632,
+    "peakObservedBytes": 533471232,
+    "minimumAvailableBytes": 74452668416,
+    "stoppedFor": null,
+    "exitCode": 0
+  },
+  "fullPackageGate": "passed; replay-package-verification.json"
+}

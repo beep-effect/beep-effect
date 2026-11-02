@@ -406,10 +406,15 @@ it.effect("a BOM file replaced by a BOM-less one after the seed's BOM probe resy
     const replacing = replacingAfterNextRead(fs, replacement, trigger);
     const journal = yield* open({
       ...replacing,
-      watch: () => {
-        watching = true;
-        return Stream.never;
-      },
+      watch: (_target, options) =>
+        Stream.never.pipe(
+          Stream.onStart(
+            Effect.sync(() => {
+              watching = true;
+              options?.onReady?.();
+            })
+          )
+        ),
       // Park the supervisor's first catch-up at its metadata sample, so a live
       // reader can subscribe before that catch-up reports what it finds.
       stat: Effect.fn("JsonlTest.gateCatchUpStat")(function* (target) {

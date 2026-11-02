@@ -53,7 +53,7 @@ import {
   runnerLossJobReruns,
   runnerLossRerunArgs,
 } from "./RunnerLossRerun.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CiWorkflowJob } from "./LaneTimings.ts";
@@ -152,7 +152,7 @@ const decodePullRequest = S.decodeUnknownEffect(S.fromJsonString(RunnerLossPullR
 const decodePullRequests = S.decodeUnknownEffect(S.fromJsonString(S.Array(RunnerLossPullRequest)));
 const decodeBranchRef = S.decodeUnknownEffect(S.fromJsonString(RunnerLossBranchRef));
 
-type GhRequirements = Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner;
+type GhRequirements = SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner;
 
 const readRun = Effect.fn("Ci.rerunRunnerLoss.readRun")(function* (
   cwd: string,

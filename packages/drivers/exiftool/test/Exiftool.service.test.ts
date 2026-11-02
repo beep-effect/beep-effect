@@ -20,10 +20,15 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+import type * as CommandLine from "effect/process/CommandLine";
+
+/** The plain text a real spawner hands the child for one argv or environment word. */
+const wordText = (word: CommandLine.Word): string => (Redacted.isRedacted(word) ? Redacted.value(word) : word);
 
 const encoder = new TextEncoder();
 
@@ -87,7 +92,7 @@ const makeFakeSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, exi
             // Write invocation: args end with [..., "-o", outputPath, sourcePath].
             const outputPath = A.get(command.args, A.length(command.args) - 2);
             if (O.isSome(outputPath) && exitCode === 0) {
-              yield* fs.writeFileString(outputPath.value, "staged bytes");
+              yield* fs.writeFileString(wordText(outputPath.value), "staged bytes");
             }
 
             return makeHandle("    1 image files created\n", "exiftool stderr", exitCode);

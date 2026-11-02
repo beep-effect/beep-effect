@@ -1,0 +1,79 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system comprising:
+<claim-text>a magnetic strip comprising a front surface and a back surface, wherein:
+<claim-text>the back surface comprises an attachment mechanism, and</claim-text>
+<claim-text>the back surface is configured to be attached to a wall of a cabinet associated with a shower niche assembly, via the attachment mechanism; and</claim-text>
+</claim-text>
+<claim-text>a lighting fixture comprising a magnetic or ferrous surface, wherein the magnetic or ferrous surface is configured to magnetically couple with the front surface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the attachment mechanism is an adhesive.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the magnetic strip is waterproof.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the lighting fixture comprises one or more Light Emitting Diodes (LEDs).</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the magnetic strip further comprises a peel off cover removably covering the back surface.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the magnetic strip is rectangular.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the magnetic strip further comprises one or more induction pads.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the one or more induction pads are connected with a utility power source and configured to receive electric power from the utility power source.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the lighting fixture further comprises one or more induction power receivers, and wherein the lighting fixture is configured to receive electric power wirelessly from the magnetic strip via the one or more induction pads and the one or more induction power receivers.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the one or more induction power receivers are configured to receive electric power wirelessly from the one or more induction pads when the one or more induction power receivers are disposed within a predefined distance of the one or more induction pads.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A system comprising:
+<claim-text>a magnetic strip comprising a front surface and a back surface, wherein:
+<claim-text>the back surface comprises an adhesive, and</claim-text>
+<claim-text>the back surface is configured to be attached to a wall of a cabinet associated with a shower niche assembly, via the adhesive;</claim-text>
+</claim-text>
+<claim-text>a peel off cover removably covering the back surface; and</claim-text>
+<claim-text>a lighting fixture comprising a magnetic or ferrous surface, wherein the magnetic or ferrous surface is configured to magnetically couple with the front surface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the magnetic strip is waterproof.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the magnetic strip further comprises one or more induction pads.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the one or more induction pads are connected with a utility power source and configured to receive electric power from the utility power source.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The system of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the lighting fixture further comprises one or more induction power receivers, and wherein the lighting fixture is configured to receive electric power wirelessly from the magnetic strip via the one or more induction pads and the one or more induction power receivers.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The system of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the one or more induction power receivers are configured to receive electric power wirelessly from the one or more induction pads when the one or more induction power receivers are disposed within a predefined distance of the one or more induction pads.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the lighting fixture comprises one or more Light Emitting Diodes (LEDs).</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the magnetic strip is rectangular.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. A shower niche assembly comprising:
+<claim-text>a cabinet for the shower niche assembly;</claim-text>
+<claim-text>a magnetic strip comprising a front surface and a back surface, wherein:
+<claim-text>the back surface comprises an adhesive, and</claim-text>
+<claim-text>the back surface is configured to be attached to a cabinet wall, via the adhesive; and</claim-text>
+</claim-text>
+<claim-text>a lighting fixture comprising a magnetic or ferrous surface, wherein the magnetic or ferrous surface is configured to magnetically couple with the front surface.</claim-text>
+</claim-text>
+</claim>
+</claims>

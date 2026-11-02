@@ -1,0 +1,94 @@
+{
+  "familyId": "12447956-root-7",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the tip",
+      "nativeQuote": "the tip",
+      "literalMatch": true,
+      "explanation": "Exact native7."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the open state",
+      "nativeQuote": "the open state",
+      "literalMatch": true,
+      "explanation": "Exact7."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the longitudinal direction",
+      "nativeQuote": "the longitudinal direction",
+      "literalMatch": true,
+      "explanation": "Exact11."
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the pivoting angle",
+      "nativeQuote": "the pivoting angle",
+      "literalMatch": true,
+      "explanation": "Exact18."
+    }
+  ],
+  "concerns": [
+    "Original FUCN268SPPOPPY2 has old7-claim version where7 depends on preceding claims; FU5OT1MZPPOPPY4 explicitly CurrentlyAmended root7 and new11-18 reconcile substantive expansion to native18. Original amended7 merges claim8 into same ClaimText, explaining count17;11-18 match exactly.",
+    "Amended7 still serializes having with a lid and facing the a head strip, plus deleted-looking trailing dependency words with OCRConfidenceData but no Del markup. Their proper rendering is not proven. Do not dismiss this operative text ambiguity as OCR alone.",
+    "Publication identity/digest verified;49/49 inventory no-intervening-CLM chronology is necessary but does not resolve amended7 rendering."
+  ],
+  "rationale": "Genuine secondparagraph positive family with same-number phrase matches; hold eligibility until amended root7 text can be verified independently of merged/duplicated OCR rendering.",
+  "sourceIdentity": {
+    "applicationNumber": "12447956",
+    "publicationNumber": "US20100071148A1",
+    "publicationDate": "2010-03-25",
+    "officeActionMailDate": "2011-09-23",
+    "officeActionDocumentIdentifiers": ["GSU9LW9JPPOPPY5"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20100071148 A1 20100325",
+      "application-reference": "US 12447956 20071203",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "FU5OT1MZPPOPPY4",
+        "officialDate": "2009-04-30T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "FUCN268SPPOPPY2",
+        "officialDate": "2009-04-30T00:00:00.000-0400"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "FU5OT1MZPPOPPY4",
+        "officialDate": "2009-04-30T00:00:00.000-0400",
+        "sha256": "7cd968209e55adecc17d9015019fb1bfbe404bfdd7ccfcc3741a5b7ed2a8e8c5",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [
+          2, 3, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+        ],
+        "sourceClaimCount": 17
+      },
+      {
+        "documentIdentifier": "FUCN268SPPOPPY2",
+        "officialDate": "2009-04-30T00:00:00.000-0400",
+        "sha256": "c96b82d038df5b5b0f3fd9de6f2bb2dd061d2257ea54eaaa6aa13fb16da84773",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [2, 3],
+        "sourceClaimCount": 7
+      }
+    ],
+    "documentInventoryCount": 49,
+    "documentInventoryRows": 49,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

@@ -1,6 +1,8 @@
 /**
  * Branded value objects and literal enumerations shared across the PACER driver.
  *
+ * **Details**
+ *
  * These are the small, dependency-free schema primitives that the auth and PCL
  * models build on: the opaque `NextGenCSO` auth token, the `loginResult` codes
  * returned by the Authentication API, and the PCL `jurisdictionType` codes.

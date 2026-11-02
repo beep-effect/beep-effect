@@ -1,0 +1,107 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system comprising:
+<claim-text>at least one in-cabin camera installed at a predetermined position and orientation in a vehicle, the in-cabin camera being configured to capture images of a user at a first frame rate;</claim-text>
+<claim-text>at least one monocular camera installed in the vehicle, the at least one monocular camera being configured to capture images of the user at a second frame rate higher than the first frame rate; and</claim-text>
+<claim-text>at least one processor configured to:
+<claim-text>process first images captured by the at least one in-cabin camera over a given time period, to determine first positions of facial landmark features of the user and first poses of the user's face during the given time period at the first frame rate;</claim-text>
+<claim-text>process second images captured by the at least one monocular camera over the given time period, to identify facial landmark features of the user in the second images;</claim-text>
+<claim-text>determine second positions of the facial landmark features at the second frame rate, by correlating the facial landmark features identified in the second images with the first positions of the facial landmark features determined from the first images; and</claim-text>
+<claim-text>determine second poses of the user's face at the second frame rate based on the second positions of the facial landmark features and the first poses of the user's face during the given time period.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to select the given time period as a time period during which the first poses of the user's face vary by less than a predefined threshold change.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to adjust a scale factor applied to the second positions of the facial landmark features, based on a correlation between the second positions and the first positions of the facial landmark features.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one monocular camera is mounted on an adjustable support in the vehicle, wherein the at least one processor is configured to:
+<claim-text>detect when the second positions of the facial landmark features have shifted by more than a predefined threshold shift within a time period shorter than a predefined time period, by correlating the facial landmark features identified in the second images with the first positions of the facial landmark features determined from the first images; and</claim-text>
+<claim-text>when it is detected that the second positions of the facial landmark features have shifted by more than the predefined threshold shift within the time period shorter than the predefined time period,
+<claim-text>determine an amount of at least one of: a tilt of the adjustable support, a translation of the adjustable support, based on a magnitude and a direction of the shift detected in the second positions of the facial landmark features; and</claim-text>
+<claim-text>correct the second positions of the facial landmark features, prior to determining the second poses of the user's face, based on the amount of the at least one of: the tilt, the translation of the adjustable support.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a controllable reflective element arranged on an optical path of the at least one monocular camera, wherein the at least one processor is configured to control an orientation of the controllable reflective element relative to the at least one monocular camera, to adjust the optical path of the at least one monocular camera and maintain the user's face within a field of view of the at least one monocular camera.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>detect when the at least one monocular camera is occluded; and</claim-text>
+<claim-text>when it is detected that the at least one monocular camera is occluded, perform at least one of:
+<claim-text>predicting third poses of the user's face based on the first poses of the user's face determined from the first images;</claim-text>
+<claim-text>refining at least one of: the first positions of the facial landmark features of the user, the first poses of the user's face, based on previously-collected information indicative of at least one of: a size of the user's head, a shape of the user's face, an average distance of the user's face from the at least one in-cabin camera.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein when determining the second poses of the user's face, the at least one processor is configured to:
+<claim-text>estimate a plurality of potential second poses of the user's face based on the second positions of the facial landmark features; and</claim-text>
+<claim-text>select a subset of the plurality of potential second poses of the user's face as the second poses of the user's face, based on the first poses of the user's face determined from the first images.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the plurality of potential second poses of the user's face are estimated in a form of a probability cloud, each potential second pose in the probability cloud being assigned a probability of said potential second pose being a correct second pose of the user's face at a given instant of time, and
+<claim-text>wherein when determining the second poses of the user's face, the at least one processor is configured to:
+<claim-text>assign a corresponding weight to a probability of each potential second pose, based on whether said potential second pose matches a corresponding first pose of the user's face for a same time instant or a nearest time instant;</claim-text>
+<claim-text>calculate a weighted probability of each potential second pose, based on the corresponding weight and the probability of said potential second pose; and</claim-text>
+<claim-text>when selecting the subset of the plurality of potential second poses of the user's face, select potential second poses having a highest weighted probability from amongst respective weighted probabilities of the plurality of potential second poses.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a heads-up display, wherein the at least one processor is configured to:
+<claim-text>determine relative positions of eyes of the user with respect to an image plane of the heads-up display, based on the second positions of the facial landmark features and the second poses of the user's face;</claim-text>
+<claim-text>generate or retrieve images to be displayed via the heads-up display, based on the relative positions of the eyes of the user with respect to the image plane; and</claim-text>
+<claim-text>display the images via the heads-up display.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A method comprising:
+<claim-text>processing first images captured by at least one in-cabin camera at a first frame rate over a given time period, to determine first positions of facial landmark features of a user and first poses of the user's face during the given time period at the first frame rate, wherein the at least one in-cabin camera is installed at a predetermined position and orientation in a vehicle;</claim-text>
+<claim-text>processing second images captured by at least one monocular camera at a second frame rate over the given time period, to identify facial landmark features of the user in the second images, wherein the at least one monocular camera is installed in the vehicle, the second frame rate being higher than the first frame rate;</claim-text>
+<claim-text>determining second positions of the facial landmark features at the second frame rate, by correlating the facial landmark features identified in the second images with the first positions of the facial landmark features determined from the first images; and</claim-text>
+<claim-text>determining second poses of the user's face at the second frame rate based on the second positions of the facial landmark features and the first poses of the user's face during the given time period.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising adjusting a scale factor applied to the second positions of the facial landmark features, based on a correlation between the second positions and the first positions of the facial landmark features.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one monocular camera is mounted on an adjustable support in the vehicle, the method further comprising:
+<claim-text>detecting when the second positions of the facial landmark features have shifted by more than a predefined threshold shift within a time period shorter than a predefined time period, by correlating the facial landmark features identified in the second images with the first positions of the facial landmark features determined from the first images; and</claim-text>
+<claim-text>when it is detected that the second positions of the facial landmark features have shifted by more than the predefined threshold shift within the time period shorter than the predefined time period,
+<claim-text>determining an amount of at least one of: a tilt of the adjustable support, a translation of the adjustable support, based on a magnitude and a direction of the shift detected in the second positions of the facial landmark features; and</claim-text>
+<claim-text>correcting the second positions of the facial landmark features, prior to determining the second poses of the user's face, based on the amount of the at least one of: the tilt, the translation of the adjustable support.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising:
+<claim-text>detecting when the at least one monocular camera is occluded; and</claim-text>
+<claim-text>when it is detected that the at least one monocular camera is occluded, performing at least one of:
+<claim-text>predicting third poses of the user's face based on the first poses of the user's face determined from the first images;</claim-text>
+<claim-text>refining at least one of: the first positions of the facial landmark features of the user, the first poses of the user's face, based on previously-collected information indicative of at least one of: a size of the user's head, a shape of the user's face, an average distance of the user's face from the at least one in-cabin camera.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein determining the second poses of the user's face comprises:
+<claim-text>estimating a plurality of potential second poses of the user's face based on the second positions of the facial landmark features; and</claim-text>
+<claim-text>selecting a subset of the plurality of potential second poses of the user's face as the second poses of the user's face, based on the first poses of the user's face determined from the first images.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the plurality of potential second poses of the user's face are estimated in a form of a probability cloud, each potential second pose in the probability cloud being assigned a probability of said potential second pose being a correct second pose of the user's face at a given instant of time, and
+<claim-text>wherein determining the second poses of the user's face further comprises:
+<claim-text>assigning a corresponding weight to a probability of each potential second pose, based on whether said potential second pose matches a corresponding first pose of the user's face for a same time instant or a nearest time instant;</claim-text>
+<claim-text>calculating a weighted probability of each potential second pose, based on the corresponding weight and the probability of said potential second pose; and</claim-text>
+<claim-text>when selecting the subset of the plurality of potential second poses of the user's face, selecting potential second poses having a highest weighted probability from amongst respective weighted probabilities of the plurality of potential second poses.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+</claims>

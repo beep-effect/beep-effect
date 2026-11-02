@@ -72,7 +72,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { eq } from "drizzle-orm";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -121,8 +121,8 @@ const reviewScope = (orgId: SharedIdentity.OrganizationId) =>
   ContradictionReviewScope.of({ orgId, sourceScopeRef: "workspace:1" });
 
 const sha256Hex = Effect.fnUntraced(function* (value: string) {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(value)));
+  const crypto = yield* Digest.Digest;
+  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value)));
 });
 
 const verifiedAnchorFor = Effect.fnUntraced(function* (

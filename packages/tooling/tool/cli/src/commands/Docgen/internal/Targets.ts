@@ -10,77 +10,97 @@ import { DomainError } from "@beep/repo-utils";
 import { A, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
+import * as Equivalence from "effect/Equivalence";
 import { dual, flow } from "effect/Function";
-import { analyzeDocgenQuality, resolveDocgenQualityTargets } from "./Quality.ts";
-import { decodeDocgenQualityReportForWorkerEval, qualityWorkerEvalSourcePacketLimit } from "./QualityWorkerEval.ts";
 import {
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
   resolveDocgenWorkspacePackage,
 } from "./Workspace.ts";
+import type { DocgenWorkspacePackage } from "../Docgen.schemas.ts";
+
+const sameDocgenPackagePath: Equivalence.Equivalence<DocgenWorkspacePackage> = Equivalence.mapInput(
+  Equivalence.String,
+  (pkg: DocgenWorkspacePackage) => pkg.relativePath
+);
+
+const resolveSelectedDocgenPackages = (selectors: A.NonEmptyReadonlyArray<string>) =>
+  Effect.forEach(selectors, resolveDocgenWorkspacePackage()).pipe(Effect.map(A.dedupeWith(sameDocgenPackagePath)));
 
 /**
- * Resolve generation targets from the optional CLI package selector.
+ * Resolve generation targets from the CLI package selectors.
+ *
+ * **Details**
+ *
+ * Selectors resolve in the order given. Selectors naming the same package
+ * collapse to its first occurrence. An empty selector list selects every
+ * configured package.
  *
  * **Example** (Resolve all generate targets)
  *
  * ```ts
  * import { resolveGenerateTargets } from "@beep/repo-cli/commands/Docgen/internal/Targets"
  * import * as Effect from "effect/Effect";
- * import * as O from "effect/Option"
  *
- * const program = resolveGenerateTargets(O.none()).pipe(Effect.map((targets) => targets.length))
+ * const program = resolveGenerateTargets([]).pipe(Effect.map((targets) => targets.length))
  * console.log(Effect.isEffect(program))
  * ```
  *
- * @param selector - Optional package selector supplied by `--package` or `--filter`.
+ * @param selectors - Package selectors supplied by repeated `--package` flags or `--filter`.
  * @returns Configured docgen package targets, or a typed failure for missing config.
  * @category queries
  * @since 0.0.0
  */
 export const resolveGenerateTargets = Effect.fn("Docgen.resolveGenerateTargets")(function* (
-  selector: O.Option<string>
+  selectors: ReadonlyArray<string>
 ) {
   yield* assertNoOrphanDocgenConfigPaths();
 
-  if (O.isSome(selector)) {
-    const target = yield* resolveDocgenWorkspacePackage(selector.value);
-    if (!target.hasDocgenConfig) {
+  if (A.isReadonlyArrayNonEmpty(selectors)) {
+    const targets = yield* resolveSelectedDocgenPackages(selectors);
+    const unconfigured = A.findFirst(targets, (target) => !target.hasDocgenConfig);
+    if (O.isSome(unconfigured)) {
       return yield* DomainError.make({
-        message: `${target.relativePath} is missing docgen.json. Run "bun run beep docgen init -p ${target.relativePath}" first.`,
+        message: `${unconfigured.value.relativePath} is missing docgen.json. Run "bun run beep docgen init -p ${unconfigured.value.relativePath}" first.`,
       });
     }
-    return [target] as const;
+    return targets;
   }
 
   return yield* discoverDocgenWorkspacePackages().pipe(Effect.map(A.filter((pkg) => pkg.hasDocgenConfig)));
 });
 
 /**
- * Resolve analysis targets from the optional CLI package selector.
+ * Resolve analysis targets from the CLI package selectors.
+ *
+ * **Details**
+ *
+ * Selectors resolve in the order given. Selectors naming the same package
+ * collapse to its first occurrence. An empty selector list selects every
+ * configured package.
  *
  * **Example** (Resolve all analyze targets)
  *
  * ```ts
  * import { resolveAnalyzeTargets } from "@beep/repo-cli/commands/Docgen/internal/Targets"
  * import * as Effect from "effect/Effect";
- * import * as O from "effect/Option"
  *
- * const program = resolveAnalyzeTargets(O.none()).pipe(Effect.map((targets) => targets.length))
+ * const program = resolveAnalyzeTargets([]).pipe(Effect.map((targets) => targets.length))
  * console.log(Effect.isEffect(program))
  * ```
  *
- * @param selector - Optional package selector supplied by `--package`.
+ * @param selectors - Package selectors supplied by repeated `--package` flags.
  * @returns Package targets eligible for metadata analysis.
  * @category queries
  * @since 0.0.0
  */
-export const resolveAnalyzeTargets = Effect.fn("Docgen.resolveAnalyzeTargets")(function* (selector: O.Option<string>) {
+export const resolveAnalyzeTargets = Effect.fn("Docgen.resolveAnalyzeTargets")(function* (
+  selectors: ReadonlyArray<string>
+) {
   yield* assertNoOrphanDocgenConfigPaths();
 
-  if (O.isSome(selector)) {
-    return [yield* resolveDocgenWorkspacePackage(selector.value)] as const;
+  if (A.isReadonlyArrayNonEmpty(selectors)) {
+    return yield* resolveSelectedDocgenPackages(selectors);
   }
 
   return yield* discoverDocgenWorkspacePackages().pipe(Effect.map(A.filter((pkg) => pkg.hasDocgenConfig)));
@@ -117,6 +137,48 @@ export const resolvePackageSelector = Effect.fn("Docgen.resolvePackageSelector")
   }
 
   return O.isSome(packageSelector) ? packageSelector : filterSelector;
+});
+
+/**
+ * Combine the legacy `--filter` selector with repeated `--package` flags.
+ *
+ * **Details**
+ *
+ * `--filter` names a single package, so it conflicts with any `--package`
+ * value that differs from it. Without `--package` values the filter, when
+ * present, becomes the only selector.
+ *
+ * **Example** (Combine repeated package selectors)
+ *
+ * ```ts
+ * import { resolvePackageSelectors } from "@beep/repo-cli/commands/Docgen/internal/Targets"
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option"
+ *
+ * const program = resolvePackageSelectors(["@beep/schema", "@beep/identity"], O.none())
+ * console.log(Effect.isEffect(program))
+ * ```
+ *
+ * @param packageSelectors - Package selectors in `--package` flag order.
+ * @param filterSelector - Optional compatibility selector.
+ * @returns The selectors to resolve, in flag order, after conflict validation.
+ * @category queries
+ * @since 0.0.0
+ */
+export const resolvePackageSelectors = Effect.fn("Docgen.resolvePackageSelectors")(function* (
+  packageSelectors: ReadonlyArray<string>,
+  filterSelector: O.Option<string>
+) {
+  if (O.isSome(filterSelector)) {
+    const conflicting = A.findFirst(packageSelectors, (selector) => selector !== filterSelector.value);
+    if (O.isSome(conflicting)) {
+      return yield* DomainError.make({
+        message: `Received conflicting selectors --package=${conflicting.value} and --filter=${filterSelector.value}.`,
+      });
+    }
+  }
+
+  return A.isReadonlyArrayNonEmpty(packageSelectors) ? packageSelectors : O.toArray(filterSelector);
 });
 
 /**
@@ -243,72 +305,3 @@ export const targetHasCurrentDocgenProofManifest: {
       (verification) => verification.packagePath === target.absolutePath && verification.status === "current"
     )
 );
-
-/**
- * Resolve the quality report source for worker evaluation commands.
- *
- * **Example** (Resolve all-source quality report)
- *
- * ```ts
- * import { resolveQualityWorkerEvalSource } from "@beep/repo-cli/commands/Docgen/internal/Targets"
- * import * as Effect from "effect/Effect";
- * import * as O from "effect/Option"
- *
- * const program = resolveQualityWorkerEvalSource({
- *   all: true,
- *   input: O.none(),
- *   packageSelector: O.none(),
- *   packetLimit: 1
- * })
- * console.log(Effect.isEffect(program))
- * ```
- *
- * @param options - Mutually exclusive input, package, or all-source options.
- * @returns A decoded or freshly generated quality report plus source metadata.
- * @category validation
- * @since 0.0.0
- */
-export const resolveQualityWorkerEvalSource = Effect.fn("Docgen.resolveQualityWorkerEvalSource")(function* ({
-  all,
-  input,
-  packageSelector,
-  packetLimit,
-}: {
-  readonly all: boolean;
-  readonly input: O.Option<string>;
-  readonly packageSelector: O.Option<string>;
-  readonly packetLimit: number;
-}) {
-  const fs = yield* FileSystem.FileSystem;
-
-  if (O.isSome(input)) {
-    return {
-      report: yield* fs.readFileString(input.value).pipe(Effect.flatMap(decodeDocgenQualityReportForWorkerEval)),
-      scope: "input" as const,
-      sourceQualityReport: input.value,
-    };
-  }
-
-  const { scope, targets } = yield* resolveDocgenQualityTargets({
-    all,
-    changedFiles: false,
-    packageSelector,
-  });
-
-  if (targets.length === 0) {
-    return yield* DomainError.make({
-      message: "No packages selected for docgen quality worker eval.",
-    });
-  }
-
-  return {
-    report: yield* analyzeDocgenQuality({
-      packetLimit: qualityWorkerEvalSourcePacketLimit(packetLimit),
-      scope,
-      scoreMode: "codex",
-      targets,
-    }),
-    scope: scope === "all" ? ("all" as const) : ("package" as const),
-    sourceQualityReport: `generated:${scope}`,
-  };
-});

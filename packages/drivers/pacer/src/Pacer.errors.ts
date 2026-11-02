@@ -1,6 +1,8 @@
 /**
  * Typed, schema-backed errors for the PACER driver boundary.
  *
+ * **Details**
+ *
  * Two error families mirror PACER's two error models: {@link PacerAuthError}
  * carries the body-level `loginResult` code from the Authentication API (which
  * returns failures as HTTP 200), while {@link PacerPclError} carries the HTTP

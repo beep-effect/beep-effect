@@ -1,0 +1,1010 @@
+{
+  "schemaVersion": "claim-automated-adjudication-summary/v1",
+  "reviewAuthority": "automated",
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "automatedAdjudicationRecorded": true,
+  "inputBundleDigest": "ac18afc16f167638d14dc986600282fd105ab19e6de112db73fd2cf67d46ce27",
+  "implementationDigest": "63d2b7a823f56d33620fbd651e9b30bd4f5f986a761bd92607e39d969eb85f47",
+  "runtimeVersion": "v16",
+  "sampleSha256": "4c6e067cc02106ebf291bd629859e4eb1b43cf0bae4b24c1c5021a3e1f13c9e3",
+  "resultsSha256": "3e0bfb2c8aee5ee18ec647d2ac4ae9ba1101469e3f0648ef1b2437c69e52318c",
+  "sampleCount": 30,
+  "populationCount": 3184,
+  "questionCount": 115,
+  "claimsWithAgreedErroneousFinding": [
+    "12477359:12",
+    "12458116:12",
+    "12452296:7",
+    "12446668:16",
+    "12510001:8",
+    "12456380:2",
+    "12511749:2",
+    "12449773:16",
+    "12507313:13",
+    "12495342:6",
+    "12449773:18",
+    "12446668:2",
+    "12489521:11",
+    "12482341:16",
+    "12420230:16",
+    "12499172:14",
+    "12481627:16",
+    "12444032:17",
+    "12485924:8",
+    "12498206:1",
+    "12479352:15"
+  ],
+  "claimsWithAllStatementsAgreedRight": [
+    "12459604:9",
+    "12512209:8",
+    "12494662:7",
+    "12483343:6",
+    "12512977:5",
+    "12491073:12",
+    "12447068:19"
+  ],
+  "unresolvedClaims": ["12457782:4", "12489902:7"],
+  "claimLevelErroneousAlertRate": null,
+  "identificationBounds": [0.7, 0.7666666666666667],
+  "identificationBoundsAreConfidenceInterval": false,
+  "conditionalWilson95Envelope": [0.5212421254128504, 0.8820761185551049],
+  "intervalKind": "Wilson-envelope-for-unresolved-sample-outcomes",
+  "categoryCounts": {
+    "missing-antecedent": {
+      "right": 0,
+      "wrong": 23,
+      "uncertain": 2
+    },
+    "pattern-not-covered": {
+      "right": 24,
+      "wrong": 35,
+      "uncertain": 16
+    },
+    "no-emitted-findings": {
+      "right": 6,
+      "wrong": 0,
+      "uncertain": 0
+    },
+    "ambiguous-antecedent": {
+      "right": 0,
+      "wrong": 9,
+      "uncertain": 0
+    }
+  },
+  "consensus": [
+    {
+      "id": "12477359:12:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12477359:12:finding:1",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12457782:4:finding:0",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:1",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:2",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:3",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:4",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:5",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:6",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:7",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:8",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:9",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:10",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:11",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:12",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12457782:4:finding:13",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12458116:12:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12458116:12:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12452296:7:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12446668:16:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12446668:16:finding:1",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12446668:16:finding:2",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": false
+    },
+    {
+      "id": "12510001:8:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12510001:8:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12456380:2:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12511749:2:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12511749:2:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12511749:2:finding:2",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12511749:2:finding:3",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:2",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:3",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:4",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:5",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:6",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:7",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:8",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:9",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:10",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:16:finding:11",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12459604:9:no-emitted-findings",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12507313:13:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12507313:13:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12507313:13:finding:2",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12507313:13:finding:3",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12507313:13:finding:4",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12495342:6:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:18:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12449773:18:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12446668:2:finding:0",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12446668:2:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12446668:2:finding:2",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12446668:2:finding:3",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12446668:2:finding:4",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489902:7:finding:0",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": false
+    },
+    {
+      "id": "12512209:8:no-emitted-findings",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489521:11:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489521:11:finding:1",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489521:11:finding:2",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489521:11:finding:3",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489521:11:finding:4",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489521:11:finding:5",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489521:11:finding:6",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489521:11:finding:7",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489521:11:finding:8",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489521:11:finding:9",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12489521:11:finding:10",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12494662:7:no-emitted-findings",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12482341:16:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12482341:16:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12483343:6:no-emitted-findings",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12420230:16:finding:0",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12420230:16:finding:1",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12420230:16:finding:2",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12512977:5:no-emitted-findings",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12499172:14:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12499172:14:finding:1",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12499172:14:finding:2",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12499172:14:finding:3",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12499172:14:finding:4",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12499172:14:finding:5",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12481627:16:finding:0",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12481627:16:finding:1",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12481627:16:finding:2",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12481627:16:finding:3",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12481627:16:finding:4",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12481627:16:finding:5",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12444032:17:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12444032:17:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12444032:17:finding:2",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12444032:17:finding:3",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "uncertain",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12444032:17:finding:4",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12485924:8:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12485924:8:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12485924:8:finding:2",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:0",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:2",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:3",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:4",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:5",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:6",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:7",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:8",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:9",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:10",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:11",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:12",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12498206:1:finding:13",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12491073:12:no-emitted-findings",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12447068:19:finding:0",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12447068:19:finding:1",
+      "verdict": "right",
+      "reviewerAVerdict": "right",
+      "reviewerBVerdict": "right",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    },
+    {
+      "id": "12479352:15:finding:0",
+      "verdict": "uncertain",
+      "reviewerAVerdict": "uncertain",
+      "reviewerBVerdict": "uncertain",
+      "confidenceThresholdMet": false,
+      "agreed": false
+    },
+    {
+      "id": "12479352:15:finding:1",
+      "verdict": "wrong",
+      "reviewerAVerdict": "wrong",
+      "reviewerBVerdict": "wrong",
+      "confidenceThresholdMet": true,
+      "agreed": true
+    }
+  ],
+  "verifiedEvidenceQuotes": 605,
+  "reviewerRoles": ["extractor-A", "critic-B"],
+  "estimand": "Automated-adjudication estimate of the fraction of the fixed 3184-claim allowed cohort receiving at least one erroneous emitted advisory statement.",
+  "limitations": [
+    "Self-assessed confidence is not calibrated probability.",
+    "Intervals approximate sampling uncertainty conditional on automated judgments; correlated model adjudication error is not covered.",
+    "The claim sample is unchanged but prior predictions informed development repairs; no fresh held-out validation is claimed.",
+    "Coverage warnings are separate from substantive alleged defects; allowed status does not prove antecedent correctness.",
+    "Not all-USPTO prevalence, finding-level precision, independently clean-claim specificity, attorney agreement or legal validation."
+  ],
+  "inputFileSha256": "30e929141ceea303c60e3bb5052cf170295390ce14ffe8329229d62abcc99b2a",
+  "reviewerASha256": "3f23b3e0d4ad3a2bb275e9d53d86a9ace784856e78f975b371cef631afbe823d",
+  "reviewerBSha256": "96fb16d5c4f05554e0f61f48752fe5cd086e7adc01a500cce39a89ba3ea86f24"
+}

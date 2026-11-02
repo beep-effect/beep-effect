@@ -52,7 +52,7 @@ import {
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -106,8 +106,8 @@ const isTransformationLedgerRecordCasesMailStorePass = S.is(TransformationLedger
 const isTransformationLedgerRecordCasesMailWarning = S.is(TransformationLedgerRecord.cases["mail-warning"]);
 
 const testLayer = Layer.mergeAll(
-  CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)),
-  NodeServices.layer
+  CorpusCommandServiceLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
 );
 
 const schemaRoundTripLaw = <Schema extends S.Codec<unknown>>(schema: Schema) => {
@@ -3563,8 +3563,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
       yield* fs.makeDirectory(claimDirectory, { recursive: true });
       const childProgram = `
           import { withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
-          import { NodeServices } from "@effect/platform-node";
+          import { NodeCrypto, NodeServices } from "@effect/platform-node";
           import * as Console from "effect/Console";
+          import * as Layer from "effect/Layer";
           import * as Effect from "effect/Effect";
 
           await Effect.runPromise(
@@ -3572,7 +3573,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
               process.env.BEEP_RESTORATION_TEST_CLAIM_DIRECTORY,
               ".preservation-writer.claim",
               Console.log("CLAIMED").pipe(Effect.andThen(Effect.never))
-            ).pipe(Effect.provide(NodeServices.layer))
+            ).pipe(Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
           );
         `;
       const child = yield* ChildProcess.make("bun", ["--eval", childProgram], {

@@ -1,0 +1,69 @@
+{
+  "observedAt": "2026-10-29T18:57:48.732272+00:00",
+  "head": "98c762efbff9abfda6cee6383ced7a07ea50a514",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-preflight-repair-mzkh40yc",
+  "artifacts": [
+    {
+      "file": "foundation-preflight-repair-v1.log",
+      "sha256": "37fb4696b93dd001db2a4384ed79051117a6df9f8845d3b57f73afb6a8dd1b49",
+      "bytes": 2080
+    },
+    {
+      "file": "foundation-preflight-repair-v1-guard.json",
+      "sha256": "932810564bede23e7ece68452166815984b843ab51b4019d510c29a98387ac3f",
+      "bytes": 354
+    },
+    {
+      "file": "foundation-preflight-focused-v1.log",
+      "sha256": "63e08d9dd5feb163752a0d4a2fa885a49d25db35baa730a741d4b92462f987ab",
+      "bytes": 1608
+    },
+    {
+      "file": "foundation-preflight-focused-v1-guard.json",
+      "sha256": "55cbf9b3677e19506c4a444b6756947a7e3050529d1440cd4012823199c20d2b",
+      "bytes": 352
+    },
+    {
+      "file": "foundation-preflight-policy-v1.log",
+      "sha256": "a564fa773e26a166cc688f554947d13b00fa1399e481a74299173ed1fd66073f",
+      "bytes": 2196
+    },
+    {
+      "file": "foundation-preflight-policy-v1-guard.json",
+      "sha256": "4a6dd1fe9f23e24d9ee2c5b06e00d4c42b84d1c6921900b08c91dbefbc9cd06a",
+      "bytes": 354
+    },
+    {
+      "file": "foundation-zero-swap-membership.log",
+      "sha256": "f938e6ccb70c99123c6f2e5a3b6467a4d6ff812d1ba1fb97fcf5373c07a58d67",
+      "bytes": 118
+    },
+    {
+      "file": "effect-vitest-private-file-adjudication.json",
+      "sha256": "877d06d7f890960019a1d29c56c3810a12ebdf78dc49a76d297d7447995c5692",
+      "bytes": 2329
+    }
+  ],
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts": "32e403417ae094438ccb5a94bb2852d7d0a84feb21a064500b098878ef892b9e",
+    "packages/tooling/library/ai-metrics/test/native-trace.test.ts": "3affc8bb6d99bde957c2dccd3ae453f6673ff01a193d8b4d7cd8c0990526cc42",
+    "packages/tooling/library/ai-metrics/test/observation-file.test.ts": "67a12e3e36b42fb8304321f22c4ebc9658a6dcc11ebcff9072a427bead8d66b3",
+    "standards/effect-vitest.inventory.jsonc": "efbe8f22c52a5d91b3e7a676158157109ae56e3a3c7a15d52d355c59533a2021",
+    "standards/instrumentation-catalog/@beep/repo-ai-metrics.generated.jsonc": "3d33e145c4ceab067b00de3c4bc2c7dfc60a2eae44ec60292bd4a61a20f36b08",
+    "standards/schema-catalog/@beep/repo-ai-metrics.generated.jsonc": "3a3fa48028ffdf3d041cd3787f619446e2979671e631d0648d0e2aa033449e6d"
+  },
+  "results": {
+    "focusedTests": 11,
+    "cliQuick": "lint and check passed",
+    "schemaTagIdioms": "0 findings",
+    "effectVitest": "introduced=0 resolved=0; exact reviewed private-file exception only",
+    "observabilityCatalog": "drifted=0",
+    "schemaCatalog": "current",
+    "swapMembership": "missing/null/string/nonzero remain invalid; numeric zero accepted"
+  },
+  "limits": [
+    "Full collected preflight still requires complexity repair and rerun.",
+    "No live collection enrollment or recovery hold change.",
+    "No whole CLI audit success claimed."
+  ]
+}

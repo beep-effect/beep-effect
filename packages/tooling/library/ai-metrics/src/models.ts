@@ -728,7 +728,6 @@ const SourceRoleDefaultPrimary = AiMetricsSourceRole.pipe(
  * const task = AgentTask.make({
  *   agentTaskId: "task-1",
  *   createdAtEpochMillis: 1_717_000_000_000,
- *   repoRootHash: "repo-hash",
  *   sourceKind: "codex",
  *   sourcePathHash: "1111111111111111111111111111111111111111111111111111111111111111",
  *   title: "Repair package docs"
@@ -746,7 +745,10 @@ export class AgentTask extends S.Opaque<AgentTask, { readonly brand: unique symb
     createdAtEpochMillis: S.Natural,
     firstSeenAt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     lastSeenAt: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    repoRootHash: S.String,
+    /** Verified source root only; unknown until source evidence resolves it. */
+    repoRootHash: S.OptionFromNullishOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    /** Collection context, which must never be treated as source identity. */
+    collectorRootHash: S.OptionFromNullishOr(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
     sourceRole: SourceRoleDefaultPrimary,

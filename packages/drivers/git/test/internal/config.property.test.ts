@@ -45,7 +45,7 @@ const canonical = (text: string): string =>
         A.join(
           A.map(
             section.entries,
-            (entry) => "\t" + entry.key + (entry.value === undefined ? "" : " = " + serializeValue(entry.value)) + "\n"
+            (entry) => `\t${entry.key}${entry.value === undefined ? "" : ` = ${serializeValue(entry.value)}`}\n`
           ),
           ""
         )
@@ -60,11 +60,11 @@ describe("git config property floor", () => {
     ([value]) =>
       Effect.gen(function* () {
         const rendered = serializeValue(value);
-        const parsed = scan("[core]\nkey = \\b" + rendered + "\n");
+        const parsed = scan(`[core]\nkey = \\b${rendered}\n`);
         assert.deepStrictEqual(parsed.diagnostics, []);
         const entry = parsed.sections[0]?.entries[0];
         assertDefined(entry);
-        assert.strictEqual(entry.value, "\b" + value);
+        assert.strictEqual(entry.value, `\b${value}`);
         assert.strictEqual(entry.valueLength, "\\b".length + rendered.length);
       }),
     runs
@@ -77,7 +77,7 @@ describe("git config property floor", () => {
       Effect.gen(function* () {
         const prefix = "[core]\nkey = first";
         const rendered = serializeValue(value);
-        const parsed = scan(prefix + "\\\r" + rendered + "\nnext = retained\n");
+        const parsed = scan(`${prefix}\\\r${rendered}\nnext = retained\n`);
         assert.deepStrictEqual(parsed.diagnostics, [
           RawDiagnostic.make({
             code: "invalidEscape",
@@ -91,7 +91,7 @@ describe("git config property floor", () => {
         assert.strictEqual(section.entries.length, 2);
         const entry = section.entries[0];
         assertDefined(entry);
-        assert.strictEqual(entry.value, "first" + value);
+        assert.strictEqual(entry.value, `first${value}`);
         assert.strictEqual(entry.valueLength, "first\\\r".length + rendered.length);
         assert.strictEqual(section.entries[1]?.key, "next");
         assert.strictEqual(section.entries[1]?.value, "retained");
@@ -117,7 +117,7 @@ describe("git config property floor", () => {
     ([value]) =>
       Effect.gen(function* () {
         const rendered = serializeValue(value);
-        const text = "[core]\nkey = " + rendered + "\n";
+        const text = `[core]\nkey = ${rendered}\n`;
         const parsed = scan(text);
         assert.deepStrictEqual(parsed.diagnostics, []);
         const entry = parsed.sections[0]?.entries[0];
@@ -137,7 +137,7 @@ describe("git config property floor", () => {
     ([subsection]) =>
       Effect.gen(function* () {
         const header = serializeHeader("remote", subsection);
-        const parsed = scan(header + "\n");
+        const parsed = scan(`${header}\n`);
         assert.deepStrictEqual(parsed.diagnostics, []);
         const section = parsed.sections[0];
         assertDefined(section);

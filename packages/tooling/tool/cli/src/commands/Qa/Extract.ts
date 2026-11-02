@@ -68,7 +68,6 @@ import {
   resolveExistingRound,
 } from "./Qa.session.ts";
 import type { ActionEvent, ClockSync, ExtractionPlan, QaDriverRequest, RoundLayout } from "@beep/qa-capture";
-import type * as Crypto from "effect/Crypto";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { QaExtractOptions } from "./Qa.schemas.ts";
 
@@ -799,7 +798,6 @@ export const runQaExtract = Effect.fn("QaExtract.run")(function* (
 ): Effect.fn.Return<
   ExtractionOutcome,
   QaCommandError,
-  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner
   | ClockCorrelator
   | Exiftool

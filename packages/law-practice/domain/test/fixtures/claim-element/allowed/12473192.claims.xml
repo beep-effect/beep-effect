@@ -1,0 +1,38 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An anti-siphonage and anti-overflow fuel pump structure, comprising a fuel pump, a fuel inlet hose, a main flow channel assembly, a control box, an exhaust and backflow channel assembly, and a fuel outlet hose, wherein
+<claim-text>the control box comprises a housing, a battery assembly, and a control board;</claim-text>
+<claim-text>the main flow channel assembly is arranged below the housing and is in communication with an interior of the housing;</claim-text>
+<claim-text>the main flow channel assembly comprises an input channel, an output channel, an exhaust port, and a seal port;</claim-text>
+<claim-text>one end of the fuel inlet hose is connected to the fuel pump through a first connection kit, and the other end of the fuel inlet hose is connected to the input channel through a second connection kit;</claim-text>
+<claim-text>the fuel outlet hose is connected to the output channel through a third connection kit;</claim-text>
+<claim-text>the exhaust and backflow channel assembly is arranged inside the housing and located below the control board; and</claim-text>
+<claim-text>the exhaust and backflow channel assembly comprises an exhaust valve, a pipeline joint, an exhaust pipe, and an exhaust and backflow channel, the exhaust valve is arranged inside the exhaust port, the pipeline joint is arranged above the exhaust valve, one end of the exhaust pipe is connected to the pipeline joint, the other end of the exhaust pipe is connected to the exhaust and backflow channel, and the exhaust and backflow channel arranged under the housing.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The anti-siphonage and anti-overflow fuel pump structure according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the battery assembly comprises a battery cover, a battery, and an upper housing,
+<claim-text>the upper housing covers an upper portion of the interior of the housing;</claim-text>
+<claim-text>the battery is arranged inside the upper housing; and</claim-text>
+<claim-text>the battery cover covers an upper portion of the battery to form a battery accommodating bin together with the upper housing.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The anti-siphonage and anti-overflow fuel pump structure according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the control board is arranged inside another side of the upper housing and electrically connected to the battery.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The anti-siphonage and anti-overflow fuel pump structure according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein one end of the exhaust and backflow channel is located inside the bottom end of the housing and connected to the exhaust pipe, and the other end of the exhaust and backflow channel is located outside the bottom end of the housing and connected to an opening of a fuel can.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The anti-siphonage and anti-overflow fuel pump structure according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein a seal plug sleeve is arranged inside the seal port, and the seal plug sleeve is arranged inside the housing.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The anti-siphonage and anti-overflow fuel pump structure according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein each of the first connection kit, the second connection kit, and the third connection kit is composed of a connection sleeve, a sleeve pipe, and a seal ring.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The anti-siphonage and anti-overflow fuel pump structure according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein a nut connector is arranged at an exterior of the second connection kit in a sleeve manner and used for being fixedly connected to an opening of a fuel can.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The anti-siphonage and anti-overflow fuel pump structure according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the exhaust valve is a one-way soft rubber exhaust valve.</claim-text>
+</claim>
+</claims>

@@ -2,8 +2,8 @@
 
 ## Status
 
-Status: `active`. The packet opens and closes in one PR; work packages run in
-parallel in one lane and the orchestrator commits.
+Status: `active`. Implementation shipped in #1946. The 2026-10-28 audit found its completion
+gate unsatisfied; a fresh closeout PR must prove readiness and merge evidence.
 
 ## Phases
 
@@ -47,3 +47,11 @@ test "$(wc -m < goals/public-origin-beep-effect-com/GOAL.md)" -le 4000
 jq . goals/public-origin-beep-effect-com/ops/manifest.json
 git diff --check -- goals/public-origin-beep-effect-com
 ```
+
+## Closeout recovery
+
+The original completion receipt is retained in
+`history/2026-10-28-original-completion-receipt.json`. Recheck the current
+implementation, bind the fresh final delivery PR and its Yeet verdict, retain
+its readiness evidence before merge, then run completion refresh and retire the
+closeout lane. Do not infer readiness from #1946 being merged.

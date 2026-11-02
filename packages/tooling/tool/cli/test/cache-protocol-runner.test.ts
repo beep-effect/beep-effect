@@ -76,6 +76,8 @@ const fixture = Effect.fn("ProtocolRunnerTest.fixture")(function* (fault: typeof
       expect(options.extendEnv).toBe(false);
       const args = options.args ?? [];
       expect(args).toContain("--unshare-user");
+      expect(args).toContain("--skip-infer");
+      expect(args).toContain("--single-package");
       const work = O.getOrThrow(A.get(args, O.getOrThrow(A.findFirstIndex(args, (arg) => arg === "--bind")) + 1));
       const name = path.basename(work);
       const positive = name === "producer" || name === "replay";

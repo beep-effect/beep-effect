@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "cache-actual-ignored-input-dry-observation/v1",
+  "recordedAt": "2026-10-30T12:18:46.651280+00:00",
+  "authority": "native-dry-input-observation-only",
+  "observations": [
+    {
+      "channel": "stable",
+      "version": "2.11.10",
+      "executableSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+      "computation": "@beep/identity#lint",
+      "beforeHash": "5aa02fa2ebecd93d",
+      "duringHash": "cace58cfed7e9093",
+      "afterHash": "5aa02fa2ebecd93d",
+      "beforeInputs": 1155,
+      "duringInputs": 1156,
+      "ignoredFixtureIncluded": true,
+      "hashChanged": true,
+      "fixtureRemoved": true,
+      "baselineRestored": true,
+      "taskExecuted": false
+    },
+    {
+      "channel": "canary",
+      "version": "2.11.9-canary.1",
+      "executableSha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+      "computation": "@beep/identity#lint",
+      "beforeHash": "5aa02fa2ebecd93d",
+      "duringHash": "92f30d80be047570",
+      "afterHash": "5aa02fa2ebecd93d",
+      "beforeInputs": 1155,
+      "duringInputs": 1156,
+      "ignoredFixtureIncluded": true,
+      "hashChanged": true,
+      "fixtureRemoved": true,
+      "baselineRestored": true,
+      "taskExecuted": false
+    }
+  ],
+  "remoteUse": false,
+  "taskExecution": false,
+  "sourceRevision": "b597e9c824a3e685de1866f08f26a299b484368d",
+  "sourceWorkingTree": {
+    "statusEntries": 2,
+    "statusUnchanged": true,
+    "configurationUnchanged": true
+  },
+  "configurationSourceSha256": {
+    "turbo.json": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf",
+    "package.json": "640d51eba1db211244fef7c066eaa179c2740a4bbe192e3d8b2e2afe37c6daeb",
+    "bun.lock": "531032f89b78abd2ed9fdfcbc7e68ef535cdc9305825274be847f6ae4e92cf59",
+    ".gitignore": "67404e9766c7e48a140a90db7042eb9df5bcfea3ba013e95f1fef1b7a54614c5"
+  },
+  "driver": {
+    "path": "goals/turborepo-quality-cache-adoption/research/actual-ignored-input-control.py",
+    "sha256": "48f955724c7c7ea13a6802355cbd1ca98d293cabcae695d094b88263b12a8fac"
+  }
+}

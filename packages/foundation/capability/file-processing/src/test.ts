@@ -5,17 +5,14 @@
  * @since 0.0.0
  */
 
-import {
-  ArtifactId,
-  ArtifactReference,
-  ContentDigest,
-  deriveArtifactId,
-  OperationId,
-} from "@beep/file-processing/Artifact";
+import { ArtifactId, ArtifactReference, ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { ArchiveExportResult, ExtractionResult } from "@beep/file-processing/Extraction";
-import { DetectionResult, FileProcessingOperationError } from "@beep/file-processing/Operation";
+import {
+  DetectionResult,
+  deriveArchiveChildArtifact,
+  FileProcessingOperationError,
+} from "@beep/file-processing/Operation";
 import { classifyFormatFromExtension, FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
-import { PosixPath } from "@beep/schema/PosixPath";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -25,12 +22,10 @@ import type {
   ExtractFileOperation,
 } from "@beep/file-processing/Operation";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
-import type * as Crypto from "effect/Crypto";
 
 const decodeArtifactId = S.decodeEffect(ArtifactId);
 const decodeContentDigest = S.decodeEffect(ContentDigest);
 const decodeOperationId = S.decodeEffect(OperationId);
-const decodePosixPath = S.decodeEffect(PosixPath);
 
 /**
  * Synthetic engine descriptor used by tests and proof fixtures.
@@ -89,36 +84,6 @@ export const decodeTestOperationIdentifiers = Effect.fn("FileProcessingTest.deco
   }
 );
 
-const decodeTestArtifactPath = (
-  path: string,
-  operation: ExportArchiveOperation
-): Effect.Effect<PosixPath, FileProcessingOperationError> =>
-  decodePosixPath(path).pipe(
-    Effect.mapError(() =>
-      FileProcessingOperationError.fromReason("archive-export-failed", {
-        artifactId: operation.source.id,
-        format: operation.format,
-        message: "Synthetic child artifact path was not POSIX-normalized.",
-        operationId: operation.operationId,
-      })
-    )
-  );
-
-const deriveTestChildArtifactId = (
-  operation: ExportArchiveOperation,
-  relativePath: PosixPath
-): Effect.Effect<ArtifactReference["id"], FileProcessingOperationError, Crypto.Crypto> =>
-  deriveArtifactId([operation.source.id, relativePath]).pipe(
-    Effect.mapError(() =>
-      FileProcessingOperationError.fromReason("archive-export-failed", {
-        artifactId: operation.source.id,
-        format: operation.format,
-        message: "Synthetic child artifact id could not be derived.",
-        operationId: operation.operationId,
-      })
-    )
-  );
-
 /**
  * Synthetic file-processing engine for generated fixtures.
  *
@@ -154,8 +119,11 @@ export const TestFileProcessingEngine: FileProcessingEngineShape = {
       });
     }
 
-    const childRelativePath = yield* decodeTestArtifactPath("children/synthetic-message.txt", operation);
-    const childArtifactId = yield* deriveTestChildArtifactId(operation, childRelativePath);
+    const { id: childArtifactId, relativePath: childRelativePath } = yield* deriveArchiveChildArtifact(
+      operation,
+      "children/synthetic-message.txt",
+      { subject: "Synthetic" }
+    );
     const child = ArtifactReference.make({
       id: childArtifactId,
       mediaType: "text/plain",

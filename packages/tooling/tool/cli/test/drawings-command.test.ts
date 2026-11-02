@@ -44,7 +44,7 @@ import {
   ValidationReport,
 } from "@beep/technical-drawing";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -64,9 +64,11 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 // Command-level coverage that needs no native PDF tools: every case fails or
 // prints before a tool would run, so it holds on hosted runners too.
 const runDrawings = Command.runWith(drawingsCommand, { version: "0.0.0" });
-const TestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const TestLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer);
 
-it.layer(PdfBackendToolsLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "30 seconds" })((it) => {
+it.layer(PdfBackendToolsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))), {
+  timeout: "30 seconds",
+})((it) => {
   it.effect(
     "maps real PDF page and font facts through the drawing backend adapter",
     Effect.fnUntraced(function* () {
@@ -157,7 +159,7 @@ it.layer(PdfBackendToolsLive.pipe(Layer.provideMerge(NodeServices.layer)), { tim
 it.layer(
   PdfBackendFromPdfTools.pipe(
     Layer.provide(PdfTools.makeLayer(PdfToolsConfig.make({ maxInflatedBytes: 1 }))),
-    Layer.provideMerge(NodeServices.layer)
+    Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
   ),
   { timeout: "30 seconds" }
 )((it) => {
@@ -300,7 +302,9 @@ it.layer(pdfAdapterFixture, { timeout: "10 seconds" })((it) => {
   );
 });
 
-it.layer(GeometryEngineOcctLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "30 seconds" })((it) => {
+it.layer(GeometryEngineOcctLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))), {
+  timeout: "30 seconds",
+})((it) => {
   it.effect(
     "adapts kernel identity, solid summaries and projections with typed port errors",
     Effect.fnUntraced(function* () {

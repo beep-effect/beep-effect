@@ -10,7 +10,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -142,9 +142,9 @@ export const resolveBiomeSchema = Effect.fn(function* (
     .readFileString(biomePath)
     .pipe(VersionSyncError.mapError("Failed to read biome.jsonc", "biome.jsonc"));
 
-  const biomeJson = yield* decodeJsoncTextAs(BiomeJsoncDocument)(biomeContent).pipe(
-    VersionSyncError.mapError("Failed to parse biome.jsonc", "biome.jsonc")
-  );
+  const biomeJson = yield* Jsonc.bind(BiomeJsoncDocument)
+    .decode(biomeContent)
+    .pipe(VersionSyncError.mapError("Failed to parse biome.jsonc", "biome.jsonc"));
 
   const schemaUrl = biomeJson.$schema;
   const schemaVersion = decodeSchemaVersion(schemaUrl);

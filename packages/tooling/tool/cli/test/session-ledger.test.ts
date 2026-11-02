@@ -21,7 +21,7 @@ import {
   sessionLedgerFileName,
 } from "@beep/repo-cli/test/Session";
 import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it, vi } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -44,12 +44,13 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const encodeGoalManifestJson = S.encodeEffect(S.fromJsonString(GoalManifest));
 
 const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
-const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer);
 
 const row = (
   overrides: Partial<{
@@ -713,7 +714,7 @@ describe("session ledger failures", () => {
   const gitWithoutCheckout = (spawnable: boolean) =>
     ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-      const line = A.join(command.args, " ");
+      const line = A.join(commandArgs(command), " ");
       if (pipe(line, Str.includes("remote.origin.url"))) {
         return Effect.succeed(handle(0, "git@github.com:beep-effect/beep-effect.git\n"));
       }

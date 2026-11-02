@@ -1,6 +1,8 @@
 /**
  * Bitemporal edge authority repository adapter.
  *
+ * **Details**
+ *
  * Every write here is one database transaction, and the transaction boundary is
  * the whole contract: a caller can never observe a logical edge with two open
  * heads or with none, because the close of the old head and the insert of its

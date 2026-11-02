@@ -33,7 +33,7 @@ adding a repo is one entry and one command. Grilled 2026-09-25
 5. `PLAN.md`, then `GOAL.md`.
 6. `research/2026-09-25-01-current-state.md`, `research/2026-09-25-02-fleet-census.md`,
    `research/SOURCES.md`.
-7. Reused implementation idioms: `packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts`,
+7. Reused implementation idioms: the graft deep refresh service (retired 2026-10-28),
    `packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.ts`,
    `packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts`,
    `scripts/setup-effect-ref.sh`.
@@ -87,7 +87,7 @@ They name the same locations recorded by R1, R6, and the frozen fleet census.
   (`graft ask "<q>" .repos/effect-workspace` for Effect API questions; `.repos/effect` narrows),
   `README.md` §"First-party history vs `.repos/effect`", `standards/effect-first-development.md`
   prose, `standards/schema-first-development-prompt.md` L64-66, the four skill/agent files,
-  `docs/runbooks/graft-local-recovery.md` (cross-link to the refs timer),
+  the graft local-recovery runbook (retired 2026-10-28) (cross-link to the refs timer),
   `docs/runbooks/systemd-timers.md` (new unit), `greptile.json` (add
   `.repos/effect-tsgo/**`, `.repos/effect-workspace/**`), `scripts/knowledge-refs-rewrite.rules.json`.
 - `.claude/settings.json` permissions: `Bash(bun run beep refs plan:*)`,

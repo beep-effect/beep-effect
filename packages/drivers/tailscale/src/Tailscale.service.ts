@@ -110,8 +110,10 @@ const tailnetIpv4AddressOption = O.liftPredicate(S.is(TailnetIpv4Address));
  */
 export const parseTailscaleMagicDnsName = Effect.fn("Tailscale.parseMagicDnsName")((rawStatusJson: string) =>
   decodeTailscaleStatusJson(rawStatusJson).pipe(
-    Effect.mapError((cause) => TailscaleStatusParseError.make({ cause })),
-    Effect.map(normalizeMagicDnsName)
+    Effect.mapBoth({
+      onFailure: (cause) => TailscaleStatusParseError.make({ cause }),
+      onSuccess: normalizeMagicDnsName,
+    })
   )
 );
 
@@ -150,19 +152,21 @@ export const isTailscaleIpv4Address: (address: string) => address is TailnetIpv4
  */
 export const parseTailscaleStatus = Effect.fn("Tailscale.parseStatus")((rawStatusJson: string) =>
   decodeTailscaleStatusJson(rawStatusJson).pipe(
-    Effect.mapError((cause) => TailscaleStatusParseError.make({ cause })),
-    Effect.map((parsed) => {
-      const tailnetIpv4Addresses = pipe(
-        parsed.Self?.TailscaleIPs,
-        O.fromUndefinedOr,
-        O.map(flow(A.map(tailnetIpv4AddressOption), A.getSomes)),
-        O.getOrElse(A.empty<TailnetIpv4AddressType>)
-      );
+    Effect.mapBoth({
+      onFailure: (cause) => TailscaleStatusParseError.make({ cause }),
+      onSuccess: (parsed) => {
+        const tailnetIpv4Addresses = pipe(
+          parsed.Self?.TailscaleIPs,
+          O.fromUndefinedOr,
+          O.map(flow(A.map(tailnetIpv4AddressOption), A.getSomes)),
+          O.getOrElse(A.empty<TailnetIpv4AddressType>)
+        );
 
-      return TailscaleStatus.make({
-        magicDnsName: normalizeMagicDnsName(parsed),
-        tailnetIpv4Addresses,
-      });
+        return TailscaleStatus.make({
+          magicDnsName: normalizeMagicDnsName(parsed),
+          tailnetIpv4Addresses,
+        });
+      },
     })
   )
 );

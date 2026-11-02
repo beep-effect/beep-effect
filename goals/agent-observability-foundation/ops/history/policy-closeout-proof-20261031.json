@@ -1,0 +1,122 @@
+{
+  "version": "foundation-policy-closeout-proof/v1",
+  "sourceParent": "974a9732b2141c54e50fb41ed9af270cd8e8f90e",
+  "inheritedSchemaFindings": {
+    "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+    "count": 5,
+    "resolution": "Annotated branded Opaque models and explicit constructors; no traversal or routing algorithm change; no new inventory entry or exception."
+  },
+  "cliProof": {
+    "checks": [
+      "tsconfig.check.json",
+      "scripts/tsconfig.json",
+      "test/tsconfig.json"
+    ],
+    "nodeRuntime": "22.23.4",
+    "nodeTestsPassed": 15,
+    "bunRuntime": "1.4.4",
+    "bunUdsTestsPassed": 2,
+    "nodeOnlySkippedOnBun": 3,
+    "guard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-policy-model-proof3-20261031.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 56137703424,
+      "peakObservedBytes": 4409253888,
+      "minimumAvailableBytes": 47993143296,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 122,
+      "pidsLimitEvents": 0,
+      "observedPhases": [
+        {
+          "phase": "beep:check",
+          "observedAtEpochSeconds": 1793449289.7322578
+        }
+      ],
+      "exitCode": 0,
+      "orphanCleanup": []
+    }
+  },
+  "generation": {
+    "commands": [
+      "lint reflection-artifacts",
+      "lint schema-first --write",
+      "lint schema-catalog --write",
+      "quality jsdoc-inventory"
+    ],
+    "reflectionBlockingFindings": 0,
+    "schemaFirst": {
+      "live": 272,
+      "tracked": 272,
+      "missing": 0,
+      "stale": 0,
+      "enforcedCandidates": 0,
+      "baselineGrowth": 0
+    },
+    "schemaCatalogAddedModels": 5,
+    "jsdocPackages": 183,
+    "jsdocOpenExportsUnchanged": 97,
+    "guard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-final-policy-refresh-20261031.service",
+      "profile": "catalog",
+      "memoryStopBytes": 17179869184,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 59651096576,
+      "peakObservedBytes": 12699275264,
+      "minimumAvailableBytes": 17970216960,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 119,
+      "pidsLimitEvents": 0,
+      "observedPhases": [],
+      "exitCode": 0,
+      "orphanCleanup": []
+    }
+  },
+  "independentReview": {
+    "reviewer": "GPT-6-Astra named foundation panel",
+    "schemaSemanticsAccepted": true,
+    "shimLifetimesAccepted": true,
+    "prospectiveDeclarationAccepted": true,
+    "runtimeWordingCorrectionApplied": true,
+    "privateExamples": {
+      "acceptedRuntimeSourceSha256": "9047491f520d03e6a6dd1be91656f95eed9ad79e2594eca26c936e2461a55301",
+      "commentOnlyReverseTransformMatches": true,
+      "sourceLevelRelativeImports": 6,
+      "docgenExcludesInternalModule": true,
+      "noExcludedSnippetCompilationClaim": true
+    }
+  },
+  "priorCollectedRun": {
+    "result": "stopped-for-source-repair",
+    "exit": 130,
+    "fullPass": false,
+    "reason": "Retain five schema failures; stop before mutating generator input."
+  },
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts": "df5966d1261903f013fc6e1f7d390046d335f991724dc08b0b256248598b8e5c",
+    "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts": "898b9c4b6fc2ec0f7174ca510f2d7e682cab316a2be47ff1a6df42b8865c282e",
+    "packages/tooling/tool/cli/test/vitest-bun-serve-shim.test.ts": "c732f47ee4e157e7d09629635c34c07945b57c33b7024a70a9c6e1c6468d5738",
+    "standards/schema-catalog/@beep/repo-cli.generated.jsonc": "188a298e59b77ece1de85f407baf8779b735f34e4f732e5de2e2dad69d8814d5",
+    "standards/schema-first.inventory.jsonc": "3ee71b893a61f4fcc15139557e6ce0a6abcc9b929144ed35aa22883515a79fa5",
+    "standards/jsdoc-documentation.inventory.jsonc": "338303b4e5b9dc47193a64de3c0cd15fec25464f613bb3c6b610b998a2caab9b",
+    "standards/jsdoc-documentation.inventory.md": "d9ee0bbf159ee9e7cd0b0d50fd84e9a2f4694df57e1caddbe400a49aae6cfb23",
+    "goals/agent-observability-foundation/ops/manifest.json": "70e6f6d4c58b82ae620604a2beb83f6217a6a658e99eb4ea5a8849a03c47e125",
+    "goals/agent-observability-foundation/history/reflections/2026-10-31-codex.md": "f0bce3eef911ba3d6923be1ccaefbd2167160fd938fdb842b8b66520058e60f1"
+  },
+  "operativeLifecycle": "active",
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2364
+  },
+  "stillRequired": [
+    "New-head final-check receipt",
+    "Exact-head hosted required checks, review and window",
+    "Merge and canonical derived completion refresh"
+  ],
+  "recoveryHoldReleased": false
+}

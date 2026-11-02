@@ -1,0 +1,82 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system for predicting and mitigating interference in an electromagnetic environment comprising:
+<claim-text>at least one sensor operable to create measured data based on the electromagnetic environment, wherein the at least one sensor is in communication with a learning engine, at least one data analysis engine, a semantic engine, and at least one server;</claim-text>
+<claim-text>wherein the at least one server is operable to create actionable data;</claim-text>
+<claim-text>wherein the learning engine is operable to utilize prediction models to predict interference in the electromagnetic environment;</claim-text>
+<claim-text>wherein the at least one server creates the actionable data based on the predicted interference, analyzed data from the at least one data analysis engine, and information relating to a rule or a policy; and</claim-text>
+<claim-text>wherein the semantic engine is operable to establish the rule or the policy based on a user data input using natural language processing (NLP).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the learning engine is operable to recommend and/or perform actions based on historical data, external data sources, machine learning (ML), artificial intelligence (AI), neural networks (NNs) and/or other learning techniques.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the semantic engine is operable to run autonomously.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one data analysis engine includes an identification engine operable to identify a device or an emitter transmitting at least one signal of interest.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a learning engine software development kit (SDK) is operable to convert a training model for operation in another electromagnetic environment.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the training model includes a machine learning (ML) model, an artificial intelligence (AI) model, a deep learning (DL) model, or a neural network (NN) model.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the actionable data relates to interference mitigation or interference prevention.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one server is operable to send at least one notification based on the actionable data in real time or near real time.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the system is operable to provide reconfiguration options relating to time, frequency, and/or spatial settings.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A system for predicting and mitigating interference in an electromagnetic environment comprising:
+<claim-text>at least one sensor operable to create measured data based on the electromagnetic environment;</claim-text>
+<claim-text>at least one data analysis engine;</claim-text>
+<claim-text>a semantic engine; and</claim-text>
+<claim-text>a learning engine operable to utilize prediction models to predict interference in the electromagnetic environment;</claim-text>
+<claim-text>wherein the at least one sensor is in communication with the learning engine;</claim-text>
+<claim-text>wherein the system is operable to provide reconfiguration options relating to time, frequency, and/or spatial settings and/or actionable data based on the prediction models, analyzed data from the at least one data analysis engine, and information relating to a rule or a policy; and</claim-text>
+<claim-text>wherein the semantic engine is operable to establish the rule or the policy based on a user data input using natural language processing (NLP).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising at least one server operable to create the actionable data and/or the reconfiguration options.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the learning engine is operable to recommend and/or perform actions based on historical data, external data sources, machine learning (ML), artificial intelligence (AI), neural networks (NNs) and/or other learning techniques.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the semantic engine is operable to run autonomously.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one data analysis engine includes an identification engine operable to identify a device or an emitter transmitting at least one signal of interest.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the actionable data relates to interference mitigation or interference prevention.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. A method for predicting and mitigating interference in an electromagnetic environment comprising:
+<claim-text>at least one sensor creating measured data based on the electromagnetic environment;</claim-text>
+<claim-text>at least one data analysis engine identifying a device or an emitter transmitting at least one signal of interest; and</claim-text>
+<claim-text>a learning engine utilizing prediction models to predict interference in the electromagnetic environment;</claim-text>
+<claim-text>wherein the prediction models incorporate descriptive analytics, diagnostic analytics, predictive analytics, and/or prescriptive analytics; and</claim-text>
+<claim-text>at least one semantic engine establishing a rule or a policy based on a user data input using natural language processing (NLP).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, further comprising modifying a training data set for a machine learning (ML) model, an artificial intelligence (AI) model, a deep learning (DL) model, or a neural network (NN) model.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the learning engine is operable to recommend and/or perform actions based on historical data, external data sources, machine learning (ML), artificial intelligence (AI), neural networks (NNs) and/or other learning techniques.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, further comprising providing reconfiguration options relating to time, frequency, and/or spatial settings and/or providing actionable data based on the prediction models, analyzed data from the at least one data analysis engine, and information relating to the rule or the policy.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method of <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein the actionable data relates to interference mitigation or interference prevention.</claim-text>
+</claim>
+</claims>

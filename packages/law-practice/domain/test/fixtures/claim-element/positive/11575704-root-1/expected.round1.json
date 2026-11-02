@@ -1,0 +1,4325 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 60,
+          "quote": "A headlamp projecting at least one illumination beam pattern"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "A headlamp"
+            },
+            "determiner": "a",
+            "head": "headlamp"
+          },
+          {
+            "anchor": {
+              "startChar": 22,
+              "endChar": 60,
+              "quote": "at least one illumination beam pattern"
+            },
+            "determiner": "at-least-one",
+            "head": "illumination beam pattern"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 74,
+          "endChar": 292,
+          "quote": "a first array of illumination light sources, the light sources arranged within the first array in a pattern which substantially corresponds to the pattern of illumination which is desired to be produced by the headlamp"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 74,
+              "endChar": 117,
+              "quote": "a first array of illumination light sources"
+            },
+            "determiner": "a",
+            "head": "first array of illumination light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 136,
+              "quote": "the light sources"
+            },
+            "determiner": "the",
+            "head": "light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 153,
+              "endChar": 168,
+              "quote": "the first array"
+            },
+            "determiner": "the",
+            "head": "first array"
+          },
+          {
+            "anchor": {
+              "startChar": 172,
+              "endChar": 181,
+              "quote": "a pattern"
+            },
+            "determiner": "a",
+            "head": "pattern"
+          },
+          {
+            "anchor": {
+              "startChar": 217,
+              "endChar": 244,
+              "quote": "the pattern of illumination"
+            },
+            "determiner": "the",
+            "head": "pattern of illumination"
+          },
+          {
+            "anchor": {
+              "startChar": 280,
+              "endChar": 292,
+              "quote": "the headlamp"
+            },
+            "determiner": "the",
+            "head": "headlamp"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 298,
+          "endChar": 607,
+          "quote": "a first converging lens having a substantially uniform spread, the uniform spread being larger in the horizontal direction than the vertical, the first lens receiving light produced by the first array of illumination sources and projecting the received light to form the at least one illumination beam pattern"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 298,
+              "endChar": 321,
+              "quote": "a first converging lens"
+            },
+            "determiner": "a",
+            "head": "first converging lens"
+          },
+          {
+            "anchor": {
+              "startChar": 329,
+              "endChar": 359,
+              "quote": "a substantially uniform spread"
+            },
+            "determiner": "a",
+            "head": "substantially uniform spread"
+          },
+          {
+            "anchor": {
+              "startChar": 361,
+              "endChar": 379,
+              "quote": "the uniform spread"
+            },
+            "determiner": "the",
+            "head": "uniform spread"
+          },
+          {
+            "anchor": {
+              "startChar": 396,
+              "endChar": 420,
+              "quote": "the horizontal direction"
+            },
+            "determiner": "the",
+            "head": "horizontal direction"
+          },
+          {
+            "anchor": {
+              "startChar": 426,
+              "endChar": 438,
+              "quote": "the vertical"
+            },
+            "determiner": "the",
+            "head": "vertical"
+          },
+          {
+            "anchor": {
+              "startChar": 440,
+              "endChar": 454,
+              "quote": "the first lens"
+            },
+            "determiner": "the",
+            "head": "first lens"
+          },
+          {
+            "anchor": {
+              "startChar": 465,
+              "endChar": 470,
+              "quote": "light"
+            },
+            "determiner": "bare",
+            "head": "light"
+          },
+          {
+            "anchor": {
+              "startChar": 483,
+              "endChar": 522,
+              "quote": "the first array of illumination sources"
+            },
+            "determiner": "the",
+            "head": "first array of illumination sources"
+          },
+          {
+            "anchor": {
+              "startChar": 538,
+              "endChar": 556,
+              "quote": "the received light"
+            },
+            "determiner": "the",
+            "head": "received light"
+          },
+          {
+            "anchor": {
+              "startChar": 565,
+              "endChar": 607,
+              "quote": "the at least one illumination beam pattern"
+            },
+            "determiner": "the",
+            "head": "at least one illumination beam pattern"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 74,
+                "endChar": 117,
+                "quote": "a first array of illumination light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 117,
+              "endChar": 119,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 136,
+                "quote": "the light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 136,
+              "endChar": 153,
+              "quote": " arranged within "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 153,
+                "endChar": 168,
+                "quote": "the first array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 168,
+              "endChar": 172,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 172,
+                "endChar": 181,
+                "quote": "a pattern"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 181,
+              "endChar": 217,
+              "quote": " which substantially corresponds to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 217,
+                "endChar": 244,
+                "quote": "the pattern of illumination"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 244,
+              "endChar": 280,
+              "quote": " which is desired to be produced by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 280,
+                "endChar": 292,
+                "quote": "the headlamp"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 298,
+                "endChar": 321,
+                "quote": "a first converging lens"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 321,
+              "endChar": 329,
+              "quote": " having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 329,
+                "endChar": 359,
+                "quote": "a substantially uniform spread"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 359,
+              "endChar": 361,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 361,
+                "endChar": 379,
+                "quote": "the uniform spread"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 379,
+              "endChar": 396,
+              "quote": " being larger in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 396,
+                "endChar": 420,
+                "quote": "the horizontal direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 420,
+              "endChar": 426,
+              "quote": " than "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 426,
+                "endChar": 438,
+                "quote": "the vertical"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 438,
+              "endChar": 440,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 440,
+                "endChar": 454,
+                "quote": "the first lens"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 454,
+              "endChar": 465,
+              "quote": " receiving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 465,
+                "endChar": 470,
+                "quote": "light"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 470,
+              "endChar": 483,
+              "quote": " produced by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 483,
+                "endChar": 522,
+                "quote": "the first array of illumination sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 522,
+              "endChar": 538,
+              "quote": " and projecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 538,
+                "endChar": 556,
+                "quote": "the received light"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 556,
+              "endChar": 565,
+              "quote": " to form "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 565,
+                "endChar": 607,
+                "quote": "the at least one illumination beam pattern"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 153,
+            "endChar": 168,
+            "quote": "the first array"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 117,
+            "quote": "a first array of illumination light sources"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 280,
+            "endChar": 292,
+            "quote": "the headlamp"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "A headlamp"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 361,
+            "endChar": 379,
+            "quote": "the uniform spread"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 329,
+            "endChar": 359,
+            "quote": "a substantially uniform spread"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 440,
+            "endChar": 454,
+            "quote": "the first lens"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 321,
+            "quote": "a first converging lens"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 483,
+            "endChar": 522,
+            "quote": "the first array of illumination sources"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 117,
+            "quote": "a first array of illumination light sources"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 565,
+            "endChar": 607,
+            "quote": "the at least one illumination beam pattern"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 22,
+            "endChar": 60,
+            "quote": "at least one illumination beam pattern"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 23,
+          "quote": "The headlamp of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The headlamp"
+            },
+            "determiner": "the",
+            "head": "headlamp"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 533,
+          "quote": "the first array of illumination light sources comprises a plurality of fiber optic cables, one end of each respective fiber optic cable being optically coupled to a respective one of a plurality of LED light sources, the other end of each respective fiber optic cable being substantially arranged corresponding to the illumination beam pattern, whereby the light emitted by the LED light sources is transferred by the fiber optic cables to the first lens in substantially the illumination beam pattern"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 77,
+              "quote": "the first array of illumination light sources"
+            },
+            "determiner": "the",
+            "head": "first array of illumination light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 88,
+              "endChar": 121,
+              "quote": "a plurality of fiber optic cables"
+            },
+            "determiner": "plurality-of",
+            "head": "fiber optic cables"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 130,
+              "quote": "one end"
+            },
+            "determiner": "bare",
+            "head": "one end"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 167,
+              "quote": "each respective fiber optic cable"
+            },
+            "determiner": "bare",
+            "head": "each respective fiber optic cable"
+          },
+          {
+            "anchor": {
+              "startChar": 195,
+              "endChar": 211,
+              "quote": "a respective one"
+            },
+            "determiner": "a",
+            "head": "respective one"
+          },
+          {
+            "anchor": {
+              "startChar": 215,
+              "endChar": 247,
+              "quote": "a plurality of LED light sources"
+            },
+            "determiner": "plurality-of",
+            "head": "led light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 249,
+              "endChar": 262,
+              "quote": "the other end"
+            },
+            "determiner": "the",
+            "head": "other end"
+          },
+          {
+            "anchor": {
+              "startChar": 266,
+              "endChar": 299,
+              "quote": "each respective fiber optic cable"
+            },
+            "determiner": "bare",
+            "head": "each respective fiber optic cable"
+          },
+          {
+            "anchor": {
+              "startChar": 346,
+              "endChar": 375,
+              "quote": "the illumination beam pattern"
+            },
+            "determiner": "the",
+            "head": "illumination beam pattern"
+          },
+          {
+            "anchor": {
+              "startChar": 385,
+              "endChar": 394,
+              "quote": "the light"
+            },
+            "determiner": "the",
+            "head": "light"
+          },
+          {
+            "anchor": {
+              "startChar": 406,
+              "endChar": 427,
+              "quote": "the LED light sources"
+            },
+            "determiner": "the",
+            "head": "led light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 446,
+              "endChar": 468,
+              "quote": "the fiber optic cables"
+            },
+            "determiner": "the",
+            "head": "fiber optic cables"
+          },
+          {
+            "anchor": {
+              "startChar": 472,
+              "endChar": 486,
+              "quote": "the first lens"
+            },
+            "determiner": "the",
+            "head": "first lens"
+          },
+          {
+            "anchor": {
+              "startChar": 504,
+              "endChar": 533,
+              "quote": "the illumination beam pattern"
+            },
+            "determiner": "the",
+            "head": "illumination beam pattern"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2.a",
+        "ancestor": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 77,
+                "quote": "the first array of illumination light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 88,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 88,
+                "endChar": 121,
+                "quote": "a plurality of fiber optic cables"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 121,
+              "endChar": 123,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 130,
+                "quote": "one end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 130,
+              "endChar": 134,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 167,
+                "quote": "each respective fiber optic cable"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 167,
+              "endChar": 195,
+              "quote": " being optically coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 195,
+                "endChar": 211,
+                "quote": "a respective one"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 211,
+              "endChar": 215,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 215,
+                "endChar": 247,
+                "quote": "a plurality of LED light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 247,
+              "endChar": 249,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 249,
+                "endChar": 262,
+                "quote": "the other end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 262,
+              "endChar": 266,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 266,
+                "endChar": 299,
+                "quote": "each respective fiber optic cable"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 299,
+              "endChar": 346,
+              "quote": " being substantially arranged corresponding to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 346,
+                "endChar": 375,
+                "quote": "the illumination beam pattern"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 375,
+              "endChar": 385,
+              "quote": ", whereby "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 385,
+                "endChar": 394,
+                "quote": "the light"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 394,
+              "endChar": 406,
+              "quote": " emitted by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 406,
+                "endChar": 427,
+                "quote": "the LED light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 427,
+              "endChar": 446,
+              "quote": " is transferred by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 446,
+                "endChar": 468,
+                "quote": "the fiber optic cables"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 468,
+              "endChar": 472,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 472,
+                "endChar": 486,
+                "quote": "the first lens"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 486,
+              "endChar": 504,
+              "quote": " in substantially "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 504,
+                "endChar": 533,
+                "quote": "the illumination beam pattern"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 12,
+            "quote": "The headlamp"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "A headlamp"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 77,
+            "quote": "the first array of illumination light sources"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 117,
+            "quote": "a first array of illumination light sources"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 346,
+            "endChar": 375,
+            "quote": "the illumination beam pattern"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 22,
+            "endChar": 60,
+            "quote": "at least one illumination beam pattern"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 406,
+            "endChar": 427,
+            "quote": "the LED light sources"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 215,
+            "endChar": 247,
+            "quote": "a plurality of LED light sources"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 446,
+            "endChar": 468,
+            "quote": "the fiber optic cables"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 88,
+            "endChar": 121,
+            "quote": "a plurality of fiber optic cables"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 472,
+            "endChar": 486,
+            "quote": "the first lens"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 321,
+            "quote": "a first converging lens"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 504,
+            "endChar": 533,
+            "quote": "the illumination beam pattern"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 22,
+            "endChar": 60,
+            "quote": "at least one illumination beam pattern"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 23,
+          "quote": "The headlamp of claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The headlamp"
+            },
+            "determiner": "the",
+            "head": "headlamp"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 43,
+          "endChar": 484,
+          "quote": "a second array of illumination light sources and a second converging lens, the first array and first lens forming a spread portion of the at least one illumination beam pattern and the second array of illumination light sources and second lens forming at least one area of increased illumination superimposed onto the spread pattern formed by the first array and lens, the superimposition producing the at least one illumination beam pattern"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 43,
+              "endChar": 87,
+              "quote": "a second array of illumination light sources"
+            },
+            "determiner": "a",
+            "head": "second array of illumination light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 92,
+              "endChar": 116,
+              "quote": "a second converging lens"
+            },
+            "determiner": "a",
+            "head": "second converging lens"
+          },
+          {
+            "anchor": {
+              "startChar": 118,
+              "endChar": 133,
+              "quote": "the first array"
+            },
+            "determiner": "the",
+            "head": "first array"
+          },
+          {
+            "anchor": {
+              "startChar": 138,
+              "endChar": 148,
+              "quote": "first lens"
+            },
+            "determiner": "bare",
+            "head": "first lens"
+          },
+          {
+            "anchor": {
+              "startChar": 157,
+              "endChar": 173,
+              "quote": "a spread portion"
+            },
+            "determiner": "a",
+            "head": "spread portion"
+          },
+          {
+            "anchor": {
+              "startChar": 177,
+              "endChar": 219,
+              "quote": "the at least one illumination beam pattern"
+            },
+            "determiner": "the",
+            "head": "at least one illumination beam pattern"
+          },
+          {
+            "anchor": {
+              "startChar": 224,
+              "endChar": 270,
+              "quote": "the second array of illumination light sources"
+            },
+            "determiner": "the",
+            "head": "second array of illumination light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 275,
+              "endChar": 286,
+              "quote": "second lens"
+            },
+            "determiner": "bare",
+            "head": "second lens"
+          },
+          {
+            "anchor": {
+              "startChar": 295,
+              "endChar": 338,
+              "quote": "at least one area of increased illumination"
+            },
+            "determiner": "at-least-one",
+            "head": "area of increased illumination"
+          },
+          {
+            "anchor": {
+              "startChar": 357,
+              "endChar": 375,
+              "quote": "the spread pattern"
+            },
+            "determiner": "the",
+            "head": "spread pattern"
+          },
+          {
+            "anchor": {
+              "startChar": 386,
+              "endChar": 401,
+              "quote": "the first array"
+            },
+            "determiner": "the",
+            "head": "first array"
+          },
+          {
+            "anchor": {
+              "startChar": 406,
+              "endChar": 410,
+              "quote": "lens"
+            },
+            "determiner": "bare",
+            "head": "lens"
+          },
+          {
+            "anchor": {
+              "startChar": 412,
+              "endChar": 431,
+              "quote": "the superimposition"
+            },
+            "determiner": "the",
+            "head": "superimposition"
+          },
+          {
+            "anchor": {
+              "startChar": 442,
+              "endChar": 484,
+              "quote": "the at least one illumination beam pattern"
+            },
+            "determiner": "the",
+            "head": "at least one illumination beam pattern"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.a",
+        "ancestor": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 43,
+                "endChar": 87,
+                "quote": "a second array of illumination light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 87,
+              "endChar": 92,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 92,
+                "endChar": 116,
+                "quote": "a second converging lens"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 116,
+              "endChar": 118,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 118,
+                "endChar": 133,
+                "quote": "the first array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 133,
+              "endChar": 138,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 138,
+                "endChar": 148,
+                "quote": "first lens"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 148,
+              "endChar": 157,
+              "quote": " forming "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 157,
+                "endChar": 173,
+                "quote": "a spread portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 173,
+              "endChar": 177,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 177,
+                "endChar": 219,
+                "quote": "the at least one illumination beam pattern"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 219,
+              "endChar": 224,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 224,
+                "endChar": 270,
+                "quote": "the second array of illumination light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 270,
+              "endChar": 275,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 275,
+                "endChar": 286,
+                "quote": "second lens"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 286,
+              "endChar": 295,
+              "quote": " forming "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 295,
+                "endChar": 338,
+                "quote": "at least one area of increased illumination"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 338,
+              "endChar": 357,
+              "quote": " superimposed onto "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 357,
+                "endChar": 375,
+                "quote": "the spread pattern"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 375,
+              "endChar": 386,
+              "quote": " formed by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 386,
+                "endChar": 401,
+                "quote": "the first array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 401,
+              "endChar": 406,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 406,
+                "endChar": 410,
+                "quote": "lens"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 410,
+              "endChar": 412,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 412,
+                "endChar": 431,
+                "quote": "the superimposition"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 431,
+              "endChar": 442,
+              "quote": " producing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 442,
+                "endChar": 484,
+                "quote": "the at least one illumination beam pattern"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 12,
+            "quote": "The headlamp"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "A headlamp"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 118,
+            "endChar": 133,
+            "quote": "the first array"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 117,
+            "quote": "a first array of illumination light sources"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 138,
+            "endChar": 148,
+            "quote": "first lens"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 321,
+            "quote": "a first converging lens"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 177,
+            "endChar": 219,
+            "quote": "the at least one illumination beam pattern"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 22,
+            "endChar": 60,
+            "quote": "at least one illumination beam pattern"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 224,
+            "endChar": 270,
+            "quote": "the second array of illumination light sources"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 43,
+            "endChar": 87,
+            "quote": "a second array of illumination light sources"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 286,
+            "quote": "second lens"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 92,
+            "endChar": 116,
+            "quote": "a second converging lens"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 386,
+            "endChar": 401,
+            "quote": "the first array"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 117,
+            "quote": "a first array of illumination light sources"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 406,
+            "endChar": 410,
+            "quote": "lens"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 321,
+            "quote": "a first converging lens"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 442,
+            "endChar": 484,
+            "quote": "the at least one illumination beam pattern"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 22,
+            "endChar": 60,
+            "quote": "at least one illumination beam pattern"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 23,
+          "quote": "The headlamp of claim 3"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The headlamp"
+            },
+            "determiner": "the",
+            "head": "headlamp"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 861,
+          "quote": "the first and second arrays of illumination light sources each comprise a plurality of fiber optic cables, one end of each respective fiber optic cable the respective arrays being optically coupled to a respective one of a plurality of LED light sources in the respective array, the other end of each respective fiber optic cable in each respective array being substantially arranged corresponding to a portion of the at least one illumination beam pattern, whereby the light emitted by the LED light sources in the first array is transferred by the fiber optic cables to the first lens and the light emitted by the LED sources in the second array is transferred by the fiber optic cables to the second lens and the light projected by the first and second lenses is superimposed to form the at least one illumination beam pattern"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 89,
+              "quote": "the first and second arrays of illumination light sources"
+            },
+            "determiner": "the",
+            "head": "first and second arrays of illumination light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 104,
+              "endChar": 137,
+              "quote": "a plurality of fiber optic cables"
+            },
+            "determiner": "plurality-of",
+            "head": "fiber optic cables"
+          },
+          {
+            "anchor": {
+              "startChar": 139,
+              "endChar": 146,
+              "quote": "one end"
+            },
+            "determiner": "bare",
+            "head": "one end"
+          },
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 183,
+              "quote": "each respective fiber optic cable"
+            },
+            "determiner": "bare",
+            "head": "each respective fiber optic cable"
+          },
+          {
+            "anchor": {
+              "startChar": 184,
+              "endChar": 205,
+              "quote": "the respective arrays"
+            },
+            "determiner": "the",
+            "head": "respective arrays"
+          },
+          {
+            "anchor": {
+              "startChar": 233,
+              "endChar": 249,
+              "quote": "a respective one"
+            },
+            "determiner": "a",
+            "head": "respective one"
+          },
+          {
+            "anchor": {
+              "startChar": 253,
+              "endChar": 285,
+              "quote": "a plurality of LED light sources"
+            },
+            "determiner": "plurality-of",
+            "head": "led light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 289,
+              "endChar": 309,
+              "quote": "the respective array"
+            },
+            "determiner": "the",
+            "head": "respective array"
+          },
+          {
+            "anchor": {
+              "startChar": 311,
+              "endChar": 324,
+              "quote": "the other end"
+            },
+            "determiner": "the",
+            "head": "other end"
+          },
+          {
+            "anchor": {
+              "startChar": 328,
+              "endChar": 361,
+              "quote": "each respective fiber optic cable"
+            },
+            "determiner": "bare",
+            "head": "each respective fiber optic cable"
+          },
+          {
+            "anchor": {
+              "startChar": 365,
+              "endChar": 386,
+              "quote": "each respective array"
+            },
+            "determiner": "bare",
+            "head": "each respective array"
+          },
+          {
+            "anchor": {
+              "startChar": 433,
+              "endChar": 442,
+              "quote": "a portion"
+            },
+            "determiner": "a",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 446,
+              "endChar": 488,
+              "quote": "the at least one illumination beam pattern"
+            },
+            "determiner": "the",
+            "head": "at least one illumination beam pattern"
+          },
+          {
+            "anchor": {
+              "startChar": 498,
+              "endChar": 507,
+              "quote": "the light"
+            },
+            "determiner": "the",
+            "head": "light"
+          },
+          {
+            "anchor": {
+              "startChar": 519,
+              "endChar": 540,
+              "quote": "the LED light sources"
+            },
+            "determiner": "the",
+            "head": "led light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 544,
+              "endChar": 559,
+              "quote": "the first array"
+            },
+            "determiner": "the",
+            "head": "first array"
+          },
+          {
+            "anchor": {
+              "startChar": 578,
+              "endChar": 600,
+              "quote": "the fiber optic cables"
+            },
+            "determiner": "the",
+            "head": "fiber optic cables"
+          },
+          {
+            "anchor": {
+              "startChar": 604,
+              "endChar": 618,
+              "quote": "the first lens"
+            },
+            "determiner": "the",
+            "head": "first lens"
+          },
+          {
+            "anchor": {
+              "startChar": 623,
+              "endChar": 632,
+              "quote": "the light"
+            },
+            "determiner": "the",
+            "head": "light"
+          },
+          {
+            "anchor": {
+              "startChar": 644,
+              "endChar": 659,
+              "quote": "the LED sources"
+            },
+            "determiner": "the",
+            "head": "led sources"
+          },
+          {
+            "anchor": {
+              "startChar": 663,
+              "endChar": 679,
+              "quote": "the second array"
+            },
+            "determiner": "the",
+            "head": "second array"
+          },
+          {
+            "anchor": {
+              "startChar": 698,
+              "endChar": 720,
+              "quote": "the fiber optic cables"
+            },
+            "determiner": "the",
+            "head": "fiber optic cables"
+          },
+          {
+            "anchor": {
+              "startChar": 724,
+              "endChar": 739,
+              "quote": "the second lens"
+            },
+            "determiner": "the",
+            "head": "second lens"
+          },
+          {
+            "anchor": {
+              "startChar": 744,
+              "endChar": 753,
+              "quote": "the light"
+            },
+            "determiner": "the",
+            "head": "light"
+          },
+          {
+            "anchor": {
+              "startChar": 767,
+              "endChar": 794,
+              "quote": "the first and second lenses"
+            },
+            "determiner": "the",
+            "head": "first and second lenses"
+          },
+          {
+            "anchor": {
+              "startChar": 819,
+              "endChar": 861,
+              "quote": "the at least one illumination beam pattern"
+            },
+            "determiner": "the",
+            "head": "at least one illumination beam pattern"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "3"
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4.a",
+        "ancestor": "3.a"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 89,
+                "quote": "the first and second arrays of illumination light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 89,
+              "endChar": 104,
+              "quote": " each comprise "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 104,
+                "endChar": 137,
+                "quote": "a plurality of fiber optic cables"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 137,
+              "endChar": 139,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 139,
+                "endChar": 146,
+                "quote": "one end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 146,
+              "endChar": 150,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 150,
+                "endChar": 183,
+                "quote": "each respective fiber optic cable"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 183,
+              "endChar": 184,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 184,
+                "endChar": 205,
+                "quote": "the respective arrays"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 205,
+              "endChar": 233,
+              "quote": " being optically coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 233,
+                "endChar": 249,
+                "quote": "a respective one"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 249,
+              "endChar": 253,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 253,
+                "endChar": 285,
+                "quote": "a plurality of LED light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 285,
+              "endChar": 289,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 289,
+                "endChar": 309,
+                "quote": "the respective array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 309,
+              "endChar": 311,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 311,
+                "endChar": 324,
+                "quote": "the other end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 324,
+              "endChar": 328,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 328,
+                "endChar": 361,
+                "quote": "each respective fiber optic cable"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 361,
+              "endChar": 365,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 365,
+                "endChar": 386,
+                "quote": "each respective array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 386,
+              "endChar": 433,
+              "quote": " being substantially arranged corresponding to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 433,
+                "endChar": 442,
+                "quote": "a portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 442,
+              "endChar": 446,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 446,
+                "endChar": 488,
+                "quote": "the at least one illumination beam pattern"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 488,
+              "endChar": 498,
+              "quote": ", whereby "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 498,
+                "endChar": 507,
+                "quote": "the light"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 507,
+              "endChar": 519,
+              "quote": " emitted by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 519,
+                "endChar": 540,
+                "quote": "the LED light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 540,
+              "endChar": 544,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 544,
+                "endChar": 559,
+                "quote": "the first array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 559,
+              "endChar": 578,
+              "quote": " is transferred by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 578,
+                "endChar": 600,
+                "quote": "the fiber optic cables"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 600,
+              "endChar": 604,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 604,
+                "endChar": 618,
+                "quote": "the first lens"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 618,
+              "endChar": 623,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 623,
+                "endChar": 632,
+                "quote": "the light"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 632,
+              "endChar": 644,
+              "quote": " emitted by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 644,
+                "endChar": 659,
+                "quote": "the LED sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 659,
+              "endChar": 663,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 663,
+                "endChar": 679,
+                "quote": "the second array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 679,
+              "endChar": 698,
+              "quote": " is transferred by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 698,
+                "endChar": 720,
+                "quote": "the fiber optic cables"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 720,
+              "endChar": 724,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 724,
+                "endChar": 739,
+                "quote": "the second lens"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 739,
+              "endChar": 744,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 744,
+                "endChar": 753,
+                "quote": "the light"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 753,
+              "endChar": 767,
+              "quote": " projected by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 767,
+                "endChar": 794,
+                "quote": "the first and second lenses"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 794,
+              "endChar": 819,
+              "quote": " is superimposed to form "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 819,
+                "endChar": 861,
+                "quote": "the at least one illumination beam pattern"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 12,
+            "quote": "The headlamp"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "A headlamp"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 446,
+            "endChar": 488,
+            "quote": "the at least one illumination beam pattern"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 22,
+            "endChar": 60,
+            "quote": "at least one illumination beam pattern"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 544,
+            "endChar": 559,
+            "quote": "the first array"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 117,
+            "quote": "a first array of illumination light sources"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 604,
+            "endChar": 618,
+            "quote": "the first lens"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 321,
+            "quote": "a first converging lens"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 663,
+            "endChar": 679,
+            "quote": "the second array"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 43,
+            "endChar": 87,
+            "quote": "a second array of illumination light sources"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 724,
+            "endChar": 739,
+            "quote": "the second lens"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 92,
+            "endChar": 116,
+            "quote": "a second converging lens"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 819,
+            "endChar": 861,
+            "quote": "the at least one illumination beam pattern"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 22,
+            "endChar": 60,
+            "quote": "at least one illumination beam pattern"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 23,
+          "quote": "The headlamp of claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The headlamp"
+            },
+            "determiner": "the",
+            "head": "headlamp"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 258,
+          "quote": "the first array of illumination light sources further comprises a set of LED light sources which can be illuminated sequentially to provide a steerable light pattern superimposed upon the at least one illumination beam pattern"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 77,
+              "quote": "the first array of illumination light sources"
+            },
+            "determiner": "the",
+            "head": "first array of illumination light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 122,
+              "quote": "a set of LED light sources"
+            },
+            "determiner": "a",
+            "head": "set of led light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 172,
+              "endChar": 197,
+              "quote": "a steerable light pattern"
+            },
+            "determiner": "a",
+            "head": "steerable light pattern"
+          },
+          {
+            "anchor": {
+              "startChar": 216,
+              "endChar": 258,
+              "quote": "the at least one illumination beam pattern"
+            },
+            "determiner": "the",
+            "head": "at least one illumination beam pattern"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5.a",
+        "ancestor": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 77,
+                "quote": "the first array of illumination light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 96,
+              "quote": " further comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 122,
+                "quote": "a set of LED light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 122,
+              "endChar": 172,
+              "quote": " which can be illuminated sequentially to provide "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 172,
+                "endChar": 197,
+                "quote": "a steerable light pattern"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 197,
+              "endChar": 216,
+              "quote": " superimposed upon "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 216,
+                "endChar": 258,
+                "quote": "the at least one illumination beam pattern"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 12,
+            "quote": "The headlamp"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "A headlamp"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 77,
+            "quote": "the first array of illumination light sources"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 117,
+            "quote": "a first array of illumination light sources"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 216,
+            "endChar": 258,
+            "quote": "the at least one illumination beam pattern"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 22,
+            "endChar": 60,
+            "quote": "at least one illumination beam pattern"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 23,
+          "quote": "The headlamp of claim 3"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The headlamp"
+            },
+            "determiner": "the",
+            "head": "headlamp"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 264,
+          "quote": "the first and second arrays of illumination light sources farther comprise a set of LED light sources which can be illuminated sequentially to provide a steerable light pattern superimposed upon the at least one illumination pattern"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 89,
+              "quote": "the first and second arrays of illumination light sources"
+            },
+            "determiner": "the",
+            "head": "first and second arrays of illumination light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 107,
+              "endChar": 133,
+              "quote": "a set of LED light sources"
+            },
+            "determiner": "a",
+            "head": "set of led light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 183,
+              "endChar": 208,
+              "quote": "a steerable light pattern"
+            },
+            "determiner": "a",
+            "head": "steerable light pattern"
+          },
+          {
+            "anchor": {
+              "startChar": 227,
+              "endChar": 264,
+              "quote": "the at least one illumination pattern"
+            },
+            "determiner": "the",
+            "head": "at least one illumination pattern"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "3"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6.a",
+        "ancestor": "3.a"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 89,
+                "quote": "the first and second arrays of illumination light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 89,
+              "endChar": 107,
+              "quote": " farther comprise "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 107,
+                "endChar": 133,
+                "quote": "a set of LED light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 133,
+              "endChar": 183,
+              "quote": " which can be illuminated sequentially to provide "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 183,
+                "endChar": 208,
+                "quote": "a steerable light pattern"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 208,
+              "endChar": 227,
+              "quote": " superimposed upon "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 227,
+                "endChar": 264,
+                "quote": "the at least one illumination pattern"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 12,
+            "quote": "The headlamp"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "A headlamp"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 264,
+            "quote": "the at least one illumination pattern"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 22,
+            "endChar": 60,
+            "quote": "at least one illumination beam pattern"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 23,
+          "quote": "The headlamp of claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The headlamp"
+            },
+            "determiner": "the",
+            "head": "headlamp"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 343,
+          "quote": "the optical coupling of the LED light sources to the each respective one end of the fiber optic cable includes a microreflector located on a substrate to which the LED is mounted, the microreflector surrounding the LED to reflect a substantial portion of the light produced by the LED into the fiber optic cable"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 52,
+              "quote": "the optical coupling"
+            },
+            "determiner": "the",
+            "head": "optical coupling"
+          },
+          {
+            "anchor": {
+              "startChar": 56,
+              "endChar": 77,
+              "quote": "the LED light sources"
+            },
+            "determiner": "the",
+            "head": "led light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 108,
+              "quote": "the each respective one end"
+            },
+            "determiner": "the",
+            "head": "each respective one end"
+          },
+          {
+            "anchor": {
+              "startChar": 112,
+              "endChar": 133,
+              "quote": "the fiber optic cable"
+            },
+            "determiner": "the",
+            "head": "fiber optic cable"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 159,
+              "quote": "a microreflector"
+            },
+            "determiner": "a",
+            "head": "microreflector"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 182,
+              "quote": "a substrate"
+            },
+            "determiner": "a",
+            "head": "substrate"
+          },
+          {
+            "anchor": {
+              "startChar": 192,
+              "endChar": 199,
+              "quote": "the LED"
+            },
+            "determiner": "the",
+            "head": "led"
+          },
+          {
+            "anchor": {
+              "startChar": 212,
+              "endChar": 230,
+              "quote": "the microreflector"
+            },
+            "determiner": "the",
+            "head": "microreflector"
+          },
+          {
+            "anchor": {
+              "startChar": 243,
+              "endChar": 250,
+              "quote": "the LED"
+            },
+            "determiner": "the",
+            "head": "led"
+          },
+          {
+            "anchor": {
+              "startChar": 262,
+              "endChar": 283,
+              "quote": "a substantial portion"
+            },
+            "determiner": "a",
+            "head": "substantial portion"
+          },
+          {
+            "anchor": {
+              "startChar": 287,
+              "endChar": 296,
+              "quote": "the light"
+            },
+            "determiner": "the",
+            "head": "light"
+          },
+          {
+            "anchor": {
+              "startChar": 309,
+              "endChar": 316,
+              "quote": "the LED"
+            },
+            "determiner": "the",
+            "head": "led"
+          },
+          {
+            "anchor": {
+              "startChar": 322,
+              "endChar": 343,
+              "quote": "the fiber optic cable"
+            },
+            "determiner": "the",
+            "head": "fiber optic cable"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7.a",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 52,
+                "quote": "the optical coupling"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 52,
+              "endChar": 56,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 56,
+                "endChar": 77,
+                "quote": "the LED light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 81,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 81,
+                "endChar": 108,
+                "quote": "the each respective one end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 108,
+              "endChar": 112,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 112,
+                "endChar": 133,
+                "quote": "the fiber optic cable"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 133,
+              "endChar": 143,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 159,
+                "quote": "a microreflector"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 159,
+              "endChar": 171,
+              "quote": " located on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 171,
+                "endChar": 182,
+                "quote": "a substrate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 182,
+              "endChar": 192,
+              "quote": " to which "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 192,
+                "endChar": 199,
+                "quote": "the LED"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 199,
+              "endChar": 212,
+              "quote": " is mounted, "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 212,
+                "endChar": 230,
+                "quote": "the microreflector"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 230,
+              "endChar": 243,
+              "quote": " surrounding "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 243,
+                "endChar": 250,
+                "quote": "the LED"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 250,
+              "endChar": 262,
+              "quote": " to reflect "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 262,
+                "endChar": 283,
+                "quote": "a substantial portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 283,
+              "endChar": 287,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 287,
+                "endChar": 296,
+                "quote": "the light"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 296,
+              "endChar": 309,
+              "quote": " produced by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 309,
+                "endChar": 316,
+                "quote": "the LED"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 316,
+              "endChar": 322,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 322,
+                "endChar": 343,
+                "quote": "the fiber optic cable"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 12,
+            "quote": "The headlamp"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "A headlamp"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 56,
+            "endChar": 77,
+            "quote": "the LED light sources"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 215,
+            "endChar": 247,
+            "quote": "a plurality of LED light sources"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 81,
+            "endChar": 108,
+            "quote": "the each respective one end"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 130,
+            "quote": "one end"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 212,
+            "endChar": 230,
+            "quote": "the microreflector"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 159,
+            "quote": "a microreflector"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 23,
+          "quote": "The headlamp of claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The headlamp"
+            },
+            "determiner": "the",
+            "head": "headlamp"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 165,
+          "quote": "one wherein different ones of the light sources in light source array can be illuminated to form different illumination beam patterns"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 58,
+              "quote": "different ones"
+            },
+            "determiner": "bare",
+            "head": "different ones"
+          },
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 79,
+              "quote": "the light sources"
+            },
+            "determiner": "the",
+            "head": "light sources"
+          },
+          {
+            "anchor": {
+              "startChar": 83,
+              "endChar": 101,
+              "quote": "light source array"
+            },
+            "determiner": "bare",
+            "head": "light source array"
+          },
+          {
+            "anchor": {
+              "startChar": 129,
+              "endChar": 165,
+              "quote": "different illumination beam patterns"
+            },
+            "determiner": "bare",
+            "head": "different illumination beam patterns"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8.a",
+        "ancestor": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 32,
+              "endChar": 44,
+              "quote": "one wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 58,
+                "quote": "different ones"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 58,
+              "endChar": 62,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 62,
+                "endChar": 79,
+                "quote": "the light sources"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 79,
+              "endChar": 83,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 83,
+                "endChar": 101,
+                "quote": "light source array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 101,
+              "endChar": 129,
+              "quote": " can be illuminated to form "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 129,
+                "endChar": 165,
+                "quote": "different illumination beam patterns"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 12,
+            "quote": "The headlamp"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "A headlamp"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 83,
+            "endChar": 101,
+            "quote": "light source array"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 117,
+            "quote": "a first array of illumination light sources"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 23,
+          "quote": "The headlamp of claim 8"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The headlamp"
+            },
+            "determiner": "the",
+            "head": "headlamp"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 123,
+          "quote": "the different illumination beam patterns include a low beam pattern and a high beam pattern"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 72,
+              "quote": "the different illumination beam patterns"
+            },
+            "determiner": "the",
+            "head": "different illumination beam patterns"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 99,
+              "quote": "a low beam pattern"
+            },
+            "determiner": "a",
+            "head": "low beam pattern"
+          },
+          {
+            "anchor": {
+              "startChar": 104,
+              "endChar": 123,
+              "quote": "a high beam pattern"
+            },
+            "determiner": "a",
+            "head": "high beam pattern"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "8"
+      },
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9.a",
+        "ancestor": "8.a"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 72,
+                "quote": "the different illumination beam patterns"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 72,
+              "endChar": 81,
+              "quote": " include "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 81,
+                "endChar": 99,
+                "quote": "a low beam pattern"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 99,
+              "endChar": 104,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 104,
+                "endChar": 123,
+                "quote": "a high beam pattern"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 12,
+            "quote": "The headlamp"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "A headlamp"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 72,
+            "quote": "the different illumination beam patterns"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 165,
+            "quote": "different illumination beam patterns"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 23,
+          "quote": "The headlamp of claim 9"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The headlamp"
+            },
+            "determiner": "the",
+            "head": "headlamp"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 107,
+          "quote": "the different illumination beam patterns further include a fog lamp pattern"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 72,
+              "quote": "the different illumination beam patterns"
+            },
+            "determiner": "the",
+            "head": "different illumination beam patterns"
+          },
+          {
+            "anchor": {
+              "startChar": 89,
+              "endChar": 107,
+              "quote": "a fog lamp pattern"
+            },
+            "determiner": "a",
+            "head": "fog lamp pattern"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "9"
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10.a",
+        "ancestor": "9.a"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 72,
+                "quote": "the different illumination beam patterns"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 72,
+              "endChar": 89,
+              "quote": " further include "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 89,
+                "endChar": 107,
+                "quote": "a fog lamp pattern"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 12,
+            "quote": "The headlamp"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "A headlamp"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 72,
+            "quote": "the different illumination beam patterns"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 165,
+            "quote": "different illumination beam patterns"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 11,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "11",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 23,
+          "quote": "The headlamp of claim 9"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The headlamp"
+            },
+            "determiner": "the",
+            "head": "headlamp"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 121,
+          "quote": "the different illumination beam patterns further include a day time running light pattern"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 72,
+              "quote": "the different illumination beam patterns"
+            },
+            "determiner": "the",
+            "head": "different illumination beam patterns"
+          },
+          {
+            "anchor": {
+              "startChar": 89,
+              "endChar": 121,
+              "quote": "a day time running light pattern"
+            },
+            "determiner": "a",
+            "head": "day time running light pattern"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "11",
+        "ancestor": "9"
+      },
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "11.a",
+        "ancestor": "9.a"
+      },
+      {
+        "kind": "functional",
+        "element": "11.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 72,
+                "quote": "the different illumination beam patterns"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 72,
+              "endChar": 89,
+              "quote": " further include "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 89,
+                "endChar": 121,
+                "quote": "a day time running light pattern"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 12,
+            "quote": "The headlamp"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "A headlamp"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 72,
+            "quote": "the different illumination beam patterns"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 165,
+            "quote": "different illumination beam patterns"
+          }
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,120 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13275397-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20130036818", "A1", "20130214"],
+    "applicationReference": ["US", "13275397", "20111018"],
+    "officeActionDocumentIdentifiers": ["HN7G13DHPXXIFW4"],
+    "officeActionMailDate": "2013-10-25"
+  },
+  "digestEvidence": [
+    {
+      "file": "13275397.publication.xml",
+      "sha256": "a479af8e953f27c4027502c3fd039a6261d63b4c6cdf00c956d23a5d032c84ca",
+      "matchesProvenance": true
+    },
+    {
+      "file": "13275397.claims.xml",
+      "sha256": "140c2dea315258a5a42506040f0c037cbefc7cdf8e464f15d8c877cd8be4c400",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "140c2dea315258a5a42506040f0c037cbefc7cdf8e464f15d8c877cd8be4c400",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "GTX1CWC0PPOPPY2",
+      "xmlAvailable": true,
+      "sha256": "6e77b20486c20d373154fb56034a61e558a7b00bd8fb1f1c1f1fe79326f04265",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 61,
+    "actualRows": 61,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2013-10-14T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "HMS3BSYNPXXIFW3"
+      },
+      {
+        "officialDate": "2011-10-18T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "GTX1CWC0PPOPPY2"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 4, 7 and 19-22 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the two first cavities",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the two first cavities"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the spacer",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the spacer"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the predetermined thickness",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the predetermined thickness"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the gap",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the gap"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the bottom surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the bottom surface"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the top surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the top surface"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the stopper",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the stopper"
+    }
+  ],
+  "assessment": "Legacy lowercase original has22 numbered claims, not zero; selected1-7 agree apart from line/page numerals. Actual ground covers4/7/19-22. Selected4/7 connect naturally to root1; no claim version conflict.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

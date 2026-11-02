@@ -1,0 +1,51 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "14262251-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "the respective spin-lattice relaxation times T1",
+      "reason": "Root1 begins with a definite measurement quantity without prior NP introduction. No quantity is invented. Later plural spin-lattice times refer to the explicitly measured quantity/collection; a singular fitted time is not forced onto a selected numerical member of that collection."
+    },
+    {
+      "quote": "the signal intensity or line width",
+      "reason": "Shared determiner coordinated signal metrics retained as complete NP; frequency/nucleus and parameter-vector initial definite mentions do not invent unrecited metric introductions. Later exact first/second vector references have their explicit local constructing mention as referent."
+    },
+    {
+      "quote": "the above operations",
+      "reason": "Collective reference to source operation sequence is retained without selecting one element or fabricating an operation NP."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation of exact canonical/native claims. Explicit manually selected element and noun-phrase spans are serialized; no source decomposition algorithm, production rules, predictions, synthetic fixtures or prior conformance labels used. Complete lexical heads, nested determiner terms, natural dependency and source-supported entity identities retained. Functional edges preserve complete source text and ordered participants. Independent critic pending; agent confidence is not attorney agreement.",
+  "referenceNotes": [],
+  "sourceValidation": {
+    "claimsXmlSha256": "5261aca87821915f83c5818a1847f954410f70c93deafc9dfdfd8173fbd228b1",
+    "sourceEligibility": "Retained independent source critic accepted. No fresh original-PDF/inventory authentication claimed."
+  },
+  "counts": {
+    "trees": 4,
+    "elements": 25,
+    "terms": 67
+  },
+  "independence": "Extractor did not read production implementation, decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or prior structural labels for this family. Helpers locate only manually chosen exact source quotes, serialize annotations and validate spans. Only assigned expected.json/extractor.json written.",
+  "attorneyAdjudication": "pending",
+  "validation": {
+    "schema": "All trees decoded through declared ClaimElementTree schema; production decomposer not invoked.",
+    "anchors": "Exact canonical UTF-16 spans, element source order, term nonoverlap/ownership, local/foreign term endpoints and contiguous complete functional reconstruction checked.",
+    "native": "All canonical/context claims equal native claim text under permitted printed-number/whitespace normalization; claims XML digest matches provenance.",
+    "independentSemanticCritic": "Pending; extractor checks do not establish independent acceptance."
+  }
+}

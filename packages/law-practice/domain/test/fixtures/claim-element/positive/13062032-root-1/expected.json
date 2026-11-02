@@ -1,0 +1,5539 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 48,
+          "quote": "Method for non-destructive ultrasound inspection"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 11,
+              "endChar": 48,
+              "quote": "non-destructive ultrasound inspection"
+            },
+            "determiner": "bare",
+            "head": "non-destructive ultrasound inspection"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 58,
+          "endChar": 256,
+          "quote": "at least one ultrasonic pulse is radiated by means of at least one ultrasonic transmitter into a workpiece to be inspected and the ultrasonic pulse is reflected on boundary surfaces in the workpiece"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 87,
+              "quote": "at least one ultrasonic pulse"
+            },
+            "determiner": "at-least-one",
+            "head": "ultrasonic pulse"
+          },
+          {
+            "anchor": {
+              "startChar": 112,
+              "endChar": 147,
+              "quote": "at least one ultrasonic transmitter"
+            },
+            "determiner": "at-least-one",
+            "head": "ultrasonic transmitter"
+          },
+          {
+            "anchor": {
+              "startChar": 153,
+              "endChar": 164,
+              "quote": "a workpiece"
+            },
+            "determiner": "a",
+            "head": "workpiece"
+          },
+          {
+            "anchor": {
+              "startChar": 185,
+              "endChar": 205,
+              "quote": "the ultrasonic pulse"
+            },
+            "determiner": "the",
+            "head": "ultrasonic pulse"
+          },
+          {
+            "anchor": {
+              "startChar": 222,
+              "endChar": 239,
+              "quote": "boundary surfaces"
+            },
+            "determiner": "bare",
+            "head": "boundary surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 243,
+              "endChar": 256,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 258,
+          "endChar": 380,
+          "quote": "the reflected ultrasound is received by means of at least one ultrasonic receiver and the associated signals are evaluated"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 258,
+              "endChar": 282,
+              "quote": "the reflected ultrasound"
+            },
+            "determiner": "the",
+            "head": "reflected ultrasound"
+          },
+          {
+            "anchor": {
+              "startChar": 307,
+              "endChar": 339,
+              "quote": "at least one ultrasonic receiver"
+            },
+            "determiner": "at-least-one",
+            "head": "ultrasonic receiver"
+          },
+          {
+            "anchor": {
+              "startChar": 344,
+              "endChar": 366,
+              "quote": "the associated signals"
+            },
+            "determiner": "the",
+            "head": "associated signals"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 386,
+          "endChar": 517,
+          "quote": "the ultrasound in the process passes through a leading body which is disposed between the workpiece and the transmitter or receiver"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 386,
+              "endChar": 400,
+              "quote": "the ultrasound"
+            },
+            "determiner": "the",
+            "head": "ultrasound"
+          },
+          {
+            "anchor": {
+              "startChar": 404,
+              "endChar": 415,
+              "quote": "the process"
+            },
+            "determiner": "the",
+            "head": "process"
+          },
+          {
+            "anchor": {
+              "startChar": 431,
+              "endChar": 445,
+              "quote": "a leading body"
+            },
+            "determiner": "a",
+            "head": "leading body"
+          },
+          {
+            "anchor": {
+              "startChar": 472,
+              "endChar": 485,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          },
+          {
+            "anchor": {
+              "startChar": 490,
+              "endChar": 517,
+              "quote": "the transmitter or receiver"
+            },
+            "determiner": "the",
+            "head": "transmitter or receiver"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 527,
+          "endChar": 693,
+          "quote": "the method comprises at least one step for determining sound velocity in the leading body by means of a phased array comprised of selectively controllable transducers"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 527,
+              "endChar": 537,
+              "quote": "the method"
+            },
+            "determiner": "the",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 548,
+              "endChar": 565,
+              "quote": "at least one step"
+            },
+            "determiner": "at-least-one",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 582,
+              "endChar": 596,
+              "quote": "sound velocity"
+            },
+            "determiner": "bare",
+            "head": "sound velocity"
+          },
+          {
+            "anchor": {
+              "startChar": 600,
+              "endChar": 616,
+              "quote": "the leading body"
+            },
+            "determiner": "the",
+            "head": "leading body"
+          },
+          {
+            "anchor": {
+              "startChar": 629,
+              "endChar": 643,
+              "quote": "a phased array"
+            },
+            "determiner": "a",
+            "head": "phased array"
+          },
+          {
+            "anchor": {
+              "startChar": 657,
+              "endChar": 693,
+              "quote": "selectively controllable transducers"
+            },
+            "determiner": "bare",
+            "head": "selectively controllable transducers"
+          }
+        ]
+      },
+      {
+        "path": "1.e",
+        "anchor": {
+          "startChar": 703,
+          "endChar": 807,
+          "quote": "at least one first transducer of the phased array acts as a transmitter of at least one ultrasonic pulse"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 703,
+              "endChar": 732,
+              "quote": "at least one first transducer"
+            },
+            "determiner": "at-least-one",
+            "head": "first transducer"
+          },
+          {
+            "anchor": {
+              "startChar": 736,
+              "endChar": 752,
+              "quote": "the phased array"
+            },
+            "determiner": "the",
+            "head": "phased array"
+          },
+          {
+            "anchor": {
+              "startChar": 761,
+              "endChar": 774,
+              "quote": "a transmitter"
+            },
+            "determiner": "a",
+            "head": "transmitter"
+          },
+          {
+            "anchor": {
+              "startChar": 778,
+              "endChar": 807,
+              "quote": "at least one ultrasonic pulse"
+            },
+            "determiner": "at-least-one",
+            "head": "ultrasonic pulse"
+          }
+        ]
+      },
+      {
+        "path": "1.f",
+        "anchor": {
+          "startChar": 813,
+          "endChar": 906,
+          "quote": "at least one second transducer of the phased array acts as a receiver of the ultrasonic pulse"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 813,
+              "endChar": 843,
+              "quote": "at least one second transducer"
+            },
+            "determiner": "at-least-one",
+            "head": "second transducer"
+          },
+          {
+            "anchor": {
+              "startChar": 847,
+              "endChar": 863,
+              "quote": "the phased array"
+            },
+            "determiner": "the",
+            "head": "phased array"
+          },
+          {
+            "anchor": {
+              "startChar": 872,
+              "endChar": 882,
+              "quote": "a receiver"
+            },
+            "determiner": "a",
+            "head": "receiver"
+          },
+          {
+            "anchor": {
+              "startChar": 886,
+              "endChar": 906,
+              "quote": "the ultrasonic pulse"
+            },
+            "determiner": "the",
+            "head": "ultrasonic pulse"
+          }
+        ]
+      },
+      {
+        "path": "1.g",
+        "anchor": {
+          "startChar": 926,
+          "endChar": 1123,
+          "quote": "the sound velocity in the leading body is determined at least by means of a travel time measurement of the ultrasound along the shortest sound path of the ultrasound between said spaced transducers"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 926,
+              "endChar": 944,
+              "quote": "the sound velocity"
+            },
+            "determiner": "the",
+            "head": "sound velocity"
+          },
+          {
+            "anchor": {
+              "startChar": 948,
+              "endChar": 964,
+              "quote": "the leading body"
+            },
+            "determiner": "the",
+            "head": "leading body"
+          },
+          {
+            "anchor": {
+              "startChar": 1000,
+              "endChar": 1025,
+              "quote": "a travel time measurement"
+            },
+            "determiner": "a",
+            "head": "travel time measurement"
+          },
+          {
+            "anchor": {
+              "startChar": 1029,
+              "endChar": 1043,
+              "quote": "the ultrasound"
+            },
+            "determiner": "the",
+            "head": "ultrasound"
+          },
+          {
+            "anchor": {
+              "startChar": 1050,
+              "endChar": 1073,
+              "quote": "the shortest sound path"
+            },
+            "determiner": "the",
+            "head": "shortest sound path"
+          },
+          {
+            "anchor": {
+              "startChar": 1077,
+              "endChar": 1091,
+              "quote": "the ultrasound"
+            },
+            "determiner": "the",
+            "head": "ultrasound"
+          },
+          {
+            "anchor": {
+              "startChar": 1100,
+              "endChar": 1123,
+              "quote": "said spaced transducers"
+            },
+            "determiner": "said",
+            "head": "spaced transducers"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 58,
+                "endChar": 87,
+                "quote": "at least one ultrasonic pulse"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 87,
+              "endChar": 112,
+              "quote": " is radiated by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 112,
+                "endChar": 147,
+                "quote": "at least one ultrasonic transmitter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 147,
+              "endChar": 153,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 153,
+                "endChar": 164,
+                "quote": "a workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 164,
+              "endChar": 185,
+              "quote": " to be inspected and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 185,
+                "endChar": 205,
+                "quote": "the ultrasonic pulse"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 205,
+              "endChar": 222,
+              "quote": " is reflected on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 222,
+                "endChar": 239,
+                "quote": "boundary surfaces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 239,
+              "endChar": 243,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 243,
+                "endChar": 256,
+                "quote": "the workpiece"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 258,
+                "endChar": 282,
+                "quote": "the reflected ultrasound"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 282,
+              "endChar": 307,
+              "quote": " is received by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 307,
+                "endChar": 339,
+                "quote": "at least one ultrasonic receiver"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 339,
+              "endChar": 344,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 344,
+                "endChar": 366,
+                "quote": "the associated signals"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 366,
+              "endChar": 380,
+              "quote": " are evaluated"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 386,
+                "endChar": 400,
+                "quote": "the ultrasound"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 400,
+              "endChar": 404,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 404,
+                "endChar": 415,
+                "quote": "the process"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 415,
+              "endChar": 431,
+              "quote": " passes through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 431,
+                "endChar": 445,
+                "quote": "a leading body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 445,
+              "endChar": 472,
+              "quote": " which is disposed between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 472,
+                "endChar": 485,
+                "quote": "the workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 485,
+              "endChar": 490,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 490,
+                "endChar": 517,
+                "quote": "the transmitter or receiver"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 527,
+                "endChar": 537,
+                "quote": "the method"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 537,
+              "endChar": 548,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 548,
+                "endChar": 565,
+                "quote": "at least one step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 565,
+              "endChar": 582,
+              "quote": " for determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 582,
+                "endChar": 596,
+                "quote": "sound velocity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 596,
+              "endChar": 600,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 600,
+                "endChar": 616,
+                "quote": "the leading body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 616,
+              "endChar": 629,
+              "quote": " by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 629,
+                "endChar": 643,
+                "quote": "a phased array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 643,
+              "endChar": 657,
+              "quote": " comprised of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 657,
+                "endChar": 693,
+                "quote": "selectively controllable transducers"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.e",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 703,
+                "endChar": 732,
+                "quote": "at least one first transducer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 732,
+              "endChar": 736,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 736,
+                "endChar": 752,
+                "quote": "the phased array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 752,
+              "endChar": 761,
+              "quote": " acts as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 761,
+                "endChar": 774,
+                "quote": "a transmitter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 774,
+              "endChar": 778,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 778,
+                "endChar": 807,
+                "quote": "at least one ultrasonic pulse"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.f",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.f",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 813,
+                "endChar": 843,
+                "quote": "at least one second transducer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 843,
+              "endChar": 847,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 847,
+                "endChar": 863,
+                "quote": "the phased array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 863,
+              "endChar": 872,
+              "quote": " acts as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 872,
+                "endChar": 882,
+                "quote": "a receiver"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 882,
+              "endChar": 886,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 886,
+                "endChar": 906,
+                "quote": "the ultrasonic pulse"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.g",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.g",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 926,
+                "endChar": 944,
+                "quote": "the sound velocity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 944,
+              "endChar": 948,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 948,
+                "endChar": 964,
+                "quote": "the leading body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 964,
+              "endChar": 1000,
+              "quote": " is determined at least by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1000,
+                "endChar": 1025,
+                "quote": "a travel time measurement"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1025,
+              "endChar": 1029,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1029,
+                "endChar": 1043,
+                "quote": "the ultrasound"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1043,
+              "endChar": 1050,
+              "quote": " along "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1050,
+                "endChar": 1073,
+                "quote": "the shortest sound path"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1073,
+              "endChar": 1077,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1077,
+                "endChar": 1091,
+                "quote": "the ultrasound"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1091,
+              "endChar": 1100,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1100,
+                "endChar": 1123,
+                "quote": "said spaced transducers"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 185,
+            "endChar": 205,
+            "quote": "the ultrasonic pulse"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 58,
+            "endChar": 87,
+            "quote": "at least one ultrasonic pulse"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 243,
+            "endChar": 256,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 153,
+            "endChar": 164,
+            "quote": "a workpiece"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 472,
+            "endChar": 485,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 153,
+            "endChar": 164,
+            "quote": "a workpiece"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 527,
+            "endChar": 537,
+            "quote": "the method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 600,
+            "endChar": 616,
+            "quote": "the leading body"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 431,
+            "endChar": 445,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 736,
+            "endChar": 752,
+            "quote": "the phased array"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 629,
+            "endChar": 643,
+            "quote": "a phased array"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 847,
+            "endChar": 863,
+            "quote": "the phased array"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 629,
+            "endChar": 643,
+            "quote": "a phased array"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 886,
+            "endChar": 906,
+            "quote": "the ultrasonic pulse"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 778,
+            "endChar": 807,
+            "quote": "at least one ultrasonic pulse"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 948,
+            "endChar": 964,
+            "quote": "the leading body"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 431,
+            "endChar": 445,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 926,
+            "endChar": 944,
+            "quote": "the sound velocity"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 582,
+            "endChar": 596,
+            "quote": "sound velocity"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 27,
+          "quote": "Method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 38,
+          "endChar": 198,
+          "quote": "in the step for determining the sound velocity in the leading body, the sound velocity is determined by means of at least one back-face echo of the leading body"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 49,
+              "quote": "the step"
+            },
+            "determiner": "the",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 66,
+              "endChar": 84,
+              "quote": "the sound velocity"
+            },
+            "determiner": "the",
+            "head": "sound velocity"
+          },
+          {
+            "anchor": {
+              "startChar": 88,
+              "endChar": 104,
+              "quote": "the leading body"
+            },
+            "determiner": "the",
+            "head": "leading body"
+          },
+          {
+            "anchor": {
+              "startChar": 106,
+              "endChar": 124,
+              "quote": "the sound velocity"
+            },
+            "determiner": "the",
+            "head": "sound velocity"
+          },
+          {
+            "anchor": {
+              "startChar": 151,
+              "endChar": 178,
+              "quote": "at least one back-face echo"
+            },
+            "determiner": "at-least-one",
+            "head": "back-face echo"
+          },
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 198,
+              "quote": "the leading body"
+            },
+            "determiner": "the",
+            "head": "leading body"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 38,
+              "endChar": 41,
+              "quote": "in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 49,
+                "quote": "the step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 49,
+              "endChar": 66,
+              "quote": " for determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 66,
+                "endChar": 84,
+                "quote": "the sound velocity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 84,
+              "endChar": 88,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 88,
+                "endChar": 104,
+                "quote": "the leading body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 104,
+              "endChar": 106,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 106,
+                "endChar": 124,
+                "quote": "the sound velocity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 124,
+              "endChar": 151,
+              "quote": " is determined by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 151,
+                "endChar": 178,
+                "quote": "at least one back-face echo"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 178,
+              "endChar": 182,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 182,
+                "endChar": 198,
+                "quote": "the leading body"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 41,
+            "endChar": 49,
+            "quote": "the step"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 548,
+            "endChar": 565,
+            "quote": "at least one step"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 66,
+            "endChar": 84,
+            "quote": "the sound velocity"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 582,
+            "endChar": 596,
+            "quote": "sound velocity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 106,
+            "endChar": 124,
+            "quote": "the sound velocity"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 582,
+            "endChar": 596,
+            "quote": "sound velocity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 88,
+            "endChar": 104,
+            "quote": "the leading body"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 431,
+            "endChar": 445,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 182,
+            "endChar": 198,
+            "quote": "the leading body"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 431,
+            "endChar": 445,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 27,
+          "quote": "Method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 37,
+          "endChar": 115,
+          "quote": "the shortest sound path is calculated geometrically or by numerical simulation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 60,
+              "quote": "the shortest sound path"
+            },
+            "determiner": "the",
+            "head": "shortest sound path"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 115,
+              "quote": "numerical simulation"
+            },
+            "determiner": "bare",
+            "head": "numerical simulation"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 60,
+                "quote": "the shortest sound path"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 60,
+              "endChar": 95,
+              "quote": " is calculated geometrically or by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 95,
+                "endChar": 115,
+                "quote": "numerical simulation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 37,
+            "endChar": 60,
+            "quote": "the shortest sound path"
+          }
+        },
+        "introducing": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 1050,
+            "endChar": 1073,
+            "quote": "the shortest sound path"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 27,
+          "quote": "Method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 37,
+          "endChar": 104,
+          "quote": "the leading body is wedge-shaped or has two plane-parallel surfaces"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 53,
+              "quote": "the leading body"
+            },
+            "determiner": "the",
+            "head": "leading body"
+          },
+          {
+            "anchor": {
+              "startChar": 77,
+              "endChar": 104,
+              "quote": "two plane-parallel surfaces"
+            },
+            "determiner": "bare",
+            "head": "two plane-parallel surfaces"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 53,
+                "quote": "the leading body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 53,
+              "endChar": 77,
+              "quote": " is wedge-shaped or has "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 77,
+                "endChar": 104,
+                "quote": "two plane-parallel surfaces"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 37,
+            "endChar": 53,
+            "quote": "the leading body"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 431,
+            "endChar": 445,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 27,
+          "quote": "Method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 37,
+          "endChar": 98,
+          "quote": "the leading body comprises a thermoplastic synthetic material"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 53,
+              "quote": "the leading body"
+            },
+            "determiner": "the",
+            "head": "leading body"
+          },
+          {
+            "anchor": {
+              "startChar": 64,
+              "endChar": 98,
+              "quote": "a thermoplastic synthetic material"
+            },
+            "determiner": "a",
+            "head": "thermoplastic synthetic material"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 53,
+                "quote": "the leading body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 53,
+              "endChar": 64,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 64,
+                "endChar": 98,
+                "quote": "a thermoplastic synthetic material"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 37,
+            "endChar": 53,
+            "quote": "the leading body"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 431,
+            "endChar": 445,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 27,
+          "quote": "Method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 38,
+          "endChar": 129,
+          "quote": "in the step for determining the sound velocity in the leading body, the latter is uncoupled"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 49,
+              "quote": "the step"
+            },
+            "determiner": "the",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 66,
+              "endChar": 84,
+              "quote": "the sound velocity"
+            },
+            "determiner": "the",
+            "head": "sound velocity"
+          },
+          {
+            "anchor": {
+              "startChar": 88,
+              "endChar": 104,
+              "quote": "the leading body"
+            },
+            "determiner": "the",
+            "head": "leading body"
+          },
+          {
+            "anchor": {
+              "startChar": 106,
+              "endChar": 116,
+              "quote": "the latter"
+            },
+            "determiner": "the",
+            "head": "latter"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 38,
+              "endChar": 41,
+              "quote": "in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 49,
+                "quote": "the step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 49,
+              "endChar": 66,
+              "quote": " for determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 66,
+                "endChar": 84,
+                "quote": "the sound velocity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 84,
+              "endChar": 88,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 88,
+                "endChar": 104,
+                "quote": "the leading body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 104,
+              "endChar": 106,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 106,
+                "endChar": 116,
+                "quote": "the latter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 116,
+              "endChar": 129,
+              "quote": " is uncoupled"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 41,
+            "endChar": 49,
+            "quote": "the step"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 548,
+            "endChar": 565,
+            "quote": "at least one step"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 66,
+            "endChar": 84,
+            "quote": "the sound velocity"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 582,
+            "endChar": 596,
+            "quote": "sound velocity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 88,
+            "endChar": 104,
+            "quote": "the leading body"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 431,
+            "endChar": 445,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 106,
+            "endChar": 116,
+            "quote": "the latter"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 431,
+            "endChar": 445,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 27,
+          "quote": "Method according to claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 37,
+          "endChar": 310,
+          "quote": "the method comprises at least one further step in which travel time of the back-face echo of the leading body's coupling surface adjoining, or to be adjoined to, the workpiece is determined for at least one transducer of the phased array acting as a transmitter or receiver"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 47,
+              "quote": "the method"
+            },
+            "determiner": "the",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 83,
+              "quote": "at least one further step"
+            },
+            "determiner": "at-least-one",
+            "head": "further step"
+          },
+          {
+            "anchor": {
+              "startChar": 93,
+              "endChar": 104,
+              "quote": "travel time"
+            },
+            "determiner": "bare",
+            "head": "travel time"
+          },
+          {
+            "anchor": {
+              "startChar": 108,
+              "endChar": 126,
+              "quote": "the back-face echo"
+            },
+            "determiner": "the",
+            "head": "back-face echo"
+          },
+          {
+            "anchor": {
+              "startChar": 130,
+              "endChar": 165,
+              "quote": "the leading body's coupling surface"
+            },
+            "determiner": "the",
+            "head": "leading body's coupling surface"
+          },
+          {
+            "anchor": {
+              "startChar": 199,
+              "endChar": 212,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          },
+          {
+            "anchor": {
+              "startChar": 231,
+              "endChar": 254,
+              "quote": "at least one transducer"
+            },
+            "determiner": "at-least-one",
+            "head": "transducer"
+          },
+          {
+            "anchor": {
+              "startChar": 258,
+              "endChar": 274,
+              "quote": "the phased array"
+            },
+            "determiner": "the",
+            "head": "phased array"
+          },
+          {
+            "anchor": {
+              "startChar": 285,
+              "endChar": 310,
+              "quote": "a transmitter or receiver"
+            },
+            "determiner": "a",
+            "head": "transmitter or receiver"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 47,
+                "quote": "the method"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 47,
+              "endChar": 58,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 58,
+                "endChar": 83,
+                "quote": "at least one further step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 83,
+              "endChar": 93,
+              "quote": " in which "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 93,
+                "endChar": 104,
+                "quote": "travel time"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 104,
+              "endChar": 108,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 108,
+                "endChar": 126,
+                "quote": "the back-face echo"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 126,
+              "endChar": 130,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 130,
+                "endChar": 165,
+                "quote": "the leading body's coupling surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 165,
+              "endChar": 199,
+              "quote": " adjoining, or to be adjoined to, "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 199,
+                "endChar": 212,
+                "quote": "the workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 212,
+              "endChar": 231,
+              "quote": " is determined for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 231,
+                "endChar": 254,
+                "quote": "at least one transducer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 254,
+              "endChar": 258,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 258,
+                "endChar": 274,
+                "quote": "the phased array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 274,
+              "endChar": 285,
+              "quote": " acting as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 285,
+                "endChar": 310,
+                "quote": "a transmitter or receiver"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 37,
+            "endChar": 47,
+            "quote": "the method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 108,
+            "endChar": 126,
+            "quote": "the back-face echo"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 151,
+            "endChar": 178,
+            "quote": "at least one back-face echo"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 199,
+            "endChar": 212,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 153,
+            "endChar": 164,
+            "quote": "a workpiece"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 258,
+            "endChar": 274,
+            "quote": "the phased array"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 629,
+            "endChar": 643,
+            "quote": "a phased array"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 27,
+          "quote": "Method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 37,
+          "endChar": 307,
+          "quote": "the phased array comprises the at least one ultrasonic transmitter which, for the non-destructive ultrasound inspection, emits at least one ultrasonic pulse into the workpiece to be inspected, and the at least one ultrasonic receiver which receives the ultrasonic pulses"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 53,
+              "quote": "the phased array"
+            },
+            "determiner": "the",
+            "head": "phased array"
+          },
+          {
+            "anchor": {
+              "startChar": 64,
+              "endChar": 103,
+              "quote": "the at least one ultrasonic transmitter"
+            },
+            "determiner": "the",
+            "head": "at least one ultrasonic transmitter"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 156,
+              "quote": "the non-destructive ultrasound inspection"
+            },
+            "determiner": "the",
+            "head": "non-destructive ultrasound inspection"
+          },
+          {
+            "anchor": {
+              "startChar": 164,
+              "endChar": 193,
+              "quote": "at least one ultrasonic pulse"
+            },
+            "determiner": "at-least-one",
+            "head": "ultrasonic pulse"
+          },
+          {
+            "anchor": {
+              "startChar": 199,
+              "endChar": 212,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          },
+          {
+            "anchor": {
+              "startChar": 234,
+              "endChar": 270,
+              "quote": "the at least one ultrasonic receiver"
+            },
+            "determiner": "the",
+            "head": "at least one ultrasonic receiver"
+          },
+          {
+            "anchor": {
+              "startChar": 286,
+              "endChar": 307,
+              "quote": "the ultrasonic pulses"
+            },
+            "determiner": "the",
+            "head": "ultrasonic pulses"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 53,
+                "quote": "the phased array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 53,
+              "endChar": 64,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 64,
+                "endChar": 103,
+                "quote": "the at least one ultrasonic transmitter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 103,
+              "endChar": 115,
+              "quote": " which, for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 115,
+                "endChar": 156,
+                "quote": "the non-destructive ultrasound inspection"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 156,
+              "endChar": 164,
+              "quote": ", emits "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 164,
+                "endChar": 193,
+                "quote": "at least one ultrasonic pulse"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 193,
+              "endChar": 199,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 199,
+                "endChar": 212,
+                "quote": "the workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 212,
+              "endChar": 234,
+              "quote": " to be inspected, and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 234,
+                "endChar": 270,
+                "quote": "the at least one ultrasonic receiver"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 270,
+              "endChar": 286,
+              "quote": " which receives "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 286,
+                "endChar": 307,
+                "quote": "the ultrasonic pulses"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 37,
+            "endChar": 53,
+            "quote": "the phased array"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 629,
+            "endChar": 643,
+            "quote": "a phased array"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 64,
+            "endChar": 103,
+            "quote": "the at least one ultrasonic transmitter"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 112,
+            "endChar": 147,
+            "quote": "at least one ultrasonic transmitter"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 234,
+            "endChar": 270,
+            "quote": "the at least one ultrasonic receiver"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 307,
+            "endChar": 339,
+            "quote": "at least one ultrasonic receiver"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 199,
+            "endChar": 212,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 153,
+            "endChar": 164,
+            "quote": "a workpiece"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 156,
+            "quote": "the non-destructive ultrasound inspection"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 11,
+            "endChar": 48,
+            "quote": "non-destructive ultrasound inspection"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 286,
+            "endChar": 307,
+            "quote": "the ultrasonic pulses"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 164,
+            "endChar": 193,
+            "quote": "at least one ultrasonic pulse"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 27,
+          "quote": "Method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 37,
+          "endChar": 114,
+          "quote": "the phased array comprises more than two selectively controllable transducers"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 53,
+              "quote": "the phased array"
+            },
+            "determiner": "the",
+            "head": "phased array"
+          },
+          {
+            "anchor": {
+              "startChar": 64,
+              "endChar": 114,
+              "quote": "more than two selectively controllable transducers"
+            },
+            "determiner": "bare",
+            "head": "more than two selectively controllable transducers"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 53,
+                "quote": "the phased array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 53,
+              "endChar": 64,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 64,
+                "endChar": 114,
+                "quote": "more than two selectively controllable transducers"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 37,
+            "endChar": 53,
+            "quote": "the phased array"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 629,
+            "endChar": 643,
+            "quote": "a phased array"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 27,
+          "quote": "Method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 37,
+          "endChar": 222,
+          "quote": "the sound velocity in the leading body determined in the step for determining the sound velocity is used in the evaluation of the signals from the ultrasound inspection of the workpiece"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 55,
+              "quote": "the sound velocity"
+            },
+            "determiner": "the",
+            "head": "sound velocity"
+          },
+          {
+            "anchor": {
+              "startChar": 59,
+              "endChar": 75,
+              "quote": "the leading body"
+            },
+            "determiner": "the",
+            "head": "leading body"
+          },
+          {
+            "anchor": {
+              "startChar": 90,
+              "endChar": 98,
+              "quote": "the step"
+            },
+            "determiner": "the",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 133,
+              "quote": "the sound velocity"
+            },
+            "determiner": "the",
+            "head": "sound velocity"
+          },
+          {
+            "anchor": {
+              "startChar": 145,
+              "endChar": 159,
+              "quote": "the evaluation"
+            },
+            "determiner": "the",
+            "head": "evaluation"
+          },
+          {
+            "anchor": {
+              "startChar": 163,
+              "endChar": 174,
+              "quote": "the signals"
+            },
+            "determiner": "the",
+            "head": "signals"
+          },
+          {
+            "anchor": {
+              "startChar": 180,
+              "endChar": 205,
+              "quote": "the ultrasound inspection"
+            },
+            "determiner": "the",
+            "head": "ultrasound inspection"
+          },
+          {
+            "anchor": {
+              "startChar": 209,
+              "endChar": 222,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 55,
+                "quote": "the sound velocity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 55,
+              "endChar": 59,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 59,
+                "endChar": 75,
+                "quote": "the leading body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 75,
+              "endChar": 90,
+              "quote": " determined in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 90,
+                "endChar": 98,
+                "quote": "the step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 98,
+              "endChar": 115,
+              "quote": " for determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 115,
+                "endChar": 133,
+                "quote": "the sound velocity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 133,
+              "endChar": 145,
+              "quote": " is used in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 145,
+                "endChar": 159,
+                "quote": "the evaluation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 159,
+              "endChar": 163,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 163,
+                "endChar": 174,
+                "quote": "the signals"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 174,
+              "endChar": 180,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 180,
+                "endChar": 205,
+                "quote": "the ultrasound inspection"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 205,
+              "endChar": 209,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 209,
+                "endChar": 222,
+                "quote": "the workpiece"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 90,
+            "endChar": 98,
+            "quote": "the step"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 548,
+            "endChar": 565,
+            "quote": "at least one step"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 37,
+            "endChar": 55,
+            "quote": "the sound velocity"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 582,
+            "endChar": 596,
+            "quote": "sound velocity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 133,
+            "quote": "the sound velocity"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 582,
+            "endChar": 596,
+            "quote": "sound velocity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 75,
+            "quote": "the leading body"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 431,
+            "endChar": 445,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 163,
+            "endChar": 174,
+            "quote": "the signals"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 344,
+            "endChar": 366,
+            "quote": "the associated signals"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 180,
+            "endChar": 205,
+            "quote": "the ultrasound inspection"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 11,
+            "endChar": 48,
+            "quote": "non-destructive ultrasound inspection"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 209,
+            "endChar": 222,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 153,
+            "endChar": 164,
+            "quote": "a workpiece"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 11,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "11",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 27,
+          "quote": "Method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "anchor": {
+          "startChar": 37,
+          "endChar": 138,
+          "quote": "the outermost transducers of the phased array are used in the step for determining the sound velocity"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 62,
+              "quote": "the outermost transducers"
+            },
+            "determiner": "the",
+            "head": "outermost transducers"
+          },
+          {
+            "anchor": {
+              "startChar": 66,
+              "endChar": 82,
+              "quote": "the phased array"
+            },
+            "determiner": "the",
+            "head": "phased array"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 103,
+              "quote": "the step"
+            },
+            "determiner": "the",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 120,
+              "endChar": 138,
+              "quote": "the sound velocity"
+            },
+            "determiner": "the",
+            "head": "sound velocity"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "11",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "functional",
+        "element": "11.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 62,
+                "quote": "the outermost transducers"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 62,
+              "endChar": 66,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 66,
+                "endChar": 82,
+                "quote": "the phased array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 82,
+              "endChar": 95,
+              "quote": " are used in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 95,
+                "endChar": 103,
+                "quote": "the step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 103,
+              "endChar": 120,
+              "quote": " for determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 120,
+                "endChar": 138,
+                "quote": "the sound velocity"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 95,
+            "endChar": 103,
+            "quote": "the step"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 548,
+            "endChar": 565,
+            "quote": "at least one step"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 120,
+            "endChar": 138,
+            "quote": "the sound velocity"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 582,
+            "endChar": 596,
+            "quote": "sound velocity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 66,
+            "endChar": 82,
+            "quote": "the phased array"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 629,
+            "endChar": 643,
+            "quote": "a phased array"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 12,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "12",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 27,
+          "quote": "Method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Method"
+            },
+            "determiner": "bare",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "anchor": {
+          "startChar": 37,
+          "endChar": 179,
+          "quote": "the evaluation in the step for determining the sound velocity is carried out by means of triggering to a pulse peak of the received pulse echo"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 37,
+              "endChar": 51,
+              "quote": "the evaluation"
+            },
+            "determiner": "the",
+            "head": "evaluation"
+          },
+          {
+            "anchor": {
+              "startChar": 55,
+              "endChar": 63,
+              "quote": "the step"
+            },
+            "determiner": "the",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 98,
+              "quote": "the sound velocity"
+            },
+            "determiner": "the",
+            "head": "sound velocity"
+          },
+          {
+            "anchor": {
+              "startChar": 140,
+              "endChar": 152,
+              "quote": "a pulse peak"
+            },
+            "determiner": "a",
+            "head": "pulse peak"
+          },
+          {
+            "anchor": {
+              "startChar": 156,
+              "endChar": 179,
+              "quote": "the received pulse echo"
+            },
+            "determiner": "the",
+            "head": "received pulse echo"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "12",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "functional",
+        "element": "12.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 37,
+                "endChar": 51,
+                "quote": "the evaluation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 51,
+              "endChar": 55,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 55,
+                "endChar": 63,
+                "quote": "the step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 80,
+              "quote": " for determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 98,
+                "quote": "the sound velocity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 98,
+              "endChar": 140,
+              "quote": " is carried out by means of triggering to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 140,
+                "endChar": 152,
+                "quote": "a pulse peak"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 152,
+              "endChar": 156,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 156,
+                "endChar": 179,
+                "quote": "the received pulse echo"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 55,
+            "endChar": 63,
+            "quote": "the step"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 548,
+            "endChar": 565,
+            "quote": "at least one step"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 98,
+            "quote": "the sound velocity"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 582,
+            "endChar": 596,
+            "quote": "sound velocity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 13,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "13",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 55,
+          "quote": "Device for carrying out the method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 6,
+              "quote": "Device"
+            },
+            "determiner": "bare",
+            "head": "device"
+          },
+          {
+            "anchor": {
+              "startChar": 24,
+              "endChar": 34,
+              "quote": "the method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "13.a",
+        "anchor": {
+          "startChar": 68,
+          "endChar": 261,
+          "quote": "at least one ultrasonic transmitter for emitting at least one ultrasonic pulse into a workpiece to be inspected, with the ultrasonic pulses being reflected on boundary surfaces in the workpiece"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 68,
+              "endChar": 103,
+              "quote": "at least one ultrasonic transmitter"
+            },
+            "determiner": "at-least-one",
+            "head": "ultrasonic transmitter"
+          },
+          {
+            "anchor": {
+              "startChar": 117,
+              "endChar": 146,
+              "quote": "at least one ultrasonic pulse"
+            },
+            "determiner": "at-least-one",
+            "head": "ultrasonic pulse"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 163,
+              "quote": "a workpiece"
+            },
+            "determiner": "a",
+            "head": "workpiece"
+          },
+          {
+            "anchor": {
+              "startChar": 186,
+              "endChar": 207,
+              "quote": "the ultrasonic pulses"
+            },
+            "determiner": "the",
+            "head": "ultrasonic pulses"
+          },
+          {
+            "anchor": {
+              "startChar": 227,
+              "endChar": 244,
+              "quote": "boundary surfaces"
+            },
+            "determiner": "bare",
+            "head": "boundary surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 248,
+              "endChar": 261,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          }
+        ]
+      },
+      {
+        "path": "13.b",
+        "anchor": {
+          "startChar": 267,
+          "endChar": 338,
+          "quote": "at least one ultrasonic receiver for receiving the reflected ultrasound"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 267,
+              "endChar": 299,
+              "quote": "at least one ultrasonic receiver"
+            },
+            "determiner": "at-least-one",
+            "head": "ultrasonic receiver"
+          },
+          {
+            "anchor": {
+              "startChar": 314,
+              "endChar": 338,
+              "quote": "the reflected ultrasound"
+            },
+            "determiner": "the",
+            "head": "reflected ultrasound"
+          }
+        ]
+      },
+      {
+        "path": "13.c",
+        "anchor": {
+          "startChar": 340,
+          "endChar": 396,
+          "quote": "an evaluation unit for evaluating the associated signals"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 340,
+              "endChar": 358,
+              "quote": "an evaluation unit"
+            },
+            "determiner": "an",
+            "head": "evaluation unit"
+          },
+          {
+            "anchor": {
+              "startChar": 374,
+              "endChar": 396,
+              "quote": "the associated signals"
+            },
+            "determiner": "the",
+            "head": "associated signals"
+          }
+        ]
+      },
+      {
+        "path": "13.d",
+        "anchor": {
+          "startChar": 402,
+          "endChar": 531,
+          "quote": "a leading body which is disposed between the workpiece and the transmitter or receiver such that the ultrasound passes through it"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 402,
+              "endChar": 416,
+              "quote": "a leading body"
+            },
+            "determiner": "a",
+            "head": "leading body"
+          },
+          {
+            "anchor": {
+              "startChar": 443,
+              "endChar": 456,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          },
+          {
+            "anchor": {
+              "startChar": 461,
+              "endChar": 488,
+              "quote": "the transmitter or receiver"
+            },
+            "determiner": "the",
+            "head": "transmitter or receiver"
+          },
+          {
+            "anchor": {
+              "startChar": 499,
+              "endChar": 513,
+              "quote": "the ultrasound"
+            },
+            "determiner": "the",
+            "head": "ultrasound"
+          },
+          {
+            "anchor": {
+              "startChar": 529,
+              "endChar": 531,
+              "quote": "it"
+            },
+            "determiner": "bare",
+            "head": "it"
+          }
+        ]
+      },
+      {
+        "path": "13.e",
+        "anchor": {
+          "startChar": 541,
+          "endChar": 710,
+          "quote": "the device comprises a phased array of selectively controllable transducers for carrying out the at least one step for determining the sound velocity in the leading body"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 541,
+              "endChar": 551,
+              "quote": "the device"
+            },
+            "determiner": "the",
+            "head": "device"
+          },
+          {
+            "anchor": {
+              "startChar": 562,
+              "endChar": 616,
+              "quote": "a phased array of selectively controllable transducers"
+            },
+            "determiner": "a",
+            "head": "phased array of selectively controllable transducers"
+          },
+          {
+            "anchor": {
+              "startChar": 634,
+              "endChar": 655,
+              "quote": "the at least one step"
+            },
+            "determiner": "the",
+            "head": "at least one step"
+          },
+          {
+            "anchor": {
+              "startChar": 672,
+              "endChar": 690,
+              "quote": "the sound velocity"
+            },
+            "determiner": "the",
+            "head": "sound velocity"
+          },
+          {
+            "anchor": {
+              "startChar": 694,
+              "endChar": 710,
+              "quote": "the leading body"
+            },
+            "determiner": "the",
+            "head": "leading body"
+          }
+        ]
+      },
+      {
+        "path": "13.f",
+        "anchor": {
+          "startChar": 735,
+          "endChar": 839,
+          "quote": "at least one first transducer of the phased array acts as a transmitter of at least one ultrasonic pulse"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 735,
+              "endChar": 764,
+              "quote": "at least one first transducer"
+            },
+            "determiner": "at-least-one",
+            "head": "first transducer"
+          },
+          {
+            "anchor": {
+              "startChar": 768,
+              "endChar": 784,
+              "quote": "the phased array"
+            },
+            "determiner": "the",
+            "head": "phased array"
+          },
+          {
+            "anchor": {
+              "startChar": 793,
+              "endChar": 806,
+              "quote": "a transmitter"
+            },
+            "determiner": "a",
+            "head": "transmitter"
+          },
+          {
+            "anchor": {
+              "startChar": 810,
+              "endChar": 839,
+              "quote": "at least one ultrasonic pulse"
+            },
+            "determiner": "at-least-one",
+            "head": "ultrasonic pulse"
+          }
+        ]
+      },
+      {
+        "path": "13.g",
+        "anchor": {
+          "startChar": 845,
+          "endChar": 938,
+          "quote": "at least one second transducer of the phased array acts as a receiver of the ultrasonic pulse"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 845,
+              "endChar": 875,
+              "quote": "at least one second transducer"
+            },
+            "determiner": "at-least-one",
+            "head": "second transducer"
+          },
+          {
+            "anchor": {
+              "startChar": 879,
+              "endChar": 895,
+              "quote": "the phased array"
+            },
+            "determiner": "the",
+            "head": "phased array"
+          },
+          {
+            "anchor": {
+              "startChar": 904,
+              "endChar": 914,
+              "quote": "a receiver"
+            },
+            "determiner": "a",
+            "head": "receiver"
+          },
+          {
+            "anchor": {
+              "startChar": 918,
+              "endChar": 938,
+              "quote": "the ultrasonic pulse"
+            },
+            "determiner": "the",
+            "head": "ultrasonic pulse"
+          }
+        ]
+      },
+      {
+        "path": "13.h",
+        "anchor": {
+          "startChar": 944,
+          "endChar": 1141,
+          "quote": "the sound velocity in the leading body is determined at least by means of a travel time measurement of the ultrasound along the shortest sound path of the ultrasound between said spaced transducers"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 944,
+              "endChar": 962,
+              "quote": "the sound velocity"
+            },
+            "determiner": "the",
+            "head": "sound velocity"
+          },
+          {
+            "anchor": {
+              "startChar": 966,
+              "endChar": 982,
+              "quote": "the leading body"
+            },
+            "determiner": "the",
+            "head": "leading body"
+          },
+          {
+            "anchor": {
+              "startChar": 1018,
+              "endChar": 1043,
+              "quote": "a travel time measurement"
+            },
+            "determiner": "a",
+            "head": "travel time measurement"
+          },
+          {
+            "anchor": {
+              "startChar": 1047,
+              "endChar": 1061,
+              "quote": "the ultrasound"
+            },
+            "determiner": "the",
+            "head": "ultrasound"
+          },
+          {
+            "anchor": {
+              "startChar": 1068,
+              "endChar": 1091,
+              "quote": "the shortest sound path"
+            },
+            "determiner": "the",
+            "head": "shortest sound path"
+          },
+          {
+            "anchor": {
+              "startChar": 1095,
+              "endChar": 1109,
+              "quote": "the ultrasound"
+            },
+            "determiner": "the",
+            "head": "ultrasound"
+          },
+          {
+            "anchor": {
+              "startChar": 1118,
+              "endChar": 1141,
+              "quote": "said spaced transducers"
+            },
+            "determiner": "said",
+            "head": "spaced transducers"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "13",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "13.a",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 68,
+                "endChar": 103,
+                "quote": "at least one ultrasonic transmitter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 103,
+              "endChar": 117,
+              "quote": " for emitting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 117,
+                "endChar": 146,
+                "quote": "at least one ultrasonic pulse"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 146,
+              "endChar": 152,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 152,
+                "endChar": 163,
+                "quote": "a workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 163,
+              "endChar": 186,
+              "quote": " to be inspected, with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 186,
+                "endChar": 207,
+                "quote": "the ultrasonic pulses"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 207,
+              "endChar": 227,
+              "quote": " being reflected on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 227,
+                "endChar": 244,
+                "quote": "boundary surfaces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 244,
+              "endChar": 248,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 248,
+                "endChar": 261,
+                "quote": "the workpiece"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "13.b",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.b",
+              "anchor": {
+                "startChar": 267,
+                "endChar": 299,
+                "quote": "at least one ultrasonic receiver"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 299,
+              "endChar": 314,
+              "quote": " for receiving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.b",
+              "anchor": {
+                "startChar": 314,
+                "endChar": 338,
+                "quote": "the reflected ultrasound"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "13.c",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.c",
+              "anchor": {
+                "startChar": 340,
+                "endChar": 358,
+                "quote": "an evaluation unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 358,
+              "endChar": 374,
+              "quote": " for evaluating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.c",
+              "anchor": {
+                "startChar": 374,
+                "endChar": 396,
+                "quote": "the associated signals"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "13.d",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.d",
+              "anchor": {
+                "startChar": 402,
+                "endChar": 416,
+                "quote": "a leading body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 416,
+              "endChar": 443,
+              "quote": " which is disposed between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.d",
+              "anchor": {
+                "startChar": 443,
+                "endChar": 456,
+                "quote": "the workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 456,
+              "endChar": 461,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.d",
+              "anchor": {
+                "startChar": 461,
+                "endChar": 488,
+                "quote": "the transmitter or receiver"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 488,
+              "endChar": 499,
+              "quote": " such that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.d",
+              "anchor": {
+                "startChar": 499,
+                "endChar": 513,
+                "quote": "the ultrasound"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 513,
+              "endChar": 529,
+              "quote": " passes through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.d",
+              "anchor": {
+                "startChar": 529,
+                "endChar": 531,
+                "quote": "it"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "13.e",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.e",
+              "anchor": {
+                "startChar": 541,
+                "endChar": 551,
+                "quote": "the device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 551,
+              "endChar": 562,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.e",
+              "anchor": {
+                "startChar": 562,
+                "endChar": 616,
+                "quote": "a phased array of selectively controllable transducers"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 616,
+              "endChar": 634,
+              "quote": " for carrying out "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.e",
+              "anchor": {
+                "startChar": 634,
+                "endChar": 655,
+                "quote": "the at least one step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 655,
+              "endChar": 672,
+              "quote": " for determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.e",
+              "anchor": {
+                "startChar": 672,
+                "endChar": 690,
+                "quote": "the sound velocity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 690,
+              "endChar": 694,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.e",
+              "anchor": {
+                "startChar": 694,
+                "endChar": 710,
+                "quote": "the leading body"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "13.f",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.f",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.f",
+              "anchor": {
+                "startChar": 735,
+                "endChar": 764,
+                "quote": "at least one first transducer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 764,
+              "endChar": 768,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.f",
+              "anchor": {
+                "startChar": 768,
+                "endChar": 784,
+                "quote": "the phased array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 784,
+              "endChar": 793,
+              "quote": " acts as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.f",
+              "anchor": {
+                "startChar": 793,
+                "endChar": 806,
+                "quote": "a transmitter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 806,
+              "endChar": 810,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.f",
+              "anchor": {
+                "startChar": 810,
+                "endChar": 839,
+                "quote": "at least one ultrasonic pulse"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "13.g",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.g",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.g",
+              "anchor": {
+                "startChar": 845,
+                "endChar": 875,
+                "quote": "at least one second transducer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 875,
+              "endChar": 879,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.g",
+              "anchor": {
+                "startChar": 879,
+                "endChar": 895,
+                "quote": "the phased array"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 895,
+              "endChar": 904,
+              "quote": " acts as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.g",
+              "anchor": {
+                "startChar": 904,
+                "endChar": 914,
+                "quote": "a receiver"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 914,
+              "endChar": 918,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.g",
+              "anchor": {
+                "startChar": 918,
+                "endChar": 938,
+                "quote": "the ultrasonic pulse"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "13.h",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.h",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.h",
+              "anchor": {
+                "startChar": 944,
+                "endChar": 962,
+                "quote": "the sound velocity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 962,
+              "endChar": 966,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.h",
+              "anchor": {
+                "startChar": 966,
+                "endChar": 982,
+                "quote": "the leading body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 982,
+              "endChar": 1018,
+              "quote": " is determined at least by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.h",
+              "anchor": {
+                "startChar": 1018,
+                "endChar": 1043,
+                "quote": "a travel time measurement"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1043,
+              "endChar": 1047,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.h",
+              "anchor": {
+                "startChar": 1047,
+                "endChar": 1061,
+                "quote": "the ultrasound"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1061,
+              "endChar": 1068,
+              "quote": " along "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.h",
+              "anchor": {
+                "startChar": 1068,
+                "endChar": 1091,
+                "quote": "the shortest sound path"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1091,
+              "endChar": 1095,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.h",
+              "anchor": {
+                "startChar": 1095,
+                "endChar": 1109,
+                "quote": "the ultrasound"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1109,
+              "endChar": 1118,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.h",
+              "anchor": {
+                "startChar": 1118,
+                "endChar": 1141,
+                "quote": "said spaced transducers"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13",
+          "anchor": {
+            "startChar": 24,
+            "endChar": 34,
+            "quote": "the method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 186,
+            "endChar": 207,
+            "quote": "the ultrasonic pulses"
+          }
+        },
+        "introducing": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 117,
+            "endChar": 146,
+            "quote": "at least one ultrasonic pulse"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 248,
+            "endChar": 261,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 152,
+            "endChar": 163,
+            "quote": "a workpiece"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.d",
+          "anchor": {
+            "startChar": 443,
+            "endChar": 456,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 152,
+            "endChar": 163,
+            "quote": "a workpiece"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.d",
+          "anchor": {
+            "startChar": 529,
+            "endChar": 531,
+            "quote": "it"
+          }
+        },
+        "introducing": {
+          "path": "13.d",
+          "anchor": {
+            "startChar": 402,
+            "endChar": 416,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.e",
+          "anchor": {
+            "startChar": 541,
+            "endChar": 551,
+            "quote": "the device"
+          }
+        },
+        "introducing": {
+          "path": "13",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 6,
+            "quote": "Device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.e",
+          "anchor": {
+            "startChar": 694,
+            "endChar": 710,
+            "quote": "the leading body"
+          }
+        },
+        "introducing": {
+          "path": "13.d",
+          "anchor": {
+            "startChar": 402,
+            "endChar": 416,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.e",
+          "anchor": {
+            "startChar": 634,
+            "endChar": 655,
+            "quote": "the at least one step"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 548,
+            "endChar": 565,
+            "quote": "at least one step"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.f",
+          "anchor": {
+            "startChar": 768,
+            "endChar": 784,
+            "quote": "the phased array"
+          }
+        },
+        "introducing": {
+          "path": "13.e",
+          "anchor": {
+            "startChar": 562,
+            "endChar": 616,
+            "quote": "a phased array of selectively controllable transducers"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.g",
+          "anchor": {
+            "startChar": 879,
+            "endChar": 895,
+            "quote": "the phased array"
+          }
+        },
+        "introducing": {
+          "path": "13.e",
+          "anchor": {
+            "startChar": 562,
+            "endChar": 616,
+            "quote": "a phased array of selectively controllable transducers"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.g",
+          "anchor": {
+            "startChar": 918,
+            "endChar": 938,
+            "quote": "the ultrasonic pulse"
+          }
+        },
+        "introducing": {
+          "path": "13.f",
+          "anchor": {
+            "startChar": 810,
+            "endChar": 839,
+            "quote": "at least one ultrasonic pulse"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.h",
+          "anchor": {
+            "startChar": 966,
+            "endChar": 982,
+            "quote": "the leading body"
+          }
+        },
+        "introducing": {
+          "path": "13.d",
+          "anchor": {
+            "startChar": 402,
+            "endChar": 416,
+            "quote": "a leading body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.h",
+          "anchor": {
+            "startChar": 944,
+            "endChar": 962,
+            "quote": "the sound velocity"
+          }
+        },
+        "introducing": {
+          "path": "13.e",
+          "anchor": {
+            "startChar": 672,
+            "endChar": 690,
+            "quote": "the sound velocity"
+          }
+        }
+      }
+    ]
+  }
+]

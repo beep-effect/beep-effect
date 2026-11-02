@@ -157,7 +157,7 @@ The suites read the frozen captures in `test/fixtures/` (each lockfile carries a
 
 ## Provenance
 
-Ported from upstream `@effected/lockfiles` (MIT, C. Spencer Beggs) through the effected port, which landed it in the scratchpad module `scratchpad/effected/lockfiles`. Wave 3-5 of `goals/effected-promotion` then promoted it into this package. The promotion moved the sources to `src/`, the tests to `test/` and the fixtures to `test/fixtures/`, and renamed the schema identities from `@beep/scratchpad/effected/lockfiles/<Name>` to `@beep/lockfiles/<Name>`. It also made the changes listed under Deviations. The lab review rounds and canon exceptions are archived under `goals/effected-promotion/history/`.
+Ported from upstream `@effected/lockfiles` (MIT, C. Spencer Beggs) through the effected port, which landed it in the scratchpad module `scratchpad/effected/lockfiles` (last held at `f72d38e17dc896f23976707e4f39298bc6cdbdc2`). Wave 3-5 of `goals/effected-promotion` then promoted it into this package. The promotion moved the sources to `src/`, the tests to `test/` and the fixtures to `test/fixtures/`, and renamed the schema identities from `@beep/scratchpad/effected/lockfiles/<Name>` to `@beep/lockfiles/<Name>`. It also made the changes listed under Deviations. The lab review rounds and canon exceptions are archived under `goals/effected-promotion/history/`.
 
 ### Attribution
 

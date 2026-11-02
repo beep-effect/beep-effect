@@ -40,7 +40,7 @@ import {
   ciOperationalPatterns,
 } from "./CiOperational.schemas.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Scope from "effect/Scope";
 
 const $I = $RepoCliId.create("commands/Ci/CiOperational.service");
@@ -113,7 +113,7 @@ export const CiOperationalLive = Layer.effect(
     const path = yield* Path.Path;
     const outputs = yield* ActionOutputs;
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-    const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
+    const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
     const append = (target: string, body: string) => fs.writeFileString(target, body, { flag: "a" });
     const patterns = Effect.fn("Ci.patterns")(
       function* (write: boolean) {

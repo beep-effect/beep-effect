@@ -1,0 +1,20 @@
+{
+  "previous": "cb03f4d95cee2d679bcf702e5f0f9b8da343f4005855e8977719e63e6922ef7c",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (beep-effect-web-alchemy, feat/beep-effect-web-alchemy)",
+    "reason": "Re-record the policy-fingerprint seal inputs after merging main (#2390 seals, #2381 GlobPattern removal) and the new app manifest, plus @beep/beep-effect-web lint tasks picking up the seal inputs. Commands, outputs, cache flags and edges are unchanged; no qualification is granted.",
+    "basis": {
+      "path": "goals/beep-effect-web-alchemy/research/cache-baseline-review-2026-10-31-2.md",
+      "sha256": "a67d12edae46d3640be2812297d146807fdf3d90b040c498573f02e961f027f9"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/beep-effect-web"]
+}

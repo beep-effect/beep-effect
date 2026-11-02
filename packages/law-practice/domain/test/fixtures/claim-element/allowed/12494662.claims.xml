@@ -1,0 +1,74 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A charging system, configured for charging an energy storage power supply, wherein the charging system comprises a charging input interface, an inductor, a first switch, a second switch, a first voltage acquisition circuit, a second voltage acquisition circuit and a control circuit;
+<claim-text>the charging input interface is electrically connected to a first end of the inductor;</claim-text>
+<claim-text>a second end of the inductor is electrically connected to a first end of the first switch and a first end of the second switch respectively;</claim-text>
+<claim-text>a second end of the first switch is electrically connected to a ground terminal, and a second end of the second switch is configured for electrical connection with the energy storage power supply;</claim-text>
+<claim-text>the first voltage acquisition circuit is electrically connected to the second end of the second switch and is configured to detect a first voltage output by the charging system in real time;</claim-text>
+<claim-text>the control circuit is electrically connected to the first voltage acquisition circuit and a control terminal of the first switch respectively, and the control circuit cyclically controls a switch on/off time of the first switch based on the first voltage;</claim-text>
+<claim-text>during a charging process of the charging system, when the first voltage is less than a first preset voltage value, the control circuit controls the first switch to conduct and starts cyclic control; when the first switch is in a switch-on state, the second switch is in a switch-off state; and when the first switch is in a switch-off state, the second switch is in a switch-on state;</claim-text>
+<claim-text>the control circuit outputs a Pulse Width Modulation (PWM) control signal to the first switch;</claim-text>
+<claim-text>the second voltage acquisition circuit is electrically connected to the control circuit and the charging input interface respectively and is configured to detect a second voltage input by the charging input interface; and the control circuit cyclically controls the switch on/off time of the first switch based on the first voltage and/or the second voltage; and</claim-text>
+<claim-text>when the first voltage is greater than the first preset voltage value, or the second voltage is less than a third preset voltage value, the PWM control signal controls a reduction of the switch on time of the first switch within one cycle.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first switch is a Metal Oxide Semiconductor (MOS) transistor, the second switch is a diode, the first end of the second switch is an anode of the diode, and the second end of the second switch is a cathode of the diode.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first switch is a MOS transistor, the second switch is a MOS transistor, and a control terminal of the second switch is connected to the control circuit.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the charging system further comprises a first capacitor, one end of the first capacitor is electrically connected to the second end of the second switch, and the other end of the first capacitor is electrically connected to the ground terminal.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the charging input interface is a universal serial bus connector.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The charging system according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the charging input interface comprises a first pin, a second pin, and a third pin; the first pin is a positive terminal, the second pin is a negative terminal, and the third pin is a signal terminal; and the third pin is configured to communicate with an external charger.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The charging system according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the charging system comprises a protocol chip, and the protocol chip is electrically connected to the third pin.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The charging system according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the protocol chip controls a voltage value between the first pin and the second pin to be between 3.3V and 28V.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The charging system according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the control circuit is a microprocessor, and the third pin is electrically connected to the control circuit.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the charging system further comprises a first current acquisition circuit; the first current acquisition circuit is electrically connected to the control circuit and the charging input interface respectively and is configured to detect a first current input by the charging input interface; and the control circuit cyclically controls the switch on/off time of the first switch based on the first voltage and/or the first current.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The charging system according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein when the first voltage is less than the first preset voltage value and the first current is less than a first preset current value, the PWM control signal controls an increase of the switch on time of the first switch within one cycle.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The charging system according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the first voltage is greater than the first preset voltage value, or the first current is greater than the first preset current value, the PWM control signal controls a reduction of the switch on time of the first switch within one cycle.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the charging system further comprises a third switch and a fourth switch, a first end of the third switch is electrically connected to the charging input interface, a second end of the third switch is electrically connected to a first end of the inductor and a first end of the fourth switch respectively, a second end of the fourth switch is electrically connected to the ground terminal, and a control terminal of the third switch is electrically connected to the control circuit; and the control circuit is configured to cyclically control a switch on/off time of the third switch based on the first voltage; and
+<claim-text>during the charging process of the charging system, when the first voltage is less than the first preset voltage value, the third switch is in a switch-on state, and the fourth switch is in a switch-off state; when the first voltage is greater than the first preset voltage value, the first switch is in a switch-off state, and the control circuit controls the third switch to cutoff and starts the cyclic control; when the third switch is in a switch-on state, the fourth switch is in a switch-off state; and when the third switch is in a switch-off state, the fourth switch is in a switch-on state.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein when the first voltage is less than the first preset voltage value and the second voltage is greater than a second preset voltage value, the PWM control signal controls an increase of the switch on time of the first switch within one cycle.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein when the first voltage is greater than the first preset voltage value, or the second voltage is less than a third preset voltage value, the PWM control signal controls a reduction of the switch on time of the first switch within one cycle.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein when the second voltage is less than a third preset voltage value and a duration of the second voltage being less than the third preset voltage value reaches a first preset time, the PWM control signal controls a reduction of the switch on time of the first switch within one cycle.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the charging system further comprises a second current acquisition circuit; the second current acquisition circuit is electrically connected to the control circuit and the second end of the second switch respectively and is configured to detect a second current input by the charging system; and the control circuit cyclically controls the switch on/off time of the first switch based on the first voltage and/or the second current.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The charging system according to <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein when the first voltage is less than the first preset voltage value and the second current is less than a second preset current value, the PWM control signal controls an increase of the switch on time of the first switch within one cycle.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the charging system further comprises a first protection circuit, and the first protection circuit is configured to prevent electrostatic discharge and/or surge voltage.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. An emergency start device, comprising an energy storage power supply and the charging system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the second end of the second switch is electrically connected to the energy storage power supply.</claim-text>
+</claim>
+</claims>

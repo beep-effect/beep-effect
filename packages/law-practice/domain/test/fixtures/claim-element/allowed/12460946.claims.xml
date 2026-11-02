@@ -1,0 +1,69 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A prism actuator, comprising:
+<claim-text>a prism operational to fold an optical path from a first direction to a second direction;</claim-text>
+<claim-text>a top sub-assembly including the prism, a first pin, a second pin, a first yoke and a second yoke; and</claim-text>
+<claim-text>a bottom sub-assembly including a first magnet and a second magnet,</claim-text>
+<claim-text>wherein the top sub-assembly is configured to rotate relative to the bottom sub-assembly around a first rotation axis perpendicular to both the first and the second direction,</claim-text>
+<claim-text>wherein the first yoke is fixedly attached to the first pin and the second yoke is fixedly attached to the second pin, and</claim-text>
+<claim-text>wherein the first yoke is pulled to the first magnet and the second yoke is pulled to the second magnet such that the top sub-assembly is prevented from detaching from the bottom sub-assembly.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The prism actuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first yoke is shaped so that it clings around the first pin and the second yoke is shaped so that it clings around the second pin.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The prism actuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first rotation axis is defined by locations of the first and the second pin.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The prism actuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first and the second yoke are arc-shaped yokes.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The prism actuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first and the second magnets are arc-shaped magnets.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The prism actuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a top surface of the first and second pins facing the first direction includes a plane surface oriented perpendicularly to the first direction.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The prism actuator of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein a bottom surface of the first and second pins located opposite to the top surface is arc-shaped.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The prism actuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first yoke is glued to the first pin and the second yoke is glued to the second pin.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The prism actuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first yoke and the second yoke are made from a ferromagnetic material.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The prism actuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a pre-load force between the first yoke and the first magnet as well as between the second yoke and the second magnet is substantially in a radial direction with a center on the first rotation axis.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The prism actuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a third magnet for actuating the rotation of the top sub-assembly, and wherein the third magnet has a non-rectangular shape in at least one dimension.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The prism actuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a stationary sub-assembly, and wherein the bottom sub-assembly is configured to rotate relative to the stationary sub-assembly around a second rotation axis.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The prism actuator of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising a first curved ball-guided mechanism operative to enable the rotation around the first rotation axis and a second curved ball-guided mechanism operative to enable the rotation around the second rotation axis.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The prism actuator of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the first curved ball-guided mechanism is located on a side of the prism that is opposite to a side of the prism facing an image sensor.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The prism actuator of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein a rotation range is equal to or greater than ±5 degrees around each of the first and second rotation axes.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The prism actuator of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein a rotation range is equal to or greater than ±10 degrees around each of the first and second rotation axes.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The prism actuator of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein a rotation range is equal to or smaller than ±40 degrees around each of the first and second rotation axes.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The prism actuator of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein a rotation range around the first rotation axis is different from a rotation range around the second rotation axis.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The prism actuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, included in a folded camera, wherein the folded camera is included in a mobile device.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The prism actuator of <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein the mobile device is a smartphone.</claim-text>
+</claim>
+</claims>

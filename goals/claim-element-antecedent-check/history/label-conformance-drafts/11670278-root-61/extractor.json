@@ -1,0 +1,50 @@
+{
+  "familyId": "11670278-root-61",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "confidenceScope": "Declared P2 structure only; independent critic and attorney pending.",
+  "resolvedClaimNumbers": [
+    61,
+    62,
+    63,
+    64,
+    65,
+    67
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    "Office action FUEAL66WPPOPPY5 dated 2009-05-07 rejects claims 1-164; explicitly cites location/current location/contour in selected root61 and intensity/polarity in selected62. Remaining selected members are family context, not separately stated positives. Native US20080186197A1 publication 2008-08-07 precedes rejection.",
+    "Natural-language and XML dependencies agree:62->61,63->62,64->63,65->64,67->61. Unselected context66 is not added to score scope.",
+    "Claim61 intended main transition is comprising. Earlier boundary having a programmable shape is an incidental modifier retained in the preamble.",
+    "No originalComparisons corroboration is retained. In-force association relies on native source plus no-intervening-CLM inventory assertion; attorney verification pending.",
+    "P2 lexical quirks retained: said rover unit measures magnetic field reaches five-token cap; said rover unit's virtual rotation counts token s; the particular location if retains if.",
+    "Claim61 introduces rover unit twice (preamble/body), so later exact rover unit has no unique local introduction. Cross-claim resolution is not labelled as an edge."
+  ],
+  "rationale": "Claim61 has two limitations; children each have one. All term/head choices and exact-head local edges manually selected; offsets verified as UTF16 slices. Boundary proximity stops before determining. Round 2: source-verified claim67 term [418,452); changed apostrophe-bearing head to token-joined rover unit s virtual rotation. Quote, anchors and edges unchanged.",
+  "independence": "No decomposer/policy, existing rule fixtures or predictions inspected/run. Helpers only locate manual phrase selections and validate references/spans.",
+  "familyStatus": "extractor-proposed; critic-and-attorney-pending",
+  "sourceChecks": {
+    "selectedClaimsMatchNativeXml": [
+      61,
+      62,
+      63,
+      64,
+      65,
+      67
+    ],
+    "allElementAndTermUtf16SlicesVerified": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  },
+  "roundHistory": [
+    {
+      "round": 1,
+      "confidence": 0.97,
+      "rationale": "Claim61 has two limitations; children each have one. All term/head choices and exact-head local edges manually selected; offsets verified as UTF16 slices. Boundary proximity stops before determining.",
+      "correction": "Critic identified apostrophe normalization mismatch in manually serialized claim67 head; quote and offsets correct."
+    }
+  ]
+}

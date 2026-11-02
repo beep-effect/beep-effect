@@ -6,6 +6,8 @@
   "entries": [
     {"file":"packages/tooling/library/repo-tsconfig/src/TsconfigDiscovery.ts","symbol":"FindNearestOptions","kind":"struct-const","owner":"@beep/repo-tsconfig","identity":"FindNearestOptions","description":"Filename and inclusive directory boundary for nearest tsconfig discovery."},
     {"file":"packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts","symbol":"ExtendsFailureReason","kind":"literal-kit","owner":"@beep/repo-tsconfig","identity":"ExtendsFailureReason","description":"Why an extends chain failed to resolve."},
-    {"file":"packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts","symbol":"TsconfigExtendsError","kind":"tagged-error","owner":"@beep/repo-tsconfig","identity":"TsconfigExtendsError"}
+    {"file":"packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts","symbol":"TsconfigExtendsError","kind":"tagged-error","owner":"@beep/repo-tsconfig","identity":"TsconfigExtendsError"},
+    {"file":"packages/tooling/library/repo-tsconfig/src/TsconfigValidator.ts","symbol":"StrictTsconfig","kind":"struct-const","owner":"@beep/repo-tsconfig","identity":"StrictTsconfig","description":"A tsconfig.json document closed to its typed fields at every level and refined by tsc's list and compilerOptions rules; decode strictly to reject unknown keys."},
+    {"file":"packages/tooling/library/repo-tsconfig/src/TsconfigValidator.ts","symbol":"TsconfigValidationError","kind":"tagged-error","owner":"@beep/repo-tsconfig","identity":"TsconfigValidationError"}
   ]
 }

@@ -1,0 +1,162 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. In a method performed by a base station in the wireless communication system, a method comprising:
+<claim-text>A step to transmit codebooks allocated for data transmission to each of multiple user terminals;</claim-text>
+<claim-text>A step to receive the pilot and the data from one or more user terminals among the multiple user terminals;</claim-text>
+<claim-text>A step to generate the active user information based on the above-mentioned data;</claim-text>
+<claim-text>A step to detect active user terminals among the above-mentioned multiple user terminals based on the above-mentioned pilot and active user information;</claim-text>
+<claim-text>A step to generate the channel estimation information related to the above-mentioned active user terminals; and</claim-text>
+<claim-text>A step to detect the data of the active user terminal based on the above-mentioned channel estimation information.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>Wherein the above-mentioned data is received through codewords transmitted based on codebooks assigned to each of one or more user terminals, and</claim-text>
+<claim-text>The pilot received from above-mentioned one or more user terminals is characterized by either</claim-text>
+<claim-text>That the one randomly selected for the above-mentioned user terminal among the multiple terminals which the above-mentioned base station has generated in advance and allocated for the transmission in association with codebooks to multiple user terminals, or</claim-text>
+<claim-text>That the one generated in real time to be associated with codebooks allocated to each of above-mentioned one or more user terminals through a pilot generation unit of the above-mentioned one or more user terminals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00002">claim 2</claim-ref>,
+<claim-text>Wherein the method comprises an additional step to transmit signals for updating the above-mentioned pilot generation unit to the above-mentioned one or more user terminals, and</claim-text>
+<claim-text>Wherein in the event that the signals for updating the above-mentioned pilot generation unit have been transmitted, the pilot is characterized by the one generated in real time through the updated pilot generation unit to be associated with a codebook assigned to each of the above-mentioned one or more user terminals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>Wherein the step to generate the above-mentioned active user information and the step to detect the above-mentioned active user terminal are performed based on a learned neural network, and</claim-text>
+<claim-text>Wherein the above-mentioned neural network is learned based on the step 1 and step 2 learnings, and</claim-text>
+<claim-text>Wherein the above-mentioned step 1 learning is performed with a first loss function defined based on the information on the activation states of above-mentioned multiple user terminals and the above-mentioned active user information, and</claim-text>
+<claim-text>Wherein the above-mentioned step 2 learning is performed with a second loss function defined based on the information on the activation states of the above-mentioned multiple user terminals and the information on the estimated activation states for the above-mentioned multiple user terminals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>Wherein the method comprises an additional step to transmit the information indicating the length of the above-mentioned data to the above-mentioned one or more user terminals, and</claim-text>
+<claim-text>Wherein the step to transmit the information indicating the length of the above-mentioned data is characterized by either</claim-text>
+<claim-text>That the step to transmit the information indicating the length of the above-mentioned data to the above-mentioned one or more user terminals based on a data length change request received from the above-mentioned one or more user terminals; or</claim-text>
+<claim-text>That the step to transmit the information indicating the length of the above-mentioned data to the above-mentioned one or more user terminals when a pre-set condition is satisfied.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. In a method performed by user terminals in the wireless communication system, a method comprising:
+<claim-text>A step to receive a codebook allocated for the data transmission of the above-mentioned user terminal from a base station;</claim-text>
+<claim-text>A step to generate the data based on the above-mentioned codebook;</claim-text>
+<claim-text>A step to select or create a pilot; and</claim-text>
+<claim-text>A step to transmit the above-mentioned pilot and data to the above-mentioned base station,</claim-text>
+<claim-text>Wherein the above-mentioned user terminal is detected as an active user terminal among multiple user terminals based on the above-mentioned pilot and the active user information generated based on the above-mentioned data.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00006">claim 6</claim-ref>,
+<claim-text>Wherein the above-mentioned data is transmitted through a codeword sent based on a codebook assigned to the above-mentioned user terminal, and</claim-text>
+<claim-text>Wherein the above-mentioned pilot is characterized by either</claim-text>
+<claim-text>That the pilot that is randomly chosen by the above-mentioned user terminal among the multiple pilots which the above-mentioned base station has generated in advance in association with codebooks for transmission of pilots and allocated to the above-mentioned user terminal, or</claim-text>
+<claim-text>That the pilot that is generated in real time through the pilot generation unit of the above-mentioned user terminal to be associated with a codebook allocated to the above-mentioned user terminal.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>,
+<claim-text>Wherein the method comprises an additional step to receive a signal for updating the above-mentioned pilot generation unit from the above-mentioned base station; and</claim-text>
+<claim-text>Wherein in the event that the signal for updating the above-mentioned pilot generation unit is received, the above-mentioned pilot characterized by being generated in real time to be associated with codebooks allocated to the above-mentioned user terminal through the updated pilot generation unit.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00006">claim 6</claim-ref>,
+<claim-text>Wherein the above-mentioned user terminal is detected as the active user terminal among the above-mentioned multiple user terminals based on a learned neural network;</claim-text>
+<claim-text>Wherein the above-mentioned neural network is learned based on the step 1 learning and the step 2 learning;</claim-text>
+<claim-text>Wherein the above-mentioned step 1 learning is performed using a first loss function defined based on the information indicating the activation states of the above-mentioned multiple user terminals and the above-mentioned active user information; and</claim-text>
+<claim-text>Wherein the above-mentioned step 2 learning is performed using a second loss function defined based on the information indicating activation states of the above-mentioned multiple user terminals and the information indicating the estimated activation states for the above-mentioned multiple user terminals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00006">claim 6</claim-ref>,
+<claim-text>Wherein the method comprises an additional step to receive the information indicating the length of the above-mentioned data from the above-mentioned base station;</claim-text>
+<claim-text>Wherein the step to receive the information indicating the length of the above-mentioned data is characterized by comprising; either</claim-text>
+<claim-text>The step to receive the information indicating the data length from the above-mentioned base station based on a data length change request sent from the above-mentioned user terminal; or</claim-text>
+<claim-text>The step to receive the information indicating the data length when a pre-set condition is satisfied.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. In the wireless communication system, a base station comprising a user terminal; and one or more processors connected to the above-mentioned transceiver,
+<claim-text>Wherein the above-mentioned one or more processors is characterized by:</claim-text>
+<claim-text>Transmitting a codebook allocated for the data transmission to each of multiple user terminals,</claim-text>
+<claim-text>Receiving the pilot and the data from one or more user terminals among the above-mentioned multiple user terminals,</claim-text>
+<claim-text>Generating the active user information based on the above-mentioned data,</claim-text>
+<claim-text>Detecting the active user terminal among the above-mentioned multiple user terminals based on the above-mentioned pilot and active user information,</claim-text>
+<claim-text>Generating the channel estimation information related to the above-mentioned active user terminal, and</claim-text>
+<claim-text>Detecting the data of the above-mentioned active user terminal based on the above-mentioned channel estimation information.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The base station of <claim-ref idref="CLM-00011">claim 11</claim-ref>,
+<claim-text>Wherein the above-mentioned data is received through a codeword transmitted based on a codebook assigned to each of the above-mentioned one or more user terminals, and</claim-text>
+<claim-text>The pilot received from the above-mentioned one or more user terminals is characterized by either,</claim-text>
+<claim-text>That the pilot that is randomly chosen by the above-mentioned user terminal among the multiple pilots which the above-mentioned base station has generated and allocated in advance in association with a codebook for transmission of pilots, or</claim-text>
+<claim-text>That the pilot that is generated in real time through the pilot generation unit of the above-mentioned user terminal to be associated with a codebook allocated to the above-mentioned user terminal.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The base station of <claim-ref idref="CLM-00012">claim 12</claim-ref>,
+<claim-text>Wherein one or more processors control the base station to transmit a signal to above-mentioned one or more user terminals for updating the above-mentioned pilot generation unit, and</claim-text>
+<claim-text>Wherein in the event that the signal for updating above-mentioned pilot generator is transmitted, the above-mentioned pilot is the one generated in real time through the updated pilot generation unit to be associated with the codebook allocated to above-mentioned one or more user terminals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The base station of <claim-ref idref="CLM-00011">claim 11</claim-ref>,
+<claim-text>Wherein the above-mentioned one or more processors generate the above-mentioned active user information based on a learned neural network and control it to detect the above-mentioned active user terminal,</claim-text>
+<claim-text>Wherein the above-mentioned neural network is learned based on the step 1 learning and the step 2 learning,</claim-text>
+<claim-text>Wherein the above-mentioned step 1 learning is performed using a first loss function defined based on the information indicating the activation states of the above-mentioned multiple user terminals and the above-mentioned active user information, and</claim-text>
+<claim-text>Wherein the above-mentioned step 2 learning is performed using a second loss function defined based on the information indicating the activation states of the above-mentioned multiple user terminals and the information indicating the estimated activation states for the above-mentioned multiple user terminals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The base station of <claim-ref idref="CLM-00011">claim 11</claim-ref>,
+<claim-text>Wherein the above-mentioned one or more processors control the above-mentioned base station to transmit the information indicating the length of the above-mentioned data to above-mentioned one or more user terminals,</claim-text>
+<claim-text>Wherein above-mentioned one or more processors control the above-mentioned base station to transmit the information indicating the length of the above-mentioned data to the above-mentioned one or more user terminals based on a data length change request received from the above-mentioned one or more user terminals, or</claim-text>
+<claim-text>The above-mentioned one or more processors control the above-mentioned base station to transmit the information indicating the length of the above-mentioned data to the above-mentioned one or more user terminals when a pre-set condition is satisfied.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The user terminal of <claim-ref idref="CLM-00011">claim 11</claim-ref>, comprising,
+<claim-text>a transceiver unit to transmit/receive signals to/from a base station; and</claim-text>
+<claim-text>One or more processors connected to the above-mentioned transceiver,</claim-text>
+<claim-text>Wherein the above-mentioned one or more processors is characterized by:</claim-text>
+<claim-text>Receiving a codebook allocated for the data transmission of the above-mentioned user terminal from a base station,</claim-text>
+<claim-text>Generating the data based on the above-mentioned codebook,</claim-text>
+<claim-text>Selecting or creating a pilot,</claim-text>
+<claim-text>Controlling the above-mentioned user terminal to transmit the above-mentioned pilot and data to the above-mentioned base station, and</claim-text>
+<claim-text>Being detected as the active user terminal among the multiple user terminals based on the above-mentioned pilot and the active user information generated based on the above-mentioned data.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The user terminal of <claim-ref idref="CLM-00016">claim 16</claim-ref>,
+<claim-text>Wherein the above-mentioned data is transmitted through the codeword sent based on a codebook assigned to the above-mentioned user terminal; and</claim-text>
+<claim-text>Wherein the above-mentioned pilot is characterized by either</claim-text>
+<claim-text>That the pilot that is randomly chosen by the above-mentioned user terminal among the multiple pilots which the above-mentioned base station has generated in advance and allocated to the above-mentioned user terminal in association with a codebook for transmission of pilots, or</claim-text>
+<claim-text>That the pilot that is generated in real time through the pilot generation unit of the above-mentioned user terminal to be associated with a codebook allocated to the above-mentioned user terminal.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The user terminal of <claim-ref idref="CLM-00017">claim 17</claim-ref>,
+<claim-text>Wherein the above-mentioned one or more processors control the above-mentioned user terminal to receive a signal from the above-mentioned base station for updating the above-mentioned pilot generation unit, and</claim-text>
+<claim-text>Wherein in the event that the signal for updating above-mentioned pilot generation unit is received, the above-mentioned pilot is the one generated in real time through the updated pilot generation unit to be associated with a codebook allocated to the above-mentioned user terminal.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The user terminal of <claim-ref idref="CLM-00016">claim 16</claim-ref>,
+<claim-text>Wherein the above-mentioned user terminal is detected as the active user terminal among the above-mentioned multiple user terminals based on a learned neural network,</claim-text>
+<claim-text>Wherein the above-mentioned neural network is learned based on the step 1 learning and the step 2 learning,</claim-text>
+<claim-text>Wherein the above-mentioned step 1 learning is performed using a first loss function defined based on the information indicating the activation states of the above-mentioned multiple user terminals and the above-mentioned active user information, and</claim-text>
+<claim-text>Wherein the above-mentioned step 2 learning is performed using a second loss function defined based on the information indicating the activation states of the above-mentioned multiple user terminals and the information indicating the estimated activation states for the above-mentioned multiple user terminals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The user terminal of <claim-ref idref="CLM-00016">claim 16</claim-ref>,
+<claim-text>Wherein the above-mentioned one or more processors control the above-mentioned user terminal to receive the information indicating the length of the above-mentioned data from the above-mentioned base station,</claim-text>
+<claim-text>Wherein the above-mentioned one or more processors control the above-mentioned user terminal to receive the information indicating the length of the above-mentioned data from the above-mentioned base station based on a data length change request sent from the above-mentioned user terminal, or</claim-text>
+<claim-text>Wherein the above-mentioned one or more processors control the above-mentioned user terminal to receive the information indicating the length of the above-mentioned data when a pre-set condition is satisfied.</claim-text>
+</claim-text>
+</claim>
+</claims>

@@ -42,7 +42,8 @@ import { ModelsTargetFile, ModelsTargetLocation, resolveTargetPath } from "./Mod
 import { expectedLocatorValue, renderGeneratedBlockBody } from "./Models.render.ts";
 import { DriftFinding, ManualVerification, ModelsCheckReport } from "./Models.report.schemas.ts";
 import { modelsCheckOnlyFormat, modelsEligibility } from "./Models.spans.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -566,7 +567,12 @@ export const ModelsCheckLive: Layer.Layer<ModelsCheck> = Layer.succeed(ModelsChe
 export const ModelsLive: Layer.Layer<
   ModelsCatalog | ModelsCatalogSources | ModelsCheck | ModelsLedger | ModelsLocatorReader | ModelsManifestStore,
   never,
-  Crypto.Crypto | FileSystem.FileSystem | HttpClient.HttpClient | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | HttpClient.HttpClient
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
 > = Layer.mergeAll(
   ModelsCatalogLive,
   ModelsCatalogSourcesLive,

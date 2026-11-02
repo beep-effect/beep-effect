@@ -1,0 +1,161 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "11246782-root-28",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    28,
+    29,
+    30
+  ],
+  "findings": [],
+  "priorFindingDispositions": [
+    {
+      "priorRound": 1,
+      "findingId": "C1",
+      "disposition": "superseded-by-explicit-convention",
+      "reason": "The two one another phrases express shell reciprocity; under entity-mentions/v1 the explicit shell terms and complete relationship suffice. The prior compulsory extra-node finding is superseded, not silently relabelled as an enduring semantic defect."
+    }
+  ],
+  "reviewedGranularityCases": [
+    {
+      "claimNumber": 28,
+      "path": "28.d",
+      "anchor": {
+        "startChar": 878,
+        "endChar": 889,
+        "quote": "one another"
+      },
+      "action": "term-to-functional-text",
+      "reason": "One another expresses the fixed mutual relation among the explicit upper and lower shells. Retain shell participant terms and complete retention predicate. Their missing introductions are not cured or erased.",
+      "removedAntecedents": []
+    },
+    {
+      "claimNumber": 29,
+      "path": "29.b.ii",
+      "anchor": {
+        "startChar": 636,
+        "endChar": 647,
+        "quote": "one another"
+      },
+      "action": "term-to-functional-text",
+      "reason": "One another expresses the fixed mutual relation among the explicit upper and lower shells. Retain shell terms, fastener, posts and full function; do not invent shell introductions.",
+      "removedAntecedents": []
+    }
+  ],
+  "verifiedExactChanges": {
+    "removedTerms": [
+      {
+        "path": "28.d",
+        "anchor": {
+          "startChar": 878,
+          "endChar": 889,
+          "quote": "one another"
+        },
+        "determiner": "bare",
+        "head": "one another"
+      },
+      {
+        "path": "29.b.ii",
+        "anchor": {
+          "startChar": 636,
+          "endChar": 647,
+          "quote": "one another"
+        },
+        "determiner": "bare",
+        "head": "one another"
+      }
+    ],
+    "addedTerms": [],
+    "removedNonfunctionalEdges": [],
+    "unchangedElementStructure": true,
+    "unchangedFunctionalSourceReconstruction": true,
+    "referenceSha256": "e527a251d6ddb2344ae91a58f2b9b260b20aa505fe047390c563387ef97f3806"
+  },
+  "reviewScope": {
+    "claimCount": 3,
+    "elementCount": 24,
+    "termCount": 66,
+    "edgeCount": 51
+  },
+  "reviewNotes": [
+    "Targeted independent review under semantic-reference/v2/entity-mentions/v1 and the specific SPEC granularity decision; read the per-family granularity-review receipt, exact canonical changed contexts, prior/current reference snapshots and prior critic receipt. This is not a new source-eligibility or full original-document audit.",
+    "Independently compared the immediate pre-repair snapshot with current expected: element paths, kinds and spans are unchanged; term changes are exactly the listed removals/additions; nonfunctional edge changes are exactly the associated antecedent removals; every functional edge reconstructs the identical entire owner text before and after, with contiguous ordered source spans and valid local term ownership.",
+    "All current element/term/functional/antecedent anchors were checked against canonical UTF-16 text. Owned terms are ordered and nonoverlapping, local/foreign references exist, and typed containment/dependency endpoints are coherent. No source wording or unsupported introduction was supplied. Runtime schema success is reported in the extractor granularity receipt; this critic independently checked the specified geometry/schema constraints without rerunning production code.",
+    "Each removed relative/reciprocal surface retains its complete literal source clause or functional text and explicit governing participant(s). This applies source grammar individually; it is not a spelling-based blanket pronoun deletion rule."
+  ],
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "11246782-root-28",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.96,
+      "verdict": "changes-required",
+      "reviewedClaimNumbers": [
+        28,
+        29,
+        30
+      ],
+      "findings": [
+        {
+          "id": "C1",
+          "category": "omitted-referential-phrases",
+          "actionable": true,
+          "evidence": [
+            {
+              "claimNumber": 28,
+              "path": "28.d",
+              "anchor": {
+                "startChar": 878,
+                "endChar": 889,
+                "quote": "one another"
+              }
+            },
+            {
+              "claimNumber": 29,
+              "path": "29.b.ii",
+              "anchor": {
+                "startChar": 636,
+                "endChar": 647,
+                "quote": "one another"
+              }
+            }
+          ],
+          "reason": "Both reciprocal phrases expressly refer to the upper and lower shells in the immediately preceding retention relation. They are omitted from terms while their surface remains in functional connecting text. The source already lacks shell introductions; that does not erase these explicit referential mentions.",
+          "correction": "Add bare one another terms at both anchors and split the corresponding functional text parts in order. Keep the shell introduction problem visible: do not point an antecedent at an invented combined introduction or import shells from independent claim 21/sibling claims."
+        }
+      ],
+      "sourceConcerns": [],
+      "reviewScope": {
+        "claimCount": 3,
+        "elementCount": 24,
+        "termCount": 66,
+        "functionalRelationCount": 15
+      },
+      "reviewNotes": [
+        "Read canonical claims including context, native claims XML, provenance, source audit and independent source critic, extractor rationale, and all expected elements/terms/edges. Source eligibility remains the separate accepted source-critic conclusion; this semantic review does not repeat or supersede its original-document/PDF authentication.",
+        "Audited subject/transition grammar, explicit and nested lists, complete lexical heads, true natural dependency ancestry, missing and ambiguous introductions, local/cross-claim antecedents, term ownership, and ordered typed functional parts. No sibling claim was treated as an ancestor.",
+        "Manual schema/geometry helper checked exact UTF-16 spans for elements, terms, functional parts and antecedent references; terms are ordered/nonoverlapping inside owners, functional term parts name their owner terms, and part spans are ordered inside owners. Geometry alone is not semantic approval."
+      ],
+      "independence": "Independent bounded semantic critic session. Read only task-authorized source/reference/schema material. No P2-DESIGN, production decomposer/policy, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Only critic.json written; helpers locate manually selected quotations, serialize these findings and check schema/span geometry.",
+      "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+      "corpusStatus": "Incremental proposed references only; no goal completion or active sample acceptance claimed."
+    }
+  ],
+  "sourceConcerns": [],
+  "attorneyAdjudication": "pending; critic confidence is not attorney agreement",
+  "roundLimit": {
+    "finalPermittedRound": true,
+    "noFourthAgentRound": true
+  },
+  "independence": "Independent targeted semantic critic. Only this family critic.json written. No expected/source/code edits, production rules/predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers compare authorized reference snapshots and check exact span/schema geometry only.",
+  "corpusStatus": "Incremental reference consistency review; no active sample admission, goal completion, or attorney agreement claimed."
+}

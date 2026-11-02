@@ -117,7 +117,7 @@ const readText = Effect.fn("CoverageArtifacts.readText")(function* (root: string
   return read.contents.value;
 });
 
-const digest = (text: string) => sha256Hex(text).pipe(mapError("cannot hash artifact bytes."));
+const digest = sha256Hex;
 const jsonDigest = (value: unknown) =>
   encodeJson(value).pipe(Effect.flatMap(digest), mapError("cannot hash identity."));
 

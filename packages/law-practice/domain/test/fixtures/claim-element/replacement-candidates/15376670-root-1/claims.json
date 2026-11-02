@@ -1,0 +1,104 @@
+{
+  "familyId": "15376670-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A roller brush assembly comprising a roller and a brush set on the roller; the roller contains an interior cavity constituted by at least two barrel bodies; each portion of the barrel body edge is serrated shaped, and the adjacent serrated- shaped portions of the batter body form a blade slot for positioning the serrated-shaped blade; wherein, the blade edge is corresponding to the teeth on the serrated shaped edge; wherein, a driver unit is installed in the interior cavity to make the blade move along the barrel axially to cut the wrapped in the tooth groove.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The roller blush assembly of claim 1, wherein the driver unit comprises a centrifugal member and an elastic recovery part; the centrifugal member pushes the blade to move along the roller axially, and the elastic recovery part makes the blade return to the still state with elastic force.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The roller brush assembly of claim 2, wherein the interior cavity is further provided with a limiting block to restrict the blade to move along the roller axially.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The roller brush assembly of claim 2, wherein the distance that the blade moves along the roller axially is positive integral multiple of the distance between the teeth on the serrated shaped edge.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The roller brush assembly of claim 2, wherein the blade comprises a fixed blade and a movable blade; the fixed blade is fixed to the serrated-shaped edge of the barrel body, and the movable blade can move along the roller axially.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The roller brush assembly of claim 2, wherein the inner cavity further comprises an ejector block shaft fixedly connected with the barrel body at the center; the blade comprises a pushing part and a supporting part; the centrifugal member includes two symmetrical centrifugal ejector blocks; one end of the centrifugal ejector block is connected with the ejector block shaft, and the other end contacts the pushing part of the blade; the elastic recovery part comprises a spring seat fixed on the barrel body; the spring seat is provided with a first spring; one end of the first spring is connected with the spring seat and the other end is connected with the supporting part of the blade.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The roller brush assembly of claim 3, wherein the inner cavity further comprises an ejector block shaft fixedly connected with the barrel body at the center; the blade comprises a pushing part and a supporting part; the centrifugal member includes two symmetrical centrifugal ejector blocks; one end of the centrifugal ejector block is connected with the ejector block shaft, and the other end contacts the pushing part of the blade; the elastic recovery part comprises a spring seat fixed on the barrel body; the spring seat is provided with a first spring; one end of the first spring is connected with the spring seat and the other end is connected with the supporting part of the blade.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The roller brush assembly of claim 4, wherein the inner cavity further comprises an ejector block shaft fixedly connected with the barrel body at the center; the blade comprises a pushing part and a supporting part; the centrifugal member includes two symmetrical centrifugal ejector blocks; one end of the centrifugal ejector block is connected with the ejector block shaft, and the other end contacts the pushing part of the blade; the elastic recovery part comprises a spring seat fixed on the barrel body; the spring seat is provided with a first spring; one end of the first spring is connected with the spring seat and the other end is connected with the supporting part of the blade.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The roller brush assembly of claim 5, wherein the inner cavity further comprises an ejector block shaft fixedly connected with the barrel body at the center; the blade comprises a pushing part and a supporting part; the centrifugal member includes two symmetrical centrifugal ejector blocks; one end of the centrifugal ejector block is connected with the ejector block shaft, and the other end contacts the pushing part of the blade; the elastic recovery part comprises a spring seat fixed on the barrel body; the spring seat is provided with a first spring; one end of the first spring is connected with the spring seat and the other end is connected with the supporting part of the blade.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The roller brush assembly of claim 2, wherein the blade comprises a pushing part and a supporting part; the inner cavity is provided with a sliding groove and a holder; the sliding grooves are symmetrically distributed on both sides of the center roller and comprise two movable metal balls; the elastic recovery part comprises a spring seat fixed to the barrel body; the spring seat is mounted with a first spring; one end of the first spring is connected with the spring seat, and the other end is connected with the supporting part of the blade.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The roller brush assembly of claim 3, wherein the blade comprises a pushing part and a supporting part; the inner cavity is provided with a sliding groove and a holder; the sliding grooves are symmetrically distributed on both sides of the center roller and comprise two movable metal balls; the elastic recovery part comprises a spring seat fixed to the barrel body; the spring seat is mounted with a first spring; one end of the first spring is connected with the spring seat, and the other end is connected with the supporting part of the blade.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The roller brush assembly of claim 4, wherein the blade comprises a pushing part and a supporting part; the inner cavity is provided with a sliding groove and a holder; the sliding grooves are symmetrically distributed on both sides of the center roller and comprise two movable metal balls; the elastic recovery part comprises a spring seat fixed to the barrel body; the spring seat is mounted with a first spring; one end of the first spring is connected with the spring seat, and the other end is connected with the supporting part of the blade.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The roller brush assembly of claim 5, wherein the blade comprises a pushing part and a supporting part; the inner cavity is provided with a sliding groove and a holder; the sliding grooves are symmetrically distributed on both sides of the center roller and comprise two movable metal balls; the elastic recovery part comprises a spring seat fixed to the barrel body; the spring seat is mounted with a first spring; one end of the first spring is connected with the spring seat, and the other end is connected with the supporting part of the blade.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The roller brush assembly of claim 2, wherein the movable blade is consisted with 2 separate blades symmetrically mounted at the edge of the barrel body, each movable blade contains an opening and a lead column through the opening on the edge of the barrel body; the side close to the center roller of the movable blade comprises pushing teeth; the centrifugal member comprises a fluted disc fixed to the barrel body by a fluted disc shaft, and is perpendicular to the axial direction of the barrel body; the fluted disc is symmetrically arranged with the gears rotating with fluted disc and meshing with the pushing teeth, one side of the gear comprises a centrifugal pendulum; the other side of the centrifugal pendulum comprises a limiting rod for limiting the rotational track of the fluted disc; the elastic recovery part comprises a second spring, and the second spring is embedded on the movable blade along the roller axially.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The roller brush assembly of claim 3, wherein the movable blade is consisted with 2 separate blades symmetrically mounted at the edge of the barrel body, each movable blade contains an opening and a lead column through the opening on the edge of the barrel body; the side close to the center roller of the movable blade comprises pushing teeth; the centrifugal member comprises a fluted disc fixed to the barrel body by a fluted disc shaft, and is perpendicular to the axial direction of the barrel body; the fluted disc is symmetrically arranged with the gears rotating with fluted disc and meshing with the pushing teeth, one side of the gear comprises a centrifugal pendulum; the other side of the centrifugal pendulum comprises a limiting rod for limiting the rotational track of the fluted disc; the elastic recovery part comprises a second spring, and the second spring is embedded on the movable blade along the roller axially.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The roller brush assembly of claim 4, wherein the movable blade is consisted with 2 separate blades symmetrically mounted at the edge of the barrel body, each movable blade contains an opening and a lead column through the opening on the edge of the barrel body; the side close to the center roller of the movable blade comprises pushing teeth; the centrifugal member comprises a fluted disc fixed to the barrel body by a fluted disc shaft, and is perpendicular to the axial direction of the barrel body; the fluted disc is symmetrically arranged with the gears rotating with fluted disc and meshing with the pushing teeth, one side of the gear comprises a centrifugal pendulum; the other side of the centrifugal pendulum comprises a limiting rod for limiting the rotational track of the fluted disc; the elastic recovery part comprises a second spring, and the second spring is embedded on the movable blade along the roller axially.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The roller brush assembly of claim 5, wherein the movable blade is consisted with 2 separate blades symmetrically mounted at the edge of the barrel body, each movable blade contains an opening and a lead column through the opening on the edge of the barrel body; the side close to the center roller of the movable blade comprises pushing teeth; the centrifugal member comprises a fluted disc fixed to the barrel body by a fluted disc shaft, and is perpendicular to the axial direction of the barrel body; the fluted disc is symmetrically arranged with the gears rotating with fluted disc and meshing with the pushing teeth, one side of the gear comprises a centrifugal pendulum; the other side of the centrifugal pendulum comprises a limiting rod for limiting the rotational track of the fluted disc; the elastic recovery part comprises a second spring, and the second spring is embedded on the movable blade along the roller axially.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The roller brush assembly of claim 1, wherein the driver unit is an electric drive unit and the electric drive unit uses electricity to chive the blade to move along the roller axially and/or to return to the still state after the movement.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The roller brush assembly of claim 1, wherein the barrel bodies are connected by fasteners or adhesives to form the main shaft of the roller brush.",
+      "sourceXmlParentClaimNumbers": [1]
+    }
+  ]
+}

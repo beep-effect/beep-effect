@@ -1,0 +1,115 @@
+Observed UTC: 2026-10-28T02:22:25.661504+00:00
+Read-only Docker/service metadata and collector config; no environment or trace payload.
+monitoring_grafana grafana/grafana:13.2.4 Up 23 hours
+monitoring_prometheus prom/prometheus:v3.15.0 Up 23 hours
+monitoring_otel_collector otel/opentelemetry-collector-contrib:0.163.1 Up 23 hours
+monitoring_node_exporter prom/node-exporter:v1.12.1 Up 23 hours
+beep-ai-metrics-phoenix arizephoenix/phoenix:20.23.0 Up 22 hours (healthy)
+Id=dankserver-phoenix-backup.service
+Result=success
+ExecMainStartTimestamp=Tue 2026-10-27 04:00:18 UTC
+ExecMainExitTimestamp=Tue 2026-10-27 04:00:42 UTC
+ExecMainStatus=0
+
+Id=dankserver-monitoring-backup.service
+Result=success
+ExecMainStartTimestamp=Tue 2026-10-27 03:45:08 UTC
+ExecMainExitTimestamp=Tue 2026-10-27 03:45:31 UTC
+ExecMainStatus=0
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+  # The collector had no memory bound. A burst on the traces pipeline could grow
+  # heap until the OOM killer took the container out mid-batch.
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 70
+    spike_limit_percentage: 20
+  # Allowlist, not a deny-list. Codex CLI exports every span from every crate it
+  # links, including third-party ones (zbus `read_socket` alone averaged ~2.5 KB
+  # per span of Debug-formatted D-Bus buffers). That was ~94% of 32.19M rows and
+  # ~18 GiB of the Phoenix store, none of it consumed by any dashboard or query.
+  #
+  # `filter` DROPS spans whose condition is true, so the allowlist is expressed
+  # as `not (...)`. A deny-list would silently start passing every new span name
+  # an upstream agent invents; this fails closed instead.
+  #
+  # `handle_responses` is kept deliberately: it is the one Codex span carrying
+  # real signal (gen_ai.usage.*, llm.token_count.*). Keeping a child without its
+  # parents leaves orphan spans in Phoenix, which is an acceptable trade for the
+  # volume avoided.
+  filter/traces:
+    error_mode: ignore
+    traces:
+      span:
+        - 'not (IsMatch(name, "^claude_code\\.") or IsMatch(name, "^ai_metrics\\.") or name == "handle_responses")'
+  # Claude Code stamps the operator's email onto every export (user.email
+  # rides as a resource attribute and again as a datapoint/span attribute).
+  # Nothing downstream keys on it -- this is a single-operator fleet -- and
+  # left alone it lands in Prometheus label sets (via resource constant labels)
+  # and the Phoenix trace store in
+  # plaintext. Scrub at the shared choke point so every current and future
+  # sender is covered without per-client config.
+  resource/scrub-pii:
+    attributes:
+      - key: user.email
+        action: delete
+  attributes/scrub-pii:
+    actions:
+      - key: user.email
+        action: delete
+  # Prometheus label-name collision guard (beep-effect#1866, 2026-10-24).
+  # Codex processes launched from a Claude Code session inherit Claude's
+  # OTEL_RESOURCE_ATTRIBUTES, so their resource carries both the semconv
+  # `os.version` (Claude: kernel release) and Codex's native `os_version`
+  # (distro release). Both sanitize to the Prometheus label `os_version`, and
+  # resource_constant_labels then makes every such datapoint fail with
+  # "duplicate label names in constant and variable labels". The values differ,
+  # so keep both: move the inherited one to `os.version.inherited` only when the
+  # pair is present. Codex-only and Claude-only resources are untouched.
+  transform/prom-label-collisions:
+    error_mode: ignore
+    metric_statements:
+      - context: resource
+        statements:
+          - set(attributes["os.version.inherited"], attributes["os.version"]) where attributes["os.version"] != nil and attributes["os_version"] != nil
+          - delete_key(attributes, "os.version") where attributes["os.version.inherited"] != nil and attributes["os_version"] != nil
+  # Stamp a project so writers are separable in Phoenix. Without this everything
+  # lands in `default` and no writer can be measured or retained independently.
+  # Note the ai-metrics forwarder posts to :8447 (Phoenix directly) and bypasses
+  # this collector entirely, so it is unaffected and can carry its own stamp.
+  resource/project:
+    attributes:
+      - key: openinference.project.name
+        value: "harness-otel"
+        action: upsert
+
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:9464
+    send_timestamps: true
+    metric_expiration: 180m
+    # Copy resource attributes (beep.* attribution) onto metric datapoints.
+    resource_constant_labels:
+      included: ["*"]
+  # Coding-harness traces fan out to Arize Phoenix (beep ai-metrics stack).
+  # Reachable via the shared external docker network; Phoenix publishes
+  # 6006 on host loopback only.
+  otlphttp/phoenix:
+    traces_endpoint: http://beep-ai-metrics-phoenix:6006/v1/traces
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource/scrub-pii, attributes/scrub-pii, transform/prom-label-collisions, batch]
+      exporters: [prometheus]
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, filter/traces, resource/scrub-pii, attributes/scrub-pii, resource/project, batch]
+      exporters: [otlphttp/phoenix]

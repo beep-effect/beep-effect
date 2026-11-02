@@ -1,9 +1,9 @@
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   renderCacheIdentityLintProfile,
   verifyCacheIdentityLintProfile,
   writeCacheIdentityLintProfile,
 } from "@beep/repo-cli/test/Cache";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -13,7 +13,7 @@ import * as S from "effect/Schema";
 
 const source =
   '{"root":true,"files":{"includes":["**","!**/*.gen.*","!!vendor"],"maxSize":4096},"plugins":["./rules/custom.grit"],"linter":{"enabled":true},"overrides":[{"includes":["**/test/**"],"formatter":{"enabled":false}}]}';
-const decodeJson = decodeJsoncTextAs(S.JsonObject);
+const decodeJson = Jsonc.bind(S.JsonObject).decode;
 
 it.layer(NodeServices.layer)("identity lint profile projection", (it) => {
   it.effect("retains exclusion order, scanner settings, plugins, rules and overrides", () =>

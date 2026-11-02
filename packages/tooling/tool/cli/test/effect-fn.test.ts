@@ -2,7 +2,7 @@ import * as NodeURL from "node:url";
 import { EffectFnRulesOptions, runEffectFnRules } from "@beep/repo-cli/test/Laws";
 import { TSMorphServiceLive } from "@beep/repo-utils/TSMorph/index";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -18,7 +18,9 @@ const temporaryWorkingDirectory = Layer.effectDiscard(
     yield* Effect.addFinalizer(() => Effect.sync(() => process.chdir(previousCwd)));
   })
 );
-const nativeWorkingDirectory = temporaryWorkingDirectory.pipe(Layer.provideMerge(NodeServices.layer));
+const nativeWorkingDirectory = temporaryWorkingDirectory.pipe(
+  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+);
 const testLayer = TSMorphServiceLive.pipe(Layer.provideMerge(nativeWorkingDirectory));
 const CLI_ENTRYPOINT = NodeURL.fileURLToPath(new URL("../src/bin.ts", import.meta.url));
 

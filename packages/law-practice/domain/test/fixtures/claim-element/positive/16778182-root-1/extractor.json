@@ -1,0 +1,62 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "16778182-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "the dosage / the required dosage",
+      "reason": "Definite dosage is explicitly recited in the preamble without an indefinite introducer. Later required dosage denotes the same prediction target; its amount is not inferred."
+    },
+    {
+      "quote": "the output / the output data",
+      "reason": "The tree is explicit, but its output NP is not introduced on these claim ancestries; retain property terms without fabricating output introduction or equating data to the decision tree."
+    },
+    {
+      "quote": "the preprocessing / the pruning / the generation",
+      "reason": "These definite nominalized references point to explicit actions in root1, not prior noun terms. Functional/action relationships remain anchored; no action-to-entity antecedent endpoint is fabricated."
+    },
+    {
+      "quote": "the independent verification data set",
+      "reason": "Potential relationship to root validation data set remains genuinely source-specific; wording does not unambiguously establish shared data-set identity. No forced synonym edge."
+    },
+    {
+      "quote": "a user's human physiological parameter data",
+      "reason": "Explicit lexical genitive user ownership is retained in the complete lexical head after the supported a determiner. It is not a pronominal determiner and is not stripped."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation of exact canonical/native claims. Explicit manually selected element and noun-phrase spans are serialized; no source decomposition algorithm, production rules, predictions, synthetic fixtures or prior conformance labels used. Complete lexical heads, nested determiner terms, natural dependency and source-supported entity identities retained. Functional edges preserve complete source text and ordered participants. Independent critic pending; agent confidence is not attorney agreement.",
+  "referenceNotes": [],
+  "sourceValidation": {
+    "claimsXmlSha256": "71568d42f9f2666720d7e05ac2217639d15527f90dd3d1c86ed51d71763e2b7d",
+    "sourceEligibility": "Retained independent source critic accepted. No fresh original-PDF/inventory authentication claimed."
+  },
+  "counts": {
+    "trees": 7,
+    "elements": 24,
+    "terms": 63
+  },
+  "independence": "Extractor did not read production implementation, decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or prior structural labels for this family. Helpers locate only manually chosen exact source quotes, serialize annotations and validate spans. Only assigned expected.json/extractor.json written.",
+  "attorneyAdjudication": "pending",
+  "validation": {
+    "schema": "All trees decoded through declared ClaimElementTree schema; production decomposer not invoked.",
+    "anchors": "Exact canonical UTF-16 spans, element source order, term nonoverlap/ownership, local/foreign term endpoints and contiguous complete functional reconstruction checked.",
+    "native": "All canonical/context claims equal native claim text under permitted printed-number/whitespace normalization; claims XML digest matches provenance.",
+    "independentSemanticCritic": "Pending; extractor checks do not establish independent acceptance."
+  }
+}

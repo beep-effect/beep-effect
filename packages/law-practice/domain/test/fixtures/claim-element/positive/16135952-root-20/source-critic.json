@@ -1,0 +1,122 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16135952-root-20",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [20, 21, 22, 23, 24, 25, 26, 27],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20200088758", "A1", "20200319"],
+    "applicationReference": ["US", "16135952", "20180919"],
+    "officeActionDocumentIdentifiers": ["K9CWMD05RXEAPX1"],
+    "officeActionMailDate": "2020-04-27"
+  },
+  "digestEvidence": [
+    {
+      "file": "16135952.publication.xml",
+      "sha256": "197c40aa3a93af7a9753067011dd0e489548e6953b7d3ccf949dacd1c427c276",
+      "matchesProvenance": true
+    },
+    {
+      "file": "16135952.claims.xml",
+      "sha256": "8a90a2eb3b68a640ce6272b2e69ab1541f278cfa075d0efd7b627663e5e03dcf",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "8a90a2eb3b68a640ce6272b2e69ab1541f278cfa075d0efd7b627663e5e03dcf",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "JM9OM21YRXEAPX1",
+      "xmlAvailable": true,
+      "sha256": "cae3c499f4519ebaa003af1ae2de0ae692452bf6433b392988cd765dbae89a37",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 41,
+    "actualRows": 41,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2018-09-19T17:51:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "JM9OM21YRXEAPX1"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 2-3, 8-11, 16-19, 25 and 27 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the stabilizing movements",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the stabilizing movements"
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the disk orienting mechanisms",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the disk orienting mechanisms"
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the disk rotation mechanisms",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the disk rotation mechanisms"
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the active tiles",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the active tiles"
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the swashplates",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the swashplates"
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the drive assemblies",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the drive assemblies"
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the active tile",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the active tile"
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "drive shafts",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "drive shafts"
+    }
+  ],
+  "assessment": "Original full27 claims agree exactly including selected20-27. Actual ground includes25/27, in meaningful root20 family. Examiner questions27->25 rather than26; native27->25 is retained.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

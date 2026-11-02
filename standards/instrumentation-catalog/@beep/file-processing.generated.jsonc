@@ -17,6 +17,7 @@
     {"name":"FileProcessingService.extract","owner":"@beep/file-processing","family":"foundation","conforms":true},
     {"name":"FileProcessingService.process","owner":"@beep/file-processing","family":"foundation","conforms":true},
     {"name":"FileProcessingTest.decodeTestOperationIdentifiers","owner":"@beep/file-processing","family":"foundation","conforms":true},
+    {"name":"Operation.deriveArchiveChildArtifact","owner":"@beep/file-processing","family":"foundation","conforms":true},
     {"name":"PageOcr.recognizePage","owner":"@beep/file-processing","family":"foundation","conforms":true},
     {"name":"PageOcrService.recognizePage","owner":"@beep/file-processing","family":"foundation","conforms":true},
     {"name":"PathSafety.resolvePathWithinCanonicalRoot","owner":"@beep/file-processing","family":"foundation","conforms":true},

@@ -1,6 +1,8 @@
 /**
  * The assembled GovInfo `HttpApi` contract.
  *
+ * **Details**
+ *
  * Wires the hand-authored `Search` endpoint into a single top-level group so the
  * generated `HttpApiClient` exposes `client.search(...)` directly. This is the
  * contract surface consumed by `Govinfo.service`; transport concerns stay in the

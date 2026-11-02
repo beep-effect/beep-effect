@@ -1,0 +1,4772 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "A semi-condylar artificial knee joint"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 37,
+              "quote": "A semi-condylar artificial knee joint"
+            },
+            "determiner": "a",
+            "head": "semi-condylar artificial knee joint"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 62,
+          "endChar": 138,
+          "quote": "the knee joint includes a femoral prosthesis (1) and a tibial prosthesis (2)"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 76,
+              "quote": "the knee joint"
+            },
+            "determiner": "the",
+            "head": "knee joint"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 106,
+              "quote": "a femoral prosthesis"
+            },
+            "determiner": "a",
+            "head": "femoral prosthesis"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 134,
+              "quote": "a tibial prosthesis"
+            },
+            "determiner": "a",
+            "head": "tibial prosthesis"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 140,
+          "endChar": 288,
+          "quote": "said tibial prosthesis (2) is disposed at one side of the tibial plateau intercondylar eminence (31) and is located below the femoral prosthesis (1)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 140,
+              "endChar": 162,
+              "quote": "said tibial prosthesis"
+            },
+            "determiner": "said",
+            "head": "tibial prosthesis"
+          },
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 190,
+              "quote": "one side"
+            },
+            "determiner": "bare",
+            "head": "side"
+          },
+          {
+            "anchor": {
+              "startChar": 194,
+              "endChar": 235,
+              "quote": "the tibial plateau intercondylar eminence"
+            },
+            "determiner": "the",
+            "head": "tibial plateau intercondylar eminence"
+          },
+          {
+            "anchor": {
+              "startChar": 262,
+              "endChar": 284,
+              "quote": "the femoral prosthesis"
+            },
+            "determiner": "the",
+            "head": "femoral prosthesis"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 62,
+            "endChar": 76,
+            "quote": "the knee joint"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 37,
+            "quote": "A semi-condylar artificial knee joint"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 140,
+            "endChar": 162,
+            "quote": "said tibial prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 134,
+            "quote": "a tibial prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 262,
+            "endChar": 284,
+            "quote": "the femoral prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 86,
+            "endChar": 106,
+            "quote": "a femoral prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 140,
+                "endChar": 162,
+                "quote": "said tibial prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 162,
+              "endChar": 182,
+              "quote": " (2) is disposed at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 182,
+                "endChar": 190,
+                "quote": "one side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 190,
+              "endChar": 194,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 194,
+                "endChar": 235,
+                "quote": "the tibial plateau intercondylar eminence"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 235,
+              "endChar": 262,
+              "quote": " (31) and is located below "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 262,
+                "endChar": 284,
+                "quote": "the femoral prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 284,
+              "endChar": 288,
+              "quote": " (1)"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 60,
+          "quote": "The semi-condylar artificial knee joint according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 39,
+              "quote": "The semi-condylar artificial knee joint"
+            },
+            "determiner": "the",
+            "head": "semi-condylar artificial knee joint"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 85,
+          "endChar": 165,
+          "quote": "said tibial prosthesis (2) includes an upper gasket (21) and a lower gasket (22)"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 107,
+              "quote": "said tibial prosthesis"
+            },
+            "determiner": "said",
+            "head": "tibial prosthesis"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 136,
+              "quote": "an upper gasket"
+            },
+            "determiner": "an",
+            "head": "upper gasket"
+          },
+          {
+            "anchor": {
+              "startChar": 146,
+              "endChar": 160,
+              "quote": "a lower gasket"
+            },
+            "determiner": "a",
+            "head": "lower gasket"
+          }
+        ]
+      },
+      {
+        "path": "2.b",
+        "anchor": {
+          "startChar": 167,
+          "endChar": 441,
+          "quote": "wherein, an elastic subassembly (6) is provided on the lower gasket (22), and through which the impact force transmitted from the femoral prosthesis (1) to the upper gasket of the tibial prosthesis (2) is cushioned, so that the upper gasket (21) has a meniscus-like function"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 176,
+              "endChar": 198,
+              "quote": "an elastic subassembly"
+            },
+            "determiner": "an",
+            "head": "elastic subassembly"
+          },
+          {
+            "anchor": {
+              "startChar": 218,
+              "endChar": 234,
+              "quote": "the lower gasket"
+            },
+            "determiner": "the",
+            "head": "lower gasket"
+          },
+          {
+            "anchor": {
+              "startChar": 259,
+              "endChar": 275,
+              "quote": "the impact force"
+            },
+            "determiner": "the",
+            "head": "impact force"
+          },
+          {
+            "anchor": {
+              "startChar": 293,
+              "endChar": 315,
+              "quote": "the femoral prosthesis"
+            },
+            "determiner": "the",
+            "head": "femoral prosthesis"
+          },
+          {
+            "anchor": {
+              "startChar": 323,
+              "endChar": 339,
+              "quote": "the upper gasket"
+            },
+            "determiner": "the",
+            "head": "upper gasket"
+          },
+          {
+            "anchor": {
+              "startChar": 343,
+              "endChar": 364,
+              "quote": "the tibial prosthesis"
+            },
+            "determiner": "the",
+            "head": "tibial prosthesis"
+          },
+          {
+            "anchor": {
+              "startChar": 391,
+              "endChar": 407,
+              "quote": "the upper gasket"
+            },
+            "determiner": "the",
+            "head": "upper gasket"
+          },
+          {
+            "anchor": {
+              "startChar": 417,
+              "endChar": 441,
+              "quote": "a meniscus-like function"
+            },
+            "determiner": "a",
+            "head": "meniscus-like function"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "The semi-condylar artificial knee joint"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 37,
+            "quote": "A semi-condylar artificial knee joint"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 85,
+            "endChar": 107,
+            "quote": "said tibial prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 134,
+            "quote": "a tibial prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 218,
+            "endChar": 234,
+            "quote": "the lower gasket"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 146,
+            "endChar": 160,
+            "quote": "a lower gasket"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 293,
+            "endChar": 315,
+            "quote": "the femoral prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 86,
+            "endChar": 106,
+            "quote": "a femoral prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 323,
+            "endChar": 339,
+            "quote": "the upper gasket"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 121,
+            "endChar": 136,
+            "quote": "an upper gasket"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 343,
+            "endChar": 364,
+            "quote": "the tibial prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 134,
+            "quote": "a tibial prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 391,
+            "endChar": 407,
+            "quote": "the upper gasket"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 121,
+            "endChar": 136,
+            "quote": "an upper gasket"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "2.b",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 167,
+              "endChar": 176,
+              "quote": "wherein, "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 176,
+                "endChar": 198,
+                "quote": "an elastic subassembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 198,
+              "endChar": 218,
+              "quote": " (6) is provided on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 218,
+                "endChar": 234,
+                "quote": "the lower gasket"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 234,
+              "endChar": 259,
+              "quote": " (22), and through which "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 259,
+                "endChar": 275,
+                "quote": "the impact force"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 275,
+              "endChar": 293,
+              "quote": " transmitted from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 293,
+                "endChar": 315,
+                "quote": "the femoral prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 315,
+              "endChar": 323,
+              "quote": " (1) to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 323,
+                "endChar": 339,
+                "quote": "the upper gasket"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 339,
+              "endChar": 343,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 343,
+                "endChar": 364,
+                "quote": "the tibial prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 364,
+              "endChar": 391,
+              "quote": " (2) is cushioned, so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 391,
+                "endChar": 407,
+                "quote": "the upper gasket"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 407,
+              "endChar": 417,
+              "quote": " (21) has "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 417,
+                "endChar": 441,
+                "quote": "a meniscus-like function"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 60,
+          "quote": "The semi-condylar artificial knee joint according to claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 39,
+              "quote": "The semi-condylar artificial knee joint"
+            },
+            "determiner": "the",
+            "head": "semi-condylar artificial knee joint"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 85,
+          "endChar": 199,
+          "quote": "said elastic subassembly (6) penetrates the lower gasket (22), and is fixed and installed on the lower gasket (22)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 109,
+              "quote": "said elastic subassembly"
+            },
+            "determiner": "said",
+            "head": "elastic subassembly"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 141,
+              "quote": "the lower gasket"
+            },
+            "determiner": "the",
+            "head": "lower gasket"
+          },
+          {
+            "anchor": {
+              "startChar": 178,
+              "endChar": 194,
+              "quote": "the lower gasket"
+            },
+            "determiner": "the",
+            "head": "lower gasket"
+          }
+        ]
+      },
+      {
+        "path": "3.b",
+        "anchor": {
+          "startChar": 201,
+          "endChar": 303,
+          "quote": "the upper end protrudes above the lower gasket (22) and abuts on the lower surface of the upper gasket"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 201,
+              "endChar": 214,
+              "quote": "the upper end"
+            },
+            "determiner": "the",
+            "head": "upper end"
+          },
+          {
+            "anchor": {
+              "startChar": 231,
+              "endChar": 247,
+              "quote": "the lower gasket"
+            },
+            "determiner": "the",
+            "head": "lower gasket"
+          },
+          {
+            "anchor": {
+              "startChar": 266,
+              "endChar": 283,
+              "quote": "the lower surface"
+            },
+            "determiner": "the",
+            "head": "lower surface"
+          },
+          {
+            "anchor": {
+              "startChar": 287,
+              "endChar": 303,
+              "quote": "the upper gasket"
+            },
+            "determiner": "the",
+            "head": "upper gasket"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "The semi-condylar artificial knee joint"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 37,
+            "quote": "A semi-condylar artificial knee joint"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 85,
+            "endChar": 109,
+            "quote": "said elastic subassembly"
+          }
+        },
+        "introducing": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 176,
+            "endChar": 198,
+            "quote": "an elastic subassembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 125,
+            "endChar": 141,
+            "quote": "the lower gasket"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 146,
+            "endChar": 160,
+            "quote": "a lower gasket"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 178,
+            "endChar": 194,
+            "quote": "the lower gasket"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 146,
+            "endChar": 160,
+            "quote": "a lower gasket"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 85,
+                "endChar": 109,
+                "quote": "said elastic subassembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 109,
+              "endChar": 125,
+              "quote": " (6) penetrates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 125,
+                "endChar": 141,
+                "quote": "the lower gasket"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 141,
+              "endChar": 178,
+              "quote": " (22), and is fixed and installed on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 178,
+                "endChar": 194,
+                "quote": "the lower gasket"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 194,
+              "endChar": 199,
+              "quote": " (22)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 231,
+            "endChar": 247,
+            "quote": "the lower gasket"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 146,
+            "endChar": 160,
+            "quote": "a lower gasket"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 287,
+            "endChar": 303,
+            "quote": "the upper gasket"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 121,
+            "endChar": 136,
+            "quote": "an upper gasket"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.b",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 201,
+                "endChar": 214,
+                "quote": "the upper end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 214,
+              "endChar": 231,
+              "quote": " protrudes above "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 231,
+                "endChar": 247,
+                "quote": "the lower gasket"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 247,
+              "endChar": 266,
+              "quote": " (22) and abuts on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 266,
+                "endChar": 283,
+                "quote": "the lower surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 283,
+              "endChar": 287,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 287,
+                "endChar": 303,
+                "quote": "the upper gasket"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "2"
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 60,
+          "quote": "The semi-condylar artificial knee joint according to claim 3"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 39,
+              "quote": "The semi-condylar artificial knee joint"
+            },
+            "determiner": "the",
+            "head": "semi-condylar artificial knee joint"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 85,
+          "endChar": 154,
+          "quote": "said elastic subassembly (6) includes a sleeve (61) and a spring (62)"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 109,
+              "quote": "said elastic subassembly"
+            },
+            "determiner": "said",
+            "head": "elastic subassembly"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 131,
+              "quote": "a sleeve"
+            },
+            "determiner": "a",
+            "head": "sleeve"
+          },
+          {
+            "anchor": {
+              "startChar": 141,
+              "endChar": 149,
+              "quote": "a spring"
+            },
+            "determiner": "a",
+            "head": "spring"
+          }
+        ]
+      },
+      {
+        "path": "4.b",
+        "anchor": {
+          "startChar": 156,
+          "endChar": 217,
+          "quote": "the lower end of the spring (62) is buried in the sleeve (61)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 156,
+              "endChar": 169,
+              "quote": "the lower end"
+            },
+            "determiner": "the",
+            "head": "lower end"
+          },
+          {
+            "anchor": {
+              "startChar": 173,
+              "endChar": 183,
+              "quote": "the spring"
+            },
+            "determiner": "the",
+            "head": "spring"
+          },
+          {
+            "anchor": {
+              "startChar": 202,
+              "endChar": 212,
+              "quote": "the sleeve"
+            },
+            "determiner": "the",
+            "head": "sleeve"
+          }
+        ]
+      },
+      {
+        "path": "4.c",
+        "anchor": {
+          "startChar": 223,
+          "endChar": 302,
+          "quote": "the upper end of the spring is abutted on the lower surface of the upper gasket"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 223,
+              "endChar": 236,
+              "quote": "the upper end"
+            },
+            "determiner": "the",
+            "head": "upper end"
+          },
+          {
+            "anchor": {
+              "startChar": 240,
+              "endChar": 250,
+              "quote": "the spring"
+            },
+            "determiner": "the",
+            "head": "spring"
+          },
+          {
+            "anchor": {
+              "startChar": 265,
+              "endChar": 282,
+              "quote": "the lower surface"
+            },
+            "determiner": "the",
+            "head": "lower surface"
+          },
+          {
+            "anchor": {
+              "startChar": 286,
+              "endChar": 302,
+              "quote": "the upper gasket"
+            },
+            "determiner": "the",
+            "head": "upper gasket"
+          }
+        ]
+      },
+      {
+        "path": "4.d",
+        "anchor": {
+          "startChar": 304,
+          "endChar": 356,
+          "quote": "the sleeve (61) passes through the lower gasket (22)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 304,
+              "endChar": 314,
+              "quote": "the sleeve"
+            },
+            "determiner": "the",
+            "head": "sleeve"
+          },
+          {
+            "anchor": {
+              "startChar": 335,
+              "endChar": 351,
+              "quote": "the lower gasket"
+            },
+            "determiner": "the",
+            "head": "lower gasket"
+          }
+        ]
+      },
+      {
+        "path": "4.e",
+        "anchor": {
+          "startChar": 362,
+          "endChar": 434,
+          "quote": "the bottom end of the sleeve is installed in the cavity (7) of the tibia"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 362,
+              "endChar": 376,
+              "quote": "the bottom end"
+            },
+            "determiner": "the",
+            "head": "bottom end"
+          },
+          {
+            "anchor": {
+              "startChar": 380,
+              "endChar": 390,
+              "quote": "the sleeve"
+            },
+            "determiner": "the",
+            "head": "sleeve"
+          },
+          {
+            "anchor": {
+              "startChar": 407,
+              "endChar": 417,
+              "quote": "the cavity"
+            },
+            "determiner": "the",
+            "head": "cavity"
+          },
+          {
+            "anchor": {
+              "startChar": 425,
+              "endChar": 434,
+              "quote": "the tibia"
+            },
+            "determiner": "the",
+            "head": "tibia"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "The semi-condylar artificial knee joint"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 37,
+            "quote": "A semi-condylar artificial knee joint"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 85,
+            "endChar": 109,
+            "quote": "said elastic subassembly"
+          }
+        },
+        "introducing": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 176,
+            "endChar": 198,
+            "quote": "an elastic subassembly"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.b",
+          "anchor": {
+            "startChar": 173,
+            "endChar": 183,
+            "quote": "the spring"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 141,
+            "endChar": 149,
+            "quote": "a spring"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.b",
+          "anchor": {
+            "startChar": 202,
+            "endChar": 212,
+            "quote": "the sleeve"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 131,
+            "quote": "a sleeve"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.b",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 156,
+                "endChar": 169,
+                "quote": "the lower end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 169,
+              "endChar": 173,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 173,
+                "endChar": 183,
+                "quote": "the spring"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 183,
+              "endChar": 202,
+              "quote": " (62) is buried in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 202,
+                "endChar": 212,
+                "quote": "the sleeve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 212,
+              "endChar": 217,
+              "quote": " (61)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.c",
+          "anchor": {
+            "startChar": 240,
+            "endChar": 250,
+            "quote": "the spring"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 141,
+            "endChar": 149,
+            "quote": "a spring"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.c",
+          "anchor": {
+            "startChar": 286,
+            "endChar": 302,
+            "quote": "the upper gasket"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 121,
+            "endChar": 136,
+            "quote": "an upper gasket"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.c",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.c",
+              "anchor": {
+                "startChar": 223,
+                "endChar": 236,
+                "quote": "the upper end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 236,
+              "endChar": 240,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.c",
+              "anchor": {
+                "startChar": 240,
+                "endChar": 250,
+                "quote": "the spring"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 250,
+              "endChar": 265,
+              "quote": " is abutted on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.c",
+              "anchor": {
+                "startChar": 265,
+                "endChar": 282,
+                "quote": "the lower surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 282,
+              "endChar": 286,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.c",
+              "anchor": {
+                "startChar": 286,
+                "endChar": 302,
+                "quote": "the upper gasket"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.d",
+          "anchor": {
+            "startChar": 304,
+            "endChar": 314,
+            "quote": "the sleeve"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 131,
+            "quote": "a sleeve"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.d",
+          "anchor": {
+            "startChar": 335,
+            "endChar": 351,
+            "quote": "the lower gasket"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 146,
+            "endChar": 160,
+            "quote": "a lower gasket"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.d",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 304,
+                "endChar": 314,
+                "quote": "the sleeve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 314,
+              "endChar": 335,
+              "quote": " (61) passes through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 335,
+                "endChar": 351,
+                "quote": "the lower gasket"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 351,
+              "endChar": 356,
+              "quote": " (22)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.e",
+          "anchor": {
+            "startChar": 380,
+            "endChar": 390,
+            "quote": "the sleeve"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 131,
+            "quote": "a sleeve"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.e",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.e",
+              "anchor": {
+                "startChar": 362,
+                "endChar": 376,
+                "quote": "the bottom end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 376,
+              "endChar": 380,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.e",
+              "anchor": {
+                "startChar": 380,
+                "endChar": 390,
+                "quote": "the sleeve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 390,
+              "endChar": 407,
+              "quote": " is installed in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.e",
+              "anchor": {
+                "startChar": 407,
+                "endChar": 417,
+                "quote": "the cavity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 417,
+              "endChar": 425,
+              "quote": " (7) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.e",
+              "anchor": {
+                "startChar": 425,
+                "endChar": 434,
+                "quote": "the tibia"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "3"
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 60,
+          "quote": "The semi-condylar artificial knee joint according to claim 4"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 39,
+              "quote": "The semi-condylar artificial knee joint"
+            },
+            "determiner": "the",
+            "head": "semi-condylar artificial knee joint"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 85,
+          "endChar": 189,
+          "quote": "a bolt (63) for adjusting the elasticity of the spring (62) is provided at the bottom of the sleeve (61)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 91,
+              "quote": "a bolt"
+            },
+            "determiner": "a",
+            "head": "bolt"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 125,
+              "quote": "the elasticity"
+            },
+            "determiner": "the",
+            "head": "elasticity"
+          },
+          {
+            "anchor": {
+              "startChar": 129,
+              "endChar": 139,
+              "quote": "the spring"
+            },
+            "determiner": "the",
+            "head": "spring"
+          },
+          {
+            "anchor": {
+              "startChar": 160,
+              "endChar": 170,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 174,
+              "endChar": 184,
+              "quote": "the sleeve"
+            },
+            "determiner": "the",
+            "head": "sleeve"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "The semi-condylar artificial knee joint"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 37,
+            "quote": "A semi-condylar artificial knee joint"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 139,
+            "quote": "the spring"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 141,
+            "endChar": 149,
+            "quote": "a spring"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 174,
+            "endChar": 184,
+            "quote": "the sleeve"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 131,
+            "quote": "a sleeve"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 85,
+                "endChar": 91,
+                "quote": "a bolt"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 91,
+              "endChar": 111,
+              "quote": " (63) for adjusting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 111,
+                "endChar": 125,
+                "quote": "the elasticity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 125,
+              "endChar": 129,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 129,
+                "endChar": 139,
+                "quote": "the spring"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 139,
+              "endChar": 160,
+              "quote": " (62) is provided at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 160,
+                "endChar": 170,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 170,
+              "endChar": 174,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 174,
+                "endChar": 184,
+                "quote": "the sleeve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 184,
+              "endChar": 189,
+              "quote": " (61)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "4"
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 60,
+          "quote": "The semi-condylar artificial knee joint according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 39,
+              "quote": "The semi-condylar artificial knee joint"
+            },
+            "determiner": "the",
+            "head": "semi-condylar artificial knee joint"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 85,
+          "endChar": 154,
+          "quote": "said tibial prosthesis (2) is placed at the lower back of the patella"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 107,
+              "quote": "said tibial prosthesis"
+            },
+            "determiner": "said",
+            "head": "tibial prosthesis"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 139,
+              "quote": "the lower back"
+            },
+            "determiner": "the",
+            "head": "lower back"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 154,
+              "quote": "the patella"
+            },
+            "determiner": "the",
+            "head": "patella"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "The semi-condylar artificial knee joint"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 37,
+            "quote": "A semi-condylar artificial knee joint"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 85,
+            "endChar": 107,
+            "quote": "said tibial prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 134,
+            "quote": "a tibial prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 85,
+                "endChar": 107,
+                "quote": "said tibial prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 107,
+              "endChar": 125,
+              "quote": " (2) is placed at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 125,
+                "endChar": 139,
+                "quote": "the lower back"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 139,
+              "endChar": 143,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 154,
+                "quote": "the patella"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 60,
+          "quote": "The semi-condylar artificial knee joint according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 39,
+              "quote": "The semi-condylar artificial knee joint"
+            },
+            "determiner": "the",
+            "head": "semi-condylar artificial knee joint"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 85,
+          "endChar": 209,
+          "quote": "the artificial knee joint further includes a locating pin (5), through which the tibial prosthesis (2) is fixed to the tibia"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 110,
+              "quote": "the artificial knee joint"
+            },
+            "determiner": "the",
+            "head": "artificial knee joint"
+          },
+          {
+            "anchor": {
+              "startChar": 128,
+              "endChar": 142,
+              "quote": "a locating pin"
+            },
+            "determiner": "a",
+            "head": "locating pin"
+          },
+          {
+            "anchor": {
+              "startChar": 162,
+              "endChar": 183,
+              "quote": "the tibial prosthesis"
+            },
+            "determiner": "the",
+            "head": "tibial prosthesis"
+          },
+          {
+            "anchor": {
+              "startChar": 200,
+              "endChar": 209,
+              "quote": "the tibia"
+            },
+            "determiner": "the",
+            "head": "tibia"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "The semi-condylar artificial knee joint"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 37,
+            "quote": "A semi-condylar artificial knee joint"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 85,
+            "endChar": 110,
+            "quote": "the artificial knee joint"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 37,
+            "quote": "A semi-condylar artificial knee joint"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 162,
+            "endChar": 183,
+            "quote": "the tibial prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 134,
+            "quote": "a tibial prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 85,
+                "endChar": 110,
+                "quote": "the artificial knee joint"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 110,
+              "endChar": 128,
+              "quote": " further includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 128,
+                "endChar": 142,
+                "quote": "a locating pin"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 142,
+              "endChar": 162,
+              "quote": " (5), through which "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 162,
+                "endChar": 183,
+                "quote": "the tibial prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 183,
+              "endChar": 200,
+              "quote": " (2) is fixed to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 200,
+                "endChar": 209,
+                "quote": "the tibia"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 60,
+          "quote": "The semi-condylar artificial knee joint according to claim 7"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 39,
+              "quote": "The semi-condylar artificial knee joint"
+            },
+            "determiner": "the",
+            "head": "semi-condylar artificial knee joint"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 85,
+          "endChar": 180,
+          "quote": "the upper portion of one end of said locating pin (5) is installed in the tibial prosthesis (2)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 102,
+              "quote": "the upper portion"
+            },
+            "determiner": "the",
+            "head": "upper portion"
+          },
+          {
+            "anchor": {
+              "startChar": 106,
+              "endChar": 113,
+              "quote": "one end"
+            },
+            "determiner": "bare",
+            "head": "end"
+          },
+          {
+            "anchor": {
+              "startChar": 117,
+              "endChar": 134,
+              "quote": "said locating pin"
+            },
+            "determiner": "said",
+            "head": "locating pin"
+          },
+          {
+            "anchor": {
+              "startChar": 155,
+              "endChar": 176,
+              "quote": "the tibial prosthesis"
+            },
+            "determiner": "the",
+            "head": "tibial prosthesis"
+          }
+        ]
+      },
+      {
+        "path": "8.b",
+        "anchor": {
+          "startChar": 186,
+          "endChar": 270,
+          "quote": "the other end thereof is installed in the tibial plateau intercondylar eminence (31)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 186,
+              "endChar": 199,
+              "quote": "the other end"
+            },
+            "determiner": "the",
+            "head": "other end"
+          },
+          {
+            "anchor": {
+              "startChar": 224,
+              "endChar": 265,
+              "quote": "the tibial plateau intercondylar eminence"
+            },
+            "determiner": "the",
+            "head": "tibial plateau intercondylar eminence"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "The semi-condylar artificial knee joint"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 37,
+            "quote": "A semi-condylar artificial knee joint"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 117,
+            "endChar": 134,
+            "quote": "said locating pin"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 128,
+            "endChar": 142,
+            "quote": "a locating pin"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 155,
+            "endChar": 176,
+            "quote": "the tibial prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 134,
+            "quote": "a tibial prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 85,
+                "endChar": 102,
+                "quote": "the upper portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 102,
+              "endChar": 106,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 106,
+                "endChar": 113,
+                "quote": "one end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 113,
+              "endChar": 117,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 117,
+                "endChar": 134,
+                "quote": "said locating pin"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 134,
+              "endChar": 155,
+              "quote": " (5) is installed in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 155,
+                "endChar": 176,
+                "quote": "the tibial prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 176,
+              "endChar": 180,
+              "quote": " (2)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "8.b",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 186,
+                "endChar": 199,
+                "quote": "the other end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 199,
+              "endChar": 224,
+              "quote": " thereof is installed in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 224,
+                "endChar": 265,
+                "quote": "the tibial plateau intercondylar eminence"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 265,
+              "endChar": 270,
+              "quote": " (31)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "7"
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 60,
+          "quote": "The semi-condylar artificial knee joint according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 39,
+              "quote": "The semi-condylar artificial knee joint"
+            },
+            "determiner": "the",
+            "head": "semi-condylar artificial knee joint"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 85,
+          "endChar": 164,
+          "quote": "a prosthetic notch (23) is provided on the bottom of said tibial prosthesis (2)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 103,
+              "quote": "a prosthetic notch"
+            },
+            "determiner": "a",
+            "head": "prosthetic notch"
+          },
+          {
+            "anchor": {
+              "startChar": 124,
+              "endChar": 134,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 138,
+              "endChar": 160,
+              "quote": "said tibial prosthesis"
+            },
+            "determiner": "said",
+            "head": "tibial prosthesis"
+          }
+        ]
+      },
+      {
+        "path": "9.b",
+        "anchor": {
+          "startChar": 166,
+          "endChar": 253,
+          "quote": "a tibial notch (32) is provided on the top of the tibia below the tibial prosthesis (2)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 166,
+              "endChar": 180,
+              "quote": "a tibial notch"
+            },
+            "determiner": "a",
+            "head": "tibial notch"
+          },
+          {
+            "anchor": {
+              "startChar": 201,
+              "endChar": 208,
+              "quote": "the top"
+            },
+            "determiner": "the",
+            "head": "top"
+          },
+          {
+            "anchor": {
+              "startChar": 212,
+              "endChar": 221,
+              "quote": "the tibia"
+            },
+            "determiner": "the",
+            "head": "tibia"
+          },
+          {
+            "anchor": {
+              "startChar": 228,
+              "endChar": 249,
+              "quote": "the tibial prosthesis"
+            },
+            "determiner": "the",
+            "head": "tibial prosthesis"
+          }
+        ]
+      },
+      {
+        "path": "9.c",
+        "anchor": {
+          "startChar": 259,
+          "endChar": 407,
+          "quote": "said prosthetic notch (23) corresponds to said tibial notch (32), and together constitute a limiting hole (4) for accommodating the locating pin (5)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 259,
+              "endChar": 280,
+              "quote": "said prosthetic notch"
+            },
+            "determiner": "said",
+            "head": "prosthetic notch"
+          },
+          {
+            "anchor": {
+              "startChar": 301,
+              "endChar": 318,
+              "quote": "said tibial notch"
+            },
+            "determiner": "said",
+            "head": "tibial notch"
+          },
+          {
+            "anchor": {
+              "startChar": 349,
+              "endChar": 364,
+              "quote": "a limiting hole"
+            },
+            "determiner": "a",
+            "head": "limiting hole"
+          },
+          {
+            "anchor": {
+              "startChar": 387,
+              "endChar": 403,
+              "quote": "the locating pin"
+            },
+            "determiner": "the",
+            "head": "locating pin"
+          }
+        ]
+      },
+      {
+        "path": "9.d",
+        "anchor": {
+          "startChar": 413,
+          "endChar": 488,
+          "quote": "the limiting hole penetrates the tibial plateau intercondylar eminence (31)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 413,
+              "endChar": 430,
+              "quote": "the limiting hole"
+            },
+            "determiner": "the",
+            "head": "limiting hole"
+          },
+          {
+            "anchor": {
+              "startChar": 442,
+              "endChar": 483,
+              "quote": "the tibial plateau intercondylar eminence"
+            },
+            "determiner": "the",
+            "head": "tibial plateau intercondylar eminence"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "The semi-condylar artificial knee joint"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 37,
+            "quote": "A semi-condylar artificial knee joint"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 138,
+            "endChar": 160,
+            "quote": "said tibial prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 134,
+            "quote": "a tibial prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 85,
+                "endChar": 103,
+                "quote": "a prosthetic notch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 103,
+              "endChar": 124,
+              "quote": " (23) is provided on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 124,
+                "endChar": 134,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 134,
+              "endChar": 138,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 138,
+                "endChar": 160,
+                "quote": "said tibial prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 160,
+              "endChar": 164,
+              "quote": " (2)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.b",
+          "anchor": {
+            "startChar": 228,
+            "endChar": 249,
+            "quote": "the tibial prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 134,
+            "quote": "a tibial prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "9.b",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.b",
+              "anchor": {
+                "startChar": 166,
+                "endChar": 180,
+                "quote": "a tibial notch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 180,
+              "endChar": 201,
+              "quote": " (32) is provided on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.b",
+              "anchor": {
+                "startChar": 201,
+                "endChar": 208,
+                "quote": "the top"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 208,
+              "endChar": 212,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.b",
+              "anchor": {
+                "startChar": 212,
+                "endChar": 221,
+                "quote": "the tibia"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 221,
+              "endChar": 228,
+              "quote": " below "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.b",
+              "anchor": {
+                "startChar": 228,
+                "endChar": 249,
+                "quote": "the tibial prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 249,
+              "endChar": 253,
+              "quote": " (2)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.c",
+          "anchor": {
+            "startChar": 259,
+            "endChar": 280,
+            "quote": "said prosthetic notch"
+          }
+        },
+        "introducing": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 85,
+            "endChar": 103,
+            "quote": "a prosthetic notch"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.c",
+          "anchor": {
+            "startChar": 301,
+            "endChar": 318,
+            "quote": "said tibial notch"
+          }
+        },
+        "introducing": {
+          "path": "9.b",
+          "anchor": {
+            "startChar": 166,
+            "endChar": 180,
+            "quote": "a tibial notch"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "9.c",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.c",
+              "anchor": {
+                "startChar": 259,
+                "endChar": 280,
+                "quote": "said prosthetic notch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 280,
+              "endChar": 301,
+              "quote": " (23) corresponds to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.c",
+              "anchor": {
+                "startChar": 301,
+                "endChar": 318,
+                "quote": "said tibial notch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 318,
+              "endChar": 349,
+              "quote": " (32), and together constitute "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.c",
+              "anchor": {
+                "startChar": 349,
+                "endChar": 364,
+                "quote": "a limiting hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 364,
+              "endChar": 387,
+              "quote": " (4) for accommodating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.c",
+              "anchor": {
+                "startChar": 387,
+                "endChar": 403,
+                "quote": "the locating pin"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 403,
+              "endChar": 407,
+              "quote": " (5)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.d",
+          "anchor": {
+            "startChar": 413,
+            "endChar": 430,
+            "quote": "the limiting hole"
+          }
+        },
+        "introducing": {
+          "path": "9.c",
+          "anchor": {
+            "startChar": 349,
+            "endChar": 364,
+            "quote": "a limiting hole"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "9.d",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.d",
+              "anchor": {
+                "startChar": 413,
+                "endChar": 430,
+                "quote": "the limiting hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 430,
+              "endChar": 442,
+              "quote": " penetrates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.d",
+              "anchor": {
+                "startChar": 442,
+                "endChar": 483,
+                "quote": "the tibial plateau intercondylar eminence"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 483,
+              "endChar": 488,
+              "quote": " (31)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 78,
+          "quote": "A method of using the semi-condylar artificial knee joint according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 18,
+              "endChar": 57,
+              "quote": "the semi-condylar artificial knee joint"
+            },
+            "determiner": "the",
+            "head": "semi-condylar artificial knee joint"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 103,
+          "endChar": 142,
+          "quote": "the method includes the following steps"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 103,
+              "endChar": 113,
+              "quote": "the method"
+            },
+            "determiner": "the",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 142,
+              "quote": "the following steps"
+            },
+            "determiner": "the",
+            "head": "following steps"
+          }
+        ]
+      },
+      {
+        "path": "10.b",
+        "anchor": {
+          "startChar": 144,
+          "endChar": 209,
+          "quote": "Step 1, install the femoral prosthesis (1) on the femoral condyle"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 160,
+              "endChar": 182,
+              "quote": "the femoral prosthesis"
+            },
+            "determiner": "the",
+            "head": "femoral prosthesis"
+          },
+          {
+            "anchor": {
+              "startChar": 190,
+              "endChar": 209,
+              "quote": "the femoral condyle"
+            },
+            "determiner": "the",
+            "head": "femoral condyle"
+          }
+        ]
+      },
+      {
+        "path": "10.c",
+        "anchor": {
+          "startChar": 211,
+          "endChar": 300,
+          "quote": "Step 2, open a space for the placement of the tibial prosthesis (2) on the tibial plateau"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 224,
+              "endChar": 231,
+              "quote": "a space"
+            },
+            "determiner": "a",
+            "head": "space"
+          },
+          {
+            "anchor": {
+              "startChar": 236,
+              "endChar": 249,
+              "quote": "the placement"
+            },
+            "determiner": "the",
+            "head": "placement"
+          },
+          {
+            "anchor": {
+              "startChar": 253,
+              "endChar": 274,
+              "quote": "the tibial prosthesis"
+            },
+            "determiner": "the",
+            "head": "tibial prosthesis"
+          },
+          {
+            "anchor": {
+              "startChar": 282,
+              "endChar": 300,
+              "quote": "the tibial plateau"
+            },
+            "determiner": "the",
+            "head": "tibial plateau"
+          }
+        ]
+      },
+      {
+        "path": "10.d",
+        "anchor": {
+          "startChar": 302,
+          "endChar": 530,
+          "quote": "Step 3, excavate a tibial notch (32) in the tibia and extend the tibial notch (32) to the tibial plateau intercondylar eminence (31), and form an intercondylar eminence hole (33) in the tibial plateau intercondylar eminence (31)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 319,
+              "endChar": 333,
+              "quote": "a tibial notch"
+            },
+            "determiner": "a",
+            "head": "tibial notch"
+          },
+          {
+            "anchor": {
+              "startChar": 342,
+              "endChar": 351,
+              "quote": "the tibia"
+            },
+            "determiner": "the",
+            "head": "tibia"
+          },
+          {
+            "anchor": {
+              "startChar": 363,
+              "endChar": 379,
+              "quote": "the tibial notch"
+            },
+            "determiner": "the",
+            "head": "tibial notch"
+          },
+          {
+            "anchor": {
+              "startChar": 388,
+              "endChar": 429,
+              "quote": "the tibial plateau intercondylar eminence"
+            },
+            "determiner": "the",
+            "head": "tibial plateau intercondylar eminence"
+          },
+          {
+            "anchor": {
+              "startChar": 445,
+              "endChar": 475,
+              "quote": "an intercondylar eminence hole"
+            },
+            "determiner": "an",
+            "head": "intercondylar eminence hole"
+          },
+          {
+            "anchor": {
+              "startChar": 484,
+              "endChar": 525,
+              "quote": "the tibial plateau intercondylar eminence"
+            },
+            "determiner": "the",
+            "head": "tibial plateau intercondylar eminence"
+          }
+        ]
+      },
+      {
+        "path": "10.e",
+        "anchor": {
+          "startChar": 532,
+          "endChar": 574,
+          "quote": "Step 4, excavate a cavity (7) in the tibia"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 549,
+              "endChar": 557,
+              "quote": "a cavity"
+            },
+            "determiner": "a",
+            "head": "cavity"
+          },
+          {
+            "anchor": {
+              "startChar": 565,
+              "endChar": 574,
+              "quote": "the tibia"
+            },
+            "determiner": "the",
+            "head": "tibia"
+          }
+        ]
+      },
+      {
+        "path": "10.f",
+        "anchor": {
+          "startChar": 576,
+          "endChar": 932,
+          "quote": "Step 5, insert the sleeve on the tibial prosthesis (2) into the cavity (7), and simultaneously adjust the relative positions of the prosthetic notch (23), the tibial notch (32) and the intercondylar eminence hole (33), so that the prosthetic notch (23), the tibial notch (32) and the intercondylar eminence hole (33) together constitute a limiting hole (4)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 591,
+              "endChar": 601,
+              "quote": "the sleeve"
+            },
+            "determiner": "the",
+            "head": "sleeve"
+          },
+          {
+            "anchor": {
+              "startChar": 605,
+              "endChar": 626,
+              "quote": "the tibial prosthesis"
+            },
+            "determiner": "the",
+            "head": "tibial prosthesis"
+          },
+          {
+            "anchor": {
+              "startChar": 636,
+              "endChar": 646,
+              "quote": "the cavity"
+            },
+            "determiner": "the",
+            "head": "cavity"
+          },
+          {
+            "anchor": {
+              "startChar": 678,
+              "endChar": 700,
+              "quote": "the relative positions"
+            },
+            "determiner": "the",
+            "head": "relative positions"
+          },
+          {
+            "anchor": {
+              "startChar": 704,
+              "endChar": 724,
+              "quote": "the prosthetic notch"
+            },
+            "determiner": "the",
+            "head": "prosthetic notch"
+          },
+          {
+            "anchor": {
+              "startChar": 731,
+              "endChar": 747,
+              "quote": "the tibial notch"
+            },
+            "determiner": "the",
+            "head": "tibial notch"
+          },
+          {
+            "anchor": {
+              "startChar": 757,
+              "endChar": 788,
+              "quote": "the intercondylar eminence hole"
+            },
+            "determiner": "the",
+            "head": "intercondylar eminence hole"
+          },
+          {
+            "anchor": {
+              "startChar": 803,
+              "endChar": 823,
+              "quote": "the prosthetic notch"
+            },
+            "determiner": "the",
+            "head": "prosthetic notch"
+          },
+          {
+            "anchor": {
+              "startChar": 830,
+              "endChar": 846,
+              "quote": "the tibial notch"
+            },
+            "determiner": "the",
+            "head": "tibial notch"
+          },
+          {
+            "anchor": {
+              "startChar": 856,
+              "endChar": 887,
+              "quote": "the intercondylar eminence hole"
+            },
+            "determiner": "the",
+            "head": "intercondylar eminence hole"
+          },
+          {
+            "anchor": {
+              "startChar": 913,
+              "endChar": 928,
+              "quote": "a limiting hole"
+            },
+            "determiner": "a",
+            "head": "limiting hole"
+          }
+        ]
+      },
+      {
+        "path": "10.g",
+        "anchor": {
+          "startChar": 934,
+          "endChar": 1083,
+          "quote": "Step 6, install the locating pin (5) in the limiting hole (4), after the locating pin (5) is fixed, the tibial prosthesis (2) is fixed by bone cement"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 950,
+              "endChar": 966,
+              "quote": "the locating pin"
+            },
+            "determiner": "the",
+            "head": "locating pin"
+          },
+          {
+            "anchor": {
+              "startChar": 974,
+              "endChar": 991,
+              "quote": "the limiting hole"
+            },
+            "determiner": "the",
+            "head": "limiting hole"
+          },
+          {
+            "anchor": {
+              "startChar": 1003,
+              "endChar": 1019,
+              "quote": "the locating pin"
+            },
+            "determiner": "the",
+            "head": "locating pin"
+          },
+          {
+            "anchor": {
+              "startChar": 1034,
+              "endChar": 1055,
+              "quote": "the tibial prosthesis"
+            },
+            "determiner": "the",
+            "head": "tibial prosthesis"
+          },
+          {
+            "anchor": {
+              "startChar": 1072,
+              "endChar": 1083,
+              "quote": "bone cement"
+            },
+            "determiner": "bare",
+            "head": "bone cement"
+          }
+        ]
+      },
+      {
+        "path": "10.h",
+        "anchor": {
+          "startChar": 1085,
+          "endChar": 1198,
+          "quote": "wherein, preferably, before performing Step 5, adjust the elasticity of the spring (62) by rotating the bolt (63)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1124,
+              "endChar": 1130,
+              "quote": "Step 5"
+            },
+            "determiner": "bare",
+            "head": "step 5"
+          },
+          {
+            "anchor": {
+              "startChar": 1139,
+              "endChar": 1153,
+              "quote": "the elasticity"
+            },
+            "determiner": "the",
+            "head": "elasticity"
+          },
+          {
+            "anchor": {
+              "startChar": 1157,
+              "endChar": 1167,
+              "quote": "the spring"
+            },
+            "determiner": "the",
+            "head": "spring"
+          },
+          {
+            "anchor": {
+              "startChar": 1185,
+              "endChar": 1193,
+              "quote": "the bolt"
+            },
+            "determiner": "the",
+            "head": "bolt"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10",
+          "anchor": {
+            "startChar": 18,
+            "endChar": 57,
+            "quote": "the semi-condylar artificial knee joint"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 37,
+            "quote": "A semi-condylar artificial knee joint"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 103,
+            "endChar": 113,
+            "quote": "the method"
+          }
+        },
+        "introducing": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.b",
+          "anchor": {
+            "startChar": 160,
+            "endChar": 182,
+            "quote": "the femoral prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 86,
+            "endChar": 106,
+            "quote": "a femoral prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "10.b",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 144,
+              "endChar": 160,
+              "quote": "Step 1, install "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.b",
+              "anchor": {
+                "startChar": 160,
+                "endChar": 182,
+                "quote": "the femoral prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 182,
+              "endChar": 190,
+              "quote": " (1) on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.b",
+              "anchor": {
+                "startChar": 190,
+                "endChar": 209,
+                "quote": "the femoral condyle"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.c",
+          "anchor": {
+            "startChar": 253,
+            "endChar": 274,
+            "quote": "the tibial prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 134,
+            "quote": "a tibial prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "10.c",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 211,
+              "endChar": 224,
+              "quote": "Step 2, open "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.c",
+              "anchor": {
+                "startChar": 224,
+                "endChar": 231,
+                "quote": "a space"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 231,
+              "endChar": 236,
+              "quote": " for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.c",
+              "anchor": {
+                "startChar": 236,
+                "endChar": 249,
+                "quote": "the placement"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 249,
+              "endChar": 253,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.c",
+              "anchor": {
+                "startChar": 253,
+                "endChar": 274,
+                "quote": "the tibial prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 274,
+              "endChar": 282,
+              "quote": " (2) on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.c",
+              "anchor": {
+                "startChar": 282,
+                "endChar": 300,
+                "quote": "the tibial plateau"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.d",
+          "anchor": {
+            "startChar": 363,
+            "endChar": 379,
+            "quote": "the tibial notch"
+          }
+        },
+        "introducing": {
+          "path": "10.d",
+          "anchor": {
+            "startChar": 319,
+            "endChar": 333,
+            "quote": "a tibial notch"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "10.d",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.d",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 302,
+              "endChar": 319,
+              "quote": "Step 3, excavate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.d",
+              "anchor": {
+                "startChar": 319,
+                "endChar": 333,
+                "quote": "a tibial notch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 333,
+              "endChar": 342,
+              "quote": " (32) in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.d",
+              "anchor": {
+                "startChar": 342,
+                "endChar": 351,
+                "quote": "the tibia"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 351,
+              "endChar": 363,
+              "quote": " and extend "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.d",
+              "anchor": {
+                "startChar": 363,
+                "endChar": 379,
+                "quote": "the tibial notch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 379,
+              "endChar": 388,
+              "quote": " (32) to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.d",
+              "anchor": {
+                "startChar": 388,
+                "endChar": 429,
+                "quote": "the tibial plateau intercondylar eminence"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 429,
+              "endChar": 445,
+              "quote": " (31), and form "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.d",
+              "anchor": {
+                "startChar": 445,
+                "endChar": 475,
+                "quote": "an intercondylar eminence hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 475,
+              "endChar": 484,
+              "quote": " (33) in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.d",
+              "anchor": {
+                "startChar": 484,
+                "endChar": 525,
+                "quote": "the tibial plateau intercondylar eminence"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 525,
+              "endChar": 530,
+              "quote": " (31)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "10.e",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.e",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 532,
+              "endChar": 549,
+              "quote": "Step 4, excavate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.e",
+              "anchor": {
+                "startChar": 549,
+                "endChar": 557,
+                "quote": "a cavity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 557,
+              "endChar": 565,
+              "quote": " (7) in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.e",
+              "anchor": {
+                "startChar": 565,
+                "endChar": 574,
+                "quote": "the tibia"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.f",
+          "anchor": {
+            "startChar": 605,
+            "endChar": 626,
+            "quote": "the tibial prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 134,
+            "quote": "a tibial prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.f",
+          "anchor": {
+            "startChar": 636,
+            "endChar": 646,
+            "quote": "the cavity"
+          }
+        },
+        "introducing": {
+          "path": "10.e",
+          "anchor": {
+            "startChar": 549,
+            "endChar": 557,
+            "quote": "a cavity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.f",
+          "anchor": {
+            "startChar": 731,
+            "endChar": 747,
+            "quote": "the tibial notch"
+          }
+        },
+        "introducing": {
+          "path": "10.d",
+          "anchor": {
+            "startChar": 319,
+            "endChar": 333,
+            "quote": "a tibial notch"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.f",
+          "anchor": {
+            "startChar": 757,
+            "endChar": 788,
+            "quote": "the intercondylar eminence hole"
+          }
+        },
+        "introducing": {
+          "path": "10.d",
+          "anchor": {
+            "startChar": 445,
+            "endChar": 475,
+            "quote": "an intercondylar eminence hole"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.f",
+          "anchor": {
+            "startChar": 830,
+            "endChar": 846,
+            "quote": "the tibial notch"
+          }
+        },
+        "introducing": {
+          "path": "10.d",
+          "anchor": {
+            "startChar": 319,
+            "endChar": 333,
+            "quote": "a tibial notch"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.f",
+          "anchor": {
+            "startChar": 856,
+            "endChar": 887,
+            "quote": "the intercondylar eminence hole"
+          }
+        },
+        "introducing": {
+          "path": "10.d",
+          "anchor": {
+            "startChar": 445,
+            "endChar": 475,
+            "quote": "an intercondylar eminence hole"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "10.f",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.f",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 576,
+              "endChar": 591,
+              "quote": "Step 5, insert "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.f",
+              "anchor": {
+                "startChar": 591,
+                "endChar": 601,
+                "quote": "the sleeve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 601,
+              "endChar": 605,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.f",
+              "anchor": {
+                "startChar": 605,
+                "endChar": 626,
+                "quote": "the tibial prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 626,
+              "endChar": 636,
+              "quote": " (2) into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.f",
+              "anchor": {
+                "startChar": 636,
+                "endChar": 646,
+                "quote": "the cavity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 646,
+              "endChar": 678,
+              "quote": " (7), and simultaneously adjust "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.f",
+              "anchor": {
+                "startChar": 678,
+                "endChar": 700,
+                "quote": "the relative positions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 700,
+              "endChar": 704,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.f",
+              "anchor": {
+                "startChar": 704,
+                "endChar": 724,
+                "quote": "the prosthetic notch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 724,
+              "endChar": 731,
+              "quote": " (23), "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.f",
+              "anchor": {
+                "startChar": 731,
+                "endChar": 747,
+                "quote": "the tibial notch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 747,
+              "endChar": 757,
+              "quote": " (32) and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.f",
+              "anchor": {
+                "startChar": 757,
+                "endChar": 788,
+                "quote": "the intercondylar eminence hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 788,
+              "endChar": 803,
+              "quote": " (33), so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.f",
+              "anchor": {
+                "startChar": 803,
+                "endChar": 823,
+                "quote": "the prosthetic notch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 823,
+              "endChar": 830,
+              "quote": " (23), "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.f",
+              "anchor": {
+                "startChar": 830,
+                "endChar": 846,
+                "quote": "the tibial notch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 846,
+              "endChar": 856,
+              "quote": " (32) and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.f",
+              "anchor": {
+                "startChar": 856,
+                "endChar": 887,
+                "quote": "the intercondylar eminence hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 887,
+              "endChar": 913,
+              "quote": " (33) together constitute "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.f",
+              "anchor": {
+                "startChar": 913,
+                "endChar": 928,
+                "quote": "a limiting hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 928,
+              "endChar": 932,
+              "quote": " (4)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.g",
+          "anchor": {
+            "startChar": 974,
+            "endChar": 991,
+            "quote": "the limiting hole"
+          }
+        },
+        "introducing": {
+          "path": "10.f",
+          "anchor": {
+            "startChar": 913,
+            "endChar": 928,
+            "quote": "a limiting hole"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.g",
+          "anchor": {
+            "startChar": 1034,
+            "endChar": 1055,
+            "quote": "the tibial prosthesis"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 134,
+            "quote": "a tibial prosthesis"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "10.g",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.g",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 934,
+              "endChar": 950,
+              "quote": "Step 6, install "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.g",
+              "anchor": {
+                "startChar": 950,
+                "endChar": 966,
+                "quote": "the locating pin"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 966,
+              "endChar": 974,
+              "quote": " (5) in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.g",
+              "anchor": {
+                "startChar": 974,
+                "endChar": 991,
+                "quote": "the limiting hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 991,
+              "endChar": 1003,
+              "quote": " (4), after "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.g",
+              "anchor": {
+                "startChar": 1003,
+                "endChar": 1019,
+                "quote": "the locating pin"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1019,
+              "endChar": 1034,
+              "quote": " (5) is fixed, "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.g",
+              "anchor": {
+                "startChar": 1034,
+                "endChar": 1055,
+                "quote": "the tibial prosthesis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1055,
+              "endChar": 1072,
+              "quote": " (2) is fixed by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.g",
+              "anchor": {
+                "startChar": 1072,
+                "endChar": 1083,
+                "quote": "bone cement"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "10.h",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.h",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1085,
+              "endChar": 1124,
+              "quote": "wherein, preferably, before performing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.h",
+              "anchor": {
+                "startChar": 1124,
+                "endChar": 1130,
+                "quote": "Step 5"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1130,
+              "endChar": 1139,
+              "quote": ", adjust "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.h",
+              "anchor": {
+                "startChar": 1139,
+                "endChar": 1153,
+                "quote": "the elasticity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1153,
+              "endChar": 1157,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.h",
+              "anchor": {
+                "startChar": 1157,
+                "endChar": 1167,
+                "quote": "the spring"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1167,
+              "endChar": 1185,
+              "quote": " (62) by rotating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.h",
+              "anchor": {
+                "startChar": 1185,
+                "endChar": 1193,
+                "quote": "the bolt"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1193,
+              "endChar": 1198,
+              "quote": " (63)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "1"
+      }
+    ]
+  }
+]

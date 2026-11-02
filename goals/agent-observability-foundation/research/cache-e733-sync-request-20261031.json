@@ -1,0 +1,20 @@
+{
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "previous": "a15c868e15cdb02c9360a93f33f51bab7c8351a39d6fea4911ec39ca6ed0b875",
+  "subjects": ["@beep/repo-ai-metrics"],
+  "review": {
+    "reviewer": "GPT-6-Astra independent foundation panel",
+    "reason": "Carry only previously reviewed AI-metrics dependency deltas onto accepted main e733; root seals already match incoming main; no qualification or exception growth.",
+    "basis": {
+      "path": "goals/agent-observability-foundation/research/CACHE-E733-SYNC-20261031.md",
+      "sha256": "844d0b3a32550fa207520930ab9010696cf79e31723e4fce411a95fc2818547b"
+    }
+  }
+}

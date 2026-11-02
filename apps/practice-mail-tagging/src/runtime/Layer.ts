@@ -36,7 +36,7 @@ import type { TaggingRunId } from "@beep/law-practice-domain/values/MailTagging"
 import type { BackfillCheckpointStore, FilingLedger, TagLedger } from "@beep/law-practice-use-cases/MailTagging";
 import type { M365Error } from "@beep/m365";
 import type * as Config from "effect/Config";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as FileSystem from "effect/FileSystem";
 import type { BoxCredential, PracticeMailTaggingConfig } from "../PracticeMailTagging.config.ts";
 
@@ -58,7 +58,7 @@ export type MailTaggingDrivers = M365 | Box | DuckDb;
  */
 export type MailTaggingDriverError = M365Error | BoxError;
 
-type Platform = FileSystem.FileSystem | Path.Path | Crypto.Crypto;
+type Platform = FileSystem.FileSystem | Path.Path | Digest.Digest;
 
 const isClientCredentials = S.is(BoxCcgConfig);
 

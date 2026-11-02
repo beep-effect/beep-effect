@@ -1,0 +1,56 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "11973401-root-12",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    12,
+    13,
+    14,
+    17
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "a plurality of interconnected said first computers",
+      "reason": "Nested explicit said first computers is a separate nonoverlapping term under rule2. Outer a plurality retains its lexical group noun; of interconnected remains exact functional text. This preserves the collection and inner referenced type, not a token cap. Critic should review this source-specific nested boundary."
+    },
+    {
+      "quote": "each / thereto / the corresponding first computer",
+      "reason": "Claim13 expressly distributes a corresponding second computer to each interconnected first computer. Each-of-which remains exact functional connecting text; thereto and corresponding-first references preserve that distributed role without choosing one global member. Claim17 retains each as functional quantifier and labels the exact nested said second computer NP."
+    },
+    {
+      "quote": "those / the corresponding memory locations",
+      "reason": "Root12 those of said first computer explicitly names first-computer memory locations, distinct from replicated second-computer locations. Later corresponding memory locations of said first computer uniquely refer to that owner-qualified proform. No location identity across computers is asserted."
+    },
+    {
+      "quote": "said second computer memory locations",
+      "reason": "Full lexical computer qualifier retained in head. This phrase explicitly identifies the local second-computer memory locations introduced in12.b; it does not collapse them into the first-computer locations they replicate."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation of exact canonical/native claims. Explicit manually selected element and noun-phrase spans are serialized; no source decomposition algorithm, production rules, predictions, synthetic fixtures or prior conformance labels used. Complete lexical heads, nested determiner terms, natural dependency and source-supported entity identities retained. Functional edges preserve complete source text and ordered participants. Independent critic pending; agent confidence is not attorney agreement.",
+  "referenceNotes": [],
+  "sourceValidation": {
+    "claimsXmlSha256": "ee9d0020be3a26eb34fa37a96422bda7d8fce0180266ede3dfd7a809cef8bf5b",
+    "sourceEligibility": "Retained independent source critic accepted. No fresh original-PDF/inventory authentication claimed."
+  },
+  "counts": {
+    "trees": 4,
+    "elements": 10,
+    "terms": 35,
+    "edges": 34
+  },
+  "independence": "Extractor did not read production implementation, decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or prior structural labels for this family. Helpers locate only manually chosen exact source quotes, serialize annotations and validate spans. Only assigned expected.json/extractor.json written.",
+  "attorneyAdjudication": "pending",
+  "validation": {
+    "schema": "All trees decode through declared ClaimElementTree schema; no production decomposer invoked.",
+    "anchors": "Exact UTF-16 spans, ordered nonoverlapping term ownership, source order, antecedent endpoints and complete contiguous functional reconstruction checked.",
+    "native": "All canonical/context claims match native XML under permitted normalization; source XML digest matches provenance.",
+    "independentSemanticCritic": "Pending; extractor validation is not independent semantic acceptance."
+  }
+}

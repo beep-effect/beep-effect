@@ -1,0 +1,20 @@
+{
+  "previous": "5eae400b284cf6d5cf2b900349bd3debdd3358773f7ba3a91f58e77e37b10e6d",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effected-promotion closeout C, chore/effected-promotion-closeout)",
+    "reason": "Record the closeout manifest edit that drops the six *:effected scripts and the 44 lab-only dependencies from @beep/scratchpad after the effected lab is deleted; the closure shrinks by one package and no other subject changes; no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-c.md",
+      "sha256": "d9b26c3e594f6193bceeed994bc37ccdce157c9531d8129ad42acd29cb476e72"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["@beep/scratchpad"]
+}

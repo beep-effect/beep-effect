@@ -1,0 +1,34 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "12117564-root-7",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    7,
+    8
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 2,
+    "resolvedTreesReviewed": 2,
+    "elementCount": 11,
+    "termCount": 49,
+    "functionalRelationCount": 9
+  },
+  "reviewNotes": [
+    "Round2 independently verified all seven corrected full pair-of noun phrases at exact source spans, normalized complete heads, matching full-NP references and deduplicated antecedents. Electrode and signal pairs remain distinct. No absorbed bare complement term remains; complete functional reconstruction and schemas pass. Round1 C1 is resolved.",
+    "Full initial semantic review of selected independent7 and dependent8; other gyro roots remain context only. Main method transition follows the lengthy explicit gyro context. Bias, summing, first-phase amplitude control, differential amplification, second-phase and synchronous-detection steps remain source ordered.",
+    "First/second sides, electrodes, drive signal, phases and later summed-signal mentions have source-supported identities, with original summed-signal/differential-signal nominal-introduction gaps explicitly retained. Claim8 correctly references gyro7 without sibling donors. Pair NP segmentation was corrected in round2 as independently verified above.",
+    "All trees decode through ClaimElementTree. Exact UTF-16 element/term spans, ordering/nonoverlap/ownership, antecedent endpoints and complete contiguous functional reconstruction checked. All canonical/context claims match native XML under permitted normalization; source XML digest matches provenance.",
+    "Read retained source critic, application/publication identity and numbered rejection evidence. Source eligibility remains separately accepted; no fresh original-PDF/inventory authentication or attorney agreement claimed."
+  ],
+  "independence": "Independent full semantic critic; did not author these references. Read exact canonical/native source/context, extractor, provenance, retained source critic, schema contracts and protocol. No production implementation, decomposer, P2-DESIGN, predictions or synthetic/conformance fixtures inspected. Helpers only check manually reviewed source annotations. Only assigned critic receipts written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement"
+}

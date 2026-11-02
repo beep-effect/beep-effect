@@ -213,7 +213,7 @@ const parity = Effect.fnUntraced(function* (repoRoot: string) {
   const rows = yield* Effect.forEach(packages, (pkg) => comparePackage(repoRoot, pkg.name, pkg.dir), {
     concurrency: 8,
   });
-  const overlayDiffs = A.filterMap(rows, (row) => O.map(row.overlayDiff, (diff) => `${row.name}: ${diff}`));
+  const overlayDiffs = A.getSomes(A.map(rows, (row) => O.map(row.overlayDiff, (diff) => `${row.name}: ${diff}`)));
   const declarationDiffs = A.flatMap(rows, (row) =>
     A.map(row.declarationDiffs, (diff) => `${row.name}: ${diff.reference} legacy=${diff.legacy} kit=${diff.kit}`)
   );

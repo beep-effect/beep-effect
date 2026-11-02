@@ -1,0 +1,1442 @@
+[
+  {
+    "claimNumber": 12,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "12",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "A dual computer system"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 22,
+              "quote": "A dual computer system"
+            },
+            "determiner": "a",
+            "head": "dual computer system"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "anchor": {
+          "startChar": 35,
+          "endChar": 121,
+          "quote": "a first computer having an application program which is intolerant of computer failure"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 35,
+              "endChar": 51,
+              "quote": "a first computer"
+            },
+            "determiner": "a",
+            "head": "first computer"
+          },
+          {
+            "anchor": {
+              "startChar": 59,
+              "endChar": 81,
+              "quote": "an application program"
+            },
+            "determiner": "an",
+            "head": "application program"
+          },
+          {
+            "anchor": {
+              "startChar": 105,
+              "endChar": 121,
+              "quote": "computer failure"
+            },
+            "determiner": "bare",
+            "head": "computer failure"
+          }
+        ]
+      },
+      {
+        "path": "12.b",
+        "anchor": {
+          "startChar": 123,
+          "endChar": 328,
+          "quote": "a second computer connected thereto to mirror said first computer, said second computer having a replica of said application program and having memory locations which replicate those of said first computer"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 140,
+              "quote": "a second computer"
+            },
+            "determiner": "a",
+            "head": "second computer"
+          },
+          {
+            "anchor": {
+              "startChar": 151,
+              "endChar": 158,
+              "quote": "thereto"
+            },
+            "determiner": "bare",
+            "head": "thereto"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 188,
+              "quote": "said first computer"
+            },
+            "determiner": "said",
+            "head": "first computer"
+          },
+          {
+            "anchor": {
+              "startChar": 190,
+              "endChar": 210,
+              "quote": "said second computer"
+            },
+            "determiner": "said",
+            "head": "second computer"
+          },
+          {
+            "anchor": {
+              "startChar": 218,
+              "endChar": 227,
+              "quote": "a replica"
+            },
+            "determiner": "a",
+            "head": "replica"
+          },
+          {
+            "anchor": {
+              "startChar": 231,
+              "endChar": 255,
+              "quote": "said application program"
+            },
+            "determiner": "said",
+            "head": "application program"
+          },
+          {
+            "anchor": {
+              "startChar": 267,
+              "endChar": 283,
+              "quote": "memory locations"
+            },
+            "determiner": "bare",
+            "head": "memory locations"
+          },
+          {
+            "anchor": {
+              "startChar": 300,
+              "endChar": 305,
+              "quote": "those"
+            },
+            "determiner": "bare",
+            "head": "those"
+          },
+          {
+            "anchor": {
+              "startChar": 309,
+              "endChar": 328,
+              "quote": "said first computer"
+            },
+            "determiner": "said",
+            "head": "first computer"
+          }
+        ]
+      },
+      {
+        "path": "12.c",
+        "anchor": {
+          "startChar": 334,
+          "endChar": 527,
+          "quote": "said computer system having updating means for updating said second computer memory locations with changes to the contents or values of the corresponding memory locations of said first computer"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 334,
+              "endChar": 354,
+              "quote": "said computer system"
+            },
+            "determiner": "said",
+            "head": "computer system"
+          },
+          {
+            "anchor": {
+              "startChar": 362,
+              "endChar": 376,
+              "quote": "updating means"
+            },
+            "determiner": "bare",
+            "head": "updating means"
+          },
+          {
+            "anchor": {
+              "startChar": 390,
+              "endChar": 427,
+              "quote": "said second computer memory locations"
+            },
+            "determiner": "said",
+            "head": "second computer memory locations"
+          },
+          {
+            "anchor": {
+              "startChar": 433,
+              "endChar": 440,
+              "quote": "changes"
+            },
+            "determiner": "bare",
+            "head": "changes"
+          },
+          {
+            "anchor": {
+              "startChar": 444,
+              "endChar": 466,
+              "quote": "the contents or values"
+            },
+            "determiner": "the",
+            "head": "contents or values"
+          },
+          {
+            "anchor": {
+              "startChar": 470,
+              "endChar": 504,
+              "quote": "the corresponding memory locations"
+            },
+            "determiner": "the",
+            "head": "corresponding memory locations"
+          },
+          {
+            "anchor": {
+              "startChar": 508,
+              "endChar": 527,
+              "quote": "said first computer"
+            },
+            "determiner": "said",
+            "head": "first computer"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "functional",
+        "element": "12.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 35,
+                "endChar": 51,
+                "quote": "a first computer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 51,
+              "endChar": 59,
+              "quote": " having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 59,
+                "endChar": 81,
+                "quote": "an application program"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 81,
+              "endChar": 105,
+              "quote": " which is intolerant of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 105,
+                "endChar": 121,
+                "quote": "computer failure"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "12.b",
+        "parent": "12"
+      },
+      {
+        "kind": "functional",
+        "element": "12.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 140,
+                "quote": "a second computer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 140,
+              "endChar": 151,
+              "quote": " connected "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 151,
+                "endChar": 158,
+                "quote": "thereto"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 158,
+              "endChar": 169,
+              "quote": " to mirror "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 169,
+                "endChar": 188,
+                "quote": "said first computer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 188,
+              "endChar": 190,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 190,
+                "endChar": 210,
+                "quote": "said second computer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 210,
+              "endChar": 218,
+              "quote": " having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 218,
+                "endChar": 227,
+                "quote": "a replica"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 227,
+              "endChar": 231,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 231,
+                "endChar": 255,
+                "quote": "said application program"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 255,
+              "endChar": 267,
+              "quote": " and having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 267,
+                "endChar": 283,
+                "quote": "memory locations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 283,
+              "endChar": 300,
+              "quote": " which replicate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 300,
+                "endChar": 305,
+                "quote": "those"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 305,
+              "endChar": 309,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 309,
+                "endChar": 328,
+                "quote": "said first computer"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "12.c",
+        "parent": "12"
+      },
+      {
+        "kind": "functional",
+        "element": "12.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.c",
+              "anchor": {
+                "startChar": 334,
+                "endChar": 354,
+                "quote": "said computer system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 354,
+              "endChar": 362,
+              "quote": " having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.c",
+              "anchor": {
+                "startChar": 362,
+                "endChar": 376,
+                "quote": "updating means"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 376,
+              "endChar": 390,
+              "quote": " for updating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.c",
+              "anchor": {
+                "startChar": 390,
+                "endChar": 427,
+                "quote": "said second computer memory locations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 427,
+              "endChar": 433,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.c",
+              "anchor": {
+                "startChar": 433,
+                "endChar": 440,
+                "quote": "changes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 440,
+              "endChar": 444,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.c",
+              "anchor": {
+                "startChar": 444,
+                "endChar": 466,
+                "quote": "the contents or values"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 466,
+              "endChar": 470,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.c",
+              "anchor": {
+                "startChar": 470,
+                "endChar": 504,
+                "quote": "the corresponding memory locations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 504,
+              "endChar": 508,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.c",
+              "anchor": {
+                "startChar": 508,
+                "endChar": 527,
+                "quote": "said first computer"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.b",
+          "anchor": {
+            "startChar": 151,
+            "endChar": 158,
+            "quote": "thereto"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 35,
+            "endChar": 51,
+            "quote": "a first computer"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.b",
+          "anchor": {
+            "startChar": 169,
+            "endChar": 188,
+            "quote": "said first computer"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 35,
+            "endChar": 51,
+            "quote": "a first computer"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.b",
+          "anchor": {
+            "startChar": 309,
+            "endChar": 328,
+            "quote": "said first computer"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 35,
+            "endChar": 51,
+            "quote": "a first computer"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.b",
+          "anchor": {
+            "startChar": 190,
+            "endChar": 210,
+            "quote": "said second computer"
+          }
+        },
+        "introducing": {
+          "path": "12.b",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 140,
+            "quote": "a second computer"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.b",
+          "anchor": {
+            "startChar": 231,
+            "endChar": 255,
+            "quote": "said application program"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 81,
+            "quote": "an application program"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.c",
+          "anchor": {
+            "startChar": 334,
+            "endChar": 354,
+            "quote": "said computer system"
+          }
+        },
+        "introducing": {
+          "path": "12",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "A dual computer system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.c",
+          "anchor": {
+            "startChar": 390,
+            "endChar": 427,
+            "quote": "said second computer memory locations"
+          }
+        },
+        "introducing": {
+          "path": "12.b",
+          "anchor": {
+            "startChar": 267,
+            "endChar": 283,
+            "quote": "memory locations"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.c",
+          "anchor": {
+            "startChar": 508,
+            "endChar": 527,
+            "quote": "said first computer"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 35,
+            "endChar": 51,
+            "quote": "a first computer"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.c",
+          "anchor": {
+            "startChar": 470,
+            "endChar": 504,
+            "quote": "the corresponding memory locations"
+          }
+        },
+        "introducing": {
+          "path": "12.b",
+          "anchor": {
+            "startChar": 300,
+            "endChar": 305,
+            "quote": "those"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 13,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "13",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 25,
+          "quote": "The system as in claim 12"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "13.a",
+        "anchor": {
+          "startChar": 38,
+          "endChar": 200,
+          "quote": "a plurality of interconnected said first computers, each of which has a corresponding second computer connected thereto to mirror the corresponding first computer"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 38,
+              "endChar": 49,
+              "quote": "a plurality"
+            },
+            "determiner": "a",
+            "head": "plurality"
+          },
+          {
+            "anchor": {
+              "startChar": 68,
+              "endChar": 88,
+              "quote": "said first computers"
+            },
+            "determiner": "said",
+            "head": "first computers"
+          },
+          {
+            "anchor": {
+              "startChar": 108,
+              "endChar": 139,
+              "quote": "a corresponding second computer"
+            },
+            "determiner": "a",
+            "head": "corresponding second computer"
+          },
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 157,
+              "quote": "thereto"
+            },
+            "determiner": "bare",
+            "head": "thereto"
+          },
+          {
+            "anchor": {
+              "startChar": 168,
+              "endChar": 200,
+              "quote": "the corresponding first computer"
+            },
+            "determiner": "the",
+            "head": "corresponding first computer"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "13",
+        "ancestor": "12"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "12",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "A dual computer system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "13.a",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 38,
+                "endChar": 49,
+                "quote": "a plurality"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 49,
+              "endChar": 68,
+              "quote": " of interconnected "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 68,
+                "endChar": 88,
+                "quote": "said first computers"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 88,
+              "endChar": 108,
+              "quote": ", each of which has "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 108,
+                "endChar": 139,
+                "quote": "a corresponding second computer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 139,
+              "endChar": 150,
+              "quote": " connected "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 150,
+                "endChar": 157,
+                "quote": "thereto"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 157,
+              "endChar": 168,
+              "quote": " to mirror "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 168,
+                "endChar": 200,
+                "quote": "the corresponding first computer"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 68,
+            "endChar": 88,
+            "quote": "said first computers"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 35,
+            "endChar": 51,
+            "quote": "a first computer"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 150,
+            "endChar": 157,
+            "quote": "thereto"
+          }
+        },
+        "introducing": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 68,
+            "endChar": 88,
+            "quote": "said first computers"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 168,
+            "endChar": 200,
+            "quote": "the corresponding first computer"
+          }
+        },
+        "introducing": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 68,
+            "endChar": 88,
+            "quote": "said first computers"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 14,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "14",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 25,
+          "quote": "The system as in claim 13"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "14.a",
+        "anchor": {
+          "startChar": 35,
+          "endChar": 88,
+          "quote": "said plurality of first computers comprises a cluster"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 35,
+              "endChar": 68,
+              "quote": "said plurality of first computers"
+            },
+            "determiner": "said",
+            "head": "plurality of first computers"
+          },
+          {
+            "anchor": {
+              "startChar": 79,
+              "endChar": 88,
+              "quote": "a cluster"
+            },
+            "determiner": "a",
+            "head": "cluster"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "14",
+        "ancestor": "13"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "12",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "A dual computer system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "14.a",
+        "parent": "14"
+      },
+      {
+        "kind": "functional",
+        "element": "14.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 35,
+                "endChar": 68,
+                "quote": "said plurality of first computers"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 68,
+              "endChar": 79,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 79,
+                "endChar": 88,
+                "quote": "a cluster"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14.a",
+          "anchor": {
+            "startChar": 35,
+            "endChar": 68,
+            "quote": "said plurality of first computers"
+          }
+        },
+        "introducing": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 38,
+            "endChar": 49,
+            "quote": "a plurality"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 17,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "17",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 25,
+          "quote": "The system as in claim 14"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "17.a",
+        "anchor": {
+          "startChar": 35,
+          "endChar": 197,
+          "quote": "said updating means transmits to each said second computer data relating to the progress of execution of instructions achieved by the corresponding first computer"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 35,
+              "endChar": 54,
+              "quote": "said updating means"
+            },
+            "determiner": "said",
+            "head": "updating means"
+          },
+          {
+            "anchor": {
+              "startChar": 73,
+              "endChar": 93,
+              "quote": "said second computer"
+            },
+            "determiner": "said",
+            "head": "second computer"
+          },
+          {
+            "anchor": {
+              "startChar": 94,
+              "endChar": 98,
+              "quote": "data"
+            },
+            "determiner": "bare",
+            "head": "data"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 152,
+              "quote": "the progress of execution of instructions"
+            },
+            "determiner": "the",
+            "head": "progress of execution of instructions"
+          },
+          {
+            "anchor": {
+              "startChar": 165,
+              "endChar": 197,
+              "quote": "the corresponding first computer"
+            },
+            "determiner": "the",
+            "head": "corresponding first computer"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "17",
+        "ancestor": "14"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "12",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 22,
+            "quote": "A dual computer system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "17.a",
+        "parent": "17"
+      },
+      {
+        "kind": "functional",
+        "element": "17.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 35,
+                "endChar": 54,
+                "quote": "said updating means"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 54,
+              "endChar": 73,
+              "quote": " transmits to each "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 73,
+                "endChar": 93,
+                "quote": "said second computer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 93,
+              "endChar": 94,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 94,
+                "endChar": 98,
+                "quote": "data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 98,
+              "endChar": 111,
+              "quote": " relating to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 111,
+                "endChar": 152,
+                "quote": "the progress of execution of instructions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 152,
+              "endChar": 165,
+              "quote": " achieved by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 165,
+                "endChar": 197,
+                "quote": "the corresponding first computer"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 35,
+            "endChar": 54,
+            "quote": "said updating means"
+          }
+        },
+        "introducing": {
+          "path": "12.c",
+          "anchor": {
+            "startChar": 362,
+            "endChar": 376,
+            "quote": "updating means"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 93,
+            "quote": "said second computer"
+          }
+        },
+        "introducing": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 108,
+            "endChar": 139,
+            "quote": "a corresponding second computer"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 165,
+            "endChar": 197,
+            "quote": "the corresponding first computer"
+          }
+        },
+        "introducing": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 68,
+            "endChar": 88,
+            "quote": "said first computers"
+          }
+        }
+      }
+    ]
+  }
+]

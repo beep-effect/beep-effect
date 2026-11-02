@@ -1,0 +1,47 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "12748625-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "referenceConcernsDisposition": "Extractor localized reference concerns reviewed and retained as explicit unlinked mentions; they do not require whole-claim abstention or invented introductions. No actionable correction remains in this bounded independent review.",
+  "reviewScope": {
+    "claimCount": 9,
+    "elementCount": 23,
+    "termCount": 72,
+    "edgeCount": 81,
+    "functionalRelationCount": 14
+  },
+  "reviewNotes": [
+    "The extended root preserves the embedded network comprising context and stops at the actual resumptive method comprising transition. Six source-ordered steps retain full functional predicates and owned noun phrases; the source semicolon and providing using wording are not repaired.",
+    "Actual ancestry is 2->1, 3->2, 4/5->3 and 6-9->1. Claim 3 the second probe operation [94,120) remains unlinked: sibling 8 introduces a second probe operation but cannot provide its antecedent. Context system claim 10 is likewise excluded.",
+    "Claim 2 the channel assessment node [81,108) has the sole prior introduced operation-node referent before introducing its replacement. Claim 4 the channel assessment node [85,112) has original/replacement candidates on its ancestry and remains without a term-identity edge. Claim 5 explicitly names the second node and links to its unique claim-2 introduction.",
+    "The selected nodes correctly names the subset selected in 1.e, rather than indiscriminately the entire node plurality. Missing capacity, assessed-channel, allocating nominal and Media Access Plan introductions remain visible; true network/controller/probe/report/operation references are preserved. Source qualification discusses selected 1-5/7/9 individually; no separate examiner ground is invented for 6/8."
+  ],
+  "verification": [
+    "Read canonical full family context, native selected-claim XML, provenance, independent source critic and extractor rationale. Source eligibility remains separately accepted at source-critic confidence 0.98; no fresh original-PDF/full-inventory authentication is claimed.",
+    "Audited all expected elements/terms and typed edges for source grammar, complete heads, explicit nested lists, participating entity ownership and actual dependency-chain references. Applied entity-mentions/v1 without blanket relative/reciprocal entity nodes.",
+    "Independent helpers checked exact UTF-16 element/term/functional/antecedent source anchors, normalized heads, ordered nonoverlapping owned terms, contiguous full functional-source reconstruction, local functional ownership, actual ancestor membership of foreign references, endpoint coherence, unique paths and absence of duplicate typed edges. Native claims XML digest matches provenance. These bounded schema/geometry checks supplement semantic review; no production decomposer was called."
+  ],
+  "referenceSha256": "7b291ccabdb53cd8e1a756116601fdd57cf2c0f3f2f17db4cec951ab35b36b83",
+  "independence": "Independent semantic critic session, separate from extractor. Only this family critic.json written. No source/expected/code edits, implementation rules/P2-DESIGN, predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers only locate/check manually reviewed source spans and schema geometry and serialize this receipt.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic references only; no active sample admission, goal completion or human agreement claimed."
+}

@@ -194,10 +194,13 @@ export const wrapFaulty: {
     // `writeFileString`, `stream` and `sink` from the intercepted core methods,
     // so a fault registered on e.g. `readFile` or `open` propagates coherently
     // into the members derived from it — exactly as an OS-level failure would.
-    // The five derived members are destructured out of the spread so the
-    // contract is explicit rather than relying on `make` to overwrite them.
+    // The derived members are destructured out of the spread so the contract
+    // is explicit rather than relying on `make` to overwrite them. `make` also
+    // derives `glob`, but the base keeps its own walker, so the base `glob`
+    // is restored (intercepted) after construction.
     const {
       exists: _exists,
+      glob: _glob,
       readFileString: _readFileString,
       sink: _sink,
       stream: _stream,
@@ -211,7 +214,6 @@ export const wrapFaulty: {
       chown: intercept(base.chown, faults.chown),
       copy: intercept(base.copy, faults.copy),
       copyFile: intercept(base.copyFile, faults.copyFile),
-      glob: intercept(base.glob, faults.glob),
       link: intercept(base.link, faults.link),
       makeDirectory: intercept(base.makeDirectory, faults.makeDirectory),
       makeTempDirectory: intercept(base.makeTempDirectory, faults.makeTempDirectory),
@@ -220,6 +222,7 @@ export const wrapFaulty: {
       makeTempFileScoped: intercept(base.makeTempFileScoped, faults.makeTempFileScoped),
       open: intercept(base.open, faults.open),
       readDirectory: intercept(base.readDirectory, faults.readDirectory),
+      readDirectoryEntries: intercept(base.readDirectoryEntries, faults.readDirectoryEntries),
       readFile: intercept(base.readFile, faults.readFile),
       readLink: intercept(base.readLink, faults.readLink),
       realPath: intercept(base.realPath, faults.realPath),
@@ -235,6 +238,7 @@ export const wrapFaulty: {
     return {
       ...core,
       exists: intercept(core.exists, faults.exists),
+      glob: intercept(base.glob, faults.glob),
       readFileString: intercept(core.readFileString, faults.readFileString),
       sink: interceptLazy(core.sink, faults.sink),
       stream: interceptLazy(core.stream, faults.stream),

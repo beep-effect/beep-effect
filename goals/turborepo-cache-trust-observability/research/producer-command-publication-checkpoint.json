@@ -1,0 +1,146 @@
+{
+  "schemaVersion": "cache-producer-command-publication-checkpoint/v1",
+  "recordedAt": "2026-10-30T20:16:56.798497+00:00",
+  "authority": "Unpublished component command wiring and controlled CLI tests; no real protected execution, artifact publication, issuer grant, signing activation or task qualification.",
+  "sourceParent": "f17079bcd0ed1310601294204033d35f83381eda",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "69340b0fb3df8a158dea1320af7822d76acff94197917f3a688f1e78fd9dca78",
+    "packages/tooling/tool/cli/test/cache-dispatch.test.ts": "5db0ab19f1ba7489b4f98e2b5a9be28531c2e12050b21b8221ce0a7559e9e009",
+    "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": "9a0dee2e5fd6ec75d4ac184b37c6bb3e689f67394a1ce23c0074778602f2c327"
+  },
+  "implementation": [
+    "Extend the existing closed producer-run command with optional --publication; preserve observation-only use without reading GitHub run configuration.",
+    "Validate separate private observation output and the fixed cache-producer.json member name before reading capabilities. Decode exact positive safe run/attempt identifiers with the existing schema through Config.",
+    "Run the independently configured closed producer, then derive the existing complete v2 report from that exact observation. No report-side replacement upload, observation, artifact identity, issuer or target arguments.",
+    "Prepare the owned report before changing output files; absent owned upload leaves both existing outputs intact. Write only the compact report for upload and keep the complete observation private.",
+    "Reuse existing report codec and writer with a 64 KiB report bound including newline and an 8 MiB private observation bound. No new trust store, verifier, transport or workflow authority."
+  ],
+  "verification": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 8.731,
+      "finishedAt": "2026-10-30T19:48:27.343388+00:00"
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 7.828,
+      "finishedAt": "2026-10-30T19:48:27.412846+00:00"
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 12.774,
+      "finishedAt": "2026-10-30T19:48:31.909364+00:00"
+    },
+    "defaultPackage": {
+      "exit": 0,
+      "elapsedSeconds": 1055.828,
+      "finishedAt": "2026-10-30T20:14:55.869623+00:00",
+      "sourceRevision": "1395a7aa8b6322d2a68b879d1ffd2aba6d13097e",
+      "auditSeconds": 1019.9,
+      "docgenSeconds": 34.5,
+      "command": "bun --no-env-file run beep quality package-verify @beep/repo-cli"
+    }
+  },
+  "testsPerRuntime": 96,
+  "cliBoundaryCases": {
+    "positive": [
+      "Observation-only use succeeds without GitHub run configuration.",
+      "Hosted output carries workflow run/attempt, exact binding, owned upload and canonical observation digest.",
+      "Missing owned upload fails before either existing output is replaced."
+    ],
+    "refusals": [
+      "Missing run or attempt, zero, fractional attempt and unsafe integer before capability loading.",
+      "Missing private output, colliding output paths and wrong archive member before configuration reads.",
+      "Caller-selected store, issuer, target, signing key, run ID, attempt, artifact ID and upload are rejected by the command parser."
+    ],
+    "limits": "Producer execution is a controlled module boundary; immutable metadata/ZIP verifier tests are real local archive operations with fixture authenticated metadata. These are not real CI or R2 execution."
+  },
+  "remaining": [
+    "Current source1395 passed the complete default package audit and Docgen with refreshed canonical metadata; accepted-parent combined final and hosted proof remain.",
+    "Accept the parent, replay only unpublished owned commits after e6990a32b389e0a0900007ffd6bf0ada646edb58 and perform current combined final/hosted/review proof.",
+    "Wire the exact protected workflow, independently provision source/runtime/issuer/publication approvals, and retain actual immutable artifact IDs from successful runs.",
+    "Verify the genuinely unrun human helper only after execution, then prove bounded signed trial, independent roles, tenant/epoch isolation and rollback.",
+    "Complete all feature/computation adoption and actual seven/seven/fourteen-day observation windows; all acceptance criteria remain unproven."
+  ],
+  "productionChanges": false,
+  "credentialChanges": false,
+  "allAcceptanceUnproven": true,
+  "verificationScope": "Four suites: command dispatch, immutable hosted producer evidence, tsgo profile and severity. Producer execution is controlled; no real protected run.",
+  "adjacentQualityReview": {
+    "attribution": "Both clone fingerprints predate this component and were already reported in the earlier publication-join audit. No new duplicate groups were introduced.",
+    "fixed": {
+      "fingerprint": "dup:b1fc01a4",
+      "change": "Use the existing Array.flatMap idiom to compute each expected/actual severity once and emit its mismatch in the same pass. Existing profile/severity tests pass unchanged on both runtimes.",
+      "earlierAttempt": "Option-returning Array.filterMap is not this Effect version's API. Quick checking and the unchanged exact diagnostic test caught it; the implementation was repaired, not its assertion."
+    },
+    "retainedNonDefect": {
+      "fingerprint": "dup:624ca7d8",
+      "source": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "reason": "The shared fragment is only path resolution and a FileSystem.exists guard. SAST then rejects symlinks and noncanonical paths and returns optional eligible files; JSDoc separately reads text and returns diagnostic arrays. There is no shared policy to consolidate beyond the existing FileSystem primitive. Extracting a wrapper would couple unrelated security/lint operations and their different absence results.",
+      "resolution": "Source-reviewed non-defect; keep both guards and the unmodified raw warning. No Fallow ignore, baseline change, threshold change or runtime suppression."
+    }
+  },
+  "canonicalVerification": {
+    "startedAt": "2026-10-30T19:50:36.091025+00:00",
+    "finishedAt": "2026-10-30T19:56:42.762623+00:00",
+    "commands": [
+      [
+        "bun",
+        "--no-env-file",
+        "run",
+        "beep",
+        "lint",
+        "effect-vitest",
+        "--write"
+      ],
+      ["bun", "--no-env-file", "run", "beep", "quality", "jsdoc-inventory"],
+      [
+        "bun",
+        "--no-env-file",
+        "run",
+        "beep",
+        "observability",
+        "catalog",
+        "--write"
+      ],
+      [
+        "bun",
+        "--no-env-file",
+        "run",
+        "beep",
+        "lint",
+        "schema-catalog",
+        "--write"
+      ],
+      [
+        "bun",
+        "--no-env-file",
+        "run",
+        "beep",
+        "lint",
+        "schema-first",
+        "--write"
+      ],
+      [
+        "bun",
+        "--no-env-file",
+        "run",
+        "beep",
+        "quality",
+        "fallow",
+        "audit",
+        "--check",
+        "--base",
+        "origin/main",
+        "--out",
+        ".beep/fallow/producer-publication-final.json",
+        "--quiet"
+      ]
+    ],
+    "exit": 0,
+    "fallowRawCloneGroups": 1,
+    "remainingCloneFingerprint": "dup:624ca7d8",
+    "newFindings": 0,
+    "review": "Retained raw filesystem-presence idiom has an explicit non-defect judgment above; no suppression or threshold change."
+  }
+}

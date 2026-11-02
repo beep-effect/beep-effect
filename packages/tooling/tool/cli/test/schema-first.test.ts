@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   createFileGenerationPlanService,
   FileGenerationPlanInput,
@@ -29,7 +30,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { parse } from "jsonc-parser";
 import { Project, SyntaxKind, ts } from "ts-morph";
 
 const decodeFileGenerationPlanInputEffect = S.decodeEffect(FileGenerationPlanInput);
@@ -538,7 +538,9 @@ describe("G4 foundation family-flip regression fixture", () => {
     Effect.gen(function* () {
       // Bind the fixture to the on-disk policy: if a future edit reverts a
       // family flip, these assertions fail. Flipped so far: foundation, drivers.
-      const policy = O.some(yield* decodeUnknownSchemaCrispeningPolicyDocumentEffect(parse(committedPolicyText)));
+      const policy = O.some(
+        yield* decodeUnknownSchemaCrispeningPolicyDocumentEffect(yield* Jsonc.parse(committedPolicyText))
+      );
       const isExempt = isSchemaCrispeningPolicyExempt(policy);
 
       expect(isExempt(foundationViolation)).toBe(false);

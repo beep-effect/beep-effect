@@ -14,7 +14,6 @@ import * as Toml from "effect/encoding/Toml";
 import * as FileSystem from "effect/FileSystem";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import { AiSyncError, AiSyncValidationResult, ValidateRepoConfig } from "./models.ts";
@@ -28,15 +27,11 @@ const decodeJsonTextAs = <Schema extends S.Top>(schema: Schema) => S.decodeUnkno
 // effect/encoding/Toml ships the parser but no schema codec; Codex config is only ever read,
 // and a parse failure surfaces as the same SchemaError a schema codec would raise.
 const parseTomlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
-  Effect.try({
-    try: () => Toml.parse(text),
-    catch: (cause) =>
-      new S.SchemaError(
-        new SchemaIssue.InvalidValue({
-          message: `Invalid TOML input (${P.isError(cause) ? cause.message : String(cause)}).`,
-        })
-      ),
-  });
+  Effect.fromResult(Toml.parse(text)).pipe(
+    Effect.mapError(
+      (cause) => new S.SchemaError(new SchemaIssue.InvalidValue({ message: `Invalid TOML input (${cause.message}).` }))
+    )
+  );
 const decodeTomlTextWith =
   <A, E, R>(decode: (input: unknown) => Effect.Effect<A, E, R>) =>
   (text: string): Effect.Effect<A, E | S.SchemaError, R> =>
@@ -162,25 +157,16 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(bun run beep lint:*)",
   "Bash(bun run beep laws:*)",
   "Bash(bun run beep research install-timers:*)",
-  "Bash(bun run beep graft deep install-timer --refresh:*)",
   "Bash(bun run beep refs plan:*)",
   "Bash(bun run beep refs install-timer --refresh:*)",
   "Bash(systemctl --user list-timers:*)",
   "Bash(rm -rf .beep/fallow)",
   "Bash(bunx commitlint:*)",
   "Bash(bun install:*)",
-  "Bash(graft ask:*)",
-  "Bash(graft grep:*)",
-  "Bash(graft skeleton:*)",
-  "Bash(graft callers:*)",
-  "Bash(graft map:*)",
-  "Bash(graft blast:*)",
-  "Bash(graft check:*)",
-  "Bash(graft build)",
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 62-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI, plus the read-only Graft code-graph query subcommands and the exact structural `graft build` (never `--deep`, which spends model quota, nor `init`/`uninstall`/`upgrade`, which rewrite tracked agent wiring and are denied outright).",
+      "Exact 53-value Bash grant domain approved for this repository, including named read-only GitHub queries, intentional Yeet publication commands, archive refs under refs/archive/, and Yeet sweep; worktree removal only through the Beep CLI.",
   })
 );
 
@@ -202,18 +188,14 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
   "Bash(git checkout -- .)",
   "Bash(gh pr merge --admin:*)",
   "Bash(gh repo delete:*)",
-  "Edit(**/.github/workflows/**)",
   "Edit(**/docs/_internal/**)",
   "Edit(**/.claude/settings.json)",
   "Bash(bun run beep refs refresh:*)",
   "Bash(bun run beep refs install-timer)",
-  "Bash(graft init:*)",
-  "Bash(graft uninstall:*)",
-  "Bash(graft upgrade:*)",
 ]).pipe(
   $I.annoteSchema("RequiredClaudeRepoDenyPermission", {
     description:
-      "Exact 23-value Claude deny domain required to block history rewrites, forced worktree removal, working-tree destruction, direct stash deletion and popping, admin merges, repository deletion, protected-file edits, and the Graft lifecycle commands that rewrite tracked agent wiring.",
+      "Exact 19-value Claude deny domain required to block history rewrites, forced worktree removal, working-tree destruction, direct stash deletion and popping, admin merges, repository deletion, protected-file edits, and the operator-only reference refresh and timer installation commands.",
   })
 );
 

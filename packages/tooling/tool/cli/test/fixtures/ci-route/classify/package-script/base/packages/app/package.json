@@ -1,0 +1,8 @@
+{
+  "name": "@fixture/app",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  }
+}

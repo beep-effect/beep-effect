@@ -1,0 +1,20 @@
+{
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "previous": "8e7c9e20996b1c4c4d92acdbf966aef3e6af7e1086a1b8f0a634d7ddcd5bdaa4",
+  "subjects": ["//", "@beep/repo-ai-metrics"],
+  "review": {
+    "reviewer": "GPT-6-Astra independent foundation panel",
+    "reason": "Preserve upstream Bun1.4.4 qualification-v3 tuple and reapply reviewed foundation configuration inputs; no qualification or exception added.",
+    "basis": {
+      "path": "goals/agent-observability-foundation/research/CACHE-BASE-SYNC-REVIEW.md",
+      "sha256": "718ca64163c71d5feb5e5a074b25f1b8cde0c4f003666e017f2fd7dda2dfaca6"
+    }
+  }
+}

@@ -1,0 +1,596 @@
+{
+  "schemaVersion": "private-cargo-discovery-probe/v1",
+  "recordedAt": "2026-10-31T06:06:58.962288+00:00",
+  "authority": "Exploratory synthetic Cargo graph and explicit per-crate cache/output configuration; no current-repository qualification, activation or final feature decision.",
+  "sourceRevision": "0f8fb67d6c4c3099e40584a774fd6e2ff2fe6fd7",
+  "driverSha256": "5889f99563176e94cdbf9e474c8fcf2bdc3e0dee1128cbdc23cd589a108d2039",
+  "orchestrator": {
+    "pythonVersion": "3.15.1",
+    "executableSha256": "5ef0088638899c6440d88aab8e488da6d1eca55ada288a4fa7037fb5e5625415"
+  },
+  "sharedBoundedInvokeSource": {
+    "path": "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py",
+    "driverSha256": "7ea5bea0adfa2498bc096c639ba3ad87e91c0946bbb669b865fcb8c3d01b4f99",
+    "functionSha256": "f7106fa0488de694b4f9e5a6f658d2bfc5a54a2af7cd1690894a0930e8e8cda1"
+  },
+  "tools": {
+    "bun": {
+      "version": "1.4.4",
+      "sha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235"
+    },
+    "cargo": {
+      "version": "cargo 1.99.1 (5f94df478 2026-08-27)",
+      "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af"
+    },
+    "rustc": {
+      "version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853"
+    }
+  },
+  "clients": {
+    "schemaVersion": "cache-adoption-client-pin-observation/v1",
+    "authority": "Native binary identity observation; no runtime qualification granted.",
+    "stable": {
+      "packageVersion": "2.11.10",
+      "reportedVersion": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "packageVersion": "2.11.9-canary.1",
+      "reportedVersion": "2.11.9-canary.1",
+      "sha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+      "registryMetadata": "https://registry.npmjs.org/@turbo%2flinux-64/2.11.9-canary.1",
+      "tarball": "https://registry.npmjs.org/@turbo/linux-64/-/linux-64-2.11.9-canary.1.tgz",
+      "integrity": "sha512-/oz28k9JCTqzztuzD4oiyOPN692rLEoKePm5+n2zjyivej3ytEvQWL5M6qgSsw0f1Jx2pLJ7ucu+s4uC2C1OvQ==",
+      "integrityVerified": true,
+      "packageAndReportedVersionMatch": true
+    },
+    "sameBinaryBytes": false,
+    "registryTagsObserved": {
+      "latest": "2.11.10",
+      "canary": "2.11.9-canary.1"
+    },
+    "qualificationGate": "Binary pins established; runtime qualification still required.",
+    "clientSelection": "pinned-native-skip-infer",
+    "delegationControl": {
+      "withoutSkipInferFromRepository": "2.11.10",
+      "withSkipInferFromRepository": "2.11.9-canary.1",
+      "outsideRepository": "2.11.9-canary.1",
+      "existingPilotOwner": "Cache.pilot.ts already adds --skip-infer"
+    },
+    "canaryDocs": {
+      "registryMetadata": "https://registry.npmjs.org/turbo/2.11.9-canary.1",
+      "integrity": "sha512-SzpfiYzUudfnyOe1kbdQDLJeLNRs9hXVeZJYpXDhp+eGaB6vTUWHVmPJ858FVxz7PVOY/CEb4HCu+jU16EHSHQ==",
+      "integrityVerified": true,
+      "extractedPages": [
+        "crafting-your-repository/caching.mdx",
+        "crafting-your-repository/configuring-tasks.mdx",
+        "crafting-your-repository/using-environment-variables.mdx",
+        "reference/configuration.mdx",
+        "reference/run.mdx",
+        "reference/prune.mdx",
+        "reference/boundaries.mdx",
+        "reference/query.mdx",
+        "reference/watch.mdx",
+        "core-concepts/remote-caching.mdx"
+      ]
+    }
+  },
+  "fixtureCount": 4,
+  "fixturesRemoved": true,
+  "observations": [
+    {
+      "channel": "stable",
+      "shape": "standalone-nested",
+      "enabled": false,
+      "exit": 0,
+      "packages": ["web-a", "web-b"],
+      "tasks": [
+        {
+          "id": "web-a#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "web-b#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        }
+      ],
+      "stderrExcerpt": ""
+    },
+    {
+      "channel": "stable",
+      "shape": "standalone-nested",
+      "enabled": true,
+      "exit": 0,
+      "packages": ["web-a", "web-b"],
+      "tasks": [
+        {
+          "id": "web-a#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "web-b#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        }
+      ],
+      "stderrExcerpt": ""
+    },
+    {
+      "channel": "stable",
+      "shape": "virtual-root-workspace",
+      "enabled": false,
+      "exit": 0,
+      "packages": ["web-a", "web-b"],
+      "tasks": [
+        {
+          "id": "web-a#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "web-b#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        }
+      ],
+      "stderrExcerpt": ""
+    },
+    {
+      "channel": "stable",
+      "shape": "virtual-root-workspace",
+      "enabled": true,
+      "exit": 0,
+      "packages": [
+        "app-a-native",
+        "app-b-native",
+        "native-workspace",
+        "shared-native",
+        "web-a",
+        "web-b"
+      ],
+      "tasks": [
+        {
+          "id": "app-a-native#build",
+          "command": "cargo build --package=app-a-native --locked",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "app-b-native#build",
+          "command": "cargo build --package=app-b-native --locked",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "web-a#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "web-b#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        }
+      ],
+      "stderrExcerpt": ""
+    },
+    {
+      "channel": "canary",
+      "shape": "standalone-nested",
+      "enabled": false,
+      "exit": 0,
+      "packages": ["web-a", "web-b"],
+      "tasks": [
+        {
+          "id": "web-a#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "web-b#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        }
+      ],
+      "stderrExcerpt": ""
+    },
+    {
+      "channel": "canary",
+      "shape": "standalone-nested",
+      "enabled": true,
+      "exit": 0,
+      "packages": ["web-a", "web-b"],
+      "tasks": [
+        {
+          "id": "web-a#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "web-b#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        }
+      ],
+      "stderrExcerpt": ""
+    },
+    {
+      "channel": "canary",
+      "shape": "virtual-root-workspace",
+      "enabled": false,
+      "exit": 0,
+      "packages": ["web-a", "web-b"],
+      "tasks": [
+        {
+          "id": "web-a#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "web-b#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        }
+      ],
+      "stderrExcerpt": ""
+    },
+    {
+      "channel": "canary",
+      "shape": "virtual-root-workspace",
+      "enabled": true,
+      "exit": 0,
+      "packages": [
+        "app-a-native",
+        "app-b-native",
+        "native-workspace",
+        "shared-native",
+        "web-a",
+        "web-b"
+      ],
+      "tasks": [
+        {
+          "id": "app-a-native#build",
+          "command": "cargo build --package=app-a-native --locked",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "app-b-native#build",
+          "command": "cargo build --package=app-b-native --locked",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "web-a#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        },
+        {
+          "id": "web-b#build",
+          "command": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native --no-env-file run probe.mjs",
+          "dependencies": [],
+          "cache": {
+            "local": false,
+            "remote": false,
+            "status": "MISS",
+            "timeSaved": 0
+          },
+          "outputs": null
+        }
+      ],
+      "stderrExcerpt": ""
+    }
+  ],
+  "runtimeControls": [
+    {
+      "channel": "stable",
+      "case": "cold",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "6df89f7f3d08ba21",
+      "cache": "MISS",
+      "artifactSha256": "2857220b88de0a476e92e842644ce2816456d68ede09c447a39322c70429df40",
+      "programOutput": "library-A:external-A",
+      "summarySha256": "55c5a40c1973be3cf57ba8a6a59e153c8fcc37f2422e1079061d02ab5a67f5f5"
+    },
+    {
+      "channel": "stable",
+      "case": "removed-deliverable-replay",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "6df89f7f3d08ba21",
+      "cache": "HIT",
+      "artifactSha256": "2857220b88de0a476e92e842644ce2816456d68ede09c447a39322c70429df40",
+      "programOutput": "library-A:external-A",
+      "summarySha256": "76fb45b3c245936feeecd9ec30d75782ddbb127fea0009f0ff5ae8b5a0a0314f"
+    },
+    {
+      "channel": "stable",
+      "case": "transitive-library-mutation",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "a6b01dded86770f1",
+      "cache": "MISS",
+      "artifactSha256": "826a9e7cdc073fb4e0f56baafc92e34d34a467aba802693dd80f35b612524061",
+      "programOutput": "library-B:external-A",
+      "summarySha256": "59737f97a3b49fb69f86fe39032c025d83498816c4ef3193dafa2f48fa524193"
+    },
+    {
+      "channel": "stable",
+      "case": "undeclared-external-input-stale",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "a6b01dded86770f1",
+      "cache": "HIT",
+      "artifactSha256": "826a9e7cdc073fb4e0f56baafc92e34d34a467aba802693dd80f35b612524061",
+      "programOutput": "library-B:external-A",
+      "summarySha256": "c76086c46b70d15be0ab6b235407b73eaad35e18d036f903ed655d4dcb259639"
+    },
+    {
+      "channel": "stable",
+      "case": "declared-external-input",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "debfc14b6d1fca73",
+      "cache": "MISS",
+      "artifactSha256": "d631bf55aa830bd31eb09ce7c406fa06789a03f564d67008df96b4f4fde91ec6",
+      "programOutput": "library-B:external-B",
+      "summarySha256": "99aae0dcedc80d5b1d76bc8c8c637cb8f1f5f9221cb880a63fde3820b94b0eab"
+    },
+    {
+      "channel": "stable",
+      "case": "declared-external-mutation",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "fd8c0e58b4626ed5",
+      "cache": "MISS",
+      "artifactSha256": "d67126b7d194d28167e0804743d97eb6b6fd233bb1b3dfcec84d7e7afd1e2a48",
+      "programOutput": "library-B:external-C",
+      "summarySha256": "1231b1151140194f41e545e40d967143f5d0f601f57c871ba1c0bfb4d10a6824"
+    },
+    {
+      "channel": "stable",
+      "case": "preserved-transitive-input",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "5235e7879323a696",
+      "cache": "MISS",
+      "artifactSha256": "f3d01ce362e8a38a620d22da652b348fe72b1521d472f9b0641055a8a78500a3",
+      "programOutput": "library-C:external-C",
+      "summarySha256": "c11f1346f6078a1c4af8ffb508032f731e8d95c3d4283ecb9a0b33d5a6a75199"
+    },
+    {
+      "channel": "stable",
+      "case": "restored-declared-state",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "debfc14b6d1fca73",
+      "cache": "HIT",
+      "artifactSha256": "d631bf55aa830bd31eb09ce7c406fa06789a03f564d67008df96b4f4fde91ec6",
+      "programOutput": "library-B:external-B",
+      "summarySha256": "22675b0b063ff4238fd53cafdf59caaabc7b34a6a8d03762f93d4211141cd484"
+    },
+    {
+      "channel": "canary",
+      "case": "cold",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "56097c3b7b99aed6",
+      "cache": "MISS",
+      "artifactSha256": "8b0d32e9da42f263d335caf7b3c0958615542ff28e77d920063a6c9a38ff4ced",
+      "programOutput": "library-A:external-A",
+      "summarySha256": "a073a3ccf087e6d47d28ab1201f23b23bd10e67579d5217ea2f7e9936e056f9e"
+    },
+    {
+      "channel": "canary",
+      "case": "removed-deliverable-replay",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "56097c3b7b99aed6",
+      "cache": "HIT",
+      "artifactSha256": "8b0d32e9da42f263d335caf7b3c0958615542ff28e77d920063a6c9a38ff4ced",
+      "programOutput": "library-A:external-A",
+      "summarySha256": "c58c6929b01f3cbbe43b2b34c7aca0b6369ebba645476bbafb23fd7259efeed9"
+    },
+    {
+      "channel": "canary",
+      "case": "transitive-library-mutation",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "6238b4dee76565fe",
+      "cache": "MISS",
+      "artifactSha256": "d1f4a8c9387a332d1823688142a3cf57540789ac220f8f7d5402e31e431cd9e6",
+      "programOutput": "library-B:external-A",
+      "summarySha256": "5ddff2b23d66d5f73894f243f90a713d00a07901036bdba75aac7d954e85cf30"
+    },
+    {
+      "channel": "canary",
+      "case": "undeclared-external-input-stale",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "6238b4dee76565fe",
+      "cache": "HIT",
+      "artifactSha256": "d1f4a8c9387a332d1823688142a3cf57540789ac220f8f7d5402e31e431cd9e6",
+      "programOutput": "library-B:external-A",
+      "summarySha256": "f9faeb2a67f3f9e0f579b0045cfcefd63d0366a20f83ff43fa613258d815ba42"
+    },
+    {
+      "channel": "canary",
+      "case": "declared-external-input",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "8e5bf877569b8b68",
+      "cache": "MISS",
+      "artifactSha256": "96b9cd7d9ac276a48891a08a694464b38b8dbfd1b3d053ae9d96d4b0bd263718",
+      "programOutput": "library-B:external-B",
+      "summarySha256": "854020f37da5a142af4ff84529f3c42c2fff8470c5382b709333aaf7c71bcb7f"
+    },
+    {
+      "channel": "canary",
+      "case": "declared-external-mutation",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "56c0637e3584db3a",
+      "cache": "MISS",
+      "artifactSha256": "f6cd7eb4ddecca48856486f2e7929e617f372574413c49654885a99e2639f5b3",
+      "programOutput": "library-B:external-C",
+      "summarySha256": "93641de8134486b74067d23324ab8b580f776d0ed073878f406f2f0f65225e35"
+    },
+    {
+      "channel": "canary",
+      "case": "preserved-transitive-input",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "9aa909fb147f310b",
+      "cache": "MISS",
+      "artifactSha256": "80426141fdd3c1c214966575cb3bba3ec53893dfaf19eb377214f7cc4c3d20ef",
+      "programOutput": "library-C:external-C",
+      "summarySha256": "ff5f3f9cc7c891b304bb3eb41f506e62fa98751aba5a978d9f00fe23b025a063"
+    },
+    {
+      "channel": "canary",
+      "case": "restored-declared-state",
+      "nativeExit": 0,
+      "taskId": "app-a-native#build",
+      "hash": "8e5bf877569b8b68",
+      "cache": "HIT",
+      "artifactSha256": "96b9cd7d9ac276a48891a08a694464b38b8dbfd1b3d053ae9d96d4b0bd263718",
+      "programOutput": "library-B:external-B",
+      "summarySha256": "20f4e08cfe4dca5c77708047f8fafa884a2a5d2f0d268d916954b5caaf353e16"
+    }
+  ],
+  "assertedRuntimeCases": 16
+}

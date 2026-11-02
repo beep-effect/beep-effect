@@ -1,0 +1,40 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13275397-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "The inertial sensor as set forth in claim 5",
+      "reason": "Claim7->5->1 excludes siblings2 and6. Spacer/thickness/gap/top-surface/stopper references cannot borrow those siblings’ introductions. Separate bottom surfaces of post versus mass body remain distinct; no ownership collapse."
+    },
+    {
+      "quote": "at least the two first cavities",
+      "reason": "Exact at least selection/minimum language remains in functional text; explicit the two first cavities term retains meaningful two and first in its head. No identity to root1 single first cavity or fabricated second cavity is asserted."
+    },
+    {
+      "quote": "the edge",
+      "reason": "Cap edge in1.d is not the membrane edge introduced in1.c. Complete relative clause preserves cap ownership; no false membrane-edge antecedent. Relative which is connecting text under entity-mentions/v1."
+    },
+    {
+      "quote": "claims 4, 7 and 19-22",
+      "reason": "Actual rejection specifically includes selected4/7. Selected1-7 family context preserved exactly. Independent19/context8-22 do not supply ancestors. Source critic accepted with original extraction-zero limitation retained for attorney review."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation from canonical claims and native XML. Exact manually selected quote locations only; no decomposer, implementation, predictions, synthetic fixtures or prior conformance references read. Complete lexical noun heads, nested enumeration and explicit function represented; inferred introductions omitted. Functional parts preserve intervening source text. Confidence is an extractor assessment, not attorney agreement. Independent critic review remains required."
+}

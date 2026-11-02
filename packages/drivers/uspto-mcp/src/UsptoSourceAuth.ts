@@ -1,6 +1,8 @@
 /**
  * USPTO `SourceAuth` registration.
  *
+ * **Details**
+ *
  * USPTO's Open Data Portal credential is optional at the driver layer
  * (`@beep/uspto`'s `Uspto.layer` always constructs; the `X-API-KEY` header is
  * attached only when a key is configured and the target is same-origin —

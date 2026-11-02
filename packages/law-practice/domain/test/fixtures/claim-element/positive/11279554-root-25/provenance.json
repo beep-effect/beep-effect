@@ -1,0 +1,31 @@
+{
+  "applicationNumber": "11279554",
+  "publicationNumber": "US20060241924A1",
+  "publicationDate": "2006-10-26",
+  "nativeXmlSha256": "b58d5ce029daf21b9b7a09b20566032567d8596c2730b943e0b7a0bf4083dfb2",
+  "claimsXmlSha256": "574a7e67dcbe0787ab3339416900cfcda6355d75262d1d9997cd011562d45e4b",
+  "officeActionDocumentIdentifiers": [
+    "FRJR91A1PPOPPY5"
+  ],
+  "officeActionMailDate": "2009-02-23",
+  "officeActionSection112Text": [
+    "7. claims 8 and 20 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention. this is because they use vague terms making the claims vague and indefinite.\r\n7.1 claim 8, lines 1-2 state, “validating that the input data files describe a pipeline system that may be optimized”. the use of the term “may be” makes the claim vague and indefinite as to if the pipeline system that is optimized or not.\r\n7.2 claim 20, lines 1-2 state, “validating that the input data files describe a pipeline system that may be optimized”. the use of the term “may be” makes the claim vague and indefinite as to if the pipeline system that is optimized or not.\r\n8. claims 2-4, 7-9, 13-14, 20-21, 25-28, 31-32, 35 and 38-39 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\n8.1 in claim 2, line 3, “the feasible operational state” has no antecedent basis.\r\nin claim 2, lines 5-6, “the operational state” has no antecedent basis.\r\nin claim 2, lines 6-8, “the modified solution” has no antecedent basis.\r\nin claim 2, line 7, “the performance” has no antecedent basis.\r\nin claim 3, lines 1-2, “the feasible operational state” has no antecedent basis.\r\nin claim 4, line 2, “the feasible operational state” has no antecedent basis.\r\nin claim 7, lines 1-2, “the feasible operational state” has no antecedent basis.\r\nin claim 7, line 3, “the one or more solutions” has no antecedent basis.\r\nin claim 8, lines 1-2, “the input data files” has no antecedent basis.\r\nin claim 9, line 4, “the generation of a solution” has no antecedent basis.\r\nin claim 13, line 2, “the operation” has no antecedent basis.\r\nin claim 14, lines 6-8, “the modified solution” has no antecedent basis.\r\nin claim 14, line 7, “the performance” has no antecedent basis.\r\nin claim 14, line 9, “the poorest evaluation” has no antecedent basis.\r\nin claim 19, lines 3-4, “the one or more solutions” has no antecedent basis.\r\nin claim 20, line 2, “the input data files” has no antecedent basis.\r\nin claim 21, line 4, “the generation of a solution” has no antecedent basis.\r\nin claim 25, line 2, “the operations” has no antecedent basis.\r\nin claim 26, line 3, “the feasible operational state” has no antecedent basis.\r\nin claim 26, lines 5-6, “the operational state” has no antecedent basis.\r\nin claim 26, lines 6-8, “the modified solution” has no antecedent basis.\r\nin claim 26, line 7, “the performance” has no antecedent basis.\r\nin claim 26, line 9, “the poorest evaluation” has no antecedent basis.\r\nin claim 27, line 2, “the feasible operational state” has no antecedent basis.\r\nin claim 28, line 2, “the feasible operational state” has no antecedent basis.\r\nin claim 31, lines 1-2, “the feasible operational state” has no antecedent basis.\r\nin claim 21, line 3, “the one or more solutions” has no antecedent basis.\r\nin claim 32, line 4, “the generation of a solution” has no antecedent basis.\r\nin claim 35, line 1, “the operations” has no antecedent basis.\r\nin claim 35, line 2, “the production of material” has no antecedent basis.\r\nin claim 38, line 3, “the feasible operational state” has no antecedent basis.\r\nin claim 38, line 5, “the operation” has no antecedent basis.\r\nin claim 38, lines 5-6, “the operational state” has no antecedent basis.\r\nin claim 38, lines 6-8, “the modified solution” has no antecedent basis.\r\nin claim 38, line 7, “the performance” has no antecedent basis.\r\nin claim 38, line 9, “the poorest evaluation” has no antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "ELYE47L3PPOPPY2",
+      "officialDate": "2006-04-12T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [],
+  "documentInventoryCount": 64,
+  "documentInventoryRows": 64,
+  "primaryCpc": "F17D   3/00",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/11279554",
+    "https://api.uspto.gov/api/v1/patent/applications/11279554/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

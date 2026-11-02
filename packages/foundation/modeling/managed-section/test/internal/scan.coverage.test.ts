@@ -41,7 +41,7 @@ describe("linear marker recognition regressions", () => {
     const dialect = SectionDialect.make({ phrase: "MANAGED SECTION", styles: [plain, CommentStyle.html] });
     const begin = '<!-- --- BEGIN tool MANAGED SECTION note="--- quoted ---" --- -->  \t';
     const end = "<!-- --- END tool MANAGED SECTION --- --> \t";
-    const text = "\uFEFF" + begin + "\r\nbody\r\n" + end + "\r\nfooter";
+    const text = `\uFEFF${begin}\r\nbody\r\n${end}\r\nfooter`;
     const result = scan(text, dialect);
     if (!result.ok) assert.fail("well-formed quoted attributes must scan");
     assert.strictEqual(result.sections.length, 1);
@@ -50,7 +50,7 @@ describe("linear marker recognition regressions", () => {
     assert.strictEqual(placed.start, 1);
     assert.strictEqual(placed.end, 1 + begin.length + "\r\nbody\r\n".length + end.length);
     assert.strictEqual(placed.line, 1);
-    assert.strictEqual(Str.slice(placed.start, placed.end)(text), begin + "\r\nbody\r\n" + end);
+    assert.strictEqual(Str.slice(placed.start, placed.end)(text), `${begin}\r\nbody\r\n${end}`);
     assert.strictEqual(placed.section.commentStyle, CommentStyle.html);
     assert.deepStrictEqual(placed.section.attributes, { note: "--- quoted ---" });
     assert.strictEqual(placed.section.content, "body");
@@ -77,7 +77,7 @@ describe("linear marker recognition regressions", () => {
     const dialect = SectionDialect.default;
     const id = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
     for (const size of [4096, 16384, 65536, 262144]) {
-      const malformed = "# --- BEGIN other MANAGED SECTION x" + Str.repeat(size)(" ") + "!";
+      const malformed = `# --- BEGIN other MANAGED SECTION x${Str.repeat(size)(" ")}!`;
       const text = `${dialect.beginMarker(id)}\n${malformed}\n${dialect.endMarker(id)}`;
       const result = scan(text, dialect);
       if (!result.ok) assert.fail("malformed markers remain content");

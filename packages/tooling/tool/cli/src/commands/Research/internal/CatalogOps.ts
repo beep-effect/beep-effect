@@ -18,7 +18,7 @@ import { ResearchCommandError } from "../Research.errors.ts";
 import { KnowledgeCardFrontmatter } from "../Research.schemas.ts";
 import { CATALOG_DB_NAME, INSERT_CAPTURE_LOG, INSERT_SEEN_URL, runWithResearchDb, UPSERT_CARD } from "./Catalog.ts";
 import { renderCard, sha256HexOf, VAULT_DIRS, writeCard } from "./Vault.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $RepoCliId.create("commands/Research/internal/CatalogOps");
 
@@ -115,13 +115,13 @@ export const persistCards = Effect.fn("Research.persistCards")(function* (
   databasePath: string,
   subcommand: string,
   cards: ReadonlyArray<CardPersistRow>
-): Effect.fn.Return<void, ResearchCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, ResearchCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   if (A.length(cards) === 0) {
     return;
   }
   const now = DateTime.formatIso(yield* DateTime.now);
   for (const card of cards) {
-    yield* writeCard(vaultRoot, card.relativePath, renderCard(card.frontmatter, card.body));
+    yield* writeCard(vaultRoot, card.relativePath, yield* renderCard(card.frontmatter, card.body));
   }
   const hashedCards = yield* Effect.forEach(cards, (card) =>
     Effect.map(sha256HexOf(card.body), (contentHash) => ({ card, contentHash }))

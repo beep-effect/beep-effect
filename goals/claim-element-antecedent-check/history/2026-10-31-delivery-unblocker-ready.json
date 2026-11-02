@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "claim-delivery-unblocker-checkpoint/v1",
+  "date": "2026-10-31",
+  "repairPullRequest": "https://github.com/beep-effect/beep-effect/pull/2402",
+  "repairStatus": "ready-for-review",
+  "verifiedSourceHead": "f9549af429dd065cc288884ca73e9215a653beaf",
+  "publishedReviewHead": "cf7267cca4edb34a6b037895df5df1ba5a907981",
+  "verifiedAndReviewTreeSha": "cc3e2b0c4a175b7645c887be4764e141fea0a7bb",
+  "reviewCommitHasNoTreeChanges": true,
+  "mergedRepairBase": "3fbb6e614b6a475a6c58748e8c662a9568347d82",
+  "localFinalCheckComplete": true,
+  "localFinalCheckVerdict": "pass",
+  "localFinalCheckReceiptSha256": "b7d038294bb8a926bfb0bc341d268a1b34d231358b6d6dadfc263c72f18c4dc1",
+  "steps": [
+    {
+      "gate": "expectation-rewrite",
+      "status": "passed"
+    },
+    {
+      "gate": "cheap-gates",
+      "status": "skipped",
+      "reason": "Prior local publication collection exceeded ten minutes; current scoped policies pass; hosted full collection required"
+    },
+    {
+      "gate": "lint-policy",
+      "status": "skipped",
+      "reason": "Prior full policy run exceeded ten minutes; observed JSDoc and deprecation defects are repaired and scoped checks pass; hosted full policy required"
+    },
+    {
+      "gate": "lint",
+      "status": "passed"
+    },
+    {
+      "gate": "lint",
+      "status": "passed"
+    },
+    {
+      "gate": "repo-sanity",
+      "status": "passed"
+    },
+    {
+      "gate": "check",
+      "status": "passed"
+    },
+    {
+      "gate": "docgen",
+      "status": "skipped",
+      "reason": "Constrained local compute after publication threshold; canonical inventory completed; hosted Docgen required"
+    },
+    {
+      "gate": "fallow",
+      "status": "passed"
+    },
+    {
+      "gate": "coverage",
+      "status": "skipped",
+      "reason": "Constrained local compute; broad CLI audit controlled-stopped incomplete after thirty minutes; hosted coverage required"
+    }
+  ],
+  "focusedTestsPassed": 115,
+  "focusedTestFiles": 7,
+  "moduleParserEquivalenceInputs": 942,
+  "moduleParserEquivalenceCorpus": "CLI source before the graft retirement; original and refactored parser compared on identical inputs",
+  "moduleParserOutputMismatches": 0,
+  "complexityFindingsBefore": 11,
+  "complexityFindingsAfter": 0,
+  "mainSyncedFallowAuditFindings": 0,
+  "schemaOrComplexityThresholdWeakened": false,
+  "requiredHostedChecksSettled": false,
+  "reviewWindowSatisfied": false,
+  "repairMerged": false,
+  "repairConsumedByClaimBranch": false,
+  "claimRuntimeFreeze": "research/implementation-repair-v19-freeze.json",
+  "runtimeHashesChecked": 20,
+  "runtimeHashMismatches": 0,
+  "protectedHistoricalFilesChecked": 631,
+  "protectedHistoricalHashMismatches": 0,
+  "carriedStrictMatches": 37,
+  "selectedClaims": 538,
+  "all34ProtectedPassesRetained": true,
+  "claimEvaluationRerunForThisCheckpoint": false,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "attorneyAttendanceRequired": false,
+  "actualAttorneyReview": false,
+  "goalComplete": false
+}

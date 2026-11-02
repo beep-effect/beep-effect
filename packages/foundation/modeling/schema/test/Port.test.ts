@@ -60,7 +60,7 @@ describe("Port", () => {
     Effect.fnUntraced(function* () {
       const failure1 = yield* Effect.exit(decodeUnknownPortEffect(0));
       pipe(failure1, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure1)) {
+      if (Exit.isFailure(failure1) && Exit.hasFails(failure1)) {
         expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Expected a valid transport port number between 1 and 65535"
         );
@@ -127,7 +127,7 @@ describe("PortFromString", () => {
     Effect.fnUntraced(function* () {
       const failure2 = yield* Effect.exit(decodeUnknownPortFromStringEffect("0x50"));
       pipe(failure2, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure2)) {
+      if (Exit.isFailure(failure2) && Exit.hasFails(failure2)) {
         expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Port strings must contain only ASCII decimal digits"
         );

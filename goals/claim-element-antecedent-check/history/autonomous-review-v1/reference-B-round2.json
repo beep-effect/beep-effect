@@ -1,0 +1,2526 @@
+{
+  "schemaVersion": "claim-autonomous-reference-review/v1",
+  "reviewAuthority": "automated",
+  "reviewerRole": "independent-reference-critic-B",
+  "sessionRole": "reference-review-B",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "createdAt": "2026-10-31T09:36:43.452706+00:00",
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "independence": {
+    "runtimeDecompositionRulesInspected": false,
+    "runtimePolicyInspected": false,
+    "predictionsInspected": false,
+    "syntheticRuleFixturesInspected": false,
+    "otherReviewerOutputInspected": true,
+    "sourceAuditScope": "Frozen annotations and source/provenance only. Existing source-audit receipts were inspected as provenance, not prediction or semantic critic output. No existing file was edited.",
+    "otherReviewerOutputInspectionBoundary": "Only after both initial independent receipts were complete; round 2 criticism explicitly authorized. No runtime rules, policy, predictions or synthetic fixtures inspected."
+  },
+  "inputBundle": {
+    "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+    "annotationBundleDigest": "1b2f9c790af6bb6ba88eda3c753afc343d323e0c329cfd8ce80f80e01541c096",
+    "addendumBundleDigest": "bc6a2e4d058bb168f29a44e9bc0241450a4f3890a6d5e1d233b9939c00332297",
+    "files": [
+      {
+        "path": "AGENTS.md",
+        "sha256": "787bcd8fd29efc7245146e803a8c7e851b83c901c1f68f94dae408a1c049a4c8"
+      },
+      {
+        "path": "goals/claim-element-antecedent-check/research/AUTONOMOUS-ACCEPTANCE-v1.md",
+        "sha256": "fe1eee1637943d0554b13d69b221644afd927aeb44877325f2fa55ee86394e90"
+      },
+      {
+        "path": "goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md",
+        "sha256": "317b87b6452f810ebb0f6526a5a76c508768080837ef335643415ff6985361b3"
+      },
+      {
+        "path": "goals/claim-element-antecedent-check/history/attorney-review/index.html",
+        "sha256": "3137a07a0d4c316e1c9139c7c57e48f601fd5a361df62728262f354a59f889a6"
+      },
+      {
+        "path": "goals/claim-element-antecedent-check/history/attorney-review/packet.json",
+        "sha256": "0417c781fc706510a2200a5bb84b18eadf40acbdcdb289ea006d81d824caac96"
+      },
+      {
+        "path": "goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
+        "sha256": "f4762a3df511e409baa3fbd240d5e865b76d4189e653c9cd47ffe401bd251ba7"
+      },
+      {
+        "path": "goals/claim-element-antecedent-check/history/attorney-review/addendum.json",
+        "sha256": "ee7d67cfef9b72ab31956b503fd5c616b686b7a871af14211967cfaf51da7ccd"
+      },
+      {
+        "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts",
+        "sha256": "71a1c5c72b55dd973effeb277d4eda5f80ce349961440080fdac25d4beef9101"
+      },
+      {
+        "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts",
+        "sha256": "7a3ad126fbeaf384971268b9dd75c1ff3ae520451232f1ade13a47755be1a550"
+      },
+      {
+        "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
+        "sha256": "4f2935d1f082ff5ab3082755d1de914bceb0e65afbee1dfbd9d73df61612973d"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/claims.json",
+        "sha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/expected.json",
+        "sha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/provenance.json",
+        "sha256": "9ea4929177cad102c1ac1ba06017c6c3f162a8b66f8f8569ae2ee7f1ff9c1702"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/source-audit.json",
+        "sha256": "85501384840483b75074503ed79070493b7d7be804c31b3de654ff8d15efe498"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/source.claims.xml",
+        "sha256": "f85d043d70d8516106de0b96f9bb291c8f611adeef4c545ffcbff3eed3df5fbb"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/claims.json",
+        "sha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/expected.json",
+        "sha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/provenance.json",
+        "sha256": "5b56c3932d813fc7d1b61295acddac0cfd063230972cce434652d118115602f1"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/source-audit.json",
+        "sha256": "7d3019c49da3d5a4dac3461680b890fbcea8c6cec76fe13ab5a5f3a709914fd4"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/source.claims.xml",
+        "sha256": "3699396cd783225323ecb7840391bd127d8765c12ca741961e701c6e047974d7"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/claims.json",
+        "sha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/expected.json",
+        "sha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/provenance.json",
+        "sha256": "18005b207c05e724e24ca4c02aee5853fec02186111aa9b17ad704234deb5e0d"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/source-audit.json",
+        "sha256": "98c067db598ef13a29af42f341d7666a01b140d0b6fb02db59bf4b5866c32b73"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/source.claims.xml",
+        "sha256": "bde97a2d6a8356446f76c37acffaa5ce8b91c080b5250f3c60c7baa87533d566"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/claims.json",
+        "sha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/expected.json",
+        "sha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/provenance.json",
+        "sha256": "b006eaffc69afa88c19db524dd08eb5decd90f19222c0ce0e4c5e2fda09622f8"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/source-audit.json",
+        "sha256": "a8fdd938a39eccdbe688f25d3254021ad86494f29b9f587617bff25b1a8ad645"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/source.claims.xml",
+        "sha256": "249a28c94a5d6e0b4ef4c590743d3f7bd139afbe2203dcae9124cc8da0670acb"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/claims.json",
+        "sha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/expected.json",
+        "sha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/provenance.json",
+        "sha256": "b05768cd1eeca9087d527bac91e3addec9dd5348eeffa45e0363af2a48362033"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/source-audit.json",
+        "sha256": "1bcde8a6cc1abbacfbe6aaed89be9f9fd616cf8c4891c525cd30a3beb6e61623"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/source.claims.xml",
+        "sha256": "c75b0bb7254a5cdad49ead95d97b4d04b8ff1d78e1b9be46f0724fc313f2a146"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/claims.json",
+        "sha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/expected.json",
+        "sha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/provenance.json",
+        "sha256": "820785f349d31b5b31fd0afb151132b8ce25d9da5cd0a8ad7558b8d77dc5e0ee"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/source-audit.json",
+        "sha256": "72ea659c832e2d30b4007a7b5c7a33bcf61446f312a6dfe9677fb27f5238fe1d"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/source.claims.xml",
+        "sha256": "399d18d79cc889291a1a77caeeac14d34aac07438b7973fabe1026298fd942fd"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/claims.json",
+        "sha256": "f515dd518e402bb6ae9c3cbac662a3203ac1e1b236256d986953696f5ef7307c"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/expected.json",
+        "sha256": "6077b7c4c31dcdb2ac1f867cea149174e35f555f82742805c27f2e467b98df11"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/provenance.json",
+        "sha256": "b009a095f159d459c658e4173fc4137fdd6ffa072bc623393f55d33d658bea86"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/source-audit.json",
+        "sha256": "16277fbeb1c5ccd33c4a3fe12b86a7a3b492baac5946f33f76a06884f80cf5b5"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/source.claims.xml",
+        "sha256": "de5b0f1bcc35b1f7247c380675a3be7982938f1696bf398b9e022e2612f0f5b3"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/claims.json",
+        "sha256": "73a860bc0b4e953d68579b91e7f118b75cea86732da371ebf2a08fa4b44b165d"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/expected.json",
+        "sha256": "ba5a317888ff6aeac74731169e1d6fef8bfe813afb1d61a09a0aa3c6ff95f8d6"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/provenance.json",
+        "sha256": "52c998170503ba2c91ace5db86fb375fa1f9953fbfe919b38009c1832acea53b"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/source-audit.json",
+        "sha256": "7558ba705fc7b924b75f374b140108115d6a07b1b634fca6df048ba3b50b3321"
+      },
+      {
+        "path": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/source.claims.xml",
+        "sha256": "58be59684d73d176ac902fd2f074c5b486002656ec3243e87ca1c5f54f7288aa"
+      },
+      {
+        "path": ".beep/autonomous-reference-review-B.json",
+        "sha256": "b91a3f52c9bf45884bcb71c4d591d65798ab440d34616fb75f71d1b31dfc4cb6"
+      },
+      {
+        "path": ".beep/autonomous-reference-review-A.json",
+        "sha256": "cdf648947d7dc8c8b3b637d46a3d0566524d7fd3765e95d89de2071b2b619738"
+      }
+    ],
+    "fileManifestSha256": "ac00134cd67533d8595c23bc7d34875db70d6094027ea32588c4e1ad4d097e07"
+  },
+  "sourceBindingChecks": [
+    {
+      "familyId": "14432872-root-5",
+      "annotationMatchesPacket": true,
+      "claimsMatchPacket": true,
+      "sourceXmlMatchesProvenance": true,
+      "publicationNumber": "US20160346041A1",
+      "officeActionMailDate": "2017-05-19",
+      "officeActionIdentifiers": [
+        "J2SZPL3ZRXEAPX2"
+      ]
+    },
+    {
+      "familyId": "13575735-root-1",
+      "annotationMatchesPacket": true,
+      "claimsMatchPacket": true,
+      "sourceXmlMatchesProvenance": true,
+      "publicationNumber": "US20120294970A1",
+      "officeActionMailDate": "2015-04-13",
+      "officeActionIdentifiers": [
+        "I8A52WO0PXXIFW4"
+      ]
+    },
+    {
+      "familyId": "14970678-root-17",
+      "annotationMatchesPacket": true,
+      "claimsMatchPacket": true,
+      "sourceXmlMatchesProvenance": true,
+      "publicationNumber": "US20160174707A1",
+      "officeActionMailDate": "2016-08-16",
+      "officeActionIdentifiers": [
+        "IRRSD7PYRXEAPX2"
+      ]
+    },
+    {
+      "familyId": "14659462-root-1",
+      "annotationMatchesPacket": true,
+      "claimsMatchPacket": true,
+      "sourceXmlMatchesProvenance": true,
+      "publicationNumber": "US20150192169A1",
+      "officeActionMailDate": "2016-05-17",
+      "officeActionIdentifiers": [
+        "IOAAT5U4RXEAPX4"
+      ]
+    },
+    {
+      "familyId": "11299450-root-1",
+      "annotationMatchesPacket": true,
+      "claimsMatchPacket": true,
+      "sourceXmlMatchesProvenance": true,
+      "publicationNumber": "US20070136415A1",
+      "officeActionMailDate": "2008-10-21",
+      "officeActionIdentifiers": [
+        "FMJAPNLLPPOPPY5"
+      ]
+    },
+    {
+      "familyId": "13484431-root-19",
+      "annotationMatchesPacket": true,
+      "claimsMatchPacket": true,
+      "sourceXmlMatchesProvenance": true,
+      "publicationNumber": "US20130025114A1",
+      "officeActionMailDate": "2014-02-24",
+      "officeActionIdentifiers": [
+        "HS1U3WJ9PXXIFW4"
+      ]
+    }
+  ],
+  "mechanicalVerification": {
+    "packetAnnotationsAndClaimsMatchCurrentFrozenFiles": true,
+    "elementTermAndFunctionalPartAnchorsExact": true,
+    "functionalPartsReassembleTheirElementSpans": true,
+    "meaning": "Manual source/semantic review plus mechanical span/hash checks; schema validity alone is not semantic acceptance."
+  },
+  "claimDecisions": [
+    {
+      "id": "14432872-root-5:5",
+      "familyId": "14432872-root-5",
+      "claimNumber": 5,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "reason": "Four explicit lettered steps are preserved with their functional language. The method does not depend on claim 1, so device/conduct/fiber references cannot borrow introductions from that separate claim. Components and medication have actual bare introductions in step b; repeated medication links there.",
+      "evidence": [
+        {
+          "claimNumber": 5,
+          "anchor": {
+            "startChar": 369,
+            "endChar": 429,
+            "quote": "Introducing components and medication into the three-way key"
+          }
+        }
+      ],
+      "annotationSha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "canonicalClaimsSha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.88
+      },
+      "round2CriticismResponse": "I do not adopt A’s separate-sub-action criterion. In 5.b, components and said components are explicit participants before introducing them; in 5.c, the vein is explicit before seal it. Each represented functional element preserves the whole operation and its explicit entity. entity-mentions/v1 says representability alone does not require another proform term and requires source-specific adjudication only when it supplies the only explicit entity mention needed by a relation. Dividing each verb into a new relation would add an unrequired granularity rule. Retain agree at 0.96; this is representation agreement, not a legal pronoun-clarity ruling.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14432872-root-5:6",
+      "familyId": "14432872-root-5",
+      "claimNumber": 6,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "reason": "The source expressly depends on 5 and narrows step b. Mixture, sclerosant substance and air remain separate nominal phrases; medication links to the bare introduction in 5.b, without manufacturing a device dependency.",
+      "evidence": [
+        {
+          "claimNumber": 6,
+          "anchor": {
+            "startChar": 101,
+            "endChar": 151,
+            "quote": "wherein step b) is characterized in that a mixture"
+          }
+        }
+      ],
+      "annotationSha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "canonicalClaimsSha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14432872-root-5:7",
+      "familyId": "14432872-root-5",
+      "claimNumber": 7,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "reason": "The source depends on 5 and narrows step c, preserving injected volume, continuous firing, wattage and time as functional text. Medication has a nominal introduction in 5.b; laser has no invented indefinite introduction.",
+      "evidence": [
+        {
+          "claimNumber": 7,
+          "anchor": {
+            "startChar": 201,
+            "endChar": 264,
+            "quote": "the laser (31) is fired continuously at between 1.5 and 5 Watts"
+          }
+        }
+      ],
+      "annotationSha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "canonicalClaimsSha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14432872-root-5:8",
+      "familyId": "14432872-root-5",
+      "claimNumber": 8,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "reason": "Dependency on 5 and step-c limitation are explicit. Pulses is a real bare nominal introduction for the later the pulses; administration, type and time-period phrases are retained without inferring an introduced laser.",
+      "evidence": [
+        {
+          "claimNumber": 8,
+          "anchor": {
+            "startChar": 310,
+            "endChar": 373,
+            "quote": "the administration of the pulses depending on the type of laser"
+          }
+        }
+      ],
+      "annotationSha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "canonicalClaimsSha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "13575735-root-1:1",
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "outcome": "revise",
+      "confidence": 0.99,
+      "reason": "The explicit component hierarchy and anchored relationships are otherwise supportable, but frozen heads end and side drop the meaningful selector one at 1.b.iv and 1.c. Under lexical-head/v1 those bare heads must retain one. This is an overlay concern only; do not edit frozen labels.",
+      "evidence": [
+        {
+          "claimNumber": 1,
+          "anchor": {
+            "startChar": 622,
+            "endChar": 672,
+            "quote": "one end of the top surface of the connection frame"
+          }
+        }
+      ],
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "revise",
+        "confidence": 0.99
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "revise",
+        "confidence": 0.98
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "13575735-root-1:2",
+      "familyId": "13575735-root-1",
+      "claimNumber": 2,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "reason": "Direct dependency on 1, linear extension relationship, two discharging-portion mentions and the abstract a manner term are preserved. The groove and cooling-part antecedents trace to the actual introductions in 1.",
+      "evidence": [
+        {
+          "claimNumber": 2,
+          "anchor": {
+            "startChar": 69,
+            "endChar": 153,
+            "quote": "the curl-cooling groove of the natural cooling and shaping part is extended linearly"
+          }
+        }
+      ],
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "13575735-root-1:3",
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "outcome": "revise",
+      "confidence": 0.99,
+      "reason": "The guide and five explicit subordinate components are represented, including reciprocal connecting language. Both bare one side phrases at 3.a and 3.a.i lose the selector one in their frozen heads; lexical-head/v1 supports one side.",
+      "evidence": [
+        {
+          "claimNumber": 3,
+          "anchor": {
+            "startChar": 124,
+            "endChar": 171,
+            "quote": "the opposite side to one side of the paperboard"
+          }
+        }
+      ],
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "revise",
+        "confidence": 0.99
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "revise",
+        "confidence": 0.98
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "13575735-root-1:4",
+      "familyId": "13575735-root-1",
+      "claimNumber": 4,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "A correctly identifies a gap in my first-round confidence. Both is an outer quantifier, but also fixes dual scope. lexical-head/v1 explicitly discusses pronominal determiners and meaningful counts/selectors without classifying both. I cannot certify side edges over both side edges at >=0.95 from these instructions alone.",
+      "evidence": [
+        {
+          "claimNumber": 4,
+          "anchor": {
+            "startChar": 121,
+            "endChar": 194,
+            "quote": "a bent protrusion formed bent inwardly at both side edges of the rear end"
+          }
+        },
+        {
+          "claimNumber": 4,
+          "anchor": {
+            "startChar": 163,
+            "endChar": 178,
+            "quote": "both side edges"
+          }
+        }
+      ],
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.95
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.9
+      },
+      "round2CriticismResponse": "A correctly identifies a gap in my first-round confidence. Both is an outer quantifier, but also fixes dual scope. lexical-head/v1 explicitly discusses pronominal determiners and meaningful counts/selectors without classifying both. I cannot certify side edges over both side edges at >=0.95 from these instructions alone.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "13575735-root-1:5",
+      "familyId": "13575735-root-1",
+      "claimNumber": 5,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "reason": "The source directly names claim 1, rather than claims 1 through 3. Lower-mold and groove references reach claim-1 introductions; thereon refers to the same explicitly named lower mold, and the heat wire is introduced locally.",
+      "evidence": [
+        {
+          "claimNumber": 5,
+          "anchor": {
+            "startChar": 39,
+            "endChar": 116,
+            "quote": "according to claim 1, wherein the lower mold has a heat wire disposed thereon"
+          }
+        }
+      ],
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14970678-root-17:17",
+      "familyId": "14970678-root-17",
+      "claimNumber": 17,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "reason": "Cabinet housing precedes the first housing reference; the later a housing creates genuine identity uncertainty, so later housing edges are properly withheld. One/other selects complementary roles without selecting first versus second; nominal bias/path introductions are not invented from predicates.",
+      "evidence": [
+        {
+          "claimNumber": 17,
+          "anchor": {
+            "startChar": 28,
+            "endChar": 82,
+            "quote": "a cabinet housing and a drawer forming a slidable body"
+          }
+        }
+      ],
+      "annotationSha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "canonicalClaimsSha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.89
+      },
+      "round2CriticismResponse": "I agree with A that housing identity is unresolved, but disagree that the frozen annotation thereby requires a changed claim verdict: the packet explicitly records this reference concern and withholds the later ambiguous edges. My agree is agreement with that conservative annotated structure plus its disclosed concern, not a claim to resolve cabinet housing versus housing or pick a first/second latch role.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14970678-root-17:18",
+      "familyId": "14970678-root-17",
+      "claimNumber": 18,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "My first round conflated lack of an indefinite bias introduction with absence of any possible nominal reference target. Claim 17 explicitly says the bias before claim 18 says said bias. Whether this definite-first mention qualifies as an introducing target is not expressly fixed by the semantic protocol. The biased predicate alone must not supply an invented noun; this concern instead involves a real prior noun.",
+      "evidence": [
+        {
+          "claimNumber": 18,
+          "anchor": {
+            "startChar": 47,
+            "endChar": 106,
+            "quote": "said one latch element is movable against said bias by hand"
+          }
+        },
+        {
+          "claimNumber": 18,
+          "anchor": {
+            "startChar": 89,
+            "endChar": 98,
+            "quote": "said bias"
+          }
+        }
+      ],
+      "annotationSha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "canonicalClaimsSha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.9
+      },
+      "round2CriticismResponse": "My first round conflated lack of an indefinite bias introduction with absence of any possible nominal reference target. Claim 17 explicitly says the bias before claim 18 says said bias. Whether this definite-first mention qualifies as an introducing target is not expressly fixed by the semantic protocol. The biased predicate alone must not supply an invented noun; this concern instead involves a real prior noun.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "14970678-root-17:19",
+      "familyId": "14970678-root-17",
+      "claimNumber": 19,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "reason": "The claim names 17 and narrows the movable role to pivoting. Role-selected one and engagement have actual nominal anchors in 17.c.iii; the annotation does not arbitrarily select the first or second latch.",
+      "evidence": [
+        {
+          "claimNumber": 19,
+          "anchor": {
+            "startChar": 47,
+            "endChar": 114,
+            "quote": "said one latch element is pivotable into and out of said engagement"
+          }
+        }
+      ],
+      "annotationSha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "canonicalClaimsSha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14970678-root-17:20",
+      "familyId": "14970678-root-17",
+      "claimNumber": 20,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "reason": "The 17 dependency supports role-selected one and engagement. Its longitudinal axis remains a separate possessive phrase with head longitudinal axis; no axis is equated with the latch or fabricated from an owner relationship.",
+      "evidence": [
+        {
+          "claimNumber": 20,
+          "anchor": {
+            "startChar": 86,
+            "endChar": 126,
+            "quote": "is rotatable about its longitudinal axis"
+          }
+        }
+      ],
+      "annotationSha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "canonicalClaimsSha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:1",
+      "familyId": "14659462-root-1",
+      "claimNumber": 1,
+      "outcome": "agree",
+      "confidence": 0.95,
+      "reason": "The three steps and explicit (a)/(b) geometric subconditions are retained. Two items is not arbitrarily mapped to first/second members. Shaft/flange/nut references have real nominal anchors; axis and base do not acquire invented introductions from geometry.",
+      "evidence": [
+        {
+          "claimNumber": 1,
+          "anchor": {
+            "startChar": 114,
+            "endChar": 177,
+            "quote": "a threaded shaft of the barrel nut is positioned (a) transverse"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.95
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:2",
+      "familyId": "14659462-root-1",
+      "claimNumber": 2,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "reason": "Dependency on 1 and the four explicitly separated barrel-nut-unit clauses are preserved. Nut, slug, flange, chamfer and pin introductions are actual noun phrases; its base has head base without inferring a base antecedent.",
+      "evidence": [
+        {
+          "claimNumber": 2,
+          "anchor": {
+            "startChar": 61,
+            "endChar": 117,
+            "quote": "a nut with a cylindrical bore floatably seated in a slug"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.9
+      },
+      "round2CriticismResponse": "The unit/nut equivalence is not explicit. Withholding an identity edge does not invent one and is defensible under the unambiguous-introduction rule. I retain agree with that bounded representation; no claim is made that unit is legally definite or synonymous with the nut.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:3",
+      "familyId": "14659462-root-1",
+      "claimNumber": 3,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "reason": "The source depends on 2 and explicitly limits its plurality of pins to bowed pins; the edge points to 2.a.iii rather than a different pin cohort.",
+      "evidence": [
+        {
+          "claimNumber": 3,
+          "anchor": {
+            "startChar": 30,
+            "endChar": 62,
+            "quote": "said plurality of pins are bowed"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:4",
+      "familyId": "14659462-root-1",
+      "claimNumber": 4,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "reason": "Direct dependence on 2 supports said nut; an indentation is a new local introduction, rather than a noun inferred from another predicate.",
+      "evidence": [
+        {
+          "claimNumber": 4,
+          "anchor": {
+            "startChar": 30,
+            "endChar": 62,
+            "quote": "said nut features an indentation"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:5",
+      "familyId": "14659462-root-1",
+      "claimNumber": 5,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "reason": "The actual chain is 5 to 3 to 2, so said nut can reach 2.a.i and the new indentation remains local. The annotation preserves the claim-3 dependency even though that ancestor limits pins.",
+      "evidence": [
+        {
+          "claimNumber": 5,
+          "anchor": {
+            "startChar": 0,
+            "endChar": 38,
+            "quote": "The method of claim 3 wherein said nut"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:6",
+      "familyId": "14659462-root-1",
+      "claimNumber": 6,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "reason": "The actual chain through claim 4 supplies indentation, nut and flange introductions. Base portion is preserved as a distinct phrase; the relative that clause remains functional text between represented participants.",
+      "evidence": [
+        {
+          "claimNumber": 6,
+          "anchor": {
+            "startChar": 30,
+            "endChar": 104,
+            "quote": "said indentation is at the base portion of said nut that meets said flange"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:7",
+      "familyId": "14659462-root-1",
+      "claimNumber": 7,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "reason": "Dependency on 2 supplies flange, and the bare two chamfers retains the meaningful cardinal two rather than shortening the head.",
+      "evidence": [
+        {
+          "claimNumber": 7,
+          "anchor": {
+            "startChar": 30,
+            "endChar": 63,
+            "quote": "said flange features two chamfers"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:8",
+      "familyId": "14659462-root-1",
+      "claimNumber": 8,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "reason": "The claim depends on 2; pins and opposite ends have actual introductions there. The plural said slugs is not silently repaired into singular slug. Points and periphery remain separate source terms.",
+      "evidence": [
+        {
+          "claimNumber": 8,
+          "anchor": {
+            "startChar": 57,
+            "endChar": 122,
+            "quote": "the opposite ends of said slugs and at points along the periphery"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.91
+      },
+      "round2CriticismResponse": "I retain agree with the explicit plural/singular mismatch and omitted edge, rather than silently normalizing slugs to slug. This receipt supplies the requested explicit source-discrepancy note. A’s source uncertainty is real, but supplies no supported correction to the frozen nominal structure.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:9",
+      "familyId": "14659462-root-1",
+      "claimNumber": 9,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "A distinguishes claim-level ancestry from the more specific depends-on-element edge to 2.a.iii. The actual chain 9 to 7 to 2 is clear, but said pin holes has no nominal introduction there. The source does not uniquely establish that the distance limitation further limits the pins element rather than some missing hole structure; my prior full agreement was too strong.",
+      "evidence": [
+        {
+          "claimNumber": 9,
+          "anchor": {
+            "startChar": 30,
+            "endChar": 92,
+            "quote": "the distance from the periphery and the axis of said pin holes"
+          }
+        },
+        {
+          "claimNumber": 9,
+          "anchor": {
+            "startChar": 78,
+            "endChar": 92,
+            "quote": "said pin holes"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.9
+      },
+      "round2CriticismResponse": "A distinguishes claim-level ancestry from the more specific depends-on-element edge to 2.a.iii. The actual chain 9 to 7 to 2 is clear, but said pin holes has no nominal introduction there. The source does not uniquely establish that the distance limitation further limits the pins element rather than some missing hole structure; my prior full agreement was too strong.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "14659462-root-1:10",
+      "familyId": "14659462-root-1",
+      "claimNumber": 10,
+      "outcome": "agree",
+      "confidence": 0.95,
+      "reason": "Actual dependence on 1 and the nested (a)/(b) pin-retention subconditions are represented. Local nut/shaft/slug/pins/indentations support their explicit references. Floatably seated is a predicate, so the later position phrase has no fabricated noun introduction.",
+      "evidence": [
+        {
+          "claimNumber": 10,
+          "anchor": {
+            "startChar": 307,
+            "endChar": 365,
+            "quote": "said nut is in said floatably seated position in said slug"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.95
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:11",
+      "familyId": "14659462-root-1",
+      "claimNumber": 11,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "reason": "Direct dependence on 10 supplies its local plurality of pins. The bowed limitation is represented with the correct ancestry rather than claim-2 pins.",
+      "evidence": [
+        {
+          "claimNumber": 11,
+          "anchor": {
+            "startChar": 0,
+            "endChar": 53,
+            "quote": "The method of claim 10 wherein said plurality of pins"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:12",
+      "familyId": "14659462-root-1",
+      "claimNumber": 12,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "reason": "The 10 chain supplies local nut and shaft. The new chamfered flange and base stay explicit local introductions; no cross-sibling flange link is introduced.",
+      "evidence": [
+        {
+          "claimNumber": 12,
+          "anchor": {
+            "startChar": 31,
+            "endChar": 99,
+            "quote": "said nut further comprises a chamfered flange at a base of the shaft"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:13",
+      "familyId": "14659462-root-1",
+      "claimNumber": 13,
+      "outcome": "agree",
+      "confidence": 0.95,
+      "reason": "The unusual source there wording is preserved. Dependency is claim 7, not 12. Two chamfers retains its count; the modified chamfered flange could relate to more than one flange description on the chain, so an unsupported identity edge is reasonably withheld.",
+      "evidence": [
+        {
+          "claimNumber": 13,
+          "anchor": {
+            "startChar": 0,
+            "endChar": 48,
+            "quote": "The method of claim 7 there the chamfered flange"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.95
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.89
+      },
+      "round2CriticismResponse": "I retain agree with omission of the flange edge: both claim-1 chamfered flange and claim-2 flange/chamfer descriptions are on the chain, with no explicit identity equation. Claim 13 remains lexically preserved. This accepts non-fabrication of an edge, not a resolution of the source ambiguity.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:14",
+      "familyId": "14659462-root-1",
+      "claimNumber": 14,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "reason": "Dependency on 1 and four semicolon-separated assembly clauses are retained. At least two pins preserves its lower bound in a bare head; later said pins and opposite ends reach the local introductions.",
+      "evidence": [
+        {
+          "claimNumber": 14,
+          "anchor": {
+            "startChar": 163,
+            "endChar": 218,
+            "quote": "at least two pins connecting opposite ends of said slug"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.91
+      },
+      "round2CriticismResponse": "Each of the opposite ends distributes the fixing relationship over the already explicit opposite ends. The end entities, pins and aperture relationship are fully represented; each does not identify a new selected member later referred to as one. Keeping each of in functional text is consistent with preserving participants without inventing members under entity-mentions/v1. This is separate from the unresolved normalized head for a single full each edge anchor.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:15",
+      "familyId": "14659462-root-1",
+      "claimNumber": 15,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "A exposes the same definite-first convention gap: claim 14 explicitly recites the barrel nut assembly, and claim 15 repeats the same nominal name. An edge to that prior real noun would not invent an assembly from a predicate, but whether a definite first mention counts as introduction remains underspecified. Aperture ancestry is still supported.",
+      "evidence": [
+        {
+          "claimNumber": 15,
+          "anchor": {
+            "startChar": 31,
+            "endChar": 82,
+            "quote": "the distance from the center point of the apertures"
+          }
+        },
+        {
+          "claimNumber": 15,
+          "anchor": {
+            "startChar": 120,
+            "endChar": 143,
+            "quote": "the barrel nut assembly"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.95
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.9
+      },
+      "round2CriticismResponse": "A exposes the same definite-first convention gap: claim 14 explicitly recites the barrel nut assembly, and claim 15 repeats the same nominal name. An edge to that prior real noun would not invent an assembly from a predicate, but whether a definite first mention counts as introduction remains underspecified. Aperture ancestry is still supported.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "14659462-root-1:16",
+      "familyId": "14659462-root-1",
+      "claimNumber": 16,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "The flange reference is clear. For the barrel nut assembly, my first round treated the prior definite mention in claim 14 as categorically nonintroducing. Schema endpoint constraints do not impose that determiner restriction; the protocol does not settle it explicitly. Preserve this as uncertainty about completeness of assembly links.",
+      "evidence": [
+        {
+          "claimNumber": 16,
+          "anchor": {
+            "startChar": 31,
+            "endChar": 87,
+            "quote": "the flange of the barrel nut assembly features a chamfer"
+          }
+        },
+        {
+          "claimNumber": 16,
+          "anchor": {
+            "startChar": 45,
+            "endChar": 68,
+            "quote": "the barrel nut assembly"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.9
+      },
+      "round2CriticismResponse": "The flange reference is clear. For the barrel nut assembly, my first round treated the prior definite mention in claim 14 as categorically nonintroducing. Schema endpoint constraints do not impose that determiner restriction; the protocol does not settle it explicitly. Preserve this as uncertainty about completeness of assembly links.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "14659462-root-1:17",
+      "familyId": "14659462-root-1",
+      "claimNumber": 17,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "reason": "Direct dependence on 14 supplies nut; two indentations and opposite sides remain source phrases with the meaningful count retained.",
+      "evidence": [
+        {
+          "claimNumber": 17,
+          "anchor": {
+            "startChar": 23,
+            "endChar": 87,
+            "quote": "further comprising two indentations in opposite sides of the nut"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:18",
+      "familyId": "14659462-root-1",
+      "claimNumber": 18,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "reason": "The source depends on 17, hence reaches claim-14 nut and pins. An indentation is indefinite locally and is not arbitrarily identified with one of claim-17 two indentations.",
+      "evidence": [
+        {
+          "claimNumber": 18,
+          "anchor": {
+            "startChar": 31,
+            "endChar": 102,
+            "quote": "the nut transversely floats between said pins located in an indentation"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:19",
+      "familyId": "14659462-root-1",
+      "claimNumber": 19,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "reason": "The source names 14, so said pins resolves to at least two pins of that local assembly; bowed is preserved as the functional limitation.",
+      "evidence": [
+        {
+          "claimNumber": 19,
+          "anchor": {
+            "startChar": 0,
+            "endChar": 50,
+            "quote": "The method of claim 14 wherein said pins are bowed"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "14659462-root-1:20",
+      "familyId": "14659462-root-1",
+      "claimNumber": 20,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "reason": "The source names 18; its chain through 17 to 14 supplies the actual pins. The annotation does not jump to a separate assembly family.",
+      "evidence": [
+        {
+          "claimNumber": 20,
+          "anchor": {
+            "startChar": 0,
+            "endChar": 50,
+            "quote": "The method of claim 18 wherein said pins are bowed"
+          }
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "11299450-root-1:1",
+      "familyId": "11299450-root-1",
+      "claimNumber": 1,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "I retain the source-grounded grouping assessment, but A is right that absence of requested/new Portal-page and latest-state links needs stronger identity reasoning than my first-round agree supplied. General state, newly generated state and latest state are distinct surface descriptions; several requested/new page contexts coexist. I cannot certify every withheld link at >=0.95. The each head convention is also underspecified.",
+      "evidence": [
+        {
+          "claimNumber": 1,
+          "anchor": {
+            "startChar": 1022,
+            "endChar": 1120,
+            "quote": "in response to a client request for a new Portal page said method is characterized by the steps of"
+          }
+        },
+        {
+          "claimNumber": 1,
+          "anchor": {
+            "startChar": 789,
+            "endChar": 818,
+            "quote": "the latest navigational state"
+          }
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.95
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.89
+      },
+      "round2CriticismResponse": "I retain the source-grounded grouping assessment, but A is right that absence of requested/new Portal-page and latest-state links needs stronger identity reasoning than my first-round agree supplied. General state, newly generated state and latest state are distinct surface descriptions; several requested/new page contexts coexist. I cannot certify every withheld link at >=0.95. The each head convention is also underspecified.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "11299450-root-1:2",
+      "familyId": "11299450-root-1",
+      "claimNumber": 2,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "Base and delta references remain clear. My first round justified withholding said Portal page only generally. Claim 1 has requested page, new page, new Portal page and generic Portal page mentions. Their operational relation is plausible but a unique semantic introduction for this page occurrence is not established strongly enough to accept completeness.",
+      "evidence": [
+        {
+          "claimNumber": 2,
+          "anchor": {
+            "startChar": 41,
+            "endChar": 115,
+            "quote": "said base navigational state and said delta navigational state are encoded"
+          }
+        },
+        {
+          "claimNumber": 2,
+          "anchor": {
+            "startChar": 108,
+            "endChar": 135,
+            "quote": "encoded in said Portal page"
+          }
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.91
+      },
+      "round2CriticismResponse": "Base and delta references remain clear. My first round justified withholding said Portal page only generally. Claim 1 has requested page, new page, new Portal page and generic Portal page mentions. Their operational relation is plausible but a unique semantic introduction for this page occurrence is not established strongly enough to accept completeness.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "11299450-root-1:3",
+      "familyId": "11299450-root-1",
+      "claimNumber": 3,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "reason": "The source depends on 2 and explicitly enumerates six processing steps. New latest base state is introduced by merging and supports later pre-serialized/state references; the local new Portal page supports its later mentions. Navigation versus navigational is preserved on anchors.",
+      "evidence": [
+        {
+          "claimNumber": 3,
+          "anchor": {
+            "startChar": 336,
+            "endChar": 385,
+            "quote": "resulting in a new latest base navigational state"
+          }
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "11299450-root-1:4",
+      "familyId": "11299450-root-1",
+      "claimNumber": 4,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "reason": "Dependency is 2, so claim-3 new-latest state/object introductions cannot be borrowed. The delta state has a claim-1 introduction; serialization method and delta proxy object are introduced locally while unsupported encoding/new-latest references stay unlinked.",
+      "evidence": [
+        {
+          "claimNumber": 4,
+          "anchor": {
+            "startChar": 0,
+            "endChar": 54,
+            "quote": "The method according to claim 2, wherein said encoding"
+          }
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "11299450-root-1:5",
+      "familyId": "11299450-root-1",
+      "claimNumber": 5,
+      "outcome": "uncertain",
+      "confidence": 0.92,
+      "reason": "A correctly identifies the real prior nominal the underlying hierarchical tree-like object representation in claim 4, an actual dependency parent. It differs from the earlier sibling-claim-3 introduction and from an inferred noun. Current absence of a link depends on the unresolved definite-first-introduction convention, not lack of a prior mention.",
+      "evidence": [
+        {
+          "claimNumber": 5,
+          "anchor": {
+            "startChar": 100,
+            "endChar": 156,
+            "quote": "nodes which are described by name, value, and attributes"
+          }
+        },
+        {
+          "claimNumber": 5,
+          "anchor": {
+            "startChar": 41,
+            "endChar": 90,
+            "quote": "said hierarchical tree-like object representation"
+          }
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.92
+      },
+      "round2CriticismResponse": "A correctly identifies the real prior nominal the underlying hierarchical tree-like object representation in claim 4, an actual dependency parent. It differs from the earlier sibling-claim-3 introduction and from an inferred noun. Current absence of a link depends on the unresolved definite-first-introduction convention, not lack of a prior mention.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "11299450-root-1:6",
+      "familyId": "11299450-root-1",
+      "claimNumber": 6,
+      "outcome": "revise",
+      "confidence": 0.97,
+      "reason": "I accept A’s same-clause criticism. The source explicitly names the structure and then said structure in the same relation; no competing structure noun or owner is introduced between them. The latter is an unambiguous reference to the earlier actual nominal mention. A semantic antecedent overlay is warranted; this does not repair whether the first definite phrase had sufficient antecedent basis. My first-round rejection relied too strictly on determiner categories, which the schema does not constrain on introducing endpoints.",
+      "evidence": [
+        {
+          "claimNumber": 6,
+          "anchor": {
+            "startChar": 41,
+            "endChar": 89,
+            "quote": "the structure and/or nodes within said structure"
+          }
+        },
+        {
+          "claimNumber": 6,
+          "anchor": {
+            "startChar": 41,
+            "endChar": 89,
+            "quote": "the structure and/or nodes within said structure"
+          }
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.95
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "revise",
+        "confidence": 0.99
+      },
+      "round2CriticismResponse": "I accept A’s same-clause criticism. The source explicitly names the structure and then said structure in the same relation; no competing structure noun or owner is introduced between them. The latter is an unambiguous reference to the earlier actual nominal mention. A semantic antecedent overlay is warranted; this does not repair whether the first definite phrase had sufficient antecedent basis. My first-round rejection relied too strictly on determiner categories, which the schema does not constrain on introducing endpoints.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "11299450-root-1:7",
+      "familyId": "11299450-root-1",
+      "claimNumber": 7,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "I retain the correct exclusion of sibling-claim-4 serialization method and the delta/browser links. As in claim 2, withholding the Portal page reference is plausible but not completely justified amid requested/new/generic page descriptions in claim 1. A rightly challenges full agreement rather than demanding a guessed edge.",
+      "evidence": [
+        {
+          "claimNumber": 7,
+          "anchor": {
+            "startChar": 0,
+            "endChar": 66,
+            "quote": "The method according to claim 2, wherein said serialization method"
+          }
+        },
+        {
+          "claimNumber": 7,
+          "anchor": {
+            "startChar": 149,
+            "endChar": 165,
+            "quote": "said Portal page"
+          }
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.91
+      },
+      "round2CriticismResponse": "I retain the correct exclusion of sibling-claim-4 serialization method and the delta/browser links. As in claim 2, withholding the Portal page reference is plausible but not completely justified amid requested/new/generic page descriptions in claim 1. A rightly challenges full agreement rather than demanding a guessed edge.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "11299450-root-1:8",
+      "familyId": "11299450-root-1",
+      "claimNumber": 8,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "reason": "Dependency on 2 does not introduce a nominal serialization result merely because serialized form is a predicate result. One or more standard compression algorithms uses the supported at-least-one determiner.",
+      "evidence": [
+        {
+          "claimNumber": 8,
+          "anchor": {
+            "startChar": 41,
+            "endChar": 135,
+            "quote": "said serialization result is further compressed by one or more standard compression algorithms"
+          }
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "11299450-root-1:9",
+      "familyId": "11299450-root-1",
+      "claimNumber": 9,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "reason": "The source names 8 and supplies three explicitly named algorithms as bare terms. Said compression algorithms reaches the actual one-or-more algorithm introduction.",
+      "evidence": [
+        {
+          "claimNumber": 9,
+          "anchor": {
+            "startChar": 41,
+            "endChar": 87,
+            "quote": "said compression algorithms are GZip, Zip, RLE"
+          }
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "11299450-root-1:10",
+      "familyId": "11299450-root-1",
+      "claimNumber": 10,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "The delta-state link remains supported. The URL references in claim 1 include all URLs, each URL and specific URL within repeated operational contexts. My first-round agreement did not establish why this said URL has no unique prior nominal target; keep the identity and completeness question bounded.",
+      "evidence": [
+        {
+          "claimNumber": 10,
+          "anchor": {
+            "startChar": 41,
+            "endChar": 120,
+            "quote": "said compressed serialization result representing said delta navigational state"
+          }
+        },
+        {
+          "claimNumber": 10,
+          "anchor": {
+            "startChar": 161,
+            "endChar": 169,
+            "quote": "said URL"
+          }
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.9
+      },
+      "round2CriticismResponse": "The delta-state link remains supported. The URL references in claim 1 include all URLs, each URL and specific URL within repeated operational contexts. My first-round agreement did not establish why this said URL has no unique prior nominal target; keep the identity and completeness question bounded.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "13484431-root-19:19",
+      "familyId": "13484431-root-19",
+      "claimNumber": 19,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "A’s list-label criticism is substantive: a, b and c are procedural enumerators rather than ordinary noun phrases. Against that, they explicitly name source steps and are later referred to by said step b/c, so an anchored label can function as a bare referential expression under rule 3. Neither schema representability nor the later reference alone settles whether these labels count as eligible lexical terms. I withdraw full agreement and retain the question without fabricating step words.",
+      "evidence": [
+        {
+          "claimNumber": 19,
+          "anchor": {
+            "startChar": 648,
+            "endChar": 731,
+            "quote": "at least one of said Bernoulli suction ports being disposed in said circular region"
+          }
+        },
+        {
+          "claimNumber": 19,
+          "anchor": {
+            "startChar": 58,
+            "endChar": 80,
+            "quote": "a) placing a substrate"
+          }
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.95
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "revise",
+        "confidence": 0.99
+      },
+      "round2CriticismResponse": "A’s list-label criticism is substantive: a, b and c are procedural enumerators rather than ordinary noun phrases. Against that, they explicitly name source steps and are later referred to by said step b/c, so an anchored label can function as a bare referential expression under rule 3. Neither schema representability nor the later reference alone settles whether these labels count as eligible lexical terms. I withdraw full agreement and retain the question without fabricating step words.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "13484431-root-19:20",
+      "familyId": "13484431-root-19",
+      "claimNumber": 20,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "reason": "Direct dependence on 19 supplies the surface. Embankment and protrusions are new local introductions; respective protrusions refers to the local plurality, and no tops/edge terms are invented from geometry.",
+      "evidence": [
+        {
+          "claimNumber": 20,
+          "anchor": {
+            "startChar": 242,
+            "endChar": 322,
+            "quote": "the tops of the respective protrusions are flush with the top of said embankment"
+          }
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "13484431-root-19:21",
+      "familyId": "13484431-root-19",
+      "claimNumber": 21,
+      "outcome": "uncertain",
+      "confidence": 0.89,
+      "reason": "The lower bound and source scope are preserved, but 21.a makes the whole at least two of said Bernoulli suction ports one bare term, including an inner said noun phrase. Rule 2 calls for nonoverlapping nested determiner phrases, and family 14970678 splits one of the latch elements into one plus the latch elements. Whether this whole-partitive anchor is an accepted source-specific exception is not settled by representability; retain the question rather than force agreement or relabel.",
+      "evidence": [
+        {
+          "claimNumber": 21,
+          "anchor": {
+            "startChar": 43,
+            "endChar": 87,
+            "quote": "at least two of said Bernoulli suction ports"
+          }
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.89
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.91
+      },
+      "round2CriticismResponse": "I retain my initial uncertainty and agree with A: a whole partitive containing said Bernoulli suction ports is not clearly consistent with the nonoverlapping nested-noun convention and the split one/the latch elements representation elsewhere. No relabelling is performed.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "13484431-root-19:22",
+      "familyId": "13484431-root-19",
+      "claimNumber": 22,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "reason": "Direct dependence on 19 and six explicit clauses are retained. Circular/annular regions, local arcuate regions, local embankment/protrusions and the expanded vacuum-port plurality support the recorded edges. Each-of/at-least-one-of scope stays explicit connecting text without an invented selected member.",
+      "evidence": [
+        {
+          "claimNumber": 22,
+          "anchor": {
+            "startChar": 462,
+            "endChar": 544,
+            "quote": "said at least one vacuum suction port includes a plurality of vacuum suction ports"
+          }
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.91
+      },
+      "round2CriticismResponse": "I retain agree: each of the regions and each of said arcuate regions distribute explicit relationships over already represented plural region participants. No standalone selected member identity is subsequently asserted. The quantities and distributivity remain exact functional text. An extra each entity is not compelled by entity-mentions/v1; the each edge head question concerns normalization of a retained full noun anchor, not whether the full scope must be retained.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "13484431-root-19:23",
+      "familyId": "13484431-root-19",
+      "claimNumber": 23,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "reason": "Dependency on 22 supplies arcuate regions; area is retained as an abstract bare term. Each other remains the reciprocal operator between explicit regions, not a new entity.",
+      "evidence": [
+        {
+          "claimNumber": 23,
+          "anchor": {
+            "startChar": 42,
+            "endChar": 94,
+            "quote": "said arcuate regions are equal in area to each other"
+          }
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "agree",
+        "confidence": 0.98
+      },
+      "round2CriticismResponse": "Reconsidered against A and source context. The prior source-grounded reason remains supported; no new actionable concern requires changing this assessment.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "13484431-root-19:24",
+      "familyId": "13484431-root-19",
+      "claimNumber": 24,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "The source expressly refers to steps b/c and the depends-on-element targets preserve those relations. The additional antecedent edges use the bare b/c labels criticized in claim 19. Their eligibility as terms is unsettled; I cannot accept the complete tree at >=0.95 or invent an unrecited step noun in the ancestor anchor.",
+      "evidence": [
+        {
+          "claimNumber": 24,
+          "anchor": {
+            "startChar": 43,
+            "endChar": 96,
+            "quote": "said step b) is started after the substrate is placed"
+          }
+        },
+        {
+          "claimNumber": 24,
+          "anchor": {
+            "startChar": 43,
+            "endChar": 55,
+            "quote": "said step b)"
+          }
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.96
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.91
+      },
+      "round2CriticismResponse": "The source expressly refers to steps b/c and the depends-on-element targets preserve those relations. The additional antecedent edges use the bare b/c labels criticized in claim 19. Their eligibility as terms is unsettled; I cannot accept the complete tree at >=0.95 or invent an unrecited step noun in the ancestor anchor.",
+      "changedFromRound1": true
+    },
+    {
+      "id": "13484431-root-19:25",
+      "familyId": "13484431-root-19",
+      "claimNumber": 25,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "Pressure, threshold, holding-surface and Bernoulli-suction ancestry remain supported. The step-c antecedent uses the questioned bare c enumerator from claim 19. The procedural relation is explicit, but this term-level representation depends on the unresolved step-label convention.",
+      "evidence": [
+        {
+          "claimNumber": 25,
+          "anchor": {
+            "startChar": 42,
+            "endChar": 102,
+            "quote": "said Bernoulli suction is stopped, when the suction pressure"
+          }
+        },
+        {
+          "claimNumber": 25,
+          "anchor": {
+            "startChar": 200,
+            "endChar": 212,
+            "quote": "said step c)"
+          }
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68",
+      "reviewedDimensions": [
+        "source claim and dependency context",
+        "element grouping and kinds",
+        "term anchors and complete lexical heads",
+        "typed edges and functional connecting text"
+      ],
+      "priorRoundDecision": {
+        "outcome": "agree",
+        "confidence": 0.97
+      },
+      "otherReviewerInitialDecision": {
+        "outcome": "uncertain",
+        "confidence": 0.91
+      },
+      "round2CriticismResponse": "Pressure, threshold, holding-surface and Bernoulli-suction ancestry remain supported. The step-c antecedent uses the questioned bare c enumerator from claim 19. The procedural relation is explicit, but this term-level representation depends on the unresolved step-label convention.",
+      "changedFromRound1": true
+    }
+  ],
+  "conventionDecisions": [
+    {
+      "id": "13575735-root-1:head:0",
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "path": "1.b.iv",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.99,
+      "reason": "One selects a particular end/side from a larger object. It is a meaningful cardinal/partitive selector, not a pronominal determiner; lexical-head/v1 explicitly retains such selectors in bare heads.",
+      "evidence": [
+        {
+          "startChar": 622,
+          "endChar": 629,
+          "quote": "one end"
+        }
+      ],
+      "currentHead": "end",
+      "proposedHead": "one end",
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "priorRoundDecision": {
+        "outcome": "apply-proposed-head",
+        "confidence": 0.99
+      },
+      "round2CriticismResponse": "A independently supports retaining the one/two selector. The explicit lexical-head/v1 count/selector rule applies, so the proposed head is accepted at >=0.95.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "13575735-root-1:head:1",
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "path": "1.c",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.99,
+      "reason": "One selects a particular end/side from a larger object. It is a meaningful cardinal/partitive selector, not a pronominal determiner; lexical-head/v1 explicitly retains such selectors in bare heads.",
+      "evidence": [
+        {
+          "startChar": 762,
+          "endChar": 770,
+          "quote": "one side"
+        }
+      ],
+      "currentHead": "side",
+      "proposedHead": "one side",
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "priorRoundDecision": {
+        "outcome": "apply-proposed-head",
+        "confidence": 0.99
+      },
+      "round2CriticismResponse": "A independently supports retaining the one/two selector. The explicit lexical-head/v1 count/selector rule applies, so the proposed head is accepted at >=0.95.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "13575735-root-1:head:2",
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "path": "3.a",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.99,
+      "reason": "One selects a particular end/side from a larger object. It is a meaningful cardinal/partitive selector, not a pronominal determiner; lexical-head/v1 explicitly retains such selectors in bare heads.",
+      "evidence": [
+        {
+          "startChar": 145,
+          "endChar": 153,
+          "quote": "one side"
+        }
+      ],
+      "currentHead": "side",
+      "proposedHead": "one side",
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "priorRoundDecision": {
+        "outcome": "apply-proposed-head",
+        "confidence": 0.99
+      },
+      "round2CriticismResponse": "A independently supports retaining the one/two selector. The explicit lexical-head/v1 count/selector rule applies, so the proposed head is accepted at >=0.95.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "13575735-root-1:head:3",
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "path": "3.a.i",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.99,
+      "reason": "One selects a particular end/side from a larger object. It is a meaningful cardinal/partitive selector, not a pronominal determiner; lexical-head/v1 explicitly retains such selectors in bare heads.",
+      "evidence": [
+        {
+          "startChar": 374,
+          "endChar": 382,
+          "quote": "one side"
+        }
+      ],
+      "currentHead": "side",
+      "proposedHead": "one side",
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "priorRoundDecision": {
+        "outcome": "apply-proposed-head",
+        "confidence": 0.99
+      },
+      "round2CriticismResponse": "A independently supports retaining the one/two selector. The explicit lexical-head/v1 count/selector rule applies, so the proposed head is accepted at >=0.95.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "17617663-root-1:head:0",
+      "familyId": "17617663-root-1",
+      "claimNumber": 3,
+      "path": "3.b.iv",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.99,
+      "reason": "One selects a particular end/side from a larger object. It is a meaningful cardinal/partitive selector, not a pronominal determiner; lexical-head/v1 explicitly retains such selectors in bare heads.",
+      "evidence": [
+        {
+          "startChar": 505,
+          "endChar": 512,
+          "quote": "one end"
+        }
+      ],
+      "currentHead": "end",
+      "proposedHead": "one end",
+      "annotationSha256": "6077b7c4c31dcdb2ac1f867cea149174e35f555f82742805c27f2e467b98df11",
+      "priorRoundDecision": {
+        "outcome": "apply-proposed-head",
+        "confidence": 0.99
+      },
+      "round2CriticismResponse": "A independently supports retaining the one/two selector. The explicit lexical-head/v1 count/selector rule applies, so the proposed head is accepted at >=0.95.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "17617663-root-1:head:1",
+      "familyId": "17617663-root-1",
+      "claimNumber": 7,
+      "path": "7.b",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.99,
+      "reason": "The bare cardinal two is substantive and not encoded in a supported determiner tag; retaining it preserves the count between which the shell is arranged.",
+      "evidence": [
+        {
+          "startChar": 357,
+          "endChar": 378,
+          "quote": "two segmented rollers"
+        }
+      ],
+      "currentHead": "segmented rollers",
+      "proposedHead": "two segmented rollers",
+      "annotationSha256": "6077b7c4c31dcdb2ac1f867cea149174e35f555f82742805c27f2e467b98df11",
+      "priorRoundDecision": {
+        "outcome": "apply-proposed-head",
+        "confidence": 0.99
+      },
+      "round2CriticismResponse": "A independently supports retaining the one/two selector. The explicit lexical-head/v1 count/selector rule applies, so the proposed head is accepted at >=0.95.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "16068637-root-11:granularity:16",
+      "familyId": "16068637-root-11",
+      "claimNumber": 16,
+      "outcome": "relationship-text",
+      "confidence": 0.99,
+      "reason": "The named mating surfaces and the following bottom-surface/top-surface explanation supply the participating entities. Each other is a reciprocal relation operator; adding it as an extra entity would duplicate participants rather than preserve a missing entity mention. The entire clause remains represented.",
+      "evidence": [
+        {
+          "startChar": 867,
+          "endChar": 877,
+          "quote": "each other"
+        },
+        {
+          "startChar": 786,
+          "endChar": 978,
+          "quote": "The mating surfaces of the rivet head and on the driving spindle contacting with each other, wherein the bottom surface of the driving spindle contacting with the top surface of the rivet head"
+        }
+      ],
+      "annotationSha256": "ba5a317888ff6aeac74731169e1d6fef8bfe813afb1d61a09a0aa3c6ff95f8d6",
+      "priorRoundDecision": {
+        "outcome": "relationship-text",
+        "confidence": 0.99
+      },
+      "round2CriticismResponse": "A independently supports connecting-text. Both explicit surface participants and complete reciprocal relationship remain preserved; no new entity is necessary.",
+      "changedFromRound1": false
+    },
+    {
+      "id": "16068637-root-11:addendum:13:13.a:108-117",
+      "familyId": "16068637-root-11",
+      "claimNumber": 13,
+      "path": "13.a",
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "reason": "I withdraw the first-round 0.99 apply-proposed-head conclusion after A’s challenge. Each is an outer distributive determiner, so edge is grammatically supportable, but lexical-head/v1 specifies pronominal determiners and meaningful partitive selectors without expressly resolving distributive each. The protocol retains all previous in an existing head, making automatic universal-quantifier deletion insufficiently grounded. Retain both candidate heads and the exact each edge anchor as bounded uncertainty. This does not alter the source or require attorney presence.",
+      "evidence": [
+        {
+          "startChar": 108,
+          "endChar": 117,
+          "quote": "each edge"
+        }
+      ],
+      "currentHead": "each edge",
+      "proposedHead": "edge",
+      "annotationSha256": "ba5a317888ff6aeac74731169e1d6fef8bfe813afb1d61a09a0aa3c6ff95f8d6",
+      "canonicalClaimsSha256": "73a860bc0b4e953d68579b91e7f118b75cea86732da371ebf2a08fa4b44b165d",
+      "priorRoundDecision": {
+        "outcome": "apply-proposed-head",
+        "confidence": 0.99
+      },
+      "round2CriticismResponse": "I withdraw the first-round 0.99 apply-proposed-head conclusion after A’s challenge. Each is an outer distributive determiner, so edge is grammatically supportable, but lexical-head/v1 specifies pronominal determiners and meaningful partitive selectors without expressly resolving distributive each. The protocol retains all previous in an existing head, making automatic universal-quantifier deletion insufficiently grounded. Retain both candidate heads and the exact each edge anchor as bounded uncertainty. This does not alter the source or require attorney presence.",
+      "changedFromRound1": true
+    }
+  ],
+  "coverage": {
+    "familyCount": 6,
+    "mainClaimCount": 50,
+    "mainClaimIds": [
+      "14432872-root-5:5",
+      "14432872-root-5:6",
+      "14432872-root-5:7",
+      "14432872-root-5:8",
+      "13575735-root-1:1",
+      "13575735-root-1:2",
+      "13575735-root-1:3",
+      "13575735-root-1:4",
+      "13575735-root-1:5",
+      "14970678-root-17:17",
+      "14970678-root-17:18",
+      "14970678-root-17:19",
+      "14970678-root-17:20",
+      "14659462-root-1:1",
+      "14659462-root-1:2",
+      "14659462-root-1:3",
+      "14659462-root-1:4",
+      "14659462-root-1:5",
+      "14659462-root-1:6",
+      "14659462-root-1:7",
+      "14659462-root-1:8",
+      "14659462-root-1:9",
+      "14659462-root-1:10",
+      "14659462-root-1:11",
+      "14659462-root-1:12",
+      "14659462-root-1:13",
+      "14659462-root-1:14",
+      "14659462-root-1:15",
+      "14659462-root-1:16",
+      "14659462-root-1:17",
+      "14659462-root-1:18",
+      "14659462-root-1:19",
+      "14659462-root-1:20",
+      "11299450-root-1:1",
+      "11299450-root-1:2",
+      "11299450-root-1:3",
+      "11299450-root-1:4",
+      "11299450-root-1:5",
+      "11299450-root-1:6",
+      "11299450-root-1:7",
+      "11299450-root-1:8",
+      "11299450-root-1:9",
+      "11299450-root-1:10",
+      "13484431-root-19:19",
+      "13484431-root-19:20",
+      "13484431-root-19:21",
+      "13484431-root-19:22",
+      "13484431-root-19:23",
+      "13484431-root-19:24",
+      "13484431-root-19:25"
+    ],
+    "headQuestionIds": [
+      "13575735-root-1:head:0",
+      "13575735-root-1:head:1",
+      "13575735-root-1:head:2",
+      "13575735-root-1:head:3",
+      "17617663-root-1:head:0",
+      "17617663-root-1:head:1"
+    ],
+    "reciprocalQuestionId": "16068637-root-11:granularity:16",
+    "addendumQuestionId": "16068637-root-11:addendum:13:13.a:108-117",
+    "conventionQuestionCount": 8
+  },
+  "summary": {
+    "agree": 33,
+    "revise": 3,
+    "uncertain": 14,
+    "allEightConventionQuestionsReviewed": true,
+    "frozenReferencesModified": false,
+    "mainDecisionsChanged": 14,
+    "conventionDecisionsChanged": 1
+  },
+  "limitations": [
+    "Confidence is self-assessed and uncalibrated; no attorney agreement or legal validation.",
+    "Agreement with a conservative annotation plus an explicit source concern is not resolution of that source ambiguity.",
+    "Definite-first cross-claim introduction, page/state identity, step-label term status, nested partitive grouping and distributive-head normalization remain bounded uncertainties where identified.",
+    "No reference, score denominator, previous result or retained pass changed."
+  ],
+  "priorRoundReceipt": {
+    "path": ".beep/autonomous-reference-review-B.json",
+    "sha256": "b91a3f52c9bf45884bcb71c4d591d65798ab440d34616fb75f71d1b31dfc4cb6"
+  },
+  "criticizedReceipt": {
+    "path": ".beep/autonomous-reference-review-A.json",
+    "sha256": "cdf648947d7dc8c8b3b637d46a3d0566524d7fd3765e95d89de2071b2b619738"
+  },
+  "criticismPrinciples": [
+    "A prior actual nominal mention must be distinguished from a noun fabricated from a predicate. A same-clause unambiguous reference can warrant an overlay without repairing the first mention’s upstream antecedent sufficiency.",
+    "Represented functional relations need not be split at every verb solely to require duplicate pronoun nodes. Full exact connecting text and explicit participating entities remain required.",
+    "A step-level dependency relation and a term-level antecedent edge are different; preservation of one does not prove eligibility of an enumerator as a noun-phrase term.",
+    "Outer distributive determiners are not expressly resolved by cardinal/partitive examples; uncertainty is preferable to imposing a blanket rule."
+  ]
+}

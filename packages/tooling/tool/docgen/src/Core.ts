@@ -5,13 +5,13 @@
  * @since 0.0.0
  */
 
-/// <reference path="./markdown-toc.d.ts" />
-
 import chalk from "@beep/chalk";
 import { $RepoDocgenId } from "@beep/identity/packages";
-import { encodeTSConfigPrettyEffect, FsUtils } from "@beep/repo-utils";
+import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
+import { MarkdownFence } from "@beep/markdown/MarkdownFence";
+import { MarkdownToc } from "@beep/markdown/MarkdownToc";
+import { FsUtils } from "@beep/repo-utils";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
-import markdownToc from "@effect/markdown-toc";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
@@ -19,6 +19,7 @@ import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Checker from "./Checker.ts";
@@ -27,6 +28,7 @@ import * as Domain from "./Domain.ts";
 import * as Parser from "./Parser.ts";
 import * as Printer from "./Printer.ts";
 import { writeDocgenProofManifest } from "./ProofManifest.ts";
+import type { CodeFence } from "@beep/markdown/MarkdownFence";
 
 const $I = $RepoDocgenId.create("Core");
 
@@ -59,6 +61,14 @@ class FencedCodeBlock extends S.Opaque<FencedCodeBlock, { readonly brand: unique
  * Use when a caller must edit fence metadata or code against the exact source
  * slice that was analyzed.
  *
+ * **Details**
+ *
+ * `inPlace` is `true` when the written body is the code CommonMark reads (a
+ * closed, unindented fence outside any blockquote or list item, CRLF read as
+ * LF), so new code can be spliced over `codeStart`..`codeEnd`; a fence inside a
+ * container keeps a prefix or indentation on every line that a splice would
+ * drop.
+ *
  * **Example** (Inspect a fence info span)
  *
  * ```ts
@@ -83,9 +93,11 @@ export class FencedCodeBlockDetail extends S.Opaque<FencedCodeBlockDetail, { rea
     infoEnd: S.Natural,
     codeStart: S.Natural,
     codeEnd: S.Natural,
+    inPlace: S.Boolean,
   }).pipe(
     $I.annoteSchema("FencedCodeBlockDetail", {
-      description: "Extracted TypeScript fence with raw metadata and half-open source offsets.",
+      description:
+        "Extracted TypeScript fence with raw metadata, half-open source offsets and whether its written body can be spliced in place.",
     })
   )
 ) {}
@@ -139,12 +151,13 @@ const readSourceFiles = Effect.gen(function* () {
     paths,
     (filePath) =>
       fs.readFileString(filePath).pipe(
-        Effect.map((content) => Domain.File.new(filePath, content, { isOverwritable: false })),
-        Effect.mapError((cause) =>
-          Domain.DocgenError.make({
-            message: `[Core.readSourceFiles] Failed to read '${filePath}'\n${String(cause)}`,
-          })
-        )
+        Effect.mapBoth({
+          onFailure: (cause) =>
+            Domain.DocgenError.make({
+              message: `[Core.readSourceFiles] Failed to read '${filePath}'\n${String(cause)}`,
+            }),
+          onSuccess: (content) => Domain.File.new(filePath, content, { isOverwritable: false }),
+        })
       ),
     { concurrency: "unbounded" }
   );
@@ -275,6 +288,8 @@ export const SKIP_TYPE_CHECKING_FENCE_METADATA = "skip-type-checking";
  *
  * **Details**
  *
+ * Fences are the CommonMark fences `@beep/markdown` `MarkdownFence.fences`
+ * reads, so a marker run inside prose or indented four columns opens none.
  * Fences tagged with {@link SKIP_TYPE_CHECKING_FENCE_METADATA} are intentionally ignored.
  * Unterminated fences are reported as warnings so docgen can continue parsing the module.
  *
@@ -309,22 +324,32 @@ const isTypeScriptFence = (metadata: string): boolean =>
     A.some((prefix) => Str.startsWith(prefix)(metadata))
   );
 
-const fencePattern = /(?:```|~~~)(.*?)\n([\s\S]*?)(?:(```|~~~)|$)/g;
+const unterminatedFenceWarning = (content: string): string =>
+  `Code block does not have a matching closing fence:\n${content}`;
 
-const fenceMatches: (content: string) => ReadonlyArray<RegExpMatchArray> = flow(
-  Str.matchAll(fencePattern),
-  A.fromIterable
-);
+// A fence needs a run of three backticks or tildes; a text without one is not parsed.
+const fenceRunPattern = /`{3}|~{3}/u;
 
-const fenceWarnings = (content: string, matches: ReadonlyArray<RegExpMatchArray>): Array<string> =>
-  pipe(
-    matches,
-    A.filter((match) => match[3] === undefined),
-    A.map(() => `Code block does not have a matching closing fence:\n${content}`)
-  );
+// Every fence of the text, read as CommonMark by `@beep/markdown`, and one warning per unterminated fence.
+const codeFences = (content: string): [fences: ReadonlyArray<CodeFence>, warnings: Array<string>] =>
+  !fenceRunPattern.test(content)
+    ? [A.empty(), []]
+    : Result.match(MarkdownDocument.parseResult(content), {
+        onFailure: (error): [ReadonlyArray<CodeFence>, Array<string>] => [A.empty(), [`${error.message}:\n${content}`]],
+        onSuccess: (document): [ReadonlyArray<CodeFence>, Array<string>] => {
+          const fences = MarkdownFence.fences(document);
+          return [
+            fences,
+            A.map(
+              A.filter(fences, (fence) => fence.unterminated),
+              () => unterminatedFenceWarning(content)
+            ),
+          ];
+        },
+      });
 
-const isTypeCheckableFenceMatch = (match: RegExpMatchArray): boolean => {
-  const metadata = Str.toLowerCase(match[1] ?? "");
+const isTypeCheckableFence = (fence: CodeFence): boolean => {
+  const metadata = Str.toLowerCase(fence.infoString);
   const isSkipTypeChecking = Str.includes(SKIP_TYPE_CHECKING_FENCE_METADATA)(metadata);
   return isTypeScriptFence(metadata) && !isSkipTypeChecking;
 };
@@ -365,20 +390,13 @@ const isTypeCheckableFenceMatch = (match: RegExpMatchArray): boolean => {
 export const extractFencedCodeBlocks = (
   content: string
 ): [examples: Array<FencedCodeBlock>, warnings: Array<string>] => {
-  const matches = fenceMatches(content);
-  const warnings = fenceWarnings(content, matches);
-
-  const examples = pipe(
-    matches,
-    A.filter(isTypeCheckableFenceMatch),
-    A.map((match) =>
-      FencedCodeBlock.make({
-        code: Str.trim(match[2] ?? ""),
-        extension: fenceExtension(match[1] ?? ""),
-      })
-    )
+  const [fences, warnings] = codeFences(content);
+  const examples = A.map(A.filter(fences, isTypeCheckableFence), (fence) =>
+    FencedCodeBlock.make({
+      code: Str.trim(fence.body),
+      extension: fenceExtension(fence.infoString),
+    })
   );
-
   return [examples, warnings];
 };
 
@@ -392,8 +410,11 @@ export const extractFencedCodeBlocks = (
  *
  * **Details**
  *
- * This extractor shares the same match pass, language filtering, and warnings
- * as {@link extractFencedCodeBlocks}; offsets refer to the supplied string.
+ * This extractor shares the same `@beep/markdown` fence pass, language
+ * filtering, and warnings as {@link extractFencedCodeBlocks}; offsets refer to
+ * the supplied string. `codeStart` is the start of the line after the opening
+ * fence and `codeEnd` the start of the closing fence's line (the end of the
+ * block for an unterminated fence), so the span covers whole body lines.
  *
  * **Example** (Read exact source offsets)
  *
@@ -415,35 +436,22 @@ export const extractFencedCodeBlocks = (
 export const extractFencedCodeBlockDetails = (
   content: string
 ): [examples: Array<FencedCodeBlockDetail>, warnings: Array<string>] => {
-  const matches = fenceMatches(content);
-  const examples = pipe(
-    matches,
-    A.filter(isTypeCheckableFenceMatch),
-    A.map((match) => {
-      const matched = match[0];
-      const infoString = match[1] ?? "";
-      const rawCode = match[2] ?? "";
-      const fenceStart = match.index ?? 0;
-      const infoStart = fenceStart + 3;
-      const infoEnd = infoStart + infoString.length;
-      const codeStart = infoEnd + 1;
-      const closingLength = match[3]?.length ?? 0;
-      const fenceEnd = fenceStart + matched.length;
-      const codeEnd = fenceEnd - closingLength;
-      return FencedCodeBlockDetail.make({
-        code: Str.trim(rawCode),
-        extension: fenceExtension(infoString),
-        infoString,
-        fenceStart,
-        fenceEnd,
-        infoStart,
-        infoEnd,
-        codeStart,
-        codeEnd,
-      });
+  const [fences, warnings] = codeFences(content);
+  const examples = A.map(A.filter(fences, isTypeCheckableFence), (fence) =>
+    FencedCodeBlockDetail.make({
+      code: Str.trim(fence.body),
+      extension: fenceExtension(fence.infoString),
+      infoString: fence.infoString,
+      fenceStart: fence.fenceStart,
+      fenceEnd: fence.fenceEnd,
+      infoStart: fence.infoStart,
+      infoEnd: fence.infoEnd,
+      codeStart: fence.bodyStart,
+      codeEnd: fence.bodyEnd,
+      inPlace: !fence.unterminated && Str.replace(/\r\n?/gu, "\n")(fence.body) === fence.value,
     })
   );
-  return [examples, fenceWarnings(content, matches)];
+  return [examples, warnings];
 };
 
 const getExampleFiles = Effect.fn("getExampleFiles")(function* (modules: ReadonlyArray<Domain.Module>) {
@@ -641,15 +649,7 @@ const createExamplesTsConfigJson = Effect.gen(function* () {
   const process = yield* Domain.Process;
   const cwd = yield* process.cwd;
   const path = yield* Path.Path;
-  const content = yield* encodeTSConfigPrettyEffect({
-    compilerOptions: config.examplesCompilerOptions,
-  }).pipe(
-    Effect.mapError((cause) =>
-      Domain.DocgenError.make({
-        message: `[Core.createExamplesTsConfigJson] Failed to encode examples tsconfig\n${String(cause)}`,
-      })
-    )
-  );
+  const content = yield* Configuration.encodeExamplesTsconfig(config.examplesCompilerOptions);
   yield* writeFileToOutDir(
     Domain.File.new(path.join(cwd, config.outDir, "examples", "tsconfig.json"), content, { isOverwritable: true })
   );
@@ -755,13 +755,56 @@ const getModuleMarkdownOutputPath = Effect.fn("getModuleMarkdownOutputPath")(fun
   return path.normalize(path.join(config.outDir, "modules", `${modulePath}.md`));
 });
 
+/**
+ * Renders the table of contents of one printed module page through
+ * `MarkdownToc.render`, attributing a parse failure to the module.
+ *
+ * **Details**
+ *
+ * `MarkdownToc.render` fails with a `MarkdownParseError` when the printed
+ * module exceeds the parser's nesting depth guard (for example a JSDoc
+ * description holding a 300-deep blockquote). The kit error names no module,
+ * so this wrapper maps it to a `DocgenError` whose message carries the
+ * module path and the kit diagnostic, the way `createExamplesTsConfigJson`
+ * attributes its encoding failures.
+ *
+ * **Example** (A failing module names its path)
+ *
+ * ```ts
+ * import * as Core from "@beep/repo-docgen/Core"
+ * import * as Effect from "effect/Effect"
+ * import * as Str from "effect/String"
+ *
+ * const tooDeep = `${Str.repeat(300)(">")} foo\n`
+ * const program = Core.renderModuleToc(["src", "Deep.ts"], tooDeep).pipe(
+ *   Effect.flip,
+ *   Effect.map((error) => error.message.includes("src/Deep.ts"))
+ * )
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const renderModuleToc = Effect.fn("Core.renderModuleToc")(function* (
+  modulePath: ReadonlyArray<string>,
+  moduleContent: string
+) {
+  return yield* MarkdownToc.render(moduleContent, { bullet: "-" }).pipe(
+    Effect.mapError((cause) =>
+      Domain.DocgenError.make({
+        message: `[Core.renderModuleToc] Failed to render the table of contents of '${A.join(modulePath, "/")}'\n${String(cause)}`,
+      })
+    )
+  );
+});
+
 const getModuleMarkdownFiles = (modules: ReadonlyArray<Domain.Module>) =>
   Effect.forEach(
     modules,
     Effect.fnUntraced(function* (module, index) {
       const outputPath = yield* getModuleMarkdownOutputPath(module);
       const moduleContent = yield* Printer.printModule(module);
-      const toc = markdownToc(moduleContent, { bullets: "-" }).content;
+      const toc = yield* renderModuleToc(module.path, moduleContent);
       const frontMatter = Printer.printFrontMatter(module, index + 1);
       const content = pipe(
         `${frontMatter}\n\n${moduleContent}`,

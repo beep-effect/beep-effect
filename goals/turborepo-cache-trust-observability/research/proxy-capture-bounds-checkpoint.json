@@ -1,0 +1,174 @@
+{
+  "schemaVersion": "cache-proxy-capture-bounds/v1",
+  "recordedAt": "2026-10-29T03:19:19.098882+00:00",
+  "authority": "component-preparation-only",
+  "priorHead": "aa6e0e293bb8afc9f64192eefa71f55123e30969",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "95ea77d648b98456c681dc9e64333d2a5179936f7f16b5c4afce4974250d2cf9",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts": "81574a9d79d8abfc34fddcfdcb59ace459997b24c4c4d96b0ced958002d2bf2b",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.schemas.ts": "a0fb285cb74e23cfe34b7ceddaded03d8cd2b42982aa97f2e5c39d112ba3776f",
+    "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "2322f0514314b51acaf6186dc17521cbbeaef8e398952ccf003054d0f34189d1"
+  },
+  "limits": {
+    "requests": 5000,
+    "bodyBytes": 67108864,
+    "attemptedReplayBodyAndTagBytes": 67108864,
+    "reservedReplayKeys": 64,
+    "encodedEventBytes": 4096,
+    "maximumEncodedEventBytesAcrossRun": 20480000,
+    "scenarioAsciiCharacters": 96,
+    "overrides": "Schema-validated overrides can only lower the request/body/capture limits. Byte reservations conservatively count tagged upload attempts, including overwrites and failures."
+  },
+  "redFirst": {
+    "threeBudgetControls": "Original proxy logic with the declared lower limits still returned200 where503/413 was expected; all three failed for the intended assertions.",
+    "interruptedUpload": "Restoring only the old empty-body fallback caused an actual interrupted upload to write its tag upstream. The control expected no upstream write and failed. The historical uncommitted proxy state identified below was restored byte-for-byte; it is not the current checkpoint state.",
+    "redRestore": {
+      "exitCode": 1,
+      "restoredCurrentSourceSha256": "d245e7899b7afdf5d7fee2d9354ce0fd4272b0a198b03a2ccf24a369d7391b9d",
+      "sourceRestoredExactly": true,
+      "restoredFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts",
+      "sourceState": "uncommitted-working-tree",
+      "relationshipToCheckpoint": "Historical working-tree state before the later event-encoding failure guard and capture seam refactor. This restoration is not claimed to match the current checkpoint source; the later integrated verification is separate.",
+      "reconstruction": {
+        "baseRevision": "0fd21698130886ce797b2f5c3d880f64ebac14f2",
+        "baseFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts",
+        "patch": "goals/turborepo-cache-trust-observability/research/reproduce-interrupted-upload-red-restore.patch",
+        "patchSha256": "3feaf901def21f1af89b278987f676b457ace3cf4cf9e3a61b24b39c5598fa83",
+        "baseIsRestoredStateRevision": false,
+        "scope": "The base is a later committed checkpoint used only to reconstruct the earlier uncommitted bytes. Applying the small patch reproduces the recorded restoration digest exactly."
+      }
+    }
+  },
+  "actualControls": [
+    "Sequential request exhaustion refuses later storage access and invalidates the receipt.",
+    "A request larger than the admitted app body limit cannot become an empty upload.",
+    "Aggregate replay body/tag bytes are reserved before forwarding.",
+    "An actual interrupted upload creates no upstream write and invalidates evidence.",
+    "An oversized streamed upstream reply is rejected and cannot yield complete evidence.",
+    "Concurrent requests reserve the request count atomically.",
+    "Concurrent distinct uploads reserve at most64 replay entries before upstream writes."
+  ],
+  "integratedVerification": {
+    "status": "passed",
+    "files": 11,
+    "testsPassed": 271,
+    "seconds": 33.19,
+    "packageQuick": {
+      "status": "passed",
+      "lintSeconds": 5.8,
+      "checkSeconds": 15.7
+    },
+    "schemaCatalog": {
+      "status": "current",
+      "entries": 9333,
+      "shards": 173
+    },
+    "rootOxlint": "passed",
+    "fallowAudit": {
+      "status": "passed",
+      "findings": 0
+    },
+    "fallowHealth": {
+      "status": "passed",
+      "findings": 0
+    },
+    "censusSourceBindingsVerified": 427
+  },
+  "productionChanges": false,
+  "notProven": [
+    "This is the existing fault-injection lab proxy, not a deployed production collector.",
+    "Outer HTTP transport can refuse malformed or over64MiB requests before the application; these controls bind admitted app traffic. Production command/upload joining remains open.",
+    "No current full-package audit is asserted for these new source bytes; earlier audit source maps remain historical. Hosted broad checks remain authoritative under the recorded over-ten-minute root-replay constraint.",
+    "No R2 IAM, producer authority, key/epoch rotation, whole-task qualification or representative observation acceptance."
+  ],
+  "priorFunctionalVerification": {
+    "revision": "018058f88fb907c479ac4a8b4135b002d4942b9d",
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "42bbdaf6bc2ade8878dea4e5b150d10f8322d690fd025464f578434daf870c5e",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts": "81574a9d79d8abfc34fddcfdcb59ace459997b24c4c4d96b0ced958002d2bf2b",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.schemas.ts": "a0fb285cb74e23cfe34b7ceddaded03d8cd2b42982aa97f2e5c39d112ba3776f",
+      "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "2322f0514314b51acaf6186dc17521cbbeaef8e398952ccf003054d0f34189d1"
+    },
+    "integratedVerification": {
+      "status": "passed",
+      "files": 10,
+      "testsPassed": 256,
+      "seconds": 25.64,
+      "packageQuick": {
+        "status": "passed",
+        "lintSeconds": 5.7,
+        "checkSeconds": 12.2
+      },
+      "schemaCatalog": {
+        "status": "current",
+        "entries": 9333,
+        "shards": 173
+      },
+      "rootOxlint": "passed",
+      "censusSourceBindingsVerified": 427
+    }
+  },
+  "postComplexityRepair": {
+    "baseHead": "018058f88fb907c479ac4a8b4135b002d4942b9d",
+    "ciFailure": {
+      "run": 40811907774,
+      "job": 123244380908,
+      "attribution": "introduced",
+      "function": "app",
+      "cyclomatic": 14,
+      "cognitive": 14,
+      "crap": 56.3
+    },
+    "repair": "Keep transport orchestration in app and collect request/replay/event budgets in one private file-local capture component. Public options and actual controls are unchanged.",
+    "currentFallowAudit": {
+      "status": "passed",
+      "exitCode": 0,
+      "findings": 0,
+      "source": "Current final source, including oversize-body invalidation through the capture component."
+    },
+    "currentFallowHealth": {
+      "status": "passed",
+      "exitCode": 0,
+      "findings": 0,
+      "scope": "Final current source"
+    },
+    "noSuppressionOrBaselineChange": true
+  },
+  "preMainIntegratedVerification": {
+    "status": "passed",
+    "files": 10,
+    "testsPassed": 256,
+    "seconds": 29.2,
+    "packageQuick": {
+      "status": "passed",
+      "lintSeconds": 6.9,
+      "checkSeconds": 16.1
+    },
+    "schemaCatalog": {
+      "status": "current",
+      "entries": 9333,
+      "shards": 173
+    },
+    "rootOxlint": "passed",
+    "censusSourceBindingsVerified": 427
+  },
+  "postMainIntegration": {
+    "headAtVerification": "bde1beb3c8",
+    "reviewedMain": "b87a1418e8",
+    "selectedFiles": 11,
+    "selectedTestsPassed": 271,
+    "seconds": 33.19,
+    "sourceSha256": {
+      "bun.lock": "de99074dff56a7afb2daf995d16308376b8e21b378985d4f87651f72ae531305",
+      "turbo.json": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf",
+      "standards/policy-tools.fingerprint.json": "7416e97c11d8f08e779c0d53f3e4320b3c00fbe782d5fc465292087155abf3c7",
+      "standards/cache-qualification-baseline.json": "3f48e1865cc7feb265f7300ab79c6e363e837e9c422e2105851cf737d247c33a",
+      "packages/tooling/tool/cli/package.json": "4dc99d9055163269c73b8d96826ab38846e863ce5e3bb82a0f927271ba50fa2d",
+      "packages/tooling/tool/cli/tsconfig.json": "d9c3e5467defdc4b7716756e0b5a72214c03582c6a1c599867e0c0646caad1c3",
+      "packages/tooling/tool/cli/tsconfig.check.json": "46f47f74e0a23d162718613ac1c830feadd7f9aefe6ad14b5888ff84c2a8fb11",
+      "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts": "d5d739d07e74da8a9aa0191b4c2ef6b5253fc490b2a0013bae8f20c4a45ef8b6",
+      "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts": "8b5e91105eafb6aea4b014e41db31f8c93404aedfcb36932bce34ba2f8da01f1"
+    },
+    "scope": "Merged three reviewed main changes. Only an already-available workspace dependency link changed in bun.lock; no third-party dependency version changed. Current package checks include the inherited CLI project references, and the selected suite includes15 ecosystem-polarity tests. Own capture implementation bytes are unchanged from the passing seam repair."
+  }
+}

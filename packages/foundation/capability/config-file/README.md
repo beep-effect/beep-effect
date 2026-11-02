@@ -286,7 +286,7 @@ Each is pinned by a test (`goals/effected-promotion` SPEC W3-e and W3-h (3-3)):
 - `ConfigEventsShape` is the `ConfigEvents` service type.
 - `EncryptedCodec` derives its key once per passphrase key through the internal `PassphraseKeyDerivation` reference; the codec's requirements stay `never`.
 - The codec spans are named `EncryptedCodec.parse`, `EncryptedCodec.stringify` and `ConfigMigration.parse`.
-- `EncryptedCodec` keeps `globalThis.crypto.subtle` for PBKDF2 and AES-GCM, which `effect/Crypto` does not provide. It is used as an algorithm primitive inside the codec and not re-exposed.
+- `EncryptedCodec` keeps `globalThis.crypto.subtle` for PBKDF2 and AES-GCM, which the effect 4.0 crypto service did not provide (effect 4.1.0 adds them as `effect/crypto/Kdf` and `effect/crypto/Aead`). It is used as an algorithm primitive inside the codec and not re-exposed.
 
 ### Dependency backlog
 

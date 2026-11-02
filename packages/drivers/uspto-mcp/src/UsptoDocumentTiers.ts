@@ -1,6 +1,8 @@
 /**
  * Progressive field-tier projection for USPTO file-wrapper documents.
  *
+ * **Details**
+ *
  * `@beep/uspto`'s `getDocuments` resolves an application's
  * `documentBag`-shaped file-wrapper listing (`UsptoDocumentReference[]`,
  * `packages/drivers/uspto/src/Uspto.models.ts:210-221`) — a canonical

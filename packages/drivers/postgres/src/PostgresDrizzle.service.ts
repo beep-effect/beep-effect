@@ -12,7 +12,7 @@ import { readMigrationFiles } from "drizzle-orm/migrator";
 import { formatToMillis } from "drizzle-orm/migrator.utils";
 import * as PgEffectSessionMigrator from "drizzle-orm/pg-core/effect";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, flow, pipe } from "effect/Function";
@@ -119,8 +119,10 @@ export const makeDrizzle = <
   config: PostgresDrizzleConfig<TSchema, TRelations> = {} as PostgresDrizzleConfig<TSchema, TRelations>
 ): Effect.Effect<PostgresDrizzleDatabase<TSchema, TRelations>, PostgresError, Pg.PgClient> =>
   PgDrizzle.makeWithDefaults<NonNullable<TRelations>>(config).pipe(
-    Effect.map((database) => database as PostgresDrizzleDatabase<TSchema, TRelations>),
-    Effect.mapError((cause) => PostgresError.fromUnknown("makeDrizzle", cause))
+    Effect.mapBoth({
+      onFailure: (cause) => PostgresError.fromUnknown("makeDrizzle", cause),
+      onSuccess: (database) => database as PostgresDrizzleDatabase<TSchema, TRelations>,
+    })
   );
 
 /**
@@ -566,10 +568,10 @@ const reconcileLegacyMigrationNames = Effect.fn("Postgres.reconcileLegacyMigrati
 // entries before they can silently re-apply on every boot.
 const migrationMetaFromBundleEntry = Effect.fn("Postgres.migrationMetaFromBundleEntry")(function* (
   entry: MigrationBundleEntry
-): Effect.fn.Return<MigrationMeta, PostgresError, Crypto.Crypto> {
-  const crypto = yield* Crypto.Crypto;
+): Effect.fn.Return<MigrationMeta, PostgresError, Digest.Digest> {
+  const crypto = yield* Digest.Digest;
   const digest = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(entry.sql))
+    .digest(Digest.sha256, new TextEncoder().encode(entry.sql))
     .pipe(Effect.mapError((cause) => PostgresError.fromUnknown("migrateBundle", cause)));
   return {
     bps: true,
@@ -616,18 +618,18 @@ export const migrateBundle: {
   <TSchema extends Record<string, unknown>, TRelations extends AnyRelations>(
     db: PostgresDrizzleDatabase<TSchema, TRelations>,
     config: MigrationBundleConfig
-  ): Effect.Effect<undefined, PostgresError, Crypto.Crypto>;
+  ): Effect.Effect<undefined, PostgresError, Digest.Digest>;
   (
     config: MigrationBundleConfig
   ): <TSchema extends Record<string, unknown>, TRelations extends AnyRelations>(
     db: PostgresDrizzleDatabase<TSchema, TRelations>
-  ) => Effect.Effect<undefined, PostgresError, Crypto.Crypto>;
+  ) => Effect.Effect<undefined, PostgresError, Digest.Digest>;
 } = dual(
   2,
   <TSchema extends Record<string, unknown>, TRelations extends AnyRelations>(
     db: PostgresDrizzleDatabase<TSchema, TRelations>,
     config: MigrationBundleConfig
-  ): Effect.Effect<undefined, PostgresError, Crypto.Crypto> =>
+  ): Effect.Effect<undefined, PostgresError, Digest.Digest> =>
     decodeMigrationBundleConfig(config).pipe(
       Effect.mapError((cause) => PostgresError.fromUnknown("migrateBundle", cause)),
       Effect.flatMap((decoded) =>

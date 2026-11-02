@@ -1,6 +1,8 @@
 /**
  * Epistemic EdgeVersion row converters.
  *
+ * **Details**
+ *
  * Both temporal axes cross this boundary as plain epoch millis: an open upper
  * bound is `null` in the row and `Option.none` in the entity, so the absence of
  * a bound survives the round trip without a sentinel date standing in for it.

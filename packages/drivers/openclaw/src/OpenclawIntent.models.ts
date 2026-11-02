@@ -1,6 +1,8 @@
 /**
  * Desired-intent schema for OpenClaw deployments.
  *
+ * **Details**
+ *
  * The intent vocabulary is ours, not an upstream mirror: consumers describe the
  * deployment they want in stable technical terms and the versioned render
  * adapter maps it onto the pinned OpenClaw `openclaw.json` shape. Secrets are
@@ -35,6 +37,8 @@ const OpenclawClientDataPolicyBase = LiteralKit(["synthetic-only"]);
 
 /**
  * Driver-local 1Password secret reference (`op://vault/item/field`).
+ *
+ * **Details**
  *
  * Extra path segments after the field are allowed (section-qualified
  * references). The reference itself is non-secret data; the driver never
@@ -83,6 +87,8 @@ export type OpenclawSecretReference = typeof OpenclawSecretReference.Type;
 
 /**
  * OpenClaw versions this driver's render adapter targets.
+ *
+ * **Details**
  *
  * The set is intentionally a pinned literal domain: rendering is
  * version-keyed because upstream config schemas break between releases
@@ -1080,6 +1086,8 @@ export class OpenclawGuardrailsIntent extends S.Opaque<OpenclawGuardrailsIntent,
 /**
  * Pinned skill artifact consumed by the generation engine.
  *
+ * **Details**
+ *
  * Skills are workspace mutations, not config keys — the render adapter never
  * emits them into `openclaw.json`.
  *
@@ -1151,6 +1159,8 @@ const openclawDeploymentIntentGuardrailsDefault = OpenclawGuardrailsIntent.make(
 const openclawDeploymentIntentSkillsDefault = A.empty();
 /**
  * Root desired-intent document for one OpenClaw deployment.
+ *
+ * **Details**
  *
  * The render adapter (versioned on `openclawVersion`) turns this intent into
  * the canonical `openclaw.json` for the pinned binary. Secret material only

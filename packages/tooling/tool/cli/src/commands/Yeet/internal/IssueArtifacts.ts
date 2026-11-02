@@ -22,7 +22,8 @@ import { artifactDirForContext, safeArtifactName } from "./ArtifactPaths.ts";
 import { executeHeadInstallPreflight, HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
 import { laneRunsForWrapper, readInnerLaneReports } from "./InnerLaneReports.ts";
 import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoPlanStep, RepoRunContext, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
@@ -160,7 +161,7 @@ export const executeStepWithArtifacts = Effect.fn("Yeet.executeStepWithArtifacts
 ): Effect.fn.Return<
   RepoStepRunResult,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const rawOutputPath = yield* rawOutputPathForStep(context, step);
   return yield* step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID
@@ -473,7 +474,7 @@ export const failWithIssueArtifacts = Effect.fn("Yeet.failWithIssueArtifacts")(f
   steps: ReadonlyArray<RepoPlanStep>,
   results: ReadonlyArray<RepoStepRunResult>,
   message: string
-): Effect.fn.Return<never, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<never, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const innerLaneReports = yield* readInnerLaneReports(context).pipe(
     Effect.orElseSucceed(A.empty<QualityTaskLaneRunReport>)
   );

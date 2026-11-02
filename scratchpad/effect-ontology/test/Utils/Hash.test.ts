@@ -1,12 +1,12 @@
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, it } from "@effect/vitest";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
-import * as Crypto from "effect/Crypto";
-import * as PlatformError from "effect/PlatformError";
+import * as Digest from "effect/crypto/Digest";
 import * as S from "effect/Schema";
 import {
-  HashingError,
   hashEmbeddingKey,
   hashEmbeddingKeySync,
   hashVersionedEmbeddingKey,
@@ -93,33 +93,22 @@ it.layer(BunCrypto.layer)("platform hashing compatibility", (it) => {
   );
 });
 
-const digestFailure = PlatformError.badArgument({
-  module: "Crypto",
-  method: "digest",
-  description: "Injected digest failure",
+const digestDefect = new Error("Injected digest defect");
+const DyingDigest = Layer.mock(Digest.Digest)({
+  digest: () => Effect.die(digestDefect),
 });
-const FailingCrypto = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    randomBytes: (size) => new Uint8Array(size),
-    digest: Effect.fnUntraced(function* () {
-      return yield* digestFailure;
-    }),
-  })
-);
 
-it.layer(FailingCrypto)("typed hashing failures", (it) => {
+it.layer(DyingDigest)("hashing defects", (it) => {
   it.effect(
-    "preserves the operation and platform cause",
+    "propagates a digest defect as a defect, not a typed failure",
     Effect.fnUntraced(function* () {
-      const stringError = yield* sha256("abc").pipe(Effect.flip);
-      const bytesError = yield* sha256Bytes(new Uint8Array([97])).pipe(Effect.flip);
-      assert.instanceOf(stringError, HashingError);
-      assert.instanceOf(bytesError, HashingError);
-      assert.strictEqual(stringError.operation, "sha256");
-      assert.strictEqual(bytesError.operation, "sha256-bytes");
-      assert.strictEqual(stringError.cause, digestFailure);
-      assert.strictEqual(bytesError.cause, digestFailure);
+      const stringExit = yield* Effect.exit(sha256("abc"));
+      const bytesExit = yield* Effect.exit(sha256Bytes(new Uint8Array([97])));
+      assert.isTrue(Exit.isFailure(stringExit) && Exit.hasDies(stringExit));
+      assert.isTrue(Exit.isFailure(bytesExit) && Exit.hasDies(bytesExit));
+      assert.isFalse(Exit.isFailure(stringExit) && Exit.hasFails(stringExit));
+      assert.strictEqual(Exit.isFailure(stringExit) ? Cause.squash(stringExit.cause) : undefined, digestDefect);
+      assert.strictEqual(Exit.isFailure(bytesExit) ? Cause.squash(bytesExit.cause) : undefined, digestDefect);
     })
   );
 });

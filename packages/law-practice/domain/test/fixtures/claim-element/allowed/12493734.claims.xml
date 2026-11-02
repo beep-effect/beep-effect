@@ -1,0 +1,108 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system, comprising:
+<claim-text>one or more processors coupled to non-transitory memory, the one or more processors configured to:
+<claim-text>obtain a set of attributes of a plurality of hardware components of a distributed computing environment;</claim-text>
+<claim-text>determine a set of co-activation metrics for a plurality of experts of a mixture-of-experts model according to inference or training operations executed using the mixture-of-experts model;</claim-text>
+<claim-text>generate a quadratic unconstrained binary optimization (QUBO) data structure based at least on the set of attributes and the set of co-activation metrics;</claim-text>
+<claim-text>assign the plurality of experts of the mixture-of-experts model to the plurality of hardware components of the distributed computing environment according to the QUBO data structure; and</claim-text>
+<claim-text>execute the mixture-of-experts model using the plurality of hardware components according to the assignment.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the set of attributes of the plurality of hardware components comprises at least one of an amount of memory, a memory bandwidth, a processing capability, or a number of processing circuits.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more processors are further configured to:
+<claim-text>determine the set of co-activation metrics for the plurality of experts by causing the mixture-of-experts model to process a predetermined dataset.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more processors are further configured to:
+<claim-text>generate a set of assignments for the plurality of experts by solving a cost function generated using the QUBO data structure.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the one or more processors are further configured to:
+<claim-text>select an optimization function from a plurality of optimization functions applicable to the cost function; and</claim-text>
+<claim-text>generate the set of assignments by applying the optimization function to the cost function.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more processors are further configured to:
+<claim-text>generate a second set of co-activation metrics based on execution of the plurality of experts assigned to the plurality of hardware components;</claim-text>
+<claim-text>determine, based on the second set of co-activation metrics, that the plurality of experts are to be re-assigned among the plurality of hardware components; and</claim-text>
+<claim-text>generate a second QUBO data structure according to the second set of co-activation metrics in response to determining that the plurality of experts are to be re-assigned.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more processors are further configured to:
+<claim-text>receive a request to deploy the mixture-of-experts model in the distributed computing environment; and</claim-text>
+<claim-text>identify the plurality of hardware components based on the request.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more processors are further configured to:
+<claim-text>update the set of co-activation metrics according to at least one threshold.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more processors are further configured to:
+<claim-text>generate the QUBO data structure further based on a number of parameters in each expert of the plurality of experts.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a subset of the plurality of experts comprise replica networks, and wherein the one or more processors are further configured to:
+<claim-text>generate the QUBO data structure further based on at least one penalty term for placement of the subset of the plurality of experts among the plurality of hardware components.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A method, comprising:
+<claim-text>obtaining, by one or more processors coupled to non-transitory memory, a set of attributes of a plurality of hardware components of a distributed computing environment;</claim-text>
+<claim-text>determining, by the one or more processors, a set of co-activation metrics for a plurality of experts of a mixture-of-experts model according to inference or training operations executed using the mixture-of-experts model;</claim-text>
+<claim-text>generating, by the one or more processors, a quadratic unconstrained binary optimization (QUBO) data structure based at least on the set of attributes and the set of co-activation metrics;</claim-text>
+<claim-text>assigning, by the one or more processors, the plurality of experts of the mixture-of-experts model to the plurality of hardware components of the distributed computing environment according to the QUBO data structure; and</claim-text>
+<claim-text>executing, by the one or more processors, the mixture-of-experts model using the plurality of hardware components according to the assignment.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the set of attributes of the plurality of hardware components comprises at least one of an amount of memory, a memory bandwidth, a processing capability, or a number of processing circuits.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising determining, by the one or more processors, the set of co-activation metrics for the plurality of experts by causing the mixture-of-experts model to process a predetermined dataset.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising generating, by the one or more processors, a set of assignments for the plurality of experts by solving a cost function generated using the QUBO data structure.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00014">claim 14</claim-ref>, further comprising:
+<claim-text>selecting, by the one or more processors, an optimization function from a plurality of optimization functions applicable to the cost function; and</claim-text>
+<claim-text>generating, by the one or more processors, the set of assignments by applying the optimization function to the cost function.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>generating, by the one or more processors, a second set of co-activation metrics based on execution of the plurality of experts assigned to the plurality of hardware components;</claim-text>
+<claim-text>determining, by the one or more processors, based on the second set of co-activation metrics, that the plurality of experts are to be re-assigned among the plurality of hardware components; and</claim-text>
+<claim-text>generating, by the one or more processors, a second QUBO data structure according to the second set of co-activation metrics in response to determining that the plurality of experts are to be re-assigned.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>receiving, by the one or more processors, a request to deploy the mixture-of-experts model in the distributed computing environment; and</claim-text>
+<claim-text>identifying, by the one or more processors, the plurality of hardware components based on the request.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising updating, by the one or more processors, the set of co-activation metrics according to at least one threshold.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising generating, by the one or more processors, the QUBO data structure further based on a number of parameters in each expert of the plurality of experts.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein a subset of the plurality of experts comprise replica networks, and further comprising:
+<claim-text>generating, by the one or more processors, the QUBO data structure further based on at least one penalty term for placement of the subset of the plurality of experts among the plurality of hardware components.</claim-text>
+</claim-text>
+</claim>
+</claims>

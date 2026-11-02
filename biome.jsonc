@@ -39,11 +39,6 @@
       "!.claude/skills/teach",
       "!.claude/skills/turborepo",
       "!skills-lock.json",
-      // Graft-generated wiring (the two shims and the skill files) is written by
-      // `graft init`; the repo-owned graft-loader.cjs beside the shims is linted.
-      "!.claude/helpers/graft-hooks.cjs",
-      "!.claude/helpers/graft-statusline.cjs",
-      "!.claude/skills/graft",
       "!.grok",
       "!specs",
       "!**/.tsup",
@@ -65,6 +60,7 @@
       "!**/bun.lock",
       "!**/dist",
       "!standards/fallow.boundaries.generated.jsonc",
+      "!hold-ledger/syncpack-held.generated.json",
       "!standards/instrumentation-catalog",
       "!standards/schema-catalog",
       "!standards/fallow.dead-code.regression-baseline.jsonc",
@@ -242,9 +238,7 @@
             "allowedEnvVars": [
               "BEEP_NODE_BIN",
               "BEEP_YEET_ADMISSION_LEASE_ID",
-              "BEEP_YEET_ADMISSION_WORKLOAD_PATH",
-              "GRAFT_CRUX_MODULE",
-              "GRAFT_EXTRACT_MODULE"
+              "BEEP_YEET_ADMISSION_WORKLOAD_PATH"
             ]
           }
         },
@@ -290,12 +284,12 @@
           "level": "error",
           "options": {
             "paths": {
-              "uuid": "Use the effect/Crypto service: randomUUIDv4, randomUUIDv7, or digest for name-based ids. uuid is not a repository dependency."
+              "uuid": "Use the effect/crypto services: SecureRandom.uuidV4, SecureRandom.uuidV7, or Digest for name-based ids. uuid is not a repository dependency."
             },
             "patterns": [
               {
                 "group": ["uuid/**"],
-                "message": "Use the effect/Crypto service: randomUUIDv4, randomUUIDv7, or digest for name-based ids. uuid is not a repository dependency."
+                "message": "Use the effect/crypto services: SecureRandom.uuidV4, SecureRandom.uuidV7, or Digest for name-based ids. uuid is not a repository dependency."
               }
             ]
           }
@@ -311,12 +305,33 @@
       // sha256 and compared byte-for-byte by its check-by-default scripts and tests.
       "includes": [
         "goals/turborepo-task-qualification/research/**/*.json",
+        // Claim references and prior rounds are byte-bound to critic/attorney receipts.
+        "packages/law-practice/domain/test/fixtures/claim-element/positive/**/*.json",
+        "goals/claim-element-antecedent-check/history/label-conformance-drafts/**/*.json",
+        "goals/claim-element-antecedent-check/history/label-source-exclusions/**/*.json",
+        // Frozen measurement outputs retain the exact bytes recorded before later repairs.
+        "goals/claim-element-antecedent-check/history/*-evaluation.json",
+        "goals/claim-element-antecedent-check/history/*-results.json",
+        // Immutable automated reviewer receipts bind exact input/output bytes.
+        "goals/claim-element-antecedent-check/history/autonomous-review-v1/reference-*-round*.json",
+        "goals/claim-element-antecedent-check/history/autonomous-review-v1/allowed-*-round*.json",
+        "goals/epistemic-retention-policy-calibration/ops/protocol-v1.json",
+        "goals/epistemic-retention-policy-calibration/ops/fixture-v1.json",
+        "goals/epistemic-retention-policy-calibration/history/results/*.json",
         "goals/ciops-ontology-pipeline/research/kpi-reading.json",
         "goals/ciops-ontology-pipeline/research/kpi-adoption-table.json",
         "standards/cache-qualification.json",
         "standards/cache-qualification-baseline.json"
       ],
       "formatter": { "enabled": false }
+    },
+    {
+      "includes": ["standards/cache-qualification-baseline.json"],
+      "files": { "maxSize": 8388608 }
+    },
+    {
+      "includes": ["standards/coverage.regression-baseline.jsonc"],
+      "files": { "maxSize": 2097152 }
     },
     {
       "includes": [

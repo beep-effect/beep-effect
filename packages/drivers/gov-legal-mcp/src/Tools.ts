@@ -1,6 +1,8 @@
 /**
  * Frozen GovInfo and eCFR MCP tool declarations.
  *
+ * **Details**
+ *
  * Exactly four read-only tools are exposed. Every non-empty input and every
  * output schema comes directly from the public driver barrels; only the
  * no-argument eCFR title-list operation owns a package-local empty boundary

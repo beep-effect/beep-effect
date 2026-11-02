@@ -1,0 +1,202 @@
+{
+  "familyId": "11279554-root-25",
+  "rootClaimNumber": 25,
+  "labelClaimNumbers": [25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A computer-implemented method of optimizing operations of a pipeline system, comprising: a) reading input data, wherein the input data describes the pipeline system; b) generating a population of solutions, wherein each solution in the population specifies a feasible production state for the pipeline system; c) evaluating each solution in the population and sorting the solutions in the population according to the evaluation; d) performing a genetic optimization process on the population until a termination condition specified by the input data is satisfied; e) selecting an optimized production solution from the population of solutions, wherein the optimized production solution has a highest evaluation, relative to the solutions in the population after the genetic optimization process is performed; and f) generating, for the optimized production solution, an optimized pressure solution specifying an output pressure for one or more delivery points of the pipeline system and an input pressure for one or more production nodes of the pipeline system, using a direct pressure optimization process.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1, wherein performing the genetic optimization process comprises: a) modifying at least one aspect of the feasible operational state specified by at least one solution in the population; b) simulating the operation of the pipeline system, according to the operational state specified by the modified solution; c) evaluating the performance of the modified solution; d) adding the modified solution to the population; and e) removing a solution from the population with a poorest evaluation, relative to the solutions in the population.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method of claim 2, wherein modifying at least one aspect of the feasible operational state specified by at least one solution in the population, comprises: a) selecting a solution modification technique; b) selecting the at least one solution from the population to modify; and c) modifying the at least one solution, according to the selected solution modification technique.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method of claim 3, wherein the solution modification technique randomly modifies the least one aspect of the feasible operational state specified by the solution.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method of claim 3, wherein the solution modification technique modifies the at least one solution according to a heuristic rule.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method of claim 3, wherein the solution modification technique cross-breeds two or more solutions to generate the modified solution.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method of claim 1, wherein modifying at least one aspect of the feasible operational state specified by at least one of the solutions in the population, comprises probabilistically selecting the one or more solutions, wherein a solution with a superior evaluation is more likely to be selected for modification than a solution with an inferior evaluation.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The method of claim 1, further comprising, validating that the input data files describe a pipeline system that may be optimized.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method of claim 1, wherein the termination conditions specified by the input data comprise the termination conditions include at least one of a maximum number of solutions generated, a maximum amount of time spent, a maximum number of generations, and the generation of a solution that exceeds a specified evaluation.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method of claim 1, wherein generating a population of solutions comprises, generating a first group of solutions and a second group of solutions, wherein the first group of solutions are generated according to heuristic rules and wherein the second group of solutions are generated using a random process.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The method of claim 1, wherein the input data comprises at least one extensible markup language (XML) document.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The method of claim 1, wherein the input data is retrieved from a pipeline status database that stores a current operational state of the pipeline system.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "A computer-readable medium containing a program which, when executed, performs an operation for optimizing the operations of a pipeline system, comprising: a) reading input data, wherein the input data describes the pipeline system to be optimized; b) generating a population of solutions, wherein each solution in the population specifies a feasible operational state for the pipeline system; c) evaluating each solution in the population and sorting the solutions in the population according to the evaluation; d) performing a genetic optimization process on the population until a termination condition specified by the input data is satisfied; e) selecting an optimized production solution from the population of solutions, wherein the optimized production solution has a highest evaluation, relative to the solutions in the population after the genetic optimization process is performed; and f) generating, for the optimized production solution, an optimized pressure solution specifying an output pressure for one or more delivery points of the pipeline system and an input pressure for one or more production nodes of the pipeline system, using a direct pressure optimization process.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The computer readable medium of claim 13, wherein performing the genetic optimization process, comprises: a) modifying at least one aspect of the feasible operational state specified by at least one solution in the population; b) simulating the operation of the pipeline system, according to the operational state specified by the modified solution; c) evaluating the performance of the modified solution; d) adding the modified solution to the population; and e) removing a solution from the population with the poorest evaluation.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The computer-readable medium of claim 14, wherein modifying at least one aspect of the feasible operational state specified by at least one solution in the population, comprises: a) selecting a solution modification technique; b) selecting the at least one solution from the population to modify; and c) modifying the at least one solution, according to the selected solution modification technique.",
+      "sourceXmlParentClaimNumbers": [14]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The computer-readable medium of claim 15, wherein the solution modification technique randomly modifies the least one aspect of the feasible operational state specified by the solution.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The computer-readable medium of claim 15, wherein the solution modification technique modifies the at least one solution according to a heuristic rule.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The computer-readable medium of claim 15, wherein the solution modification technique cross-breeds two or more solutions to generate the modified solution.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The computer-readable medium of claim 13, wherein modifying at least one aspect of the feasible operational state specified by at least one of the solutions in the population, comprises probabilistically selecting the one or more solutions, wherein a solution with a superior evaluation is more likely to be selected for modification than a solution with an inferior evaluation.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The computer-readable medium of claim 13, wherein the operation further comprises, validating that the input data files describe a pipeline system that may be optimized.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The computer-readable medium of claim 13, wherein the termination conditions specified by the input data comprise the termination conditions include at least one of a maximum number of solutions generated, a maximum amount of time spent, a maximum number of generations, and the generation of a solution that exceeds a specified evaluation.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The computer-readable medium of claim 13, wherein generating a population of solutions comprises, generating a first group of solutions and a second group of solutions, wherein the first group of solutions are generated according to heuristic rules and wherein the second group of solutions are generated using a random process.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The computer-readable medium of claim 13, wherein the input data comprises at least one extensible markup language (XML) document.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The computer-readable medium of claim 13, wherein the input data is retrieved from a pipeline status database that stores a current operational state of the pipeline system.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "A system for optimizing the operations of a pipeline system, comprising: a) a processor b) an optimization program, which when executed by the processor, is configured to: i) read input data, wherein the input data describes the pipeline system to be optimized; ii) generate a population of solutions, wherein each solution in the population specifies a feasible production state for the pipeline system; iii) evaluate each solution in the population of solutions; iv) perform a genetic optimization process on the population until a termination condition specified by the input data is satisfied; v) select an optimized production solution from the population of solutions, wherein the optimized production solution has a highest evaluation, relative to the solutions in the population after the genetic optimization process is performed; and vi) generate, for the optimized production solution, an optimized pressure solution specifying an output pressure for one or more delivery points of the pipeline system and an input pressure for one or more production nodes of the pipeline system, using a direct pressure optimization process.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 26,
+      "claimText": "The system of claim 25, wherein the optimization program is configured to perform the genetic optimization process by: a) modifying at least one aspect of the feasible operational state specified by at least one solutions in the population; b) simulating the operation of the pipeline system, according to the operational state specified by the modified solution; c) evaluating the performance of the modified solution; d) adding the modified solution to the population; and e) removing a solution from the population with the poorest evaluation, relative to the solutions in the population.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 27,
+      "claimText": "The system of claim 26, wherein the program is configured to modify the at least one aspect of the feasible operational state specified by at least one solution in the population by performing the steps of: a) selecting a solution modification technique; b) selecting the at least one solution from the population to modify; and c) modifying the at least one solution, according to the selected solution modification technique.",
+      "sourceXmlParentClaimNumbers": [26]
+    },
+    {
+      "claimNumber": 28,
+      "claimText": "The system of claim 27, wherein the solution modification technique randomly modifies the least one aspect of the feasible operational state specified by the solution.",
+      "sourceXmlParentClaimNumbers": [27]
+    },
+    {
+      "claimNumber": 29,
+      "claimText": "The system of claim 27, wherein the solution modification technique modifies the at least one solution according to a heuristic rule.",
+      "sourceXmlParentClaimNumbers": [27]
+    },
+    {
+      "claimNumber": 30,
+      "claimText": "The system of claim 27, wherein the solution modification technique cross-breeds two or more solutions to generate the modified solution.",
+      "sourceXmlParentClaimNumbers": [27]
+    },
+    {
+      "claimNumber": 31,
+      "claimText": "The system of claim 25, wherein modifying at least one aspect of the feasible operational state specified by at least one of the solutions in the population, comprises probabilistically selecting the one or more solutions, wherein a solution with a superior evaluation is more likely to be selected for modification than a solution with an inferior evaluation.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 32,
+      "claimText": "The system of claim 25, wherein the termination conditions specified by the input data comprise the termination conditions include at least one of a maximum number of solutions generated, a maximum amount of time spent, a maximum number of generations, and the generation of a solution that exceeds a specified evaluation.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 33,
+      "claimText": "The system of claim 25, wherein the optimization program is configured to generate a population of solutions by generating a first group of solutions and a second group of solutions, wherein the first group of solutions are generated according to heuristic rules and wherein the second group of solutions are generated using a random process.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 34,
+      "claimText": "The system of claim 25, wherein the input data is retrieved from a pipeline status database that stores a current operational state of the pipeline system.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 35,
+      "claimText": "A method of optimizing the operations of a pipeline system, comprising: a) generating an optimized production solution for the production of material supplied to the pipeline system using a genetic algorithm optimization technique to optimize a population of seed solutions; and b) generating, for the optimized production solution, an optimized pressure solution specifying an output pressure present at one or more delivery points of the pipeline system and an input pressure to generate at one or more production nodes of the pipeline system, using a direct pressure optimization technique.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 36,
+      "claimText": "The method of claim 35, wherein the output pressures are within a required minimal delivery pressure for each respective delivery point and wherein the input pressures are within a maximal input pressure allowed for each respective production node of the pipeline system.",
+      "sourceXmlParentClaimNumbers": [35]
+    },
+    {
+      "claimNumber": 37,
+      "claimText": "The method of claim 35, wherein generating an optimized solution for the production of material included in the pipeline system, comprises: a) reading input data, wherein the input data describes the pipeline system to be optimized; b) generating a population of solutions, wherein each solution in the population specifies a feasible production state for the pipeline system; c) evaluating each solution in the population and sorting the solutions in the population according to the evaluation; d) performing an optimization process on the population until a termination condition specified by the input data is satisfied, wherein the optimization process comprises.",
+      "sourceXmlParentClaimNumbers": [35]
+    },
+    {
+      "claimNumber": 38,
+      "claimText": "The method of claim 37, wherein performing the genetic algorithm optimization technique comprises: a) modifying at least one aspect of the feasible operational state specified by at least one solutions in the population; b) simulating the operation of the pipeline system, according to the operational state specified by the modified solution; c) evaluating the performance of the modified solution; d) adding the modified solution to the population; and e) removing a solution from the population with the poorest evaluation, relative to the solutions in the population.",
+      "sourceXmlParentClaimNumbers": [37]
+    },
+    {
+      "claimNumber": 39,
+      "claimText": "The method of claim 38, wherein modifying at least one aspect of at least one of the solution in the population, comprises: a) selecting a solution modification technique; b) selecting the at least one solution from the population to modify; and c) modifying the at least one solution, according to the selected solution modification technique.",
+      "sourceXmlParentClaimNumbers": [38]
+    }
+  ]
+}

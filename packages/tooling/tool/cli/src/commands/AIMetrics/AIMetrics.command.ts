@@ -33,7 +33,14 @@ import {
   makeInstallPlanProgram,
   makeInstallPreviewProgram,
 } from "./internal/Install.ts";
+import {
+  InventoryReportOptions,
+  makeInventoryCoverageProgram,
+  makeInventoryProbeProgram,
+  makeInventoryReportProgram,
+} from "./internal/Inventory.ts";
 import { makeMirrorBuildProgram, makeMirrorStatusProgram, makeMirrorSyncProgram } from "./internal/Mirror.ts";
+import { makeObservationDeploymentProgram } from "./internal/ObservationDeployment.ts";
 import {
   MakeBenchmarkCaseAddProgramOptions,
   MakeBenchmarkCaseListProgramOptions,
@@ -536,6 +543,12 @@ const privacyCommand = Command.make("privacy", {}, () =>
   ])
 ).pipe(Command.withDescription("AI metrics privacy proof workflow"), Command.withSubcommands([privacyCheckCommand]));
 
+const observationPlanCommand = Command.make(
+  "observation-plan",
+  { input: Flag.String("input").pipe(Flag.withDescription("Explicit bounded observation deployment request JSON")) },
+  ({ input }) => runAiMetricsProgram(makeObservationDeploymentProgram(input))
+).pipe(Command.withDescription("Render paused worker and restricted intake units; no installation or startup"));
+
 const installCommand = Command.make("install", {}, () =>
   printLines([
     "AI metrics install commands:",
@@ -545,10 +558,12 @@ const installCommand = Command.make("install", {}, () =>
     "- bun run beep ai-metrics install apply --target local --dry-run",
     "- bun run beep ai-metrics install compose --target local",
     "- bun run beep ai-metrics install preview --target dankserver",
+    "- bun run beep ai-metrics install observation-plan --input <private-request.json>",
   ])
 ).pipe(
   Command.withDescription("AI metrics install workflow"),
   Command.withSubcommands([
+    observationPlanCommand,
     installPreviewCommand,
     installPlanCommand,
     installDoctorCommand,
@@ -1257,6 +1272,50 @@ const archiveCommand = Command.make("archive", {}, () =>
   Command.withSubcommands([archiveDrillCommand])
 );
 
+const inventoryReportCommand = Command.make(
+  "report",
+  {
+    input: Flag.String("input").pipe(Flag.withDescription("Declared metadata inventory JSON file (maximum 4 MiB)")),
+    json: jsonFlag,
+  },
+  (options) => runAiMetricsProgram(makeInventoryReportProgram(InventoryReportOptions.make(options)))
+).pipe(
+  Command.withDescription("Report declared capabilities, populations and route health without starting collection")
+);
+const inventoryCoverageCommand = Command.make(
+  "coverage",
+  {
+    input: Flag.String("input").pipe(
+      Flag.withDescription("Independent inventory and observation evidence JSON (maximum 4 MiB)")
+    ),
+    json: jsonFlag,
+  },
+  (options) => runAiMetricsProgram(makeInventoryCoverageProgram(InventoryReportOptions.make(options)))
+).pipe(Command.withDescription("Compare independently expected IDs with accepted and backend-visible evidence"));
+const inventoryProbeCommand = Command.make(
+  "probe-roots",
+  {
+    input: Flag.String("input").pipe(
+      Flag.withDescription("Private declared-root JSON file (maximum 64 KiB, 32 roots)")
+    ),
+    json: jsonFlag,
+  },
+  (options) => runAiMetricsProgram(makeInventoryProbeProgram(InventoryReportOptions.make(options)))
+).pipe(
+  Command.withDescription("Observe declared Git roots without starting collection; requires configured hash salt")
+);
+const inventoryCommand = Command.make("inventory", {}, () =>
+  printLines([
+    "AI metrics declared inventory:",
+    "- bun run beep ai-metrics inventory report --input <manifest.json> [--json]",
+    "- bun run beep ai-metrics inventory coverage --input <coverage.json> [--json]",
+    "- bun run beep ai-metrics inventory probe-roots --input <private-roots.json> [--json]",
+  ])
+).pipe(
+  Command.withDescription("Inspect declared observability coverage"),
+  Command.withSubcommands([inventoryReportCommand, inventoryProbeCommand, inventoryCoverageCommand])
+);
+
 /**
  * Root of the `ai-metrics` command tree: ingest, storage, export, and retention.
  *
@@ -1264,7 +1323,7 @@ const archiveCommand = Command.make("archive", {}, () =>
  *
  * Invoked with no subcommand it prints the available subcommands rather than
  * doing work, so an operator can discover the surface without risking a run.
- * Every subcommand accepts `--data-root`, which falls back to
+ * Storage subcommands accept `--data-root`, which falls back to
  * `BEEP_AI_METRICS_DATA_ROOT` and then to the XDG state store.
  *
  * **Example** (Mounting the command tree in a CLI entrypoint)
@@ -1286,6 +1345,7 @@ export const aiMetricsCommand = Command.make("ai-metrics", {}, () =>
     "AI metrics commands:",
     "- ingest",
     "- sources discover",
+    "- inventory report",
     "- config snapshot",
     "- privacy check",
     "- install preview",
@@ -1305,6 +1365,7 @@ export const aiMetricsCommand = Command.make("ai-metrics", {}, () =>
   Command.withSubcommands([
     ingestCommand,
     sourcesCommand,
+    inventoryCommand,
     configCommand,
     privacyCommand,
     installCommand,

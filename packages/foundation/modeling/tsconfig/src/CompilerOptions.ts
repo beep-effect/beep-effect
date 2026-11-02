@@ -986,3 +986,72 @@ export declare namespace CompilerOptions {
    */
   export type Encoded = typeof CompilerOptions.Encoded;
 }
+
+/**
+ * The closed view of {@link (CompilerOptions:variable)}: the same typed
+ * fields with no passthrough record, so an option the model does not type is
+ * an excess property.
+ *
+ * **Details**
+ *
+ * The key universe is the one object the passthrough schema is built from, so
+ * the two never drift. Decoding with `onExcessProperty: "error"` rejects an
+ * unknown option; the default `"ignore"` drops it. `@beep/repo-tsconfig`
+ * `TsconfigValidator` layers tsc's cross-field and uniqueness checks over
+ * this view (the strict model docgen reads).
+ *
+ * **Example** (Reject an unknown compiler option)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ClosedCompilerOptions } from "@beep/tsconfig/CompilerOptions";
+ *
+ * const strict = S.decodeUnknownExit(ClosedCompilerOptions);
+ * console.log(strict({ strict: true }, { onExcessProperty: "error" })._tag); // Success
+ * console.log(strict({ futureOption: "kept" }, { onExcessProperty: "error" })._tag); // Failure
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ClosedCompilerOptions = CompilerOptionsFields.pipe(
+  $I.annoteSchema("ClosedCompilerOptions", {
+    description: "The typed compiler options with no passthrough: an unknown option is an excess property.",
+  })
+);
+
+/**
+ * The decoded shape accepted by {@link (ClosedCompilerOptions:variable)}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClosedCompilerOptions = typeof ClosedCompilerOptions.Type;
+
+/**
+ * Type-only companion namespace for {@link (ClosedCompilerOptions:variable)}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ClosedCompilerOptions {
+  /**
+   * The decoded closed `compilerOptions` shape: every typed field optional, no index signature.
+   *
+   * @public
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Type = ClosedCompilerOptions;
+  /**
+   * The encoded (on-disk JSON) closed `compilerOptions` shape.
+   *
+   * @public
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ClosedCompilerOptions.Encoded;
+}

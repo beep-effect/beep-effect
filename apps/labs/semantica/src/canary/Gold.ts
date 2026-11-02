@@ -38,7 +38,7 @@ import { Canonicalizer } from "@/services/Canonicalizer";
 import { DocumentSelection, DocumentSource } from "@/services/DocumentSource";
 import { ActiveModelIdentity } from "@/services/LanguageModel";
 import { Parser } from "@/services/Parser";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { CorpusManifest } from "@/corpus/Manifest";
 import type { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
 import type { F1Catalog } from "@/fixtures/F1";
@@ -754,7 +754,7 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   GoldUnavailable,
   | ActiveModelIdentity
   | Canonicalizer
-  | Crypto.Crypto
+  | Digest.Digest
   | CorpusManifestBuilder
   | DocumentSource
   | F1Catalog

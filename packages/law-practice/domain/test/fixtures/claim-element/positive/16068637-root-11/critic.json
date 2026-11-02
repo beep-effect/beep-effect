@@ -1,0 +1,223 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16068637-root-11",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.96,
+  "confidenceScope": "Independent semantic structure; source qualification accepted separately by source critic and attorney adjudication pending.",
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [11, 12, 13, 14, 15, 16],
+  "findings": [],
+  "acceptanceBlockers": [],
+  "structuralStatus": "reviewed-no-structural-correction",
+  "sourceEligibility": "separate-source-critic-round2-accepted-confidence0.98; not re-certified by this structural reviewer",
+  "priorRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "16068637-root-11",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 2,
+      "confidence": 0.96,
+      "confidenceScope": "Independent semantic structure; source qualification accepted separately by source critic and attorney adjudication pending.",
+      "verdict": "unresolved",
+      "reviewedClaimNumbers": [11, 12, 13, 14, 15, 16],
+      "findings": [],
+      "acceptanceBlockers": [
+        {
+          "kind": "extractor-confidence-below-threshold",
+          "actual": 0.93,
+          "required": 0.95,
+          "requiredAction": "Extractor must independently evaluate the source-specific ambiguityResolution below and either justify a revised confidence or retain any genuinely unresolved item for attorney review. Do not raise confidence solely to pass a threshold. No structural tree change is requested by this critic."
+        }
+      ],
+      "structuralStatus": "reviewed-no-structural-correction",
+      "sourceEligibility": "separate-source-critic-round2-accepted-confidence0.98; not re-certified by this structural reviewer",
+      "priorRounds": [],
+      "priorRoundNote": "No prior semantic structural critic receipt exists in the active family directory. Extractor previousRounds preserves its round1 source hold; separate source-critic round2 has accepted the PDF-header resolution. No archived conformance receipt was read or promoted.",
+      "rationale": [
+        "Reviewed all38 elements and138 complete lexical terms against native source grammar, plus all118 typed edges and21 explicit functional relations. All176 element/term and105 connecting-text anchors are exact UTF16 slices; functional parts have ordered contiguous source coverage, correct local term ownership and existing endpoints. Selected source claims match normalized native XML and claims XML digest.",
+        "Root11 nested rivet list contains rivet shank/head/rotary-driving/positioning clauses, while die clause11.c is a system-level sibling. Root12 matching cases are separated into two explicit circled groups, each with its own conditional properties. Through hole is correctly retained as a complete lexical term in15; malformed positioning protruding is preserved, not rewritten.",
+        "Actual dependencies12/13/14->11,15->14,16->11. All antecedent targets are in the same claim or actual ancestor. The first11.a the rivet has no forward edge to later11.b. Claim13 does not borrow wedge-shaped entities from sibling12. Claim16 does not identify spindle-side central/rotary-driving structures with rivet-head structures; only source-clear head-side structure references are linked.",
+        "Step3 parent16.c spans[385,1273), including the during-the-matting condition16.c.iv[980,1273). Step4 is separate16.d[1275,1604). The condition is grammatically part of the matching/matting sequence before the explicit Step4 marker; its placement under Step3 is justified rather than a semicolon-only partition.",
+        "The component-specific aliases and malformed phrase concerns are addressed explicitly below. No remaining structural correction is found by this critic; however extractor0.93 prevents overall acceptance until its independent response or attorney escalation. The source critic accepted version evidence separately; neither confidence is attorney agreement."
+      ],
+      "ambiguityResolution": [
+        {
+          "claimNumber": 11,
+          "quote": "the rivet",
+          "span": [106, 115],
+          "resolution": "This reference precedes introduction a rivet[177,184). No earlier source noun phrase introduces a rivet, so no forward edge is warranted; missing introduction is a determinate source fact."
+        },
+        {
+          "claimNumber": 12,
+          "quote": "the rotatory driving system",
+          "span": [80, 107],
+          "resolution": "Root11 introduces rotary driving structures on the rivet head, not an explicitly named rotatory driving system. Equating an entire system to those structures requires unstated identity. No antecedent edge is justified."
+        },
+        {
+          "claimNumber": 12,
+          "quote": "a positioning protruding",
+          "span": [596, 620],
+          "resolution": "Malformed native wording nevertheless follows has a and names the sole positioning projection on the driving spindle in case2. Later the positioning protrusion[644,670) and[728,754) refer to that introduced projection. Keep literal quote/head positioning protruding; alias edge does not repair source text."
+        },
+        {
+          "claimNumber": 12,
+          "quote": "the positioning grooves",
+          "span": [695, 718],
+          "resolution": "Same case2 explicitly introduces cone-shaped groove[552,570) as the positioning structure receiving that projection. It is the only groove source in the case. Later plural positioning grooves and singular positioning groove[794,816) refer to that groove, with the source number variation preserved."
+        },
+        {
+          "claimNumber": 13,
+          "quote": "the wedge-shaped notch and wedge-shaped protrusion",
+          "span": [38, 88],
+          "resolution": "Dependency13->11 excludes12. Neither notch nor protrusion is introduced in11; source-clear lexical entities are retained but no sibling antecedent is fabricated."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "the central positioning structures",
+          "span": [506, 540],
+          "resolution": "These belong to the driving spindle by explicit following of the driving spindle. Root11 positioning structure belongs to the rivet head. Absence of a spindle-side introduction is determinate; do not link them."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "the driving structures",
+          "span": [733, 755],
+          "resolution": "Following on the top of the rivet head identifies the head-side structures introduced as rotary driving structures in11.b.iii[397,422). The earlier spindle-bottom rotary driving structures[650,679) are a separate referent and correctly have no edge to those head structures."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "the bottom surface",
+          "span": [887, 905],
+          "resolution": "Explicit of the driving spindle identifies the same spindle lower surface introduced in11.c[730,745). Bottom/lower is a source-clear directional alias, unlike the unintroduced rivet-head upper/top surface."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "the external resistance",
+          "span": [1149, 1172],
+          "resolution": "Step1 explicitly introduces appropriate resistance[176,198) applied to restrain the rivet. Step3 describes that same applied resistance being exceeded, so the existing local edge is grounded in the process grammar."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "during the matting",
+          "span": [980, 998],
+          "resolution": "This condition follows Step3 matching/contact clauses and ends before explicit Step4. Retain native matting spelling and nested16.c.iv ownership; no invented event antecedent is required."
+        }
+      ],
+      "audit": {
+        "resolvedTreesReviewed": 6,
+        "elementsReviewed": 38,
+        "termsReviewed": 138,
+        "typedEdgesReviewed": 118,
+        "functionalEdgesReviewed": 21,
+        "allElementAndTermUtf16SlicesVerified": true,
+        "allFunctionalTextSlicesVerified": true,
+        "functionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+        "selectedNativeClaimTextAndClaimsXmlDigestVerified": true,
+        "noForwardAntecedents": true,
+        "noSiblingAntecedents": true,
+        "rootSchemaCheck": "pending-root",
+        "attorneyAdjudication": "pending"
+      },
+      "independence": "Independent reviewer, not producer of these fresh semantic proposals. No P2 rules, production implementation, predictions, synthetic fixtures or conformance archives read. Helpers verified supplied source slices, digest, edge membership and ordered part coverage only; no decomposer was run or reimplemented."
+    }
+  ],
+  "priorRoundNote": "No prior semantic structural critic receipt exists in the active family directory. Extractor previousRounds preserves its round1 source hold; separate source-critic round2 has accepted the PDF-header resolution. No archived conformance receipt was read or promoted.",
+  "rationale": [
+    "Final round3 structural acceptance is warranted: extractor explicitly identifies its former0.93 uncertainty as malformed projection wording, groove-number variation and component-specific aliases, then independently resolves each using exact local grammar and component ownership. This supplies reasons that resolve the prior blocker rather than merely replacing the confidence number.",
+    "In claim12 case2, a positioning protruding[596,620) is the sole spindle positioning projection and is immediately followed by two the positioning protrusion predicates. The source malformed spelling is preserved. Cone-shaped groove[552,570) is the sole groove in that case, and paired taper/depth predicates identify the later plural positioning grooves[695,718) and singular positioning groove[794,816) without introducing a competing object.",
+    "In claim16, explicit spindle/head ownership excludes unsupported antecedent identity for spindle central/rotary structures while supporting head-side driving structures[733,755), spindle bottom/lower surface[887,905) and the locally applied resistance[1149,1172). Extractor independently explains these owners and the sole applied resistance; no new structure or source wording is inferred.",
+    "No expected/source/production/rule/prediction artifact was read in this final disposition. The unchanged six-tree reference retains its previously independently reviewed38 elements,138 terms,118 edges and21 functional relations. Earlier exact span, nested Step3 condition and Step4 separation checks remain applicable. Prior round2 receipt and its confidence blocker are preserved unchanged in priorRounds.",
+    "Both semantic confidences now meet0.95 and no actionable structural finding or remaining annotation ambiguity is identified. Acceptance is semantic structure only, following separate source-critic acceptance; root validation and actual attorney sampling/adjudication remain separate. The final agent round does not supply attorney agreement or legal definiteness."
+  ],
+  "ambiguityResolution": [
+    {
+      "claimNumber": 11,
+      "quote": "the rivet",
+      "span": [106, 115],
+      "resolution": "This reference precedes introduction a rivet[177,184). No earlier source noun phrase introduces a rivet, so no forward edge is warranted; missing introduction is a determinate source fact."
+    },
+    {
+      "claimNumber": 12,
+      "quote": "the rotatory driving system",
+      "span": [80, 107],
+      "resolution": "Root11 introduces rotary driving structures on the rivet head, not an explicitly named rotatory driving system. Equating an entire system to those structures requires unstated identity. No antecedent edge is justified."
+    },
+    {
+      "claimNumber": 12,
+      "quote": "a positioning protruding",
+      "span": [596, 620],
+      "resolution": "Malformed native wording nevertheless follows has a and names the sole positioning projection on the driving spindle in case2. Later the positioning protrusion[644,670) and[728,754) refer to that introduced projection. Keep literal quote/head positioning protruding; alias edge does not repair source text."
+    },
+    {
+      "claimNumber": 12,
+      "quote": "the positioning grooves",
+      "span": [695, 718],
+      "resolution": "Same case2 explicitly introduces cone-shaped groove[552,570) as the positioning structure receiving that projection. It is the only groove source in the case. Later plural positioning grooves and singular positioning groove[794,816) refer to that groove, with the source number variation preserved."
+    },
+    {
+      "claimNumber": 13,
+      "quote": "the wedge-shaped notch and wedge-shaped protrusion",
+      "span": [38, 88],
+      "resolution": "Dependency13->11 excludes12. Neither notch nor protrusion is introduced in11; source-clear lexical entities are retained but no sibling antecedent is fabricated."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the central positioning structures",
+      "span": [506, 540],
+      "resolution": "These belong to the driving spindle by explicit following of the driving spindle. Root11 positioning structure belongs to the rivet head. Absence of a spindle-side introduction is determinate; do not link them."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the driving structures",
+      "span": [733, 755],
+      "resolution": "Following on the top of the rivet head identifies the head-side structures introduced as rotary driving structures in11.b.iii[397,422). The earlier spindle-bottom rotary driving structures[650,679) are a separate referent and correctly have no edge to those head structures."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the bottom surface",
+      "span": [887, 905],
+      "resolution": "Explicit of the driving spindle identifies the same spindle lower surface introduced in11.c[730,745). Bottom/lower is a source-clear directional alias, unlike the unintroduced rivet-head upper/top surface."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "the external resistance",
+      "span": [1149, 1172],
+      "resolution": "Step1 explicitly introduces appropriate resistance[176,198) applied to restrain the rivet. Step3 describes that same applied resistance being exceeded, so the existing local edge is grounded in the process grammar."
+    },
+    {
+      "claimNumber": 16,
+      "quote": "during the matting",
+      "span": [980, 998],
+      "resolution": "This condition follows Step3 matching/contact clauses and ends before explicit Step4. Retain native matting spelling and nested16.c.iv ownership; no invented event antecedent is required."
+    }
+  ],
+  "audit": {
+    "resolvedTreesReviewed": 6,
+    "elementsReviewed": 38,
+    "termsReviewed": 138,
+    "typedEdgesReviewed": 118,
+    "functionalEdgesReviewed": 21,
+    "allElementAndTermUtf16SlicesVerified": true,
+    "allFunctionalTextSlicesVerified": true,
+    "functionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+    "selectedNativeClaimTextAndClaimsXmlDigestVerified": true,
+    "noForwardAntecedents": true,
+    "noSiblingAntecedents": true,
+    "rootSchemaCheck": "pending-root",
+    "attorneyAdjudication": "pending"
+  },
+  "independence": "Independent reviewer, not producer of these fresh semantic proposals. No P2 rules, production implementation, predictions, synthetic fixtures or conformance archives read. Helpers verified supplied source slices, digest, edge membership and ordered part coverage only; no decomposer was run or reimplemented.",
+  "roundReview": {
+    "previousRound": 2,
+    "findingDisposition": "confidence-blocker-resolved-by-source-specific-independent-response",
+    "extractorConfidence": 0.96,
+    "criticConfidence": 0.96,
+    "finalAgentRound": true,
+    "treeChangeRequested": false,
+    "attorneyAdjudication": "pending"
+  }
+}

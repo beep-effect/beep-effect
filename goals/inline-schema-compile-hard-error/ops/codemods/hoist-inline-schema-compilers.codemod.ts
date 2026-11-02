@@ -399,20 +399,17 @@ const groupSafeCandidates = (safe: ReadonlyArray<SafeCandidate>): ReadonlyArray<
   }
   return A.sort(
     A.fromIterable(groups.values()),
-    Order.mapInput(Order.String, (group) => group.key)
+    Order.mapInput(Order.String, (group: RewriteGroup) => group.key)
   );
 };
 
 const replaceCompilerCall = (call: CallExpression, compiler: string): void => {
   const declaration = call.getParent();
-  if (
-    Node.isVariableDeclaration(declaration) &&
-    declaration.getInitializer() === call &&
-    Node.isIdentifier(declaration.getNameNode())
-  ) {
+  const nameNode = Node.isVariableDeclaration(declaration) ? declaration.getNameNode() : undefined;
+  if (Node.isVariableDeclaration(declaration) && declaration.getInitializer() === call && Node.isIdentifier(nameNode)) {
     const statement = declaration.getFirstAncestorByKind(SyntaxKind.VariableStatement);
     const declarationList = declaration.getParentIfKind(SyntaxKind.VariableDeclarationList);
-    const references = declaration.getNameNode().findReferencesAsNodes();
+    const references = nameNode.findReferencesAsNodes();
     const changesShorthandKey = A.some(references, (reference) =>
       Node.isShorthandPropertyAssignment(reference.getParent())
     );
@@ -424,7 +421,7 @@ const replaceCompilerCall = (call: CallExpression, compiler: string): void => {
     ) {
       for (const reference of A.sort(
         references,
-        Order.mapInput(Order.Number, (entry) => -entry.getStart())
+        Order.mapInput(Order.Number, (entry: MorphNode) => -entry.getStart())
       )) {
         reference.replaceWithText(compiler);
       }
@@ -494,7 +491,7 @@ const rewriteSourceFile = (sourceFile: SourceFile, write: boolean): FileResult =
     }
     for (const call of A.sort(
       group.calls,
-      Order.mapInput(Order.Number, (entry) => -entry.getStart())
+      Order.mapInput(Order.Number, (entry: CallExpression) => -entry.getStart())
     )) {
       replaceCompilerCall(call, name);
       rewritten++;
@@ -503,7 +500,7 @@ const rewriteSourceFile = (sourceFile: SourceFile, write: boolean): FileResult =
 
   for (const [anchorIndex, statements] of A.sort(
     A.fromIterable(insertions.entries()),
-    Order.mapInput(Order.Number, ([index]) => -index)
+    Order.mapInput(Order.Number, ([index]: readonly [number, Array<string>]) => -index)
   )) {
     sourceFile.insertStatements(anchorIndex + 1, statements);
   }

@@ -29,7 +29,7 @@ import * as O from "@beep/utils/Option";
 import * as BunStdio from "@effect/platform-bun/BunStdio";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { constant, dual, pipe } from "effect/Function";
@@ -580,14 +580,8 @@ const writeAdmissionWorkload = Effect.fn("StepExec.writeAdmissionWorkload")(func
       })
     )
   );
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4().pipe(
-    Effect.mapError((cause) =>
-      AdmissionWorkloadRegistrationError.make({
-        message: `Failed to create admission workload identity ${leaseId}: ${cause.message}`,
-      })
-    )
-  );
+  const crypto = yield* SecureRandom.SecureRandom;
+  const token = yield* crypto.uuidV4();
   const temporary = `${workloadPath}.${token}.tmp`;
   const script = `
 set -eu
@@ -668,7 +662,7 @@ const resolveAdmissionWorkload = Effect.fn("StepExec.resolveAdmissionWorkload")(
 
 const prepareAdmissionWorkload = Effect.fn("StepExec.prepareAdmissionWorkload")(function* (
   configured: O.Option<ResolvedAdmissionWorkload>
-): Effect.fn.Return<void, AdmissionWorkloadRegistrationError, Crypto.Crypto> {
+): Effect.fn.Return<void, AdmissionWorkloadRegistrationError, SecureRandom.SecureRandom> {
   if (O.isNone(configured) || configured.value.ownership === "inherited") return;
   yield* writeAdmissionWorkload(configured.value.workloadPath, configured.value.leaseId, {
     schemaVersion: "yeet-admission-workload/v1",
@@ -686,7 +680,7 @@ const procStartFromStat = (text: string): string | undefined => {
 const registerAdmissionWorkload = Effect.fn("StepExec.registerAdmissionWorkload")(function* (
   configured: O.Option<ResolvedAdmissionWorkload>,
   handle: ChildProcessSpawner.ChildProcessHandle
-): Effect.fn.Return<void, AdmissionWorkloadRegistrationError, Crypto.Crypto> {
+): Effect.fn.Return<void, AdmissionWorkloadRegistrationError, SecureRandom.SecureRandom> {
   if (O.isNone(configured) || configured.value.ownership === "inherited") return;
   const processGroupId = PosInt.make(Number(handle.pid));
   const stat = yield* Effect.tryPromise({
@@ -1036,14 +1030,14 @@ export interface RunCaptured {
   ): Effect.Effect<
     CapturedStep,
     E | PlatformError.PlatformError | CaptureCommandTimedOutError | AdmissionWorkloadRegistrationError,
-    R | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    R | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   >;
   (
     options: RunCapturedOptions
   ): Effect.Effect<
     CapturedStep,
     PlatformError.PlatformError | CaptureCommandTimedOutError | AdmissionWorkloadRegistrationError,
-    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   >;
 }
 
@@ -1072,7 +1066,7 @@ export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(functi
 ): Effect.fn.Return<
   CapturedStep,
   E | PlatformError.PlatformError | CaptureCommandTimedOutError | AdmissionWorkloadRegistrationError,
-  R | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  R | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const source = options.source ?? "all";
   const commandLine = formatCommandLine(options.command, options.args);
@@ -1154,6 +1148,36 @@ export type RunCapturedStreamsOptions = SpawnFields & {
   readonly trim?: boolean | undefined;
 };
 
+// Spawns an admitted child with piped stdout and stderr and drains both under
+// the shared pipe deadline: stdout through the caller's collector, stderr into
+// bounded text, alongside the exit code.
+const runPipedChild = <A>(
+  options: SpawnFields & { readonly command: string; readonly args: ReadonlyArray<string> },
+  collectStdout: (
+    stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>
+  ) => Effect.Effect<A, PlatformError.PlatformError>,
+  stderrBound: OutputBound | undefined
+) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const handle = yield* makeAdmittedChild(options, {
+        stdin: options.stdin ?? "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
+      const [stdout, stderr, exitCode] = yield* Effect.all(
+        [
+          collectStdout(handle.stdout.pipe(Stream.interruptWhen(deadline))),
+          foldDecodedText(decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)), stderrBound, false),
+          handle.exitCode,
+        ],
+        { concurrency: "unbounded" }
+      );
+      return { stdout, stderr, exitCode };
+    })
+  );
+
 /**
  * Spawn a command and capture stdout and stderr as separate strings.
  *
@@ -1189,40 +1213,115 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
 ): Effect.fn.Return<
   CapturedStreams,
   PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* makeAdmittedChild(options, {
-        stdin: options.stdin ?? "ignore",
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
-      const [stdout, stderr, exitCode] = yield* Effect.all(
-        [
-          foldDecodedText(
-            decodedText(handle.stdout).pipe(Stream.interruptWhen(deadline)),
-            options.stdoutBound ?? options.bound,
-            false
-          ),
-          foldDecodedText(
-            decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)),
-            options.stderrBound ?? options.bound,
-            false
-          ),
-          handle.exitCode,
-        ],
-        { concurrency: "unbounded" }
-      );
-      return CapturedStreams.make({
-        exitCode,
-        stdout: options.trim === true ? Str.trim(stdout.text) : stdout.text,
-        stderr: options.trim === true ? Str.trim(stderr.text) : stderr.text,
-        truncated: stdout.truncated || stderr.truncated,
-      });
-    })
+  const { stdout, stderr, exitCode } = yield* runPipedChild(
+    options,
+    (stream) => foldDecodedText(decodedText(stream), options.stdoutBound ?? options.bound, false),
+    options.stderrBound ?? options.bound
   );
+  return CapturedStreams.make({
+    exitCode,
+    stdout: options.trim === true ? Str.trim(stdout.text) : stdout.text,
+    stderr: options.trim === true ? Str.trim(stderr.text) : stderr.text,
+    truncated: stdout.truncated || stderr.truncated,
+  });
+});
+
+/**
+ * Result of {@link runFoldedStdout}: the folded stdout value beside the bounded stderr text.
+ *
+ * **Example** (Read a folded stdout value)
+ *
+ * ```ts
+ * import { FoldedStdout } from "@beep/repo-cli/test/Process"
+ *
+ * const result = FoldedStdout.make({ exitCode: 0, value: "digest", stderr: "", truncated: false })
+ * console.log(result.value)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FoldedStdout extends S.Opaque<FoldedStdout, { readonly brand: unique symbol }>()(
+  S.Struct({
+    exitCode: S.Finite,
+    value: S.String,
+    stderr: S.String,
+    truncated: S.Boolean,
+  }).pipe(
+    $I.annoteSchema("FoldedStdout", {
+      description:
+        "Subprocess result whose stdout was folded while streaming, with bounded stderr flagged when it hit the bound.",
+    })
+  )
+) {}
+
+/**
+ * Options for {@link runFoldedStdout}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RunFoldedStdoutOptions = SpawnFields & {
+  readonly command: string;
+  readonly args: ReadonlyArray<string>;
+  /** Consumes the raw stdout bytes as they arrive and reduces them to one value. */
+  readonly fold: (
+    stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>
+  ) => Effect.Effect<string, PlatformError.PlatformError>;
+  readonly stderrBound?: OutputBound | undefined;
+};
+
+/**
+ * Spawn a command and fold its stdout while it streams, never buffering it whole.
+ *
+ * **Details**
+ *
+ * For output too large for a bounded capture that the caller only needs reduced (a digest, a
+ * count), the `fold` consumes stdout chunk by chunk, so memory stays at whatever the fold keeps.
+ * stderr is captured separately under `stderrBound` (default {@link repoRunOutputBound}) for the
+ * failure message; `truncated` reports only whether that stderr capture was clipped. Nonzero exit
+ * codes are represented in the result, stdin defaults to `"ignore"`, and the same pipe deadline as
+ * {@link runCapturedStreams} ends a fold whose pipe an escaped descendant holds open.
+ *
+ * **Example** (Count stdout bytes without buffering them)
+ *
+ * ```ts
+ * import { runFoldedStdout } from "@beep/repo-cli/test/Process"
+ * import * as Effect from "effect/Effect"
+ * import * as Stream from "effect/Stream"
+ *
+ * const size = runFoldedStdout({
+ *   command: "git",
+ *   args: ["log", "--oneline"],
+ *   fold: (stdout) =>
+ *     stdout.pipe(
+ *       Stream.runFold(() => 0, (total: number, chunk: Uint8Array) => total + chunk.length),
+ *       Effect.map(String)
+ *     )
+ * })
+ * console.log(Effect.isEffect(size)) // true
+ * ```
+ *
+ * @param options - Command, spawn fields, stdout fold, and stderr bound.
+ * @returns The folded stdout value, bounded stderr, exit code, and stderr truncation flag.
+ * @category execution
+ * @since 0.0.0
+ */
+export const runFoldedStdout = Effect.fn("StepExec.runFoldedStdout")(function* (
+  options: RunFoldedStdoutOptions
+): Effect.fn.Return<
+  FoldedStdout,
+  PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const { stdout, stderr, exitCode } = yield* runPipedChild(
+    options,
+    options.fold,
+    options.stderrBound ?? repoRunOutputBound
+  );
+  return FoldedStdout.make({ exitCode, value: stdout, stderr: stderr.text, truncated: stderr.truncated });
 });
 
 /**
@@ -1280,7 +1379,7 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
 ): Effect.fn.Return<
   number,
   PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* Effect.scoped(
     Effect.gen(function* () {

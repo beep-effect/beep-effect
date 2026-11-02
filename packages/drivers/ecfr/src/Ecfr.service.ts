@@ -1,6 +1,8 @@
 /**
  * Effect service for the keyless eCFR versioner REST API.
  *
+ * **Details**
+ *
  * The 2nd consumer of the shared transport transformer incubated in
  * `@beep/govinfo`: it builds a raw `HttpClient` on the `HttpClient.mapRequest`
  * path (base-URL prefixing) and threads it through `transport.transformClient`

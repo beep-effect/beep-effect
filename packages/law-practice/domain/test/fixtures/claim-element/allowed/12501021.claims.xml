@@ -1,0 +1,229 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system comprising:
+<claim-text>a tracker;</claim-text>
+<claim-text>a multiscopic display comprising:
+<claim-text>an array of light-emitting elements; and</claim-text>
+<claim-text>a multiscopic optical element arranged on an optical path of the array of light-emitting elements, the multiscopic optical element comprising a plurality of multiscopic cells; and</claim-text>
+</claim-text>
+<claim-text>at least one processor configured to:
+<claim-text>determine a relative location of each eye of at least one user with respect to an image plane of the multiscopic display, using the tracker;</claim-text>
+<claim-text>determine a three-dimensional view frustum corresponding to a given eye of the at least one user, based on a relative location of the given eye with respect to the image plane;</claim-text>
+<claim-text>identify a set of light-emitting elements in the array to be employed to display a graphical element to the given eye, based on a position of the graphical element in the 3D view frustum;</claim-text>
+<claim-text>determine, for each light-emitting element in the set, a perceived shape and a perceived angular size of said light-emitting element from a perspective of the given eye, based on the relative location of the given eye with respect to the image plane, and on optical distortion parameters of the multiscopic optical element;</claim-text>
+<claim-text>rasterize the graphical element onto the set of light-emitting elements based at least on relative perceived positions of the light-emitting elements in the set from the perspective of the given eye, and the perceived shape and the perceived angular size of each light-emitting element in the set;</claim-text>
+<claim-text>compute a colour value for each light-emitting element in the set based on the rasterization of the graphical element;</claim-text>
+<claim-text>store, for the graphical element, computed colour values for the light-emitting elements in the set, along with cadence information indicating a reference cadence of a reference light-emitting element in the set with respect to a multiscopic cell;</claim-text>
+<claim-text>update the 3D view frustum corresponding to the given eye, based on a current or predicted relative location of the given eye with respect to the image plane;</claim-text>
+<claim-text>identify another set of light-emitting elements in the array to be employed to display the graphical element to the given eye, based on the position of the graphical element in the updated 3D view frustum;</claim-text>
+<claim-text>determine whether a cadence of a corresponding light-emitting element in the another set with respect to another multiscopic cell matches the reference cadence of the reference light-emitting element in the set within a predefined similarity threshold; and</claim-text>
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the another set matches the reference cadence within the predefined similarity threshold, reuse the stored colour values for the light-emitting elements of the another set to display the graphical element to the given eye.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the another set does not match the reference cadence within the predefined similarity threshold,
+<claim-text>search for a further set of light-emitting elements in the array to be employed to display the graphical element to the given eye, in place of the another set of light-emitting elements, wherein:
+<claim-text>(i) a cadence of a corresponding light-emitting element in the further set with respect to a corresponding multiscopic cell matches the reference cadence within the predefined similarity threshold, and</claim-text>
+<claim-text>(ii) the further set of light-emitting elements lies within a predefined spatial distance threshold from the another set of light-emitting elements; and</claim-text>
+</claim-text>
+<claim-text>reuse the stored colour values for the light-emitting elements of the further set to display the graphical element to the given eye.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>determine a viewing direction from the given eye toward the set of light-emitting elements, based on the relative location of the given eye with respect to the image plane and a position of the set of light-emitting elements in the array;</claim-text>
+<claim-text>store, for the graphical element, the viewing direction in addition to the computed colour values for the light-emitting elements in the set and the cadence information;</claim-text>
+<claim-text>determine a current or predicted viewing direction from the given eye toward the another set of light-emitting elements, based on the current or predicted relative location of the given eye with respect to the image plane and a position of the another set of light-emitting elements in the array;</claim-text>
+<claim-text>determine whether an angular deviation between the current or predicted viewing direction and the stored viewing direction exceeds a predefined angular threshold; and</claim-text>
+<claim-text>when it is determined that the angular deviation exceeds the predefined angular threshold,
+<claim-text>re-rasterize the graphical element onto the another set of light-emitting elements based at least on relative perceived positions of the light-emitting elements in the another set from the perspective of the given eye, and a perceived shape and a perceived angular size of each light-emitting element in the another set; and</claim-text>
+<claim-text>compute a colour value for each light-emitting element in the another set based on the re-rasterization of the graphical element.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, the at least one processor is configured to:
+<claim-text>determine a distance between the given eye and the position of the graphical element in the 3D view frustum;</claim-text>
+<claim-text>determine a scaling factor for the graphical element based on the distance between the given eye and the position of the graphical element in the 3D view frustum;</claim-text>
+<claim-text>store, for the graphical element, the scaling factor in addition to the computed colour values for the light-emitting elements in the set and the cadence information;</claim-text>
+<claim-text>determine a current or predicted distance between the given eye and the position of the graphical element in the updated 3D view frustum;</claim-text>
+<claim-text>determine a current or predicted scaling factor for the graphical element based on the current or predicted distance between the given eye and the position of the graphical element in the updated 3D view frustum;</claim-text>
+<claim-text>determine whether a difference between the current or predicted scaling factor and the stored scaling factor exceeds a predefined scaling threshold; and</claim-text>
+<claim-text>when it is determined that the difference exceeds the predefined scaling threshold,
+<claim-text>re-rasterize the graphical element onto the another set of light-emitting elements based at least on relative perceived positions of the light-emitting elements in the another set from the perspective of the given eye, and a perceived shape and a perceived angular size of each light-emitting element in the another set, wherein the another set of light-emitting elements in the array to be employed to display the graphical element to the given eye is identified based further on the current or predicted scaling factor; and</claim-text>
+<claim-text>compute a colour value for each light-emitting element in the another set based on the re-rasterization of the graphical element.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a plurality of graphical elements correspond to respective glyphs in a text string, and wherein the at least one processor is configured to:
+<claim-text>identify, for each graphical element from among the plurality of graphical elements, a corresponding set of light-emitting elements in the array to be employed to display said graphical element to the given eye, based on a position of said graphical element in the 3D view frustum;</claim-text>
+<claim-text>determine, for each light-emitting element in the corresponding set, a perceived shape and a perceived angular size of said light-emitting element from the perspective of the given eye;</claim-text>
+<claim-text>rasterize said graphical element onto the corresponding set of light-emitting elements;</claim-text>
+<claim-text>compute a colour value for each light-emitting element in the corresponding set based on the rasterization of said graphical element;</claim-text>
+<claim-text>store, for said graphical element, computed colour values for the light-emitting elements in the corresponding set, along with cadence information indicating a corresponding reference cadence of a reference light-emitting element in the corresponding set with respect to a corresponding multiscopic cell;</claim-text>
+<claim-text>identify another corresponding set of light-emitting elements in the array to be employed to display said graphical element to the given eye, based on the position of said graphical element in the updated 3D view frustum;</claim-text>
+<claim-text>determine whether a cadence of a corresponding light-emitting element in the another corresponding set with respect to another corresponding multiscopic cell matches the corresponding reference cadence within the predefined similarity threshold; and</claim-text>
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the another corresponding set matches the corresponding reference cadence within the predefined similarity threshold, reuse the stored colour values for the light-emitting elements of the another corresponding set to display said graphical element to the given eye.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the another corresponding set does not match the corresponding reference cadence within the predefined similarity threshold,
+<claim-text>search for a further corresponding set of light-emitting elements in the array to be employed to display said graphical element to the given eye, in place of the another corresponding set of light-emitting elements, wherein:
+<claim-text>(i) a cadence of a corresponding light-emitting element in the further corresponding set with respect to a corresponding multiscopic cell matches the corresponding reference cadence within the predefined similarity threshold, and</claim-text>
+<claim-text>(ii) the further corresponding set of light-emitting elements lies within a predefined spatial distance threshold from the another corresponding set of light-emitting elements; and</claim-text>
+</claim-text>
+<claim-text>reuse the stored colour values for the light-emitting elements of the further corresponding set to display said graphical element to the given eye.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>determine a second 3D view frustum corresponding to another eye of the at least one user, based on a current or predicted relative location of the another eye with respect to the image plane;</claim-text>
+<claim-text>identify a second set of light-emitting elements in the array to be employed to display the graphical element to the another eye, based on a position of the graphical element in the second 3D view frustum;</claim-text>
+<claim-text>determine whether a cadence of a corresponding light-emitting element in the second set with respect to a corresponding multiscopic cell matches the reference cadence of the reference light-emitting element in the set within a predefined similarity threshold; and</claim-text>
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the second set matches the reference cadence within the predefined similarity threshold, reuse the stored colour values for the light-emitting elements of the second set to display the graphical element to the another eye.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>predict a future relative location of the given eye with respect to the image plane;</claim-text>
+<claim-text>determine a future 3D view frustum corresponding to the given eye, based on the future relative location;</claim-text>
+<claim-text>identify a future set of light-emitting elements in the array to be employed to display the graphical element to the given eye at a future time instant, based on a position of the graphical element in the future 3D view frustum;</claim-text>
+<claim-text>determine, for each light-emitting element in the future set, a perceived shape and a perceived angular size of said light-emitting element from a perspective of the given eye, based on the future relative location and optical distortion parameters of the multiscopic optical element;</claim-text>
+<claim-text>rasterize the graphical element onto the future set of light-emitting elements based at least on relative perceived positions of the light-emitting elements in the future set from the perspective of the given eye, and the perceived shape and the perceived angular size of each light-emitting element in the future set;</claim-text>
+<claim-text>compute a colour value for each light-emitting element in the future set based on the rasterization of the graphical element;</claim-text>
+<claim-text>store, for the graphical element, computed colour values for the light-emitting elements in the future set, along with cadence information indicating a future reference cadence of a reference light-emitting element in the future set with respect to a multiscopic cell;</claim-text>
+<claim-text>update the future 3D view frustum corresponding to the given eye, based on a current relative location of the given eye with respect to the image plane;</claim-text>
+<claim-text>identify a current set of light-emitting elements in the array to be employed to display the graphical element to the given eye at a current time instant, based on the position of the graphical element in the updated future 3D view frustum;</claim-text>
+<claim-text>determine whether a cadence of a corresponding light-emitting element in the current set with respect to a corresponding multiscopic cell matches the future reference cadence of the reference light-emitting element in the future set within another predefined similarity threshold; and</claim-text>
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the current set matches the future reference cadence within the another predefined similarity threshold, reuse the stored colour values for the light-emitting elements of the current set to display the graphical element to the given eye at the current time instant.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the another set of light-emitting elements in the array is vertically offset from the set of light-emitting elements in the array by a distance within a predefined vertical offset threshold.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>determine a gaze direction of each eye of the at least one user, using the tracker;</claim-text>
+<claim-text>determine whether the at least one user is looking at the graphical element, based on the gaze direction of either eye or each eye of the at least one user; and</claim-text>
+<claim-text>when it is determined that the at least one user is looking at the graphical element, reduce the predefined similarity threshold used for determining whether the cadence of the corresponding light-emitting element in the another set matches the reference cadence.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>determine a gaze direction of each eye of the at least one user, using the tracker;</claim-text>
+<claim-text>determine whether the at least one user is looking at the graphical element, based on the gaze direction of either eye or each eye of the at least one user; and</claim-text>
+<claim-text>when it is determined that the at least one user is looking at the graphical element,
+<claim-text>bypass reuse of the stored colour values;</claim-text>
+<claim-text>re-rasterize the graphical element onto the another set of light-emitting elements; and</claim-text>
+<claim-text>compute a colour value for each light-emitting element in the another set based on the re-rasterization of the graphical element.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A method comprising:
+<claim-text>determining a relative location of each eye of at least one user with respect to an image plane of a multiscopic display, using a tracker, wherein the multiscopic display comprises an array of light-emitting elements and a multiscopic optical element arranged on an optical path of the array of light-emitting elements, the multiscopic optical element comprising a plurality of multiscopic cells;</claim-text>
+<claim-text>determining a three-dimensional view frustum corresponding to a given eye of the at least one user, based on a relative location of the given eye with respect to the image plane;</claim-text>
+<claim-text>identifying a set of light-emitting elements in the array to be employed to display a graphical element to the given eye, based on a position of the graphical element in the 3D view frustum;</claim-text>
+<claim-text>determining, for each light-emitting element in the set, a perceived shape and a perceived angular size of said light-emitting element from a perspective of the given eye, based on the relative location of the given eye with respect to the image plane, and on optical distortion parameters of the multiscopic optical element;</claim-text>
+<claim-text>rasterizing the graphical element onto the set of light-emitting elements based at least on relative perceived positions of the light-emitting elements in the set from the perspective of the given eye, and the perceived shape and the perceived angular size of each light-emitting element in the set;</claim-text>
+<claim-text>computing a colour value for each light-emitting element in the set based on the rasterization of the graphical element;</claim-text>
+<claim-text>storing, for the graphical element, computed colour values for the light-emitting elements in the set, along with cadence information indicating a reference cadence of a reference light-emitting element in the set with respect to a multiscopic cell;</claim-text>
+<claim-text>updating the 3D view frustum corresponding to the given eye, based on a current or predicted relative location of the given eye with respect to the image plane;</claim-text>
+<claim-text>identifying another set of light-emitting elements in the array to be employed to display the graphical element to the given eye, based on the position of the graphical element in the updated 3D view frustum;</claim-text>
+<claim-text>determining whether a cadence of a corresponding light-emitting element in the another set with respect to another multiscopic cell matches the reference cadence of the reference light-emitting element in the set within a predefined similarity threshold; and</claim-text>
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the another set matches the reference cadence within the predefined similarity threshold, reusing the stored colour values for the light-emitting elements of the another set to display the graphical element to the given eye.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising:
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the another set does not match the reference cadence within the predefined similarity threshold,
+<claim-text>searching for a further set of light-emitting elements in the array to be employed to display the graphical element to the given eye, in place of the another set of light-emitting elements, wherein:
+<claim-text>(i) a cadence of a corresponding light-emitting element in the further set with respect to a corresponding multiscopic cell matches the reference cadence within the predefined similarity threshold, and</claim-text>
+<claim-text>(ii) the further set of light-emitting elements lies within a predefined spatial distance threshold from the another set of light-emitting elements; and</claim-text>
+</claim-text>
+<claim-text>reusing the stored colour values for the light-emitting elements of the further set to display the graphical element to the given eye.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising:
+<claim-text>determining a viewing direction from the given eye toward the set of light-emitting elements, based on the relative location of the given eye with respect to the image plane and a position of the set of light-emitting elements in the array;</claim-text>
+<claim-text>storing, for the graphical element, the viewing direction in addition to the computed colour values for the light-emitting elements in the set and the cadence information;</claim-text>
+<claim-text>determining a current or predicted viewing direction from the given eye toward the another set of light-emitting elements, based on the current or predicted relative location of the given eye with respect to the image plane and a position of the another set of light-emitting elements in the array;</claim-text>
+<claim-text>determining whether an angular deviation between the current or predicted viewing direction and the stored viewing direction exceeds a predefined angular threshold; and</claim-text>
+<claim-text>when it is determined that the angular deviation exceeds the predefined angular threshold,
+<claim-text>re-rasterizing the graphical element onto the another set of light-emitting elements based at least on relative perceived positions of the light-emitting elements in the another set from the perspective of the given eye, and a perceived shape and a perceived angular size of each light-emitting element in the another set; and</claim-text>
+<claim-text>computing a colour value for each light-emitting element in the another set based on the re-rasterization of the graphical element.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising:
+<claim-text>determining a distance between the given eye and the position of the graphical element in the 3D view frustum;</claim-text>
+<claim-text>determining a scaling factor for the graphical element based on the distance between the given eye and the position of the graphical element in the 3D view frustum;</claim-text>
+<claim-text>storing, for the graphical element, the scaling factor in addition to the computed colour values for the light-emitting elements in the set and the cadence information;</claim-text>
+<claim-text>determining a current or predicted distance between the given eye and the position of the graphical element in the updated 3D view frustum;</claim-text>
+<claim-text>determining a current or predicted scaling factor for the graphical element based on the current or predicted distance between the given eye and the position of the graphical element in the updated 3D view frustum;</claim-text>
+<claim-text>determining whether a difference between the current or predicted scaling factor and the stored scaling factor exceeds a predefined scaling threshold; and</claim-text>
+<claim-text>when it is determined that the difference exceeds the predefined scaling threshold,
+<claim-text>re-rasterizing the graphical element onto the another set of light-emitting elements based at least on relative perceived positions of the light-emitting elements in the another set from the perspective of the given eye, and a perceived shape and a perceived angular size of each light-emitting element in the another set, wherein the another set of light-emitting elements in the array to be employed to display the graphical element to the given eye is identified based further on the current or predicted scaling factor; and</claim-text>
+<claim-text>computing a colour value for each light-emitting element in the another set based on the re-rasterization of the graphical element.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein a plurality of graphical elements correspond to respective glyphs in a text string, and wherein the method further comprises:
+<claim-text>identifying, for each graphical element from among the plurality of graphical elements, a corresponding set of light-emitting elements in the array to be employed to display said graphical element to the given eye, based on a position of said graphical element in the 3D view frustum;</claim-text>
+<claim-text>determining, for each light-emitting element in the corresponding set, a perceived shape and a perceived angular size of said light-emitting element from the perspective of the given eye;</claim-text>
+<claim-text>rasterizing said graphical element onto the corresponding set of light-emitting elements;</claim-text>
+<claim-text>computing a colour value for each light-emitting element in the corresponding set based on the rasterization of said graphical element;</claim-text>
+<claim-text>storing, for said graphical element, computed colour values for the light-emitting elements in the corresponding set, along with cadence information indicating a corresponding reference cadence of a reference light-emitting element in the corresponding set with respect to a corresponding multiscopic cell;</claim-text>
+<claim-text>identifying another corresponding set of light-emitting elements in the array to be employed to display said graphical element to the given eye, based on the position of said graphical element in the updated 3D view frustum;</claim-text>
+<claim-text>determining whether a cadence of a corresponding light-emitting element in the another corresponding set with respect to another corresponding multiscopic cell matches the corresponding reference cadence within the predefined similarity threshold; and</claim-text>
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the another corresponding set matches the corresponding reference cadence within the predefined similarity threshold, reusing the stored colour values for the light-emitting elements of the another corresponding set to display said graphical element to the given eye.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, further comprising:
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the another corresponding set does not match the corresponding reference cadence within the predefined similarity threshold,
+<claim-text>searching for a further corresponding set of light-emitting elements in the array to be employed to display said graphical element to the given eye, in place of the another corresponding set of light-emitting elements, wherein:
+<claim-text>(i) a cadence of a corresponding light-emitting element in the further corresponding set with respect to a corresponding multiscopic cell matches the corresponding reference cadence within the predefined similarity threshold, and</claim-text>
+<claim-text>(ii) the further corresponding set of light-emitting elements lies within a predefined spatial distance threshold from the another corresponding set of light-emitting elements; and</claim-text>
+</claim-text>
+<claim-text>reusing the stored colour values for the light-emitting elements of the further corresponding set to display said graphical element to the given eye.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising:
+<claim-text>determining a second 3D view frustum corresponding to another eye of the at least one user, based on a current or predicted relative location of the another eye with respect to the image plane;</claim-text>
+<claim-text>identifying a second set of light-emitting elements in the array to be employed to display the graphical element to the another eye, based on a position of the graphical element in the second 3D view frustum;</claim-text>
+<claim-text>determining whether a cadence of a corresponding light-emitting element in the second set with respect to a corresponding multiscopic cell matches the reference cadence of the reference light-emitting element in the set within a predefined similarity threshold; and</claim-text>
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the second set matches the reference cadence within the predefined similarity threshold, reusing the stored colour values for the light-emitting elements of the second set to display the graphical element to the another eye.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising:
+<claim-text>predicting a future relative location of the given eye with respect to the image plane;</claim-text>
+<claim-text>determining a future 3D view frustum corresponding to the given eye, based on the future relative location;</claim-text>
+<claim-text>identifying a future set of light-emitting elements in the array to be employed to display the graphical element to the given eye at a future time instant, based on a position of the graphical element in the future 3D view frustum;</claim-text>
+<claim-text>determining, for each light-emitting element in the future set, a perceived shape and a perceived angular size of said light-emitting element from a perspective of the given eye, based on the future relative location and optical distortion parameters of the multiscopic optical element;</claim-text>
+<claim-text>rasterizing the graphical element onto the future set of light-emitting elements based at least on relative perceived positions of the light-emitting elements in the future set from the perspective of the given eye, and the perceived shape and the perceived angular size of each light-emitting element in the future set;</claim-text>
+<claim-text>computing a colour value for each light-emitting element in the future set based on the rasterization of the graphical element;</claim-text>
+<claim-text>storing, for the graphical element, computed colour values for the light-emitting elements in the future set, along with cadence information indicating a future reference cadence of a reference light-emitting element in the future set with respect to a multiscopic cell;</claim-text>
+<claim-text>updating the future 3D view frustum corresponding to the given eye, based on a current relative location of the given eye with respect to the image plane;</claim-text>
+<claim-text>identifying a current set of light-emitting elements in the array to be employed to display the graphical element to the given eye at a current time instant, based on the position of the graphical element in the updated future 3D view frustum;</claim-text>
+<claim-text>determining whether a cadence of a corresponding light-emitting element in the current set with respect to a corresponding multiscopic cell matches the future reference cadence of the reference light-emitting element in the future set within another predefined similarity threshold; and</claim-text>
+<claim-text>when it is determined that the cadence of the corresponding light-emitting element in the current set matches the future reference cadence within the another predefined similarity threshold, reusing the stored colour values for the light-emitting elements of the current set to display the graphical element to the given eye at the current time instant.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the another set of light-emitting elements in the array is vertically offset from the set of light-emitting elements in the array by a distance within a predefined vertical offset threshold.</claim-text>
+</claim>
+</claims>

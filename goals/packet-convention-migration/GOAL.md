@@ -20,7 +20,8 @@ Do not resume, amend, or reapply the merged #855 branch. For regression work,
 run the public preview and fleet checks read-only:
 
 1. `bun run beep goals set-status --migrate` must plan zero edits.
-2. `bun run beep goals migrate-conventions --preview` must report zero
+2. The `goals migrate-conventions --preview` command (retired in beep-cli-composition W0;
+   [`Migration.command.ts` at f16d82e9f1](https://github.com/beep-effect/beep-effect/blob/f16d82e9f16d72f64d42b40284bf2867566e796b/packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts)) must report zero
    translations, seeds, issues, assumptions, and fleet findings.
 3. `bun run beep explore --check` must report `findings=0`.
 4. `bun run beep goals doctor` must report zero blockers and advisories.

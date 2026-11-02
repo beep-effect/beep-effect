@@ -15,7 +15,7 @@ const runs = { arbitrary: fcRuns(100) };
 const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
   const equivalent = S.toEquivalence(schema);
   it.effect.prop(
-    name + " decodes its encoded values without failure",
+    `${name} decodes its encoded values without failure`,
     [Arbitrary.schema(schema)],
     ([value]) =>
       Effect.gen(function* () {
@@ -64,7 +64,7 @@ it.effect.prop(
       assert.isTrue(S.toEquivalence(SectionDocument)(reparsed, parsed));
       assert.strictEqual(
         dialect.beginMarker(id),
-        Str.replace(' origin="property" key="' + key + '"', "")(Str.split(eol)(rendered)[0])
+        Str.replace(` origin="property" key="${key}"`, "")(Str.split(eol)(rendered)[0])
       );
       assert.strictEqual(dialect.endMarker(id), Str.split(eol)(rendered).at(-1));
     }),

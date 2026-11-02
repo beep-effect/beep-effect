@@ -1,0 +1,106 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "15803808-root-15",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.97,
+  "verdict": "eligible",
+  "reviewedClaimNumbers": [
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "15803808",
+    "publicationNumber": "US20180130207A1",
+    "publicationDate": "20180510"
+  },
+  "digestEvidence": [
+    {
+      "file": "15803808.publication.xml",
+      "sha256": "bcf474b065a922a20f362dcef0bc0962bac96328a6e7f9cc3f274b380ec12369",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "2426920929458a340ef2c506d08f5fd4f64851990fdf2ca49c5178ac9bd64fb2",
+      "matchesProvenance": true
+    },
+    {
+      "file": "15803808.J9NB4YJERXEAPX2.original.xml",
+      "sha256": "4730b3df7010ab77483736f5f230686f8118da205baef7e1f5dd672001f7aa0e",
+      "matchesProvenance": true
+    }
+  ],
+  "quotedEvidence": [
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "voxel of the image",
+      "nativeQuote": "voxel of the image",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the merged dataset",
+      "nativeQuote": "the merged dataset",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the analysis module",
+      "nativeQuote": "the analysis module",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the merged dataset",
+      "nativeQuote": "the merged dataset",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the merged dataset",
+      "nativeQuote": "the merged dataset",
+      "literalMatchIgnoringCase": true
+    }
+  ],
+  "groundEvidence": {
+    "fullCacheFile": "full-oa-expanded.json",
+    "fullCacheSha256": "115c5af3c1f05bfc978b5b0ba07c3fe7e077848170f5dd25880d5713e74bbf56",
+    "documentIdentifier": "JOZUIATPRXEAPX1",
+    "minimalStatutoryQuote": "The following is a quotation of 35 U.S.C. 112(b):",
+    "actualNumberedGroundScope": "Numbered antecedent-basis rejections immediately follow112(b)/second-paragraph quotations; selected numbered phrases verified.",
+    "scopeEvidence": "Claims1–19 would be allowed provided112/101rejections overcome."
+  },
+  "inventoryEvidence": {
+    "sha256": "caa6e0a027fbb4d2c2196b206719392f5afcb61cae86933d5056d39f808f82cb",
+    "declaredCount": 41,
+    "actualRows": 41,
+    "preOrOnActionClaimAndAmendmentRows": [
+      {
+        "documentIdentifier": "J9NB4YJERXEAPX2",
+        "documentCode": "CLM",
+        "officialDate": "2017-11-05T00:00:00.000-0400"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "JOZUIATPRXEAPX1",
+        "documentCode": "CTNF",
+        "officialDate": "2018-11-29T09:37:31.000-0500"
+      }
+    ]
+  },
+  "concerns": [
+    "Expanded raw full OA JOZUIATPRXEAPX1 has Claim Rejections35USC112 followed by explicit112(b) and pre-AIAsecondparagraph quotations, then numbered antecedent rejections including15/18/19; conclusion says1–19 allowable if112/101rejections overcome. Missing snippet heading is filled from matching cached full record.",
+    "Original17-node parse has duplicated ClaimNumber5, whose printed label is1 5. and full computer-implemented method body is actual15; native15 separately numbered, not a merged claim. Original16–19 separately corroborate body/dependencies;11 omitted by OCR is unselectedcontext.",
+    "Full original15 and16–19 independently read: only OCR splits/misread letters, punctuation/quote typography; no substantive alternate references or amendments. Native15 independent,16–19→15."
+  ],
+  "pdfNeeds": [],
+  "rationale": "Source-only selection audit distinguishes actual numbered statutoryground, native membership, conflicting versions and unreadable original formula. Chronology supports but does not replace exact source evidence. Candidate only; no active slot changed; independent critic and attorney adjudication pending.",
+  "independence": "No structuralexpected/production/rules/predictions, network/secrets/git/delegation. Only this candidate source-audit written."
+}

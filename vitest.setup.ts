@@ -31,14 +31,14 @@ import * as NodeHttp from "node:http";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeStream from "node:stream";
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { A, O, P, R } from "@beep/utils";
 import { addEqualityTesters } from "@effect/vitest";
 import * as MutableHashSet from "effect/MutableHashSet";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
-import picomatch from "picomatch";
-import * as Toml from "toml";
 
 // Node 26 exposes a configurable experimental `localStorage` getter even when
 // no `--localstorage-file` was supplied. Vitest consequently sees the property
@@ -100,6 +100,7 @@ type BunFileShim = {
 type BunServeOptions = {
   readonly fetch: (request: Request, server: ReturnType<BunTestShim["serve"]>) => Promise<Response> | Response;
   readonly hostname?: string;
+  readonly unix?: string;
   readonly port?: number;
   readonly maxRequestBodySize?: number;
 };
@@ -140,9 +141,6 @@ type BunTestShim = {
       readonly values: ReadonlyArray<unknown>;
     };
   };
-  readonly TOML: {
-    readonly parse: (content: string) => unknown;
-  };
   readonly env: NodeJS.ProcessEnv;
   readonly file: (path: string | URL) => BunFileShim;
   readonly markdown: {
@@ -151,7 +149,7 @@ type BunTestShim = {
   readonly shimPortLockDirectory: string;
   readonly serve: (options: BunServeOptions) => {
     readonly hostname: string;
-    readonly port: number;
+    readonly port: number | undefined;
     readonly reload: (options: Pick<BunServeOptions, "fetch">) => void;
     readonly stop: (force?: boolean) => Promise<void>;
   };
@@ -183,13 +181,12 @@ const isObject = (value: unknown): value is object => P.isObjectKeyword(value) &
 const hasFunctionProperty = (value: unknown, key: string): boolean =>
   isObject(value) && typeof Reflect.get(value, key) === "function";
 
-// fallow-ignore-next-line complexity -- CRAP finding comes from fallow's static coverage estimate; the probe is a flat 13-way conjunction of function-property checks over the Bun shim API with cognitive 1. Owner: repo root (vitest.setup.ts). Exit: remove once fallow health reads the measured coverage for this file (#1855 detector frontier) or the branches collapse.
+// fallow-ignore-next-line complexity -- CRAP finding comes from fallow's static coverage estimate; the probe is a flat 12-way conjunction of function-property checks over the Bun shim API with cognitive 1. Owner: repo root (vitest.setup.ts). Exit: remove once fallow health reads the measured coverage for this file (#1855 detector frontier) or the branches collapse.
 const isBunTestShim = (value: unknown): value is BunTestShim =>
   isObject(value) &&
   hasFunctionProperty(value, "CryptoHasher") &&
   P.hasProperty(value, "Glob") &&
   P.hasProperty(value, "JSONL") &&
-  P.hasProperty(value, "TOML") &&
   P.hasProperty(value, "env") &&
   hasFunctionProperty(value, "file") &&
   P.hasProperty(value, "markdown") &&
@@ -362,6 +359,21 @@ const shimPortFloor = 20_000;
 const shimPortCount = 12_000;
 const shimPortLockDirectory = NodePath.join(NodeOS.tmpdir(), "beep-vitest-bun-serve-ports");
 const ownedShimPorts = MutableHashSet.empty<number>();
+// Setup runs again for each file in shared workers. The process owns one cleanup listener and
+// every evaluation publishes its absolute lock paths into the same registry. Keep ownedShimPorts
+// local so stopping a server can only release a reservation acquired by its own shim instance.
+const shimPortCleanupKey = Symbol.for("@beep/vitest/BunServePortCleanup");
+const shimPortCleanup = (() => {
+  const existing: unknown = Reflect.get(process, shimPortCleanupKey);
+  if (MutableHashSet.isMutableHashSet<string>(existing)) return existing;
+  const locks = MutableHashSet.empty<string>();
+  Reflect.set(process, shimPortCleanupKey, locks);
+  process.once("exit", () => {
+    for (const lock of locks) NodeFS.rmSync(lock, { force: true });
+    MutableHashSet.clear(locks);
+  });
+  return locks;
+})();
 let nextShimPortOffset = Math.floor(Math.random() * shimPortCount);
 
 const shimPortLockPath = (port: number): string => NodePath.join(shimPortLockDirectory, `${port}.lock`);
@@ -395,31 +407,98 @@ const createShimPortLock = (port: number): boolean => {
   }
 };
 
-// A lock whose owner exited, or one without a pid (never written by this shim), is reclaimed once.
-// Two processes reclaiming the same abandoned lock at the same instant could both succeed; that
-// needs a crashed owner and an exact collision, and a live owner is never displaced.
-const lockShimPort = (port: number): boolean => {
-  if (createShimPortLock(port)) return true;
-  let owner: number;
+// Each reclaimer holds a hard link to the inode it inspected. Only a canonical lock with exactly
+// that one extra link can be removed: another live reclaimer's link prevents both from winning.
+// Keeping the link through publication also protects a new owner's lock from a late stale unlink.
+const pruneAbandonedShimPortLinks = (port: number): void => {
+  for (const name of NodeFS.readdirSync(shimPortLockDirectory)) {
+    if (!Str.startsWith(`${port}.`)(name) || !(Str.endsWith(".tmp")(name) || Str.endsWith(".reap")(name))) continue;
+    const owner = Number(Str.split(name, ".")[1]);
+    if (Number.isInteger(owner) && owner > 0 && !isLiveProcess(owner)) {
+      NodeFS.rmSync(NodePath.join(shimPortLockDirectory, name), { force: true });
+    }
+  }
+};
+
+const reclaimAbandonedShimPort = (port: number, intent: string): boolean => {
+  const owner = Number.parseInt(NodeFS.readFileSync(intent, "utf8"), 10);
+  if (Number.isInteger(owner) && isLiveProcess(owner)) return false;
+  pruneAbandonedShimPortLinks(port);
+  const inspected = NodeFS.statSync(intent);
+  const canonical = shimPortLockPath(port);
+  let current: NodeFS.Stats;
   try {
-    owner = Number.parseInt(NodeFS.readFileSync(shimPortLockPath(port), "utf8"), 10);
+    current = NodeFS.statSync(canonical);
   } catch (cause) {
     if (errnoCode(cause) === "ENOENT") return createShimPortLock(port);
     throw cause;
   }
-  if (Number.isInteger(owner) && isLiveProcess(owner)) return false;
-  NodeFS.rmSync(shimPortLockPath(port), { force: true });
+  if (current.dev !== inspected.dev || current.ino !== inspected.ino || current.nlink !== 2) return false;
+  NodeFS.rmSync(canonical, { force: true });
   return createShimPortLock(port);
 };
 
+const lockShimPort = (port: number): boolean => {
+  if (createShimPortLock(port)) return true;
+  const intent = NodePath.join(shimPortLockDirectory, `${port}.${process.pid}.${NodeCrypto.randomUUID()}.reap`);
+  try {
+    NodeFS.linkSync(shimPortLockPath(port), intent);
+  } catch (cause) {
+    if (errnoCode(cause) === "ENOENT") return createShimPortLock(port);
+    throw cause;
+  }
+  try {
+    return reclaimAbandonedShimPort(port, intent);
+  } finally {
+    NodeFS.rmSync(intent, { force: true });
+  }
+};
+
+// The lock files only exclude other shim processes. A long-lived listener outside the test run
+// (an IDE helper, a browser runtime, a dev server) can hold a port in the shim range too; the
+// async bind then fails with EADDRINUSE after `serve` returned and the caller's requests reach
+// that process instead. Linux lists every listening TCP socket in /proc/net/tcp{,6} (state 0A),
+// so those ports are skipped before a lock is taken. Elsewhere the files are absent and the
+// set stays empty.
+const shimProcNetTcpTables = ["/proc/net/tcp", "/proc/net/tcp6"] as const;
+const shimTcpListenState = "0A";
+
+const readProcNetTcpRows = (table: string): ReadonlyArray<string> => {
+  try {
+    return A.drop(Str.split("\n")(NodeFS.readFileSync(table, "utf8")), 1);
+  } catch {
+    return [];
+  }
+};
+
+// A row reads `sl local_address rem_address st ...`; local_address is HEXADDR:HEXPORT for both
+// IPv4 and IPv6 rows.
+const listeningPortOfRow = (row: string): O.Option<number> => {
+  const fields = A.filter(Str.split(/\s+/)(Str.trim(row)), Str.isNonEmpty);
+  const localAddress = fields[1];
+  if (fields[3] !== shimTcpListenState || localAddress === undefined) return O.none();
+  return Str.lastIndexOf(":")(localAddress).pipe(
+    O.map((separator) => Number.parseInt(Str.slice(separator + 1)(localAddress), 16)),
+    O.filter(Number.isInteger)
+  );
+};
+
+const listeningTcpPorts = (): MutableHashSet.MutableHashSet<number> =>
+  MutableHashSet.fromIterable(
+    A.getSomes(A.map(A.flatMap(shimProcNetTcpTables, readProcNetTcpRows), listeningPortOfRow))
+  );
+
 const claimShimPort = (): number => {
   NodeFS.mkdirSync(shimPortLockDirectory, { recursive: true });
+  const occupied = listeningTcpPorts();
   for (let attempt = 0; attempt < shimPortCount; attempt++) {
     const offset = (nextShimPortOffset + attempt) % shimPortCount;
     const port = shimPortFloor + offset;
+    if (MutableHashSet.has(occupied, port)) continue;
     if (lockShimPort(port)) {
       nextShimPortOffset = (offset + 1) % shimPortCount;
       MutableHashSet.add(ownedShimPorts, port);
+      MutableHashSet.add(shimPortCleanup, shimPortLockPath(port));
       return port;
     }
   }
@@ -431,12 +510,9 @@ const claimShimPort = (): number => {
 const releaseShimPort = (port: number): void => {
   if (!MutableHashSet.has(ownedShimPorts, port)) return;
   MutableHashSet.remove(ownedShimPorts, port);
+  MutableHashSet.remove(shimPortCleanup, shimPortLockPath(port));
   NodeFS.rmSync(shimPortLockPath(port), { force: true });
 };
-
-process.once("exit", () => {
-  for (const port of ownedShimPorts) NodeFS.rmSync(shimPortLockPath(port), { force: true });
-});
 
 const listenPort = (requestedPort: number | undefined): number =>
   requestedPort === undefined || requestedPort === 0 ? claimShimPort() : requestedPort;
@@ -471,7 +547,8 @@ const respondToRequest = async (
   handler: BunServeOptions["fetch"]
 ): Promise<void> => {
   try {
-    const fetchRequest = toFetchRequest(request, chunks, `${handle.hostname}:${handle.port}`);
+    const fallbackHost = handle.port === undefined ? "localhost" : `${handle.hostname}:${handle.port}`;
+    const fetchRequest = toFetchRequest(request, chunks, fallbackHost);
     await writeResponse(response, await handler(fetchRequest, handle));
   } catch (error) {
     response.statusCode = 500;
@@ -497,7 +574,8 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
   let handler = options.fetch;
   let stopped: Promise<void> | undefined;
   const hostname = options.hostname ?? "0.0.0.0";
-  const port = listenPort(options.port);
+  // Unix listeners must not reserve or bind an unrelated TCP port.
+  const port = options.unix === undefined ? listenPort(options.port) : undefined;
   let bindError: Error | undefined;
   let bindFailed = false;
   const server = NodeHttp.createServer((request, response) => {
@@ -510,7 +588,8 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
     bindError = error;
     bindFailed = true;
   });
-  server.listen(port, hostname);
+  if (options.unix !== undefined) server.listen(options.unix);
+  else server.listen(port, hostname);
 
   const handle: ReturnType<BunTestShim["serve"]> = {
     hostname,
@@ -524,28 +603,11 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
       handler = options.fetch;
     },
     stop: () =>
-      (bindFailed ? Promise.resolve() : (stopped ??= stopServer(server))).finally(() => releaseShimPort(port)),
+      (bindFailed ? Promise.resolve() : (stopped ??= stopServer(server))).finally(() => {
+        if (port !== undefined) releaseShimPort(port);
+      }),
   };
   return handle;
-};
-
-const normalizeTomlValue = (value: unknown): unknown => {
-  if (A.isArray(value)) {
-    return A.map(value, normalizeTomlValue);
-  }
-  if (P.isObjectKeyword(value) && P.isNotNull(value)) {
-    return R.fromEntries(A.map(R.toEntries(value), ([key, item]) => [key, normalizeTomlValue(item)] as const));
-  }
-  return value;
-};
-
-const parseToml = (content: string): unknown => {
-  try {
-    return normalizeTomlValue(Toml.parse(content));
-  } catch (cause) {
-    const message = errorMessage(cause);
-    throw new Error(Str.includes('"=" found')(message) ? `Unexpected = (${message})` : message);
-  }
 };
 
 const parseJsonlChunk: BunTestShim["JSONL"]["parseChunk"] = (content) => {
@@ -619,15 +681,25 @@ class CryptoHasherShim {
   }
 }
 
+// Bun.Glob.match admits dotfiles wherever a wildcard stands (the walker below applies
+// Bun.Glob.scanSync's own `dot` option before any path reaches the matcher) and reads a
+// leading `#` as a literal, not a comment; it negates a leading `!` as minimatch does.
+const globShimOptions = GlobPatternOptions.make({ dot: true, nocomment: true });
+
+// Bun.Glob over `@beep/glob`: the matcher is the kit's `GlobPattern`; the walker keeps Bun's
+// scanSync semantics for Node runs of Bun-targeted suites (effected-promotion W4-p).
 class GlobShim {
-  private readonly matcher: (value: string) => boolean;
+  private readonly matcher: GlobPattern;
 
   constructor(readonly pattern: string) {
-    this.matcher = picomatch(normalizeFilePath(pattern), { dot: true });
+    this.matcher = Result.getOrThrowWith(
+      GlobPattern.compileResult(normalizeFilePath(pattern), globShimOptions),
+      (error) => new Error(`Bun.Glob shim: ${error.message}`, { cause: error })
+    );
   }
 
   match(relativePath: string): boolean {
-    return this.matcher(normalizeFilePath(relativePath));
+    return this.matcher.matches(normalizeFilePath(relativePath));
   }
 
   scanSync(options?: BunGlobScanOptions): Iterable<string> {
@@ -637,7 +709,8 @@ class GlobShim {
     const patternDepth = Str.split("/")(normalizedPattern).length;
     const recursivePattern = Str.includes("**")(normalizedPattern);
     const scanRoot = scanRootForGlobPattern(normalizedPattern);
-    const includeDirectories = options?.onlyFiles !== true && !Str.endsWith("/**/*")(this.pattern);
+    // Bun.Glob.scanSync defaults `onlyFiles` to true: directories are listed only on request.
+    const includeDirectories = options?.onlyFiles === false;
     const outputPath = (relativePath: string, absolutePath: string): string =>
       options?.absolute === true ? normalizeFilePath(absolutePath) : relativePath;
 
@@ -720,9 +793,6 @@ if (!isBunTestShim(Reflect.get(globalThis, "Bun"))) {
     JSONL: {
       parseChunk: parseJsonlChunk,
     },
-    TOML: {
-      parse: parseToml,
-    },
     env: process.env,
     file,
     markdown: {
@@ -744,4 +814,19 @@ if (!isBunTestShim(Reflect.get(globalThis, "Bun"))) {
 // Node coverage runs use the same native primitive through this platform shim.
 if (!hasFunctionProperty(globalThis.crypto, "timingSafeEqual")) {
   Reflect.set(globalThis.crypto, "timingSafeEqual", NodeCrypto.timingSafeEqual);
+}
+
+// Effect's Bun HTTP adapter consumes Bun's batched reader API. Node readers
+// expose read() only; one returned chunk is a valid readMany() batch. Keep
+// cancellation and locking on the original reader, and leave native Bun alone.
+if (!hasFunctionProperty(ReadableStreamDefaultReader.prototype, "readMany")) {
+  Object.defineProperty(ReadableStreamDefaultReader.prototype, "readMany", {
+    configurable: true,
+    writable: true,
+    value: function <T>(this: ReadableStreamDefaultReader<T>) {
+      return this.read().then((result) =>
+        result.done ? { done: true, value: undefined } : { done: false, value: [result.value] }
+      );
+    },
+  });
 }

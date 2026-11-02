@@ -1,0 +1,298 @@
+{
+  "schemaVersion": "claim-v24-historical-review-identity/v1",
+  "runtimeVersion": "v24",
+  "implementationDigest": "cc7722a1492e408278842353ee8f2bc7233ecc1a194c266211849e51825e75cb",
+  "sampleCount": 30,
+  "selectionChanged": false,
+  "questionCount": 115,
+  "allSampledFindingQuestionsIdentical": true,
+  "allSourceAndDependencyClaimTextsIdentical": true,
+  "verifiedHistoricalReviewerEvidenceQuotes": 605,
+  "contextParsingFieldsChanged": [
+    {
+      "patentNumber": "12459604",
+      "claimNumber": 6,
+      "changedFields": ["body", "preamble", "transition"]
+    },
+    {
+      "patentNumber": "12420230",
+      "claimNumber": 5,
+      "changedFields": ["body", "preamble", "transition"]
+    },
+    {
+      "patentNumber": "12420230",
+      "claimNumber": 14,
+      "changedFields": ["body", "preamble", "transition"]
+    },
+    {
+      "patentNumber": "12499172",
+      "claimNumber": 16,
+      "changedFields": ["body", "preamble", "transition"]
+    }
+  ],
+  "historicalInputSha256": "30e929141ceea303c60e3bb5052cf170295390ce14ffe8329229d62abcc99b2a",
+  "historicalSummarySha256": "3be617248e607b061a8ad1066597cd78a3a408e2ccaf3049bbe95234ea823d16",
+  "freshIndependentReviewClaimed": false,
+  "reviewAuthority": "automated-historical-carry-forward",
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "claims": [
+    {
+      "claimId": "12477359:12",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "592d63304507d537caed91abaa767ba0c2daef988ef78f932971dcef222d3386"
+    },
+    {
+      "claimId": "12457782:4",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "3613584b6d62d7468624f071db89f78f0e0f8006dcc63789881b2961bb90bdf2"
+    },
+    {
+      "claimId": "12458116:12",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "45df1f4b34465c87613ff58915c8a815906ceb8bdae35ad493b413c08a01308f"
+    },
+    {
+      "claimId": "12452296:7",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "39bc20203378df826a29ae45a81a90bf998fa670d78fafa9260ff22895554eeb"
+    },
+    {
+      "claimId": "12446668:16",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "a694b4ec7b6d75cc5c41393f94d7657caa9afc129c17d6f4264af2053fdbab54"
+    },
+    {
+      "claimId": "12510001:8",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "4280ae745ba7cf64bc52c0875ca8216a19805273287b010a952054d76779bf93"
+    },
+    {
+      "claimId": "12456380:2",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "941df15944ff810c2d4cd838aaa350880e338cc331080d8dd74fe2fe210e0986"
+    },
+    {
+      "claimId": "12511749:2",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "01c9ad162d629945495fc7461da7841c189d020dbe5101d1b18562235ccb273f"
+    },
+    {
+      "claimId": "12449773:16",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "c20f26456aadb4cf6cda4e862f59c92e9ca1fa9252ed712e85b777d1e84da1a9"
+    },
+    {
+      "claimId": "12459604:9",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "7c76a8f48aafb50a6539b9e606ff4bc36366282b301cf632ae760c183af451d6"
+    },
+    {
+      "claimId": "12507313:13",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "cc047074c5565c69d50d420326ffd5fc11337ec3b26364468ff4e3e77daf4cd8"
+    },
+    {
+      "claimId": "12495342:6",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "8a8724d4153fc11ae40a0985976e7126375ec1484e23b3ddd0b6c2499231dd7f"
+    },
+    {
+      "claimId": "12449773:18",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "c20f26456aadb4cf6cda4e862f59c92e9ca1fa9252ed712e85b777d1e84da1a9"
+    },
+    {
+      "claimId": "12446668:2",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "a694b4ec7b6d75cc5c41393f94d7657caa9afc129c17d6f4264af2053fdbab54"
+    },
+    {
+      "claimId": "12489902:7",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "2748b1a16e3db7ae260f1cabb615e187117f502e24536a86fa5bfa3ff46c9a57"
+    },
+    {
+      "claimId": "12512209:8",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "1c4b39c26106294881d24ddf0c62f1928fa4001a55c4e05fc4f61b51bbbb88c1"
+    },
+    {
+      "claimId": "12489521:11",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "ddcce502fd37e8c3e5427c8b7c0880a18958f662eb6a81cb8dc09b64ee718001"
+    },
+    {
+      "claimId": "12494662:7",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "51566d8ab686937eccd67ba4b609b6ac7fad1aa15708d079435ef5db9934c7d1"
+    },
+    {
+      "claimId": "12482341:16",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "6e16cbefc4320f5293f29df857f3c451381d4d330bf0d8096a1b15d8ee3fbf3c"
+    },
+    {
+      "claimId": "12483343:6",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "e414c4c67e584553d0ce29cf5e14f0faffa678d33c93d956df2b5703c8b29f18"
+    },
+    {
+      "claimId": "12420230:16",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "d879f61c1caf069d852ddf20205ba31f8a666ef706d33842f5516c2849c9c228"
+    },
+    {
+      "claimId": "12512977:5",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "f65ea0667579fdbb36708d4708a83b6c084e6f0656c0d55c827b65a3fd138fb6"
+    },
+    {
+      "claimId": "12499172:14",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "56d557b646a2a89388177cc4af54b5b0b406b6a2fb0f8b758cc3a6638c8c40b6"
+    },
+    {
+      "claimId": "12481627:16",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "37221af1fe231f3d527966f99595f07391a18d02a5feecea572283df5f594db0"
+    },
+    {
+      "claimId": "12444032:17",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "993e7524a6791aa74fe0f13bdc8e2a787cab3a2e79d3d11876de325824d71cc2"
+    },
+    {
+      "claimId": "12485924:8",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "f895f3fc2dbe9e87b73e6acfadd530e7462cbbf5cea78c124505a9bf6df21dfb"
+    },
+    {
+      "claimId": "12498206:1",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "a68720967eb5d2b35fa33c48a697135c030e6b12ea2672e9814f7decb0529f46"
+    },
+    {
+      "claimId": "12491073:12",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "8f1b07dfccaf896788935c04784a4333e172f1edbaf129ef7994b2e78c4cdc1a"
+    },
+    {
+      "claimId": "12447068:19",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "0469ae54b7699ecb7e84fe21f31c69b8982a67cbfd793ca4f423250f66f6cf6c"
+    },
+    {
+      "claimId": "12479352:15",
+      "status": "checked",
+      "findingQuestionsIdentical": true,
+      "sourceAndDependencyClaimTextsIdentical": true,
+      "currentPredictionSha256": "6cab1885144ec4015c1768feea24702e23394bbdbc206133044085d604498132"
+    }
+  ],
+  "claimLevelSummary": {
+    "claimsWithAgreedErroneousFinding": [
+      "12477359:12",
+      "12458116:12",
+      "12452296:7",
+      "12446668:16",
+      "12510001:8",
+      "12456380:2",
+      "12511749:2",
+      "12449773:16",
+      "12507313:13",
+      "12495342:6",
+      "12449773:18",
+      "12446668:2",
+      "12489521:11",
+      "12482341:16",
+      "12420230:16",
+      "12499172:14",
+      "12481627:16",
+      "12444032:17",
+      "12485924:8",
+      "12498206:1",
+      "12479352:15"
+    ],
+    "claimsWithAllStatementsAgreedRight": [
+      "12459604:9",
+      "12512209:8",
+      "12494662:7",
+      "12483343:6",
+      "12512977:5",
+      "12491073:12",
+      "12447068:19"
+    ],
+    "unresolvedClaims": ["12457782:4", "12489902:7"],
+    "identificationBounds": [0.7, 0.7666666666666667],
+    "conditionalWilson95Envelope": [0.5212421254128504, 0.8820761185551049],
+    "intervalKind": "Wilson-envelope-for-unresolved-sample-outcomes",
+    "estimand": "Automated-adjudication estimate of the fraction of the fixed 3184-claim allowed cohort receiving at least one erroneous emitted advisory statement.",
+    "limitations": [
+      "Self-assessed confidence is not calibrated probability.",
+      "Intervals approximate sampling uncertainty conditional on automated judgments; correlated model adjudication error is not covered.",
+      "The claim sample is unchanged but prior predictions informed development repairs; no fresh held-out validation is claimed.",
+      "Coverage warnings are separate from substantive alleged defects; allowed status does not prove antecedent correctness.",
+      "Not all-USPTO prevalence, finding-level precision, independently clean-claim specificity, attorney agreement or legal validation."
+    ]
+  },
+  "limitation": "Whole prediction reports for three sampled patents differ. Four unselected context claims have changed preamble/transition/body parsing; full claim texts, dependencies, every selected question/finding and all historical evidence quotes remain identical. Prior judgments are carried forward as historical judgments, not represented as a fresh review of v24."
+}

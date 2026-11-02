@@ -1,0 +1,31 @@
+{
+  "applicationNumber": "12117564",
+  "publicationNumber": "US20080282800A1",
+  "publicationDate": "2008-11-20",
+  "nativeXmlSha256": "6ec90ae4e07f664e22fc027ca2a79451d649494b17f97843e5377cfe335fb55e",
+  "claimsXmlSha256": "85faad34d875631fd0800e319e660540ec53620e2cdeb7db1073be500e298908",
+  "officeActionDocumentIdentifiers": [
+    "GJBJEV4HPPOPPY5"
+  ],
+  "officeActionMailDate": "2011-01-26",
+  "officeActionSection112Text": [
+    "claims 1-10 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\nin claim 1, line 13, the phrase “the detected signal” lacks antecedent basis - here is claimed “a pair of detected signals”. please clarify. in line 15, the phrase “the detected signal” lacks antecedent basis. in lines 16-17, the phrase “the detected signal” lacks antecedent basis.\r\nin claim 3, line 13, the phrase “the detected signal” lacks antecedent basis. in line 15, the phrase “the detected signal” lacks antecedent basis. in lines 16-17, the phrase “the detected signal” lacks antecedent basis. in line 20, the phrase “the detected signal” lacks antecedent basis. in line 23, the phrase “the signal” lacks antecedent basis. in 24, the phrase “the detected signal” lacks antecedent basis.\r\nin claim 5, line 11, the phrase “the detected signal” lacks antecedent basis. in line 13, the phrase “the delayed detected signal” lacks antecedent basis. in line 14, the phrase the detected signal lacks antecedent basis.\r\nin claim 7, line 11, the phrase “the detected signal” lacks antecedent basis. in line 13, the phrase “the detected signal” lacks antecedent basis. in line 14, the phrase “the detected signal” lacks antecedent basis. in line 16, the phrase “the detected signal” lacks antecedent basis. in line 18, the phrase “the differential-amplified signal” lacks antecedent basis. in lines 18-19, the phrase “the detected signal” lacks antecedent basis.\r\nin claim 9, line 14, the phrase “the detected signal” lacks antecedent basis. in line 16, the phrase “the detected signal” lacks antecedent basis. in lines 17-18, the phrase “the detected signal” lacks antecedent basis. in line 21, the phrase “the detected signal” lacks antecedent basis. in line 24, the phrase “the signal” lacks antecedent basis. in line 25, the phrase “the detected signal” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "FFZWGXUPPPOPPY4",
+      "officialDate": "2008-05-08T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [],
+  "documentInventoryCount": 42,
+  "documentInventoryRows": 42,
+  "primaryCpc": "G01C  19/5649",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/12117564",
+    "https://api.uspto.gov/api/v1/patent/applications/12117564/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

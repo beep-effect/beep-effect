@@ -203,3 +203,386 @@ records each important reconciliation.
 
 These are graduated-goal deliverables, not omissions to conceal with static
 confidence.
+
+## 2026-10-28 signed-client posture source refresh
+
+Installed Turbo documentation and exact native experiments informed the client
+component. The stable package is 2.11.10; canary behavior is checked separately
+with the pinned 2.11.9-canary.1 binary. These sources do not establish production
+trust readiness or qualify a computation.
+
+- Installed `turbo/docs/reference/configuration.mdx`: SHA-256 `f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074`.
+- Installed `turbo/docs/reference/run.mdx`: SHA-256 `31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731`.
+- Installed `turbo/docs/reference/system-environment-variables.mdx`: SHA-256 `068c31df0ce0ca1acbb6e36d5c7616ee753e617285543f092c11b7bce63ce21e`.
+- Installed `turbo/docs/core-concepts/remote-caching.mdx`: SHA-256 `96dd2390be45fd2dbc312b1175d9836b0b39e114dd470d9fa050ce9e046b6052`.
+
+The two signing-posture native receipts bind the observed controls to client
+checksums and implementation source checksums. The positive control makes remote
+HTTP requests; missing-key local controls do not. Native census accepts the
+monorepo fixture shape. A single-package dry plan omits workspace identity and
+is deliberately not substituted for the normal runtime selection contract.
+
+## 2026-10-28 implementation refresh
+
+The current source baseline is `2c59e073c8`; the native checkpoint separately
+binds changed runner source bytes. Historical claims above keep their dates.
+
+- [Current client pins](../../turborepo-quality-cache-adoption/research/current-client-pins.json):
+  installed stable 2.11.10 and published canary 2.11.9-canary.1, executable
+  hashes, registry package integrity and native delegation controls.
+- [Current population](../../turborepo-quality-cache-adoption/research/current-population.json):
+  Cache census source hashes and the retained qualification owner's handoff;
+  inventory only, with current semantic review and disposition still pending.
+- [Current feature inventory](../../turborepo-quality-cache-adoption/research/current-feature-matrix.json):
+  exact bundled-document hashes and installed-schema flags; applicability and
+  runtime correctness remain separate proof obligations.
+- [Current native protocol checkpoint](../../turborepo-cache-trust-observability/research/current-native-checkpoint.json):
+  real stable/canary synthetic runs with signing and transport controls; no
+  deployed role, tenant or observation-window authority.
+- [Retained qualification](../../turborepo-task-qualification/research/current-signed-qualification.json):
+  applies to its original identity-lint computation, reuse layer, profile and
+  epoch; it cannot promote the refreshed population.
+
+## 2026-10-29 backend-result projection
+
+The finite labels and status/method checks follow `Code::label`, `Code::status`
+and `Code::from_response` in the tracked pinned adapter policy patch. Its exact
+digest is retained in `backend-result-checkpoint.json`. Direct/proxy synthetic
+server controls supply capture and redaction evidence. These are observation-only
+labels: a response header does not establish a genuine miss, HMAC validity or a
+protected producer. The checkpoint separates the frozen full audit from later
+test-codec hoisting, canonical catalog refresh and main integration.
+
+- `proxy-capture-bounds-checkpoint.json`: current source bindings, intended-cause
+  budget/interrupted-upload failures and 256 passing integrated tests. It does
+  not transfer historical full audits or claim deployed production collection.
+
+- `reproduce-interrupted-upload-red-restore.patch`: a small byte reconstruction
+  from the later committed proxy to the uncommitted historical restoration
+  state. The checkpoint names the restored file and state; the base commit is
+  explicitly not presented as a revision of the restored state. Its digest was
+  reproduced by applying the patch in a disposable directory.
+
+### Hosted request-completion repair, 2026-10-29
+
+[The completion checkpoint](proxy-request-completion-checkpoint.json) binds
+the current capture and test bytes to 271 tests, package checks, full style
+scan, zero Fallow findings, two counterfactuals and three CPU-constrained
+loopback processes. The prior capture checkpoint remains byte-identical and
+retains its own historical source maps and full-audit scope. No native
+artifact, signing activation, deployed grant or observation window changes.
+
+## 2026-10-29 candidate adapter runtime
+
+- `adapter-runtime-checkpoint.json` and `adapter-runtime-lab.json`: exact candidate
+  source/build bindings, 49 Cargo tests, synthetic wire/native controls and
+  actual fixture worker/cgroup/environment observations. Local component proof
+  only; historical adapter-policy evidence retains its original binary.
+
+- `adapter-runtime-lab-before-cleanup-review.json` retains the original runtime
+  observation bytes. The current runtime report and checkpoint separately bind
+  the cleanup review repair, three failure controls and fresh synthetic replay.
+
+- [Node runtime control checkpoint](proxy-node-runtime-checkpoint.json): source-
+  bound Node failure reproduction, actual Bun child propagation, Node/Bun
+  integrations, V8 instrumentation and CPU-constrained controls. The runtime
+  mismatch is grounded in `vitest.setup.ts`: `collectRequestBody` precedes
+  `respondToRequest`. Prior request-completion evidence is retained unchanged.
+
+- [Response error-path coverage checkpoint](reply-error-coverage-checkpoint.json):
+  exact test/wire digests, actual hosted regression attribution, Bun and Node/V8
+  tests, and supplemental coverage scope. A locally combined observation is not
+  a substitute for the fresh hosted comparison. Earlier evidence is preserved.
+
+### Hosted artifact provenance preparation, 2026-10-29
+
+- [GitHub artifact REST contract](https://docs.github.com/en/rest/actions/artifacts):
+  immutable artifact identity, SHA-256 archive digest and owning workflow-run
+  metadata. These API fields require independent workflow approval and exact
+  byte verification; a caller-provided digest is insufficient.
+- Current implementation: `Cache.workflow.github.schemas.ts` and
+  `Cache.workflow.github.ts` in the existing Cache command owner, with tests
+  in `cache-hosted-producer.test.ts`. The standard-library ZIP reader never
+  extracts paths and checks original names before accepting normalized names.
+  Workflow content is restricted to a bounded ASCII profile so text decoding
+  cannot silently substitute bytes before the independently approved hash.
+- Fixtures prove the verifier mechanism, not actual protected CI publication
+  or a production R2 upload. Current source-bound verification is being
+  collected; no acceptance criterion or observation window closes here.
+
+- [Hosted producer verifier checkpoint](hosted-producer-verifier-checkpoint.json):
+  exact implementation/test/content-decoder hashes, 101 focused and 341
+  integrated tests, three intended-failure guard controls, zero Fallow/test-style
+  findings and the frozen audit plus documentation-only repair. This is a local
+  verifier component; fixture API metadata is not actual CI publication.
+
+- [Native upload-join checkpoint](native-upload-join-checkpoint.json),
+  [bounded physical observations](native-upload-join-observations.json) and
+  [retained native control](native-upload-join-control.ts): exact source/runtime
+  digests, actual stable/canary upload bytes, cross-runtime integration, three
+  intended-failure guard controls and the original failed full package run with
+  its explicit attribution. After committing the prepared manifests, both
+  affected files pass 35 tests against unchanged package source. The original
+  failed full run remains explicit. Reproduce
+  with the pinned Bun using the retained control. No live R2, producer approval,
+  protected publication or real-computation qualification is inferred.
+
+- [Signed credential readiness checkpoint](signed-credential-readiness-checkpoint.json):
+  authenticated Alchemy previews, exact wrapper/template and pinned provider
+  provenance, five rejected configurations and current GitHub branch/secret
+  metadata. At that earlier snapshot, two account-token resources were planned;
+  none had been created, no key had been handed off and no signed cache had
+  been activated. The later deployment checkpoint records the actual grants.
+
+- [Git fixture repair checkpoint](workflow-git-fixture-checkpoint.json): original
+  clean whole-run failure, current Bun/Node tests and actual Git-guard removal.
+  Production workflow implementation bytes are unchanged.
+
+
+- [Passing CLI package replay](producer-package-replay-checkpoint.json): clean
+  committed source, audit1087.0seconds/docgen41.5seconds, original failures kept.
+- [Actual Alchemy role deployment](signed-credential-deployment-checkpoint.json)
+  and [retained storage control](../../../infra/r2-cache/trial-grants.py): two
+  scoped active roles, exact policies, reader denials, actual writer operations,
+  confirmed cleanup and unchanged follow-up plan. Roles are not assigned to
+  consumers, and no signed cache or qualification was activated.
+- [Cloudflare OAuth account-token provisioning](https://developers.cloudflare.com/changelog/post/2026-10-01-account-api-token-provisioning/)
+  and [account-token ownership](https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/):
+  existing OAuth creation scope and creator-limited management.
+
+- [Publication gate repair](producer-publication-gate-repair-checkpoint.json):
+  introduced catalog/property findings, canonical regeneration, schema-derived
+  binding properties, two intended-failure controls, exact restoration and
+  current Node/Bun integration. Earlier full audits retain their exact scope.
+
+
+### Producer coverage repair
+
+- [Coverage repair checkpoint](producer-coverage-repair-checkpoint.json): the
+  original complete final-check receipt failed only the new-file coverage ratchet.
+  Both repaired files now have 100% coverage in Node/V8 and Bun/Istanbul,
+  five intended-failure guard controls and 362 integration tests per runtime.
+  Earlier frozen proofs remain separate; no coverage baseline, qualification
+  entry, deployed signing policy or whole-goal acceptance changes.
+
+
+### Producer review repair
+
+- [Review repair checkpoint](producer-review-repair-checkpoint.json): optimized
+  Python refusal before cloud-client imports, retained typed runtime error causes,
+  30 focused tests per runtime, full file coverage and intended-failure controls.
+  The refreshed census changes no semantic reviews, cache flags or qualification.
+  The earlier passing full replay stays historical; this repair needs fresh
+  publication and hosted acceptance.
+
+
+### Goal-packet review safety
+
+- [Packet review checkpoint](producer-packet-review-checkpoint.json): historical
+  package-replay scope, optimization refusals, explicit native dry-plan checks,
+  fresh report-directory creation and baseline chronology. Controlled unit
+  excerpts stay distinct from eighteen real synthetic native replay processes.
+  Earlier observations keep their original driver identities and full goal
+  acceptance remains open.
+
+
+## Docgen launch repair, 2026-10-29
+
+`docgen-launch-repair-checkpoint.json` records the actual full before/after
+commands, the retained intermittent exit 130 attempts, interpreter observation
+and package/script checks. The baseline review names the ten blocking cached
+tasks and the one reviewed package subject; fourteen executable command-digest
+records change with those manifest bytes. Scope/profile/epoch and the
+qualification ledger remain unchanged. This grants no cache qualification or
+signed trust readiness.
+
+
+## Signed supervisor launcher repair, 2026-10-29
+
+- [Source-bound checkpoint](signed-runtime-alias-checkpoint.json): exact private
+  runtime aliases repair discovery of a pinned executable named `bun.native`.
+  The actual isolated old/fixed topology probe exited127/0 respectively and
+  the fixed form reported the expected pinned runtime versions.
+- 18 supervisor tests pass in each runtime; package lint/check and the complete
+  package audit plus Docgen pass. This is launcher proof; current native task
+  qualification and production trust remain separate unfinished gates.
+
+
+- [Deterministic contained-directory error coverage](fs-guards-directory-coverage-checkpoint.json):
+  real typed filesystem cause, refusal before writing, both 34-test runtime
+  suites, exact error adapter V8 hit and full package audit/documentation.
+  Existing floors and implementation remain unchanged; consumer final proof
+  and both full-goal contracts remain open.
+
+
+### Owned native capture and complete graph, 2026-10-29
+
+[The source-bound checkpoint](producer-capture-checkpoint.json) records actual
+pinned native protocol runs, separate incoming tag digests, complete minimal
+summary retention, and the reviewed whole-graph upload validator. It also records
+the current census without changing configuration or qualification decisions.
+Actual signed real-pilot execution, backend/supervisor integration and protected
+publication remain separate proof obligations.
+
+
+## Passing producer-capture whole-package replay
+
+`producer-capture-checkpoint.json` now also records the complete default
+`@beep/repo-cli` package audit and full Docgen pass on the fixed signed-summary
+fixture source at `11c6a3dc9a8d`. The run completed in 1158.844 seconds (audit
+1117.9 seconds, Docgen 39.4 seconds). Prior failed and interrupted runs remain
+historical evidence; this pass grants neither live trust nor qualification.
+
+
+## Private socket transport component, 2026-10-29
+
+- [Source-bound checkpoint](private-socket-checkpoint.json): original TCP wrapper
+  shares the observer handler with a scoped owner-only Unix endpoint. Existing
+  Effect NetAddress and platform Unix HTTP agent are reused.
+- Actual Node and Bun focused runs passed 48 tests in 3 files each. Additional
+  real-socket controls prove request-budget refusal and invalid evidence after
+  exhaustion. The earlier source-bound package audit and documentation build passed in 1244.41s.
+- These are component observations. They neither prove real R2 producer traffic
+  nor confer protected workflow, qualification or production signing authority.
+
+
+### Private socket coverage controls
+
+The private-socket checkpoint also retains current 51-test Node/V8 and
+Bun/Istanbul runs. Both providers report 100% lines, statements, functions and
+branches for the fixture; proxy metrics exceed the existing per-file floors.
+Three constructor-double cases prove modes, wrong-address refusal, bind-cause
+preservation and cleanup in-process, while the native lifecycle proves Bun
+transport. Two source-removal controls fail their intended assertions and restore
+the exact source. The production implementation and original test stay byte
+identical to the prior full package replay; current integrated final proof
+remains required for the new test file and combined source.
+
+
+- [Private-socket test lifetime review](private-socket-scope-review.json):
+  one canonical Option assertion repair, six explicit resource judgments, and
+  four actual scope-removal controls that fail the required cleanup assertions.
+  Both current 51-test provider runs pass with unchanged coverage floors.
+
+- `private-pilot-storage-checkpoint.json`: consolidated prerequisite source, actual synthetic guest-alias counterexample, scoped private storage and dependency import checks. Fresh combined whole-package/hosted and native trust acceptance remain pending.
+
+
+### Private storage refusal coverage
+
+The current hosted run 40985410945 and coverage job 123844603476 identify the
+unexecuted refusal. Retained CLI-shard artifacts plus the direct 26-test
+Istanbul run map the source guard; the existing coverage owner's normalizer and
+scoped Istanbul library combine the diagnostic counters. See the source-bound
+repair checkpoint. New published-head canonical and hosted acceptance remain
+required.
+
+
+- `closed-producer-upload-checkpoint.json`: owned upload preparation, paired target/key approval, source/runtime snapshots, actual synthetic guest-alias counterexample and scoped private storage repair; current protected native acceptance remains pending.
+
+
+### Signed adapter exec controls
+
+The signed-adapter-launch checkpoint binds the explicit launcher, real child
+environment observations, default infra package audit/Docgen and two private
+source-copy controls. Its selected test executable is inert. It establishes no
+R2 capability, protected producer authority or resource/listener attestation.
+The ordinary adapter lifecycle and cache configuration remain unchanged.
+
+- `owned-adapter-lifecycle-checkpoint.json`: source-bound local implementation
+  and proof for late owned-backend acquisition, approved storage identity,
+  private pipe startup, fixed real resource/lifetime observations and
+  issuer-bound cleanup. Separates 112-test Node/Bun orchestration, real
+  synthetic adapter/controller cases and three intended guard failures from
+  the unperformed R2/protected/qualification/observation gates.
+
+- `owned-adapter-integration-checkpoint.json`: accepted PR #2367 main integration with the owned backend/upload path; fresh 142-test Node and Bun replays and package lint/check. Earlier checkpoints retain their original source scope; complete and protected proof remains pending.
+
+- `producer-integration-policy-review.json`: exact source repair, canonical assertion semantics, one source-reviewed real-process platform judgment, and scoped passing checks; interrupted complete proof is explicitly not acceptance.
+
+- `producer-fallow-repair-checkpoint.json`: introduced complexity/duplication attribution, canonical upload-profile and shared-reader repair, current 163-case dual-runtime replay, intended digest-removal failure with exact restoration, real synthetic controller cleanup and canonical documentation/policy checks. Complete package/final/hosted and all real trust/adoption gates remain required.
+
+
+- [Upload lifetime review checkpoint](producer-upload-lifetime-checkpoint.json)
+  binds the current admitted lifecycle, unchanged backend caps, seventy focused
+  cases per runtime and exact-restored regression controls. The inert peer and
+  controlled admission do not prove actual R2 grants or protected publication.
+
+
+
+### Complete observation and immutable publication, 2026-10-30
+
+- [Local source-bound checkpoint](complete-observation-publication-checkpoint.json):
+  the existing hosted-report schema/verifier now supports a bounded v2 report
+  that hashes the complete canonical observation and binds its exact owned
+  upload. V1 remains upload-only; no new trust store or qualification authority.
+- Thirty-two Node tests and thirty-two Bun tests use physical local ZIPs with
+  mocked authenticated metadata. Three source-removal controls prove the full
+  digest, upload equality and private snapshot guards are causal. These are
+  component observations, not an actual protected workflow or native R2 run.
+- The existing issuer, acceptance importer and live-source policy owners remain
+  required; actual publisher/consumer wiring, renewal and production observations
+  are explicitly unfinished.
+
+- The publisher input separates run/attempt from the artifact identity allocated
+  after upload. The current report builder needs no invented future artifact ID;
+  authenticated verification retains that required identity. Fresh Node/Bun
+  replays and digest/upload/snapshot controls cover the refined source.
+
+
+### Publication-bound acceptance consumer, 2026-10-30
+
+- [Source-bound acceptance checkpoint](acceptance-publication-join-checkpoint.json):
+  local implementation joins immutable publication with existing issuer/MAC
+  acceptance, persistence and operational reads. The combined 222 cases pass
+  under each runtime; three exact-restored source-removal controls demonstrate
+  strict verification, final publication-approval reads and final issuer checks.
+- Tests use real private files, physical ZIPs, the real CLI command and controlled
+  metadata services. They prove refusal and scope behavior, not actual GitHub
+  producer execution, deployed credentials or signed R2 performance.
+- The unpublished continuation uses the committed lifecycle repair as its local
+  parent. Accepted-parent replay, canonical combined proof and protected hosted
+  execution are still required. All full-goal acceptance remains unproven.
+
+
+### Manual inspection governance, 2026-10-30
+
+- [Policy repair receipt](inspection-governance-checkpoint.json): introduced
+  missing-context mapping was found by the full package proof. The explicit
+  operational mapping preserves the workflow checker and required contexts.
+- Both native runtimes pass 127 security/lane cases, including dispatch/main,
+  read-only permission, disabled capability and retention checks. Actual protected
+  execution and complete combined proof remain separate requirements.
+
+- 2026-10-30: The inspection-governance repair at `c5ae8bf81934a7d62ffce440c88b2a8a2e3e80bc` passed default `@beep/repo-cli` package verification, including audit and Docgen (exit 0; 1,085.848 seconds). Source hashes in `inspection-governance-checkpoint.json` remain exact. This is component verification, not accepted-parent, hosted or live producer proof.
+
+- 2026-10-30: `producer-command-publication-checkpoint.json` binds current closed-command publication wiring to two source digests, 71 passing cases per runtime and quick package proof. Existing complete report builder, schema identifiers and bounded writer are reused. CLI spies isolate execution; authenticated metadata remains a fixture. No real protected publication, credential bootstrap or signed activation is claimed.
+
+- 2026-10-30: The command-publication checkpoint now binds the adjacent one-pass severity consolidation and 96 passing cases per runtime. The two Fallow clone fingerprints are inherited; `dup:b1fc01a4` is consolidated, while `dup:624ca7d8` has an explicit source-backed non-defect judgment and remains in raw reports without suppression.
+
+- 2026-10-30: Publication command source `1395a7aa8b6322d2a68b879d1ffd2aba6d13097e` passed the full default package audit and Docgen (exit 0, 1,055.828 seconds). The exact three code/test digests in `producer-command-publication-checkpoint.json` still match. This is component proof; it does not establish accepted-parent, hosted or live R2 producer acceptance.
+
+- 2026-10-30: `producer-private-output-checkpoint.json` binds the unpublished command repair. The original writer fails two physical mode assertions under a child-only 022 umask. Removing exclusive creation while retaining mode 0600 fails the existing-output refusal assertion; exact source bytes are restored. Nine real filesystem refusal checks cover both producer modes. Current default package, accepted-parent combined and actual protected publication proof remain required.
+
+- The private-output checkpoint also retains the complete c99 package pass and an independent API-contract counterexample. Typed public warming examples fail when the shared writer acquires FileSystem implicitly, then compile after producer-only capability selection. No new public dependency or live activation is retained; refined-source package proof remains required.
+
+
+### Accepted-source worker replay observation, 2026-10-31
+
+- [Worker observation](normal-source-worker-observation.json): stable 2.11.10,
+  accepted source `b30cd9e6dd96bcb7426a6a69c8f3be2c6f370c94`, unchanged worker
+  and native launch options, complete source-validated matrix under an outer
+  capture observer. The ordinary CLI attempts are retained as failures.
+- A private read-only native Biome overlay isolates the initial proposal's
+  formatting defect. Equivalent formatted JSON passes; unchanged source passes.
+  Invalid stdin controls are excluded from the negative/pass evidence.
+- Scope: diagnostic worker observation, without a production, protected
+  publication, ordinary CLI success or operational qualification claim.
+
+## Producer quality-seal input closure, 2026-10-31
+
+- [Reviewed closure](producer-quality-closure-baseline-review-2026-10-31.md) and
+  [bounded compare-and-swap request](producer-quality-closure-baseline-request-2026-10-31.json):
+  four added policy inputs, root-only acknowledgement, unchanged runtime scope
+  and byte-identical qualification ledger. No qualification or activation.
+
+Accepted-main R5b integration uses the [root-scoped review](producer-accepted-r5b-baseline-review-2026-10-31.md) and [CAS request](producer-accepted-r5b-baseline-request-2026-10-31.json). The accepted current-runtime v3 profile and all non-root reviews are preserved; no qualification or rollout is granted.

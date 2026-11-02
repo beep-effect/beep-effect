@@ -1,0 +1,84 @@
+{
+  "observedAt": "2026-10-29T13:30:39.804591-05:00",
+  "foundationParent": "4c93cd6d6df4acd59cb01c6fc8539d64fdd732f4",
+  "upstreamParent": "524a5fad6fd422919f00d388ecea17ae4d3e501d",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-cache-base-sync-1ycuz9ue",
+  "artifacts": [
+    {
+      "file": "foundation-upstream-cache-baseline.json",
+      "sha256": "8e7c9e20996b1c4c4d92acdbf966aef3e6af7e1086a1b8f0a634d7ddcd5bdaa4",
+      "bytes": 4415894
+    },
+    {
+      "file": "foundation-cache-base-sync-v1.log",
+      "sha256": "5126ddcfa18319dea6ee61f9351f12407a48f2ba11c714f285e9055514d2d3a9",
+      "bytes": 826
+    },
+    {
+      "file": "foundation-cache-base-sync-v1-guard.json",
+      "sha256": "e6eb9827bec11dbade6b4811236c7832c39e1a7ebb474c286fa565c2a419c0da",
+      "bytes": 350
+    },
+    {
+      "file": "cache-qualification-baseline.json",
+      "sha256": "c3392c3c0cb06488e33dd519bfc30bb3e5f960350095a0d19eca2d233e6e0f5f",
+      "bytes": 4416298
+    },
+    {
+      "file": "CACHE-BASE-SYNC-REVIEW.md",
+      "sha256": "718ca64163c71d5feb5e5a074b25f1b8cde0c4f003666e017f2fd7dda2dfaca6",
+      "bytes": 2211
+    },
+    {
+      "file": "cache-base-sync-request.json",
+      "sha256": "10650c14b3cd4ac41484e33edf33ca9193348b99905cbf745437dbd78b0366fe",
+      "bytes": 770
+    },
+    {
+      "file": "foundation-delivery-staged-secrets-v1.log",
+      "sha256": "28c5b6b037e230ab2ff626b65b707c567fa46b5885a8faea13e7dc7505d7bf4d",
+      "bytes": 111
+    },
+    {
+      "file": "foundation-delivery-staged-secrets-v2.log",
+      "sha256": "c989a1fb4d774d3bf9d75963917f0fd59a0d85940b4dd12067adb442f674d4c8",
+      "bytes": 111
+    }
+  ],
+  "review": {
+    "reviewer": "independent Astra xhigh panel session /root/foundation_panel_astra",
+    "acceptedBasisSha256": "718ca64163c71d5feb5e5a074b25f1b8cde0c4f003666e017f2fd7dda2dfaca6",
+    "acceptedRequestSha256": "10650c14b3cd4ac41484e33edf33ca9193348b99905cbf745437dbd78b0366fe",
+    "scope": "pre-execution review; post-write assertions and audit verified separately by orchestrator"
+  },
+  "verification": {
+    "canonicalWriterExitCode": 0,
+    "auditBlockingFindings": 0,
+    "unassessedCachedComputations": 1621,
+    "projectionEqualsReviewedFoundation": true,
+    "upstreamTupleAndScopePreserved": true,
+    "other187ReviewsUnchanged": true,
+    "changedNodes": 9,
+    "ledgerByteIdentical": true,
+    "ledgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb"
+  },
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-cache-base-sync-v1.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 8589934592,
+    "initialAvailableBytes": 20485013504,
+    "peakObservedBytes": 2451783680,
+    "minimumAvailableBytes": 18610302976,
+    "stoppedFor": null,
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "limitations": [
+    "No cache qualification or exception added; audit is configuration proof, not execution qualification.",
+    "Catalog merge completed automatically; final canonical catalog gate still required.",
+    "Pre-merge package results are not full verification of the merged checkout.",
+    "Publication preflight, remaining Fallow, whole-CLI abort, installed/canary refresh and hosted delivery/closeout remain open."
+  ]
+}

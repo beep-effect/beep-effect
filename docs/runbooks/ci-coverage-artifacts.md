@@ -1,16 +1,16 @@
 # CI coverage artifacts
 
 The Check workflow collects coverage during its existing unit and Labs test
-executions. Its coverage comparison job validates those reports, merges the two
-repo-cli test halves and runs the existing regression comparator. It does not
+executions. Its coverage comparison job validates those reports, merges the four
+repo-cli test quarters and runs the existing regression comparator. It does not
 execute tests or regenerate the baseline.
 
 ## Producers
 
-The four Test Unit partitions keep their existing identities: `unit-a`,
-`unit-b`, `repo-cli-1` and `repo-cli-2`. They run each package's canonical coverage
+The six Test Unit partitions keep stable identities: `unit-a`, `unit-b` and
+`repo-cli-1` to `repo-cli-4`. They run each package's canonical coverage
 commands, preserving environment assignments, configuration and test selection.
-Node invocations use V8; Bun invocations use Istanbul. The CLI's two partitions
+Node invocations use V8; Bun invocations use Istanbul. The CLI's four partitions
 use its existing Node/V8 coverage command. The Labs job supplies a fifth
 artifact. Providers are recorded per invocation, and a package's canonical
 coverage shards must use the same provider before their raw counters can be merged.
@@ -93,7 +93,7 @@ and source inventories, digests and successful test completion. Missing, stale
 or inconsistent evidence fails the comparison.
 
 The merger combines raw maps in Istanbul's counter format before calculating percentages.
-Adding or averaging the summaries from the two repo-cli halves would lose the
+Adding or averaging the summaries from the repo-cli shards would lose the
 relationship between their complementary executed branches. Unexecuted source
 files remain part of the report. A source with no instrumentable units requires
 both a restricted syntax check and evidence from the real instrumenter. This

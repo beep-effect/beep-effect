@@ -1,0 +1,47 @@
+{
+  "applicationNumber": "15803808",
+  "publicationNumber": "US20180130207A1",
+  "publicationDate": "2018-05-10",
+  "nativeXmlSha256": "bcf474b065a922a20f362dcef0bc0962bac96328a6e7f9cc3f274b380ec12369",
+  "claimsXmlSha256": "2426920929458a340ef2c506d08f5fd4f64851990fdf2ca49c5178ac9bd64fb2",
+  "officeActionDocumentIdentifiers": [
+    "JOZUIATPRXEAPX1"
+  ],
+  "officeActionMailDate": "2018-11-29",
+  "officeActionSection112Text": [
+    "claim 1 recites the limitation “data synthesizer module”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 1 recites the limitation “the data sources”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 1 recites the limitation “data synthesizer module”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 1 recites the limitation “each voxel of the image”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 1 recites the limitation “the merged dataset”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 1 recites the limitation “the output”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 2 recites the limitation “the merged dataset”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 3 recites the limitation “the merged dataset”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 4 recites the limitation “the supplementary clinically relevant data”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 8 recites the limitation “the image filtering”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 8 recites the limitation “the human classification process”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 10 recites the limitation “the classified data”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 10 recites the limitation “the radiologist”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 12 recites the limitation “the doctor”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 12 recites the limitation “the clinically relevant patient health parameters”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 12 recites the limitation “the clinical data”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 13 recites the limitation “the computing device”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 15 recites the limitation “voxel of the image”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 15 recites the limitation “the merged dataset”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 15 recites the limitation “the analysis module”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 18 recites the limitation “the merged dataset”. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 19 recites the limitation “the merged dataset”. there is insufficient antecedent basis for this limitation in the claim."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "J9NB4YJERXEAPX2",
+      "officialDate": "2017-11-05T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "J9NB4YJERXEAPX2",
+      "officialDate": "2017-11-05T00:00:00.000-0400",
+      "sha256": "4730b3df7010ab77483736f5f230686f8118da205baef7e1f5dd672001f7aa0e",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        4,
+        9,
+        12,
+        13,
+        14,
+        16
+      ],
+      "sourceClaimCount": 17
+    }
+  ],
+  "documentInventoryCount": 41,
+  "documentInventoryRows": 41,
+  "primaryCpc": "G06N  20/00",
+  "inForceEvidence": "Source-only replacement proposal. Native publication precedes OA and inventory chronology is preliminary only; numbered examiner association and actual operative original/adoption must be independently audited. No predictions inspected.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/15803808",
+    "https://api.uspto.gov/api/v1/patent/applications/15803808/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

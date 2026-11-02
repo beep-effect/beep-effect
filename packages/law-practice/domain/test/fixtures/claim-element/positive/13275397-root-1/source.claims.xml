@@ -1,0 +1,102 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An inertial sensor, comprising:
+<claim-text>a plate-shaped membrane;</claim-text>
+<claim-text>a mass body disposed under a central portion of the membrane;</claim-text>
+<claim-text>a post disposed under an edge of the membrane so as to support the membrane; and</claim-text>
+<claim-text>a bottom cap of which the edge is provided with a first cavity into which an adhesive is introduced, the adhesive bonding the edge to a bottom surface of the post so as to cover the mass body and the post.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The inertial sensor as set forth in <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a spacer having a predetermined thickness disposed between the post and the bottom cap,
+<claim-text>wherein a gap between the bottom surface of the post and a top surface of the bottom cap is equal to the predetermined thickness.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The inertial sensor as set forth in <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the spacer is disposed along the outermost side or the innermost side between the post and the bottom cap.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The inertial sensor as set forth in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the bottom cap is provided with at least the two first cavities.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The inertial sensor as set forth in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a central portion of the bottom cap is provided with a concave portion depressed in a thickness direction so as to be spaced apart from the mass body.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The inertial sensor as set forth in <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the concave portion is provided with a stopper protruded in a direction of the mass body.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The inertial sensor as set forth in <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the spacer having the predetermined thickness is disposed between the post and the bottom cap,
+<claim-text>the gap between the bottom surface of the post and the top surface of the bottom cap is equal to the predetermined thickness,</claim-text>
+<claim-text>the concave portion is provided with the stopper protruded in the direction of the mass body, and</claim-text>
+<claim-text>the gap between the bottom surface of the mass body and the top surface of the stopper is equal to the predetermined thickness.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A method of manufacturing an inertial sensor, comprising:
+<claim-text>(A) preparing a bottom cap;</claim-text>
+<claim-text>(B) forming a first cavity at an edge of the bottom cap;</claim-text>
+<claim-text>(C) preparing a plate-shaped membrane, a mass body disposed under a central portion of the membrane, and a post disposed under the edge of the membrane so as to support the membrane; and</claim-text>
+<claim-text>(D) bonding the edge of the bottom cap to the bottom surface of the post with an adhesive so as to cover the mass body and the post and introducing the adhesive into the first cavity.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method as set forth in <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising after step (A), forming a spacer having a predetermined thickness on the top surface of the bottom cap,
+<claim-text>wherein at step (D), the gap between the bottom surface of the post and the top surface of the bottom cap is equal to the predetermined thickness.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method as set forth in <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein at the forming of the spacer, the spacer is disposed along the outermost side or the innermost side between the post and the bottom cap.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method as set forth in <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising after step (D), removing a portion corresponding to the top portion of the spacer in the membrane and the post, a portion corresponding to the bottom portion of the spacer in the bottom cap, and the spacer.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method as set forth in <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the forming of the spacer includes:
+<claim-text>forming an oxide layer, a plating layer, or a photoresist layer on the bottom cap; and</claim-text>
+<claim-text>forming the spacer by selectively patterning the oxide layer, the plating layer, or the photoresist layer.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method as set forth in <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein at step (B), the first cavity is formed by selectively etching the bottom cap.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method as set forth in <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein at step (B), at least the two first cavities are formed.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method as set forth in <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising after step (A), forming a concave portion depressed in a thickness direction at the central portion of the bottom cap,
+<claim-text>wherein at step (D), the concave portion is spaced apart from the mass body.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method as set forth in <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein at the forming of the concave portion, the concave portion is formed by selectively etching the bottom cap.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method as set forth in <claim-ref idref="CLM-00015">claim 15</claim-ref>, further comprising at the forming of the concave portion, foliating a stopper protruded in a direction of the mass body on the concave portion.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method as set forth in <claim-ref idref="CLM-00017">claim 17</claim-ref>, further comprising simultaneously forming the first cavity, the concave portion, and the stopper by selectively etching the bottom cap.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. An inertial sensor, comprising:
+<claim-text>a plate-shaped membrane;</claim-text>
+<claim-text>a mass body disposed under a central portion of the membrane;</claim-text>
+<claim-text>a post disposed under an edge of the membrane so as to support the membrane; and</claim-text>
+<claim-text>an upper cap of which the edge is provided with a second cavity into which an adhesive is introduced, the adhesive bonding the edge to a top surface of the membrane so as to cover the membrane.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The inertial sensor as set forth in <claim-ref idref="CLM-00019">claim 19</claim-ref>, further comprising a spacer having a predetermined thickness disposed between the membrane and the upper cap,
+<claim-text>wherein a gap between the top surface of the membrane and a bottom surface of the upper cap is equal to the predetermined thickness.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The inertial sensor as set forth in <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein a central portion of the upper cap is provided with a concave portion depressed in a thickness direction so as to be spaced apart from the membrane.</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The inertial sensor as set forth in <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein the spacer having the predetermined thickness is disposed between the membrane and the upper cap,
+<claim-text>the gap between the top surface of the membrane and the bottom surface of the upper cap is equal to the predetermined thickness,</claim-text>
+<claim-text>the concave portion is provided with the stopper protruded in the direction of the membrane, and</claim-text>
+<claim-text>the gap between the top surface of the membrane and the bottom surface of the stopper is equal to the predetermined thickness. </claim-text>
+</claim-text>
+</claim>
+</claims>

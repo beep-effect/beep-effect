@@ -1,0 +1,68 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "12656234-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "reviewScope": {
+    "claimCount": 10,
+    "elementCount": 52,
+    "termCount": 372,
+    "edgeCount": 177,
+    "functionalRelationCount": 33
+  },
+  "previousRoundReceipt": "critic.round2.json",
+  "priorFindingsAssessment": [
+    {
+      "id": "missing-local-semantic-references",
+      "disposition": "resolved",
+      "verifiedCaseCount": 15,
+      "reason": "All15 added edges match exact prior cases and are supported by unique local/per-transaction/qualified-interval/code-value/level/collection/gradient/member grammar. No donor crosses actual ancestry or conflates a buy/sell subset with an aggregate."
+    },
+    {
+      "id": "outer-each-in-bare-heads",
+      "disposition": "resolved",
+      "verifiedCaseCount": 10,
+      "reason": "All10 heads remove only outer distributive each; exact quotes, substantive qualifiers, counts, term ownership and function parts are unchanged."
+    },
+    {
+      "id": "missing-possessive-determiner-in-source-anchors",
+      "disposition": "resolved",
+      "verifiedCaseCount": 4,
+      "reason": "All four complete whose value / whose date and time spans match exact source; bare tags and lexical heads retained. Only affected functional parts adjusted around these source-exact anchors. All previous15-edge/10-head changes retained."
+    }
+  ],
+  "findings": [],
+  "reviewNotes": [
+    "Independent final round3 source check confirms four complete possessiveNP anchors and exact functional reconstruction. Full current source structure, prior15 reference identities and10 each-head normalizations remain reviewed and accepted.",
+    "Full52elements/372terms/177edges remain intact; no source, formula, head or identity change accompanies the anchor correction. Native MathML canonical coverage and disclosed originalPDF corroboration remain intact without formula reconstruction.",
+    "Source-specific transaction/member/subset ambiguity remains explicit. Current accepted agent reference is not attorney agreement, benchmark admission or an accuracy result."
+  ],
+  "verification": [
+    "All10 trees decoded through ClaimElementTree. ExactUTF16 source anchors, nonoverlapping term ownership, full contiguous functional reconstruction, term endpoints and actual dependency ancestry, duplicate-edge absence and exact selected scope passed.",
+    "Native source XML SHA256 matches provenance; all12 canonical/context claim strings match native after printed-number and whitespace normalization. Mechanical checks supplement semantic review and never invoke a decomposer."
+  ],
+  "referenceSha256": "478a5dc097a52f4ca57d5ab3df514b5907a3736aedba44ad5d495429c7628704",
+  "extractorSha256": "edacfaf4e669d77f50dfe63e84f1909fa6ab89de517c7b5c81753c093469e406",
+  "independence": "Separate GPT-6.1-Sol medium critic session; did not extract this family. Read only canonical/native source, provenance/source critic, protocol/schema contracts and extraction/review receipts. No production/decomposer/P2-DESIGN/predictions/synthetic/conformance inspection. Only assigned critic.json and preserved critic.round1.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Reference review only; no active admission, accuracy or human agreement claim.",
+  "roundLimit": "Round3 of at most3 complete; accepted with no actionable findings. No fourth round."
+}

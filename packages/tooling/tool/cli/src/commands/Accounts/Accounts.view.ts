@@ -98,6 +98,7 @@ const sectionTitle: Readonly<Record<AccountSection, string>> = {
   supergrok: "SuperGrok Heavy",
   muse: "Muse",
   junie: "JetBrains AI",
+  kimi: "Kimi Code",
   other: "Other",
 };
 
@@ -109,7 +110,8 @@ const productName: Readonly<Record<string, string>> = {
 
 // In these panels the accounts are alternatives to each other, so the order
 // is advice. The SuperGrok panel lists three tools on one subscription, and
-// Muse has one login: nothing there to choose between.
+// Muse, JetBrains AI, and Kimi Code have one login each: nothing there to
+// choose between.
 const isRanked = (section: AccountSection): boolean =>
   section === "claude" || section === "codex" || section === "other";
 
@@ -176,10 +178,21 @@ const hoursUntilAvailable = (row: AccountRanking, now: DateTime.Utc): O.Option<n
     unavailable: O.none<number>,
   });
 
+// The proxy stores a Kimi login without an identity, so the row shows the
+// email the poll read from the profile once it has one.
+const identityOf = (row: AccountRanking): O.Option<string> =>
+  AccountUsageOutcome.match(row.usage.outcome, {
+    Ok: ({ identity }) => identity,
+    NeedsLogin: O.none<string>,
+    Failed: O.none<string>,
+  });
+
 const labelOf = (section: AccountSection, row: AccountRanking): string =>
   section === "supergrok"
     ? (productName[row.usage.account.provider] ?? row.usage.account.provider)
-    : row.usage.account.label;
+    : section === "kimi"
+      ? O.getOrElse(identityOf(row), () => row.usage.account.label)
+      : row.usage.account.label;
 
 type Status = readonly [label: string, tone: (text: string) => string];
 

@@ -1,0 +1,1114 @@
+[
+  {
+    "claimNumber": 11,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "11",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 48,
+          "quote": "A friction self-piercing riveting (F-SPR) system"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "A friction"
+            },
+            "determiner": "a",
+            "head": "friction"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "anchor": {
+          "startChar": 61,
+          "endChar": 175,
+          "quote": "a driving spindle that is capable of driving the rivet for axial translational motion and radial rotational motion"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 78,
+              "quote": "a driving spindle"
+            },
+            "determiner": "a",
+            "head": "driving spindle"
+          },
+          {
+            "anchor": {
+              "startChar": 106,
+              "endChar": 115,
+              "quote": "the rivet"
+            },
+            "determiner": "the",
+            "head": "rivet"
+          }
+        ]
+      },
+      {
+        "path": "11.b",
+        "anchor": {
+          "startChar": 177,
+          "endChar": 196,
+          "quote": "a rivet comprising:"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 177,
+              "endChar": 184,
+              "quote": "a rivet"
+            },
+            "determiner": "a",
+            "head": "rivet"
+          }
+        ]
+      },
+      {
+        "path": "11.b.i",
+        "anchor": {
+          "startChar": 197,
+          "endChar": 359,
+          "quote": "a semi-tubed rivet shank, with a wedge shaped cone tip at the bottom end, wherein the rivet has a rivet head that connecting with the upper end of the rivet shank"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 197,
+              "endChar": 221,
+              "quote": "a semi-tubed rivet shank"
+            },
+            "determiner": "a",
+            "head": "semi-tubed rivet shank"
+          },
+          {
+            "anchor": {
+              "startChar": 228,
+              "endChar": 235,
+              "quote": "a wedge"
+            },
+            "determiner": "a",
+            "head": "wedge"
+          },
+          {
+            "anchor": {
+              "startChar": 255,
+              "endChar": 269,
+              "quote": "the bottom end"
+            },
+            "determiner": "the",
+            "head": "bottom end"
+          },
+          {
+            "anchor": {
+              "startChar": 279,
+              "endChar": 288,
+              "quote": "the rivet"
+            },
+            "determiner": "the",
+            "head": "rivet"
+          },
+          {
+            "anchor": {
+              "startChar": 293,
+              "endChar": 305,
+              "quote": "a rivet head"
+            },
+            "determiner": "a",
+            "head": "rivet head"
+          },
+          {
+            "anchor": {
+              "startChar": 327,
+              "endChar": 340,
+              "quote": "the upper end"
+            },
+            "determiner": "the",
+            "head": "upper end"
+          },
+          {
+            "anchor": {
+              "startChar": 344,
+              "endChar": 359,
+              "quote": "the rivet shank"
+            },
+            "determiner": "the",
+            "head": "rivet shank"
+          }
+        ]
+      },
+      {
+        "path": "11.b.ii",
+        "anchor": {
+          "startChar": 361,
+          "endChar": 482,
+          "quote": "the rivet head has a chamfering and rotary driving structures at the upper end, and a positioning structure in the center"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 361,
+              "endChar": 375,
+              "quote": "the rivet head"
+            },
+            "determiner": "the",
+            "head": "rivet head"
+          },
+          {
+            "anchor": {
+              "startChar": 380,
+              "endChar": 392,
+              "quote": "a chamfering"
+            },
+            "determiner": "a",
+            "head": "chamfering"
+          },
+          {
+            "anchor": {
+              "startChar": 426,
+              "endChar": 439,
+              "quote": "the upper end"
+            },
+            "determiner": "the",
+            "head": "upper end"
+          },
+          {
+            "anchor": {
+              "startChar": 445,
+              "endChar": 468,
+              "quote": "a positioning structure"
+            },
+            "determiner": "a",
+            "head": "positioning structure"
+          },
+          {
+            "anchor": {
+              "startChar": 472,
+              "endChar": 482,
+              "quote": "the center"
+            },
+            "determiner": "the",
+            "head": "center"
+          }
+        ]
+      },
+      {
+        "path": "11.b.iii",
+        "anchor": {
+          "startChar": 484,
+          "endChar": 562,
+          "quote": "the rotary driving structure is a central symmetric, concave or convex surface"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 484,
+              "endChar": 494,
+              "quote": "the rotary"
+            },
+            "determiner": "the",
+            "head": "rotary"
+          },
+          {
+            "anchor": {
+              "startChar": 516,
+              "endChar": 535,
+              "quote": "a central symmetric"
+            },
+            "determiner": "a",
+            "head": "central symmetric"
+          }
+        ]
+      },
+      {
+        "path": "11.b.iv",
+        "anchor": {
+          "startChar": 564,
+          "endChar": 660,
+          "quote": "the positioning structure is a central symmetric and mirror symmetric, concave or convex surface"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 564,
+              "endChar": 589,
+              "quote": "the positioning structure"
+            },
+            "determiner": "the",
+            "head": "positioning structure"
+          },
+          {
+            "anchor": {
+              "startChar": 593,
+              "endChar": 612,
+              "quote": "a central symmetric"
+            },
+            "determiner": "a",
+            "head": "central symmetric"
+          }
+        ]
+      },
+      {
+        "path": "11.b.v",
+        "anchor": {
+          "startChar": 662,
+          "endChar": 795,
+          "quote": "a die on the top of the workpieces, wherein the driving spindle has a lower surface matching with the upper surface of the rivet head"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 662,
+              "endChar": 667,
+              "quote": "a die"
+            },
+            "determiner": "a",
+            "head": "die"
+          },
+          {
+            "anchor": {
+              "startChar": 671,
+              "endChar": 678,
+              "quote": "the top"
+            },
+            "determiner": "the",
+            "head": "top"
+          },
+          {
+            "anchor": {
+              "startChar": 682,
+              "endChar": 696,
+              "quote": "the workpieces"
+            },
+            "determiner": "the",
+            "head": "workpieces"
+          },
+          {
+            "anchor": {
+              "startChar": 706,
+              "endChar": 725,
+              "quote": "the driving spindle"
+            },
+            "determiner": "the",
+            "head": "driving spindle"
+          },
+          {
+            "anchor": {
+              "startChar": 730,
+              "endChar": 745,
+              "quote": "a lower surface"
+            },
+            "determiner": "a",
+            "head": "lower surface"
+          },
+          {
+            "anchor": {
+              "startChar": 760,
+              "endChar": 777,
+              "quote": "the upper surface"
+            },
+            "determiner": "the",
+            "head": "upper surface"
+          },
+          {
+            "anchor": {
+              "startChar": 781,
+              "endChar": 795,
+              "quote": "the rivet head"
+            },
+            "determiner": "the",
+            "head": "rivet head"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "part-of",
+        "child": "11.b",
+        "parent": "11"
+      },
+      {
+        "kind": "part-of",
+        "child": "11.b.i",
+        "parent": "11.b"
+      },
+      {
+        "kind": "part-of",
+        "child": "11.b.ii",
+        "parent": "11.b"
+      },
+      {
+        "kind": "part-of",
+        "child": "11.b.iii",
+        "parent": "11.b"
+      },
+      {
+        "kind": "part-of",
+        "child": "11.b.iv",
+        "parent": "11.b"
+      },
+      {
+        "kind": "part-of",
+        "child": "11.b.v",
+        "parent": "11.b"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.b.i",
+          "anchor": {
+            "startChar": 279,
+            "endChar": 288,
+            "quote": "the rivet"
+          }
+        },
+        "introducing": {
+          "path": "11.b",
+          "anchor": {
+            "startChar": 177,
+            "endChar": 184,
+            "quote": "a rivet"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.b.ii",
+          "anchor": {
+            "startChar": 361,
+            "endChar": 375,
+            "quote": "the rivet head"
+          }
+        },
+        "introducing": {
+          "path": "11.b.i",
+          "anchor": {
+            "startChar": 293,
+            "endChar": 305,
+            "quote": "a rivet head"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.b.iv",
+          "anchor": {
+            "startChar": 564,
+            "endChar": 589,
+            "quote": "the positioning structure"
+          }
+        },
+        "introducing": {
+          "path": "11.b.ii",
+          "anchor": {
+            "startChar": 445,
+            "endChar": 468,
+            "quote": "a positioning structure"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.b.v",
+          "anchor": {
+            "startChar": 706,
+            "endChar": 725,
+            "quote": "the driving spindle"
+          }
+        },
+        "introducing": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 78,
+            "quote": "a driving spindle"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.b.v",
+          "anchor": {
+            "startChar": 781,
+            "endChar": 795,
+            "quote": "the rivet head"
+          }
+        },
+        "introducing": {
+          "path": "11.b.i",
+          "anchor": {
+            "startChar": 293,
+            "endChar": 305,
+            "quote": "a rivet head"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 12,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "12",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 28,
+          "quote": "The F-SPR system of claim 11"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The F-SPR system"
+            },
+            "determiner": "the",
+            "head": "f-spr system"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "anchor": {
+          "startChar": 38,
+          "endChar": 54,
+          "quote": "the matching is:"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 38,
+              "endChar": 50,
+              "quote": "the matching"
+            },
+            "determiner": "the",
+            "head": "matching"
+          }
+        ]
+      },
+      {
+        "path": "12.a.i",
+        "anchor": {
+          "startChar": 55,
+          "endChar": 281,
+          "quote": "{circle around (1)} when the rotatory driving system is in the form of several wedge-shaped notches, the driving spindle has several wedge-shaped projections evenly distributed along the circumferential direction on the bottom"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 92,
+              "quote": "the rotatory"
+            },
+            "determiner": "the",
+            "head": "rotatory"
+          },
+          {
+            "anchor": {
+              "startChar": 114,
+              "endChar": 122,
+              "quote": "the form"
+            },
+            "determiner": "the",
+            "head": "form"
+          },
+          {
+            "anchor": {
+              "startChar": 156,
+              "endChar": 175,
+              "quote": "the driving spindle"
+            },
+            "determiner": "the",
+            "head": "driving spindle"
+          },
+          {
+            "anchor": {
+              "startChar": 238,
+              "endChar": 267,
+              "quote": "the circumferential direction"
+            },
+            "determiner": "the",
+            "head": "circumferential direction"
+          },
+          {
+            "anchor": {
+              "startChar": 271,
+              "endChar": 281,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          }
+        ]
+      },
+      {
+        "path": "12.a.ii",
+        "anchor": {
+          "startChar": 283,
+          "endChar": 384,
+          "quote": "wherein the number of the wedge-shaped projections is equal to the number of the wedge-shaped notches"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 291,
+              "endChar": 301,
+              "quote": "the number"
+            },
+            "determiner": "the",
+            "head": "number"
+          },
+          {
+            "anchor": {
+              "startChar": 305,
+              "endChar": 333,
+              "quote": "the wedge-shaped projections"
+            },
+            "determiner": "the",
+            "head": "wedge-shaped projections"
+          },
+          {
+            "anchor": {
+              "startChar": 346,
+              "endChar": 356,
+              "quote": "the number"
+            },
+            "determiner": "the",
+            "head": "number"
+          },
+          {
+            "anchor": {
+              "startChar": 360,
+              "endChar": 384,
+              "quote": "the wedge-shaped notches"
+            },
+            "determiner": "the",
+            "head": "wedge-shaped notches"
+          }
+        ]
+      },
+      {
+        "path": "12.a.iii",
+        "anchor": {
+          "startChar": 386,
+          "endChar": 497,
+          "quote": "wherein the shape of the wedge-shaped projections is complementary to the shape of the wedge-shaped notch. And:"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 394,
+              "endChar": 403,
+              "quote": "the shape"
+            },
+            "determiner": "the",
+            "head": "shape"
+          },
+          {
+            "anchor": {
+              "startChar": 407,
+              "endChar": 435,
+              "quote": "the wedge-shaped projections"
+            },
+            "determiner": "the",
+            "head": "wedge-shaped projections"
+          },
+          {
+            "anchor": {
+              "startChar": 456,
+              "endChar": 465,
+              "quote": "the shape"
+            },
+            "determiner": "the",
+            "head": "shape"
+          },
+          {
+            "anchor": {
+              "startChar": 469,
+              "endChar": 491,
+              "quote": "the wedge-shaped notch"
+            },
+            "determiner": "the",
+            "head": "wedge-shaped notch"
+          }
+        ]
+      },
+      {
+        "path": "12.a.iv",
+        "anchor": {
+          "startChar": 498,
+          "endChar": 634,
+          "quote": "{circle around (2)} when the positioning structure is cone-shaped groove, the driving spindle has a positioning protruding on the bottom"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 523,
+              "endChar": 548,
+              "quote": "the positioning structure"
+            },
+            "determiner": "the",
+            "head": "positioning structure"
+          },
+          {
+            "anchor": {
+              "startChar": 572,
+              "endChar": 591,
+              "quote": "the driving spindle"
+            },
+            "determiner": "the",
+            "head": "driving spindle"
+          },
+          {
+            "anchor": {
+              "startChar": 596,
+              "endChar": 609,
+              "quote": "a positioning"
+            },
+            "determiner": "a",
+            "head": "positioning"
+          },
+          {
+            "anchor": {
+              "startChar": 624,
+              "endChar": 634,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          }
+        ]
+      },
+      {
+        "path": "12.a.v",
+        "anchor": {
+          "startChar": 636,
+          "endChar": 718,
+          "quote": "wherein the positioning protrusion has the same taper with the positioning grooves"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 644,
+              "endChar": 670,
+              "quote": "the positioning protrusion"
+            },
+            "determiner": "the",
+            "head": "positioning protrusion"
+          },
+          {
+            "anchor": {
+              "startChar": 675,
+              "endChar": 689,
+              "quote": "the same taper"
+            },
+            "determiner": "the",
+            "head": "same taper"
+          },
+          {
+            "anchor": {
+              "startChar": 695,
+              "endChar": 718,
+              "quote": "the positioning grooves"
+            },
+            "determiner": "the",
+            "head": "positioning grooves"
+          }
+        ]
+      },
+      {
+        "path": "12.a.vi",
+        "anchor": {
+          "startChar": 720,
+          "endChar": 816,
+          "quote": "wherein the positioning protrusion has a height smaller than the depth of the positioning groove"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 728,
+              "endChar": 754,
+              "quote": "the positioning protrusion"
+            },
+            "determiner": "the",
+            "head": "positioning protrusion"
+          },
+          {
+            "anchor": {
+              "startChar": 759,
+              "endChar": 775,
+              "quote": "a height smaller"
+            },
+            "determiner": "a",
+            "head": "height smaller"
+          },
+          {
+            "anchor": {
+              "startChar": 781,
+              "endChar": 790,
+              "quote": "the depth"
+            },
+            "determiner": "the",
+            "head": "depth"
+          },
+          {
+            "anchor": {
+              "startChar": 794,
+              "endChar": 816,
+              "quote": "the positioning groove"
+            },
+            "determiner": "the",
+            "head": "positioning groove"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a.i",
+        "parent": "12.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a.ii",
+        "parent": "12.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a.iii",
+        "parent": "12.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a.iv",
+        "parent": "12.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a.v",
+        "parent": "12.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a.vi",
+        "parent": "12.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "12",
+        "ancestor": "11"
+      }
+    ]
+  },
+  {
+    "claimNumber": 13,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "13",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 28,
+          "quote": "The F-SPR system of claim 11"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The F-SPR system"
+            },
+            "determiner": "the",
+            "head": "f-spr system"
+          }
+        ]
+      },
+      {
+        "path": "13.a",
+        "anchor": {
+          "startChar": 38,
+          "endChar": 147,
+          "quote": "the wedge-shaped notch and wedge-shaped protrusion have chamfering on each edge for avoiding over positioning"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 38,
+              "endChar": 60,
+              "quote": "the wedge-shaped notch"
+            },
+            "determiner": "the",
+            "head": "wedge-shaped notch"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "13.a",
+        "parent": "13"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "13",
+        "ancestor": "11"
+      }
+    ]
+  },
+  {
+    "claimNumber": 14,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "14",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 28,
+          "quote": "The F-SPR system of claim 11"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The F-SPR system"
+            },
+            "determiner": "the",
+            "head": "f-spr system"
+          }
+        ]
+      },
+      {
+        "path": "14.a",
+        "anchor": {
+          "startChar": 38,
+          "endChar": 151,
+          "quote": "the die has an upper surface designing with fixed structures on the top end to control the flow of the workpieces"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 38,
+              "endChar": 45,
+              "quote": "the die"
+            },
+            "determiner": "the",
+            "head": "die"
+          },
+          {
+            "anchor": {
+              "startChar": 50,
+              "endChar": 66,
+              "quote": "an upper surface"
+            },
+            "determiner": "an",
+            "head": "upper surface"
+          },
+          {
+            "anchor": {
+              "startChar": 102,
+              "endChar": 113,
+              "quote": "the top end"
+            },
+            "determiner": "the",
+            "head": "top end"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 133,
+              "quote": "the flow"
+            },
+            "determiner": "the",
+            "head": "flow"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 151,
+              "quote": "the workpieces"
+            },
+            "determiner": "the",
+            "head": "workpieces"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "14.a",
+        "parent": "14"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "14",
+        "ancestor": "11"
+      }
+    ]
+  },
+  {
+    "claimNumber": 15,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "15",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 28,
+          "quote": "The F-SPR system of claim 14"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The F-SPR system"
+            },
+            "determiner": "the",
+            "head": "f-spr system"
+          }
+        ]
+      },
+      {
+        "path": "15.a",
+        "anchor": {
+          "startChar": 38,
+          "endChar": 175,
+          "quote": "the fixed structure includes a concave die with a flat surface, a pip die, a die with a concave flat bottom and a die with a through hole"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 38,
+              "endChar": 57,
+              "quote": "the fixed structure"
+            },
+            "determiner": "the",
+            "head": "fixed structure"
+          },
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 80,
+              "quote": "a concave die"
+            },
+            "determiner": "a",
+            "head": "concave die"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 100,
+              "quote": "a flat surface"
+            },
+            "determiner": "a",
+            "head": "flat surface"
+          },
+          {
+            "anchor": {
+              "startChar": 102,
+              "endChar": 111,
+              "quote": "a pip die"
+            },
+            "determiner": "a",
+            "head": "pip die"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 118,
+              "quote": "a die"
+            },
+            "determiner": "a",
+            "head": "die"
+          },
+          {
+            "anchor": {
+              "startChar": 124,
+              "endChar": 145,
+              "quote": "a concave flat bottom"
+            },
+            "determiner": "a",
+            "head": "concave flat bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 155,
+              "quote": "a die"
+            },
+            "determiner": "a",
+            "head": "die"
+          },
+          {
+            "anchor": {
+              "startChar": 161,
+              "endChar": 175,
+              "quote": "a through hole"
+            },
+            "determiner": "a",
+            "head": "through hole"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "15.a",
+        "parent": "15"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "15",
+        "ancestor": "14"
+      }
+    ]
+  }
+]

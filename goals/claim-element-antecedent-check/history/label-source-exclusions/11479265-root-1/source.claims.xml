@@ -1,0 +1,90 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An equalizer receiving a digitally modulated single-carrier signal and performing equalization using frequency domain signal processing, wherein the equalizer comprises:
+<claim-text>a filtering part accepting a received signal sampled using a predetermined number of over-samples as input and performing filtering by converting the received signal to an over-sample number small enough to avoid foldover noise generation in the frequency domain; </claim-text>
+<claim-text>a transmission channel estimation part converting the received signal to an over-sample number large enough to obtain sufficient timing resolution, performing path timing detection using the timing resolution, converting the transmission channel responses corresponding to the path timings to the frequency domain, and calculating transmission channel estimates corresponding to the subcarriers of the received signal in the frequency domain; and </claim-text>
+<claim-text>a weight calculation part, which calculates the weights of the equalizing filter used in the filtering part based on the output of the transmission channel estimation part. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The equalizer according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the filtering part has:
+<claim-text>a downsampling part that downsamples a received signal sampled using an over-sample number of N<sub>OS </sub>to an over-sample number of N′<sub>OS </sub>(N′<sub>OS</sub>N<sub>OS</sub>/n, where n is 1 or greater and an integer equal to a power of 2), </claim-text>
+<claim-text>a first FFT part that performs a fast Fourier transform (FFT: Fast Fourier Transform) on the output of the downsampling part using N′<sub>OS</sub>×N<sub>FFT </sub>points (N<sub>FFT</sub>: fast Fourier transform block length), </claim-text>
+<claim-text>an equalizing filter that filters the output of the first FFT part using the weights, and </claim-text>
+<claim-text>an IFFT part that performs an inverse fast Fourier transform (IFFT: Inverse Fast Fourier Transform) on the output of the equalizing filter using N′<sub>OS</sub>×N<sub>FFT </sub>points. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The equalizer according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the transmission channel estimation part has:
+<claim-text>an upsampling part that upsamples a received signal sampled using an over-sample number of N<sub>OS </sub>to an over-sample number of N″<sub>OS </sub>(N″<sub>OS</sub>=mN<sub>OS</sub>, where m is 1 or greater and an integer equal to a power of 2), </claim-text>
+<claim-text>a timing detection part that detects the timings of a plurality of paths using the output of the upsampling part, </claim-text>
+<claim-text>a transmission channel response estimation part that estimates the transmission channels at a plurality of detected path timings, </claim-text>
+<claim-text>a second FFT part that performs FFT on the impulse responses obtained as output from the transmission channel response estimation part using N″<sub>OS</sub>×N′<sub>FFT </sub>points (N′<sub>FFT</sub>=N<sub>FFT</sub>/l, where l is 1 or greater and an integer equal to a power of 2 and N′<sub>FFT </sub>is an FFT block length), </claim-text>
+<claim-text>a subcarrier removal part that removes high frequency component subcarriers from the subcarriers outputted from the second FFT part, and </claim-text>
+<claim-text>a subcarrier interpolation part that performs subcarrier interpolation between subcarriers remaining after removal by the subcarrier removal part. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The equalizer according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the transmission channel estimation part has:
+<claim-text>an upsampling part that upsamples the received signal sampled using an over-sample number of N<sub>OS </sub>to an over-sample number of N″<sub>OS</sub>, </claim-text>
+<claim-text>a timing detection part that detects the timings of a plurality of paths using the received signal, </claim-text>
+<claim-text>a transmission channel response estimation part that estimates the transmission channels at a plurality of detected path timings, </claim-text>
+<claim-text>a second FFT part that performs FFT on the impulse responses obtained as output from the transmission channel response estimation part using N″<sub>OS</sub>×N<sub>FFT </sub>points, </claim-text>
+<claim-text>a subcarrier removal part that removes high frequency component subcarriers from the subcarriers outputted from the second FFT part, and </claim-text>
+<claim-text>a subcarrier interpolation part that performs subcarrier interpolation between the subcarriers remaining after removal by the subcarrier removal part. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The equalizer according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the weight calculation part calculates the weights of the equalizing filter based on the minimum mean square error method (MMSE: Minimum Mean Square Error) or the zero forcing method. </claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The equalizer according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the timing detection part has:
+<claim-text>a delay profile generation part that generates a delay profile based on the results of detection of sliding correlation between a known pilot signal sequence and a pilot signal contained in an upsampled received signal with an over-sample number of N″<sub>OS</sub>, and </claim-text>
+<claim-text>a path timing selection part that selects the timings of a plurality of high-level paths based on the delay profile. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The equalizer according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the timing detection part has:
+<claim-text>a delay profile generation part that generates a delay profile based on the results of detection of sliding correlation between a known pilot signal sequence and a pilot signal contained in a received signal with an over-sample number of N<sub>OS</sub>, </claim-text>
+<claim-text>a profile interpolation part that interpolates the delay profile to an over-sample number of N″<sub>OS</sub>, and </claim-text>
+<claim-text>a path timing selection part that selects the timings of a plurality of high-level paths using the output of the profile interpolation part. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The equalizer according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the timing detection part has:
+<claim-text>a delay profile generation part that generates a delay profile based on the results of detection of sliding correlation between a known pilot signal sequence and a pilot signal contained in a received signal with an over-sample number of N<sub>OS</sub>, </claim-text>
+<claim-text>a path timing selection part that selects the timings of a plurality of high-level paths based on the delay profile, </claim-text>
+<claim-text>a partial profile interpolation part that interpolates the delay profile in the peripheral portions of the path timings to an over-sample number of N″<sub>OS </sub>based on the delay profile and the timings of the plurality of paths, and </claim-text>
+<claim-text>a path timing adjustment part that designates the highest-level points in each path as the path timings using the output of the partial profile interpolation part. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The equalizer according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the timing detection part has:
+<claim-text>a delay profile generation part that generates a delay profile based on the results of detection of sliding correlation between a known pilot signal sequence and a pilot signal contained in a received signal with an over-sample number of N<sub>OS</sub>, </claim-text>
+<claim-text>a path timing selection part that selects the timings of a plurality of high-level paths based on the delay profile, </claim-text>
+<claim-text>a partial profile calculation part that calculates the delay profile in the peripheral portions of the path timings using the timings of the plurality of paths and the upsampled received signal with an over-sample number of N″<sub>OS</sub>, and </claim-text>
+<claim-text>a path timing adjustment part that designates the highest-level point in each path as the path timing using the output of the partial profile calculation part. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The equalizer according to <claim-ref idref="CLM-00003">claim 3</claim-ref> or <claim-ref idref="CLM-00004">4</claim-ref>, wherein the subcarrier removal part removes sub carriers in the range of (N′<sub>OS</sub>/2)×(N<sub>FFT</sub>/l)&lt;f≦(N″<sub>OS</sub>−N′<sub>OS</sub>/2)×(N<sub>FFT</sub>/l) for transmission channel estimates H(f) (1≦f≦N″<sub>OS</sub>×(N<sub>FFT</sub>/l)) outputted from the second FFT part. </claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The equalizer according to claims <b>3</b> or <b>4</b>, wherein the subcarrier interpolation part performs subcarrier interpolation with l-<b>1</b> subcarriers each between the subcarriers, using subcarriers in the range of 1≦f≦(N′<sub>OS</sub>/2)×(N<sub>FFT</sub>/l), (N″<sub>OS</sub>−N′<sub>OS</sub>/2)×(N<sub>FFT</sub>/l)&lt;f≦N″<sub>OS</sub>×(N<sub>FFT</sub>/l), i.e. the remainder after removal by the subcarrier removal part, for transmission channel estimates H(f) (1≦f≦N″<sub>OS</sub>×(N<sub>FFT</sub>/l)) outputted from the second FFT part. </claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The equalizer according to claims <b>3</b> or <b>4</b>, wherein the subcarrier interpolation part uses N (where N is an integer of 2 or more) subcarriers to interpolate the respective subcarriers based on a (N−1)th order function. </claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The equalizer according to <claim-ref idref="CLM-00003">claim 3</claim-ref> or <claim-ref idref="CLM-00004">4</claim-ref> wherein, in the processing size of the second FFT part, i.e. N″<sub>OS</sub>×N′<sub>FFT </sub>(N′<sub>FFT</sub>=N<sub>FFT</sub>l), l=m×n, and the processing size N″<sub>OS</sub>×N′<sub>FFT </sub>can be made identical to the processing size N′<sub>OS</sub>×N<sub>FFT </sub>of the first FFT part. </claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. An equalizing method comprising receiving a digitally modulated single-carrier signal and performing equalization using frequency domain signal processing,
+<claim-text>wherein a received signal sampled using a predetermined number of over-samples is filtered by conversion to an over-sample number small enough to avoid foldover noise generation in the frequency domain, and, on the other hand, the received signal is converted to an over-sample number large enough to obtain sufficient timing resolution, </claim-text>
+<claim-text>path timing detection is carried out using this timing resolution, </claim-text>
+<claim-text>transmission channel responses corresponding to the path timings are converted to the frequency domain, </claim-text>
+<claim-text>transmission channel estimates corresponding to the subcarriers of the received signal in the frequency domain are calculated, and </claim-text>
+<claim-text>the weights of the equalizing filter used for the filtering are calculated from the channel estimates.</claim-text>
+</claim-text>
+</claim>
+</claims>

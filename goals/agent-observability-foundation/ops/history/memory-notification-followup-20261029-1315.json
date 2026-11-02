@@ -1,0 +1,88 @@
+{
+  "observedAt": "2026-10-29T13:16:06.181144-05:00",
+  "host": {
+    "MemTotal": 134352207872,
+    "MemAvailable": 21120704512,
+    "SwapTotal": 51539603456,
+    "SwapFree": 26865664
+  },
+  "kernelDecisions": [
+    {
+      "timestamp": "2026-10-27T07:16:09-05:00",
+      "constraint": "CONSTRAINT_NONE",
+      "scope": "global",
+      "task": "python"
+    },
+    {
+      "timestamp": "2026-10-28T05:57:47-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T05:59:29-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T06:04:08-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T06:06:47-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T14:26:17-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T21:13:20-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "tsc"
+    },
+    {
+      "timestamp": "2026-10-29T07:54:53-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "python3"
+    },
+    {
+      "timestamp": "2026-10-29T10:56:06-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "python3"
+    }
+  ],
+  "distinctOomDecisions": 9,
+  "processSamples": [
+    {
+      "processCategory": "python workload",
+      "memoryStatus": ["VmRSS:\t38558684 kB", "VmSwap:\t 9842520 kB"]
+    },
+    {
+      "processCategory": "file manager",
+      "memoryStatus": ["VmRSS:\t23432104 kB", "VmSwap:\t10234172 kB"]
+    }
+  ],
+  "pressure": "some avg10=0.00 avg60=0.10 avg300=0.12 total=561536825\nfull avg10=0.00 avg60=0.10 avg300=0.11 total=503404983",
+  "recoveryHold": {
+    "beep-ai-metrics-forwarder.service": "LoadState=masked\nActiveState=inactive\nMainPID=0",
+    "beep-ai-metrics-forwarder.timer": "LoadState=masked\nActiveState=inactive"
+  },
+  "actions": "Read-only inspection. No stress run, application termination, swap change, or notification suppression.",
+  "limits": "Point-in-time process samples are not additive host accounting or proof of a leak. Dolphin trigger remains unknown; prior tooltip workaround is already set.",
+  "publicRepresentation": {
+    "kind": "sanitized-derivative",
+    "originalSha256": "9928e6c6cb38269fbd6f956c9ec37d5378572e2cce87ad0d5138c793affaea7d",
+    "policy": "Home paths normalized; machine/session/process identities and unrelated workload locations omitted. Measurements, timestamps, source hashes and uncertainty retained. Exact original is retained privately; see public-receipt-sanitization-20261031.json."
+  }
+}

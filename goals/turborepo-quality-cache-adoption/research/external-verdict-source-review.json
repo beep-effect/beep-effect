@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "cache-external-verdict-source-review/v1",
+  "recordedAt": "2026-10-30T01:28:40.200555+00:00",
+  "authority": "Current source-only external verdict disposition. No live advisory audit, qualified cache reuse or hosted verdict is produced.",
+  "sourceRevision": "0d743f018ef79c29468f02678f8825d0564649e8",
+  "sourceBindings": {
+    "package.json": "640d51eba1db211244fef7c066eaa179c2740a4bbe192e3d8b2e2afe37c6daeb",
+    "turbo.json": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf",
+    "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": "a33cba4daade78b76a44ca800dea302d570bec418dcfb4f69e8999370f6b2a1e",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts": "feae6a35f2eb734e812a63a497eaf297729971852adfd9f56dfae8ffa37137a3",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts": "4611856c18a37c2f5c45dffe0e32c7222776b05a2c3361496165eb490b7a931c",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts": "d443672935b5ae9c4bfacb9672180d3c70dfd2faa6b885e0bae06d91a67c2573"
+  },
+  "populationBeforeReviewSha256": "2c4da2cc50a52a3197b194a5c77b9c5336859b5e72e716ecc7715d202ce59663",
+  "rows": [
+    {
+      "computation": "//#repo-sanity:bun-audit",
+      "manifest": "package.json",
+      "command": "bun run beep quality bun-audit",
+      "configurationId": "c6fa36e2f69bbd46d190c250eb62c8e68833f56c6eb2d95abc8334ba6af42d01",
+      "censusWorkspaceScriptMapDigest": "890b7cdbfaa2a80879f365cd054a8568f91ae11f1fc6b9fc34b245f14452bbd4",
+      "effectiveCacheEnabled": false,
+      "archivedOutputs": [],
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The command obtains current external vulnerability data and selects OSV ignores using DateTime.now, including ignoreUntil and effectiveUntil. Matching source inputs or a prior tree-exact success cannot establish the current advisory verdict or unexpired exceptions.",
+      "sourceEvidence": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "symbol": "runBunAudit",
+          "lines": [1050, 1085],
+          "facts": [
+            "Reads lockfile and OSV configuration.",
+            "Reads the current clock for active ignore and package-override selection.",
+            "Invokes bun audit --audit-level=high and propagates its result."
+          ]
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+          "symbol": "githubCheckRepoSanityLanes",
+          "lines": [558, 564],
+          "fact": "Collector invokes the quality command as a fresh repo-sanity lane."
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+          "symbol": "NonReusableLaneProofId and prepared identities",
+          "lines": [33, 36, 253],
+          "fact": "Explicitly excludes repo-sanity:bun-audit from tree-exact lane reuse."
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+          "symbol": "census script map digest",
+          "lines": [190, 196],
+          "fact": "The shared command digest intentionally covers the complete workspace script map; it is not a digest of just the one command string."
+        }
+      ],
+      "pureCounterparts": [
+        {
+          "computation": "//#lint:policy-fingerprint",
+          "status": "Existing separate dependency remains eligible for semantic review, qualification and adoption; this exclusion grants no reuse."
+        },
+        {
+          "symbols": [
+            "selectOsvIgnoreIdsForAudit",
+            "selectOsvPackageOverrideIdsForAudit"
+          ],
+          "status": "Pure inline selection receives an explicit current time; there is no separate configured computation to adopt here. Keep the time-dependent external verdict fresh."
+        }
+      ],
+      "requiredFollowThrough": "Keep the external advisory/time-dependent verdict fresh; independently qualify any eligible pure prerequisites."
+    }
+  ],
+  "counts": {
+    "sourceReviewedWholeTasks": 1,
+    "publicPopulationRowsChanged": 1,
+    "qualifiedComputations": 0
+  },
+  "limits": [
+    "Source inspection does not prove current external advisories, active hosted checks or rollout.",
+    "The current PR source stays frozen during its complete package proof.",
+    "Revalidate every binding against the integrating source before updating the public census."
+  ],
+  "qualificationLedgerChanged": false,
+  "cacheFlagsChanged": false,
+  "revalidatedSourceRevision": "c76902d99d77c1bb675834410f8a532cf7ed76bb",
+  "revalidatedAt": "2026-10-30T04:28:08.024124+00:00",
+  "allSourceBindingsMatch": true
+}

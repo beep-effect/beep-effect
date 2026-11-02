@@ -1,0 +1,155 @@
+{
+  "recordedAt": "2026-10-29T20:52:51.938102+00:00",
+  "baseHead": "b88c377d77f31f294900d2eaa611af7b9e8ed2b4",
+  "archive": "~/.local/state/beep/observation-proof-archive/boundary-predicates-o2cv8ikx",
+  "beforeArchive": "~/.local/state/beep/observation-proof-archive/observation-boundary-predicates-before-e2xuj21x",
+  "sourceHashes": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts": "d8b79d38f000eaa6c0401e305f36ba31f1532bce5b75848324a52eb9185d3617",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts": "0387bf4cb77537dcc88a0478bdb8c5c99645390649d2994f4c797d553e983098",
+    "packages/tooling/library/ai-metrics/src/internal/observation-export-reader.ts": "4dea9a8df87d480a15cd8f7d8a7d4c4954b7ca6c0f2b0214259c44c5ec08eced",
+    "packages/tooling/library/ai-metrics/src/transcript-discovery.ts": "63b0c93bdb340f663769a70f042125bd8c45928ab15c1ee3627bdb9df3645fb2",
+    "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts": "54935b1fbceb57b7decb72c5913a6be7dc13419b3e37ad8f90b81f912c6b4069"
+  },
+  "focused": {
+    "libraryTestsPassed": 39,
+    "cliTestsPassed": 11
+  },
+  "packageChecks": {
+    "aiMetricsAudit": "passed: build, source/test types, 832 tests across 74 files, lint",
+    "aiMetricsDocgen": "passed: 658 examples",
+    "cliCheck": "passed",
+    "cliLint": "passed"
+  },
+  "installedProof": {
+    "result": "passed",
+    "sourceStableDuringRun": true,
+    "sourceFilesVerified": 86,
+    "artifact": "installed/evidence.json",
+    "sha256": "6d49bd32b8c3be8d8df801cb98ce72d6f4fb0bd953bf31af7475432c1cde3c4e",
+    "privateMaintenance": {
+      "result": "passed",
+      "publicRouteDenied": true,
+      "activeBackupRefused": true,
+      "pausedBackupCreated": true,
+      "backupReceipt": {
+        "manifest": {
+          "version": "observation-backup/v1",
+          "hostId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "namespaceId": "115c12ef0db1d87026ae48567e458aba200b0f948feadceb44b0c8704ecb33ed",
+          "configDigest": "653a13ea36d57d8155b82545336fb3a5719a8764af9d3f09d92c98578c72dc9c",
+          "snapshotDigest": "4b01e51d31f4bd82c55f282faf6e68613159f01a4fa6b819edc35322ff529e65",
+          "bytes": 167936,
+          "createdAt": 1793307193400
+        },
+        "manifestDigest": "a8d6a190bcf262bcf2431781eaaf9897cab228c7c6851b4f9e3a4ab7b0e3c155"
+      },
+      "occupiedSlotPreserved": true,
+      "invalidSlotAndDestinationRefused": true,
+      "emptyWindowSealHeld": true,
+      "unknownRestoreRefused": true,
+      "workerRemainsPaused": true,
+      "bodyLimitAndUtf8Refusal": true,
+      "bodyDeadlineAndNoQueue": true,
+      "actualAgeBasedExpiryExercised": false,
+      "staleContextRefusedAfterRestart": true,
+      "backupPreservedAcrossRestart": true
+    },
+    "invalidCredentialsRefusedBeforeJournalMutation": [
+      "empty",
+      "oversized",
+      "invalid-utf8",
+      "newline"
+    ],
+    "liveCanary": {
+      "result": "passed",
+      "project": "foundation-canary-94ac4ec1e089",
+      "recordBudget": 2,
+      "exactLocalAndBackendEventSets": true,
+      "workerVisibilityReceipts": 2,
+      "privateContentAbsentFromBackend": true,
+      "actualHarnessCoverage": false,
+      "productionCollectorChanged": false,
+      "cleanup": "owned collector stopped and removed; private queue retained"
+    },
+    "independentHealth": {
+      "actualWorkerScraped": true,
+      "alertDeliveredToLocalReceiver": true,
+      "ownedMonitorStopped": true,
+      "rulesSha256": "adc0e9b1113c4a0ae3798b504fefa30d283324f0d21f9f107e94111c1a6952ab"
+    },
+    "cleanup": [
+      {
+        "unit": "beep-observation-deploy-abc77395e604.service",
+        "mainPid": 0,
+        "ownedUnitFileRemoved": true
+      },
+      {
+        "unit": "beep-observation-deploy-abc77395e604-intake.service",
+        "mainPid": 0,
+        "ownedUnitFileRemoved": true
+      }
+    ],
+    "limits": [
+      "Synthetic records only; no actual harness enrollment",
+      "Outer guard excludes separately installed bounded units",
+      "Local alert receiver is not proof of human notification"
+    ]
+  },
+  "fallow": {
+    "introducedComplexityBefore": 16,
+    "introducedComplexityAfter": 6,
+    "introducedDuplication": 0,
+    "inheritedAdjacentDuplication": 4,
+    "deadCode": 0,
+    "result": "expected exit1; six reviewed worklist items remain"
+  },
+  "review": "independent Astra accepted exact five hashes; no threshold approval",
+  "recoveryHold": "preserved",
+  "entrypoint": {
+    "result": "passed",
+    "sourceFilesVerified": 29,
+    "artifact": "entrypoint/evidence.json",
+    "sha256": "fe34e1b8d580f5fbb7be183bbd6200174007b56465b23f681c635cecbe0df173",
+    "managedChildLaunches": 1,
+    "lostAckAndRestartRecovered": true,
+    "independentClaimRefusedRelaunch": true,
+    "actualProviderSessions": 0,
+    "allOwnedMainPidsZero": true,
+    "deliberateMemoryExhaustion": false
+  },
+  "optionalQueryCredentialProof": {
+    "result": "passed",
+    "sourceStableDuringRun": true,
+    "sourceFilesVerified": 84,
+    "artifact": "optional-credential/evidence.json",
+    "sha256": "2959e0460ddb99e0a7f21f9828c15e1c071f8c97fb8dd7aa979d11298566d565",
+    "optionalQueryCredentialTested": true,
+    "environmentIsolation": {
+      "workerKeys": ["CREDENTIALS_DIRECTORY", "PATH"],
+      "intakeKeys": [
+        "GOMAXPROCS",
+        "GOMEMLIMIT",
+        "PATH",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME"
+      ],
+      "credentialFilesUsed": true,
+      "arbitrarySecretCanaryAbsent": true,
+      "secretsAbsentFromArgvAndHealth": true,
+      "optionalQueryCredentialTested": true
+    },
+    "syntheticOnly": true,
+    "cleanup": [
+      {
+        "unit": "beep-observation-deploy-0c7883f16487.service",
+        "mainPid": 0,
+        "ownedUnitFileRemoved": true
+      },
+      {
+        "unit": "beep-observation-deploy-0c7883f16487-intake.service",
+        "mainPid": 0,
+        "ownedUnitFileRemoved": true
+      }
+    ]
+  }
+}

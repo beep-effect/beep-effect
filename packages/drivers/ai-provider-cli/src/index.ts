@@ -152,3 +152,8 @@ export * from "./AiProviderCliHome.service.ts";
 export * from "./AiProviderCliSession.errors.ts";
 export * from "./AiProviderCliSession.models.ts";
 export * from "./AiProviderCliSession.service.ts";
+/**
+ * Owner-supplied process and validated-session observation ports.
+ * @since 0.0.0
+ */
+export type { ManagedSessionObserver, ManagedSessionProcess } from "./AiProviderCliSession.lifecycle.ts";

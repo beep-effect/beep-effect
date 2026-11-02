@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "claim-delivery-gate-checkpoint/v1",
+  "testedCommit": "dca7a95972",
+  "outcome": "schema catalog stale in two changed packages; publication stopped before push",
+  "passedGateCount": 24,
+  "failedGateCount": 1,
+  "stages": [
+    {
+      "id": "quality:changeset-status",
+      "status": "passed"
+    },
+    {
+      "id": "version-sync:check-runtime",
+      "status": "passed"
+    },
+    {
+      "id": "quality:cache-policy",
+      "status": "passed"
+    },
+    {
+      "id": "goals:index-check",
+      "status": "passed"
+    },
+    {
+      "id": "explore:atlas-check",
+      "status": "passed"
+    },
+    {
+      "id": "observability:catalog-check",
+      "status": "passed"
+    },
+    {
+      "id": "quality:catalog-usage",
+      "status": "passed"
+    },
+    {
+      "id": "repo-sanity:tsconfig-sync",
+      "status": "passed"
+    },
+    {
+      "id": "lint:effect-imports",
+      "status": "passed"
+    },
+    {
+      "id": "lint:effect-imports-markdown",
+      "status": "passed"
+    },
+    {
+      "id": "lint:markdown-fences",
+      "status": "passed"
+    },
+    {
+      "id": "lint:retired-effect-paths",
+      "status": "passed"
+    },
+    {
+      "id": "lint:retired-iri-authorities",
+      "status": "passed"
+    },
+    {
+      "id": "lint:schema-tag-idioms",
+      "status": "passed"
+    },
+    {
+      "id": "lint:schema-first",
+      "status": "passed"
+    },
+    {
+      "id": "lint:effect-vitest",
+      "status": "passed"
+    },
+    {
+      "id": "lint:allowlist",
+      "status": "passed"
+    },
+    {
+      "id": "goals:doctor",
+      "status": "passed"
+    },
+    {
+      "id": "lint:oxlint",
+      "status": "passed"
+    },
+    {
+      "id": "quality:jsdoc-ratchet:regenerated",
+      "status": "passed"
+    },
+    {
+      "id": "quality:jsdoc-ratchet:committed",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:audit",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:dead-code",
+      "status": "passed"
+    },
+    {
+      "id": "fallow:health",
+      "status": "passed"
+    },
+    {
+      "id": "lint:schema-catalog",
+      "status": "failed"
+    }
+  ],
+  "requiredFollowup": "Regenerate law-practice-use-cases and uspto schema catalogs through the canonical writer, preserve this failed attempt and rerun publication.",
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false
+}

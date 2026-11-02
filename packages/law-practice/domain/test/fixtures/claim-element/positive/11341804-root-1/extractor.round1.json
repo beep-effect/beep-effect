@@ -1,0 +1,99 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "11341804-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "the non-expanded state",
+      "reason": "Exact canonical claim-4 wording retained. Accepted source critic confirms original PDF corroboration and identifies examiner non-expandable state as an isolated inaccurate quotation, not text to substitute."
+    },
+    {
+      "quote": "claims 1-24",
+      "reason": "Selected root-family 1-9 are within the actual second-paragraph ground. Context roots 10/17 and their descendants stay out of scope and are not antecedent donors. Source critic separately discloses preliminary-amendment inventory and its original/PDF version reconciliation."
+    }
+  ],
+  "referenceConcerns": [
+    {
+      "claimNumbers": [
+        1,
+        8
+      ],
+      "quotes": [
+        "its desired, predetermined expansion and/or shape",
+        "the expansion"
+      ],
+      "reason": "The root possessive phrase preserves coordinated expansion/shape as recited. No arbitrary selection of one member supplies an invented scalar expansion introduction in claim 8."
+    },
+    {
+      "claimNumbers": [
+        4,
+        5
+      ],
+      "quotes": [
+        "the expandable particles",
+        "the expandable components"
+      ],
+      "reason": "Links use the bare components term in root composition whose explicit following clause states expandability. Electrically-conducting components are separately recorded. No source claim is rewritten or sphere-property evidence borrowed across siblings."
+    },
+    {
+      "claimNumbers": [
+        6,
+        7
+      ],
+      "quote": "the heat treatment",
+      "reason": "Root 1 states treated with heat without an explicit heat-treatment NP introduction. Sibling claim 5 bare heat treatment cannot donate an antecedent to claims 6/7. Exact process relations remain present without inventing a term for the earlier verb phrase."
+    },
+    {
+      "claimNumber": 5,
+      "quote": "which spheres",
+      "reason": "Explicit lexical sphere phrase retained as a bare relative NP, unlike a bare which linker. It is not forced to one member of the micro-sphere/micro-hollow-sphere alternatives."
+    },
+    {
+      "claimNumbers": [
+        2,
+        3
+      ],
+      "quote": "a housing and/or printed circuit board and/or housing parts",
+      "reason": "Source and/or alternatives remain explicit in full functional text and separate anchored component NPs. Claim 3 does not borrow the sibling-2 placement component introductions."
+    }
+  ],
+  "annotationRationale": "Fresh manual extraction of source grammar and exact material/process phrases. Extensive shielding-substance composition remains root context before in which method; its component specification is a functional child. Dispensing and heat-treatment/expansion are separate ordered functional limitations. Claim 3 separates detaching from subsequent placement; claim 4 preserves two state-dependent diameter conditions. No material chemistry/Markush or means-plus-function interpretation is attempted. Full lexical heads retain electrically-conducting, different (partial), desired, predetermined, and explicit numeric factor wording. Bare/possessive entity phrases are explicit; relative connectors do not automatically create duplicate pronoun entities. Gasket substance and expanded shielding substance identify the single described shielding mixture; expandable particles/components identify the sole component group explicitly described as expandable in 1.a, without borrowing sibling sphere descriptions.",
+  "counts": {
+    "trees": 9,
+    "elements": 22,
+    "terms": 64,
+    "edges": 65
+  },
+  "sourceValidation": {
+    "nativeClaimsMatchCanonicalIgnoringPermittedWhitespace": true,
+    "claimsXmlSha256": "f5fdd6c5f938fc2d4c77d249edd92179a6233cc29d55f4e1d52b4aa481f40d90",
+    "sourceEligibility": "Accepted retained source critic reviewed, including original-text/PDF reconciliation. No new original-document or inventory authentication claimed."
+  },
+  "independence": "Fresh source-semantic extraction. No prior structural labels, production rules, P2-DESIGN, predictions, synthetic fixtures, conformance, network, secrets, git or delegation. Helpers locate manually specified source quotations, serialize chosen trees and validate spans; no decomposer used. Only this family expected.json and extractor.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "validation": {
+    "schema": "Every tree decoded successfully through the declared ClaimElementTree schema; no production decomposer invoked.",
+    "anchors": "Exact canonical UTF-16 element/term spans and ordered nonoverlapping terms checked. Native claims bodies match canonical ignoring permitted printed-number removal/whitespace; source XML digest matches provenance.",
+    "functionalParts": "Each functional edge reconstructs its complete source element span from ordered contiguous term/text parts.",
+    "references": "All local/foreign antecedent endpoints name labeled terms; targets stay on independently read actual natural ancestry. No context/sibling donors.",
+    "scope": "Every selected claim exactly once as resolved. Local reference uncertainty retained separately; no whole-claim abstentions.",
+    "independentSemanticCritic": "Pending. These checks are extractor validation, not independent criticism or human acceptance."
+  }
+}

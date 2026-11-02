@@ -6,12 +6,12 @@
     "title": "Claim Element Antecedent Check",
     "status": "active",
     "created": "2026-10-14",
-    "updated": "2026-10-14",
+    "updated": "2026-11-01",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/claim-element-antecedent-check",
   "lifecycle": "active",
-  "mission": "Give patent claims a span-anchored element tree and an advisory, deterministic §112(b) antecedent-basis and dependency self-check whose findings reach the attorney as claim-finding review items, measured on public USPTO claims with strict structural equality.",
+  "mission": "Give patent claims a span-anchored element tree and an advisory, deterministic \u00a7112(b) antecedent-basis and dependency self-check whose findings reach the attorney as claim-finding review items, measured on public USPTO claims with strict structural equality.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -23,7 +23,25 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2502,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_claim-element-closeout-de30f7bf5b55/verdict.json",
+        "gating": true
+      },
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -60,22 +78,22 @@
     {
       "id": "P2",
       "name": "Deterministic implementation + USPTO adapter + labelled set",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Review items + evaluation",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -94,5 +112,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P0-P1 merged (#1764). P2a rules and P2b Layer plus fixture-backed USPTO adapter ship in the P2 PR; P2c labelled set and live acceptance wait on the operator regenerating the USPTO ODP key (403)."
+  "statusNote": "Implementation PR #2411 merged as 3057999b33 under the designated orchestrator S11 exception; its hosted jobs were pending/cancelled, not green. Post-merge v24 retains 37/538, all 34 protected and all 37 prior matches with zero losses. All 115 sampled questions and 605 evidence quotes preserve historical automated judgments; actual-attorney flags remain false. Exact original v11 bytes are restored and all 631 pins match. Three current package audit/docgen checks pass. Closeout reflection and final follow-up evidence are prepared; operative lifecycle remains active until canonical readiness and merge receipts verify completion. Final follow-up PR #2502 declares prospective completed-retained status; the operative lifecycle remains active until exact-head readiness, required-check and merge-time rule-suite receipts verify it.",
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2502
+  }
 }

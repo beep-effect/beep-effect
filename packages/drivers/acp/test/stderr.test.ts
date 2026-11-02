@@ -20,6 +20,13 @@ const bytes = (...chunks: ReadonlyArray<string>) =>
   Stream.fromIterable(A.map(chunks, (chunk) => encoder.encode(chunk)));
 
 describe("sanitizeStderrExcerpt", () => {
+  it("removes the entire underscore-containing provider credential", () => {
+    const body = `${Str.repeat(20)("A")}_${Str.repeat(40)("B")}`;
+    for (const prefix of ["sk-proj-", "sk-svcacct-", "sk-ant-api03-", "sk-ant-oat01-"]) {
+      assert.strictEqual(sanitizeStderrExcerpt(`key=${prefix}${body}`, []), "key=[redacted]");
+    }
+  });
+
   it("redacts home paths, pairing URLs, sign-in URLs and tokens", () => {
     const excerpt = sanitizeStderrExcerpt(
       A.join(

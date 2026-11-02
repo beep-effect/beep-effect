@@ -7,7 +7,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { Minimatch as Oracle } from "minimatch";
+import { legacySamples } from "../legacyOracle.ts";
 import type { ParseReturn } from "@beep/glob/internal/minimatch";
 
 const runs = { arbitrary: fcRuns(100) };
@@ -60,15 +60,23 @@ describe("minimatch property floor", () => {
     runs
   );
   it.effect.prop(
-    "compiled glob serialization preserves matching and agrees with the README upstream oracle",
+    "compiled glob serialization preserves matching",
     [patterns, paths, Arbitrary.schema(S.Boolean), Arbitrary.schema(S.Boolean)],
     ([pattern, path, dot, nocase]) =>
       Effect.sync(() => {
         const matcher = new Minimatch(pattern, { dot, nocase });
         const reparsed = new Minimatch(matcher.pattern, { dot, nocase });
         assert.strictEqual(reparsed.match(path), matcher.match(path));
-        assert.strictEqual(matcher.match(path), new Oracle(pattern, { dot, nocase, platform: "linux" }).match(path));
         assert.deepStrictEqual(braceExpand(matcher.pattern), braceExpand(reparsed.pattern));
+      }),
+    runs
+  );
+  it.effect.prop(
+    "compiled matching preserves independently recorded upstream property cases",
+    [legacySamples("minimatch-property")],
+    ([[, pattern, path, options, expected]]) =>
+      Effect.sync(() => {
+        assert.strictEqual(new Minimatch(pattern, options).match(path), expected, `${pattern} vs ${path}`);
       }),
     runs
   );

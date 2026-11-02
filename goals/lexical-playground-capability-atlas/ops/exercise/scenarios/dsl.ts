@@ -6,32 +6,32 @@ export type LocatorSpec = Readonly<
   | {
       kind: "css";
       selector: string;
-      nth?: number;
+      nth?: number | undefined;
     }
   | {
-      exact?: boolean;
+      exact?: boolean | undefined;
       kind: "role";
-      name?: string;
-      nameMatch?: "prefix";
-      nth?: number;
+      name?: string | undefined;
+      nameMatch?: "prefix" | undefined;
+      nth?: number | undefined;
       role: AriaRole;
-      scope?: string;
+      scope?: string | undefined;
     }
   | {
-      exact?: boolean;
+      exact?: boolean | undefined;
       kind: "text";
-      nth?: number;
+      nth?: number | undefined;
       text: string;
     }
   | {
       kind: "placeholder";
       placeholder: string;
-      nth?: number;
+      nth?: number | undefined;
     }
   | {
       id: string;
       kind: "test-id";
-      nth?: number;
+      nth?: number | undefined;
     }
 >;
 
@@ -39,12 +39,12 @@ export type QueryValue = boolean | number | string;
 export type Query = Readonly<Record<string, QueryValue>>;
 
 export type ClickOptions = Readonly<{
-  button?: "left" | "middle" | "right";
-  downloadSlot?: string;
-  force?: boolean;
-  input?: "mouse" | "touch";
-  modifiers?: ReadonlyArray<"Alt" | "Control" | "Meta" | "Shift">;
-  position?: Readonly<{ x: number; y: number }>;
+  button?: "left" | "middle" | "right" | undefined;
+  downloadSlot?: string | undefined;
+  force?: boolean | undefined;
+  input?: "mouse" | "touch" | undefined;
+  modifiers?: ReadonlyArray<"Alt" | "Control" | "Meta" | "Shift"> | undefined;
+  position?: Readonly<{ x: number; y: number }> | undefined;
   upload?: Readonly<
     | {
         content: string;
@@ -61,7 +61,7 @@ export type Step = Readonly<
   | {
       action: "goto";
       path: string;
-      query?: Query;
+      query?: Query | undefined;
     }
   | {
       action: "reload";
@@ -69,7 +69,7 @@ export type Step = Readonly<
   | {
       action: "click";
       locator: LocatorSpec;
-      options?: ClickOptions;
+      options?: ClickOptions | undefined;
     }
   | {
       action: "hover";
@@ -77,29 +77,29 @@ export type Step = Readonly<
     }
   | {
       action: "drag";
-      delta?: Readonly<{ x: number; y: number }>;
+      delta?: Readonly<{ x: number; y: number }> | undefined;
       source: LocatorSpec;
-      target?: LocatorSpec;
+      target?: LocatorSpec | undefined;
     }
   | {
       action: "keyboard";
       keys: string;
-      locator?: LocatorSpec;
+      locator?: LocatorSpec | undefined;
     }
   | {
       action: "type";
       locator: LocatorSpec;
-      mode?: "fill" | "insert";
+      mode?: "fill" | "insert" | undefined;
       text: string;
     }
   | {
       action: "expect-selector";
       locator: LocatorSpec;
-      state?: "attached" | "detached" | "hidden" | "visible";
+      state?: "attached" | "detached" | "hidden" | "visible" | undefined;
     }
   | {
       action: "expect-text";
-      exact?: boolean;
+      exact?: boolean | undefined;
       locator: LocatorSpec;
       text: string;
     }
@@ -120,10 +120,12 @@ export type Step = Readonly<
   | {
       action: "clipboard-paste";
       locator: LocatorSpec;
-      payload?: Readonly<{
-        mimeType: "text/html" | "text/plain";
-        text: string;
-      }>;
+      payload?:
+        | Readonly<{
+            mimeType: "text/html" | "text/plain";
+            text: string;
+          }>
+        | undefined;
     }
   | {
       action: "file-paste";
@@ -166,7 +168,7 @@ export type Scenario = Readonly<{
   activationExercise: string;
   group: string;
   id: string;
-  manualReason?: string;
+  manualReason?: string | undefined;
   networkExpectation: NetworkExpectation;
   scripted: boolean;
   steps: ReadonlyArray<Step>;

@@ -70,7 +70,8 @@ import {
   yeetInboxPaths,
   yeetInboxRowId,
 } from "./Inbox.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type { YeetCommandError } from "../Yeet.errors.ts";
 import type { YeetBaseConflictCapsule } from "./Inbox.ts";
 import type { YeetWatchCheck } from "./WatchStream.ts";
@@ -586,7 +587,11 @@ export const yeetDispatchStatePath = Effect.fn("Yeet.yeetDispatchStatePath")(fun
  */
 export const loadYeetRemediationWave = Effect.fn("Yeet.loadYeetRemediationWave")(function* (
   repoRoot: string
-): Effect.fn.Return<O.Option<YeetRemediationWave>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  O.Option<YeetRemediationWave>,
+  never,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
+> {
   const fs = yield* FileSystem.FileSystem;
   const statePath = yield* yeetDispatchStatePath(repoRoot);
   const text = yield* Effect.option(fs.readFileString(statePath));
@@ -627,7 +632,7 @@ const writeRemediationWave = Effect.fn("Yeet.writeRemediationWave")(function* (
 const persistYeetRemediationWave = (
   repoRoot: string,
   wave: YeetRemediationWave
-): Effect.Effect<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =>
+): Effect.Effect<void, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> =>
   writeRemediationWave(repoRoot, wave).pipe(
     Effect.catch((error) => Console.error(renderYeetDispatchStateWarning(error.message)))
   );
@@ -808,7 +813,7 @@ export const dispatchYeetCheckFailure = Effect.fn("Yeet.dispatchYeetCheckFailure
   head: Pick<YeetRemediationWave, "headSha" | "prNumber">,
   check: YeetWatchCheck,
   at: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const capsule = YeetFailureCapsule.make({
     bucket: check.signal.bucket,
     headSha: head.headSha,
@@ -819,21 +824,11 @@ export const dispatchYeetCheckFailure = Effect.fn("Yeet.dispatchYeetCheckFailure
     state: check.signal.state,
     workflow: check.workflow,
   });
-  const id = yield* yeetInboxRowId(capsule).pipe(
-    Effect.asSome,
-    Effect.catch((error) =>
-      Console.error(
-        `[yeet] failed to derive inbox row id for "${capsule.lane}" (${error.message}); the red is NOT queued and will retry on the next observation.`
-      ).pipe(Effect.as(O.none<string>()))
-    )
-  );
-  if (O.isNone(id)) {
-    return;
-  }
+  const id = yield* yeetInboxRowId(capsule);
   const row = YeetCheckFailedRow.make({
     capsule,
     checkout: repoRoot,
-    id: id.value,
+    id,
     severity: check.required ? YeetInboxSeverity.Enum.P0 : YeetInboxSeverity.Enum.P1,
     ts: at,
   });
@@ -1004,7 +999,11 @@ export class YeetBaseConflictWalk extends S.Opaque<YeetBaseConflictWalk, { reado
 export const yeetBaseConflictWalk = Effect.fn("Yeet.yeetBaseConflictWalk")(function* (
   repoRoot: string,
   coordinates: Pick<YeetBaseConflictCapsule, "headSha" | "prNumber">
-): Effect.fn.Return<YeetBaseConflictWalk, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  YeetBaseConflictWalk,
+  YeetCommandError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   let generation = 0;
   let corruptReceipts = A.empty<YeetBaseConflictCorruptReceipt>();
   let consumed = yield* baseConflictGenerationConsumed(repoRoot, { ...coordinates, generation });
@@ -1044,7 +1043,11 @@ export const yeetBaseConflictWalk = Effect.fn("Yeet.yeetBaseConflictWalk")(funct
 export const yeetBaseConflictGeneration = Effect.fn("Yeet.yeetBaseConflictGeneration")(function* (
   repoRoot: string,
   coordinates: Pick<YeetBaseConflictCapsule, "headSha" | "prNumber">
-): Effect.fn.Return<number, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  number,
+  YeetCommandError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   return (yield* yeetBaseConflictWalk(repoRoot, coordinates)).generation;
 });
 
@@ -1060,7 +1063,7 @@ const baseConflictGenerationConsumed = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   O.Option<ReadonlyArray<YeetBaseConflictCorruptReceipt>>,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const id = yield* yeetBaseConflictRowId(coordinates);
   const ack = yield* readYeetAckState(repoRoot, id);
@@ -1120,7 +1123,11 @@ export const dispatchYeetBaseConflict = Effect.fn("Yeet.dispatchYeetBaseConflict
   repoRoot: string,
   capsule: YeetBaseConflictCapsule,
   at: string
-): Effect.fn.Return<O.Option<YeetBaseConflictRow>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  O.Option<YeetBaseConflictRow>,
+  never,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const delivered = yield* yeetBaseConflictRowId(capsule).pipe(
     Effect.map((id) => YeetBaseConflictRow.make({ capsule, checkout: repoRoot, id, severity: "P0", ts: at })),
     Effect.flatMap((row) =>
@@ -1186,7 +1193,7 @@ export const supersedeYeetDispatchState = Effect.fn("Yeet.supersedeYeetDispatchS
   headSha: string,
   prNumber: number,
   at: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const previous = yield* loadYeetRemediationWave(repoRoot);
   const wave = supersedeYeetRemediationWave(
     YeetWaveSupersedeInput.make({ at, headSha, prNumber, wave: O.getOrNull(previous) })
@@ -1246,7 +1253,7 @@ export const stampYeetWaveRedSet = Effect.fn("Yeet.stampYeetWaveRedSet")(functio
   head: Pick<YeetRemediationWave, "headSha" | "prNumber">,
   redSetKey: string,
   at: string
-): Effect.fn.Return<O.Option<string>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<O.Option<string>, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const pinned = O.filter(
     yield* loadYeetRemediationWave(repoRoot),
     (wave) => wave.headSha === head.headSha && wave.prNumber === head.prNumber

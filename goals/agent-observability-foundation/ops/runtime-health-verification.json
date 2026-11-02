@@ -1,0 +1,47 @@
+{
+  "recordedAt": "2026-10-28T21:48:01.601174+00:00",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "goalComplete": false,
+  "runtimeTests": 7,
+  "workerSocketCompositionTests": 7,
+  "verification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 120.8,
+    "docgenSeconds": 12.9,
+    "execution": "One agent-runs.slice job, MemoryHigh 7 GiB, MemoryMax 8 GiB, zero additional swap, CPUQuota 200%, 300s deadline; RAYON_NUM_THREADS=2 and BIOME_THREADS=2. No concurrent owned heavy verification."
+  },
+  "metricsFormat": {
+    "tool": "promtool 3.15.1",
+    "command": "promtool check metrics",
+    "result": "passed",
+    "sample": "ops/runtime-health-metrics.prom",
+    "bytes": 2914,
+    "scope": "Synthetic completed-cycle output from the actual renderer. Not a deployed scrape or alert-delivery proof."
+  },
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/observation-runtime.ts": "86ab78754e6836bbdce86b640986e20cbb57e25b2082b4ae99b047247bd13761",
+    "packages/tooling/library/ai-metrics/src/index.ts": "69daaa4aa493dd5e4fe5f0e1e734a1f41b79f1010c16b54017183ac06f390831",
+    "packages/tooling/library/ai-metrics/test/observation-runtime.test.ts": "faa42b10fa134a36f10edeb60efff49a667ca5c89fd096a85cc81f2e10b981e8",
+    "packages/tooling/library/ai-metrics/test/observation-worker.test.ts": "e0f9bbaf843bc7136178e669af86d8fab036fcf0f1a6bd2343dbbc3fa1d76ba1"
+  },
+  "verified": [
+    "No implicit intake resume",
+    "One loop with sequential delayed cycles",
+    "Deadline and storage failure preserve unknown progress",
+    "Paused, stopped and idle-native states distinct",
+    "Stale and regressed clocks explicit",
+    "Unexpected defects terminate and pause intake",
+    "Actual journal-to-socket cadence and shutdown",
+    "Fixed metadata-only gauges without fabricated missing counts"
+  ],
+  "remaining": [
+    "Production entrypoint and private health listener",
+    "External heartbeat observer and alert delivery",
+    "Source discovery cadence and source/event-lag health",
+    "Fleet identity and independent coverage denominators",
+    "CLI/desktop/live canary, backup lifecycle, review and repository delivery"
+  ]
+}

@@ -32,8 +32,7 @@ bounded implementation, exploration and second-opinion review lanes to Junie fir
 below). Junie is not a chain step: a quota failure elsewhere still steps the originating chain
 down, and a Junie worker never delegates onward.
 
-Keep GPT-6 Luna lightweight routes and Grok 4.7 web research. Graft deep uses
-Opus 5.5 through the proxy. Junie is a bounded spend-down pool when JetBrains
+Keep GPT-6 Luna lightweight routes and Grok 4.7 web research. Junie is a bounded spend-down pool when JetBrains
 credits remain, not a fallback; Muse remains opt-in. The manifest's separate
 JSDoc title-migration specialist uses Grok 4.7. Historical probes below retain
 their dates and results; current recipes use the live declared pins.
@@ -57,8 +56,8 @@ runs its own chain. The meter and recipe below describe that route.
 
 ### Opus
 
-`bun run beep accounts` opens a live screen of every Claude, Codex, Muse Code, and Grok Build account
-the local proxy holds a login for: one panel per provider, each ranked on its own, re-polled every
+`bun run beep accounts` opens a live screen of every Claude, Codex, Muse Code, Grok Build, and Kimi
+Code account the local proxy holds a login for: one panel per provider, each ranked on its own, re-polled every
 60 seconds (`--every <seconds>`, at least 15; `r` polls now, `q` quits). Inside the Claude and Codex
 panels the account to use next carries `▶`, and the panel title says whether to stay on the account
 the CLI is signed in to (`●`, read from the Claude and Codex CLIs' own config files) or switch.
@@ -68,7 +67,14 @@ quota left. A detail line shows the session window, model-scoped windows, credit
 cloud session credits with their expiry, ChatGPT credits), unused ChatGPT limit resets, and the plan.
 A poll that fails keeps the account's last good reading, marked with its age. `bun run beep accounts
 status` prints the same board once; `--json` emits the `accounts-status/v2` report (one group per
-provider). Muse reports no windows while its five-hour window is idle. Cursor is not polled (D17):
+provider). Muse reports no windows while its five-hour window is idle. Kimi Code shows its
+five-hour window as the session, the monthly total as the cycle, the monthly coding limit as a
+cycle scoped to `coding`, the legacy seven-day limit as the week when a plan has one, the Extra
+Usage wallet as a credit balance, and the membership tier (Pro, Plus, ...) as the plan; the CLI,
+the desktop app, and the proxy login share that one quota. Admit the login with
+`cli-proxy-api --kimi-ai-login` (`--kimi-login` for a kimi.com account): the proxy refreshes the
+fifteen-minute access token ahead of expiry, and nothing reads the Kimi CLI's own credential file,
+whose refresh token rotates on every refresh. Cursor is not polled (D17):
 the SuperGrok Heavy panel shows `accounts-snapshot/v1` files that a local collector leaves in
 `$HOME/.local/state/beep/accounts/` (`BEEP_ACCOUNTS_SNAPSHOT_DIR` overrides), each with its age; a
 snapshot window that has reset since capture shows as `ready (est.)`. It only reads the proxy's

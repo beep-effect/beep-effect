@@ -20,7 +20,7 @@
  * Exit code 1 when any gate fails.
  */
 import * as NodeURL from "node:url";
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -158,7 +158,7 @@ const makeRepository = Effect.fnUntraced(function* (root: string, name: string) 
   yield* write(path.join(cwd, "OWNERS"), "* @base\n");
   yield* write(path.join(cwd, "no-newline.txt"), "  padded text without newline  ");
   yield* write(path.join(cwd, "dir with space", "file name.md"), "unicode: ünïcödé ✓\n");
-  yield* write(path.join(cwd, "large.txt"), Str.repeat("0123456789abcdef\n", 65_536));
+  yield* write(path.join(cwd, "large.txt"), Str.repeat(65_536)("0123456789abcdef\n"));
   yield* git(cwd, ["add", "."]);
   yield* git(cwd, ["commit", "--quiet", "-m", "base"]);
   yield* git(cwd, ["switch", "--quiet", "-c", "feature"]);
@@ -401,7 +401,7 @@ const program = Effect.gen(function* () {
 }).pipe(Effect.scoped);
 
 NodeRuntime.runMain(
-  Layer.build(NodeServices.layer).pipe(
+  Layer.build(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)).pipe(
     Effect.flatMap((services) => program.pipe(Effect.provide(services))),
     Effect.scoped
   )

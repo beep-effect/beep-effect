@@ -1,0 +1,104 @@
+{
+  "familyId": "13070851-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.75,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the harq entity",
+      "nativeQuote": "the HARQ entity",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the dl cc",
+      "nativeQuote": "the DL CC",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the dl cc",
+      "nativeQuote": "the DL CC",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the dl cc",
+      "nativeQuote": "the DL CC",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the dl cc",
+      "nativeQuote": "the DL CC",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the dl cc",
+      "nativeQuote": "the DL CC",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    }
+  ],
+  "concerns": [
+    "MISSING ACTUAL STATUTORY GROUND: retained snippet gives antecedent comments but no112(b)/second-paragraph rejection statement or scope. Original comparison extracted0 claims, so no independent version proof. Natural any claims1 to4 in5/6 means alternatives1,2,3,4, while XML proposes only1/4; membership still root1 but proposal is incomplete."
+  ],
+  "rationale": "Read retained action and selected natural dependencies; actual ground presence distinguished from mere antecedent commentary. Original/version evidence investigated where needed. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "13070851",
+    "nativePublicationNumber": "US20110274057A1",
+    "nativePublicationDate": "20111110",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "8c31676fd8c2981faadc66c68c18b80d86ef7b624ed7aa3cf6752a57c698f9db",
+    "sourceClaimsXmlSha256": "d0cfa17ca520ecf770cc83a16479773c803740d9a7e592c8883ad830a6180645"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 30,
+    "retainedInventoryCount": 30,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "GLO1NLRJPPOPPY2",
+        "officialDate": "2011-03-24T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2013-01-02",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "GLO1NLRJPPOPPY2",
+      "officialDate": "2011-03-24T00:00:00.000-0400",
+      "sha256": "1ee5b7b9fc51e87700bf580bee2c5fe8f71d4127c54be53c69b1e3c3c615b18c",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "nativeContextClaimCount": 14,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "GLO1NLRJPPOPPY2",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 0
+    }
+  ]
+}

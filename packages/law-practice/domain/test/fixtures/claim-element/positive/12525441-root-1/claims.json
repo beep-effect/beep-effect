@@ -1,0 +1,42 @@
+{
+  "familyId": "12525441-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for joining components by means of tensioning bolts, comprising the following steps: placing a tensioning bolt at the components to be joined, threading a nut onto the tensioning bolt, stretching the tensioning bolt by means of a hydraulic tensioning device, supported at the components, said tensioning device being in engagement with the protruding end of the tensioning bolt which extends beyond the nut, and turning the nut further until it contacts one of the components, wherein the hydraulic pressure of the tensioning device is monitored, the tensioning device is blocked hydraulically when a hydraulic pressure target value is reached during stretching, and, in the event of a pressure drop during the blocking, pressure is built up again by additional pumping.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1, characterized in that at the beginning of the blocking a time measurement is started, and that a signal for turning the nut is generated if no pressure drop to below a lower threshold value occurs within a predetermined holding time after the start of the time measurement.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method of claim 1, characterized in that an electronic recording of the following parameters is performed: a) the duration of the pressure build-up until the target value is reached, b) the magnitude of the pressure and/or the chronological development of the pressure, c) whether additional pumping has occurred.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method of claim 1, characterized in that the lengthening of the threaded bolt is determined by determining the volume of the hydraulic oil pumped into the tensioning device.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method of claim 1, characterized in that the hydraulic tensioning device includes at least one piston movable in a tensioning cylinder, and that the course of the piston is calculated from the volume of delivered oil by means of a microprocessor and sensors.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "A device for joining components by means of tensioning bolts, comprising a hydraulic tensioning device having a tensioning cylinder, a hydraulic aggregate for generating the pressure for the tensioning device and a control device at which a target value of the pressure can be set, wherein the control device controls the hydraulic aggregate such that, after the target value has been reached, the control device causes a hydraulic blocking of the tensioning device for a predetermined holding time and that the control device reactivates the hydraulic aggregate if the pressure drops below a lower threshold value within the holding time.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The device of claim 6, wherein if no pressure drop to below the lower threshold value occurs during the holding time, the control device generates a signal for turning the nut.",
+      "sourceXmlParentClaimNumbers": [6]
+    }
+  ]
+}

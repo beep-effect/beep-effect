@@ -35,7 +35,7 @@ import * as Str from "effect/String";
 import type { FileProcessingServiceShape } from "@beep/file-processing/Service";
 import type { ResolveSourceTextRequest } from "@beep/file-processing/SourceText";
 import type { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $WorkspaceServerId.create("SourceText/WorkspaceSourceTextResolver");
 const LOCATOR_NORMALIZATION_VERSION = "1";
@@ -63,7 +63,7 @@ const resolverError =
 
 const digestBytes = Effect.fnUntraced(function* (
   bytes: Uint8Array
-): Effect.fn.Return<SourceTextDigest, SourceTextResolverError, Crypto.Crypto> {
+): Effect.fn.Return<SourceTextDigest, SourceTextResolverError, Digest.Digest> {
   const hex = yield* decodeSha256HexFromBytes(bytes).pipe(
     Effect.mapError(resolverError("extraction-failed", "The source-text digest could not be computed."))
   );
@@ -178,7 +178,7 @@ const resolveWorkspaceId = Effect.fnUntraced(function* (scopeRef: string) {
  * @since 0.0.0
  */
 export const makeWorkspaceSourceTextResolver = Effect.fnUntraced(function* () {
-  const crypto = yield* Effect.context<Crypto.Crypto>();
+  const crypto = yield* Effect.context<Digest.Digest>();
   const fileProcessing = yield* FileProcessingService;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

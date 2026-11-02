@@ -16,7 +16,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import { repoRunOutputBound, runCaptured } from "../process/StepExec.ts";
 import { commandTextForStep, RepoStepRunResult } from "./RepoRun.models.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CaptureSource } from "../process/StepExec.ts";
 import type { RepoPlanStep } from "./RepoRun.models.ts";
@@ -44,7 +44,11 @@ const runRepoCommand = (
   env: Record<string, string | undefined> | undefined,
   tee: boolean,
   shape: RepoCommandCaptureShape
-): Effect.Effect<RepoCommandOutput, DomainError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> => {
+): Effect.Effect<
+  RepoCommandOutput,
+  DomainError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> => {
   const commandText = A.join([command, ...args], " ");
   return runCaptured({
     command,
@@ -70,7 +74,11 @@ const makeRepoCommandCapture = (
     args: ReadonlyArray<string>,
     cwd: string,
     env: Record<string, string | undefined> | undefined = undefined
-  ): Effect.fn.Return<RepoCommandOutput, DomainError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  ): Effect.fn.Return<
+    RepoCommandOutput,
+    DomainError,
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  > {
     return yield* runRepoCommand(command, args, cwd, env, tee, shape);
   });
 
@@ -193,7 +201,7 @@ const makeRepoPlanStepExecutor = (identifier: string, capture: typeof runRepoCom
   ): Effect.fn.Return<
     RepoStepRunResult,
     DomainError,
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   > {
     const commandText = commandTextForStep(step);
     yield* Console.log(`[repo-run] ${step.label}: ${commandText}`);

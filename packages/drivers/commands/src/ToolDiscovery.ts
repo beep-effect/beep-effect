@@ -614,7 +614,7 @@ const make = Effect.fnUntraced(function* () {
 
   const isAvailable = Effect.fn("ToolDiscovery.isAvailable")(function* (tool: Tool) {
     return yield* resolve(tool).pipe(
-      Effect.map(() => true),
+      Effect.as(true),
       Effect.orElseSucceed(() => false)
     );
   });

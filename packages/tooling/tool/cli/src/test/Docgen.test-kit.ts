@@ -15,18 +15,19 @@ export {
   DoctestFenceAnalyzerLive,
   DoctestFenceRewriterLive,
   discoverChangedDoctestFilesForTesting,
+  doctestFenceFindingsForTesting,
   makeDoctestAnalyzerLayer,
   makeDoctestRewriterLayer,
   planConsoleRewrites,
   quotedDoctestName,
   rewriteDoctestSourceForTesting,
+  scanDoctestFencesForTesting,
   validateDoctestAssertions,
 } from "../commands/Docgen/internal/Doctest.ts";
+export { getDeclaredJsDocs } from "../commands/Docgen/internal/JsDocNodes.ts";
 export * from "../commands/Docgen/internal/Local.ts";
 export * from "../commands/Docgen/internal/Operations.ts";
 export * from "../commands/Docgen/internal/Quality.ts";
-export * from "../commands/Docgen/internal/QualityWorkerEval.ts";
-export * from "../commands/Docgen/internal/QualityWorkerRunpodEval.ts";
 /**
  * Shared source marker and fence rendering helpers for documentation tests.
  *

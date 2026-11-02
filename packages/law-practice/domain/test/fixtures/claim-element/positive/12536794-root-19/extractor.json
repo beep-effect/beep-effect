@@ -1,0 +1,60 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12536794-root-19",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Source critic accepted0.97; original selected19–24 match after legacy lowercase-XML/heading reconciliation. Native wording remains canonical.",
+    "Natural20/21->19,22->21,23->22,24->23 dependencies retained. Independent roots1/25 and their descendants are context only.",
+    "Native workpiece/elongated workpiece versus root wind turbine blade and claim21 elongated work surface wording remain exact; no source text is repaired."
+  ],
+  "annotationRationale": [
+    "Root19 includes its full use/hardware preamble and resumptive said method before main comprising. Blade feature list and robotic hardware list have nested owned terms; nine operative actions follow source order.",
+    "Actual/expected locations, measurement positions, first/second locations and estimated centers remain distinct. Bare additional locations explicitly introduce the set used later; root-end center order phrases are not forced to one arbitrary center.",
+    "Wind turbine blade is the sole operated workpiece in19, so explicit workpiece references use a source-context alias; claim21 elongated work surface is not silently equated to that blade.",
+    "Functional actions, tolerance iteration and manufacturing steps are represented directly; clear steps are not discarded because of awkward continue measuring or following each determining wording."
+  ],
+  "referenceConcerns": [
+    {
+      "claimNumber": 19,
+      "quote": "the actual location",
+      "reason": "Initial definite actual-location recitations have no explicit noun introduction; do not invent an actual-location entity from sensing action."
+    },
+    {
+      "claimNumber": 20,
+      "quote": "the last estimated root end center",
+      "reason": "References last/previous centers select within an ordered iterative series; first center and additional centers are separate recitations. No arbitrary single center edge."
+    },
+    {
+      "claimNumber": 21,
+      "quote": "the elongated work surface",
+      "reason": "Source differs from elongated workpiece; no unambiguous introduced work-surface identity is forced."
+    }
+  ],
+  "criticReview": "round2 lexical-head-only independent critic pending",
+  "attorneyAdjudication": "pending",
+  "independence": "Fresh manual source annotation using claims/context, provenance/source audits/critic, protocol and schemas only. No implementation rules, predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers locate manually selected quotes, serialize manually selected structure/edges and check geometry only.",
+  "validation": "Every selected claim resolved exactly once. All trees schema-decode; UTF16 exact element/term/functional-text slices, nonoverlap, local and cross-claim term endpoints, and ordered contiguous functional parts checked. Native source.claims.xml digest matches provenance.",
+  "confidenceRationale": "First-pass0.95 semantic proposal based on manually grounded source boundaries, complete lexical terms, actual ancestry and explicit ambiguity preservation, with passed source/schema/geometry checks. Independent semantic critic scrutiny remains required; source acceptance and attorney agreement are separate.",
+  "headConvention": "lexical-head/v1",
+  "headConventionReview": {
+    "previousRound": 1,
+    "round": 2,
+    "review": "head-review.json",
+    "reviewedFlagCount": 1,
+    "changedHeadCount": 1,
+    "scope": "Only independently reviewed flagged lexical heads changed. Existing anchors, determiners, elements, edges, sources, semantic confidence and unresolved/reference concerns remain unchanged. Prior semantic acceptance is preserved as evidence; current lexical revision awaits independent critic. Attorney adjudication and admission bar unchanged."
+  }
+}

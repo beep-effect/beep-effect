@@ -58,6 +58,7 @@ import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { SourceText, Thread, Workspace } from "@beep/workspace-server";
 import { BunServices } from "@effect/platform-bun";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -357,6 +358,7 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
     Layer.merge(OntologyServerLive, OntologyWorkspaceSeedLive.pipe(Layer.provide(OntologyServerLive))),
   ]),
   Layer.provide(PgliteDrizzleLive),
+  Layer.provide(BunCrypto.layer),
   Layer.provideMerge(BunServices.layer),
   Layer.provideMerge(ObservabilityLive)
 );
@@ -387,5 +389,6 @@ export const RuntimeTest: DesktopHandlersLayer = DesktopHandlersTest.pipe(
     DocumentsSyncFixtureLive,
     OntologyServerLive,
   ]),
+  Layer.provide(BunCrypto.layer),
   Layer.provideMerge(BunServices.layer)
 );

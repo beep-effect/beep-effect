@@ -9,26 +9,11 @@
 import { CuidState } from "@beep/schema/Cuid";
 import { DateTimes } from "@beep/utils/DateTime";
 import * as ThreadStoreServer from "@beep/workspace-use-cases/server";
-import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { makeDrizzleThreadStore, makeInMemoryThreadStore } from "./ThreadStore.repo.ts";
 
 const ThreadStore = ThreadStoreServer.Thread.ThreadStore;
-const CuidStateLive = Layer.effect(
-  CuidState,
-  CuidState.make("node").pipe(
-    Effect.tapError((cause) =>
-      Effect.logDebug("Workspace ThreadStore failed to initialize public id generation").pipe(
-        Effect.annotateLogs({ cause })
-      )
-    ),
-    Effect.mapError(() =>
-      ThreadStoreServer.Thread.ThreadStoreUnavailable.make({
-        reason: "initialize public id generator failed",
-      })
-    )
-  )
-).pipe(Layer.provide(DateTimes.Default));
+const CuidStateLive = Layer.effect(CuidState, CuidState.make("node")).pipe(Layer.provide(DateTimes.Default));
 
 /**
  * In-memory ThreadStore layer for fast workspace proofs, requiring host crypto

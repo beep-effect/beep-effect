@@ -27,7 +27,7 @@ import {
   YeetReviewWindowOpen,
   YeetReviewWindowUnknown,
 } from "@beep/repo-cli/test/Yeet";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -54,6 +54,7 @@ import rulesFixture from "./fixtures/yeet-merge-gate/rules.json" with { type: "j
 import threadsFixture from "./fixtures/yeet-merge-gate/threads.json" with { type: "json" };
 import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" with { type: "json" };
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
+import { commandArgs } from "./support/commandArgs.ts";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -688,7 +689,7 @@ const answerFor = (script: GhScript, command: string, line: string): ScriptedAns
 const scriptedGh = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("the gate never spawns a piped command");
-    const line = A.join([command.command, ...command.args], " ");
+    const line = A.join([command.command, ...commandArgs(command)], " ");
     if (script.spawnFails === true && command.command === "gh") {
       return Effect.fail(
         PlatformError.systemError({
@@ -735,7 +736,7 @@ const commandOptions = (overrides: Partial<Parameters<typeof MergeGateCommandOpt
     ...overrides,
   });
 
-it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer), { timeout: "30 seconds" })(
   "yeet merge-gate against recorded gh payloads",
   (it) => {
     it.effect("reads the PR, check runs, review window, threads and ruleset into one read", () =>

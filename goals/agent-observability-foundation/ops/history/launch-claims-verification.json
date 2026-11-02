@@ -1,0 +1,83 @@
+{
+  "scope": "Independent bounded launch claim store, producer crash/concurrency, actual SQLite restore and managed child integration",
+  "recordedAt": "2026-10-29T01:48:34.738757+00:00",
+  "result": "passed",
+  "syntheticOnly": true,
+  "actualProviderSessions": 0,
+  "productionRollout": false,
+  "recoveryHoldPreserved": true,
+  "goalComplete": false,
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts": "d431979cf63dbf1e3b29727f3851421c28213d3ed98cdda15b1cd5bd915e864e",
+    "packages/tooling/library/ai-metrics/src/index.ts": "763b454c8adec5bdf7d5f4697f95c28f71971998524f770166197be4b8d663f4",
+    "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts": "f8d41ff74efa82657ef01f4a641be76f170765b0ac7e3a082fd601b4a83bb6ed",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "e0bb405ac83024f63196b4f74278ef28ec234178a72da2e30020f05d83ab880d",
+    "packages/tooling/library/ai-metrics/test/observation-launch-claims.test.ts": "705a5c9e314f4c90cac4c13fda4fe5f2fdf76cf4c51eeb5d92a1cdca5d1ef4ac",
+    "packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts": "fa571ec9153891670bd4ffff0d2ca0e30a6adfbcab80fa489dfa42bbb6d83f90",
+    "packages/tooling/library/ai-metrics/test/observation-launch-claims-restore.test.ts": "748469954961c4295c9cb8d47bf16a1cd930564d2a274685cadc61417aff0aef",
+    "packages/tooling/library/ai-metrics/test/fixtures/observation-claims.ts": "3a51357e493031b6b351eb6394d1fb9d063be5add095857e44a372a229934e62",
+    "packages/tooling/library/ai-metrics/test/fixtures/claim-file-fault.ts": "ee57a830acc5e46b5f2149fc05c5f77cca5d556553e0ef6fc22b8e1e70727c53",
+    "packages/tooling/library/ai-metrics/test/fixtures/observation-claim-process.ts": "701a1ef5b41557e1f3b3bf9321764efe35a815402c63cbfcbabca957ab749295"
+  },
+  "focusedVerification": {
+    "files": 3,
+    "tests": 12,
+    "result": "passed",
+    "log": "/tmp/foundation-launch-claims-check-v4.log",
+    "memoryPeakGiB": 2.4,
+    "swapBytes": 0
+  },
+  "bridgeTypecheck": {
+    "result": "passed",
+    "runtimeSeconds": 5.432,
+    "memoryPeakGiB": 2.2,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-claim-bridge-types.log"
+  },
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 112.0,
+    "docgenSeconds": 12.9,
+    "runtimeSeconds": 126.466,
+    "memoryPeakGiB": 5.6,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-launch-claims-quality.log",
+    "execution": "Serialized agent-runs.slice; MemoryHigh 7 GiB, MemoryMax 8 GiB, zero swap, CPUQuota 200%, TasksMax 256, RuntimeMaxSec 360; BIOME_THREADS=2 and RAYON_NUM_THREADS=2."
+  },
+  "actualEntrypoint": {
+    "receipt": "goals/agent-observability-foundation/ops/launch-claims-entrypoint-verification.json",
+    "managedPeer": {
+      "providerProtocol": "codex",
+      "syntheticOnly": true,
+      "actualProviderSessions": 0,
+      "actualChildLaunches": 1,
+      "childStoppedBeforeFinished": true,
+      "facts": 4,
+      "sourceSessionHash": "d68e4276439465dd100b078507b6c43ed0a253a55b97d928a79e37bf4c228982",
+      "nativeSourceSessionJoin": true,
+      "independentClaimRefusedRelaunchAfterRestart": true
+    },
+    "launchFacts": {
+      "cliMarkedFixtures": 1,
+      "desktopMarkedFixtures": 1,
+      "actualHarnessLaunches": 0,
+      "committedFacts": 12,
+      "exactReplayAfterRestart": true,
+      "privateFieldRefused": true,
+      "startsPaused": true,
+      "typedClientVerifiedReceipts": true,
+      "privateContextWhilePaused": true,
+      "newClientAfterRestart": true
+    },
+    "allEightOwnedProcessesStopped": true
+  },
+  "remaining": [
+    "Immutable lifecycle producer outbox and exact receipt reconciliation without process relaunch",
+    "Production owner/enrollment, fixed capacity management and independent expected populations",
+    "Claim-store loss or rollback recovery requires hold and external reconciliation",
+    "Real CLI/desktop canary and production rollback",
+    "Final panel, hosted repository delivery and full SPEC acceptance"
+  ]
+}

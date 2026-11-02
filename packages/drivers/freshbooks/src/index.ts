@@ -1,6 +1,8 @@
 /**
  * FreshBooks API driver.
  *
+ * **Details**
+ *
  * A schema-first Effect driver for the FreshBooks REST API on the
  * `@beep/hubspot` pattern: an auth-code token helper whose single-use
  * refresh-token rotation runs behind one refresh owner, and schema-decoded

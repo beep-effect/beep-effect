@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "cache-external-security-disposition-review/v1",
+  "recordedAt": "2026-10-30T21:18:10.908031+00:00",
+  "authority": "Current source review of one whole-task keep-fresh boundary; no executed security verdict, cache qualification, adoption or hosted status.",
+  "sourceRevision": "3cab76e370f54d3059d6a374ff1698b5717e0524",
+  "populationBeforeReviewSha256": "2c4da2cc50a52a3197b194a5c77b9c5336859b5e72e716ecc7715d202ce59663",
+  "sourceSha256": {
+    "package.json": "640d51eba1db211244fef7c066eaa179c2740a4bbe192e3d8b2e2afe37c6daeb",
+    "turbo.json": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf",
+    "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": "a33cba4daade78b76a44ca800dea302d570bec418dcfb4f69e8999370f6b2a1e",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts": "4611856c18a37c2f5c45dffe0e32c7222776b05a2c3361496165eb490b7a931c",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts": "feae6a35f2eb734e812a63a497eaf297729971852adfd9f56dfae8ffa37137a3",
+    "osv-scanner.toml": "5f62453084518c3ad83324bf9d6cf4e6d95aacf5e2adf56c27c4c5f594edb47f",
+    "bun.lock": "531032f89b78abd2ed9fdfcbc7e68ef535cdc9305825274be847f6ae4e92cf59"
+  },
+  "selection": {
+    "computation": "//#repo-sanity:bun-audit",
+    "count": 1,
+    "source": "Existing 2571-computation census; one still-unreviewed explicit root audit task.",
+    "otherSecurityLane": "quality:security is also explicitly nonreusable in the shared proof owner, but this receipt does not invent or count a missing census row."
+  },
+  "rows": [
+    {
+      "computation": "//#repo-sanity:bun-audit",
+      "command": "bun run beep quality bun-audit",
+      "liveCommandTextSha256": "a9c54bcd495d0818d5b38bcb2be658be0decc9556257f93a54a8305eafc12a53",
+      "retainedCensusCommandDigest": "890b7cdbfaa2a80879f365cd054a8568f91ae11f1fc6b9fc34b245f14452bbd4",
+      "configurationId": "c6fa36e2f69bbd46d190c250eb62c8e68833f56c6eb2d95abc8334ba6af42d01",
+      "effectiveConfiguration": {
+        "cache": false,
+        "inputs": [
+          "./.bun-version",
+          "./.nvmrc",
+          "./package.json",
+          "./tsconfig.base.json",
+          "./tsconfig.json",
+          "./tsconfig.packages.json",
+          "bun.lock",
+          "osv-scanner.toml"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": ["//#lint:policy-fingerprint"],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The whole command queries current external vulnerability information and evaluates wall-clock expiration of OSV ignores and package overrides. An unchanged tree cannot establish that either external advisories or time-based exceptions remain current. Preserve fresh execution and the existing explicit proof-reuse exclusion.",
+      "sourceFacts": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "lines": "1052-1084",
+          "fact": "Reads live config and lockfile, obtains DateTime.now, selects current ignored/override IDs, then runs bun audit --audit-level=high."
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+          "lines": "33-36",
+          "fact": "The existing NonReusableLaneProofId includes quality:security and repo-sanity:bun-audit because live vulnerability data cannot be proven current by tree-exact receipts."
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+          "lines": "558-564",
+          "fact": "The pre-push Repo Sanity lane invokes the same owned audit command."
+        }
+      ],
+      "pureCounterpart": "No separately executable pure counterpart is adopted by this review. Any proposed lockfile/config parsing slice needs its own complete semantic inputs, profile and qualification; its result cannot stand in for a fresh external security verdict."
+    }
+  ],
+  "counts": {
+    "newWholeTaskFreshDispositions": 1,
+    "previousSourceReviewedWholeTaskFreshDispositions": 198,
+    "sourceReviewedWholeTaskFreshDispositions": 199,
+    "remainingFinalDispositionGaps": 2372
+  },
+  "limits": [
+    "Source-backed decision only; bun audit was not run and no vulnerability outcome is asserted.",
+    "No clock, policy, OSV ignore, baseline, cache flag, generated script, proof owner, network or hosted-status behavior changed.",
+    "Every eligible pure decomposition and all nine full-goal acceptance criteria remain unfinished."
+  ],
+  "reversal": "Remove only this source-review projection and restore the population row to pending; keep existing fresh audit behavior and proof-reuse exclusions.",
+  "qualificationLedgerChanged": false,
+  "cacheFlagsChanged": false,
+  "fullGoalAcceptanceChanged": false,
+  "verification": {
+    "structural": {
+      "exactOnePopulationRowChanged": true,
+      "other2570RowsUnchanged": true,
+      "configurationMapsAndFeatureMatrixUnchanged": true,
+      "countsMatchActualFinalDispositions": true,
+      "sourceHashesMatch": true,
+      "specHashMatches": true,
+      "allAcceptanceStatesUnchanged": true,
+      "noRuntimeOrSecurityCommandRun": true
+    },
+    "packetChecks": {
+      "goalsDoctor": "passed",
+      "exploreCheck": "passed",
+      "biomeFormat": "passed",
+      "gitDiffCheck": "passed"
+    },
+    "checkedAt": "2026-10-30T21:19:16.078623+00:00"
+  }
+}

@@ -28,7 +28,7 @@ import { evaluateSkillOptCompletion, readSourceSnapshots } from "./EvalFixture.t
 import { evaluateLaw } from "./EvalLawLanes.ts";
 import { RecordAgentEffectivenessEvalScoreOptions, recordAgentEffectivenessEvalScore } from "./EvalRecord.ts";
 import { EvalScoring } from "./EvalScoring.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.schemas.ts";
 
@@ -134,7 +134,7 @@ export const scoreAgentEffectivenessEval = Effect.fn("AgentEffectivenessEvalScor
 }): Effect.fn.Return<
   AgentEffectivenessEvalScoreReport,
   AgentEffectivenessEvalScorerError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -261,7 +261,7 @@ export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivene
 }: RunAgentEffectivenessEvalScoreCommandOptions): Effect.fn.Return<
   void,
   AgentEffectivenessEvalScorerError | S.SchemaError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const taskText = yield* fs

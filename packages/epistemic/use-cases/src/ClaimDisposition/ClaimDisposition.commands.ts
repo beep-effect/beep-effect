@@ -1,6 +1,8 @@
 /**
  * Claim disposition boundary command.
  *
+ * **Details**
+ *
  * The disposition repository port takes a fully built {@link ClaimDisposition}
  * entity rather than a partial insert payload, so the boundary a caller crosses
  * is a decode: untrusted input becomes an entity here, once, and everything

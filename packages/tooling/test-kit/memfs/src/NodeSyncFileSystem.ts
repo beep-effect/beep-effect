@@ -223,68 +223,73 @@ const statInfo =
         })
     );
 
-const make: FileSystem.FileSystem = FileSystem.make({
-  access: (path, options) =>
-    attempt("access", path, () => {
-      let mode = NFS.constants.F_OK;
-      if (options?.readable === true) mode |= NFS.constants.R_OK;
-      if (options?.writable === true) mode |= NFS.constants.W_OK;
-      NFS.accessSync(path, mode);
-    }),
-  stat: statInfo("stat", (path) => NFS.statSync(path, { bigint: true })),
-  lstat: statInfo("lstat", (path) => NFS.lstatSync(path, { bigint: true })),
-  // The adapter's own value: node's Buffer (a Uint8Array), not a copy. A
-  // non-string path never reaches `readFileSync`, which would read it as a
-  // file DESCRIPTOR; the adapter's async `readFile` rejects it in its callback,
-  // so it surfaces there as a system error (Unknown, ERR_INVALID_ARG_TYPE).
-  readFile: (path) =>
-    P.isString(path)
-      ? attempt("readFile", path, () => NFS.readFileSync(path))
-      : Effect.fail(
-          errnoException(
-            "readFile",
-            path,
-            InvalidPathArgumentError.make({
-              message: `The "path" argument must be of type string. Received ${typeof path}`,
-              code: "ERR_INVALID_ARG_TYPE",
-            })
-          )
-        ),
-  // The adapter wraps `readdir` in `Effect.tryPromise` whose catch is
-  // `handleErrnoException` alone, so EVERY failure — argument errors too — is
-  // a system error (an `ERR_*` code maps to Unknown). Matched here ON PURPOSE:
-  // a NUL byte or non-string path is `Unknown`/`ERR_INVALID_ARG_*` for
-  // readDirectory but `BadArgument` for every other member, exactly as on the
-  // adapter. Do not "fix" it: it is the parity with the adapter.
-  readDirectory: (path, options) =>
-    Effect.try({
-      try: () => NFS.readdirSync(path, { encoding: "utf8", recursive: options?.recursive === true }),
-      catch: (err) => errnoException("readDirectory", path, err),
-    }),
-  readLink: (path) => attempt("readLink", path, () => NFS.readlinkSync(path)),
-  // The JS `realpathSync`, NOT `.native`: the node adapter wraps the JS
-  // `fs.realpath`, which resolves links but never canonicalizes case.
-  realPath: (path) => attempt("realPath", path, () => NFS.realpathSync(path)),
-  copy: unsupported("copy"),
-  copyFile: unsupported("copyFile"),
-  chmod: unsupported("chmod"),
-  chown: unsupported("chown"),
+// `FileSystem.make` derives `glob` from `readDirectoryEntries`; both stay
+// outside the read set, so the derived `glob` is replaced with the same defect.
+const make: FileSystem.FileSystem = {
+  ...FileSystem.make({
+    access: (path, options) =>
+      attempt("access", path, () => {
+        let mode = NFS.constants.F_OK;
+        if (options?.readable === true) mode |= NFS.constants.R_OK;
+        if (options?.writable === true) mode |= NFS.constants.W_OK;
+        NFS.accessSync(path, mode);
+      }),
+    stat: statInfo("stat", (path) => NFS.statSync(path, { bigint: true })),
+    lstat: statInfo("lstat", (path) => NFS.lstatSync(path, { bigint: true })),
+    // The adapter's own value: node's Buffer (a Uint8Array), not a copy. A
+    // non-string path never reaches `readFileSync`, which would read it as a
+    // file DESCRIPTOR; the adapter's async `readFile` rejects it in its callback,
+    // so it surfaces there as a system error (Unknown, ERR_INVALID_ARG_TYPE).
+    readFile: (path) =>
+      P.isString(path)
+        ? attempt("readFile", path, () => NFS.readFileSync(path))
+        : Effect.fail(
+            errnoException(
+              "readFile",
+              path,
+              InvalidPathArgumentError.make({
+                message: `The "path" argument must be of type string. Received ${typeof path}`,
+                code: "ERR_INVALID_ARG_TYPE",
+              })
+            )
+          ),
+    // The adapter wraps `readdir` in `Effect.tryPromise` whose catch is
+    // `handleErrnoException` alone, so EVERY failure — argument errors too — is
+    // a system error (an `ERR_*` code maps to Unknown). Matched here ON PURPOSE:
+    // a NUL byte or non-string path is `Unknown`/`ERR_INVALID_ARG_*` for
+    // readDirectory but `BadArgument` for every other member, exactly as on the
+    // adapter. Do not "fix" it: it is the parity with the adapter.
+    readDirectory: (path, options) =>
+      Effect.try({
+        try: () => NFS.readdirSync(path, { encoding: "utf8", recursive: options?.recursive === true }),
+        catch: (err) => errnoException("readDirectory", path, err),
+      }),
+    readLink: (path) => attempt("readLink", path, () => NFS.readlinkSync(path)),
+    // The JS `realpathSync`, NOT `.native`: the node adapter wraps the JS
+    // `fs.realpath`, which resolves links but never canonicalizes case.
+    realPath: (path) => attempt("realPath", path, () => NFS.realpathSync(path)),
+    copy: unsupported("copy"),
+    copyFile: unsupported("copyFile"),
+    chmod: unsupported("chmod"),
+    chown: unsupported("chown"),
+    link: unsupported("link"),
+    makeDirectory: unsupported("makeDirectory"),
+    makeTempDirectory: unsupported("makeTempDirectory"),
+    makeTempDirectoryScoped: unsupported("makeTempDirectoryScoped"),
+    makeTempFile: unsupported("makeTempFile"),
+    makeTempFileScoped: unsupported("makeTempFileScoped"),
+    open: unsupported("open"),
+    remove: unsupported("remove"),
+    readDirectoryEntries: unsupported("readDirectoryEntries"),
+    rename: unsupported("rename"),
+    symlink: unsupported("symlink"),
+    truncate: unsupported("truncate"),
+    utimes: unsupported("utimes"),
+    watch: () => Stream.die(readOnly("watch")),
+    writeFile: unsupported("writeFile"),
+  }),
   glob: unsupported("glob"),
-  link: unsupported("link"),
-  makeDirectory: unsupported("makeDirectory"),
-  makeTempDirectory: unsupported("makeTempDirectory"),
-  makeTempDirectoryScoped: unsupported("makeTempDirectoryScoped"),
-  makeTempFile: unsupported("makeTempFile"),
-  makeTempFileScoped: unsupported("makeTempFileScoped"),
-  open: unsupported("open"),
-  remove: unsupported("remove"),
-  rename: unsupported("rename"),
-  symlink: unsupported("symlink"),
-  truncate: unsupported("truncate"),
-  utimes: unsupported("utimes"),
-  watch: () => Stream.die(readOnly("watch")),
-  writeFile: unsupported("writeFile"),
-});
+};
 
 /**
  * A read-only, synchronous `FileSystem` over `node:fs`.
@@ -301,7 +306,8 @@ const make: FileSystem.FileSystem = FileSystem.make({
  * byte, a non-string) is `BadArgument` for every member EXCEPT
  * `readDirectory`, which reports it as `Unknown` carrying node's
  * `ERR_INVALID_ARG_*` code, because that is what the adapter does. Every
- * other member — writes, `open` and the streams built on it, `glob`, `watch`,
+ * other member — writes, `open` and the streams built on it, `glob`,
+ * `readDirectoryEntries`, `watch`,
  * temp files — is a defect (`Effect.die`), not a typed failure: this
  * filesystem never writes, and a caller that tries has a wiring bug
  * `Effect.catch` must not absorb.

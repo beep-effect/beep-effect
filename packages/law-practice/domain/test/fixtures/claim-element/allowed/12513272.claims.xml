@@ -1,0 +1,188 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system comprising:
+<claim-text>an autostereoscopic display; and</claim-text>
+<claim-text>at least one processor configured to:</claim-text>
+<claim-text>obtain information indicative of a relative location of a first eye and of a second eye of at least one user with respect to an image plane of the autostereoscopic display;</claim-text>
+<claim-text>generate or retrieve a first image and a second image to be directed toward the first eye and the second eye, respectively, based on the relative location of the first eye and of the second eye with respect to the image plane;</claim-text>
+<claim-text>for a given first segment of the first image presenting at least a part of a virtual object, determine an amount of crosstalk toward the first eye, based on at least the second image;</claim-text>
+<claim-text>determine a given second segment of the second image that also presents at least said part of the virtual object;</claim-text>
+<claim-text>adjust intensity values of pixels in the given second segment of the second image, based on the amount of crosstalk determined for the given first segment of the first image;</claim-text>
+<claim-text>generate an autostereoscopic image using the first image and the second image; and</claim-text>
+<claim-text>display the autostereoscopic image via the autostereoscopic display;</claim-text>
+<claim-text>wherein a first display region and a second display region of the autostereoscopic display are employed to emit light corresponding to the given first segment of the first image toward the first eye and to emit light corresponding to the given second segment of the second image toward the second eye, respectively,</claim-text>
+<claim-text>wherein the intensity values of the pixels in the given second segment of the second image are adjusted such that a binocular sum of:</claim-text>
+<claim-text>(i) a luminance of the light emitted from the first segment toward the first eye,</claim-text>
+<claim-text>(ii) a luminance of the light emitted from the second segment toward the second eye, and</claim-text>
+<claim-text>(iii) a luminance of the crosstalk toward the first eye,</claim-text>
+<claim-text>lies within a predefined threshold range of a target binocular luminance corresponding to said part of the virtual object:</claim-text>
+<claim-text>wherein the binocular sum (L<sub>binocular</sub>) is calculated using an expression:</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00003" num="00003">
+<math overflow="scroll">
+<mrow>
+<mrow>
+<msub>
+<mi>L</mi>
+<mi>binocular</mi>
+</msub>
+<mo>=</mo>
+<mfrac>
+<mrow>
+<msubsup>
+<mi>L</mi>
+<mi>first</mi>
+<mn>2</mn>
+</msubsup>
+<mo>+</mo>
+<msubsup>
+<mi>L</mi>
+<mi>second</mi>
+<mn>2</mn>
+</msubsup>
+</mrow>
+<mrow>
+<msub>
+<mi>L</mi>
+<mi>first</mi>
+</msub>
+<mo>+</mo>
+<msub>
+<mi>L</mi>
+<mi>second</mi>
+</msub>
+</mrow>
+</mfrac>
+</mrow>
+<mo>,</mo>
+</mrow>
+</math>
+</maths>
+<claim-text>wherein: L<sub>first </sub>denotes a sum of (i) the luminance of the light emitted from the first segment toward the first eye and (iii) the luminance of the crosstalk toward the first eye, and</claim-text>
+<claim-text>L<sub>second </sub>denotes (ii) the luminance of the light emitted from the second segment toward the second eye.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to apply a black level lift to the second image prior to adjusting the intensity values of the pixels in the given second segment of the second image.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the black level lift is applied on a per-segment basis, and wherein a segment of the second image to which the black level lift is applied includes and surrounds the given second segment.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>for the given second segment of the second image presenting at least said part of the virtual object, determine an amount of crosstalk toward the second eye, based on at least the first image; and</claim-text>
+<claim-text>adjust intensity values of pixels in the given first segment of the first image, based on the amount of crosstalk determined for the given second segment of the second image.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>for the given second segment of the second image presenting at least said part of the virtual object, determine an amount of crosstalk toward the second eye, based on at least the first image; and</claim-text>
+<claim-text>adjust the intensity values of the pixels in the given second segment of the second image, based further on the amount of crosstalk determined for the given second segment of the second image.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>apply a black level lift to at least the given first segment of the first image; and</claim-text>
+<claim-text>adjust intensity values of pixels in the given first segment of the first image, in addition to adjusting the intensity values of the pixels in the given second segment of the second image, based on the amount of crosstalk determined for the given first segment of the first image.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a tracker, wherein the at least one processor configured to:
+<claim-text>determine a gaze direction of the first eye, using the tracker; and</claim-text>
+<claim-text>select the given first segment of the first image, based on the gaze direction of the first eye.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A method comprising:
+<claim-text>obtaining information indicative of a relative location of a first eye and of a second eye of at least one user with respect to an image plane of an autostereoscopic display;</claim-text>
+<claim-text>generating or retrieving a first image and a second image to be directed toward the first eye and the second eye, respectively, based on the relative location of the first eye and of the second eye with respect to the image plane;</claim-text>
+<claim-text>for a given first segment of the first image presenting at least a part of a virtual object, determining an amount of crosstalk toward the first eye, based on at least the second image;</claim-text>
+<claim-text>determining a given second segment of the second image that also presents at least said part of the virtual object;</claim-text>
+<claim-text>adjusting intensity values of pixels in the given second segment of the second image, based on the amount of crosstalk determined for the given first segment of the first image;</claim-text>
+<claim-text>generating an autostereoscopic image using the first image and the second image; and</claim-text>
+<claim-text>displaying the autostereoscopic image via the autostereoscopic display;</claim-text>
+<claim-text>wherein a first display region and a second display region of the autostereoscopic display are employed to emit light corresponding to the given first segment of the first image toward the first eye and to emit light corresponding to the given second segment of the second image toward the second eye, respectively,</claim-text>
+<claim-text>wherein the intensity values of the pixels in the given second segment of the second image are adjusted such that a binocular sum of:</claim-text>
+<claim-text>(i) a luminance of the light emitted from the first segment toward the first eye,</claim-text>
+<claim-text>(ii) a luminance of the light emitted from the second segment toward the second eye, and</claim-text>
+<claim-text>(iii) a luminance of the crosstalk toward the first eye,</claim-text>
+<claim-text>lies within a predefined threshold range of a target binocular luminance corresponding to said part of the virtual object:</claim-text>
+<claim-text>wherein the binocular sum (L<sub>binocular</sub>) is calculated using an expression:</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00004" num="00004">
+<math overflow="scroll">
+<mrow>
+<mrow>
+<msub>
+<mi>L</mi>
+<mi>binocular</mi>
+</msub>
+<mo>=</mo>
+<mfrac>
+<mrow>
+<msubsup>
+<mi>L</mi>
+<mi>first</mi>
+<mn>2</mn>
+</msubsup>
+<mo>+</mo>
+<msubsup>
+<mi>L</mi>
+<mi>second</mi>
+<mn>2</mn>
+</msubsup>
+</mrow>
+<mrow>
+<msub>
+<mi>L</mi>
+<mi>first</mi>
+</msub>
+<mo>+</mo>
+<msub>
+<mi>L</mi>
+<mi>second</mi>
+</msub>
+</mrow>
+</mfrac>
+</mrow>
+<mo>,</mo>
+</mrow>
+</math>
+</maths>
+<claim-text>wherein: L<sub>first </sub>denotes a sum of (i) the luminance of the light emitted from the first segment toward the first eye and (iii) the luminance of the crosstalk toward the first eye, and</claim-text>
+<claim-text>L<sub>second </sub>denotes (ii) the luminance of the light emitted from the second segment toward the second eye.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising applying a black level lift to the second image prior to adjusting the intensity values of the pixels in the given second segment of the second image.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the black level lift is applied on a per-segment basis, and wherein a segment of the second image to which the black level lift is applied includes and surrounds the given second segment.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising:
+<claim-text>for the given second segment of the second image presenting at least said part of the virtual object, determining an amount of crosstalk toward the second eye, based on at least the first image; and</claim-text>
+<claim-text>adjusting intensity values of pixels in the given first segment of the first image, based on the amount of crosstalk determined for the given second segment of the second image.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising:
+<claim-text>for the given second segment of the second image presenting at least said part of the virtual object, determining an amount of crosstalk toward the second eye, based on at least the first image; and</claim-text>
+<claim-text>adjusting the intensity values of the pixels in the given second segment of the second image, based further on the amount of crosstalk determined for the given second segment of the second image.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising:
+<claim-text>applying a black level lift to at least the given first segment of the first image; and</claim-text>
+<claim-text>adjusting intensity values of pixels in the given first segment of the first image, in addition to adjusting the intensity values of the pixels in the given second segment of the second image, based on the amount of crosstalk determined for the given first segment of the first image.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising:
+<claim-text>determining a gaze direction of the first eye, using a tracker; and</claim-text>
+</claim-text>
+<claim-text>selecting the given first segment of the first image, based on the gaze direction of the first eye.</claim-text>
+</claim>
+</claims>

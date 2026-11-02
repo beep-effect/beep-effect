@@ -7,7 +7,6 @@
  * @since 0.0.0
  */
 
-import { TSConfigCompilerOptions } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
@@ -20,7 +19,7 @@ import * as Configuration from "./Configuration.ts";
 import * as Core from "./Core.ts";
 import * as Domain from "./Domain.ts";
 
-const decodeCompilerOptions = S.decodeUnknownEffect(S.fromJsonString(S.toEncoded(TSConfigCompilerOptions)));
+const decodeCompilerOptions = S.decodeUnknownEffect(S.fromJsonString(Configuration.CompilerOptionsShape));
 
 const configFile = Flag.File("config-file", { mustExist: true }).pipe(
   Flag.withDescription("Package-relative path to an alternate docgen configuration file"),

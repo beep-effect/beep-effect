@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   decodeSkillsLockDocumentJson,
   encodeSkillsLockDocumentJson,
@@ -10,9 +11,9 @@ import {
   skillsCommand,
   VendoredSkillLockEntry,
 } from "@beep/repo-cli/commands/Skills";
+import { checkInstalledSkills } from "@beep/repo-cli/test/SharedInternals";
 import { computeSkillTree, installedTargetsHash } from "@beep/repo-cli/test/Skills";
 import { findRepoRoot } from "@beep/repo-utils";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { it } from "@beep/test-runner";
 import { A, O, Str } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -24,6 +25,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Toml from "effect/encoding/Toml";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -33,6 +35,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Tuple from "effect/Tuple";
@@ -202,7 +205,7 @@ describe("skills command", () => {
     const native =
       '[skills]\ninclude_instructions = true\n[[skills.config]]\nname = "closeout"\nenabled = true\n[mcp_servers.native]\nurl = "native"\n[[skills.config]]\nname = "operator-skill"\nenabled = false\n[[skills.config]]\nname = "native-metadata"\nenabled = false\nowner = "operator"\n';
     const rendered = renderCodexConfigWithSkills(native, ["closeout"]);
-    expect(Toml.parse(rendered)).toMatchObject({
+    expect(Result.getOrThrow(Toml.parse(rendered))).toMatchObject({
       skills: {
         config: [
           { name: "closeout", enabled: true },
@@ -219,7 +222,7 @@ describe("skills command", () => {
     const native =
       '[skills]\ninclude_instructions = true\n[mcp_servers.native]\nurl = "native"\n[[skills.config]]\nname = "closeout"\nenabled = false\nowner = "operator"\n';
     const rendered = renderCodexConfigWithSkills(native, ["closeout"]);
-    expect(Toml.parse(rendered)).toMatchObject({
+    expect(Result.getOrThrow(Toml.parse(rendered))).toMatchObject({
       skills: { config: [{ name: "closeout", enabled: true, owner: "operator" }] },
     });
     expect(O.getOrNull(Str.match(/name = "closeout"/g)(rendered))).toHaveLength(1);
@@ -691,7 +694,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("vendored skill trees in
       const lock = yield* decodeSkillsLockDocumentJson(
         yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"))
       );
-      const biome = yield* decodeJsoncTextAs(BiomeFileIncludes)(
+      const biome = yield* Jsonc.bind(BiomeFileIncludes).decode(
         yield* fs.readFileString(path.join(repoRoot, "biome.jsonc"))
       );
       const vendoredTargets = A.flatMap(R.values(lock.skills), (entry) =>
@@ -700,6 +703,38 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("vendored skill trees in
 
       expect(A.isArrayNonEmpty(vendoredTargets)).toBe(true);
       expect(A.filter(vendoredTargets, (target) => !excludedByBiome(biome.files.includes)(target))).toEqual([]);
+    })
+  );
+});
+
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("installed skill frontmatter check", (it) => {
+  it.effect("reads the YAML block through the @beep/markdown codec and names engine diagnostics", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-skill-frontmatter-" });
+      const skills: ReadonlyArray<readonly [string, string]> = [
+        ["valid", "---\nname: valid\ndescription: A valid skill.\n---\n\n# Valid\n"],
+        ["broken", "---\nname: [broken\n---\n\n# Broken\n"],
+        ["doubled", "---\nname: doubled\ndescription: Doubled.\nname: doubled\n---\n"],
+        ["toml", '+++\nname = "toml"\n+++\n'],
+        ["unclosed", "---\nname: unclosed\ndescription: Unclosed.\n"],
+      ];
+      for (const [name, content] of skills) {
+        yield* fs.makeDirectory(path.join(root, name), { recursive: true });
+        yield* fs.writeFileString(path.join(root, name, "SKILL.md"), content);
+      }
+      const report = yield* checkInstalledSkills(
+        root,
+        A.map(skills, ([name]) => name),
+        HashSet.empty()
+      );
+      expect(A.map(report.issues, (issue) => [issue.skill, issue.message])).toEqual([
+        ["broken", "Invalid YAML frontmatter (YAML parse failed with 1 error: MalformedFlowCollection at 1:7)."],
+        ["doubled", "Invalid YAML frontmatter (YAML parse failed with 1 error: DuplicateKey at 3:1)."],
+        ["toml", "SKILL.md frontmatter is toml; the Agent Skills format requires a YAML block."],
+        ["unclosed", "SKILL.md has no YAML frontmatter block."],
+      ]);
     })
   );
 });

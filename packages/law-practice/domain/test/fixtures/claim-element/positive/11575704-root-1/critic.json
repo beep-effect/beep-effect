@@ -1,0 +1,121 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "11575704-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "findings": [],
+  "headConsistencyReview": {
+    "schemaVersion": "head-review/v2",
+    "scope": "Independent head-only consistency review against manually read exact source; prior full semantic acceptance retained through independently verified complete structural invariance. No new full semantic extraction or attorney agreement claimed.",
+    "previousRound": 1,
+    "reviewedActionCount": 5,
+    "sourceSpecificJudgment": "In all five phrases each distributes over cable or array members. Respective remains the substantive correspondence modifier; fiber optic cable and array noun heads remain complete. Neither end/array ownership nor member/LED correspondence changes. Source omitted linking wording in4 is preserved.",
+    "actions": [
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 134,
+          "endChar": 167,
+          "quote": "each respective fiber optic cable"
+        },
+        "beforeHead": "each respective fiber optic cable",
+        "acceptedHead": "respective fiber optic cable",
+        "verdict": "accepted"
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 266,
+          "endChar": 299,
+          "quote": "each respective fiber optic cable"
+        },
+        "beforeHead": "each respective fiber optic cable",
+        "acceptedHead": "respective fiber optic cable",
+        "verdict": "accepted"
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 150,
+          "endChar": 183,
+          "quote": "each respective fiber optic cable"
+        },
+        "beforeHead": "each respective fiber optic cable",
+        "acceptedHead": "respective fiber optic cable",
+        "verdict": "accepted"
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 328,
+          "endChar": 361,
+          "quote": "each respective fiber optic cable"
+        },
+        "beforeHead": "each respective fiber optic cable",
+        "acceptedHead": "respective fiber optic cable",
+        "verdict": "accepted"
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 365,
+          "endChar": 386,
+          "quote": "each respective array"
+        },
+        "beforeHead": "each respective array",
+        "acceptedHead": "respective array",
+        "verdict": "accepted"
+      }
+    ],
+    "invariance": "Verified every action anchor as exact UTF-16 source, every bare tag unchanged, exactly listed outer each removed and all remaining head words retained. Undoing only these head fields restores the entire prior parsed expected tree. Raw prior expected text transformed only at those declared head-value literals equals current text byte-for-byte; no anchor, determiner, element, edge, function part, scope or other value changed.",
+    "priorReceiptHashes": "Every expected/extractor/critic/head-review raw SHA256 named by head-review/v2 preservedPriorReceipts independently verified against the exact retained file bytes.",
+    "preservedPriorReceipts": [
+      {
+        "file": "expected.round1.json",
+        "sha256": "09b6c30d503ba24ace9d97393dc59880ccad66803799ba3c3636718bbf51ddb3"
+      },
+      {
+        "file": "extractor.round1.json",
+        "sha256": "2367ce4e6ab0413eb3bc3428901d356d154c2cd1097165e3e7991d809535c5de"
+      },
+      {
+        "file": "critic.round1.json",
+        "sha256": "680a7739f81e1d70204b7bf2fa7a66d9b2d706acf8f6ab86eadff5cb2b404b7f"
+      }
+    ]
+  },
+  "verification": [
+    "All current trees decode through ClaimElementTree. Exact canonical UTF-16 element/term spans, ordering/nonoverlap/ownership, antecedent endpoints and complete contiguous functional reconstruction independently pass.",
+    "All canonical/context claims match native XML under permitted normalization, and source claims XML digest matches provenance. Source anchors/semantics and previously accepted full critic base remain unchanged.",
+    "Source grammar shows each is an outer distributive determiner in every assigned action; complete substantive lexical modifiers and any counts/partitive pair content are preserved. This is a bounded grammatical normalization, not a generic word stoplist."
+  ],
+  "referenceSha256": "eadff8b53126abeda1c958c169d28360c0332eb5d403c9b17f8d4e3bf91ac3a0",
+  "extractorSha256": "879e77f7eb9c7e5542a1e4a061b131a353836a04df3c3478879b5442bccdee3e",
+  "reviewNotes": [
+    "Prior full semantic critic verdict was accepted with no remaining findings. Only assigned current lexical changes are newly adjudicated here; all earlier receipts remain intact.",
+    "Known human count/selector holds and16068637 each-edge/each-other matters remain outside this assignment and unchanged. No fourth agent round or attorney verdict is supplied."
+  ],
+  "independence": "Separate independent GPT-6.1-Sol medium critic session from head-consistency extractor. Read exact source contexts/full affected claims, head-review/v2 actions, previous expected/critic/extractor receipts and raw file hashes. No production implementation/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or source changes. Only assigned current critic files written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "roundLimit": "Round2 of at most3; no remaining actionable assigned head findings.",
+  "corpusStatus": "Incremental head-consistency criticism only; no human agreement, new sample admission or accuracy claim."
+}

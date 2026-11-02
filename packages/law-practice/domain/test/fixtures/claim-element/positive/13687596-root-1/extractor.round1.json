@@ -1,0 +1,29 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13687596-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Independent source critic accepted eligibility at 0.98 after legacy lowercase original XML count reconciliation; native wording is used unchanged, including claim 8 “the composite structure metal interface part”.",
+    "Claims 6 and 12 contain meaningful technical references to method 1 and assembly 6 while changing claimed subject. Trees preserve assembly/sub-assembly subjects; dependency edges encode technical reference, not an opinion about formal legal dependency.",
+    "Claim 5 “said apertures”, “said connections”, “said locking means” and claim 9 “said apertures” do not have unambiguous explicit noun introductions on their ancestry. No noun is extracted from slash-type modifiers to invent one. Claim 12’s terminal “the matching aperture or the lumen” has split alternatives, so no singular branch edge to the earlier disjunctive “an aperture or lumen” is invented.",
+    "Claim 1 “said interlock” names the result of interlocking without an explicit introductory noun. Missing introduction is preserved, as are unintroduced definite conditions, positions, phases and type phrases.",
+    "The phrases “said parts” in assemblies 6/12 and terminal “said part” in12 have distributed or singular/plural ownership uncertainty. These exact noun phrases remain with no fabricated single-entity antecedent edge."
+  ],
+  "annotationRationale": [
+    "The root 1 preamble includes the elaborated assembly and its incidental comprising list; the main transition is said method comprising. Root 12 similarly retains its full actual sub-assembly preamble before wherein despite incidental earlier comprising. No incidental comprising/having shortcut controls boundaries.",
+    "Full lexical heads preserve composite structure part, metal interface part, metal structure part, assembling male/female mating connectors, assembling male/female type mating connectors, V-shaped cross-section, V-shaped cross section, tab/aperture type and stud/aperture type. Related lexical variants are not normalized into invented exact wording.",
+    "Structural introductions/type descriptions use limitation; explicit assembling, welding, interlocking, deforming, position transitions and movement relations use functional-relation with locally owned terms and exact ordered text.",
+    "Actual explicit claim references determine ancestry. Clear inherited components, connectors, locks and tab references get cross-claim edges. First/second series phrases in claim 4 are recorded as first definite recitations and their subsequent claim 5 references connect to those explicit ordinal entities, whose order distinguishes them. No type/part inference supplies missing introductions.",
+    "At-least-one determiner surfaces use the schema surface; numerical quantifiers outside that surface retain exact anchors with bare determiners. Nested of-phrases have separate nonoverlapping noun terms. Shared determiner coordinates remain one noun phrase when the text has one determiner.",
+    "Local referential concerns are explicitly retained; source-clear boundaries remain structurally annotatable. No implementation coverage limitation or legal construction is substituted for semantic labeling."
+  ],
+  "independence": "Fresh manually selected source grammar, lexical terms and semantic identities. Read only canonical claims/native XML, context, source/provenance/audit/critic, protocol and schema contracts. No rules, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helper only locates manually selected quotes, formats annotations and checks span/reference coherence.",
+  "sourceStatus": "Independent source critic accepted; independent semantic critic and attorney adjudication pending.",
+  "validation": "Every selected claim resolved exactly once; exact spans, unique paths, nonoverlapping owned terms, referenced endpoint existence and ordered locally owned functional parts checked. Context claims not added to scoring."
+}

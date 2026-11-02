@@ -1,4 +1,3 @@
-/** @effect-diagnostics globalConsole:skip-file -- the one console.warn is a dev-only notice in the Storybook preview iframe, outside any Effect runtime; file-level because its biome-ignore must sit on the line above it. Owner: @beep/storybook. Exit: the preview boots through an Effect runtime with a browser Logger. */
 // `previewHead` installs this shape before hoisted imports evaluate. Keep the
 // fallback for preview consumers that evaluate this module outside Storybook.
 const globalWithProcess = globalThis as unknown as {
@@ -23,13 +22,16 @@ if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
       return import("react-grab");
     })
     .catch((error: unknown) => {
-      // biome-ignore lint/suspicious/noConsole: dev-only degradation notice; the console is the intended surface. Owner: @beep/storybook. Exit: the preview boots through an Effect runtime with a browser Logger.
-      console.warn("react-grab failed to load; component grabbing is unavailable in this session.", error);
+      // Dev-only degradation notice. The default Logger writes it to the preview iframe's console.
+      Effect.runFork(
+        Effect.logWarning("react-grab failed to load; component grabbing is unavailable in this session.", error)
+      );
     });
 }
 
 import { AppThemeProvider, ThemeMode, useThemeMode } from "@beep/ui/themes";
 import { DecoratorHelpers } from "@storybook/addon-themes";
+import * as Effect from "effect/Effect";
 import * as React from "react";
 import { themes } from "storybook/theming";
 import type { ResolvedThemeMode } from "@beep/ui/themes";

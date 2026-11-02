@@ -1,0 +1,130 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "13687596-root-1",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "previousRound": 2,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 1,
+      "path": "1",
+      "anchor": {
+        "startChar": 87,
+        "endChar": 111,
+        "quote": "one metal interface part"
+      },
+      "determiner": "bare",
+      "beforeHead": "metal interface part",
+      "afterHead": "one metal interface part",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "orating an assembly comprising at least one composite structure part, one metal interface part and one metal structure part, said method comprising: a step for asse",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 1,
+      "path": "1",
+      "anchor": {
+        "startChar": 116,
+        "endChar": 140,
+        "quote": "one metal structure part"
+      },
+      "determiner": "bare",
+      "beforeHead": "metal structure part",
+      "afterHead": "one metal structure part",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "g at least one composite structure part, one metal interface part and one metal structure part, said method comprising: a step for assembling the composite structur",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 4,
+      "path": "4.a",
+      "anchor": {
+        "startChar": 137,
+        "endChar": 156,
+        "quote": "at least two series"
+      },
+      "determiner": "bare",
+      "beforeHead": "series",
+      "afterHead": "at least two series",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "assembling the composite structure and metal interface parts comprise at least two series of connectors, during the pre-assembling phase, the first series of a",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 6,
+      "path": "6.a",
+      "anchor": {
+        "startChar": 148,
+        "endChar": 172,
+        "quote": "one metal interface part"
+      },
+      "determiner": "bare",
+      "beforeHead": "metal interface part",
+      "afterHead": "one metal interface part",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "m 1, said assembly comprising: at least one composite structure part, one metal interface part and one metal structure part, the composite structure part and the me",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 6,
+      "path": "6.a",
+      "anchor": {
+        "startChar": 177,
+        "endChar": 201,
+        "quote": "one metal structure part"
+      },
+      "determiner": "bare",
+      "beforeHead": "metal structure part",
+      "afterHead": "one metal structure part",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": ": at least one composite structure part, one metal interface part and one metal structure part, the composite structure part and the metal interface part forming a ",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 8,
+      "path": "8.a",
+      "anchor": {
+        "startChar": 140,
+        "endChar": 159,
+        "quote": "at least two series"
+      },
+      "determiner": "bare",
+      "beforeHead": "series",
+      "afterHead": "at least two series",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "he composite structure metal interface part are connectors comprising at least two series of connectors.",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round2.json",
+      "sha256": "a03cdb42cc56cd8ff0bdbd419cd78dc6072ed620e8b0b9cc837c5d5988c51402"
+    },
+    {
+      "file": "extractor.round2.json",
+      "sha256": "7b1384fa9ec8609c03d597925cc668405792f6852b2b873eb747611e732f09f9"
+    },
+    {
+      "file": "critic.round2.json",
+      "sha256": "4c5bd37635b4072be1d5db721b3e5e10fe92dc59d3ef9b8353b2b926230c0ea4"
+    }
+  ],
+  "missingPriorCritic": null,
+  "structureInvariant": "Expected trees are byte-for-byte semantically equal after replacing only audited head fields with their prior values. No anchors, determiners, edges, element structure, source or claim scope changed.",
+  "independence": "Targeted extractor correction from manually reviewed exact canonical/native source context and lexical-head/v1 only. Literal audit flags were checked individually; no generic parser/decomposer, production rules, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "unchanged; pending human review where already required"
+}

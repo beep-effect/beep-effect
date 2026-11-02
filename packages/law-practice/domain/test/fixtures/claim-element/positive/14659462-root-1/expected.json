@@ -1,0 +1,5797 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "A method of fastening two items"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 22,
+              "endChar": 31,
+              "quote": "two items"
+            },
+            "determiner": "bare",
+            "head": "two items"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 57,
+          "endChar": 274,
+          "quote": "placing a barrel nut in a hole of the first item so that a threaded shaft of the barrel nut is positioned (a) transverse to the axis of said hole of the first item and (b) aligned with a access hole in the second item"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 65,
+              "endChar": 77,
+              "quote": "a barrel nut"
+            },
+            "determiner": "a",
+            "head": "barrel nut"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 87,
+              "quote": "a hole"
+            },
+            "determiner": "a",
+            "head": "hole"
+          },
+          {
+            "anchor": {
+              "startChar": 91,
+              "endChar": 105,
+              "quote": "the first item"
+            },
+            "determiner": "the",
+            "head": "first item"
+          },
+          {
+            "anchor": {
+              "startChar": 114,
+              "endChar": 130,
+              "quote": "a threaded shaft"
+            },
+            "determiner": "a",
+            "head": "threaded shaft"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 148,
+              "quote": "the barrel nut"
+            },
+            "determiner": "the",
+            "head": "barrel nut"
+          }
+        ]
+      },
+      {
+        "path": "1.a.i",
+        "anchor": {
+          "startChar": 167,
+          "endChar": 220,
+          "quote": "transverse to the axis of said hole of the first item"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 181,
+              "endChar": 189,
+              "quote": "the axis"
+            },
+            "determiner": "the",
+            "head": "axis"
+          },
+          {
+            "anchor": {
+              "startChar": 193,
+              "endChar": 202,
+              "quote": "said hole"
+            },
+            "determiner": "said",
+            "head": "hole"
+          },
+          {
+            "anchor": {
+              "startChar": 206,
+              "endChar": 220,
+              "quote": "the first item"
+            },
+            "determiner": "the",
+            "head": "first item"
+          }
+        ]
+      },
+      {
+        "path": "1.a.ii",
+        "anchor": {
+          "startChar": 229,
+          "endChar": 274,
+          "quote": "aligned with a access hole in the second item"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 242,
+              "endChar": 255,
+              "quote": "a access hole"
+            },
+            "determiner": "a",
+            "head": "access hole"
+          },
+          {
+            "anchor": {
+              "startChar": 259,
+              "endChar": 274,
+              "quote": "the second item"
+            },
+            "determiner": "the",
+            "head": "second item"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 276,
+          "endChar": 365,
+          "quote": "ensuring that said barrel nut has at least one chamfered flange at the base of said shaft"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 290,
+              "endChar": 305,
+              "quote": "said barrel nut"
+            },
+            "determiner": "said",
+            "head": "barrel nut"
+          },
+          {
+            "anchor": {
+              "startChar": 310,
+              "endChar": 339,
+              "quote": "at least one chamfered flange"
+            },
+            "determiner": "at-least-one",
+            "head": "chamfered flange"
+          },
+          {
+            "anchor": {
+              "startChar": 343,
+              "endChar": 351,
+              "quote": "the base"
+            },
+            "determiner": "the",
+            "head": "base"
+          },
+          {
+            "anchor": {
+              "startChar": 355,
+              "endChar": 365,
+              "quote": "said shaft"
+            },
+            "determiner": "said",
+            "head": "shaft"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 372,
+          "endChar": 516,
+          "quote": "ensuring that the threaded shaft of said barrel nut is floatably retained in said barrel nut via pins positioned thereover said chamfered flange"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 386,
+              "endChar": 404,
+              "quote": "the threaded shaft"
+            },
+            "determiner": "the",
+            "head": "threaded shaft"
+          },
+          {
+            "anchor": {
+              "startChar": 408,
+              "endChar": 423,
+              "quote": "said barrel nut"
+            },
+            "determiner": "said",
+            "head": "barrel nut"
+          },
+          {
+            "anchor": {
+              "startChar": 449,
+              "endChar": 464,
+              "quote": "said barrel nut"
+            },
+            "determiner": "said",
+            "head": "barrel nut"
+          },
+          {
+            "anchor": {
+              "startChar": 469,
+              "endChar": 473,
+              "quote": "pins"
+            },
+            "determiner": "bare",
+            "head": "pins"
+          },
+          {
+            "anchor": {
+              "startChar": 485,
+              "endChar": 494,
+              "quote": "thereover"
+            },
+            "determiner": "bare",
+            "head": "thereover"
+          },
+          {
+            "anchor": {
+              "startChar": 495,
+              "endChar": 516,
+              "quote": "said chamfered flange"
+            },
+            "determiner": "said",
+            "head": "chamfered flange"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.a.i",
+        "parent": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 167,
+              "endChar": 181,
+              "quote": "transverse to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.i",
+              "anchor": {
+                "startChar": 181,
+                "endChar": 189,
+                "quote": "the axis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 189,
+              "endChar": 193,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.i",
+              "anchor": {
+                "startChar": 193,
+                "endChar": 202,
+                "quote": "said hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 202,
+              "endChar": 206,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.i",
+              "anchor": {
+                "startChar": 206,
+                "endChar": 220,
+                "quote": "the first item"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.a.ii",
+        "parent": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a.ii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 229,
+              "endChar": 242,
+              "quote": "aligned with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.ii",
+              "anchor": {
+                "startChar": 242,
+                "endChar": 255,
+                "quote": "a access hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 255,
+              "endChar": 259,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.ii",
+              "anchor": {
+                "startChar": 259,
+                "endChar": 274,
+                "quote": "the second item"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 276,
+              "endChar": 290,
+              "quote": "ensuring that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 290,
+                "endChar": 305,
+                "quote": "said barrel nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 305,
+              "endChar": 310,
+              "quote": " has "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 310,
+                "endChar": 339,
+                "quote": "at least one chamfered flange"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 339,
+              "endChar": 343,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 343,
+                "endChar": 351,
+                "quote": "the base"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 351,
+              "endChar": 355,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 355,
+                "endChar": 365,
+                "quote": "said shaft"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 372,
+              "endChar": 386,
+              "quote": "ensuring that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 386,
+                "endChar": 404,
+                "quote": "the threaded shaft"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 404,
+              "endChar": 408,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 408,
+                "endChar": 423,
+                "quote": "said barrel nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 423,
+              "endChar": 449,
+              "quote": " is floatably retained in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 449,
+                "endChar": 464,
+                "quote": "said barrel nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 464,
+              "endChar": 469,
+              "quote": " via "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 469,
+                "endChar": 473,
+                "quote": "pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 473,
+              "endChar": 485,
+              "quote": " positioned "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 485,
+                "endChar": 494,
+                "quote": "thereover"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 494,
+              "endChar": 495,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 495,
+                "endChar": 516,
+                "quote": "said chamfered flange"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 134,
+            "endChar": 148,
+            "quote": "the barrel nut"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 65,
+            "endChar": 77,
+            "quote": "a barrel nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a.i",
+          "anchor": {
+            "startChar": 193,
+            "endChar": 202,
+            "quote": "said hole"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 81,
+            "endChar": 87,
+            "quote": "a hole"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 290,
+            "endChar": 305,
+            "quote": "said barrel nut"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 65,
+            "endChar": 77,
+            "quote": "a barrel nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 355,
+            "endChar": 365,
+            "quote": "said shaft"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 114,
+            "endChar": 130,
+            "quote": "a threaded shaft"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 386,
+            "endChar": 404,
+            "quote": "the threaded shaft"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 114,
+            "endChar": 130,
+            "quote": "a threaded shaft"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 408,
+            "endChar": 423,
+            "quote": "said barrel nut"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 65,
+            "endChar": 77,
+            "quote": "a barrel nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 449,
+            "endChar": 464,
+            "quote": "said barrel nut"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 65,
+            "endChar": 77,
+            "quote": "a barrel nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 495,
+            "endChar": 516,
+            "quote": "said chamfered flange"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 310,
+            "endChar": 339,
+            "quote": "at least one chamfered flange"
+          }
+        }
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 57,
+              "endChar": 65,
+              "quote": "placing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 65,
+                "endChar": 77,
+                "quote": "a barrel nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 81,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 81,
+                "endChar": 87,
+                "quote": "a hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 87,
+              "endChar": 91,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 91,
+                "endChar": 105,
+                "quote": "the first item"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 105,
+              "endChar": 114,
+              "quote": " so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 114,
+                "endChar": 130,
+                "quote": "a threaded shaft"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 130,
+              "endChar": 134,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 148,
+                "quote": "the barrel nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 148,
+              "endChar": 274,
+              "quote": " is positioned (a) transverse to the axis of said hole of the first item and (b) aligned with a access hole in the second item"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 355,
+          "quote": "the barrel nut unit comprises: a nut with a cylindrical bore floatably seated in a slug; said nut further comprising a flange at its base featuring at least one chamfer; a plurality of pins connecting opposite ends of said slug; and, wherein said pins are operably configured to retain said nut in a floatably seated position"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 49,
+              "quote": "the barrel nut unit"
+            },
+            "determiner": "the",
+            "head": "barrel nut unit"
+          }
+        ]
+      },
+      {
+        "path": "2.a.i",
+        "anchor": {
+          "startChar": 61,
+          "endChar": 117,
+          "quote": "a nut with a cylindrical bore floatably seated in a slug"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 66,
+              "quote": "a nut"
+            },
+            "determiner": "a",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 72,
+              "endChar": 90,
+              "quote": "a cylindrical bore"
+            },
+            "determiner": "a",
+            "head": "cylindrical bore"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 117,
+              "quote": "a slug"
+            },
+            "determiner": "a",
+            "head": "slug"
+          }
+        ]
+      },
+      {
+        "path": "2.a.ii",
+        "anchor": {
+          "startChar": 119,
+          "endChar": 198,
+          "quote": "said nut further comprising a flange at its base featuring at least one chamfer"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 127,
+              "quote": "said nut"
+            },
+            "determiner": "said",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 147,
+              "endChar": 155,
+              "quote": "a flange"
+            },
+            "determiner": "a",
+            "head": "flange"
+          },
+          {
+            "anchor": {
+              "startChar": 159,
+              "endChar": 167,
+              "quote": "its base"
+            },
+            "determiner": "bare",
+            "head": "base"
+          },
+          {
+            "anchor": {
+              "startChar": 178,
+              "endChar": 198,
+              "quote": "at least one chamfer"
+            },
+            "determiner": "at-least-one",
+            "head": "chamfer"
+          }
+        ]
+      },
+      {
+        "path": "2.a.iii",
+        "anchor": {
+          "startChar": 200,
+          "endChar": 257,
+          "quote": "a plurality of pins connecting opposite ends of said slug"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 200,
+              "endChar": 219,
+              "quote": "a plurality of pins"
+            },
+            "determiner": "plurality-of",
+            "head": "pins"
+          },
+          {
+            "anchor": {
+              "startChar": 231,
+              "endChar": 244,
+              "quote": "opposite ends"
+            },
+            "determiner": "bare",
+            "head": "opposite ends"
+          },
+          {
+            "anchor": {
+              "startChar": 248,
+              "endChar": 257,
+              "quote": "said slug"
+            },
+            "determiner": "said",
+            "head": "slug"
+          }
+        ]
+      },
+      {
+        "path": "2.a.iv",
+        "anchor": {
+          "startChar": 272,
+          "endChar": 355,
+          "quote": "said pins are operably configured to retain said nut in a floatably seated position"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 272,
+              "endChar": 281,
+              "quote": "said pins"
+            },
+            "determiner": "said",
+            "head": "pins"
+          },
+          {
+            "anchor": {
+              "startChar": 316,
+              "endChar": 324,
+              "quote": "said nut"
+            },
+            "determiner": "said",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 328,
+              "endChar": 355,
+              "quote": "a floatably seated position"
+            },
+            "determiner": "a",
+            "head": "floatably seated position"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.i",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.i",
+              "anchor": {
+                "startChar": 61,
+                "endChar": 66,
+                "quote": "a nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 66,
+              "endChar": 72,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.i",
+              "anchor": {
+                "startChar": 72,
+                "endChar": 90,
+                "quote": "a cylindrical bore"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 90,
+              "endChar": 111,
+              "quote": " floatably seated in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.i",
+              "anchor": {
+                "startChar": 111,
+                "endChar": 117,
+                "quote": "a slug"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.ii",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.ii",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 127,
+                "quote": "said nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 127,
+              "endChar": 147,
+              "quote": " further comprising "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.ii",
+              "anchor": {
+                "startChar": 147,
+                "endChar": 155,
+                "quote": "a flange"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 155,
+              "endChar": 159,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.ii",
+              "anchor": {
+                "startChar": 159,
+                "endChar": 167,
+                "quote": "its base"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 167,
+              "endChar": 178,
+              "quote": " featuring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.ii",
+              "anchor": {
+                "startChar": 178,
+                "endChar": 198,
+                "quote": "at least one chamfer"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.iii",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.iii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iii",
+              "anchor": {
+                "startChar": 200,
+                "endChar": 219,
+                "quote": "a plurality of pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 219,
+              "endChar": 231,
+              "quote": " connecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iii",
+              "anchor": {
+                "startChar": 231,
+                "endChar": 244,
+                "quote": "opposite ends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 244,
+              "endChar": 248,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iii",
+              "anchor": {
+                "startChar": 248,
+                "endChar": 257,
+                "quote": "said slug"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.iv",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.iv",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iv",
+              "anchor": {
+                "startChar": 272,
+                "endChar": 281,
+                "quote": "said pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 281,
+              "endChar": 316,
+              "quote": " are operably configured to retain "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iv",
+              "anchor": {
+                "startChar": 316,
+                "endChar": 324,
+                "quote": "said nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 324,
+              "endChar": 328,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iv",
+              "anchor": {
+                "startChar": 328,
+                "endChar": 355,
+                "quote": "a floatably seated position"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2.a",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.ii",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 127,
+            "quote": "said nut"
+          }
+        },
+        "introducing": {
+          "path": "2.a.i",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 66,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.iv",
+          "anchor": {
+            "startChar": 316,
+            "endChar": 324,
+            "quote": "said nut"
+          }
+        },
+        "introducing": {
+          "path": "2.a.i",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 66,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.iii",
+          "anchor": {
+            "startChar": 248,
+            "endChar": 257,
+            "quote": "said slug"
+          }
+        },
+        "introducing": {
+          "path": "2.a.i",
+          "anchor": {
+            "startChar": 111,
+            "endChar": 117,
+            "quote": "a slug"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.iv",
+          "anchor": {
+            "startChar": 272,
+            "endChar": 281,
+            "quote": "said pins"
+          }
+        },
+        "introducing": {
+          "path": "2.a.iii",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 219,
+            "quote": "a plurality of pins"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 62,
+          "quote": "said plurality of pins are bowed"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 52,
+              "quote": "said plurality of pins"
+            },
+            "determiner": "said",
+            "head": "plurality of pins"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 30,
+                "endChar": 52,
+                "quote": "said plurality of pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 52,
+              "endChar": 62,
+              "quote": " are bowed"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.a",
+        "ancestor": "2.a.iii"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 30,
+            "endChar": 52,
+            "quote": "said plurality of pins"
+          }
+        },
+        "introducing": {
+          "path": "2.a.iii",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 219,
+            "quote": "a plurality of pins"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 62,
+          "quote": "said nut features an indentation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 38,
+              "quote": "said nut"
+            },
+            "determiner": "said",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 48,
+              "endChar": 62,
+              "quote": "an indentation"
+            },
+            "determiner": "an",
+            "head": "indentation"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 30,
+                "endChar": 38,
+                "quote": "said nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 38,
+              "endChar": 48,
+              "quote": " features "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 48,
+                "endChar": 62,
+                "quote": "an indentation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4.a",
+        "ancestor": "2.a.i"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 30,
+            "endChar": 38,
+            "quote": "said nut"
+          }
+        },
+        "introducing": {
+          "path": "2.a.i",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 66,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 3"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 62,
+          "quote": "said nut features an indentation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 38,
+              "quote": "said nut"
+            },
+            "determiner": "said",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 48,
+              "endChar": 62,
+              "quote": "an indentation"
+            },
+            "determiner": "an",
+            "head": "indentation"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 30,
+                "endChar": 38,
+                "quote": "said nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 38,
+              "endChar": 48,
+              "quote": " features "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 48,
+                "endChar": 62,
+                "quote": "an indentation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5.a",
+        "ancestor": "2.a.i"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 30,
+            "endChar": 38,
+            "quote": "said nut"
+          }
+        },
+        "introducing": {
+          "path": "2.a.i",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 66,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 4"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 104,
+          "quote": "said indentation is at the base portion of said nut that meets said flange"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 46,
+              "quote": "said indentation"
+            },
+            "determiner": "said",
+            "head": "indentation"
+          },
+          {
+            "anchor": {
+              "startChar": 53,
+              "endChar": 69,
+              "quote": "the base portion"
+            },
+            "determiner": "the",
+            "head": "base portion"
+          },
+          {
+            "anchor": {
+              "startChar": 73,
+              "endChar": 81,
+              "quote": "said nut"
+            },
+            "determiner": "said",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 93,
+              "endChar": 104,
+              "quote": "said flange"
+            },
+            "determiner": "said",
+            "head": "flange"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 30,
+                "endChar": 46,
+                "quote": "said indentation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 46,
+              "endChar": 53,
+              "quote": " is at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 53,
+                "endChar": 69,
+                "quote": "the base portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 69,
+              "endChar": 73,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 73,
+                "endChar": 81,
+                "quote": "said nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 81,
+              "endChar": 93,
+              "quote": " that meets "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 93,
+                "endChar": 104,
+                "quote": "said flange"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "4"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6.a",
+        "ancestor": "4.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 30,
+            "endChar": 46,
+            "quote": "said indentation"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 48,
+            "endChar": 62,
+            "quote": "an indentation"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 81,
+            "quote": "said nut"
+          }
+        },
+        "introducing": {
+          "path": "2.a.i",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 66,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 93,
+            "endChar": 104,
+            "quote": "said flange"
+          }
+        },
+        "introducing": {
+          "path": "2.a.ii",
+          "anchor": {
+            "startChar": 147,
+            "endChar": 155,
+            "quote": "a flange"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 63,
+          "quote": "said flange features two chamfers"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 41,
+              "quote": "said flange"
+            },
+            "determiner": "said",
+            "head": "flange"
+          },
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 63,
+              "quote": "two chamfers"
+            },
+            "determiner": "bare",
+            "head": "two chamfers"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 30,
+                "endChar": 41,
+                "quote": "said flange"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 41,
+              "endChar": 51,
+              "quote": " features "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 63,
+                "quote": "two chamfers"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7.a",
+        "ancestor": "2.a.ii"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 30,
+            "endChar": 41,
+            "quote": "said flange"
+          }
+        },
+        "introducing": {
+          "path": "2.a.ii",
+          "anchor": {
+            "startChar": 147,
+            "endChar": 155,
+            "quote": "a flange"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 135,
+          "quote": "said pins are connected at the opposite ends of said slugs and at points along the periphery of said ends"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 39,
+              "quote": "said pins"
+            },
+            "determiner": "said",
+            "head": "pins"
+          },
+          {
+            "anchor": {
+              "startChar": 57,
+              "endChar": 74,
+              "quote": "the opposite ends"
+            },
+            "determiner": "the",
+            "head": "opposite ends"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 88,
+              "quote": "said slugs"
+            },
+            "determiner": "said",
+            "head": "slugs"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 102,
+              "quote": "points"
+            },
+            "determiner": "bare",
+            "head": "points"
+          },
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 122,
+              "quote": "the periphery"
+            },
+            "determiner": "the",
+            "head": "periphery"
+          },
+          {
+            "anchor": {
+              "startChar": 126,
+              "endChar": 135,
+              "quote": "said ends"
+            },
+            "determiner": "said",
+            "head": "ends"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 30,
+                "endChar": 39,
+                "quote": "said pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 39,
+              "endChar": 57,
+              "quote": " are connected at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 74,
+                "quote": "the opposite ends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 74,
+              "endChar": 78,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 78,
+                "endChar": 88,
+                "quote": "said slugs"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 88,
+              "endChar": 96,
+              "quote": " and at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 102,
+                "quote": "points"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 102,
+              "endChar": 109,
+              "quote": " along "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 109,
+                "endChar": 122,
+                "quote": "the periphery"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 122,
+              "endChar": 126,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 126,
+                "endChar": 135,
+                "quote": "said ends"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8.a",
+        "ancestor": "2.a.iii"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 30,
+            "endChar": 39,
+            "quote": "said pins"
+          }
+        },
+        "introducing": {
+          "path": "2.a.iii",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 219,
+            "quote": "a plurality of pins"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 74,
+            "quote": "the opposite ends"
+          }
+        },
+        "introducing": {
+          "path": "2.a.iii",
+          "anchor": {
+            "startChar": 231,
+            "endChar": 244,
+            "quote": "opposite ends"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 126,
+            "endChar": 135,
+            "quote": "said ends"
+          }
+        },
+        "introducing": {
+          "path": "2.a.iii",
+          "anchor": {
+            "startChar": 231,
+            "endChar": 244,
+            "quote": "opposite ends"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 7"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 141,
+          "quote": "the distance from the periphery and the axis of said pin holes is within the range of 0.057 inch to 0.0967 inch"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 42,
+              "quote": "the distance"
+            },
+            "determiner": "the",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 48,
+              "endChar": 61,
+              "quote": "the periphery"
+            },
+            "determiner": "the",
+            "head": "periphery"
+          },
+          {
+            "anchor": {
+              "startChar": 66,
+              "endChar": 74,
+              "quote": "the axis"
+            },
+            "determiner": "the",
+            "head": "axis"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 92,
+              "quote": "said pin holes"
+            },
+            "determiner": "said",
+            "head": "pin holes"
+          },
+          {
+            "anchor": {
+              "startChar": 103,
+              "endChar": 112,
+              "quote": "the range"
+            },
+            "determiner": "the",
+            "head": "range"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 30,
+                "endChar": 42,
+                "quote": "the distance"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 42,
+              "endChar": 48,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 48,
+                "endChar": 61,
+                "quote": "the periphery"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 61,
+              "endChar": 66,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 66,
+                "endChar": 74,
+                "quote": "the axis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 74,
+              "endChar": 78,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 78,
+                "endChar": 92,
+                "quote": "said pin holes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 92,
+              "endChar": 103,
+              "quote": " is within "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 103,
+                "endChar": 112,
+                "quote": "the range"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 112,
+              "endChar": 141,
+              "quote": " of 0.057 inch to 0.0967 inch"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "7"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9.a",
+        "ancestor": "2.a.iii"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 38,
+          "endChar": 433,
+          "quote": "the barrel nut assembly comprises: a nut with a cylindrical shaft, said nut being floatably seated in a slug; said nut further comprising indentations on opposite sides of the shaft; and, a plurality of pins that are connected to opposites ends of the slug so that (a) said nut is in said floatably seated position in said slug and (b) a portion of said pins is positioned near said indentations"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 38,
+              "endChar": 61,
+              "quote": "the barrel nut assembly"
+            },
+            "determiner": "the",
+            "head": "barrel nut assembly"
+          }
+        ]
+      },
+      {
+        "path": "10.a.i",
+        "anchor": {
+          "startChar": 73,
+          "endChar": 146,
+          "quote": "a nut with a cylindrical shaft, said nut being floatably seated in a slug"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 73,
+              "endChar": 78,
+              "quote": "a nut"
+            },
+            "determiner": "a",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 84,
+              "endChar": 103,
+              "quote": "a cylindrical shaft"
+            },
+            "determiner": "a",
+            "head": "cylindrical shaft"
+          },
+          {
+            "anchor": {
+              "startChar": 105,
+              "endChar": 113,
+              "quote": "said nut"
+            },
+            "determiner": "said",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 140,
+              "endChar": 146,
+              "quote": "a slug"
+            },
+            "determiner": "a",
+            "head": "slug"
+          }
+        ]
+      },
+      {
+        "path": "10.a.ii",
+        "anchor": {
+          "startChar": 148,
+          "endChar": 219,
+          "quote": "said nut further comprising indentations on opposite sides of the shaft"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 148,
+              "endChar": 156,
+              "quote": "said nut"
+            },
+            "determiner": "said",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 176,
+              "endChar": 188,
+              "quote": "indentations"
+            },
+            "determiner": "bare",
+            "head": "indentations"
+          },
+          {
+            "anchor": {
+              "startChar": 192,
+              "endChar": 206,
+              "quote": "opposite sides"
+            },
+            "determiner": "bare",
+            "head": "opposite sides"
+          },
+          {
+            "anchor": {
+              "startChar": 210,
+              "endChar": 219,
+              "quote": "the shaft"
+            },
+            "determiner": "the",
+            "head": "shaft"
+          }
+        ]
+      },
+      {
+        "path": "10.a.iii",
+        "anchor": {
+          "startChar": 226,
+          "endChar": 433,
+          "quote": "a plurality of pins that are connected to opposites ends of the slug so that (a) said nut is in said floatably seated position in said slug and (b) a portion of said pins is positioned near said indentations"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 226,
+              "endChar": 245,
+              "quote": "a plurality of pins"
+            },
+            "determiner": "plurality-of",
+            "head": "pins"
+          },
+          {
+            "anchor": {
+              "startChar": 268,
+              "endChar": 282,
+              "quote": "opposites ends"
+            },
+            "determiner": "bare",
+            "head": "opposites ends"
+          },
+          {
+            "anchor": {
+              "startChar": 286,
+              "endChar": 294,
+              "quote": "the slug"
+            },
+            "determiner": "the",
+            "head": "slug"
+          }
+        ]
+      },
+      {
+        "path": "10.a.iii.i",
+        "anchor": {
+          "startChar": 307,
+          "endChar": 365,
+          "quote": "said nut is in said floatably seated position in said slug"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 307,
+              "endChar": 315,
+              "quote": "said nut"
+            },
+            "determiner": "said",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 322,
+              "endChar": 352,
+              "quote": "said floatably seated position"
+            },
+            "determiner": "said",
+            "head": "floatably seated position"
+          },
+          {
+            "anchor": {
+              "startChar": 356,
+              "endChar": 365,
+              "quote": "said slug"
+            },
+            "determiner": "said",
+            "head": "slug"
+          }
+        ]
+      },
+      {
+        "path": "10.a.iii.ii",
+        "anchor": {
+          "startChar": 374,
+          "endChar": 433,
+          "quote": "a portion of said pins is positioned near said indentations"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 374,
+              "endChar": 383,
+              "quote": "a portion"
+            },
+            "determiner": "a",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 387,
+              "endChar": 396,
+              "quote": "said pins"
+            },
+            "determiner": "said",
+            "head": "pins"
+          },
+          {
+            "anchor": {
+              "startChar": 416,
+              "endChar": 433,
+              "quote": "said indentations"
+            },
+            "determiner": "said",
+            "head": "indentations"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a.i",
+        "parent": "10.a"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.i",
+              "anchor": {
+                "startChar": 73,
+                "endChar": 78,
+                "quote": "a nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 78,
+              "endChar": 84,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.i",
+              "anchor": {
+                "startChar": 84,
+                "endChar": 103,
+                "quote": "a cylindrical shaft"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 103,
+              "endChar": 105,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.i",
+              "anchor": {
+                "startChar": 105,
+                "endChar": 113,
+                "quote": "said nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 113,
+              "endChar": 140,
+              "quote": " being floatably seated in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.i",
+              "anchor": {
+                "startChar": 140,
+                "endChar": 146,
+                "quote": "a slug"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a.ii",
+        "parent": "10.a"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.ii",
+              "anchor": {
+                "startChar": 148,
+                "endChar": 156,
+                "quote": "said nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 156,
+              "endChar": 176,
+              "quote": " further comprising "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.ii",
+              "anchor": {
+                "startChar": 176,
+                "endChar": 188,
+                "quote": "indentations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 188,
+              "endChar": 192,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.ii",
+              "anchor": {
+                "startChar": 192,
+                "endChar": 206,
+                "quote": "opposite sides"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 206,
+              "endChar": 210,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.ii",
+              "anchor": {
+                "startChar": 210,
+                "endChar": 219,
+                "quote": "the shaft"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a.iii",
+        "parent": "10.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a.iii.i",
+        "parent": "10.a.iii"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a.iii.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.iii.i",
+              "anchor": {
+                "startChar": 307,
+                "endChar": 315,
+                "quote": "said nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 315,
+              "endChar": 322,
+              "quote": " is in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.iii.i",
+              "anchor": {
+                "startChar": 322,
+                "endChar": 352,
+                "quote": "said floatably seated position"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 352,
+              "endChar": 356,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.iii.i",
+              "anchor": {
+                "startChar": 356,
+                "endChar": 365,
+                "quote": "said slug"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a.iii.ii",
+        "parent": "10.a.iii"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a.iii.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.iii.ii",
+              "anchor": {
+                "startChar": 374,
+                "endChar": 383,
+                "quote": "a portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 383,
+              "endChar": 387,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.iii.ii",
+              "anchor": {
+                "startChar": 387,
+                "endChar": 396,
+                "quote": "said pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 396,
+              "endChar": 416,
+              "quote": " is positioned near "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.iii.ii",
+              "anchor": {
+                "startChar": 416,
+                "endChar": 433,
+                "quote": "said indentations"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10.a",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 105,
+            "endChar": 113,
+            "quote": "said nut"
+          }
+        },
+        "introducing": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 78,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.ii",
+          "anchor": {
+            "startChar": 148,
+            "endChar": 156,
+            "quote": "said nut"
+          }
+        },
+        "introducing": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 78,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.ii",
+          "anchor": {
+            "startChar": 210,
+            "endChar": 219,
+            "quote": "the shaft"
+          }
+        },
+        "introducing": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 84,
+            "endChar": 103,
+            "quote": "a cylindrical shaft"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.iii",
+          "anchor": {
+            "startChar": 286,
+            "endChar": 294,
+            "quote": "the slug"
+          }
+        },
+        "introducing": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 140,
+            "endChar": 146,
+            "quote": "a slug"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.iii.i",
+          "anchor": {
+            "startChar": 307,
+            "endChar": 315,
+            "quote": "said nut"
+          }
+        },
+        "introducing": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 78,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.iii.i",
+          "anchor": {
+            "startChar": 356,
+            "endChar": 365,
+            "quote": "said slug"
+          }
+        },
+        "introducing": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 140,
+            "endChar": 146,
+            "quote": "a slug"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.iii.ii",
+          "anchor": {
+            "startChar": 387,
+            "endChar": 396,
+            "quote": "said pins"
+          }
+        },
+        "introducing": {
+          "path": "10.a.iii",
+          "anchor": {
+            "startChar": 226,
+            "endChar": 245,
+            "quote": "a plurality of pins"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a.iii.ii",
+          "anchor": {
+            "startChar": 416,
+            "endChar": 433,
+            "quote": "said indentations"
+          }
+        },
+        "introducing": {
+          "path": "10.a.ii",
+          "anchor": {
+            "startChar": 176,
+            "endChar": 188,
+            "quote": "indentations"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "functional",
+        "element": "10.a.iii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.iii",
+              "anchor": {
+                "startChar": 226,
+                "endChar": 245,
+                "quote": "a plurality of pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 245,
+              "endChar": 268,
+              "quote": " that are connected to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.iii",
+              "anchor": {
+                "startChar": 268,
+                "endChar": 282,
+                "quote": "opposites ends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 282,
+              "endChar": 286,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a.iii",
+              "anchor": {
+                "startChar": 286,
+                "endChar": 294,
+                "quote": "the slug"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 294,
+              "endChar": 433,
+              "quote": " so that (a) said nut is in said floatably seated position in said slug and (b) a portion of said pins is positioned near said indentations"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 11,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "11",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 10"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "anchor": {
+          "startChar": 31,
+          "endChar": 63,
+          "quote": "said plurality of pins are bowed"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 31,
+              "endChar": 53,
+              "quote": "said plurality of pins"
+            },
+            "determiner": "said",
+            "head": "plurality of pins"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "functional",
+        "element": "11.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 53,
+                "quote": "said plurality of pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 53,
+              "endChar": 63,
+              "quote": " are bowed"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "11",
+        "ancestor": "10"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "11.a",
+        "ancestor": "10.a.iii"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 31,
+            "endChar": 53,
+            "quote": "said plurality of pins"
+          }
+        },
+        "introducing": {
+          "path": "10.a.iii",
+          "anchor": {
+            "startChar": 226,
+            "endChar": 245,
+            "quote": "a plurality of pins"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 12,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "12",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 10"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "anchor": {
+          "startChar": 31,
+          "endChar": 99,
+          "quote": "said nut further comprises a chamfered flange at a base of the shaft"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 31,
+              "endChar": 39,
+              "quote": "said nut"
+            },
+            "determiner": "said",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 76,
+              "quote": "a chamfered flange"
+            },
+            "determiner": "a",
+            "head": "chamfered flange"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 86,
+              "quote": "a base"
+            },
+            "determiner": "a",
+            "head": "base"
+          },
+          {
+            "anchor": {
+              "startChar": 90,
+              "endChar": 99,
+              "quote": "the shaft"
+            },
+            "determiner": "the",
+            "head": "shaft"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "functional",
+        "element": "12.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 39,
+                "quote": "said nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 39,
+              "endChar": 58,
+              "quote": " further comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 58,
+                "endChar": 76,
+                "quote": "a chamfered flange"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 76,
+              "endChar": 80,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 86,
+                "quote": "a base"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 86,
+              "endChar": 90,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 90,
+                "endChar": 99,
+                "quote": "the shaft"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "12",
+        "ancestor": "10"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "12.a",
+        "ancestor": "10.a.i"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 31,
+            "endChar": 39,
+            "quote": "said nut"
+          }
+        },
+        "introducing": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 78,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 90,
+            "endChar": 99,
+            "quote": "the shaft"
+          }
+        },
+        "introducing": {
+          "path": "10.a.i",
+          "anchor": {
+            "startChar": 84,
+            "endChar": 103,
+            "quote": "a cylindrical shaft"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 13,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "13",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 7"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "13.a",
+        "anchor": {
+          "startChar": 28,
+          "endChar": 112,
+          "quote": "the chamfered flange is defined by two chamfers on opposite sides of the flange base"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 28,
+              "endChar": 48,
+              "quote": "the chamfered flange"
+            },
+            "determiner": "the",
+            "head": "chamfered flange"
+          },
+          {
+            "anchor": {
+              "startChar": 63,
+              "endChar": 75,
+              "quote": "two chamfers"
+            },
+            "determiner": "bare",
+            "head": "two chamfers"
+          },
+          {
+            "anchor": {
+              "startChar": 79,
+              "endChar": 93,
+              "quote": "opposite sides"
+            },
+            "determiner": "bare",
+            "head": "opposite sides"
+          },
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 112,
+              "quote": "the flange base"
+            },
+            "determiner": "the",
+            "head": "flange base"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "13.a",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 28,
+                "endChar": 48,
+                "quote": "the chamfered flange"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 48,
+              "endChar": 63,
+              "quote": " is defined by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 63,
+                "endChar": 75,
+                "quote": "two chamfers"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 75,
+              "endChar": 79,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 79,
+                "endChar": 93,
+                "quote": "opposite sides"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 93,
+              "endChar": 97,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 112,
+                "quote": "the flange base"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "13",
+        "ancestor": "7"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "13.a",
+        "ancestor": "2.a.ii"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 14,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "14",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "14.a",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 335,
+          "quote": "the barrel nut assembly comprises: a nut with a cylindrical bore seated in a slug; said nut further comprising a flange at its base; at least two pins connecting opposite ends of said slug; and, said pins being fixed in apertures located along the outer periphery of each of the opposite ends of said slug"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 53,
+              "quote": "the barrel nut assembly"
+            },
+            "determiner": "the",
+            "head": "barrel nut assembly"
+          }
+        ]
+      },
+      {
+        "path": "14.a.i",
+        "anchor": {
+          "startChar": 65,
+          "endChar": 111,
+          "quote": "a nut with a cylindrical bore seated in a slug"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 65,
+              "endChar": 70,
+              "quote": "a nut"
+            },
+            "determiner": "a",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 76,
+              "endChar": 94,
+              "quote": "a cylindrical bore"
+            },
+            "determiner": "a",
+            "head": "cylindrical bore"
+          },
+          {
+            "anchor": {
+              "startChar": 105,
+              "endChar": 111,
+              "quote": "a slug"
+            },
+            "determiner": "a",
+            "head": "slug"
+          }
+        ]
+      },
+      {
+        "path": "14.a.ii",
+        "anchor": {
+          "startChar": 113,
+          "endChar": 161,
+          "quote": "said nut further comprising a flange at its base"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 121,
+              "quote": "said nut"
+            },
+            "determiner": "said",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 141,
+              "endChar": 149,
+              "quote": "a flange"
+            },
+            "determiner": "a",
+            "head": "flange"
+          },
+          {
+            "anchor": {
+              "startChar": 153,
+              "endChar": 161,
+              "quote": "its base"
+            },
+            "determiner": "bare",
+            "head": "base"
+          }
+        ]
+      },
+      {
+        "path": "14.a.iii",
+        "anchor": {
+          "startChar": 163,
+          "endChar": 218,
+          "quote": "at least two pins connecting opposite ends of said slug"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 163,
+              "endChar": 180,
+              "quote": "at least two pins"
+            },
+            "determiner": "bare",
+            "head": "at least two pins"
+          },
+          {
+            "anchor": {
+              "startChar": 192,
+              "endChar": 205,
+              "quote": "opposite ends"
+            },
+            "determiner": "bare",
+            "head": "opposite ends"
+          },
+          {
+            "anchor": {
+              "startChar": 209,
+              "endChar": 218,
+              "quote": "said slug"
+            },
+            "determiner": "said",
+            "head": "slug"
+          }
+        ]
+      },
+      {
+        "path": "14.a.iv",
+        "anchor": {
+          "startChar": 225,
+          "endChar": 335,
+          "quote": "said pins being fixed in apertures located along the outer periphery of each of the opposite ends of said slug"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 225,
+              "endChar": 234,
+              "quote": "said pins"
+            },
+            "determiner": "said",
+            "head": "pins"
+          },
+          {
+            "anchor": {
+              "startChar": 250,
+              "endChar": 259,
+              "quote": "apertures"
+            },
+            "determiner": "bare",
+            "head": "apertures"
+          },
+          {
+            "anchor": {
+              "startChar": 274,
+              "endChar": 293,
+              "quote": "the outer periphery"
+            },
+            "determiner": "the",
+            "head": "outer periphery"
+          },
+          {
+            "anchor": {
+              "startChar": 305,
+              "endChar": 322,
+              "quote": "the opposite ends"
+            },
+            "determiner": "the",
+            "head": "opposite ends"
+          },
+          {
+            "anchor": {
+              "startChar": 326,
+              "endChar": 335,
+              "quote": "said slug"
+            },
+            "determiner": "said",
+            "head": "slug"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "14.a",
+        "parent": "14"
+      },
+      {
+        "kind": "part-of",
+        "child": "14.a.i",
+        "parent": "14.a"
+      },
+      {
+        "kind": "functional",
+        "element": "14.a.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.i",
+              "anchor": {
+                "startChar": 65,
+                "endChar": 70,
+                "quote": "a nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 70,
+              "endChar": 76,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.i",
+              "anchor": {
+                "startChar": 76,
+                "endChar": 94,
+                "quote": "a cylindrical bore"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 94,
+              "endChar": 105,
+              "quote": " seated in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.i",
+              "anchor": {
+                "startChar": 105,
+                "endChar": 111,
+                "quote": "a slug"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "14.a.ii",
+        "parent": "14.a"
+      },
+      {
+        "kind": "functional",
+        "element": "14.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.ii",
+              "anchor": {
+                "startChar": 113,
+                "endChar": 121,
+                "quote": "said nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 121,
+              "endChar": 141,
+              "quote": " further comprising "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.ii",
+              "anchor": {
+                "startChar": 141,
+                "endChar": 149,
+                "quote": "a flange"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 149,
+              "endChar": 153,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.ii",
+              "anchor": {
+                "startChar": 153,
+                "endChar": 161,
+                "quote": "its base"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "14.a.iii",
+        "parent": "14.a"
+      },
+      {
+        "kind": "functional",
+        "element": "14.a.iii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.iii",
+              "anchor": {
+                "startChar": 163,
+                "endChar": 180,
+                "quote": "at least two pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 180,
+              "endChar": 192,
+              "quote": " connecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.iii",
+              "anchor": {
+                "startChar": 192,
+                "endChar": 205,
+                "quote": "opposite ends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 205,
+              "endChar": 209,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.iii",
+              "anchor": {
+                "startChar": 209,
+                "endChar": 218,
+                "quote": "said slug"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "14.a.iv",
+        "parent": "14.a"
+      },
+      {
+        "kind": "functional",
+        "element": "14.a.iv",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.iv",
+              "anchor": {
+                "startChar": 225,
+                "endChar": 234,
+                "quote": "said pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 234,
+              "endChar": 250,
+              "quote": " being fixed in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.iv",
+              "anchor": {
+                "startChar": 250,
+                "endChar": 259,
+                "quote": "apertures"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 259,
+              "endChar": 274,
+              "quote": " located along "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.iv",
+              "anchor": {
+                "startChar": 274,
+                "endChar": 293,
+                "quote": "the outer periphery"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 293,
+              "endChar": 305,
+              "quote": " of each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.iv",
+              "anchor": {
+                "startChar": 305,
+                "endChar": 322,
+                "quote": "the opposite ends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 322,
+              "endChar": 326,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a.iv",
+              "anchor": {
+                "startChar": 326,
+                "endChar": 335,
+                "quote": "said slug"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "14",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "14.a",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14.a.ii",
+          "anchor": {
+            "startChar": 113,
+            "endChar": 121,
+            "quote": "said nut"
+          }
+        },
+        "introducing": {
+          "path": "14.a.i",
+          "anchor": {
+            "startChar": 65,
+            "endChar": 70,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14.a.iii",
+          "anchor": {
+            "startChar": 209,
+            "endChar": 218,
+            "quote": "said slug"
+          }
+        },
+        "introducing": {
+          "path": "14.a.i",
+          "anchor": {
+            "startChar": 105,
+            "endChar": 111,
+            "quote": "a slug"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14.a.iv",
+          "anchor": {
+            "startChar": 225,
+            "endChar": 234,
+            "quote": "said pins"
+          }
+        },
+        "introducing": {
+          "path": "14.a.iii",
+          "anchor": {
+            "startChar": 163,
+            "endChar": 180,
+            "quote": "at least two pins"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14.a.iv",
+          "anchor": {
+            "startChar": 326,
+            "endChar": 335,
+            "quote": "said slug"
+          }
+        },
+        "introducing": {
+          "path": "14.a.i",
+          "anchor": {
+            "startChar": 105,
+            "endChar": 111,
+            "quote": "a slug"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14.a.iv",
+          "anchor": {
+            "startChar": 305,
+            "endChar": 322,
+            "quote": "the opposite ends"
+          }
+        },
+        "introducing": {
+          "path": "14.a.iii",
+          "anchor": {
+            "startChar": 192,
+            "endChar": 205,
+            "quote": "opposite ends"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 15,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "15",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 14"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "15.a",
+        "anchor": {
+          "startChar": 31,
+          "endChar": 243,
+          "quote": "the distance from the center point of the apertures located along the outer periphery of the barrel nut assembly to the edge of the slug end of the barrel nut assembly is in the range of 0.057 inch to 0.0967 inch"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 31,
+              "endChar": 43,
+              "quote": "the distance"
+            },
+            "determiner": "the",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 49,
+              "endChar": 65,
+              "quote": "the center point"
+            },
+            "determiner": "the",
+            "head": "center point"
+          },
+          {
+            "anchor": {
+              "startChar": 69,
+              "endChar": 82,
+              "quote": "the apertures"
+            },
+            "determiner": "the",
+            "head": "apertures"
+          },
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 116,
+              "quote": "the outer periphery"
+            },
+            "determiner": "the",
+            "head": "outer periphery"
+          },
+          {
+            "anchor": {
+              "startChar": 120,
+              "endChar": 143,
+              "quote": "the barrel nut assembly"
+            },
+            "determiner": "the",
+            "head": "barrel nut assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 147,
+              "endChar": 155,
+              "quote": "the edge"
+            },
+            "determiner": "the",
+            "head": "edge"
+          },
+          {
+            "anchor": {
+              "startChar": 159,
+              "endChar": 171,
+              "quote": "the slug end"
+            },
+            "determiner": "the",
+            "head": "slug end"
+          },
+          {
+            "anchor": {
+              "startChar": 175,
+              "endChar": 198,
+              "quote": "the barrel nut assembly"
+            },
+            "determiner": "the",
+            "head": "barrel nut assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 205,
+              "endChar": 214,
+              "quote": "the range"
+            },
+            "determiner": "the",
+            "head": "range"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "15.a",
+        "parent": "15"
+      },
+      {
+        "kind": "functional",
+        "element": "15.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 43,
+                "quote": "the distance"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 43,
+              "endChar": 49,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 49,
+                "endChar": 65,
+                "quote": "the center point"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 65,
+              "endChar": 69,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 69,
+                "endChar": 82,
+                "quote": "the apertures"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 82,
+              "endChar": 97,
+              "quote": " located along "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 116,
+                "quote": "the outer periphery"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 116,
+              "endChar": 120,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 120,
+                "endChar": 143,
+                "quote": "the barrel nut assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 143,
+              "endChar": 147,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 147,
+                "endChar": 155,
+                "quote": "the edge"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 155,
+              "endChar": 159,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 159,
+                "endChar": 171,
+                "quote": "the slug end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 171,
+              "endChar": 175,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 175,
+                "endChar": 198,
+                "quote": "the barrel nut assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 198,
+              "endChar": 205,
+              "quote": " is in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 205,
+                "endChar": 214,
+                "quote": "the range"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 214,
+              "endChar": 243,
+              "quote": " of 0.057 inch to 0.0967 inch"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "15",
+        "ancestor": "14"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "15.a",
+        "ancestor": "14.a.iv"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 69,
+            "endChar": 82,
+            "quote": "the apertures"
+          }
+        },
+        "introducing": {
+          "path": "14.a.iv",
+          "anchor": {
+            "startChar": 250,
+            "endChar": 259,
+            "quote": "apertures"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 16,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "16",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 14"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "16.a",
+        "anchor": {
+          "startChar": 31,
+          "endChar": 87,
+          "quote": "the flange of the barrel nut assembly features a chamfer"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 31,
+              "endChar": 41,
+              "quote": "the flange"
+            },
+            "determiner": "the",
+            "head": "flange"
+          },
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 68,
+              "quote": "the barrel nut assembly"
+            },
+            "determiner": "the",
+            "head": "barrel nut assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 87,
+              "quote": "a chamfer"
+            },
+            "determiner": "a",
+            "head": "chamfer"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "16.a",
+        "parent": "16"
+      },
+      {
+        "kind": "functional",
+        "element": "16.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 41,
+                "quote": "the flange"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 41,
+              "endChar": 45,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 68,
+                "quote": "the barrel nut assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 68,
+              "endChar": 78,
+              "quote": " features "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 78,
+                "endChar": 87,
+                "quote": "a chamfer"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "16",
+        "ancestor": "14"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "16.a",
+        "ancestor": "14.a.ii"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.a",
+          "anchor": {
+            "startChar": 31,
+            "endChar": 41,
+            "quote": "the flange"
+          }
+        },
+        "introducing": {
+          "path": "14.a.ii",
+          "anchor": {
+            "startChar": 141,
+            "endChar": 149,
+            "quote": "a flange"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 17,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "17",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 14"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "17.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 87,
+          "quote": "two indentations in opposite sides of the nut"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 42,
+              "endChar": 58,
+              "quote": "two indentations"
+            },
+            "determiner": "bare",
+            "head": "two indentations"
+          },
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 76,
+              "quote": "opposite sides"
+            },
+            "determiner": "bare",
+            "head": "opposite sides"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 87,
+              "quote": "the nut"
+            },
+            "determiner": "the",
+            "head": "nut"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "17.a",
+        "parent": "17"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "17",
+        "ancestor": "14"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "17.a",
+        "ancestor": "14.a.i"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 87,
+            "quote": "the nut"
+          }
+        },
+        "introducing": {
+          "path": "14.a.i",
+          "anchor": {
+            "startChar": 65,
+            "endChar": 70,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 18,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "18",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 17"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "18.a",
+        "anchor": {
+          "startChar": 31,
+          "endChar": 102,
+          "quote": "the nut transversely floats between said pins located in an indentation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 31,
+              "endChar": 38,
+              "quote": "the nut"
+            },
+            "determiner": "the",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 76,
+              "quote": "said pins"
+            },
+            "determiner": "said",
+            "head": "pins"
+          },
+          {
+            "anchor": {
+              "startChar": 88,
+              "endChar": 102,
+              "quote": "an indentation"
+            },
+            "determiner": "an",
+            "head": "indentation"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "18.a",
+        "parent": "18"
+      },
+      {
+        "kind": "functional",
+        "element": "18.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "18.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 38,
+                "quote": "the nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 38,
+              "endChar": 67,
+              "quote": " transversely floats between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "18.a",
+              "anchor": {
+                "startChar": 67,
+                "endChar": 76,
+                "quote": "said pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 76,
+              "endChar": 88,
+              "quote": " located in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "18.a",
+              "anchor": {
+                "startChar": 88,
+                "endChar": 102,
+                "quote": "an indentation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "18",
+        "ancestor": "17"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "18.a",
+        "ancestor": "14.a.i"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "18.a",
+          "anchor": {
+            "startChar": 31,
+            "endChar": 38,
+            "quote": "the nut"
+          }
+        },
+        "introducing": {
+          "path": "14.a.i",
+          "anchor": {
+            "startChar": 65,
+            "endChar": 70,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "18.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 76,
+            "quote": "said pins"
+          }
+        },
+        "introducing": {
+          "path": "14.a.iii",
+          "anchor": {
+            "startChar": 163,
+            "endChar": 180,
+            "quote": "at least two pins"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "18",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 19,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "19",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 14"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "19.a",
+        "anchor": {
+          "startChar": 31,
+          "endChar": 50,
+          "quote": "said pins are bowed"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 31,
+              "endChar": 40,
+              "quote": "said pins"
+            },
+            "determiner": "said",
+            "head": "pins"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "19.a",
+        "parent": "19"
+      },
+      {
+        "kind": "functional",
+        "element": "19.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 40,
+                "quote": "said pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 40,
+              "endChar": 50,
+              "quote": " are bowed"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "19",
+        "ancestor": "14"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "19.a",
+        "ancestor": "14.a.iii"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.a",
+          "anchor": {
+            "startChar": 31,
+            "endChar": 40,
+            "quote": "said pins"
+          }
+        },
+        "introducing": {
+          "path": "14.a.iii",
+          "anchor": {
+            "startChar": 163,
+            "endChar": 180,
+            "quote": "at least two pins"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 20,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "20",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 18"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "20.a",
+        "anchor": {
+          "startChar": 31,
+          "endChar": 50,
+          "quote": "said pins are bowed"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 31,
+              "endChar": 40,
+              "quote": "said pins"
+            },
+            "determiner": "said",
+            "head": "pins"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "20.a",
+        "parent": "20"
+      },
+      {
+        "kind": "functional",
+        "element": "20.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 40,
+                "quote": "said pins"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 40,
+              "endChar": 50,
+              "quote": " are bowed"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "20",
+        "ancestor": "18"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "20.a",
+        "ancestor": "14.a.iii"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 31,
+            "endChar": 40,
+            "quote": "said pins"
+          }
+        },
+        "introducing": {
+          "path": "14.a.iii",
+          "anchor": {
+            "startChar": 163,
+            "endChar": 180,
+            "quote": "at least two pins"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,84 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A system for signal identification in a radiofrequency (RF) environment, comprising:
+<claim-text>at least one node device including a processor and memory;</claim-text>
+<claim-text>wherein the at least one node device is in communication with at least one artificial intelligence (AI) engine;</claim-text>
+<claim-text>wherein the at least one node device is operable to receive RF data based on the RF environment;</claim-text>
+<claim-text>wherein the at least one node device is operable to average Fast Fourier Transform (FFT) data derived from the RF data into at least one tile;</claim-text>
+<claim-text>wherein the at least one AI engine is operable to generate an output for the at least one tile to identify at least one signal;</claim-text>
+<claim-text>wherein the at least one tile is represented as at least one waterfall image; and</claim-text>
+<claim-text>wherein location information for the at least one signal is displayed on at least one user interface as at least one line of bearing.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one AI engine is operable to calculate an average probability based on the output.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one AI engine is trained using at least one training data set.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a signal modulation type of the at least one signal includes direct sequence spread spectrum (DSSS), orthogonal frequency division multiplexing (OFDM), frequency hopping spread spectrum (FHSS), and/or Futaba advanced spread spectrum technology (FASST).</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one signal includes a drone signal.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one node device is operable to transmit an alert and/or report related to a comparison of the location information of the at least one signal against at least one location of interest.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one line of bearing is calculated by a direction-finding engine.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one signal is highlighted on the at least one waterfall image.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising at least one RF receiver operable to transform the RF data to the FFT data.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. An apparatus for signal identification in a radiofrequency (RF) environment, comprising:
+<claim-text>a node device including a processor and memory;</claim-text>
+<claim-text>wherein the node device is in communication with at least one artificial intelligence (AI) engine;</claim-text>
+<claim-text>wherein the node device is operable to receive RF data;</claim-text>
+<claim-text>wherein the node device is operable to average Fast Fourier Transform (FFT) data derived from the RF data into at least one tile;</claim-text>
+<claim-text>wherein the at least one AI engine is operable to generate an output for the at least one tile to identify and correspond at least one signal with a probability;</claim-text>
+<claim-text>wherein the at least one tile is represented as at least one waterfall image; and</claim-text>
+<claim-text>wherein at least one line of bearing is displayed for the at least one signal on at least one user interface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The apparatus of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one line of bearing represents location information for the at least one signal, including an airport no-fly-zone and/or at least one geofence.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. The apparatus of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the at least one node device is operable to transmit an alert and/or report related to a comparison of the location information of the at least one signal against at least one location of interest.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The apparatus of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one AI engine is operable to calculate an average probability based on the output.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. The apparatus of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one AI engine is operable to be trained using at least one training data set.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. The apparatus of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one line of bearing is calculated by a direction-finding engine.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. A method for signal analysis in a radiofrequency (RF) environment, comprising:
+<claim-text>at least one node device receiving Fast Fourier Transform (FFT) data derived from RF data based on the RF environment;</claim-text>
+<claim-text>averaging the FFT data by the at least one node device into at least one tile and representing the at least one tile as at least one waterfall image;</claim-text>
+<claim-text>generating an output for the at least one tile by at least one artificial intelligence (AI) engine in communication with the at least one node device to identify and correlate at least one signal with a probability;</claim-text>
+<claim-text>classifying at least one signal emitting device by comparing the at least one signal emitted from the at least one signal emitting device to classification data stored in a classification library; and</claim-text>
+<claim-text>displaying at least one line of bearing for the at least one signal on at least one user interface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text>17. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the at least one line of bearing represents location information for the at least one signal, including an airport no-fly-zone and/or at least one geofence.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text>18. The method of <claim-ref idref="CLM-00017">claim 17</claim-ref>, further comprising the at least one node device transmitting an alert and/or report related to a comparison of the location information for the at least one signal against at least one location of interest.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text>19. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the at least one AI engine is trained using at least one training data set.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text>20. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the at least one signal characteristic includes a modulation type of the at least one signal that includes direct sequence spread spectrum (DSSS), orthogonal frequency division multiplexing (OFDM), frequency hopping spread spectrum (FHSS), and/or Futaba advanced spread spectrum technology (FASST).</claim-text>
+</claim>
+</claims>

@@ -1,0 +1,84 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "13070851-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "The method of any of claims 1 to 4",
+      "reason": "Claims5/6 preserve alternative natural dependencies to each1/2/3/4. Four depends-on-element edges enumerate the allowed alternatives; source wording in preamble retains alternative rather than conjunctive dependency meaning. All alternatives share the same unique root UL/DL CC entities."
+    },
+    {
+      "quote": "the HARQ entity",
+      "reason": "First definite HARQ-entity mention has no prior explicit entity NP introduction. No antecedent is invented from buffers or uplink carrier."
+    },
+    {
+      "quote": "the said UL CC",
+      "reason": "Malformed stacked the said UL CC anchor remains complete with supported outer the determiner. Said is another grammatical referring determiner, so normalized lexical head is ul cc; source text and unique carrier reference are unchanged."
+    },
+    {
+      "quote": "all uplink hybrid automatic repeat-request (HARQ) buffers",
+      "reason": "Unsupported all quantifier retained in the exact bare NP and lexical head, preserving the total-buffer scope. Flushing/deactivation and scheduling conditions remain complete functional text; no inferred individual buffer/member identity."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation of exact canonical/native claims. Explicit manually selected element and noun-phrase spans are serialized; no source decomposition algorithm, production rules, predictions, synthetic fixtures or prior conformance labels used. Complete lexical heads, nested determiner terms, natural dependency and source-supported entity identities retained. Functional edges preserve complete source text and ordered participants. Independent critic pending; agent confidence is not attorney agreement.",
+  "referenceNotes": [
+    "Explicitly named initialisms and their source parentheses are retained in lexical entity phrases. Later short UE/RRC/UL/DL forms resolve by unique introduction and source role, without external telecommunications assumptions."
+  ],
+  "sourceValidation": {
+    "claimsXmlSha256": "d0cfa17ca520ecf770cc83a16479773c803740d9a7e592c8883ad830a6180645",
+    "sourceEligibility": "Retained independent source critic accepted. No fresh original-PDF/inventory authentication claimed."
+  },
+  "counts": {
+    "trees": 7,
+    "elements": 15,
+    "terms": 38,
+    "edges": 45
+  },
+  "independence": "Extractor did not read production implementation, decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or prior structural labels for this family. Helpers locate only manually chosen exact source quotes, serialize annotations and validate spans. Only assigned expected.json/extractor.json written.",
+  "attorneyAdjudication": "pending",
+  "validation": {
+    "schema": "All trees decode through declared ClaimElementTree schema; production decomposer not invoked.",
+    "anchors": "Exact UTF-16 spans, source order, nonoverlapping ordered terms, source-contained ownership, all antecedent endpoints and complete ordered functional reconstruction checked.",
+    "native": "All canonical/context claims match native XML under permitted normalization; source claims XML digest matches provenance.",
+    "independentSemanticCritic": "Pending; extractor checks are not independent acceptance."
+  },
+  "previousRounds": [
+    {
+      "round": 1,
+      "expected": "expected.round1.json",
+      "extractor": "extractor.round1.json",
+      "criticRound": 1,
+      "criticVerdict": "changes-required"
+    }
+  ],
+  "round2Changes": [
+    {
+      "findingId": "stacked-determiner-in-head",
+      "disposition": "accepted",
+      "reason": "Full malformed the said UL CC anchor retained. Both the and said are grammatical referring determiners, not carrier lexical name; head normalized to ul cc without changing supported the tag or unique UL carrier edge."
+    },
+    {
+      "findingId": "reference-claim-order",
+      "disposition": "accepted",
+      "reason": "Trees and resolvedClaimNumbers serialized1–7, preserving all semantics, elements/terms/edges and alternative dependencies. This is artifact ordering, not improved structural recovery."
+    }
+  ],
+  "criticReview": "Independent round2 critic pending.",
+  "round2Independence": "Original extractor independently adjudicated exact critic cases against canonical source and protocol. No production, decomposer, design, predictions or conformance inspected. Only listed source-supported references/head/order changed; full previous receipts preserved."
+}

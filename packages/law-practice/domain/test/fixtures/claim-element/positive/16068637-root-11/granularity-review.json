@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-28",
+  "convention": "entity-mentions/v1",
+  "status": "requires-attorney-after-agent-round-limit",
+  "reason": "Independent semantic extraction and critic reached the maximum3 rounds before the granularity clarification. Do not start another agent round or silently treat prior structural approval as convention approval. Attorney review will decide these connective representations alongside the mandated spot-check.",
+  "items": [
+    {
+      "familyId": "16068637-root-11",
+      "claimNumber": 16,
+      "path": "16.c.iii",
+      "anchor": {
+        "startChar": 867,
+        "endChar": 877,
+        "quote": "each other"
+      },
+      "head": "each other"
+    }
+  ],
+  "sourceEligibility": "accepted separately",
+  "priorSemanticApproval": "retained in extractor/critic receipts; convention consistency not recertified"
+}

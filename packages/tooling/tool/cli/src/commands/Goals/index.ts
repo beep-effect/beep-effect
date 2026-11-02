@@ -126,33 +126,19 @@ export * from "./Inventory.ts";
  */
 export * from "./Materialize.ts";
 /**
- * Packet-convention migration command and model surfaces.
+ * Goal-fleet graph lint (duplicate ids, dependency cycles, dangling references).
  *
  * @category cli-commands
  * @since 0.0.0
  */
 export * from "./Migration/ManifestTranslation.ts";
 /**
- * Packet-convention CLI command surfaces.
- *
- * @category cli-commands
- * @since 0.0.0
- */
-export * from "./Migration/Migration.command.ts";
-/**
- * Packet-convention migration schemas.
+ * Goal-fleet lint finding schemas.
  *
  * @category schemas
  * @since 0.0.0
  */
 export * from "./Migration/Migration.schemas.ts";
-/**
- * Packet fork-repair and genesis mutation services.
- *
- * @category services
- * @since 0.0.0
- */
-export * from "./Migration/PacketMutation.ts";
 /**
  * Mechanical status-migration engine.
  *

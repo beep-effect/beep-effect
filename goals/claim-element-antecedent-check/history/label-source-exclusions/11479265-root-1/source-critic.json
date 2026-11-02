@@ -1,0 +1,198 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "11479265-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": false,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20070009023", "A1", "20070111"],
+    "applicationReference": ["US", "11479265", "20060630"],
+    "officeActionDocumentIdentifiers": ["FTDA915CPPOPPY5"],
+    "officeActionMailDate": "2009-04-13"
+  },
+  "digestEvidence": [
+    {
+      "file": "11479265.publication.xml",
+      "sha256": "deaa3090ac9777d86c676d065038992b0eac89a4fa3bdc2a0d749603096271b5",
+      "matchesProvenance": true
+    },
+    {
+      "file": "11479265.claims.xml",
+      "sha256": "a95f5a9d57a63e6616eebcce267f6125aad804eb4b1ff44821b44f9dd17ccab2",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "a95f5a9d57a63e6616eebcce267f6125aad804eb4b1ff44821b44f9dd17ccab2",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "EPD542NLPP1GUI3",
+      "xmlAvailable": false
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 37,
+    "actualRows": 37,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2006-06-30T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "EPD542NLPP1GUI3"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-14 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the timing resolution",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the timing resolution"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the path timings",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the path timings"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the subcarriers",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the subcarriers"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the weights",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the weights"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the output",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the output",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the output",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the impulse responses",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the impulse responses"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the impulse responses",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the impulse responses"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the minimum mean square error method",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the minimum mean square error method"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the zero forcing method",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the zero forcing method"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the results of detection of sliding correlation",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the results of detection of sliding correlation"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the results of detection of sliding correlation",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the results of detection of sliding correlation"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the results of detection of sliding correlation",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the results of detection of sliding correlation"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the peripheral portions",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the peripheral portions"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the output",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output"
+    }
+  ],
+  "assessment": "PDF confirms native and original prose/dependencies, but reveals material formula conflicts: PDF1 (printed18) claim2 N\u2032os = Nos/n has equality sign absent from raw native claim2 XML (N\u2032OSNOS/n). PDF5 (printed22) claim13 N\u2032FFT=NFFT/l has division slash absent from raw native13 XML (N\u2032FFT=NFFTl). These are raw source omissions, not whitespace or helper normalization. Native source cannot be presumed exact operative formula text.",
+  "findings": [
+    {
+      "severity": "blocking",
+      "evidence": "PDF confirms native and original prose/dependencies, but reveals material formula conflicts: PDF1 (printed18) claim2 N\u2032os = Nos/n has equality sign absent from raw native claim2 XML (N\u2032OSNOS/n). PDF5 (printed22) claim13 N\u2032FFT=NFFT/l has division slash absent from raw native13 XML (N\u2032FFT=NFFTl). These are raw source omissions, not whitespace or helper normalization. Native source cannot be presumed exact operative formula text.",
+      "requiredAction": "Reconcile authoritative operative text against native source without changing source words to force a match."
+    }
+  ],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used.",
+  "pdfCorroboration": {
+    "documentIdentifier": "EPD542NLPP1GUI3",
+    "sha256": "39a0346065acad723c22ffd6ddad9f7b31296c7e365dd7ed77ad9f345383318c",
+    "pdfPagesInspected": [1, 2, 3, 4, 5],
+    "printedPages": [18, 19, 20, 21, 22],
+    "purpose": "Independent visual corroboration only."
+  },
+  "previousRounds": [
+    {
+      "round": 1,
+      "verdict": "accepted",
+      "confidence": 0.98,
+      "assessment": "Original PDF1-5 (printed18-22) corroborates selected1-10/13 wording, formulas and natural alternatives10/13->3or4. OA actual second-paragraph ground1-14 and selected numbered discussion correspond;9-13 derivative rejection preserved.",
+      "findings": []
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "cache-errors-only-schema-observation/v1",
+  "authority": "Exact canary package schema availability; native controls establish behavior.",
+  "packageVersion": "2.11.11-canary.1",
+  "registryMetadata": "https://registry.npmjs.org/turbo/2.11.11-canary.1",
+  "tarball": "https://registry.npmjs.org/turbo/-/turbo-2.11.11-canary.1.tgz",
+  "integrity": "sha512-jYlRIAXmTymrB9pB0X1Q/zlXbUL5IWO0sOBv7paWK3YYPOYP8Xyvw9HbSlcYO4qAMWB8r8kyFdH9qMknKA4GZw==",
+  "integrityVerified": true,
+  "schemaMember": "package/schema.json",
+  "schemaSha256": "bdd984dd8575fc1dae811fb453637c472d13aff403a5c1486e16233756f48b71",
+  "feature": {
+    "jsonPath": [
+      "definitions",
+      "FutureFlags",
+      "properties",
+      "errorsOnlyShowHash"
+    ],
+    "definition": {
+      "description": "When using `outputLogs: \"errors-only\"`, show task hashes when tasks complete successfully. This provides visibility into which tasks are running without showing full output logs.",
+      "default": false,
+      "type": "boolean"
+    }
+  }
+}

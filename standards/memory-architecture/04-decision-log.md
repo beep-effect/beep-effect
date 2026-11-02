@@ -523,3 +523,29 @@ Both documentation and deprecated-API lanes now use oxlint (PRs #1791 and #1753)
 The ESLint config, parser and plugins are removed by `goals/eslint-removal`;
 governance helpers moved to `@beep/repo-configs/laws/*` and `internal/laws/*`.
 Earlier entries retain their historical tool names.
+
+---
+
+## 2026-10-28: Graft Retired From Every Repo Surface
+
+**Context:** A controlled on/off A/B the same day (54 headless Opus 5.5 runs
+over 9 read-only navigation tasks, two matched worktrees) found no correctness,
+cost, or token difference with graft wired in, and wall time 27% higher
+(p=0.016). The agent chose `graft` in only 13 of 27 runs and preferred `rg` for
+blast-radius, caller, and exhaustive searches. The nightly deep refresh spent
+about three hours of Opus 5.5 per night for that result.
+
+**Decision (operator, 2026-10-28):** Retire graft completely. This supersedes
+the 2026-09-08 and 2026-09-09 entries, which stay as history. Removed: the
+graft CLI command and its deep refresh unit, the graft patch kit, the Claude hooks, status line, helpers and permission
+grants, the `graft` skill (Claude, Codex, Grok), the `AGENTS.md` section, the
+`graft.deep` model-routing role, the graft context in schema-inventory lane
+prompts, and every ignore, lint, Turbo, and IDE entry for the `graft/` cache.
+`beep refs refresh` is now pull-only: it fast-forwards clean members and builds
+no index, so it needs no model provider. Code navigation uses `rg` and the
+editor; Effect API questions read the `.repos/effect` checkout directly.
+
+**Reversal:** revert the retirement PR, reinstall `@nanonets/graft`, and run
+`graft build`. Machine-local residue (the installed
+`beep-graft-deep-refresh` units, `$HOME/.config/beep-graft/env`, `graft/`
+caches in clones and reference members) is cleaned outside the repo.

@@ -90,7 +90,12 @@ const program = Effect.scoped(
       yield* store.accept(message, 100);
       yield* writeCheckpoint(checkpoint, "accepted");
     } else {
-      const claim = yield* store.claimNext("b", "b-owner", 101, 201);
+      // A racing child holds the write lock for its own claim; on a loaded host that can outlast
+      // the short busy timeout. The claim is one transaction, so a retried lock timeout still
+      // leaves exactly one winner.
+      const claim = yield* store
+        .claimNext("b", "b-owner", 101, 201)
+        .pipe(Effect.retry({ while: isMailboxLockTimeout, times: 8, schedule: Schedule.spaced("50 millis") }));
       yield* writeCheckpoint(checkpoint, O.isSome(claim) ? "claimed" : "none");
     }
     return yield* Effect.never;

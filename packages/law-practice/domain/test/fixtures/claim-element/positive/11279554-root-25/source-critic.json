@@ -1,0 +1,149 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "11279554-root-25",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20060241924", "A1", "20061026"],
+    "applicationReference": ["US", "11279554", "20060412"],
+    "officeActionDocumentIdentifiers": ["FRJR91A1PPOPPY5"],
+    "officeActionMailDate": "2009-02-23"
+  },
+  "digestEvidence": [
+    {
+      "file": "11279554.publication.xml",
+      "sha256": "b58d5ce029daf21b9b7a09b20566032567d8596c2730b943e0b7a0bf4083dfb2",
+      "matchesProvenance": true
+    },
+    {
+      "file": "11279554.claims.xml",
+      "sha256": "574a7e67dcbe0787ab3339416900cfcda6355d75262d1d9997cd011562d45e4b",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "574a7e67dcbe0787ab3339416900cfcda6355d75262d1d9997cd011562d45e4b",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "ELYE47L3PPOPPY2",
+      "xmlAvailable": false
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 64,
+    "actualRows": 64,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2006-04-12T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "ELYE47L3PPOPPY2"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "7. claims 8 and 20 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention. this is because they use vague terms making the claims vague and indefinite.",
+    "8. claims 2-4, 7-9, 13-14, 20-21, 25-28, 31-32, 35 and 38-39 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the operations",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the operations"
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the feasible operational state",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the feasible operational state"
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the operational state",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the operational state"
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the modified solution",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the modified solution"
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the performance",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the performance"
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the poorest evaluation",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the poorest evaluation"
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the feasible operational state",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the feasible operational state"
+    },
+    {
+      "claimNumber": 28,
+      "examinerPhrase": "the feasible operational state",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the feasible operational state"
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the feasible operational state",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the feasible operational state"
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the one or more solutions",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the one or more solutions"
+    },
+    {
+      "claimNumber": 32,
+      "examinerPhrase": "the generation of a solution",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the generation of a solution"
+    }
+  ],
+  "assessment": "Original PDF5-7 (printed37-39) corroborates complete selected25-34 wording and dependencies. OA expressly rejects25-28/31-32;29/30/33/34 remain dependency context. Its isolated21 near31 is not silently renumbered.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used.",
+  "pdfCorroboration": {
+    "documentIdentifier": "ELYE47L3PPOPPY2",
+    "sha256": "3d86ce85bad94696fc7d1246802e261419e8da414c02eb98490a731f2011a7d6",
+    "pdfPagesInspected": [5, 6, 7],
+    "printedPages": [37, 38, 39],
+    "purpose": "Independent visual corroboration only."
+  }
+}

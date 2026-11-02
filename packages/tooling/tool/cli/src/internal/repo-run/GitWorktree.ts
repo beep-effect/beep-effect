@@ -16,7 +16,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const resolvedPath = Effect.fnUntraced(function* (
@@ -105,7 +105,7 @@ export const removeGitWorktree = Effect.fn("GitWorktree.removeGitWorktree")(
   function* (
     repoRoot: string,
     worktreePath: string
-  ): Effect.fn.Return<boolean, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | Git> {
+  ): Effect.fn.Return<boolean, never, ChildProcessSpawner.ChildProcessSpawner | Git | SecureRandom.SecureRandom> {
     const git = yield* Git;
     const removed = yield* git.worktreeRemove(repoRoot, worktreePath, { force: true }).pipe(Effect.isSuccess);
     yield* runRepoCommandCapture("git", ["worktree", "prune"], repoRoot).pipe(Effect.ignore);

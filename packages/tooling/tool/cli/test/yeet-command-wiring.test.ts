@@ -1,5 +1,6 @@
 import { YeetCommandError, yeetCommand, yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet";
 import { CommandJsonOutput, printCommandJson } from "@beep/repo-cli/test/Cli";
+import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/test/Quality";
 import {
   MemoryStats,
   provideRuntimeRootForTesting,
@@ -8,8 +9,11 @@ import {
   RuntimeRootChoice,
   YeetAdmissionLease,
 } from "@beep/repo-cli/test/RepoRun";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
+  attemptJournalPath,
   buildYeetRunPlanWithMode,
+  decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
   findLiveReadyMonitorJob,
   finishPublishWithPullRequestForTesting,
@@ -21,15 +25,22 @@ import {
   ProofJobRequest,
   ProofJobSubmitter,
   ProofJobUnit,
+  proofLedgerPathForCheckout,
   RepoRunContext,
+  runArtifactPathForContext,
   runPlanExecutionForTesting,
   runPushFirstPublishPhasesForTesting,
+  runStandardPublishPhasesForTesting,
   TurboPlanSnapshot,
+  YeetAttemptJournalEvent,
+  YeetAttemptStarted,
   YeetEnsuredPullRequest,
   YeetRunPlanModeOptions,
+  YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
+import { GitObjectId } from "@beep/schema/Conformance";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInclude, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -41,7 +52,7 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -56,12 +67,14 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
 
 const commandTestLayer = Layer.mergeAll(
   NodeServices.layer,
+  NodeCrypto.layer,
   Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
 );
 
@@ -204,27 +217,6 @@ describe("yeet merge-loop command wiring", () => {
       );
 
     it.effect(
-      "routes plan-contract-check and fallow-fixture-check to their handlers, which refuse unusable input",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-fixture-commands-" });
-        expect(
-          yield* commandFailure(["plan-contract-check", "--expect-step-id", "publish:02-pr-create"])
-        ).toMatchObject({ _tag: "YeetCommandError", message: "yeet plan-contract-check requires --from-stdin." });
-        expect(
-          yield* commandFailure([
-            "fallow-fixture-check",
-            path.join(root, "missing-fixture.jsonc"),
-            "--emit",
-            path.join(root, "fixture-issues.json"),
-          ])
-        ).toMatchObject({ _tag: "YeetCommandError" });
-        expect(yield* fs.exists(path.join(root, "fixture-issues.json"))).toBe(false);
-      })
-    );
-
-    it.effect(
       "routes fallow-feedback to its handler, which refuses an envelope directory outside the repository",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -280,9 +272,9 @@ describe("yeet merge-loop command wiring", () => {
           });
         const spawner = ChildProcessSpawner.make((command) => {
           if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected planner pipe");
-          const line = A.join([command.command, ...command.args], " ");
+          const line = A.join([command.command, ...commandArgs(command)], " ");
           const responseFor = (responses: ReadonlyArray<readonly [string, string]>) =>
-            A.findFirst(responses, ([argument]) => A.contains(command.args, argument)).pipe(
+            A.findFirst(responses, ([argument]) => A.contains(commandArgs(command), argument)).pipe(
               O.map(([, output]) => output)
             );
           const response = Match.value(command.command).pipe(
@@ -330,7 +322,6 @@ describe("yeet merge-loop command wiring", () => {
             ["repair", "--plan"],
             ["status", "--plan"],
             ["sweep", "--plan"],
-            ["pre-push-hook", "--plan"],
           ],
           Effect.fnUntraced(function* (args) {
             const logged = A.length(yield* TestConsole.logLines);
@@ -683,6 +674,10 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("cheap-gates admission", (
           import { readdir } from "node:fs/promises";
           const [lease] = await readdir(process.env.TEST_ADMISSION_LEASES);
           await Bun.write("observed-lease.json", Bun.file(process.env.TEST_ADMISSION_LEASES + "/" + lease));
+          await Bun.write("observed-report-env.json", JSON.stringify({
+            path: process.env.BEEP_YEET_INNER_LANE_REPORT_PATH ?? null,
+            parent: process.env.BEEP_YEET_INNER_LANE_PARENT_ID ?? null,
+          }));
           console.log("fallow: 1 unused export"); process.exitCode = 23;
         `
           ),
@@ -697,6 +692,8 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("cheap-gates admission", (
           baseFreshness: O.none(),
           mergeReady: O.none(),
           stash: O.none(),
+          publishedHeadSha: O.none(),
+          committedHeadSha: O.none(),
         });
 
         const execution =
@@ -722,6 +719,11 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("cheap-gates admission", (
         const lease = yield* fs
           .readFileString(path.join(root, "observed-lease.json"))
           .pipe(Effect.flatMap(decodeAdmissionLease));
+        if (mode !== "publish") {
+          const reportEnv = yield* fs.readFileString(path.join(root, "observed-report-env.json"));
+          expect(reportEnv).toContain("inner-lanes.ndjson");
+          expect(reportEnv).toContain(gate.id);
+        }
         expect(lease.kind).toBe("full-proof");
         expect(lease.weightTokens).toBe(3);
         expect(lease.priority).toBe(mode === "publish" ? "publish" : "verify");
@@ -796,6 +798,34 @@ it.layer(commandTestLayer)("settle-timeout route legality", (it) => {
   );
 });
 
+it.layer(commandTestLayer)("monitor polling interval", (it) => {
+  for (const flags of [[], ["--watch"], ["--detach"]])
+    it.effect(`rejects an interval outside a status loop: ${flags}`, () =>
+      Effect.gen(function* () {
+        const failure = yield* Effect.flip(runYeetCommand(["monitor", "--poll-interval", "60s", ...flags]));
+        expect(failure).toMatchObject({ message: "--poll-interval requires --until-ready or --until-merged." });
+      })
+    );
+  for (const value of ["0s", "-1s", "Infinity", "invalid"])
+    it.effect(`rejects invalid interval ${value} before detached submission`, () =>
+      Effect.gen(function* () {
+        const failure = yield* Effect.flip(
+          runYeetCommand(["monitor", "--until-ready", `--poll-interval=${value}`, "--detach"])
+        );
+        expect(failure).toMatchObject({ message: "--poll-interval requires a positive finite duration." });
+      })
+    );
+  for (const mode of ["--until-ready", "--until-merged"])
+    it.effect(`accepts a positive interval before canonical detached submission: ${mode}`, () =>
+      Effect.gen(function* () {
+        const failure = yield* Effect.flip(
+          runYeetCommand(["monitor", mode, "--poll-interval", "60s", "--detach", "--plan"])
+        );
+        expect(failure).toMatchObject({ message: "--detach cannot be combined with --plan." });
+      })
+    );
+});
+
 it.layer(commandTestLayer)("until-ready route legality", (it) => {
   it.each([
     { untilMerged: false, untilEvent: false, watch: false, expected: "ready-loop" },
@@ -861,7 +891,15 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("detached proof job comman
       )
     )
   );
-  for (const name of ["status", "pre-push-hook"]) {
+  for (const name of ["pre-push-hook", "plan-contract-check", "fallow-fixture-check"]) {
+    it.effect(`rejects the retired ${name} subcommand`, () =>
+      runYeetCommand([name]).pipe(
+        Effect.flip,
+        Effect.tap((error) => Effect.sync(() => expect(error._tag).not.toBe("YeetCommandError")))
+      )
+    );
+  }
+  for (const name of ["status"]) {
     it.effect(`does not accept --detach on ${name}`, () =>
       runYeetCommand([name, "--detach"]).pipe(
         Effect.flip,
@@ -1036,6 +1074,8 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
       baseFreshness: O.none(),
       mergeReady: O.none(),
       stash: O.none(),
+      publishedHeadSha: O.none(),
+      committedHeadSha: O.none(),
     });
     const ensurePullRequest = () =>
       Effect.succeed(
@@ -1229,3 +1269,479 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
   );
 });
 const FixturePackageJson = S.fromJsonString(S.Unknown);
+
+it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity", (it) => {
+  const fixture = Effect.fn("YeetPublishedHeadTest.fixture")(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-published-head-" });
+    const root = path.join(directory, "work");
+    const remote = path.join(directory, "remote.git");
+    yield* fs.makeDirectory(root);
+    yield* runFixtureGit(directory, ["init", "--bare", "-q", remote]);
+    yield* runFixtureGit(root, ["init", "-q", "--initial-branch=main"]);
+    yield* fs.writeFileString(path.join(root, ".gitignore"), ".beep/\n");
+    yield* runFixtureGit(root, ["add", ".gitignore"]);
+    yield* runFixtureGit(root, ["commit", "-q", "-m", "test: starting head"]);
+    const readHead = fs
+      .readFileString(path.join(root, ".git/refs/heads/main"))
+      .pipe(
+        Effect.map(Str.trim),
+        Effect.flatMap(S.decodeEffect(GitObjectId)),
+        Effect.withSpan("YeetPublishedHeadTest.readHead")
+      );
+    const startingHead = yield* readHead;
+    yield* runFixtureGit(root, ["commit", "-q", "--allow-empty", "-m", "test: generated commit"]);
+    const committedHead = yield* readHead;
+    yield* runFixtureGit(root, ["remote", "add", "origin", remote]);
+    const context = RepoRunContext.make({
+      base: "HEAD~1",
+      branch: "main",
+      cwd: root,
+      head: startingHead,
+      originalArgv: [],
+      packetDir: ".beep/yeet",
+      repoRoot: root,
+      turbo: TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
+    });
+    const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+    const extras = yield* Ref.make<YeetVerdictExtrasForTesting>({
+      baseFreshness: O.none(),
+      mergeReady: O.none(),
+      stash: O.none(),
+      publishedHeadSha: O.none(),
+      committedHeadSha: O.none(),
+    });
+    const push = RepoPlanStep.make({
+      id: "publish:01-git-push",
+      label: "publish:git:push",
+      phase: "publish",
+      command: "git",
+      args: ["push", "origin", "HEAD:refs/heads/main"],
+      cwd: root,
+      scope: "repo",
+      mutability: "readonly",
+      resume: "never",
+    });
+    const proofDrift = RepoPlanStep.make({
+      ...push,
+      id: "full:pre-push",
+      label: "full:pre-push",
+      phase: "full",
+      args: [
+        "-c",
+        "user.name=fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-q",
+        "--allow-empty",
+        "-m",
+        "test: proof-time head change",
+      ],
+    });
+    const execute = Effect.fn("YeetPublishedHeadTest.execute")(
+      (steps: ReadonlyArray<RepoPlanStep>, gates: ReadonlyArray<RepoPlanStep>, proveFirst = false) => {
+        const plan = RepoRunPlan.make({ context, steps: [...gates, ...steps] });
+        const options = defaultYeetRunOptions({ mode: "publish", pr: false });
+        const operation =
+          proveFirst === true
+            ? runStandardPublishPhasesForTesting(
+                plan,
+                options,
+                gates,
+                steps,
+                [],
+                recorder,
+                extras,
+                false,
+                YeetAttemptStarted.make({
+                  attemptId: UUID.make("550e8400-e29b-41d4-a716-446655440000"),
+                  runId: "published-head-fixture",
+                  branch: context.branch,
+                  base: context.base,
+                  head: startingHead,
+                  mode: "publish",
+                  startedAt: "2026-10-30T00:00:00.000Z",
+                })
+              )
+            : runPushFirstPublishPhasesForTesting(plan, options, gates, steps, [], recorder, extras, false);
+        return operation.pipe(
+          provideRuntimeRootForTesting(
+            RuntimeRootChoice.make({ kind: "test-override", root: path.join(directory, "runtime") })
+          ),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          TestClock.withLive
+        );
+      }
+    );
+    return {
+      committedHead,
+      context,
+      execute,
+      extras,
+      fs,
+      path,
+      proofDrift,
+      push,
+      readHead,
+      remote,
+      root,
+      startingHead,
+    };
+  });
+
+  it.effect("records the actual pushed generated commit while preserving the starting identity", () =>
+    Effect.gen(function* () {
+      const current = yield* fixture();
+      yield* current.execute([current.push], []);
+      const remoteHead = yield* current.fs.readFileString(current.path.join(current.remote, "refs/heads/main"));
+      expect(Str.trim(remoteHead)).toBe(current.committedHead);
+      expect(current.committedHead).not.toBe(current.startingHead);
+      expect(current.context.head).toBe(current.startingHead);
+      assertSome((yield* Ref.get(current.extras)).publishedHeadSha, current.committedHead);
+    })
+  );
+
+  it.effect("retains no publication identity when the push fails", () =>
+    Effect.gen(function* () {
+      const current = yield* fixture();
+      const failed = RepoPlanStep.make({ ...current.push, args: ["push", "missing-remote", "HEAD"] });
+      const error = yield* current.execute([failed], []).pipe(Effect.flip);
+      expect(error.message).toContain("publish phase failed");
+      assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
+      expect(yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"))).toBe(false);
+    })
+  );
+
+  it.effect("refuses a head that changes during a successful push", () =>
+    Effect.gen(function* () {
+      const current = yield* fixture();
+      const drift = RepoPlanStep.make({
+        ...current.push,
+        command: "bun",
+        args: [
+          "--eval",
+          'import { spawnSync } from "node:child_process"; const commit = spawnSync("git", ["-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-q", "--allow-empty", "-m", "test: concurrent head"], { stdio: "ignore" }); if (commit.status !== 0) process.exit(7); const push = spawnSync("git", ["push", "origin", "HEAD:refs/heads/main"], { stdio: "ignore" }); process.exit(push.status ?? 8);',
+        ],
+      });
+      const error = yield* current.execute([drift], []).pipe(Effect.flip);
+      expect(error.message).toContain("head changed during publication");
+      assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
+      const remoteHead = yield* current.fs.readFileString(current.path.join(current.remote, "refs/heads/main"));
+      expect(Str.trim(remoteHead)).toBe(yield* current.readHead);
+      expect(Str.trim(remoteHead)).not.toBe(current.committedHead);
+    })
+  );
+
+  it.effect("refuses a proof head that changes before the push", () =>
+    Effect.gen(function* () {
+      const current = yield* fixture();
+      const gate = RepoPlanStep.make({
+        ...current.proofDrift,
+        id: "full:00-cheap-gates",
+        label: "full:cheap-gates",
+      });
+      const error = yield* current.execute([current.push], [gate]).pipe(Effect.flip);
+      expect(error.message).toContain("head changed during publication");
+      assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
+      expect(yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"))).toBe(false);
+    })
+  );
+
+  it.effect("does not invent a publication identity for a plan without a Git push", () =>
+    Effect.gen(function* () {
+      const current = yield* fixture();
+      yield* current.execute([], []);
+      assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
+      expect(yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"))).toBe(false);
+    })
+  );
+
+  it.effect("prove-first records the actual pushed commit while preserving the starting identity", () =>
+    Effect.gen(function* () {
+      const current = yield* fixture();
+      yield* current.execute([current.push], [], true);
+      const remoteHead = yield* current.fs.readFileString(current.path.join(current.remote, "refs/heads/main"));
+      expect(Str.trim(remoteHead)).toBe(current.committedHead);
+      expect(current.committedHead).not.toBe(current.startingHead);
+      expect(current.context.head).toBe(current.startingHead);
+      assertSome((yield* Ref.get(current.extras)).publishedHeadSha, current.committedHead);
+    })
+  );
+
+  it.effect("prove-first refuses a proof head that changes before the push", () =>
+    Effect.gen(function* () {
+      const current = yield* fixture();
+      const error = yield* current.execute([current.push], [current.proofDrift], true).pipe(Effect.flip);
+      expect(error.message).toContain("head changed during publication");
+      expect(yield* current.readHead).not.toBe(current.committedHead);
+      assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
+      expect(yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"))).toBe(false);
+    })
+  );
+});
+
+// The publish attempt starts on the checked-out commit and then creates its own
+// commit. Goal completion binds a publish verdict to the merged PR head through
+// `resolvedHeadSha`, so every fact written after that commit (the cheap-gates
+// admission lease, the proof-shadow fact, the verdict and the terminal journal
+// row) must name the commit the publish created, not the one it started from.
+const encodeInnerLaneReportJson = S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
+const decodeLedgerFactHead = S.decodeUnknownOption(
+  S.fromJsonString(S.Struct({ fact: S.Struct({ provenance: S.Struct({ headSha: S.String }) }) }))
+);
+
+type CommittingPublishOutcome = "pushed" | "push-failed" | "commit-failed" | "interrupted-after-commit";
+
+it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdict identity", (it) => {
+  const publish = Effect.fn("YeetCommittingPublishTest.publish")(function* (outcome: CommittingPublishOutcome) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-committing-publish-" });
+    const root = path.join(directory, "work");
+    const remote = path.join(directory, "remote.git");
+    const runtimeDir = path.join(directory, "runtime");
+    const observedLease = path.join(directory, "observed-lease.json");
+    const gateHeld = path.join(directory, "gate-held");
+    yield* fs.makeDirectory(root);
+    yield* runFixtureGit(directory, ["init", "--bare", "-q", remote]);
+    yield* runFixtureGit(root, ["init", "-q", "--initial-branch=main"]);
+    // The proof-shadow epoch reads these six root files.
+    const policyPackDir = path.join(root, "packages", "tooling", "policy-pack", "lint-rules");
+    yield* fs.makeDirectory(policyPackDir, { recursive: true });
+    yield* fs.writeFileString(path.join(root, ".gitignore"), ".beep/\nnode_modules/\n");
+    yield* fs.writeFileString(path.join(root, "bun.lock"), "lockfile\n");
+    yield* fs.writeFileString(path.join(root, ".bun-version"), "1.4.0\n");
+    yield* fs.writeFileString(path.join(root, ".nvmrc"), "24\n");
+    yield* fs.writeFileString(path.join(root, "turbo.json"), "{}\n");
+    yield* fs.writeFileString(path.join(root, "tsconfig.base.json"), "{}\n");
+    yield* fs.writeFileString(path.join(policyPackDir, "package.json"), '{"version":"9.8.7"}\n');
+    yield* runFixtureGit(root, ["add", "."]);
+    yield* runFixtureGit(root, ["commit", "-q", "-m", "test: starting head"]);
+    yield* runFixtureGit(root, ["remote", "add", "origin", remote]);
+    const readHead = fs.readFileString(path.join(root, ".git/refs/heads/main")).pipe(Effect.map(Str.trim));
+    const startingHead = yield* readHead;
+    // The commit-message guard resolves commitlint from the checkout first.
+    const commitlint = path.join(root, "node_modules", ".bin", "commitlint");
+    yield* fs.makeDirectory(path.dirname(commitlint), { recursive: true });
+    yield* fs.writeFileString(commitlint, "#!/bin/sh\nexit 0\n");
+    yield* fs.chmod(commitlint, 0o755);
+    yield* fs.writeFileString(path.join(root, "change.txt"), "staged change\n");
+    yield* runFixtureGit(root, ["add", "change.txt"]);
+    const context = RepoRunContext.make({
+      base: startingHead,
+      branch: "main",
+      cwd: root,
+      head: "HEAD",
+      originalArgv: [],
+      packetDir: ".beep/yeet",
+      repoRoot: root,
+      turbo: TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
+    });
+    const message = "fix(repo-cli): record the pushed head";
+    const commit = RepoPlanStep.make({
+      id: "commit:01-git-commit",
+      label: "commit:git:commit",
+      phase: "commit",
+      command: outcome === "commit-failed" ? "false" : "git",
+      args: [
+        "-c",
+        "user.name=fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "commit",
+        "-q",
+        "-m",
+        message,
+      ],
+      cwd: root,
+      scope: "repo",
+      mutability: "publish",
+      resume: "never",
+    });
+    // The cheap-gates stand-in copies its own admission lease out of the
+    // checkout, leaves one shadowable inner lane, and optionally holds so the
+    // test can interrupt the attempt after its commit.
+    const gate = RepoPlanStep.make({
+      ...commit,
+      id: "full:00-cheap-gates",
+      label: "full:cheap-gates",
+      phase: "full",
+      command: "bun",
+      args: [
+        "--eval",
+        `
+          import { copyFileSync, readdirSync, writeFileSync } from "node:fs";
+          const leases = process.env.TEST_ADMISSION_LEASES;
+          const [lease] = readdirSync(leases);
+          copyFileSync(leases + "/" + lease, process.env.TEST_OBSERVED_LEASE);
+          writeFileSync(process.env.BEEP_YEET_INNER_LANE_REPORT_PATH, process.env.TEST_INNER_LANE_REPORT + "\\n");
+          if (process.env.TEST_GATE_HELD) {
+            writeFileSync(process.env.TEST_GATE_HELD, "held\\n");
+            setInterval(() => {}, 1000);
+          }
+        `,
+      ],
+      mutability: "readonly",
+      env: {
+        TEST_ADMISSION_LEASES: path.join(runtimeDir, "beep", "admit", "leases"),
+        TEST_OBSERVED_LEASE: observedLease,
+        TEST_INNER_LANE_REPORT: yield* encodeInnerLaneReportJson(
+          QualityTaskLaneRunReport.make({
+            schemaVersion: "quality-task-lane-run/v1",
+            parentLaneId: O.some("full:00-cheap-gates"),
+            lanes: [
+              QualityTaskLaneRun.make({
+                id: "check",
+                label: "ci:check",
+                status: "passed",
+                inputDigest: O.none(),
+                commandText: O.some("bun run check"),
+              }),
+            ],
+          })
+        ),
+        ...(outcome === "interrupted-after-commit" ? { TEST_GATE_HELD: gateHeld } : {}),
+      },
+    });
+    const push = RepoPlanStep.make({
+      ...commit,
+      id: "publish:01-git-push",
+      label: "publish:git:push",
+      phase: "publish",
+      command: "git",
+      args: ["push", "-q", outcome === "push-failed" ? "missing-remote" : "origin", "HEAD:refs/heads/main"],
+    });
+    const run = yield* runPlanExecutionForTesting(
+      RepoRunPlan.make({ context, steps: [commit, gate, push] }),
+      defaultYeetRunOptions({ mode: "publish", pr: false, message }),
+      O.some(message)
+    ).pipe(
+      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+      TestClock.withLive,
+      Effect.forkChild
+    );
+    if (outcome === "interrupted-after-commit") {
+      // The held gate proves the commit step already ran; each check is a real
+      // file-system round trip, so no clock is involved in the wait.
+      yield* fs.exists(gateHeld).pipe(Effect.repeat({ until: (held) => held }));
+      yield* Fiber.interrupt(run);
+    }
+    const exit = yield* Fiber.await(run);
+    const verdict = yield* fs
+      .readFileString(yield* runArtifactPathForContext(context, "verdict.json"))
+      .pipe(Effect.flatMap(YeetVerdictJson.decode), Effect.option);
+    const journal = yield* fs.readFileString(yield* attemptJournalPath(context));
+    const events = yield* Effect.forEach(pipe(journal, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+      decodeYeetAttemptJournalEvent(line)
+    );
+    const ledgerHeads = yield* fs.readFileString(yield* proofLedgerPathForCheckout(root)).pipe(
+      Effect.map(
+        flow(
+          Str.split("\n"),
+          A.map((line) => O.map(decodeLedgerFactHead(line), (row) => row.fact.provenance.headSha)),
+          A.getSomes
+        )
+      ),
+      Effect.orElseSucceed(A.empty<string>)
+    );
+    const lease = yield* fs.readFileString(observedLease).pipe(Effect.flatMap(decodeAdmissionLease), Effect.option);
+    return {
+      events,
+      exit,
+      finalHead: yield* readHead,
+      leaseHead: O.flatMap(lease, (value) => value.resolvedHeadSha),
+      ledgerHeads,
+      remoteHead: yield* fs
+        .readFileString(path.join(remote, "refs/heads/main"))
+        .pipe(Effect.map(Str.trim), Effect.option),
+      startingHead,
+      verdict,
+    };
+  });
+
+  const startedHead = (events: ReadonlyArray<YeetAttemptJournalEvent>) =>
+    pipe(
+      A.findFirst(events, YeetAttemptJournalEvent.guards["attempt-started"]),
+      O.flatMap((started) => started.resolvedHeadSha)
+    );
+  const finishedHead = (events: ReadonlyArray<YeetAttemptJournalEvent>) =>
+    pipe(
+      A.findFirst(events, YeetAttemptJournalEvent.guards["attempt-finished"]),
+      O.flatMap((finished) => finished.resolvedHeadSha)
+    );
+  const terminated = (events: ReadonlyArray<YeetAttemptJournalEvent>) =>
+    A.findFirst(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
+
+  it.effect("records the commit a successful publish created and pushed as the resolved head", () =>
+    Effect.gen(function* () {
+      const run = yield* publish("pushed");
+      assertTrue(run.exit._tag === "Success");
+      expect(run.finalHead).not.toBe(run.startingHead);
+      assertSome(run.remoteHead, run.finalHead);
+      const verdict = O.getOrThrow(run.verdict);
+      expect(verdict.mode).toBe("publish");
+      expect(verdict.outcome).toBe("success");
+      assertSome(verdict.resolvedHeadSha, run.finalHead);
+      assertSome(verdict.publishedHeadSha, GitObjectId.make(run.finalHead));
+      expect(verdict.head).toBe(run.startingHead);
+      assertSome(startedHead(run.events), run.startingHead);
+      assertSome(finishedHead(run.events), run.finalHead);
+      // The cheap-gates admission ran after the commit, on the commit's tree.
+      assertSome(run.leaseHead, run.finalHead);
+      expect(run.ledgerHeads).toEqual([run.finalHead]);
+    })
+  );
+
+  it.effect("keeps the created commit as the resolved head when the push fails", () =>
+    Effect.gen(function* () {
+      const run = yield* publish("push-failed");
+      assertTrue(run.exit._tag === "Failure");
+      expect(run.finalHead).not.toBe(run.startingHead);
+      assertNone(run.remoteHead);
+      const verdict = O.getOrThrow(run.verdict);
+      expect(verdict.outcome).toBe("failure");
+      assertSome(verdict.resolvedHeadSha, run.finalHead);
+      assertNone(verdict.publishedHeadSha);
+      assertSome(finishedHead(run.events), run.finalHead);
+      assertSome(run.leaseHead, run.finalHead);
+      expect(run.ledgerHeads).toEqual([run.finalHead]);
+    })
+  );
+
+  it.effect("names the created commit in the terminal row of an attempt interrupted after its commit", () =>
+    Effect.gen(function* () {
+      const run = yield* publish("interrupted-after-commit");
+      assertTrue(run.exit._tag === "Failure" && Cause.hasInterruptsOnly(run.exit.cause));
+      expect(run.finalHead).not.toBe(run.startingHead);
+      assertNone(run.verdict);
+      assertNone(finishedHead(run.events));
+      const terminal = O.getOrThrow(terminated(run.events));
+      expect(terminal.reason).toBe("interrupted");
+      assertSome(terminal.resolvedHeadSha, run.finalHead);
+      assertSome(startedHead(run.events), run.startingHead);
+      assertSome(run.leaseHead, run.finalHead);
+    })
+  );
+
+  it.effect("keeps the starting head when the commit step fails", () =>
+    Effect.gen(function* () {
+      const run = yield* publish("commit-failed");
+      assertTrue(run.exit._tag === "Failure");
+      expect(run.finalHead).toBe(run.startingHead);
+      const verdict = O.getOrThrow(run.verdict);
+      expect(verdict.outcome).toBe("failure");
+      assertSome(verdict.resolvedHeadSha, run.startingHead);
+      assertSome(finishedHead(run.events), run.startingHead);
+      assertNone(run.leaseHead);
+    })
+  );
+});

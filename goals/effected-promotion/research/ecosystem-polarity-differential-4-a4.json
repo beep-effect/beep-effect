@@ -1,0 +1,1249 @@
+{
+  "schemaVersion": 1,
+  "commit": "24463c0057d56201cdda7ae38020fc2416886109",
+  "tool": "goals/effected-promotion/ops/ecosystem-polarity-differential.ts",
+  "generatedAt": "2026-10-28T05:17:19.713Z",
+  "scenarios": [
+    {
+      "name": "live-full",
+      "tree": "live",
+      "expects": [],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 33,
+        "violations": [],
+        "sortedViolations": []
+      }
+    },
+    {
+      "name": "live-scoped-member",
+      "tree": "live",
+      "includePaths": ["packages/ecosystem/effect-drizzle/package.json"],
+      "expects": [],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 33,
+        "violations": [],
+        "sortedViolations": []
+      }
+    },
+    {
+      "name": "live-scoped-unrelated",
+      "tree": "live",
+      "includePaths": ["README.md"],
+      "expects": [],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 0,
+        "scannedSourceFiles": 0,
+        "violations": [],
+        "sortedViolations": []
+      }
+    },
+    {
+      "name": "synthetic-full",
+      "tree": "synthetic",
+      "expects": [
+        "3-literal-line",
+        "4-template-head",
+        "2-declaration-skipped",
+        "5-wider",
+        "1-order"
+      ],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 10,
+        "scannedSourceFiles": 55,
+        "violations": [
+          {
+            "file": "packages/ecosystem/declarations/src/ambient.d.mts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/declared-mts"
+          },
+          {
+            "file": "packages/ecosystem/declarations/src/types.d.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/declared"
+          },
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/dynamic"
+          },
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 2,
+            "kind": "source-import",
+            "detail": "@beep/required"
+          },
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 3,
+            "kind": "source-import",
+            "detail": "@beep/optional"
+          },
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 4,
+            "kind": "source-import",
+            "detail": "@beep/multiline"
+          },
+          {
+            "file": "packages/ecosystem/missing-src/package.json",
+            "line": 1,
+            "kind": "runtime-dependency",
+            "detail": "dependencies.@beep/runtime"
+          },
+          {
+            "file": "packages/ecosystem/missing-src/package.json",
+            "line": 1,
+            "kind": "runtime-dependency",
+            "detail": "peerDependencies.aliased -> npm:@beep/aliased@^1.0.0"
+          },
+          {
+            "file": "packages/ecosystem/missing-src/package.json",
+            "line": 1,
+            "kind": "bundled-dependencies",
+            "detail": "bundledDependencies"
+          },
+          {
+            "file": "packages/ecosystem/nested/src/a/b/c/deep.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/deep"
+          },
+          {
+            "file": "packages/ecosystem/nested/src/a/sibling.tsx",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/tsx"
+          },
+          {
+            "file": "packages/ecosystem/nested/src/common.cts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/cts"
+          },
+          {
+            "file": "packages/ecosystem/nested/src/module.mts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/mts"
+          },
+          {
+            "file": "packages/ecosystem/node-modules/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/own"
+          },
+          {
+            "file": "packages/ecosystem/node-modules/src/node_modules/dep/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/vendored"
+          },
+          {
+            "file": "packages/ecosystem/ordering/src/index.ts",
+            "line": 3,
+            "kind": "source-import",
+            "detail": "@beep/x-import"
+          },
+          {
+            "file": "packages/ecosystem/ordering/src/index.ts",
+            "line": 2,
+            "kind": "source-import",
+            "detail": "@beep/y-export"
+          },
+          {
+            "file": "packages/ecosystem/ordering/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/z-dynamic"
+          },
+          {
+            "file": "packages/ecosystem/static-forms/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/static"
+          },
+          {
+            "file": "packages/ecosystem/static-forms/src/index.ts",
+            "line": 2,
+            "kind": "source-import",
+            "detail": "@beep/types"
+          },
+          {
+            "file": "packages/ecosystem/static-forms/src/index.ts",
+            "line": 3,
+            "kind": "source-import",
+            "detail": "@beep/side"
+          },
+          {
+            "file": "packages/ecosystem/static-forms/src/index.ts",
+            "line": 4,
+            "kind": "source-import",
+            "detail": "@beep/exported"
+          },
+          {
+            "file": "packages/ecosystem/static-forms/src/index.ts",
+            "line": 5,
+            "kind": "source-import",
+            "detail": "@beep/named"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/template-head/src/index.ts",
+            "line": 2,
+            "kind": "source-import",
+            "detail": "@beep/"
+          },
+          {
+            "file": "packages/ecosystem/template-head/src/index.ts",
+            "line": 3,
+            "kind": "source-import",
+            "detail": "@beep/"
+          },
+          {
+            "file": "packages/ecosystem/template-head/src/index.ts",
+            "line": 4,
+            "kind": "source-import",
+            "detail": "@beep/plain"
+          },
+          {
+            "file": "packages/ecosystem/template-head/src/index.ts",
+            "line": 5,
+            "kind": "source-import",
+            "detail": "@beep/prefix-"
+          }
+        ],
+        "sortedViolations": [
+          "packages/ecosystem/declarations/src/ambient.d.mts:1 [source-import] @beep/declared-mts",
+          "packages/ecosystem/declarations/src/types.d.ts:1 [source-import] @beep/declared",
+          "packages/ecosystem/dynamic-forms/src/index.ts:1 [source-import] @beep/dynamic",
+          "packages/ecosystem/dynamic-forms/src/index.ts:2 [source-import] @beep/required",
+          "packages/ecosystem/dynamic-forms/src/index.ts:3 [source-import] @beep/optional",
+          "packages/ecosystem/dynamic-forms/src/index.ts:4 [source-import] @beep/multiline",
+          "packages/ecosystem/missing-src/package.json:1 [bundled-dependencies] bundledDependencies",
+          "packages/ecosystem/missing-src/package.json:1 [runtime-dependency] dependencies.@beep/runtime",
+          "packages/ecosystem/missing-src/package.json:1 [runtime-dependency] peerDependencies.aliased -> npm:@beep/aliased@^1.0.0",
+          "packages/ecosystem/nested/src/a/b/c/deep.ts:1 [source-import] @beep/deep",
+          "packages/ecosystem/nested/src/a/sibling.tsx:1 [source-import] @beep/tsx",
+          "packages/ecosystem/nested/src/common.cts:1 [source-import] @beep/cts",
+          "packages/ecosystem/nested/src/module.mts:1 [source-import] @beep/mts",
+          "packages/ecosystem/node-modules/src/index.ts:1 [source-import] @beep/own",
+          "packages/ecosystem/node-modules/src/node_modules/dep/index.ts:1 [source-import] @beep/vendored",
+          "packages/ecosystem/ordering/src/index.ts:1 [source-import] @beep/z-dynamic",
+          "packages/ecosystem/ordering/src/index.ts:2 [source-import] @beep/y-export",
+          "packages/ecosystem/ordering/src/index.ts:3 [source-import] @beep/x-import",
+          "packages/ecosystem/static-forms/src/index.ts:1 [source-import] @beep/static",
+          "packages/ecosystem/static-forms/src/index.ts:2 [source-import] @beep/types",
+          "packages/ecosystem/static-forms/src/index.ts:3 [source-import] @beep/side",
+          "packages/ecosystem/static-forms/src/index.ts:4 [source-import] @beep/exported",
+          "packages/ecosystem/static-forms/src/index.ts:5 [source-import] @beep/named",
+          "packages/ecosystem/symlink-loop/src/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/template-head/src/index.ts:2 [source-import] @beep/",
+          "packages/ecosystem/template-head/src/index.ts:3 [source-import] @beep/",
+          "packages/ecosystem/template-head/src/index.ts:4 [source-import] @beep/plain",
+          "packages/ecosystem/template-head/src/index.ts:5 [source-import] @beep/prefix-"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-member-static-forms",
+      "tree": "synthetic",
+      "includePaths": ["packages/ecosystem/static-forms/package.json"],
+      "expects": [],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 1,
+        "violations": [
+          {
+            "file": "packages/ecosystem/static-forms/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/static"
+          },
+          {
+            "file": "packages/ecosystem/static-forms/src/index.ts",
+            "line": 2,
+            "kind": "source-import",
+            "detail": "@beep/types"
+          },
+          {
+            "file": "packages/ecosystem/static-forms/src/index.ts",
+            "line": 3,
+            "kind": "source-import",
+            "detail": "@beep/side"
+          },
+          {
+            "file": "packages/ecosystem/static-forms/src/index.ts",
+            "line": 4,
+            "kind": "source-import",
+            "detail": "@beep/exported"
+          },
+          {
+            "file": "packages/ecosystem/static-forms/src/index.ts",
+            "line": 5,
+            "kind": "source-import",
+            "detail": "@beep/named"
+          }
+        ],
+        "sortedViolations": [
+          "packages/ecosystem/static-forms/src/index.ts:1 [source-import] @beep/static",
+          "packages/ecosystem/static-forms/src/index.ts:2 [source-import] @beep/types",
+          "packages/ecosystem/static-forms/src/index.ts:3 [source-import] @beep/side",
+          "packages/ecosystem/static-forms/src/index.ts:4 [source-import] @beep/exported",
+          "packages/ecosystem/static-forms/src/index.ts:5 [source-import] @beep/named"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-member-dynamic-forms",
+      "tree": "synthetic",
+      "includePaths": ["packages/ecosystem/dynamic-forms/package.json"],
+      "expects": ["3-literal-line"],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 1,
+        "violations": [
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/dynamic"
+          },
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 2,
+            "kind": "source-import",
+            "detail": "@beep/required"
+          },
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 3,
+            "kind": "source-import",
+            "detail": "@beep/optional"
+          },
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 4,
+            "kind": "source-import",
+            "detail": "@beep/multiline"
+          }
+        ],
+        "sortedViolations": [
+          "packages/ecosystem/dynamic-forms/src/index.ts:1 [source-import] @beep/dynamic",
+          "packages/ecosystem/dynamic-forms/src/index.ts:2 [source-import] @beep/required",
+          "packages/ecosystem/dynamic-forms/src/index.ts:3 [source-import] @beep/optional",
+          "packages/ecosystem/dynamic-forms/src/index.ts:4 [source-import] @beep/multiline"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-member-template-head",
+      "tree": "synthetic",
+      "includePaths": ["packages/ecosystem/template-head/package.json"],
+      "expects": ["4-template-head"],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 1,
+        "violations": [
+          {
+            "file": "packages/ecosystem/template-head/src/index.ts",
+            "line": 2,
+            "kind": "source-import",
+            "detail": "@beep/"
+          },
+          {
+            "file": "packages/ecosystem/template-head/src/index.ts",
+            "line": 3,
+            "kind": "source-import",
+            "detail": "@beep/"
+          },
+          {
+            "file": "packages/ecosystem/template-head/src/index.ts",
+            "line": 4,
+            "kind": "source-import",
+            "detail": "@beep/plain"
+          },
+          {
+            "file": "packages/ecosystem/template-head/src/index.ts",
+            "line": 5,
+            "kind": "source-import",
+            "detail": "@beep/prefix-"
+          }
+        ],
+        "sortedViolations": [
+          "packages/ecosystem/template-head/src/index.ts:2 [source-import] @beep/",
+          "packages/ecosystem/template-head/src/index.ts:3 [source-import] @beep/",
+          "packages/ecosystem/template-head/src/index.ts:4 [source-import] @beep/plain",
+          "packages/ecosystem/template-head/src/index.ts:5 [source-import] @beep/prefix-"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-member-decoys",
+      "tree": "synthetic",
+      "includePaths": ["packages/ecosystem/decoys/package.json"],
+      "expects": [],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 1,
+        "violations": [],
+        "sortedViolations": []
+      }
+    },
+    {
+      "name": "synthetic-member-declarations",
+      "tree": "synthetic",
+      "includePaths": ["packages/ecosystem/declarations/package.json"],
+      "expects": ["2-declaration-skipped"],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 3,
+        "violations": [
+          {
+            "file": "packages/ecosystem/declarations/src/ambient.d.mts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/declared-mts"
+          },
+          {
+            "file": "packages/ecosystem/declarations/src/types.d.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/declared"
+          }
+        ],
+        "sortedViolations": [
+          "packages/ecosystem/declarations/src/ambient.d.mts:1 [source-import] @beep/declared-mts",
+          "packages/ecosystem/declarations/src/types.d.ts:1 [source-import] @beep/declared"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-member-missing-src",
+      "tree": "synthetic",
+      "includePaths": ["packages/ecosystem/missing-src/package.json"],
+      "expects": [],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 0,
+        "violations": [
+          {
+            "file": "packages/ecosystem/missing-src/package.json",
+            "line": 1,
+            "kind": "runtime-dependency",
+            "detail": "dependencies.@beep/runtime"
+          },
+          {
+            "file": "packages/ecosystem/missing-src/package.json",
+            "line": 1,
+            "kind": "runtime-dependency",
+            "detail": "peerDependencies.aliased -> npm:@beep/aliased@^1.0.0"
+          },
+          {
+            "file": "packages/ecosystem/missing-src/package.json",
+            "line": 1,
+            "kind": "bundled-dependencies",
+            "detail": "bundledDependencies"
+          }
+        ],
+        "sortedViolations": [
+          "packages/ecosystem/missing-src/package.json:1 [bundled-dependencies] bundledDependencies",
+          "packages/ecosystem/missing-src/package.json:1 [runtime-dependency] dependencies.@beep/runtime",
+          "packages/ecosystem/missing-src/package.json:1 [runtime-dependency] peerDependencies.aliased -> npm:@beep/aliased@^1.0.0"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-member-nested",
+      "tree": "synthetic",
+      "includePaths": ["packages/ecosystem/nested/package.json"],
+      "expects": [],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 4,
+        "violations": [
+          {
+            "file": "packages/ecosystem/nested/src/a/b/c/deep.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/deep"
+          },
+          {
+            "file": "packages/ecosystem/nested/src/a/sibling.tsx",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/tsx"
+          },
+          {
+            "file": "packages/ecosystem/nested/src/common.cts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/cts"
+          },
+          {
+            "file": "packages/ecosystem/nested/src/module.mts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/mts"
+          }
+        ],
+        "sortedViolations": [
+          "packages/ecosystem/nested/src/a/b/c/deep.ts:1 [source-import] @beep/deep",
+          "packages/ecosystem/nested/src/a/sibling.tsx:1 [source-import] @beep/tsx",
+          "packages/ecosystem/nested/src/common.cts:1 [source-import] @beep/cts",
+          "packages/ecosystem/nested/src/module.mts:1 [source-import] @beep/mts"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-member-node-modules",
+      "tree": "synthetic",
+      "includePaths": ["packages/ecosystem/node-modules/package.json"],
+      "expects": ["5-wider"],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 2,
+        "violations": [
+          {
+            "file": "packages/ecosystem/node-modules/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/own"
+          },
+          {
+            "file": "packages/ecosystem/node-modules/src/node_modules/dep/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/vendored"
+          }
+        ],
+        "sortedViolations": [
+          "packages/ecosystem/node-modules/src/index.ts:1 [source-import] @beep/own",
+          "packages/ecosystem/node-modules/src/node_modules/dep/index.ts:1 [source-import] @beep/vendored"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-member-symlink-loop",
+      "tree": "synthetic",
+      "includePaths": ["packages/ecosystem/symlink-loop/package.json"],
+      "expects": ["5-wider"],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 41,
+        "violations": [
+          {
+            "file": "packages/ecosystem/symlink-loop/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          },
+          {
+            "file": "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/looped"
+          }
+        ],
+        "sortedViolations": [
+          "packages/ecosystem/symlink-loop/src/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped",
+          "packages/ecosystem/symlink-loop/src/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/loop/index.ts:1 [source-import] @beep/looped"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-member-ordering",
+      "tree": "synthetic",
+      "includePaths": ["packages/ecosystem/ordering/package.json"],
+      "expects": ["1-order"],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 1,
+        "scannedSourceFiles": 1,
+        "violations": [
+          {
+            "file": "packages/ecosystem/ordering/src/index.ts",
+            "line": 3,
+            "kind": "source-import",
+            "detail": "@beep/x-import"
+          },
+          {
+            "file": "packages/ecosystem/ordering/src/index.ts",
+            "line": 2,
+            "kind": "source-import",
+            "detail": "@beep/y-export"
+          },
+          {
+            "file": "packages/ecosystem/ordering/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/z-dynamic"
+          }
+        ],
+        "sortedViolations": [
+          "packages/ecosystem/ordering/src/index.ts:1 [source-import] @beep/z-dynamic",
+          "packages/ecosystem/ordering/src/index.ts:2 [source-import] @beep/y-export",
+          "packages/ecosystem/ordering/src/index.ts:3 [source-import] @beep/x-import"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-scoped-src",
+      "tree": "synthetic",
+      "includePaths": [
+        "packages/ecosystem/dynamic-forms/src/index.ts",
+        "packages/ecosystem/ordering/src/index.ts"
+      ],
+      "expects": ["3-literal-line", "1-order"],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 2,
+        "scannedSourceFiles": 2,
+        "violations": [
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/dynamic"
+          },
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 2,
+            "kind": "source-import",
+            "detail": "@beep/required"
+          },
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 3,
+            "kind": "source-import",
+            "detail": "@beep/optional"
+          },
+          {
+            "file": "packages/ecosystem/dynamic-forms/src/index.ts",
+            "line": 4,
+            "kind": "source-import",
+            "detail": "@beep/multiline"
+          },
+          {
+            "file": "packages/ecosystem/ordering/src/index.ts",
+            "line": 3,
+            "kind": "source-import",
+            "detail": "@beep/x-import"
+          },
+          {
+            "file": "packages/ecosystem/ordering/src/index.ts",
+            "line": 2,
+            "kind": "source-import",
+            "detail": "@beep/y-export"
+          },
+          {
+            "file": "packages/ecosystem/ordering/src/index.ts",
+            "line": 1,
+            "kind": "source-import",
+            "detail": "@beep/z-dynamic"
+          }
+        ],
+        "sortedViolations": [
+          "packages/ecosystem/dynamic-forms/src/index.ts:1 [source-import] @beep/dynamic",
+          "packages/ecosystem/dynamic-forms/src/index.ts:2 [source-import] @beep/required",
+          "packages/ecosystem/dynamic-forms/src/index.ts:3 [source-import] @beep/optional",
+          "packages/ecosystem/dynamic-forms/src/index.ts:4 [source-import] @beep/multiline",
+          "packages/ecosystem/ordering/src/index.ts:1 [source-import] @beep/z-dynamic",
+          "packages/ecosystem/ordering/src/index.ts:2 [source-import] @beep/y-export",
+          "packages/ecosystem/ordering/src/index.ts:3 [source-import] @beep/x-import"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-scoped-unrelated",
+      "tree": "synthetic",
+      "includePaths": [
+        "packages/other/src/index.ts",
+        "packages/ecosystem/nested/test/index.test.ts"
+      ],
+      "expects": [],
+      "outcome": {
+        "ok": true,
+        "checkedMembers": 0,
+        "scannedSourceFiles": 0,
+        "violations": [],
+        "sortedViolations": []
+      }
+    }
+  ]
+}

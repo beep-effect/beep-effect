@@ -1,0 +1,20 @@
+{
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "previous": "a3624d8a0d2b02ff697755ef3e39abb6914314d08a43a271d0b620b9063d5832",
+  "subjects": ["//", "@beep/repo-ai-metrics"],
+  "review": {
+    "reviewer": "GPT-6-Astra independent foundation panel",
+    "reason": "Record the six reviewed task configuration changes from foundation dependencies and canonical jsonl policy closure inputs. No cache qualification or exception is added.",
+    "basis": {
+      "path": "goals/agent-observability-foundation/research/CACHE-BASELINE-REVIEW.md",
+      "sha256": "67c9d7d18844c8ead6abf384586d4dac98bc6646a87819d66c8bee0fc02b866d"
+    }
+  }
+}

@@ -438,12 +438,14 @@ export class Repository extends S.Class<Repository, { readonly brand: unique sym
             return Effect.succeed(repository);
           }
           return decodeRepositoryFields(input).pipe(
-            Effect.mapError((error) => error.issue),
-            Effect.map((fields) => {
-              const rest = restOf(input, KNOWN_REPOSITORY_KEYS);
-              const repository = Repository.make({ ...fields, ...(!R.isEmptyRecord(rest) && { rest }) });
-              repository.#wire = input;
-              return repository;
+            Effect.mapBoth({
+              onFailure: (error) => error.issue,
+              onSuccess: (fields) => {
+                const rest = restOf(input, KNOWN_REPOSITORY_KEYS);
+                const repository = Repository.make({ ...fields, ...(!R.isEmptyRecord(rest) && { rest }) });
+                repository.#wire = input;
+                return repository;
+              },
             })
           );
         },
@@ -559,12 +561,14 @@ export class Bugs extends S.Class<Bugs, { readonly brand: unique symbol }>($I`Bu
             return Effect.succeed(bugs);
           }
           return decodeBugsFields(input).pipe(
-            Effect.mapError((error) => error.issue),
-            Effect.map((fields) => {
-              const rest = restOf(input, KNOWN_BUGS_KEYS);
-              const bugs = Bugs.make({ ...fields, ...(!R.isEmptyRecord(rest) && { rest }) });
-              bugs.#wire = input;
-              return bugs;
+            Effect.mapBoth({
+              onFailure: (error) => error.issue,
+              onSuccess: (fields) => {
+                const rest = restOf(input, KNOWN_BUGS_KEYS);
+                const bugs = Bugs.make({ ...fields, ...(!R.isEmptyRecord(rest) && { rest }) });
+                bugs.#wire = input;
+                return bugs;
+              },
             })
           );
         },

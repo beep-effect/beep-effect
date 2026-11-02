@@ -1,0 +1,126 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14970678-root-17",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "reviewedClaimNumbers": [
+    17,
+    18,
+    19,
+    20
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "14970678",
+    "publicationNumber": "US20160174707A1",
+    "publicationDate": "20160623"
+  },
+  "digestEvidence": [
+    {
+      "file": "14970678.publication.xml",
+      "sha256": "5549fc5ff860d7f8d852894762a991d32635e3d41aaf16a107e34a3e68859e75",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "bde97a2d6a8356446f76c37acffaa5ce8b91c080b5250f3c60c7baa87533d566",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14970678.II8ZYRTXPXXIFW3.original.xml",
+      "sha256": "8a01042805c9bccae9a58fca0ea3fe039d2cec81301af7ca96f43a6644866371",
+      "matchesProvenance": true
+    }
+  ],
+  "quotedEvidence": [
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "a cabinet housing",
+      "nativeQuote": "a cabinet housing",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "a housing",
+      "nativeQuote": "a housing",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the path",
+      "nativeQuote": "the path",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the other latch element",
+      "nativeQuote": "the other latch element",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the bias",
+      "nativeQuote": "the bias",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "said bias",
+      "nativeQuote": "said bias",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "its longitudinal axis",
+      "nativeQuote": "its longitudinal axis",
+      "literalMatchIgnoringCase": true
+    }
+  ],
+  "groundEvidence": {
+    "documentIdentifier": "IRRSD7PYRXEAPX2",
+    "submissionDate": "2016-08-16",
+    "matchingFullRecords": 1,
+    "fullCacheSha256": "115c5af3c1f05bfc978b5b0ba07c3fe7e077848170f5dd25880d5713e74bbf56",
+    "minimalStatutoryQuote": "Claims 1-20 are rejected under 35 U.S.C. 112(b) or 35 U.S.C. 112 (pre-AIA ), second paragraph",
+    "actualNumberedGroundScope": "Explicit1–20 indefinite ground. Claim17 individually questions cabinet housing/a housing identity and path/other latch element/bias antecedents;18 said bias and20 its longitudinal axis individually discussed. Claim19 expressly rejected via dependency together with3/5/13/15/16."
+  },
+  "inventoryEvidence": {
+    "sha256": "cded859892d710627c332d81397ef7900ece538478ed155ff21513f33f517400",
+    "declaredCount": 30,
+    "actualRows": 30,
+    "preOrOnActionClaimAndAmendmentRows": [
+      {
+        "documentIdentifier": "II8ZYRTXPXXIFW3",
+        "documentCode": "CLM",
+        "officialDate": "2015-12-16T00:00:00.000-0500"
+      }
+    ]
+  },
+  "originalPdfEvidence": [
+    {
+      "documentIdentifier": "II8ZYRTXPXXIFW3",
+      "sha256": "79d27c924e54dd1ccebc2eda8d83e3fa5833b1d176809c4fc6139150757fe6bd",
+      "pdfPages": [
+        2,
+        3
+      ],
+      "printedPages": [
+        11,
+        12
+      ],
+      "corroborationOnly": true,
+      "finding": "PDF2 prints separate17 cabinet drawer start; PDF3 completes17 and separately prints18/19/20, each according to claim17. Full selected wording and dependency match native; original XML line numbers25/15 are marginal page lines, not claim text."
+    }
+  ],
+  "concerns": [
+    "Native17 is independent cabinet drawer claim with18–20 directly dependent on17, a meaningful natural4-claim mechanical family. No explicit chemical/material Markush limitation in selected claims.",
+    "Only filing CLM II8ZYRTXPXXIFW3 appears before cited action in complete30-row inventory; original20-claim text and PDF corroborate selected17–20. No competing preliminary amendment or selected operative version found. Identity and publication/source/original hashes match retained provenance.",
+    "Ground association is established by matching full OA exact ID/date and numbered scope, not chronology or sparse phrase matches alone. No assertion that all selected claims have independent detailed grounds:19 is expressly dependency rejection."
+  ],
+  "pdfNeeds": [],
+  "rationale": "Source eligible for independent critic review. This receipt certifies source scope/version/fidelity only; no semantic expected labels or active slot selection.",
+  "independence": "Extractor for this candidate only; no critic role on same candidate, no expected labels, production rules/predictions, network, secrets, git or delegation. Only this source-audit receipt written."
+}

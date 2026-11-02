@@ -1,6 +1,8 @@
 /**
  * In-memory PGlite test layer for SQL integration tests.
  *
+ * **Details**
+ *
  * Provides a fresh in-process, in-memory PGlite database (no `dataDir`) exposed
  * under the `@effect/sql-pg` {@link Pg.PgClient}, generic
  * {@link SqlClient.SqlClient}, and `@effect/sql-pglite` PgliteClient tags. The

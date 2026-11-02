@@ -1,0 +1,122 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14260199-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20150311547", "A1", "20151029"],
+    "applicationReference": ["US", "14260199", "20140423"],
+    "officeActionDocumentIdentifiers": ["IV12H9U5RXEAPX5"],
+    "officeActionMailDate": "2016-11-02"
+  },
+  "digestEvidence": [
+    {
+      "file": "14260199.publication.xml",
+      "sha256": "08c98643029dcd0d123474a416b76e8b5c6c565b7c559a460de8947df8f8a29e",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14260199.claims.xml",
+      "sha256": "5b2ce81b0552054f82bf832063dcf66a518267969ed212c5016d9b9b10c233e3",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "5b2ce81b0552054f82bf832063dcf66a518267969ed212c5016d9b9b10c233e3",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "HUDAWNTKPXXIFW3",
+      "xmlAvailable": true,
+      "sha256": "ee14bfcecac2c1c2f0799920d7662b03d5ac4b07842d8115143ad9d3f282db10",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 85,
+    "actualRows": 85,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2014-04-23T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "HUDAWNTKPXXIFW3"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 2, 4, 6, 7, 9-15, and 19 rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the temperature",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the temperature"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the liquid water",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the liquid water"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the pressure",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the pressure"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "cathode inlet air",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "cathode inlet air"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the drain",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the drain"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the orifice",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the orifice"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the drain",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the drain"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the orifice",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the orifice"
+    }
+  ],
+  "assessment": "Original selected1-3/5-8 match exactly;4 differs only embedded page/file header. Ground expressly covers2/4/6/7 plus outside context; selected family is meaningful. Natural5->4 and7->6, then1, are preserved.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

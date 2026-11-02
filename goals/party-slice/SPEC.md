@@ -41,7 +41,7 @@ Higher sources outrank lower sources when they conflict.
 | `Ids.ts` | `PartyId` from `@beep/shared-domain/identity/Party` (integer surrogate, #2025); the deterministic `PartyKey` and the other party ids in `@beep/party-domain` | the scratchpad's evidence-minted `party:` strings become `PartyKey`s. A `KeyAssignment` claim maps a `PartyKey` to a `PartyId`, and `SameParty` redirects the absorbed party's keys to the surviving id (Decision Log) |
 | `Party.ts`, `Communication.ts`, `Provenance.ts` | `@beep/party-domain` | parties, identifiers, accounts, voices, evidence anchors, collection sides |
 | `Proposition.ts` | `@beep/party-domain` | the slice-owned proposition union (`IdentifierOf`, `SameParty`, `DistinctParty`, `Membership`, `ReportsTo`, `VoiceAuthor`, ...) |
-| `Claim.ts` | `@beep/party-domain` | `makeClaimEnvelope({ $I, proposition, ids })`; the scratchpad mirror of evidence-signals is deleted |
+| `Claim.ts` | `@beep/party-domain` | `makeClaimEnvelope({ $I, proposition, logicalKey, ids })`; party owns the stable, unambiguous key function for its proposition union; the scratchpad mirror of evidence-signals is deleted |
 | `Time.ts` | removed | `@beep/epistemics` `ValidTime` / `KnowledgeInterval` (epoch millis) replace the string `UtcInstant` |
 | `Admission.ts`, `Hierarchy.ts`, `Resolution.ts`, `Projection.ts` | `@beep/party-domain` | pure behavior: admission proofs, declared vs operational hierarchy, `effect/Graph` resolution, projections |
 | `Ledger.ts` | port in `@beep/party-use-cases`; `PartyLedgerMemory` in `@beep/party-server` | append-only bitemporal ledger, a `Context.Service` port |
@@ -84,8 +84,9 @@ Higher sources outrank lower sources when they conflict.
   (separate prerequisite PR).
 - [ ] `@beep/party-domain`, `@beep/party-use-cases` and `@beep/party-server` exist, created by
   `beep create-package`, with the module placement above.
-- [ ] Party claims bind `makeClaimEnvelope` and the P1b factories to party ids. A test proves the binding
-  emits identifiers distinct from the epistemic slice's.
+- [ ] Party claims bind `makeClaimEnvelope` and the P1b factories to party ids and supply the slice-owned,
+  unambiguous `logicalKey` function for the party proposition union. Tests prove the binding emits
+  identifiers distinct from the epistemic slice's and rejects a key inconsistent with its proposition.
 - [ ] The scratchpad competency tests (identity, admission, hierarchy, ledger, resolution) pass against
   the slice packages on the synthetic fixtures.
 - [ ] The ingestion adapters run end to end on a synthetic mail index through the memory ledger, and the

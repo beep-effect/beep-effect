@@ -1,0 +1,63 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16628033-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.97,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Source critic accepted at 0.98. The actual rejection names claims 1, 3–4 and 8–10; claims 2, 5–7 remain selected family context/score members and are not individually represented as rejected.",
+    "Claim 3 “the upper end” has no explicit owner; examiner calls the structure unclear. It remains a lexical term with no invented owner or identity edge. The relation to lower/upper gaskets is explicit and retained.",
+    "Claim 10 is a method using the joint according to claim 1. Its technical reference is represented without deciding formal legal dependency. Sibling claims 4/5/7/9 do not supply sleeve, spring, bolt, locating pin or prosthetic-notch introductions to claim 10.",
+    "Definite anatomical regions and parts with no introduced antecedent remain terms without fabricated introduction edges."
+  ],
+  "annotationRationale": [
+    "Actual preamble subject precedes characterized transition. Structural component introductions are limitations; explicit placement, cushioning, penetration, abutment and operative steps are functional relations with ordered exact parts.",
+    "Full lexical heads include semi-condylar artificial knee joint, tibial plateau intercondylar eminence, intercondylar eminence hole, meniscus-like function and elastic subassembly.",
+    "Cross-claim references follow source dependency ancestry and unambiguous abbreviated heads (knee joint/artificial knee joint refer to the claimed semi-condylar artificial knee joint).",
+    "Claim 10 step labels and preferred preliminary adjustment are retained in independent source-order elements; their common method parent is the actual method subject. Exact quantities and reference numerals remain in source text.",
+    "Missing introductions and the upper-end owner ambiguity are recorded as reference-level concerns. They do not prevent an exact structural proposal or trigger an implementation-based abstention.",
+    "Round 2 accepts the omitted possessive reference: in claim 8 “one end of said locating pin” contrasts with “the other end thereof”. “thereof” [200,207) identifies the same locating pin introduced in 7.a, not an identity between the two ends. Added the exact owned bare term and antecedent edge to 7.a “a locating pin”; functional 8.b parts now expose that term while preserving every connecting character."
+  ],
+  "independence": "Fresh manually selected source grammar, lexical terms and semantic identities. Read only canonical claims/native XML, context, source/provenance/audit/critic, protocol and schema contracts. No rules, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helper only locates manually selected quotes, formats annotations and checks span/reference coherence.",
+  "sourceStatus": "Independent source critic accepted; independent semantic critic and attorney adjudication pending.",
+  "validation": "Round-1 expected/extractor/critic preserved byte-for-byte. Selected scope unchanged; every source slice, term ownership, nonoverlap, referenced term membership and functional-part coverage mechanically rechecked after round-2 corrections.",
+  "roundReview": {
+    "previousRound": 1,
+    "findingDisposition": "accepted-and-corrected",
+    "changes": [
+      "Added bare thereof [200,207) in 8.b and antecedent to 7.a a locating pin.",
+      "Split the existing 8.b functional connecting text around the newly owned term; all element boundaries preserved."
+    ],
+    "previousReceipts": [
+      "expected.round1.json",
+      "extractor.round1.json",
+      "critic.round1.json"
+    ],
+    "criticRound2Status": "pending"
+  },
+  "headConvention": "lexical-head/v1",
+  "headConventionReview": {
+    "previousRound": 2,
+    "round": 3,
+    "review": "head-review.json",
+    "reviewedFlagCount": 2,
+    "changedHeadCount": 2,
+    "scope": "Only independently reviewed flagged lexical heads changed. Existing anchors, determiners, elements, edges, sources, semantic confidence and unresolved/reference concerns remain unchanged. Prior semantic acceptance is preserved as evidence; current lexical revision awaits independent critic. Attorney adjudication and admission bar unchanged."
+  },
+  "criticReview": "round3 lexical-head-only independent critic pending"
+}

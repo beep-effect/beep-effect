@@ -7,6 +7,7 @@ import { getSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -79,11 +80,12 @@ describe("Interop and Metadata", () => {
 
       for (const [name, schema] of schemaEntries) {
         const metadata = getSemanticSchemaMetadata(schema);
-        expect(O.isSome(metadata), `${moduleAudit.name}.${name}`).toBe(true);
-        expect(
+        assertTrue(O.isSome(metadata), `${moduleAudit.name}.${name}`);
+        deepStrictEqual(
           O.map(metadata, (m) => m.canonicalName),
+          O.some(name),
           `${moduleAudit.name}.${name}`
-        ).toEqual(O.some(name));
+        );
       }
     }
   });

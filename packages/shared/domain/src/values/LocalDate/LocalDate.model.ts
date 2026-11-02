@@ -1,6 +1,8 @@
 /**
  * LocalDate value object model.
  *
+ * **Details**
+ *
  * Defines the schema-backed class used by the LocalDate behavior module. A
  * LocalDate stores only UTC calendar fields and deliberately carries no time
  * zone or clock-time component.

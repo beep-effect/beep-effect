@@ -1,0 +1,67 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "14971439-root-17",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    17
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "a the tube-fitting-assembly ferrule",
+      "reason": "Malformed double article retained in the complete anchored a-term, with head the tube-fitting-assembly ferrule; no silent source repair or invented separate article entity."
+    },
+    {
+      "quote": "claims 1-17",
+      "reason": "Actual 112(b) ground includes independent selected claim 17 with its own numbered phrases. Other independent ferrule root 1 and claims 2-16 are context only, not ancestry or extra score scope."
+    }
+  ],
+  "referenceConcerns": [
+    {
+      "claimNumber": 17,
+      "quote": "an inner and outer surface",
+      "reason": "The source introduces a coordinated surface expression using one shared indefinite article. Retain that complete NP; subsequent said inner surface and said outer surface are not forced onto a single selected member or a fabricated individual introduction."
+    },
+    {
+      "claimNumber": 17,
+      "quotes": [
+        "the tube",
+        "the tube exterior surface",
+        "the threaded socket interior surface"
+      ],
+      "reason": "Tube sections and a socket are explicit, but these later singular tube/property-surface phrases do not provide their own unambiguous introducing NPs at the required granularity. No property-to-component antecedent is fabricated."
+    },
+    {
+      "claimNumber": 17,
+      "quote": "said deformations",
+      "reason": "Two indefinite deformation expressions and multiple compression effects precede this collective plural. Keep the full relation without selecting a single deformation introduction as a forced plural identity."
+    }
+  ],
+  "annotationRationale": "Fresh manual extraction of the independent method. Explicit (i)/(ii) provisions and nested (a)/(b) ferrule components are retained as source-ordered elements; ferrule deformation and sealing conditions remain anchored functional children of the ferrule provision. Bare introductory axis, shoulder, socket, plug-nut and tube-section phrases are retained. Clear later names link to those exact introductions through source role and local identity, including plug-nut versus plug nut and connected tube sections versus sections of tube. Parent list anchor covers all included child conditions. No legal or material-performance construction is performed.",
+  "counts": {
+    "trees": 1,
+    "elements": 7,
+    "terms": 43,
+    "edges": 27
+  },
+  "sourceValidation": {
+    "nativeClaimsMatchCanonicalIgnoringPermittedWhitespace": true,
+    "claimsXmlSha256": "15257b174ff30cb7484cdb56e84beb5931acd39a5ce92261e2a908b3373d8ebf",
+    "sourceEligibility": "Accepted retained source critic reviewed, including original-text/PDF reconciliation. No new original-document or inventory authentication claimed."
+  },
+  "independence": "Fresh source-semantic extraction. No prior structural labels, production rules, P2-DESIGN, predictions, synthetic fixtures, conformance, network, secrets, git or delegation. Helpers locate manually specified source quotations, serialize chosen trees and validate spans; no decomposer used. Only this family expected.json and extractor.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "validation": {
+    "schema": "Every tree decoded successfully through the declared ClaimElementTree schema; no production decomposer invoked.",
+    "anchors": "Exact canonical UTF-16 element/term spans and ordered nonoverlapping terms checked. Native claims bodies match canonical ignoring permitted printed-number removal/whitespace; source XML digest matches provenance.",
+    "functionalParts": "Each functional edge reconstructs its complete source element span from ordered contiguous term/text parts.",
+    "references": "All local/foreign antecedent endpoints name labeled terms; targets stay on independently read actual natural ancestry. No context/sibling donors.",
+    "scope": "Every selected claim exactly once as resolved. Local reference uncertainty retained separately; no whole-claim abstentions.",
+    "independentSemanticCritic": "Pending. These checks are extractor validation, not independent criticism or human acceptance."
+  }
+}

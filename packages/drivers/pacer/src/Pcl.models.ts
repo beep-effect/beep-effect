@@ -2,6 +2,8 @@
  * Schema-first request/response models for the PACER Case Locator (PCL) API
  * synchronous search endpoints (`/cases/find`, `/parties/find`).
  *
+ * **Details**
+ *
  * Response fields are modeled defensively with `S.optionalKey` (PACER omits
  * empty fields) and permissive unions for the int-vs-string fields that the
  * spec is inconsistent about, so a live QA response never fails to decode.

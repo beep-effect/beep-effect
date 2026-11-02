@@ -1,0 +1,65 @@
+{
+  "familyId": "16052309-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "resolvedClaimNumbers": [],
+  "unresolved": [
+    {
+      "claimNumber": 1,
+      "reason": "Source preamble/body transition characterized in that is unsupported by PatentClaimTransition; do not invent wherein or comprising.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 2,
+      "reason": "Source preamble/body transition characterized in that is unsupported by PatentClaimTransition. Claim 2 contains a nested having, but using it as the main transition would discard the actual source boundary and misclassify the earlier limitation as preamble.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 3,
+      "reason": "Source preamble/body transition characterized in that is unsupported by PatentClaimTransition; do not invent wherein or comprising.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 4,
+      "reason": "Source preamble/body transition characterized in that is unsupported by PatentClaimTransition; do not invent wherein or comprising.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 5,
+      "reason": "Source preamble/body transition characterized in that is unsupported by PatentClaimTransition; do not invent wherein or comprising.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 6,
+      "reason": "Source preamble/body transition characterized in that is unsupported by PatentClaimTransition; do not invent wherein or comprising.",
+      "sourceQuote": "characterized in that"
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "Office action JV5BLJF5RXEAPX3 dated 2019-05-03 explicitly rejects claims 1-6 and enumerates phrases in each; publication 2019-02-07 precedes rejection.",
+    "Claims 2-6 explicitly refer to claim 1 in natural language, agreeing with selected family membership.",
+    "Claim 2 has a nested having phrase; critic should confirm unresolved treatment instead of silently promoting a nested constituent to the source transition.",
+    "Complete inventory asserts no intervening CLM amendment; only claim 2 matches original OCR exactly apart from whitespace. OCR corroboration is not the source, and attorney in-force review is pending.",
+    "Examiner quotes include possessive its phrases and these pieces. Unsupported transition prevents complete contract trees; no clean pass is claimed."
+  ],
+  "rationale": "All six selected source claims retain unsupported leading characterized in that transitions. Empty expected array means unresolved reference coverage for these six claims, never an antecedent-clean family.",
+  "independence": "Manually selected element boundaries, phrases, heads and edges against P2. No decomposer/policy, rule fixtures or predictions read or executed. Helpers locate selected quotes and verify JavaScript UTF-16 slices only. Critic and attorney review pending.",
+  "confidenceScope": "Resolved contract labels and explicit unsupported-source classification; does not assert legal correctness or attorney agreement.",
+  "familyStatus": "unresolved",
+  "sourceChecks": {
+    "selectedClaimNumbersVerifiedAgainstNativeClaimXml": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "allElementAndTermUtf16SlicesVerified": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  }
+}

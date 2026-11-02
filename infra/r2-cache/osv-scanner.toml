@@ -1,0 +1,6 @@
+# Used only when policy.sh verifies the sole block-buffer resolution is the
+# reviewed 0.10.4 archive. Other versions receive an unfiltered scan.
+[[IgnoredVulns]]
+id = "GHSA-qwgh-2vcv-g2f7"
+ignoreUntil = 2026-11-27T00:00:00Z
+reason = "Not affected: pinned block-buffer0.10.4 stores pos in a separate private field, not the data block's inline cursor described by this advisory. Its ReadBuffer type is absent. The exhaustive256-value caught-panic regression passes. policy.sh binds this exception to the exact archive checksum; no other advisory or version is excluded. See adapter-dependency-review.json."

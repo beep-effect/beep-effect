@@ -84,7 +84,7 @@ describe("SPDX parser rejection paths", () => {
       // A parenthesis enters Or, And and Atom in sequence. These three depths
       // target each entry guard rather than just one deeply parenthesized case.
       for (const padding of ["MIT OR ", "MIT AND ", ""])
-        assertNone(parse(padding + Str.repeat(85)("(") + "MIT" + Str.repeat(85)(")")));
+        assertNone(parse(`${padding + Str.repeat(85)("(")}MIT${Str.repeat(85)(")")}`));
       assert.deepStrictEqual(parse("MIT"), O.some({ kind: "license", id: "MIT", plus: false }));
     })
   );

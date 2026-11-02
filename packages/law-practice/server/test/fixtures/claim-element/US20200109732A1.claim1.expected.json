@@ -1,0 +1,125 @@
+{
+  "claimNumber": 1,
+  "producer": "rule",
+  "elements": [
+    {
+      "path": "1",
+      "anchor": {
+        "startChar": 0,
+        "endChar": 47,
+        "quote": "A mounting system applied to cabinets with feet"
+      },
+      "kind": "preamble-subject",
+      "terms": [
+        {
+          "anchor": {
+            "startChar": 0,
+            "endChar": 17,
+            "quote": "A mounting system"
+          },
+          "determiner": "a",
+          "head": "mounting system"
+        }
+      ]
+    },
+    {
+      "path": "1.a",
+      "anchor": {
+        "startChar": 59,
+        "endChar": 364,
+        "quote": "the left side (1a) being composed of U-shaped bends (1c) receiving the double tubular rear feet (2a) in square section welded in H-shape on its forward part of the left side (2b) by fitting them to the bends of the side part (1c), being locked by manually bending the tab (1b) on the hole (2c) of the foot"
+      },
+      "kind": "limitation",
+      "terms": [
+        {
+          "anchor": {
+            "startChar": 59,
+            "endChar": 72,
+            "quote": "the left side"
+          },
+          "determiner": "the",
+          "head": "left side"
+        },
+        {
+          "anchor": {
+            "startChar": 126,
+            "endChar": 154,
+            "quote": "the double tubular rear feet"
+          },
+          "determiner": "the",
+          "head": "double tubular rear feet"
+        },
+        {
+          "anchor": {
+            "startChar": 199,
+            "endChar": 215,
+            "quote": "its forward part"
+          },
+          "determiner": "bare",
+          "head": "forward part"
+        },
+        {
+          "anchor": {
+            "startChar": 219,
+            "endChar": 232,
+            "quote": "the left side"
+          },
+          "determiner": "the",
+          "head": "left side"
+        },
+        {
+          "anchor": {
+            "startChar": 257,
+            "endChar": 266,
+            "quote": "the bends"
+          },
+          "determiner": "the",
+          "head": "bends"
+        },
+        {
+          "anchor": {
+            "startChar": 270,
+            "endChar": 283,
+            "quote": "the side part"
+          },
+          "determiner": "the",
+          "head": "side part"
+        },
+        {
+          "anchor": {
+            "startChar": 323,
+            "endChar": 330,
+            "quote": "the tab"
+          },
+          "determiner": "the",
+          "head": "tab"
+        },
+        {
+          "anchor": {
+            "startChar": 339,
+            "endChar": 347,
+            "quote": "the hole"
+          },
+          "determiner": "the",
+          "head": "hole"
+        },
+        {
+          "anchor": {
+            "startChar": 356,
+            "endChar": 364,
+            "quote": "the foot"
+          },
+          "determiner": "the",
+          "head": "foot"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "part-of",
+      "child": "1.a",
+      "parent": "1"
+    }
+  ]
+}

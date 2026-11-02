@@ -140,7 +140,7 @@ export class BoxProvisioningSubjectMismatchError extends S.TaggedError<
  *
  * ```ts
  * import { BoxProvisioningDriftError } from "@beep/box-provisioning/BoxProvisioningErrors"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const error = BoxProvisioningDriftError.make({
  *   actualPlanDigest: Sha256Hex.make("a".repeat(64)),

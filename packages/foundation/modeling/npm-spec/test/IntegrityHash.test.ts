@@ -82,7 +82,7 @@ describe("IntegrityHash statics", () => {
 
 // The corepack pin tail is the one place the kit meets the `<algo>.<hex>` form,
 // and TWO schemas model it — `PackageManagerPin.integrity` here and
-// `@beep/scratchpad/effected/package-json`'s `PackageManager.integrity`. Both consume this
+// `@beep/package-json`'s `PackageManager.integrity`. Both consume this
 // export. The forms the wider brand accepts and this one must not are the
 // point of the suite: an SRI or yarn hash in a pin tail is not a near-miss, it
 // is a value that field can never legitimately hold.

@@ -6,7 +6,7 @@
  * Implements the progress streaming contract with Effect patterns.
  * Provides functional builders for creating progress events. Event ids are
  * UUIDv4 values from the platform `Crypto` service, so the builders require
- * `Crypto.Crypto`.
+ * `SecureRandom.SecureRandom`.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -18,7 +18,7 @@ import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
 import * as Chunk from "effect/Chunk";
 import * as Clock from "effect/Clock";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -198,8 +198,8 @@ const isRefFirst = (args: IArguments): boolean => P.isObject(args[0]);
 /**
  * Mint a progress event id from the platform `Crypto` service.
  */
-const nextEventId: Effect.Effect<UUID, PlatformError, Crypto.Crypto> = Effect.map(
-  Crypto.Crypto.use((crypto) => crypto.randomUUIDv4()),
+const nextEventId: Effect.Effect<UUID, PlatformError, SecureRandom.SecureRandom> = Effect.map(
+  SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4()),
   UUID.make
 );
 
@@ -241,12 +241,12 @@ export const createExtractionStarted: {
       estimatedAvgChunkSize: PosInt;
       contentType?: string;
     }
-  ): Effect.Effect<ExtractionStartedEvent, PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<ExtractionStartedEvent, PlatformError, SecureRandom.SecureRandom>;
   (textMetadata: {
     characterCount: PosInt;
     estimatedAvgChunkSize: PosInt;
     contentType?: string;
-  }): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionStartedEvent, PlatformError, Crypto.Crypto>;
+  }): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionStartedEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   2,
   Effect.fn("ProgressStreaming.createExtractionStarted")(function* (
@@ -256,7 +256,7 @@ export const createExtractionStarted: {
       estimatedAvgChunkSize: PosInt;
       contentType?: string;
     }
-  ): Effect.fn.Return<ExtractionStartedEvent, PlatformError, Crypto.Crypto> {
+  ): Effect.fn.Return<ExtractionStartedEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
     return ExtractionStartedEvent.make({
       _tag: "extraction_started",
@@ -312,12 +312,12 @@ export const createChunkingProgress: {
     chunksCompleted: number,
     chunksProcessing: number,
     avgChunkSize: PosInt
-  ): Effect.Effect<ChunkingProgressEvent, PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<ChunkingProgressEvent, PlatformError, SecureRandom.SecureRandom>;
   (
     chunksCompleted: number,
     chunksProcessing: number,
     avgChunkSize: PosInt
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkingProgressEvent, PlatformError, Crypto.Crypto>;
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkingProgressEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   4,
   Effect.fn("ProgressStreaming.createChunkingProgress")(function* (
@@ -325,7 +325,7 @@ export const createChunkingProgress: {
     chunksCompleted: number,
     chunksProcessing: number,
     avgChunkSize: PosInt
-  ): Effect.fn.Return<ChunkingProgressEvent, PlatformError, Crypto.Crypto> {
+  ): Effect.fn.Return<ChunkingProgressEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
     return ChunkingProgressEvent.make({
       _tag: "chunking_progress",
@@ -378,12 +378,12 @@ export const createChunkProcessingStarted: {
     chunkIndex: number,
     chunkTextLength: PosInt,
     textPreview: string
-  ): Effect.Effect<ChunkProcessingStartedEvent, PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<ChunkProcessingStartedEvent, PlatformError, SecureRandom.SecureRandom>;
   (
     chunkIndex: number,
     chunkTextLength: PosInt,
     textPreview: string
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingStartedEvent, PlatformError, Crypto.Crypto>;
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingStartedEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   4,
   Effect.fn("ProgressStreaming.createChunkProcessingStarted")(function* (
@@ -391,7 +391,7 @@ export const createChunkProcessingStarted: {
     chunkIndex: number,
     chunkTextLength: PosInt,
     textPreview: string
-  ): Effect.fn.Return<ChunkProcessingStartedEvent, PlatformError, Crypto.Crypto> {
+  ): Effect.fn.Return<ChunkProcessingStartedEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
     return ChunkProcessingStartedEvent.make({
       _tag: "chunk_processing_started",
@@ -447,14 +447,14 @@ export const createEntityFound: {
     mention: string,
     types: ReadonlyArray<string>,
     confidence?: Confidence
-  ): Effect.Effect<EntityFoundEvent, PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<EntityFoundEvent, PlatformError, SecureRandom.SecureRandom>;
   (
     chunkIndex: number,
     entityId: string,
     mention: string,
     types: ReadonlyArray<string>,
     confidence?: Confidence
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<EntityFoundEvent, PlatformError, Crypto.Crypto>;
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<EntityFoundEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   isRefFirst,
   Effect.fn("ProgressStreaming.createEntityFound")(function* (
@@ -464,7 +464,7 @@ export const createEntityFound: {
     mention: string,
     types: ReadonlyArray<string>,
     confidence?: Confidence
-  ): Effect.fn.Return<EntityFoundEvent, PlatformError, Crypto.Crypto> {
+  ): Effect.fn.Return<EntityFoundEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
     return EntityFoundEvent.make({
       _tag: "entity_found",
@@ -524,7 +524,7 @@ export const createRelationFound: {
     object: string | number | boolean,
     isEntityReference: boolean,
     confidence?: Confidence
-  ): Effect.Effect<RelationFoundEvent, PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<RelationFoundEvent, PlatformError, SecureRandom.SecureRandom>;
   (
     chunkIndex: number,
     subjectId: string,
@@ -532,7 +532,7 @@ export const createRelationFound: {
     object: string | number | boolean,
     isEntityReference: boolean,
     confidence?: Confidence
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<RelationFoundEvent, PlatformError, Crypto.Crypto>;
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<RelationFoundEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   isRefFirst,
   Effect.fn("ProgressStreaming.createRelationFound")(function* (
@@ -543,7 +543,7 @@ export const createRelationFound: {
     object: string | number | boolean,
     isEntityReference: boolean,
     confidence?: Confidence
-  ): Effect.fn.Return<RelationFoundEvent, PlatformError, Crypto.Crypto> {
+  ): Effect.fn.Return<RelationFoundEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
     return RelationFoundEvent.make({
       _tag: "relation_found",
@@ -602,14 +602,14 @@ export const createChunkProcessingComplete: {
     relationCount: number,
     durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
-  ): Effect.Effect<ChunkProcessingCompleteEvent, PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<ChunkProcessingCompleteEvent, PlatformError, SecureRandom.SecureRandom>;
   (
     chunkIndex: number,
     entityCount: number,
     relationCount: number,
     durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingCompleteEvent, PlatformError, Crypto.Crypto>;
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingCompleteEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   isRefFirst,
   Effect.fn("ProgressStreaming.createChunkProcessingComplete")(function* (
@@ -619,7 +619,7 @@ export const createChunkProcessingComplete: {
     relationCount: number,
     durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
-  ): Effect.fn.Return<ChunkProcessingCompleteEvent, PlatformError, Crypto.Crypto> {
+  ): Effect.fn.Return<ChunkProcessingCompleteEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
     return ChunkProcessingCompleteEvent.make({
       _tag: "chunk_processing_complete",
@@ -680,7 +680,7 @@ export const createExtractionComplete: {
     totalDurationMs: PosInt,
     successfulChunks: number,
     failedChunks: number
-  ): Effect.Effect<ExtractionCompleteEvent, PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<ExtractionCompleteEvent, PlatformError, SecureRandom.SecureRandom>;
   (
     totalEntities: number,
     totalRelations: number,
@@ -688,7 +688,7 @@ export const createExtractionComplete: {
     totalDurationMs: PosInt,
     successfulChunks: number,
     failedChunks: number
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionCompleteEvent, PlatformError, Crypto.Crypto>;
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionCompleteEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   7,
   Effect.fn("ProgressStreaming.createExtractionComplete")(function* (
@@ -699,7 +699,7 @@ export const createExtractionComplete: {
     totalDurationMs: PosInt,
     successfulChunks: number,
     failedChunks: number
-  ): Effect.fn.Return<ExtractionCompleteEvent, PlatformError, Crypto.Crypto> {
+  ): Effect.fn.Return<ExtractionCompleteEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
     return ExtractionCompleteEvent.make({
       _tag: "extraction_complete",
@@ -767,13 +767,13 @@ export const createExtractionFailed: {
     errorMessage: string,
     isRecoverable: boolean,
     options?: CreateExtractionFailedOptions
-  ): Effect.Effect<ExtractionFailedEvent, PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<ExtractionFailedEvent, PlatformError, SecureRandom.SecureRandom>;
   (
     errorType: string,
     errorMessage: string,
     isRecoverable: boolean,
     options?: CreateExtractionFailedOptions
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionFailedEvent, PlatformError, Crypto.Crypto>;
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionFailedEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   isRefFirst,
   Effect.fn("ProgressStreaming.createExtractionFailed")(function* (
@@ -782,7 +782,7 @@ export const createExtractionFailed: {
     errorMessage: string,
     isRecoverable: boolean,
     options?: CreateExtractionFailedOptions
-  ): Effect.fn.Return<ExtractionFailedEvent, PlatformError, Crypto.Crypto> {
+  ): Effect.fn.Return<ExtractionFailedEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
     return ExtractionFailedEvent.make({
       eventId: yield* nextEventId,
@@ -847,14 +847,14 @@ export const createRecoverableError: {
     errorMessage: string,
     phase: string,
     recoveryAction: string
-  ): Effect.Effect<RecoverableErrorEvent, PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<RecoverableErrorEvent, PlatformError, SecureRandom.SecureRandom>;
   (
     chunkIndex: number,
     errorType: string,
     errorMessage: string,
     phase: string,
     recoveryAction: string
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<RecoverableErrorEvent, PlatformError, Crypto.Crypto>;
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<RecoverableErrorEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   6,
   Effect.fn("ProgressStreaming.createRecoverableError")(function* (
@@ -864,7 +864,7 @@ export const createRecoverableError: {
     errorMessage: string,
     phase: string,
     recoveryAction: string
-  ): Effect.fn.Return<RecoverableErrorEvent, PlatformError, Crypto.Crypto> {
+  ): Effect.fn.Return<RecoverableErrorEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
     return RecoverableErrorEvent.make({
       eventId: yield* nextEventId,
@@ -1130,18 +1130,18 @@ export const enqueueEvent: {
   (
     ref: Ref.Ref<BackpressureState>,
     event: ProgressEvent
-  ): Effect.Effect<O.Option<BackpressureWarningEvent>, ProgressStreamingError | PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<O.Option<BackpressureWarningEvent>, ProgressStreamingError | PlatformError, SecureRandom.SecureRandom>;
   (
     event: ProgressEvent
   ): (
     ref: Ref.Ref<BackpressureState>
-  ) => Effect.Effect<O.Option<BackpressureWarningEvent>, ProgressStreamingError | PlatformError, Crypto.Crypto>;
+  ) => Effect.Effect<O.Option<BackpressureWarningEvent>, ProgressStreamingError | PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   2,
   Effect.fn("ProgressStreaming.enqueueEvent")(function* (
     ref: Ref.Ref<BackpressureState>,
     event: ProgressEvent
-  ): Effect.fn.Return<O.Option<BackpressureWarningEvent>, ProgressStreamingError | PlatformError, Crypto.Crypto> {
+  ): Effect.fn.Return<O.Option<BackpressureWarningEvent>, ProgressStreamingError | PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
 
     // Check sampling
@@ -1313,17 +1313,17 @@ export const withBackpressure: {
     config: BackpressureConfig
   ): (
     stream: Stream.Stream<ProgressEvent, E, R>
-  ) => Stream.Stream<ProgressEvent, E | ProgressStreamingError | PlatformError, R | Crypto.Crypto>;
+  ) => Stream.Stream<ProgressEvent, E | ProgressStreamingError | PlatformError, R | SecureRandom.SecureRandom>;
   <E, R>(
     stream: Stream.Stream<ProgressEvent, E, R>,
     config: BackpressureConfig
-  ): Stream.Stream<ProgressEvent, E | ProgressStreamingError | PlatformError, R | Crypto.Crypto>;
+  ): Stream.Stream<ProgressEvent, E | ProgressStreamingError | PlatformError, R | SecureRandom.SecureRandom>;
 } = dual(
   2,
   <E, R>(
     stream: Stream.Stream<ProgressEvent, E, R>,
     config: BackpressureConfig
-  ): Stream.Stream<ProgressEvent, E | ProgressStreamingError | PlatformError, R | Crypto.Crypto> =>
+  ): Stream.Stream<ProgressEvent, E | ProgressStreamingError | PlatformError, R | SecureRandom.SecureRandom> =>
     Stream.unwrap(
       Effect.gen(function* () {
         const handlerRef = yield* makeBackpressureHandler(config);

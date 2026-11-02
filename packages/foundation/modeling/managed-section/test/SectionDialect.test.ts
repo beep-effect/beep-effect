@@ -248,7 +248,7 @@ describe("SectionDialect round-2 regressions", () => {
     for (const style of CommentStyle.presets) {
       const id = SectionId.make({ key: "tool", commentStyle: style });
       for (const marker of [SectionDialect.default.beginMarker(id), SectionDialect.default.endMarker(id)]) {
-        const section = id.section("\uFEFF" + marker);
+        const section = id.section(`\uFEFF${marker}`);
         assert.isFalse(SectionDialect.default.containsMarker(section.content));
         assert.isTrue(SectionDialect.default.containsMarker(marker));
         for (const eol of Eol.literals) {
@@ -259,7 +259,7 @@ describe("SectionDialect round-2 regressions", () => {
           const repeated = Result.getOrThrow(parsed.reconcile([section]));
           assert.strictEqual(repeated.text, rendered);
           assert.isFalse(repeated.changed);
-          const bomDocument = Result.getOrThrow(SectionDocument.parseResult("\uFEFF" + rendered));
+          const bomDocument = Result.getOrThrow(SectionDocument.parseResult(`\uFEFF${rendered}`));
           assert.strictEqual(bomDocument.sections[0]?.start, 1);
           assert.strictEqual(bomDocument.sections[0]?.section.content, section.content);
         }
@@ -347,7 +347,7 @@ describe("SectionDialect round-2 regressions", () => {
       const parsed = Result.getOrThrow(SectionDocument.parseResult(rendered, dialect));
       assert.deepStrictEqual(parsed.sections[0]?.section.attributes, section.attributes);
       assert.strictEqual(parsed.sections[0]?.section.content, "body");
-      assert.isFalse(dialect.containsMarker(dialect.beginMarker(id) + "!"));
+      assert.isFalse(dialect.containsMarker(`${dialect.beginMarker(id)}!`));
     }
     for (const tail of [
       " ---!",
@@ -357,7 +357,7 @@ describe("SectionDialect round-2 regressions", () => {
       ' note="a" note="b" ---',
       "---",
     ]) {
-      assert.isFalse(SectionDialect.default.containsMarker("# --- BEGIN tool MANAGED SECTION" + tail));
+      assert.isFalse(SectionDialect.default.containsMarker(`# --- BEGIN tool MANAGED SECTION${tail}`));
     }
   });
 });
@@ -381,8 +381,8 @@ it("preserves Unicode multiline boundaries and Unicode inside quoted attribute c
   for (const separator of ["\u2028", "\u2029"]) {
     const begin = dialect.beginMarker(hashId);
     const end = dialect.endMarker(hashId);
-    assert.isTrue(dialect.containsMarker(begin + separator + "ordinary content"));
-    const text = begin + separator + "body" + separator + end;
+    assert.isTrue(dialect.containsMarker(`${begin + separator}ordinary content`));
+    const text = `${begin + separator}body${separator}${end}`;
     const markers = [...dialect.markerMatches(text)];
     assert.strictEqual(markers[0]?.[1][0], begin);
     assert.strictEqual(markers[0]?.[1][1], "BEGIN");
@@ -390,15 +390,15 @@ it("preserves Unicode multiline boundaries and Unicode inside quoted attribute c
     assert.strictEqual(markers[0]?.[1][3], undefined);
     assert.strictEqual(markers[1]?.[1].index, begin.length + separator.length + "body".length + separator.length);
     const doc = Result.getOrThrow(SectionDocument.parseResult(text));
-    assert.strictEqual(doc.sections[0]?.section.content, separator + "body" + separator);
-    const expected = hashId.section("body", { note: "a" + separator + "b --- quoted ---" });
+    assert.strictEqual(doc.sections[0]?.section.content, `${separator}body${separator}`);
+    const expected = hashId.section("body", { note: `a${separator}b --- quoted ---` });
     const rendered = expectSuccess(dialect.render(expected));
     const captured = [...dialect.markerMatches(rendered)];
     assert.strictEqual(captured[0]?.[1][3], `note="a${separator}b --- quoted ---"`);
     const parsed = Result.getOrThrow(SectionDocument.parseResult(rendered));
     assert.deepStrictEqual(parsed.sections[0]?.section.attributes, expected.attributes);
     assert.strictEqual(parsed.check(expected)._tag, "UpToDate");
-    const invalid = '# --- BEGIN invalid MANAGED SECTION note="unterminated ---' + separator + begin;
+    const invalid = `# --- BEGIN invalid MANAGED SECTION note="unterminated ---${separator}${begin}`;
     const recovered = [...dialect.markerMatches(invalid)];
     assert.strictEqual(recovered.length, 1);
     assert.strictEqual(recovered[0]?.[1][2], hashId.key);

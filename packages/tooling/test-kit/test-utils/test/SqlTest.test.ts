@@ -21,6 +21,7 @@ import {
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -236,7 +237,7 @@ describe("SqlTest", () => {
       sqlTransportMock.rejectStart = true;
       const failedStart = yield* makePgliteTestcontainerResource().pipe(Effect.scoped, Effect.exit);
 
-      expect(Exit.isFailure(failedStart)).toBe(true);
+      failedStart.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(failedStart)) {
         const failure = Cause.squash(failedStart.cause);
 
@@ -267,7 +268,7 @@ describe("SqlTest", () => {
       expect(Layer.isLayer(NodeSqliteTestDriver.makeLayer(undefined))).toBe(true);
 
       const exit = yield* makePgliteTestcontainerResource({ internalPort: 0 }).pipe(Effect.scoped, Effect.exit);
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const failure = Cause.squash(exit.cause);
         expect(failure).toBeInstanceOf(SqlTestHarnessError);
@@ -549,7 +550,7 @@ describe("SqlTest", () => {
         )
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const failure = Cause.squash(exit.cause);
 
@@ -591,7 +592,7 @@ describe("SqlTest", () => {
         )
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const failure = Cause.squash(exit.cause);
 
@@ -673,7 +674,7 @@ describe("SqlTest", () => {
       expect(yield* encodeUnknownPgExternalConnectionUri(pgExternalConfig.connectionUri)).toBe(
         "postgres://user:pass@localhost:5432/test_db"
       );
-      expect(yield* encodeUnknownTestDatabaseInfoShape(info)).toEqual({
+      deepStrictEqual(yield* encodeUnknownTestDatabaseInfoShape(info), {
         connectionUri: O.some("postgres://user:pass@localhost:5432/test_db"),
         containerId: O.some("container-1"),
         database: O.some("test_db"),

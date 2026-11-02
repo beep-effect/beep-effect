@@ -1,0 +1,171 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18018354-root-6",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.97,
+  "confidenceScope": "Independent native-source semantic structure and identified corrections; separately accepted source qualification is not re-certified, and attorney adjudication is pending.",
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+  "findings": [],
+  "sourceEligibility": "Separate source critic accepted; not re-certified by semantic critic. Native source remains canonical.",
+  "audit": {
+    "treesReviewed": 12,
+    "elementsReviewed": 45,
+    "termsReviewed": 467,
+    "typedEdgesReviewed": 158,
+    "edgeKinds": {
+      "part-of": 33,
+      "antecedent": 92,
+      "functional": 22,
+      "depends-on-element": 11
+    },
+    "functionalEdgesReviewed": 22,
+    "functionalTextAnchorsVerified": 427,
+    "allElementAndTermUtf16SlicesVerified": true,
+    "allFunctionalTextSlicesVerified": true,
+    "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+    "allLocalAndCrossClaimTermEndpointsVerified": true,
+    "nestedListContainmentVerified": true,
+    "uniqueTermOwnershipVerified": true,
+    "schemaDecode": "separate-root-validation",
+    "selectedScopeComplete": true
+  },
+  "attorneyAdjudication": "pending",
+  "sourceOrNormalizationAnomalies": [
+    "Documented original/native quote typography, AI/Al and thranstheoretical/transtheoretical variants remain source-critic caveats. No new source/version or normalized-span failure detected."
+  ],
+  "independence": "Independent critic, not producer of these families. Reviewed exact claims/context, provenance/source audit/source critic, fresh extractor/expected, semantic-reference/v2 and schema contracts. No rules, predictions, synthetic fixtures, archived conformance, network, secrets, git or delegation. Helpers verified supplied spans/schema/reference geometry only.",
+  "rationale": [
+    "All three prior semantic findings are resolved. Claim6 has one exact plurality-of term [102,132), a plurality of hair diagnosers, head hair diagnosers. The previous split terms are removed and the claim14/16 referring terms now target the complete introduction without dangling references.",
+    "Claim15 now adds12 source-grounded nested elements: shampoo group15.c.i with six state/product alternatives; scaling group15.c.ii; option group15.c.ii.i with three explicit first/second/third functional step children. Their exact source spans follow braces, ordinal enumeration and grammatical grouping. Terms moved to deepest annotated owners without duplication; all existing reference paths were transferred and all functional parts have ordered exact source coverage using their own terms.",
+    "Claim17 four generic shampoo terms now resolve by their explicit for-state qualifiers to distinct claim15 introductions. Normal/dry/sensitive are direct source matches. Oil/oily is justified by the unique oil-qualified alternative in the same ordered normal/dry/oil-or-oily/sensitive/dandruff/hair-loss lists, with no competing oily-specific shampoo. Both source spellings and distinct heads are preserved; the two oily-state references correctly target an oil state rather than silently rewriting it.",
+    "Reviewed current full semantic structure:12 trees,45 elements,467 terms,158 typed edges and22 explicit functional relations. All512 element/term anchors and supplied functional text anchors match exact UTF16 source slices; nested child containment, unique term ownership, ordered functional coverage, and all local/cross-claim endpoints pass. Root part-of edges express conceptual ownership by the claim subject, whose preamble anchor is not a spatial envelope around the body.",
+    "Actual dependency chain7->6 through17->16, component-information identities qualified by positive/negative relevance in12, competing first/second labels in13, malformed native wording and unresolved referential concerns remain as independently reviewed. No model identity is inferred from a compound module name, no unrelated context1/3 introduction is imported, and no single-target thereto/aspect identity is forced.",
+    "Both semantic confidences are0.97; no remaining actionable structural finding. The preserved prior receipt records the original three findings. Separate accepted source qualification and root schema validation are not re-certified here, and attorney adjudication remains pending."
+  ],
+  "ambiguityResolution": [
+    {
+      "claimNumber": 17,
+      "quote": "the shampoo for the oily state",
+      "span": [354, 384],
+      "resolution": "Selects claim15 a shampoo[695,704) for an oil state[709,721). Parallel list order and sole oil-related alternative disambiguate it; no competing target. Preserve oil/oily spelling difference."
+    },
+    {
+      "claimNumber": 15,
+      "quote": "the oily state",
+      "span": [1469, 1483],
+      "resolution": "Same state dimension as sole introduced an oil state[709,721) within this claim; retain native wording and explicit alias edge."
+    },
+    {
+      "claimNumber": 12,
+      "quote": "positive component information of positive relevance",
+      "resolution": "Positive/negative relevance qualifiers continue to distinguish four component-information source identities; no unqualified collapse."
+    },
+    {
+      "claimNumber": 17,
+      "quote": "thereto",
+      "resolution": "Multiple surrounding parameter/aspect candidates remain. Existing explicit bare reference terms without forced single-target edges preserve the recorded source ambiguity; acceptance does not assert attorney resolution."
+    }
+  ],
+  "priorRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "18018354-root-6",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.97,
+      "confidenceScope": "Independent native-source semantic structure and identified corrections; separately accepted source qualification is not re-certified, and attorney adjudication is pending.",
+      "verdict": "changes-required",
+      "reviewedClaimNumbers": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+      "findings": [
+        {
+          "severity": "actionable",
+          "claimNumber": 6,
+          "path": "6.a",
+          "quote": "a plurality of hair diagnosers",
+          "span": [102, 132],
+          "issue": "The explicit plurality-of determiner is split into a a plurality term and bare hair diagnosers, discarding its representable determiner structure. This is a named schema determiner surface, not an ordinary nested of noun phrase.",
+          "requiredCorrection": "Replace these two terms with one exact term [102,132), determiner plurality-of, head hair diagnosers. Update every reference target to the resulting owned term, preserving exact source and full head."
+        },
+        {
+          "severity": "actionable",
+          "claimNumber": 15,
+          "path": "15.c",
+          "quote": "each recommended shampoo information {a shampoo for a normal state, a shampoo for a dry state, a shampoo for an oil state, a shampoo for a sensitive state, an anti-dandruff shampoo, and a hair loss shampoo}",
+          "issue": "Two explicit nested source lists are flattened into one functional element: six shampoo alternatives within braces, and the scalp-scaling option list with a first step, a second step and a third step. Current terms preserve words but no child elements/part-of structure represent their explicit grouping.",
+          "requiredCorrection": "Represent the clearly delimited nested shampoo list and first/second/third scalp-scaling option steps as source-grounded nested elements with part-of edges, distributing terms to their actual owners without duplication. Preserve internal parenthetical definitions, exact long conditional text and complete functional parts. Ordinal spelling is flexible; actual grouping/ownership must be visible."
+        },
+        {
+          "severity": "actionable",
+          "claimNumber": 17,
+          "path": "17.a",
+          "quote": "the shampoo for the normal state, the shampoo for the dry state, the shampoo for the oily state, the shampoo for the sensitive state",
+          "span": [289, 421],
+          "issue": "The first four shampoo references have no antecedent edges because their bare head is generic shampoo, but surrounding explicit for-state qualifiers disambiguate them among the separate claim15 introductions. At least normal/dry/sensitive are direct distinct matches; oily versus oil is the recorded state-word variation, not a reason to discard all four source-qualified identities.",
+          "requiredCorrection": "Add source-qualified antecedents for the normal/dry/sensitive shampoo terms to their respective claim15 introductions. Independently resolve the oily/oil state alias with explicit rationale, or retain only that precise uncertainty if a concrete competing target remains. Do not collapse the shampoo introductions, choose by exact head alone or arbitrarily pick one generic shampoo."
+        }
+      ],
+      "sourceEligibility": "Separate source critic accepted at0.98; native text is canonical. For12447956 the PDF resolves earlier amended-root7 hold and merged XML numbering.",
+      "audit": {
+        "treesReviewed": 12,
+        "elementsReviewed": 33,
+        "termsReviewed": 468,
+        "typedEdgesReviewed": 137,
+        "edgeKinds": {
+          "part-of": 21,
+          "antecedent": 86,
+          "functional": 19,
+          "depends-on-element": 11
+        },
+        "allElementAndTermUtf16SlicesVerified": true,
+        "allFunctionalTextSlicesVerified": true,
+        "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+        "allLocalAndCrossClaimTermEndpointsVerified": true,
+        "schemaDecode": "passed all supplied trees",
+        "selectedScopeComplete": true
+      },
+      "attorneyAdjudication": "pending",
+      "sourceOrNormalizationAnomalies": [
+        "Documented original/native quote typography, AI/Al and thranstheoretical/transtheoretical variants remain source-critic caveats. No new source/version or normalized-span failure detected."
+      ],
+      "independence": "Independent critic, not producer of these families. Reviewed exact claims/context, provenance/source audit/source critic, fresh extractor/expected, semantic-reference/v2 and schema contracts. No rules, predictions, synthetic fixtures, archived conformance, network, secrets, git or delegation. Helpers verified supplied spans/schema/reference geometry only.",
+      "rationale": [
+        "All33 elements/468 terms/137 existing edges and19 functional relationships were reviewed. Exact supplied source spans and functional order/coverage/ownership pass; these checks do not establish correct determiner encoding or recover omitted nested element structure. Three actionable gaps are specified above.",
+        "Long conditional branches, quoted information names, parenthetical component definitions and distinct positive/negative relevance references in12 remain exact. First/second output labels in13 are not forced into the component-information identities from10/11.",
+        "Actual chain7->6 through17->16 excludes unrelated independent context1/3. Missing user IDs, stages, models and unit introductions are not borrowed from those sources."
+      ],
+      "ambiguityResolution": [
+        {
+          "claimNumber": 12,
+          "quote": "positive component information of positive relevance",
+          "resolution": "The positive/negative relevance qualifiers distinguish all four component-information references; current targets10/11 are supported."
+        },
+        {
+          "claimNumber": 17,
+          "quote": "the shampoo for the normal state",
+          "resolution": "The state-qualified relation selects a shampoo for a normal state in15. Its lexical head may remain shampoo while its edge uses the exact source qualifier context."
+        },
+        {
+          "claimNumber": 17,
+          "quote": "thereto",
+          "resolution": "Opposite-thereto phrases sit within multiple positive/negative parameter branches. Do not invent single-target edges merely because the token repeats."
+        }
+      ]
+    }
+  ],
+  "roundReview": {
+    "previousRound": 1,
+    "findingDisposition": "all-three-corrected",
+    "extractorConfidence": 0.97,
+    "priorReceipts": [
+      "expected.round1.json",
+      "extractor.round1.json",
+      "critic.round1.json"
+    ]
+  }
+}

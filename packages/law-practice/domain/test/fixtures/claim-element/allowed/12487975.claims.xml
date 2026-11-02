@@ -1,0 +1,174 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system comprising:
+<claim-text>one or more processors; and</claim-text>
+<claim-text>a non-transitory, computer-readable memory storing instructions thereon, which, when executed by the one or more processors, cause the system to:
+<claim-text>retrieve a mixed data input, wherein the mixed data input comprises primary input data, secondary input data, and indicative input data, wherein each entry in the mixed data input has a corresponding timestamp indicating a time of generation, wherein the primary input data is associated with issuance of value indicators, wherein the secondary input data is associated with transfer of value indicators, and wherein the indicative input data is associated with unacknowledged value indicator transfer requests;</claim-text>
+<claim-text>aggregate the mixed data input into an input database table including a plurality of entries from the mixed data input, wherein each entry from the plurality of entries is associated with a plurality of categorical features, and wherein the plurality of categorical features includes a data type feature and a time window feature;</claim-text>
+<claim-text>generate, for each entry within the input database table, a corresponding category for the data type feature, wherein each entry is assigned the corresponding category based on whether the corresponding entry comprises the primary input data, the secondary input data, or the indicative input data;</claim-text>
+<claim-text>generate, for each entry within the input database table, a corresponding time window for the time window feature, wherein each entry is assigned the corresponding time window based on a particular difference between a current date and the corresponding timestamp for each entry; and</claim-text>
+<claim-text>train, using contents of the input database table, a representative value machine learning model to generate one or more representative values for an entity, wherein the representative value machine learning model uses weights and patterns associated with the contents of the input database table to determine the one or more representative values.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the instructions further cause the one or more processors to:
+<claim-text>calculate a first difference between the current date and a corresponding timestamp of a most recent entry of either the primary input data or the secondary input data to the mixed data input;</claim-text>
+<claim-text>in response to the first difference falling within a first category of the time window feature:
+<claim-text>cache a volume-weighted average based on the secondary input data in a first temporary checkpoint database table, and</claim-text>
+<claim-text>generate a first representative value based on either the volume-weighted average of the secondary input data or a latest value from the primary input data;</claim-text>
+</claim-text>
+<claim-text>in response to the first difference falling within a second category of the time window feature:
+<claim-text>cache a validated subset of the indicative input data in a second temporary checkpoint database table, wherein the validated subset includes data from the indicative input data that (i) is associated with a recent material update, (ii) has a value greater than a predetermined threshold value, and (iii) satisfies a set of plausibility criteria,</claim-text>
+<claim-text>cache a volume-weighted indicative average based on the validated subset in a third temporary checkpoint database table, and</claim-text>
+<claim-text>generate a second representative value based on the volume-weighted indicative average and either (i) the primary input data or (ii) the volume-weighted average of the secondary input data;</claim-text>
+</claim-text>
+<claim-text>in response to the first difference falling within a third category of the time window feature:
+<claim-text>cache the validated subset of the indicative input data in the second temporary checkpoint database table,</claim-text>
+<claim-text>cache the volume-weighted indicative average based on the validated subset in the third temporary checkpoint database table, and</claim-text>
+<claim-text>generate a third representative value based on the volume-weighted indicative average;</claim-text>
+</claim-text>
+<claim-text>receive a fourth representative value from the representative value machine learning model;</claim-text>
+<claim-text>compare the fourth representative value to at least one of the first representative value, the second representative value, or the third representative value; and</claim-text>
+<claim-text>retrain, based on a result of the comparing, the representative value machine learning model.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the instructions further cause the one or more processors to:
+<claim-text>merge at least one of the first temporary checkpoint database table, the second temporary checkpoint database table, or the third temporary checkpoint database table into a persistent database table;</claim-text>
+<claim-text>delete the first temporary checkpoint database table, the second temporary checkpoint database table, and the third temporary checkpoint database table; and</claim-text>
+<claim-text>store the persistent database table, the fourth representative value, and at least one of the first representative value, the second representative value, or the third representative value in an output database.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the instructions further cause the one or more processors to, before merging at least one of the first temporary checkpoint database table, the second temporary checkpoint database table, or the third temporary checkpoint database table into the persistent database table:
+<claim-text>execute a validation routine for at least one of the first temporary checkpoint database table, the second temporary checkpoint database table, or the third temporary checkpoint database table, wherein the validation routine includes at least one of a duplicate data check, a null data check, a categorical field check, a referential integrity check, or an expectation compatibility check;</claim-text>
+<claim-text>in response to determining that the validation routine has failed for the first temporary checkpoint database table, regenerate the first temporary checkpoint database table, the second temporary checkpoint database table, and the third temporary checkpoint database table;</claim-text>
+<claim-text>in response to determining that the validation routine has failed for the second temporary checkpoint database table, regenerate the second temporary checkpoint database table and the third temporary checkpoint database table; and</claim-text>
+<claim-text>in response to determining that the validation routine has failed for the third temporary checkpoint database table, regenerate the third temporary checkpoint database table.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the representative value machine learning model uses weights and patterns to determine the one or more representative values by:
+<claim-text>determining a first weight for the primary input data, a second weight for the secondary input data, and a third weight for the indicative input data;</claim-text>
+<claim-text>determining a first pattern of values based on the primary input data, a second pattern of values based on the secondary input data, and a third pattern of values based on the indicative input data;</claim-text>
+<claim-text>associating the first pattern of values with the first weight, the second pattern of values with the second weight, and the third pattern of values with the third weight; and</claim-text>
+<claim-text>combining the first pattern of values, the second pattern of values, and the third pattern of values to generate the one or more representative values, wherein each pattern of values from the first pattern of values, the second pattern of values, and the third pattern of values contributes to the one or more representative values proportionally to the associated weight.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the instructions further cause the one or more processors to generate, for each entry within the input database table, the corresponding time window by:
+<claim-text>calculating a first difference for a first entry within the input database table, wherein the first difference represents a number of days between the current date and a corresponding timestamp for the first entry;</claim-text>
+<claim-text>in response to determining that the number of days falls within a first predetermined time window, assigning the first entry to the first predetermined time window for the corresponding time window feature;</claim-text>
+<claim-text>in response to determining that the number of days falls within a second predetermined time window, assigning the first entry to the second predetermined time window for the corresponding time window feature; and</claim-text>
+<claim-text>in response to determining that the number of days falls within a third predetermined time window, assigning the first entry to the third predetermined time window for the corresponding time window feature.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the instructions further cause the one or more processors to:
+<claim-text>input, into an anomaly detection model, the mixed data input to receive a set of outlier data; and</claim-text>
+<claim-text>before aggregating the mixed data input into the input database table, remove the set of outlier data from the mixed data input.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the instructions further cause the one or more processors to train the representative value machine learning model by:
+<claim-text>calculating a first accuracy for a first representative value, wherein the first representative value is generated by the representative value machine learning model based on all the features from the plurality of categorical features;</claim-text>
+<claim-text>calculating a second accuracy for a second representative value, wherein the second representative value is generated by the representative value machine learning model based on a subset of the features from the plurality of categorical features;</claim-text>
+<claim-text>determining that a difference between the first accuracy and the second accuracy is less than or equal to a predetermined accuracy threshold; and</claim-text>
+<claim-text>in response to the determining, directing the representative value machine learning model to generate future representative values based on the subset of the features from the plurality of categorical features.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the instructions further cause the one or more processors to retrieve the primary input data by:
+<claim-text>extracting, using a text recognition model, data entries from an image file associated with an issuance of a value indicator.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. One or more non-transitory, computer-readable storage media comprising instructions recorded thereon, wherein the instructions, when executed by at least one data processor of a system, cause the system to:
+<claim-text>retrieve a mixed data input, wherein the mixed data input comprises primary input data, secondary input data, and indicative input data, wherein each entry in the mixed data input has a corresponding timestamp indicating a time of generation, wherein the primary input data is associated with issuance of value indicators, wherein the secondary input data is associated with transfer of value indicators, wherein the indicative input data is associated with unacknowledged value indicator transfer requests, and wherein each entry in the mixed data input is associated with a plurality of categorical features including a data type feature and a time window feature;</claim-text>
+<claim-text>generate, for each entry within the mixed data input, a corresponding category of the data type feature, wherein each entry is assigned the corresponding category based on whether the corresponding entry comprises the primary input data, the secondary input data, or the indicative input data;</claim-text>
+<claim-text>generate, for each entry within the mixed data input, a corresponding time window for the time window feature, wherein each entry is assigned the corresponding time window based on a particular difference between a current date and the corresponding timestamp for each entry;</claim-text>
+<claim-text>input, into a representative value machine learning model, the mixed data input to receive one or more representative values for an entity, wherein the representative value machine learning model is trained to generate the one or more representative values based on weights and patterns derived from a historical input database table and a deterministically generated representative value;</claim-text>
+<claim-text>receive a representative value from the representative value machine learning model; and</claim-text>
+<claim-text>store the representative value in an output database.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the instructions further cause the system to:
+<claim-text>calculate a first difference between the current date and a corresponding timestamp of a most recent entry of either the primary input data or the secondary input data to the mixed data input;</claim-text>
+<claim-text>determine that the first difference falls within a first time window of the time window feature, wherein the first time window is a most recent time window of the time window feature, and wherein indicative input data is not an input for the representative value machine learning model when the first difference falls within the first time window; and</claim-text>
+<claim-text>before inputting the mixed data input into the representative value machine learning model, remove the indicative input data from the mixed data input.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the instructions further cause the system to:
+<claim-text>retrieve, for each entry within the primary input data, the secondary input data, and the indicative input data, corresponding timestamps;</claim-text>
+<claim-text>identify, based on the corresponding timestamps and the current date, a first set of entries having the corresponding timestamps changing from falling within a first category of the time window feature on a previous day to falling within a second category of the time window feature on a current day and a second set of entries having the corresponding timestamps changing from falling within the second category of the time window feature on the previous day to falling within a third category of the time window feature on the current day;</claim-text>
+<claim-text>generate the mixed data input by combining the first set of entries and the second set of entries; and</claim-text>
+<claim-text>in response to receiving the representative value from the representative value machine learning model, combine, within the output database, the representative value with a previously generated set of representative values.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the instructions further cause the system to:
+<claim-text>aggregate the mixed data input into an input database table including the primary input data, the secondary input data, and the indicative input data;</claim-text>
+<claim-text>generate, for each entry within the mixed data input, the corresponding category for the data type feature by inserting the corresponding category within the input database table; and</claim-text>
+<claim-text>generate, for each entry within the mixed data input, the corresponding time window for the time window feature by inserting the corresponding time window within the input database table.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the instructions further cause the system to:
+<claim-text>input, into an anomaly detection model, the mixed data input to receive a set of outlier data; and</claim-text>
+<claim-text>before aggregating the mixed data input into the input database table, remove the set of outlier data from the mixed data input.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the instructions further cause the system to generate, for each entry within the mixed data input, the corresponding time window by:
+<claim-text>calculating a first difference for a first entry within the mixed data input, wherein the first difference represents a number of days between the current date and a corresponding timestamp for the first entry;</claim-text>
+<claim-text>in response to determining that the number of days falls within a first predetermined time window, assigning the first entry to the first predetermined time window for the corresponding time window feature;</claim-text>
+<claim-text>in response to determining that the number of days falls within a second predetermined time window, assigning the first entry to the second predetermined time window for the corresponding time window feature; and</claim-text>
+<claim-text>in response to determining that the number of days falls within a third predetermined time window, assigning the first entry to the third predetermined time window for the corresponding time window feature.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. A method, comprising:
+<claim-text>retrieving a mixed data input, wherein the mixed data input comprises primary input data, secondary input data, and indicative input data, wherein each entry in the mixed data input has a corresponding timestamp indicating a time of generation, wherein the primary input data is associated with issuance of value indicators, wherein the secondary input data is associated with transfer of value indicators, and wherein the indicative input data is associated with unacknowledged value indicator transfer requests;</claim-text>
+<claim-text>generating, for each entry within the mixed data input, a corresponding category of a data type feature, wherein each entry is assigned the corresponding category based on whether the corresponding entry comprises the primary input data, the secondary input data, or the indicative input data;</claim-text>
+<claim-text>generating, for each entry within the mixed data input, a corresponding time window for a time window feature, wherein each entry is assigned the corresponding time window based on a particular difference between a current date and the corresponding timestamp for each entry;</claim-text>
+<claim-text>inputting, into a first representative value machine learning model, a first subset of the mixed data input, wherein the first subset is associated with a first time window of the time window feature, and wherein the first representative value machine learning model is trained to generate one or more representative values based on weights and patterns derived from historical primary input data and historical secondary input data;</claim-text>
+<claim-text>receiving a first representative value for an entity from the first representative value machine learning model;</claim-text>
+<claim-text>inputting, into a second representative value machine learning model, a second subset of the mixed data input, wherein the second subset is associated with a second time window of the time window feature and wherein the second representative value machine learning model is trained to generate one or more representative values based on weights and patterns derived from historical primary input data, historical secondary input data, and historical indicative input data;</claim-text>
+<claim-text>receiving a second representative value for the entity from the second representative value machine learning model;</claim-text>
+<claim-text>inputting, into a third representative value machine learning model, a third subset of the mixed data input, wherein the third subset is associated with a third time window of the time window feature and wherein the third representative value machine learning model is trained to generate one or more representative values based on weights and patterns derived from historical indicative input data;</claim-text>
+<claim-text>receiving a third representative value for the entity from the third representative value machine learning model; and</claim-text>
+<claim-text>storing the mixed data input, the first representative value, the second representative value, and the third representative value in an output database.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, further comprising:
+<claim-text>retrieving, for each entry within the primary input data, the secondary input data, and the indicative input data, corresponding timestamps;</claim-text>
+<claim-text>identifying, based on the corresponding timestamps and the current date, a first set of entries having the corresponding timestamps changing from falling within a first category of the time window feature on a previous day to falling within a second category of the time window feature on a current day and a second set of entries having the corresponding timestamps changing from falling within the second category of the time window feature on the previous day to falling within a third category of the time window feature on the current day; and</claim-text>
+<claim-text>generating the mixed data input by combining the first set of entries and the second set of entries.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, further comprising:
+<claim-text>aggregating the mixed data input into an input database table including the primary input data, the secondary input data, and the indicative input data;</claim-text>
+<claim-text>generating, for each entry within the mixed data input, the corresponding category for the data type feature by inserting the corresponding category within the input database table; and</claim-text>
+<claim-text>generating, for each entry within the mixed data input, the corresponding time window for the time window feature by inserting the corresponding time window within the input database table.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, further comprising:
+<claim-text>inputting, into an anomaly detection model, the mixed data input to receive a set of outlier data; and</claim-text>
+<claim-text>before inputting the first subset of the mixed data input into the first representative value machine learning model, removing the set of outlier data from the mixed data input.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein generating, for each entry within the mixed data input, the corresponding time window comprises:
+<claim-text>calculating a first difference for a first entry within the mixed data input, wherein the first difference represents a number of days between the current date and a corresponding timestamp for the first entry;</claim-text>
+<claim-text>in response to determining that the number of days falls within a first predetermined time window, assigning the first entry to the first predetermined time window for the corresponding time window feature;</claim-text>
+<claim-text>in response to determining that the number of days falls within a second predetermined time window, assigning the first entry to the second predetermined time window for the corresponding time window feature; and</claim-text>
+<claim-text>in response to determining that the number of days falls within a third predetermined time window, assigning the first entry to the third predetermined time window for the corresponding time window feature.</claim-text>
+</claim-text>
+</claim>
+</claims>

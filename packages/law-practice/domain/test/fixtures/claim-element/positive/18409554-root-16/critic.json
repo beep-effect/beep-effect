@@ -1,0 +1,68 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "18409554-root-16",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22
+  ],
+  "findings": [],
+  "reviewScope": {
+    "kind": "independent lexical-head-only revision review",
+    "headCount": 1,
+    "preservedSemanticReview": "critic.round2.json",
+    "previousRound": 2,
+    "currentRound": 3
+  },
+  "headReviewEvidence": [
+    {
+      "claimNumber": 16,
+      "path": "16.d",
+      "anchor": {
+        "startChar": 489,
+        "endChar": 512,
+        "quote": "at least two electrodes"
+      },
+      "determiner": "bare",
+      "priorHead": "electrodes",
+      "acceptedHead": "at least two electrodes",
+      "disposition": "accepted under lexical-head/v1; exact source anchor and all non-head fields preserved"
+    }
+  ],
+  "reviewNotes": [
+    "Claim 16 states force applied by at least two electrodes on tissues. Bare encodes neither the minimum nor the count, so at least two electrodes is complete. This remains distinct from the one-or-more opening encoded by the supported at-least-one tag elsewhere in the same claim.",
+    "The current change is accepted as a lexical-head-only revision of the prior independently accepted semantic reference. Earlier full semantic/source review evidence remains in the immutable prior-round critic receipt; this review does not claim fresh original-PDF or attorney authentication."
+  ],
+  "verification": [
+    "Read lexical-head/v1 and manually adjudicated each listed correction against exact canonical and native source claim context. Checked nearby pronominal/cardinal/minimum/partitive term heads for consistency with supported determiner tags.",
+    "Verified all head-review preservedPriorReceipts SHA-256 values, including the prior critic receipt. Existing critic.json was byte-identical to that preserved prior-round receipt before replacement.",
+    "Independently reversed exactly the reviewed head fields and compared the entire resulting JSON tree with expected.round2.json: equal. All anchors, determiners, elements, typed edges, dependency structure, functional parts and claim scope therefore remain unchanged.",
+    "Checked each changed term source anchor as half-open UTF-16 offsets. Native source.claims.xml SHA-256 matches provenance.claimsXmlSha256, and all native claims match canonical claims after only printed-number removal and whitespace normalization. No decomposer or implementation rule was used."
+  ],
+  "referenceSha256": "2c1af77913d626fcb0bca8d68b36bf7f661d5e6aa599a6ba5d58a9ecd2f9bb34",
+  "extractorSha256": "72e6ec71b70145b744ecdd235d2623e3725a79c18773ed27d7f3b03276e96d58",
+  "headReviewSha256": "49c856448f1eda0a3e7e55e4aff1bf0a4d4f8c8f450f322a50ed528702929c6b",
+  "preservedPriorCritic": {
+    "file": "critic.round2.json",
+    "sha256": "40d48d419b2cd828034c00ed43c4aa8876b4fa3f18941c09a08089ed5b86198b",
+    "round": 2,
+    "verdict": "accepted",
+    "confidence": 0.96
+  },
+  "referenceConcernsDisposition": "Prior semantic and source concerns remain unchanged and explicitly documented in extractor.json and the preserved prior-round critic. Head changes add no antecedent, identity assertion, source repair or scope expansion.",
+  "independence": "Separate GPT-6.1-Sol medium critic session, independent of extractor. Only current critic.json files written. Reviewed protocol, canonical/native sources, existing semantic receipts and head-review diffs. No production/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or source/expected/extractor edits.",
+  "attorneyAdjudication": "unchanged; pending actual human review where required; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference acceptance only; no active sample admission, goal completion, accuracy result or human agreement claimed."
+}

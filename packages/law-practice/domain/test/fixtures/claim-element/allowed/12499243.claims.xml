@@ -1,0 +1,134 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for managing security in a computing environment using one or more processors to execute instructions that are configured to cause actions, comprising:
+<claim-text>obtaining a threat hunt plan to collect a plurality of candidate evidence items from one or more evidence sources;</claim-text>
+<claim-text>discarding one or more portions of the plurality of candidate evidence items based on a relevance score associated with each candidate evidence item;</claim-text>
+<claim-text>collecting one or more evidence items based on one or more non-discarded portions of the plurality of candidate evidence items;</claim-text>
+<claim-text>identifying one or more threat indicators associated with the one or more evidence items based on one or more criteria in the threat hunt plan;</claim-text>
+<claim-text>obtaining one or more threat profiles based on the one or more evidence items and the one or more threat indicators, wherein the one or more threat profiles include one or more threat assessment metrics associated with the one or more threat indicators, and wherein the one or more threat profiles are included in a report; and</claim-text>
+<claim-text>obtaining a user interface that includes one or more display panels for content that includes the report and other information associated with the one or more threat assessments, wherein the content is dynamically transformed and arranged for display to a user based on one or more of user interaction telemetry, user feedback or telemetry metrics.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprises:
+<claim-text>collecting threat intelligence data from one or more external threat sources including one or more of a security vendor advisory, a government alert, an industry threat report, or a vulnerability disclosure.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein collecting the one or more candidate evidence items, further comprises:
+<claim-text>obtaining one or more collection agents to interface with one or more of a system log, a network traffic capture, an endpoint, a database, an email service, or a user activity record, wherein the one or more collection agents collect the plurality of candidate evidence items from the one or more evidence sources based on one or more of a time range, a filtering criterion, or a sampling rate.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>obtaining the threat hunt plan from a threat hunt plan repository based on a threat hunt hypothesis, wherein the threat hunt plan includes one or more of an evidence collection strategy, an investigation methodology, an analysis framework, or a reporting requirement; and</claim-text>
+<claim-text>modifying the threat hunt plan based on one or more of an organizational environment, an available evidence source, a security configuration, or a network architecture.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>discarding one or more other portions of candidate evidence items of the plurality of candidate evidence items based on one or more filters that include one or more of a relevance filter, a quality filter, a format validator, or a duplicate detector; and</claim-text>
+<claim-text>normalizing one or more of a data format, a timestamp format, an entity identifier, or a metadata structure associated with each non-discarded candidate evidence item.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>obtaining one or more authentication actions associated with the one or more evidence items, wherein the one or more authentication actions include one or more of a login frequency, an access timing pattern, a credential usage pattern, or a session management activity; and</claim-text>
+<claim-text>correlating the one or more authentication actions with one or more of a user role, a geographic location, a device characteristic, or a network context to identify one or more security concerns, wherein the one or more security concerns are included in the threat profile.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein obtaining the one or more threat profiles further comprises:
+<claim-text>obtaining one or more metrics that include one or more of a threat severity rating, a confidence score, a risk indicator, or an evidence correlation that are associated with the one or more evidence items, wherein the one or more threat profiles include the one or more metrics.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>detecting one or more threats, wherein one or more descriptions of the one or more detected threats include one or more of evidence documentation, an attack vector description, a compromise indicator summary, or a threat actor attribution analysis;</claim-text>
+<claim-text>obtaining one or more response recommendations associated with the one or more threats including one or more of an immediate containment measure, a threat mitigation strategy, a system hardening procedure, or an incident response escalation protocol; and</claim-text>
+<claim-text>updating the report to include the one or more descriptions and the one or more response recommendations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>obtaining one or more other response recommendations including one or more of a complementary threat hunting plan, an expanded evidence collection activity, a related threat vector analysis, or a continuous monitoring requirement; and</claim-text>
+<claim-text>collecting one or more detection rule proposals that incorporate one or more of a discovered threat indicator, an attack pattern, a behavioral anomaly, or a compromise signature into one or more automated monitoring systems; and</claim-text>
+<claim-text>updating the report to include the one or more other response recommendations and the one or more detection rule proposals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>obtaining a threat hunt hypothesis based on one or more of a user input, a scheduled task, or a notice associated with one or more potential security threats, wherein the threat hunt plan is based on the threat hunt hypothesis.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A network computer for managing security in a computing environment, comprising:
+<claim-text>a memory that stores at least instructions; and</claim-text>
+<claim-text>one or more processors that execute instructions that are configured to cause actions, including:
+<claim-text>obtaining a threat hunt plan to collect a plurality of candidate evidence items from one or more evidence sources;</claim-text>
+<claim-text>discarding one or more portions of the plurality of candidate evidence items based on a relevance score associated with each candidate evidence item;</claim-text>
+<claim-text>collecting one or more evidence items based on one or more non-discarded portions of the plurality of candidate evidence items;</claim-text>
+<claim-text>identifying one or more threat indicators associated with the one or more evidence items based on one or more criteria in the threat hunt plan;</claim-text>
+<claim-text>obtaining one or more threat profiles based on the one or more evidence items and the one or more threat indicators, wherein the one or more threat profiles include one or more threat assessment metrics associated with the one or more threat indicators, and wherein the one or more threat profiles are included in a report; and</claim-text>
+<claim-text>obtaining a user interface that includes one or more display panels for content that includes the report and other information associated with the one or more threat assessments, wherein the content is dynamically transformed and arranged for display to a user based on one or more of user interaction telemetry, user feedback or telemetry metrics.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The network computer of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein collecting the one or more candidate evidence items, further comprises:
+<claim-text>obtaining one or more collection agents to interface with one or more of a system log, a network traffic capture, an endpoint, a database, an email service, or a user activity record, wherein the one or more collection agents collect the plurality of candidate evidence items from the one or more evidence sources based on one or more of a time range, a filtering criterion, or a sampling rate.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The network computer of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>obtaining the threat hunt plan from a threat hunt plan repository based on a threat hunt hypothesis, wherein the threat hunt plan includes one or more of an evidence collection strategy, an investigation methodology, an analysis framework, or a reporting requirement; and</claim-text>
+<claim-text>modifying the threat hunt plan based on one or more of an organizational environment, an available evidence source, a security configuration, or a network architecture.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The network computer of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>discarding one or more other portions of candidate evidence items of the plurality of candidate evidence items based on one or more filters that include one or more of a relevance filter, a quality filter, a format validator, or a duplicate detector; and</claim-text>
+<claim-text>normalizing one or more of a data format, a timestamp format, an entity identifier, or a metadata structure associated with each non-discarded candidate evidence item.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The network computer of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>obtaining one or more authentication actions associated with the one or more evidence items, wherein the one or more authentication actions include one or more of a login frequency, an access timing pattern, a credential usage pattern, or a session management activity; and</claim-text>
+<claim-text>correlating the one or more authentication actions with one or more of a user role, a geographic location, a device characteristic, or a network context to identify one or more security concerns, wherein the one or more security concerns are included in the threat profile.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The network computer of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein obtaining the one or more threat profiles further comprises:
+<claim-text>obtaining one or more metrics that include one or more of a threat severity rating, a confidence score, a risk indicator, or an evidence correlation that are associated with the one or more evidence items, wherein the one or more threat profiles include the one or more metrics.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The network computer of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>detecting one or more threats, wherein one or more descriptions of the one or more detected threats include one or more of evidence documentation, an attack vector description, a compromise indicator summary, or a threat actor attribution analysis;</claim-text>
+<claim-text>obtaining one or more response recommendations associated with the one or more threats including one or more of an immediate containment measure, a threat mitigation strategy, a system hardening procedure, or an incident response escalation protocol; and</claim-text>
+<claim-text>updating the report to include the one or more descriptions and the one or more response recommendations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The network computer of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>obtaining one or more other response recommendations including one or more of a complementary threat hunting plan, an expanded evidence collection activity, a related threat vector analysis, or a continuous monitoring requirement; and</claim-text>
+<claim-text>collecting one or more detection rule proposals that incorporate one or more of a discovered threat indicator, an attack pattern, a behavioral anomaly, or a compromise signature into one or more automated monitoring systems; and</claim-text>
+<claim-text>updating the report to include the one or more other response recommendations and the one or more detection rule proposals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. A processor readable non-transitory storage media that includes instructions configured for managing security in a computing environment, wherein execution of the instructions by one or more processors on one or more network computers performs actions, comprising:
+<claim-text>obtaining a threat hunt plan to collect a plurality of candidate evidence items from one or more evidence sources;</claim-text>
+<claim-text>discarding one or more portions of the plurality of candidate evidence items based on a relevance score associated with each candidate evidence item;</claim-text>
+<claim-text>collecting one or more evidence items based on one or more non-discarded portions of the plurality of candidate evidence items;</claim-text>
+<claim-text>identifying one or more threat indicators associated with the one or more evidence items based on one or more criteria in the threat hunt plan;</claim-text>
+<claim-text>obtaining one or more threat profiles based on the one or more evidence items and the one or more threat indicators, wherein the one or more threat profiles include one or more threat assessment metrics associated with the one or more threat indicators, and wherein the one or more threat profiles are included in a report; and</claim-text>
+<claim-text>obtaining a user interface that includes one or more display panels for content that includes the report and other information associated with the one or more threat assessments, wherein the content is dynamically transformed and arranged for display to a user based on one or more of user interaction telemetry, user feedback or telemetry metrics.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The media of <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein collecting the one or more candidate evidence items, further comprises:
+<claim-text>obtaining one or more collection agents to interface with one or more of a system log, a network traffic capture, an endpoint, a database, an email service, or a user activity record, wherein the one or more collection agents collect the plurality of candidate evidence items from the one or more evidence sources based on one or more of a time range, a filtering criterion, or a sampling rate.</claim-text>
+</claim-text>
+</claim>
+</claims>

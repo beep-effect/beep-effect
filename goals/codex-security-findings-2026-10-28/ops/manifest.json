@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "codex-security-findings-2026-10-28",
+    "title": "Codex Security Findings (2026-10-28)",
+    "status": "active",
+    "created": "2026-10-28",
+    "updated": "2026-10-31",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/codex-security-findings-2026-10-28",
+  "lifecycle": "active",
+  "mission": "Retain closure of seven Cloud findings and resolve all 29 additional GitHub security alerts discovered on 2026-10-31.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until final closeout PR #2488 is merged through repository gates with genuine final-head canonical readiness, all seven Cloud findings remain resolved, and all 20 dependency, four code-scanning and five secret-scanning alerts are resolved with evidence; implementation PR #2389 and reconciliation PR #2416 remain supporting.",
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 1930,
+        "role": "supporting"
+      },
+      {
+        "number": 2333,
+        "role": "supporting"
+      },
+      {
+        "number": 2389,
+        "role": "supporting"
+      },
+      {
+        "number": 2416,
+        "role": "supporting"
+      },
+      {
+        "number": 2488,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/chore_security-findings-closeout-2c19f79cbffa/verdict.json",
+        "gating": true
+      }
+    ]
+  },
+  "branch": "chore/security-findings-closeout",
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/codex-security-findings-2026-10-28/README.md",
+    "goals/codex-security-findings-2026-10-28/SPEC.md",
+    "goals/codex-security-findings-2026-10-28/PLAN.md",
+    "goals/codex-security-findings-2026-10-28/GOAL.md",
+    "goals/codex-security-findings-2026-10-28/research/SOURCES.md",
+    "goals/codex-security-findings-2026-10-28/research/2026-11-01-final-closeout.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/qualification.md",
+    "research/2026-10-31-closeout.md",
+    "research/2026-10-31-dependencies.md",
+    "research/2026-10-31-review.md",
+    "research/2026-10-31-scanning.md",
+    "research/2026-10-31-accepted-closeout.md",
+    "research/2026-11-01-final-closeout.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/codex-security-findings-2026-10-28/GOAL.md"
+    }
+  ],
+  "source": {
+    "provider": "Codex Security Cloud MCP app",
+    "repository": "kriegcloud/beep-effect",
+    "url": "https://chatgpt.com/mcp-app/connector_openai_defense_factory/open_defense_factory#/findings",
+    "capturedAt": "2026-10-28",
+    "captureMethodPolicy": "signed-in-csv-export",
+    "rawCaptureRoot": "goals/codex-security-findings-2026-10-28/raw",
+    "rawCaptureTracked": false
+  },
+  "catalog": {
+    "expectedCount": 7,
+    "capturedCount": 7,
+    "severityCountsKnown": true,
+    "severityCounts": {
+      "Low": 1,
+      "Informational": 6
+    },
+    "dispositionCounts": {
+      "remediate": 7,
+      "already-fixed": 0,
+      "false-positive": 0,
+      "out-of-scope": 0,
+      "untriaged": 0
+    },
+    "note": "Fixes for all seven Cloud findings merged and the findings are verified Fixed; 20 supplemental dependency alerts and nine scanning alerts are tracked in separate catalogs."
+  },
+  "closeoutPolicy": {
+    "fixed": "Fixed",
+    "alreadyFixed": "Fixed",
+    "dismissedInvalid": "False positive",
+    "outOfScope": "False positive",
+    "acceptedRisk": "not allowed"
+  },
+  "dispositionPolicy": {
+    "default": "remediate",
+    "acceptedRiskAllowed": false,
+    "falsePositiveThreshold": "strict current-HEAD proof that affected code is absent, unreachable, non-shipped, already fixed, or materially misunderstood",
+    "fixPhilosophy": "minimal shared-root fixes with focused regression proof; reuse canonical repo helpers after live source and barrel discovery"
+  },
+  "sanitation": {
+    "trackedRawFindingContent": false,
+    "rawCaptureLocation": "goals/codex-security-findings-2026-10-28/raw",
+    "commitsOnlySanitizedMarkdown": true,
+    "codexPatchTextTracked": false,
+    "publicFindingPolicy": "Tracked records contain title, severity, Codex ID, source commit, public summary, decisions, changed files, and verification only."
+  },
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Bootstrap",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Capture",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Validate",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Lane partition",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Remediate",
+      "status": "complete"
+    },
+    {
+      "id": "P5",
+      "name": "Repo proof",
+      "status": "in-progress"
+    },
+    {
+      "id": "P6",
+      "name": "Publish",
+      "status": "complete"
+    },
+    {
+      "id": "P7",
+      "name": "Monitor",
+      "status": "in-progress"
+    },
+    {
+      "id": "P8",
+      "name": "Merge and close findings",
+      "status": "pending"
+    },
+    {
+      "id": "P9",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/codex-security-findings-2026-10-28/GOAL.md)\" -le 4000",
+    "jq . goals/codex-security-findings-2026-10-28/ops/manifest.json",
+    "jq . goals/codex-security-findings-2026-10-28/ops/triage.json",
+    "test \"$(find goals/codex-security-findings-2026-10-28/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 7",
+    "git diff --check -- goals/codex-security-findings-2026-10-28",
+    "jq -r '.findings[].commit' goals/codex-security-findings-2026-10-28/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The signed-in export is unavailable or the detail evidence needed for a verdict cannot be obtained.",
+    "Tracked evidence contains secrets, auth values, signed URLs, email addresses, or raw developer-local paths.",
+    "A remediation requires an architecture or product decision outside packet scope.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2488
+  },
+  "statusNote": "Implementation PR #2389 and reconciliation PR #2416 are merged; #2416's retained verdict is closeout-mode and bound to a pre-merge head, so it cannot qualify completion. Final closeout PR #2488 carries a publish verdict at its exact final head. External dependency, code-scanning and secret-scanning inventories were zero-open on 2026-11-01.",
+  "supplementalDependencies": {
+    "catalog": "ops/dependabot.json",
+    "expectedCount": 20,
+    "status": "in-progress"
+  },
+  "supplementalScanning": {
+    "catalog": "ops/scanning.json",
+    "codeScanningCount": 4,
+    "secretScanningCount": 5,
+    "status": "complete"
+  }
+}

@@ -13,7 +13,7 @@ import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
 import { ghOutput } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as S from "effect/Schema";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
@@ -61,7 +61,7 @@ export const yeetGh = Effect.fn("Yeet.gh")(function* (
   context: RepoRunContext,
   label: string,
   args: ReadonlyArray<string>
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
   return yield* ghOutput({ args, cwd: context.repoRoot, label, onFailure: ghFailure(label) });
 });
 

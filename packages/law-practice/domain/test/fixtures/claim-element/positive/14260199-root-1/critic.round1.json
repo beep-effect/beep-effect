@@ -1,0 +1,162 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "14260199-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "reviewScope": {
+    "claimCount": 8,
+    "elementCount": 27,
+    "termCount": 104,
+    "edgeCount": 98,
+    "functionalRelationCount": 18
+  },
+  "findings": [
+    {
+      "id": "local-drain-orifice-reference-chains",
+      "kind": "missing-source-supported-antecedents",
+      "cases": [
+        {
+          "referring": {
+            "path": "6.b",
+            "anchor": {
+              "startChar": 132,
+              "endChar": 141,
+              "quote": "the drain"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "6.a",
+            "anchor": {
+              "startChar": 73,
+              "endChar": 82,
+              "quote": "the drain"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "6.b",
+            "anchor": {
+              "startChar": 324,
+              "endChar": 333,
+              "quote": "the drain"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "6.a",
+            "anchor": {
+              "startChar": 73,
+              "endChar": 82,
+              "quote": "the drain"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "6.b",
+            "anchor": {
+              "startChar": 156,
+              "endChar": 167,
+              "quote": "the orifice"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "6.a",
+            "anchor": {
+              "startChar": 98,
+              "endChar": 109,
+              "quote": "the orifice"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "6.b",
+            "anchor": {
+              "startChar": 309,
+              "endChar": 320,
+              "quote": "the orifice"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "6.a",
+            "anchor": {
+              "startChar": 98,
+              "endChar": 109,
+              "quote": "the orifice"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "7.a",
+            "anchor": {
+              "startChar": 55,
+              "endChar": 64,
+              "quote": "the drain"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "6.a",
+            "anchor": {
+              "startChar": 73,
+              "endChar": 82,
+              "quote": "the drain"
+            }
+          }
+        },
+        {
+          "referring": {
+            "path": "7.a",
+            "anchor": {
+              "startChar": 93,
+              "endChar": 104,
+              "quote": "the orifice"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "6.a",
+            "anchor": {
+              "startChar": 98,
+              "endChar": 109,
+              "quote": "the orifice"
+            }
+          }
+        }
+      ],
+      "reason": "Claim6 lacks the indefinite drain/orifice introductions in sibling5, so first6.a definite mentions must not borrow those. However those exact6.a noun mentions explicitly establish the local drain and orifice for the same screen assembly. Later6.b and actual dependent7 refer to those same unique local objects. Protocol permits references to earlier explicit definite nominal mentions; absence of an earlier indefinite introducer does not erase later local identity.",
+      "correction": "Keep the first6.a drain/orifice references unlinked to sibling5, and add the listed6.b/7 antecedent chains to the exact first6.a nominal mentions. Preserve source claim6→1 and7→6, all anchors and concerns about first introduction."
+    }
+  ],
+  "verification": [
+    "Read selected canonical claims, all expected elements/terms/typed edges and extractor rationale; reviewed native source XML and independent source-critic evidence. Source eligibility is separately accepted; no fresh original-PDF/full-inventory authentication claimed.",
+    "Independent checks passed every exact UTF-16 anchor, term order/nonoverlap/ownership and normalized head shape, full contiguous functional reconstruction and exact participating terms, local/foreign endpoint membership and true dependency ancestry, path uniqueness and no duplicate edges. Native XML digest matches provenance and canonical/native source strings match under permitted printed-number/whitespace normalization. Geometry supplements manual semantics; no decomposer was called."
+  ],
+  "referenceSha256": "7e7a5e17b86cfed010e439246ad533dbd8fdbbcb0bdb949c9b5a056e97350d00",
+  "extractorSha256": "c8defca82888f908aa8cd75986542f4f39877634f72fecb710bf30513e92a5ea",
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json written. Source/model/tree/edge schema evidence only; no production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "roundLimit": "Round1 of at most3 extractor/critic rounds. Return exact findings to extractor, do not edit expected here.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference review only; no active sample admission, goal completion, human agreement or accuracy result claimed.",
+  "reviewNotes": [
+    "Audited system/subsystem preamble, stack/inlet/exhaust/drip rail and valve list, condensation/protrusion/sump relations, controller threshold quantities, bypass assembly, cooler/sensor/humidification conditions and screen/drain thermal relation. Natural5→4→1 and7→6→1 are correctly preserved.",
+    "Cathode inlet air and shortened air in4 refer to the explicitly supplied cathode-air stream from1.b by unique source ownership, without borrowing sibling3. Pressure measurement before/after conditioning is not assumed to be one physical numerical measurement. Joint temperature-and-liquid-water term is not collapsed onto one component.",
+    "Different sump introductions and changing water/condensation populations are not arbitrarily equated. The screen portion and exhaustive source heat/ice conditions remain anchored. Only the local drain/orifice reference-chain finding remains actionable."
+  ]
+}

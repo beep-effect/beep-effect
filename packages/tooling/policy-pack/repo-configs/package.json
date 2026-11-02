@@ -33,12 +33,12 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/jsonc": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/semver": "workspace:^",
     "@beep/utils": "workspace:^",
     "@effect/platform-node": "catalog:",
-    "effect": "catalog:",
-    "jsonc-parser": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@beep/test-runner": "workspace:^",

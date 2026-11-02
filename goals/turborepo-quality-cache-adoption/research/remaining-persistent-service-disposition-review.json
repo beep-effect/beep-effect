@@ -1,0 +1,335 @@
+{
+  "schemaVersion": "cache-persistent-service-source-review/v1",
+  "recordedAt": "2026-10-29T22:47:43.360544+00:00",
+  "authority": "Source-only whole-command exclusions. No service launch, runtime proof, cache setting or qualification mutation.",
+  "sourceRevision": "1d0e90c301bce0de43b4276b8cf6b39d598fc71d",
+  "populationBeforeReviewSha256": "6b411a49da73e4aafd848da2a5467a428bf52ae64c00280a6dab8cc4d3591231",
+  "configurationSourceBindingsRef": {
+    "path": "research/mutating-fixer-disposition-review.json",
+    "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+  },
+  "runtimeDeclarationSources": {
+    "package.json": "640d51eba1db211244fef7c066eaa179c2740a4bbe192e3d8b2e2afe37c6daeb",
+    "bun.lock": "531032f89b78abd2ed9fdfcbc7e68ef535cdc9305825274be847f6ae4e92cf59",
+    ".bun-version": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35",
+    ".nvmrc": "d9f318747a126ce2247661af67852b185def7789492eabfad7bba322be087c33"
+  },
+  "serviceKinds": {
+    "bun-watch": 4,
+    "vite-development-server": 4,
+    "storybook-development-server": 1,
+    "vite-static-preview-server": 1
+  },
+  "rows": [
+    {
+      "computation": "@beep/api-docs#dev",
+      "manifest": "apps/labs/api-docs/package.json",
+      "manifestSha256": "3c92e30964fe824a188170712fd94c400755a48f02a418afa66107370ee9bf24",
+      "scriptMapSha256": "e4a720236b53c4d3976cd3d88a7728b67c501e1ddb7da980da18f0ea952239a1",
+      "configurationId": "a6b8411893bf7ca3beda5e57abd8b17bb39b759c12879e5bfa0341e4506c8937",
+      "command": "portless api-docs.labs.beep sh -c 'bun --watch src/main.ts'",
+      "serviceKind": "bun-watch",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The exact Portless command starts a persistent watcher or server. A cache hit cannot provide its live process; the effective configuration already disables caching and declares no archived outputs.",
+      "pureCounterpart": {
+        "computation": "@beep/api-docs#build",
+        "command": "bun run beep:build",
+        "status": "Separate existing finite computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyComputations": [
+        "@beep/codegen-kit#build",
+        "@beep/ecfr#build",
+        "@beep/govinfo#build",
+        "@beep/identity#build",
+        "@beep/pacer#build",
+        "@beep/qa-capture#build",
+        "@beep/schema#build",
+        "@beep/test-runner#build",
+        "@beep/utils#build"
+      ]
+    },
+    {
+      "computation": "@beep/ciops#dev",
+      "manifest": "apps/labs/ciops/package.json",
+      "manifestSha256": "93977ccf6af0133b8d6a6827b805be775ce63c6ebd73036c336053afa01935aa",
+      "scriptMapSha256": "0bbb337ab7781524e21e75f3252032024894f0b8c997ebcf4b67a1a4dc03ca9f",
+      "configurationId": "a6b8411893bf7ca3beda5e57abd8b17bb39b759c12879e5bfa0341e4506c8937",
+      "command": "portless ciops.labs.beep sh -c 'bun --watch src/main.ts'",
+      "serviceKind": "bun-watch",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The exact Portless command starts a persistent watcher or server. A cache hit cannot provide its live process; the effective configuration already disables caching and declares no archived outputs.",
+      "pureCounterpart": {
+        "computation": "@beep/ciops#build",
+        "command": "bun run beep:build",
+        "status": "Separate existing finite computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyComputations": [
+        "@beep/identity#build",
+        "@beep/schema#build",
+        "@beep/test-runner#build",
+        "@beep/test-utils#build"
+      ]
+    },
+    {
+      "computation": "@beep/lejeune-bolt-workbench#dev",
+      "manifest": "apps/labs/lejeune-bolt-workbench/package.json",
+      "manifestSha256": "d2acf5cb2abc24902941b7f8345d4af90ffceced1af6dc29c800f2c297226aec",
+      "scriptMapSha256": "11d7703f22bfd89c16ffe7cd37f9dd69f661f98bedf1fe48e373908137e376d7",
+      "configurationId": "a6b8411893bf7ca3beda5e57abd8b17bb39b759c12879e5bfa0341e4506c8937",
+      "command": "portless lejeune-bolt-workbench.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
+      "serviceKind": "vite-development-server",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The exact Portless command starts a persistent watcher or server. A cache hit cannot provide its live process; the effective configuration already disables caching and declares no archived outputs.",
+      "pureCounterpart": {
+        "computation": "@beep/lejeune-bolt-workbench#build",
+        "command": "bun run beep:build",
+        "status": "Separate existing finite computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyComputations": [
+        "@beep/anthropic#build",
+        "@beep/doc-text#build",
+        "@beep/duckdb#build",
+        "@beep/file-processing#build",
+        "@beep/identity#build",
+        "@beep/langextract#build",
+        "@beep/nlp#build",
+        "@beep/oxigraph#build",
+        "@beep/pglite#build",
+        "@beep/provenance#build",
+        "@beep/rdf#build",
+        "@beep/schema#build",
+        "@beep/semantic-web#build",
+        "@beep/test-runner#build",
+        "@beep/test-utils#build",
+        "@beep/ui#build"
+      ]
+    },
+    {
+      "computation": "@beep/practice-m365-contacts#dev",
+      "manifest": "apps/practice-m365-contacts/package.json",
+      "manifestSha256": "f1822c79cd741cb9cc2195c180f32494cbbd2a9c3b2b5c406b4d06573f52f7ea",
+      "scriptMapSha256": "79eb6ab3c0e40c28c82a12ad19529623ba49654a84b09f5639410c0bbf707527",
+      "configurationId": "daf795440b81eb5fcf6e465a0af3d6129ac24b24d7166a74cfad89dd0bdafa1c",
+      "command": "portless practice-m365-contacts.beep sh -c 'bun --watch src/main.ts'",
+      "serviceKind": "bun-watch",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The exact Portless command starts a persistent watcher or server. A cache hit cannot provide its live process; the effective configuration already disables caching and declares no archived outputs.",
+      "pureCounterpart": {
+        "computation": "@beep/practice-m365-contacts#build",
+        "command": "bun run beep:build",
+        "status": "Separate existing finite computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyComputations": [
+        "@beep/identity#build",
+        "@beep/law-practice-server#build",
+        "@beep/law-practice-use-cases#build",
+        "@beep/m365#build",
+        "@beep/schema#build",
+        "@beep/test-runner#build",
+        "@beep/xdg#build"
+      ]
+    },
+    {
+      "computation": "@beep/practice-review-hub#dev",
+      "manifest": "apps/practice-review-hub/package.json",
+      "manifestSha256": "7cd0a149963554fffb409802cc47486a3492d1bf9d777e451d4b0da50896bb9f",
+      "scriptMapSha256": "6d961a670cc4d1275eccc2875841f1f24c85c15ff4adf02099744e3f6a1505f7",
+      "configurationId": "daf795440b81eb5fcf6e465a0af3d6129ac24b24d7166a74cfad89dd0bdafa1c",
+      "command": "portless practice-review-hub.beep sh -c 'bun --watch src/main.ts'",
+      "serviceKind": "bun-watch",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The exact Portless command starts a persistent watcher or server. A cache hit cannot provide its live process; the effective configuration already disables caching and declares no archived outputs.",
+      "pureCounterpart": {
+        "computation": "@beep/practice-review-hub#build",
+        "command": "bun run beep:build",
+        "status": "Separate existing finite computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyComputations": [
+        "@beep/identity#build",
+        "@beep/law-practice-domain#build",
+        "@beep/law-practice-server#build",
+        "@beep/law-practice-use-cases#build",
+        "@beep/m365#build",
+        "@beep/mcp-kit#build",
+        "@beep/schema#build",
+        "@beep/test-runner#build",
+        "@beep/utils#build"
+      ]
+    },
+    {
+      "computation": "@beep/professional-desktop#dev",
+      "manifest": "apps/professional-desktop/package.json",
+      "manifestSha256": "05cffe9aa228fe7c6c9dd56db79192b306c61b001c6f0634099a3114208a411c",
+      "scriptMapSha256": "9eabd4edbd0cda78a27c83e30a3a2063420cc147aa05896ec47bcd5940b1a53f",
+      "configurationId": "daf795440b81eb5fcf6e465a0af3d6129ac24b24d7166a74cfad89dd0bdafa1c",
+      "command": "portless professional-desktop.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1421}\" --strictPort'",
+      "serviceKind": "vite-development-server",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The exact Portless command starts a persistent watcher or server. A cache hit cannot provide its live process; the effective configuration already disables caching and declares no archived outputs.",
+      "pureCounterpart": {
+        "computation": "@beep/professional-desktop#build",
+        "command": "bun run beep:build",
+        "status": "Separate existing finite computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyComputations": [
+        "@beep/agents-client#build",
+        "@beep/agents-domain#build",
+        "@beep/agents-server#build",
+        "@beep/agents-use-cases#build",
+        "@beep/anthropic#build",
+        "@beep/box#build",
+        "@beep/cosmos#build",
+        "@beep/doc-text#build",
+        "@beep/dock#build",
+        "@beep/dock-react#build",
+        "@beep/documents-domain#build",
+        "@beep/documents-server#build",
+        "@beep/documents-use-cases#build",
+        "@beep/editor#build",
+        "@beep/epistemic-client#build",
+        "@beep/epistemic-config#build",
+        "@beep/epistemic-domain#build",
+        "@beep/epistemic-server#build",
+        "@beep/epistemic-tables#build",
+        "@beep/epistemic-ui#build",
+        "@beep/epistemic-use-cases#build",
+        "@beep/epistemics#build",
+        "@beep/file-processing#build",
+        "@beep/graph-3d#build",
+        "@beep/identity#build",
+        "@beep/lexical-schema#build",
+        "@beep/mcp-kit#build",
+        "@beep/md#build",
+        "@beep/memfs#build",
+        "@beep/observability#build",
+        "@beep/ontology-client#build",
+        "@beep/ontology-config#build",
+        "@beep/ontology-domain#build",
+        "@beep/ontology-server#build",
+        "@beep/ontology-ui#build",
+        "@beep/ontology-use-cases#build",
+        "@beep/pglite#build",
+        "@beep/postgres#build",
+        "@beep/provenance#build",
+        "@beep/rdf#build",
+        "@beep/schema#build",
+        "@beep/shared-domain#build",
+        "@beep/test-runner#build",
+        "@beep/test-utils#build",
+        "@beep/ui#build",
+        "@beep/utils#build",
+        "@beep/workspace-domain#build",
+        "@beep/workspace-server#build",
+        "@beep/workspace-use-cases#build",
+        "@beep/xstate#build"
+      ]
+    },
+    {
+      "computation": "@beep/semantica#dev",
+      "manifest": "apps/labs/semantica/package.json",
+      "manifestSha256": "eda0f46800dde5476001783507cfa01c536ca7b2579c191f2a43c73e5e756155",
+      "scriptMapSha256": "346e509109acb3ebafc22ed0c37a910e5e810a3cf9d2c2af89473b647c4481ff",
+      "configurationId": "a6b8411893bf7ca3beda5e57abd8b17bb39b759c12879e5bfa0341e4506c8937",
+      "command": "portless semantica.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
+      "serviceKind": "vite-development-server",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The exact Portless command starts a persistent watcher or server. A cache hit cannot provide its live process; the effective configuration already disables caching and declares no archived outputs.",
+      "pureCounterpart": {
+        "computation": "@beep/semantica#build",
+        "command": "bun run beep:build",
+        "status": "Separate existing finite computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyComputations": [
+        "@beep/anthropic#build",
+        "@beep/doc-text#build",
+        "@beep/duckdb#build",
+        "@beep/epistemics#build",
+        "@beep/file-processing#build",
+        "@beep/identity#build",
+        "@beep/langextract#build",
+        "@beep/nlp#build",
+        "@beep/nlp-processing#build",
+        "@beep/openai#build",
+        "@beep/oxigraph#build",
+        "@beep/pglite#build",
+        "@beep/provenance#build",
+        "@beep/rdf#build",
+        "@beep/schema#build",
+        "@beep/semantic-web#build",
+        "@beep/test-runner#build",
+        "@beep/test-utils#build",
+        "@beep/wink#build"
+      ]
+    },
+    {
+      "computation": "@beep/storybook#storybook",
+      "manifest": "apps/storybook/package.json",
+      "manifestSha256": "3fdb437b8bd01d9439ba337756f968164edd297f495e9b325b59f69c610e0d76",
+      "scriptMapSha256": "80e28170bc3d9a7d650a0beb436ba005ceb4aee0991eea95d22a7db037e562de",
+      "configurationId": "2bd888ded0452816da4bd1bba6ade44de62d309fad000d4620811a9b6203adf3",
+      "command": "portless storybook.beep sh -c 'storybook dev -p \"${PORT:-6006}\"'",
+      "serviceKind": "storybook-development-server",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The exact Portless command starts a persistent watcher or server. A cache hit cannot provide its live process; the effective configuration already disables caching and declares no archived outputs.",
+      "pureCounterpart": {
+        "computation": "@beep/storybook#storybook:build",
+        "command": "NODE_OPTIONS=--disable-warning=DEP0205 storybook build -o storybook-static",
+        "status": "Separate existing finite computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyComputations": []
+    },
+    {
+      "computation": "@beep/storybook#storybook:start",
+      "manifest": "apps/storybook/package.json",
+      "manifestSha256": "3fdb437b8bd01d9439ba337756f968164edd297f495e9b325b59f69c610e0d76",
+      "scriptMapSha256": "80e28170bc3d9a7d650a0beb436ba005ceb4aee0991eea95d22a7db037e562de",
+      "configurationId": "8b6c633cc81294d82d08dfe90f263a696830ea4246224c19edebdf8b62f34cab",
+      "command": "portless storybook.beep sh -c 'vite preview --host 0.0.0.0 --port \"${PORT:-6006}\" --outDir storybook-static'",
+      "serviceKind": "vite-static-preview-server",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The exact Portless command starts a persistent watcher or server. A cache hit cannot provide its live process; the effective configuration already disables caching and declares no archived outputs.",
+      "pureCounterpart": {
+        "computation": "@beep/storybook#storybook:build",
+        "command": "NODE_OPTIONS=--disable-warning=DEP0205 storybook build -o storybook-static",
+        "status": "Separate existing finite computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyComputations": ["@beep/storybook#storybook:build"]
+    },
+    {
+      "computation": "@beep/trustgraph-workbench#dev",
+      "manifest": "apps/labs/trustgraph-workbench/package.json",
+      "manifestSha256": "aa3ef6c44154c29f524bfacb8d0417b99df3bbc99ddfe7c98d8593f38104a6ad",
+      "scriptMapSha256": "19c9d48c4583d0c3e92d45a2842573a6b2c06396c90c09ab897ff2bbb8d518dc",
+      "configurationId": "a6b8411893bf7ca3beda5e57abd8b17bb39b759c12879e5bfa0341e4506c8937",
+      "command": "portless trustgraph-workbench.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
+      "serviceKind": "vite-development-server",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The exact Portless command starts a persistent watcher or server. A cache hit cannot provide its live process; the effective configuration already disables caching and declares no archived outputs.",
+      "pureCounterpart": {
+        "computation": "@beep/trustgraph-workbench#build",
+        "command": "bun run beep:build",
+        "status": "Separate existing finite computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyComputations": [
+        "@beep/brand#build",
+        "@beep/test-runner#build",
+        "@beep/ui#build"
+      ]
+    }
+  ],
+  "counts": {
+    "additionalPersistentServicesRemainFresh": 10,
+    "allReviewedPersistentServicesRemainFresh": 12,
+    "allReviewedFixersRemainFresh": 186,
+    "totalSourceReviewedFreshDispositions": 198,
+    "remainingFinalDispositionGaps": 2373
+  },
+  "limits": [
+    "All twelve configured persistent executable computations are now source-reviewed at their current whole-command boundary.",
+    "Finite application builds, dependency builds and Storybook static build remain separate unfinished computations.",
+    "Exact manifest/script/configuration binding changes invalidate this review.",
+    "No command was started, timed or qualified; no performance or whole-goal acceptance follows from source classification."
+  ],
+  "qualificationLedgerChanged": false,
+  "cacheFlagsChanged": false
+}

@@ -1,0 +1,2582 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 110,
+          "quote": "A method for implementing variable length packets to embed extra control information in an interconnect system"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 26,
+              "endChar": 49,
+              "quote": "variable length packets"
+            },
+            "determiner": "bare",
+            "head": "variable length packets"
+          },
+          {
+            "anchor": {
+              "startChar": 59,
+              "endChar": 84,
+              "quote": "extra control information"
+            },
+            "determiner": "bare",
+            "head": "extra control information"
+          },
+          {
+            "anchor": {
+              "startChar": 88,
+              "endChar": 110,
+              "quote": "an interconnect system"
+            },
+            "determiner": "an",
+            "head": "interconnect system"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 123,
+          "endChar": 232,
+          "quote": "defining packets to include an End-to-End (ETE) Flow Unit within packet (Flit) count field in a packet header"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 132,
+              "endChar": 139,
+              "quote": "packets"
+            },
+            "determiner": "bare",
+            "head": "packets"
+          },
+          {
+            "anchor": {
+              "startChar": 151,
+              "endChar": 213,
+              "quote": "an End-to-End (ETE) Flow Unit within packet (Flit) count field"
+            },
+            "determiner": "an",
+            "head": "end-to-end (ete) flow unit within packet (flit) count field"
+          },
+          {
+            "anchor": {
+              "startChar": 217,
+              "endChar": 232,
+              "quote": "a packet header"
+            },
+            "determiner": "a",
+            "head": "packet header"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 234,
+          "endChar": 284,
+          "quote": "receiving an incoming packet from an incoming link"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 244,
+              "endChar": 262,
+              "quote": "an incoming packet"
+            },
+            "determiner": "an",
+            "head": "incoming packet"
+          },
+          {
+            "anchor": {
+              "startChar": 268,
+              "endChar": 284,
+              "quote": "an incoming link"
+            },
+            "determiner": "an",
+            "head": "incoming link"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 286,
+          "endChar": 463,
+          "quote": "checking said ETE flit count field, and responsive to an identified nonzero value in said ETE flit count field, removing a specified number of embedded ETE flits from the packet"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 295,
+              "endChar": 320,
+              "quote": "said ETE flit count field"
+            },
+            "determiner": "said",
+            "head": "ete flit count field"
+          },
+          {
+            "anchor": {
+              "startChar": 340,
+              "endChar": 367,
+              "quote": "an identified nonzero value"
+            },
+            "determiner": "an",
+            "head": "identified nonzero value"
+          },
+          {
+            "anchor": {
+              "startChar": 371,
+              "endChar": 396,
+              "quote": "said ETE flit count field"
+            },
+            "determiner": "said",
+            "head": "ete flit count field"
+          },
+          {
+            "anchor": {
+              "startChar": 407,
+              "endChar": 447,
+              "quote": "a specified number of embedded ETE flits"
+            },
+            "determiner": "a",
+            "head": "specified number of embedded ete flits"
+          },
+          {
+            "anchor": {
+              "startChar": 453,
+              "endChar": 463,
+              "quote": "the packet"
+            },
+            "determiner": "the",
+            "head": "packet"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 469,
+          "endChar": 531,
+          "quote": "using control information from said removed embedded ETE flits"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 475,
+              "endChar": 494,
+              "quote": "control information"
+            },
+            "determiner": "bare",
+            "head": "control information"
+          },
+          {
+            "anchor": {
+              "startChar": 500,
+              "endChar": 531,
+              "quote": "said removed embedded ETE flits"
+            },
+            "determiner": "said",
+            "head": "removed embedded ete flits"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 123,
+              "endChar": 132,
+              "quote": "defining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 132,
+                "endChar": 139,
+                "quote": "packets"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 139,
+              "endChar": 151,
+              "quote": " to include "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 151,
+                "endChar": 213,
+                "quote": "an End-to-End (ETE) Flow Unit within packet (Flit) count field"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 213,
+              "endChar": 217,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 217,
+                "endChar": 232,
+                "quote": "a packet header"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 234,
+              "endChar": 244,
+              "quote": "receiving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 244,
+                "endChar": 262,
+                "quote": "an incoming packet"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 262,
+              "endChar": 268,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 268,
+                "endChar": 284,
+                "quote": "an incoming link"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 286,
+              "endChar": 295,
+              "quote": "checking "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 295,
+                "endChar": 320,
+                "quote": "said ETE flit count field"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 320,
+              "endChar": 340,
+              "quote": ", and responsive to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 340,
+                "endChar": 367,
+                "quote": "an identified nonzero value"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 367,
+              "endChar": 371,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 371,
+                "endChar": 396,
+                "quote": "said ETE flit count field"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 396,
+              "endChar": 407,
+              "quote": ", removing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 407,
+                "endChar": 447,
+                "quote": "a specified number of embedded ETE flits"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 447,
+              "endChar": 453,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 453,
+                "endChar": 463,
+                "quote": "the packet"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 469,
+              "endChar": 475,
+              "quote": "using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 475,
+                "endChar": 494,
+                "quote": "control information"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 494,
+              "endChar": 500,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 500,
+                "endChar": 531,
+                "quote": "said removed embedded ETE flits"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 295,
+            "endChar": 320,
+            "quote": "said ETE flit count field"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 151,
+            "endChar": 213,
+            "quote": "an End-to-End (ETE) Flow Unit within packet (Flit) count field"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 371,
+            "endChar": 396,
+            "quote": "said ETE flit count field"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 151,
+            "endChar": 213,
+            "quote": "an End-to-End (ETE) Flow Unit within packet (Flit) count field"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 453,
+            "endChar": 463,
+            "quote": "the packet"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 244,
+            "endChar": 262,
+            "quote": "an incoming packet"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 500,
+            "endChar": 531,
+            "quote": "said removed embedded ETE flits"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 407,
+            "endChar": 447,
+            "quote": "a specified number of embedded ETE flits"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "The method as recited in claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 170,
+          "quote": "sending an ETE cyclic redundancy check (CRC) flit with said embedded ETE flits, ETE CRC flit covers only said embedded ETE flits"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 50,
+              "endChar": 91,
+              "quote": "an ETE cyclic redundancy check (CRC) flit"
+            },
+            "determiner": "an",
+            "head": "ete cyclic redundancy check (crc) flit"
+          },
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 120,
+              "quote": "said embedded ETE flits"
+            },
+            "determiner": "said",
+            "head": "embedded ete flits"
+          },
+          {
+            "anchor": {
+              "startChar": 122,
+              "endChar": 134,
+              "quote": "ETE CRC flit"
+            },
+            "determiner": "bare",
+            "head": "ete crc flit"
+          },
+          {
+            "anchor": {
+              "startChar": 147,
+              "endChar": 170,
+              "quote": "said embedded ETE flits"
+            },
+            "determiner": "said",
+            "head": "embedded ete flits"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 42,
+              "endChar": 50,
+              "quote": "sending "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 50,
+                "endChar": 91,
+                "quote": "an ETE cyclic redundancy check (CRC) flit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 91,
+              "endChar": 97,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 120,
+                "quote": "said embedded ETE flits"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 120,
+              "endChar": 122,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 122,
+                "endChar": 134,
+                "quote": "ETE CRC flit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 134,
+              "endChar": 147,
+              "quote": " covers only "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 147,
+                "endChar": 170,
+                "quote": "said embedded ETE flits"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 122,
+            "endChar": 134,
+            "quote": "ETE CRC flit"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 50,
+            "endChar": 91,
+            "quote": "an ETE cyclic redundancy check (CRC) flit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 97,
+            "endChar": 120,
+            "quote": "said embedded ETE flits"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 407,
+            "endChar": 447,
+            "quote": "a specified number of embedded ETE flits"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 147,
+            "endChar": 170,
+            "quote": "said embedded ETE flits"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 407,
+            "endChar": 447,
+            "quote": "a specified number of embedded ETE flits"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "The method as recited in claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 172,
+          "quote": "identifying an ETE cyclic redundancy check (CRC) flit, and validating said embedded ETE flits responsive to a correct ETE CRC flit"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 54,
+              "endChar": 95,
+              "quote": "an ETE cyclic redundancy check (CRC) flit"
+            },
+            "determiner": "an",
+            "head": "ete cyclic redundancy check (crc) flit"
+          },
+          {
+            "anchor": {
+              "startChar": 112,
+              "endChar": 135,
+              "quote": "said embedded ETE flits"
+            },
+            "determiner": "said",
+            "head": "embedded ete flits"
+          },
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 172,
+              "quote": "a correct ETE CRC flit"
+            },
+            "determiner": "a",
+            "head": "correct ete crc flit"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 42,
+              "endChar": 54,
+              "quote": "identifying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 54,
+                "endChar": 95,
+                "quote": "an ETE cyclic redundancy check (CRC) flit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 95,
+              "endChar": 112,
+              "quote": ", and validating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 112,
+                "endChar": 135,
+                "quote": "said embedded ETE flits"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 135,
+              "endChar": 150,
+              "quote": " responsive to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 150,
+                "endChar": 172,
+                "quote": "a correct ETE CRC flit"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 112,
+            "endChar": 135,
+            "quote": "said embedded ETE flits"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 407,
+            "endChar": 447,
+            "quote": "a specified number of embedded ETE flits"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "The method as recited in claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 178,
+          "quote": "determining when to embed ETE flits based upon predetermined configuration settings and available ETE messages in an outgoing ETE buffer"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 68,
+              "endChar": 77,
+              "quote": "ETE flits"
+            },
+            "determiner": "bare",
+            "head": "ete flits"
+          },
+          {
+            "anchor": {
+              "startChar": 89,
+              "endChar": 125,
+              "quote": "predetermined configuration settings"
+            },
+            "determiner": "bare",
+            "head": "predetermined configuration settings"
+          },
+          {
+            "anchor": {
+              "startChar": 130,
+              "endChar": 152,
+              "quote": "available ETE messages"
+            },
+            "determiner": "bare",
+            "head": "available ete messages"
+          },
+          {
+            "anchor": {
+              "startChar": 156,
+              "endChar": 178,
+              "quote": "an outgoing ETE buffer"
+            },
+            "determiner": "an",
+            "head": "outgoing ete buffer"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 42,
+              "endChar": 68,
+              "quote": "determining when to embed "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 68,
+                "endChar": 77,
+                "quote": "ETE flits"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 89,
+              "quote": " based upon "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 89,
+                "endChar": 125,
+                "quote": "predetermined configuration settings"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 125,
+              "endChar": 130,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 130,
+                "endChar": 152,
+                "quote": "available ETE messages"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 152,
+              "endChar": 156,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 156,
+                "endChar": 178,
+                "quote": "an outgoing ETE buffer"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "The method as recited in claim 4"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 150,
+          "quote": "said predetermined configuration settings include a maximum flits allowed to be embedded for each packet type"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 82,
+              "quote": "said predetermined configuration settings"
+            },
+            "determiner": "said",
+            "head": "predetermined configuration settings"
+          },
+          {
+            "anchor": {
+              "startChar": 91,
+              "endChar": 106,
+              "quote": "a maximum flits"
+            },
+            "determiner": "a",
+            "head": "maximum flits"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 150,
+              "quote": "each packet type"
+            },
+            "determiner": "bare",
+            "head": "packet type"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "4"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 82,
+                "quote": "said predetermined configuration settings"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 82,
+              "endChar": 91,
+              "quote": " include "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 91,
+                "endChar": 106,
+                "quote": "a maximum flits"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 106,
+              "endChar": 134,
+              "quote": " allowed to be embedded for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 150,
+                "quote": "each packet type"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 41,
+            "endChar": 82,
+            "quote": "said predetermined configuration settings"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 89,
+            "endChar": 125,
+            "quote": "predetermined configuration settings"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "The method as recited in claim 4"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 153,
+          "quote": "said predetermined configuration settings include whether embedded flits include a cyclic redundancy check (CRC)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 82,
+              "quote": "said predetermined configuration settings"
+            },
+            "determiner": "said",
+            "head": "predetermined configuration settings"
+          },
+          {
+            "anchor": {
+              "startChar": 99,
+              "endChar": 113,
+              "quote": "embedded flits"
+            },
+            "determiner": "bare",
+            "head": "embedded flits"
+          },
+          {
+            "anchor": {
+              "startChar": 122,
+              "endChar": 153,
+              "quote": "a cyclic redundancy check (CRC)"
+            },
+            "determiner": "a",
+            "head": "cyclic redundancy check (crc)"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "4"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 82,
+                "quote": "said predetermined configuration settings"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 82,
+              "endChar": 99,
+              "quote": " include whether "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 99,
+                "endChar": 113,
+                "quote": "embedded flits"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 113,
+              "endChar": 122,
+              "quote": " include "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 122,
+                "endChar": 153,
+                "quote": "a cyclic redundancy check (CRC)"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 41,
+            "endChar": 82,
+            "quote": "said predetermined configuration settings"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 89,
+            "endChar": 125,
+            "quote": "predetermined configuration settings"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "The method as recited in claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 155,
+          "quote": "creating said packet header including a header cyclic redundancy check (CRC) for transmitting on an outgoing link"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 69,
+              "quote": "said packet header"
+            },
+            "determiner": "said",
+            "head": "packet header"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 118,
+              "quote": "a header cyclic redundancy check (CRC)"
+            },
+            "determiner": "a",
+            "head": "header cyclic redundancy check (crc)"
+          },
+          {
+            "anchor": {
+              "startChar": 139,
+              "endChar": 155,
+              "quote": "an outgoing link"
+            },
+            "determiner": "an",
+            "head": "outgoing link"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 42,
+              "endChar": 51,
+              "quote": "creating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 69,
+                "quote": "said packet header"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 69,
+              "endChar": 80,
+              "quote": " including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 118,
+                "quote": "a header cyclic redundancy check (CRC)"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 139,
+              "quote": " for transmitting on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 139,
+                "endChar": 155,
+                "quote": "an outgoing link"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 69,
+            "quote": "said packet header"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 217,
+            "endChar": 232,
+            "quote": "a packet header"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "The method as recited in claim 7"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 159,
+          "quote": "removing a number of ETE messages from an ETE buffer corresponding to said nonzero value in said ETE flit count field"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 75,
+              "quote": "a number of ETE messages"
+            },
+            "determiner": "a",
+            "head": "number of ete messages"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 94,
+              "quote": "an ETE buffer"
+            },
+            "determiner": "an",
+            "head": "ete buffer"
+          },
+          {
+            "anchor": {
+              "startChar": 112,
+              "endChar": 130,
+              "quote": "said nonzero value"
+            },
+            "determiner": "said",
+            "head": "nonzero value"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 159,
+              "quote": "said ETE flit count field"
+            },
+            "determiner": "said",
+            "head": "ete flit count field"
+          }
+        ]
+      },
+      {
+        "path": "8.b",
+        "anchor": {
+          "startChar": 161,
+          "endChar": 202,
+          "quote": "converting said ETE messages to ETE flits"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 172,
+              "endChar": 189,
+              "quote": "said ETE messages"
+            },
+            "determiner": "said",
+            "head": "ete messages"
+          },
+          {
+            "anchor": {
+              "startChar": 193,
+              "endChar": 202,
+              "quote": "ETE flits"
+            },
+            "determiner": "bare",
+            "head": "ete flits"
+          }
+        ]
+      },
+      {
+        "path": "8.c",
+        "anchor": {
+          "startChar": 208,
+          "endChar": 273,
+          "quote": "inserting said ETE flits into the packet after said packet header"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 218,
+              "endChar": 232,
+              "quote": "said ETE flits"
+            },
+            "determiner": "said",
+            "head": "ete flits"
+          },
+          {
+            "anchor": {
+              "startChar": 238,
+              "endChar": 248,
+              "quote": "the packet"
+            },
+            "determiner": "the",
+            "head": "packet"
+          },
+          {
+            "anchor": {
+              "startChar": 255,
+              "endChar": 273,
+              "quote": "said packet header"
+            },
+            "determiner": "said",
+            "head": "packet header"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "7"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 42,
+              "endChar": 51,
+              "quote": "removing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 75,
+                "quote": "a number of ETE messages"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 75,
+              "endChar": 81,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 81,
+                "endChar": 94,
+                "quote": "an ETE buffer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 94,
+              "endChar": 112,
+              "quote": " corresponding to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 112,
+                "endChar": 130,
+                "quote": "said nonzero value"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 130,
+              "endChar": 134,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 159,
+                "quote": "said ETE flit count field"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "8.b",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 161,
+              "endChar": 172,
+              "quote": "converting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 172,
+                "endChar": 189,
+                "quote": "said ETE messages"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 189,
+              "endChar": 193,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 193,
+                "endChar": 202,
+                "quote": "ETE flits"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "8.c",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 208,
+              "endChar": 218,
+              "quote": "inserting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.c",
+              "anchor": {
+                "startChar": 218,
+                "endChar": 232,
+                "quote": "said ETE flits"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 232,
+              "endChar": 238,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.c",
+              "anchor": {
+                "startChar": 238,
+                "endChar": 248,
+                "quote": "the packet"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 248,
+              "endChar": 255,
+              "quote": " after "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.c",
+              "anchor": {
+                "startChar": 255,
+                "endChar": 273,
+                "quote": "said packet header"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 112,
+            "endChar": 130,
+            "quote": "said nonzero value"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 340,
+            "endChar": 367,
+            "quote": "an identified nonzero value"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 134,
+            "endChar": 159,
+            "quote": "said ETE flit count field"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 151,
+            "endChar": 213,
+            "quote": "an End-to-End (ETE) Flow Unit within packet (Flit) count field"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.c",
+          "anchor": {
+            "startChar": 218,
+            "endChar": 232,
+            "quote": "said ETE flits"
+          }
+        },
+        "introducing": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 193,
+            "endChar": 202,
+            "quote": "ETE flits"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.c",
+          "anchor": {
+            "startChar": 238,
+            "endChar": 248,
+            "quote": "the packet"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 244,
+            "endChar": 262,
+            "quote": "an incoming packet"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.c",
+          "anchor": {
+            "startChar": 255,
+            "endChar": 273,
+            "quote": "said packet header"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 217,
+            "endChar": 232,
+            "quote": "a packet header"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 172,
+            "endChar": 189,
+            "quote": "said ETE messages"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 75,
+            "quote": "a number of ETE messages"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "The method as recited in claim 8"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 172,
+          "quote": "inserting an ETE cyclic redundancy check (CRC) flit with said embedded ETE flits, ETE CRC flit covers only said embedded ETE flits"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 52,
+              "endChar": 93,
+              "quote": "an ETE cyclic redundancy check (CRC) flit"
+            },
+            "determiner": "an",
+            "head": "ete cyclic redundancy check (crc) flit"
+          },
+          {
+            "anchor": {
+              "startChar": 99,
+              "endChar": 122,
+              "quote": "said embedded ETE flits"
+            },
+            "determiner": "said",
+            "head": "embedded ete flits"
+          },
+          {
+            "anchor": {
+              "startChar": 124,
+              "endChar": 136,
+              "quote": "ETE CRC flit"
+            },
+            "determiner": "bare",
+            "head": "ete crc flit"
+          },
+          {
+            "anchor": {
+              "startChar": 149,
+              "endChar": 172,
+              "quote": "said embedded ETE flits"
+            },
+            "determiner": "said",
+            "head": "embedded ete flits"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "8"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 42,
+              "endChar": 52,
+              "quote": "inserting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 52,
+                "endChar": 93,
+                "quote": "an ETE cyclic redundancy check (CRC) flit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 93,
+              "endChar": 99,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 99,
+                "endChar": 122,
+                "quote": "said embedded ETE flits"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 122,
+              "endChar": 124,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 124,
+                "endChar": 136,
+                "quote": "ETE CRC flit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 136,
+              "endChar": 149,
+              "quote": " covers only "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 149,
+                "endChar": 172,
+                "quote": "said embedded ETE flits"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 124,
+            "endChar": 136,
+            "quote": "ETE CRC flit"
+          }
+        },
+        "introducing": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 52,
+            "endChar": 93,
+            "quote": "an ETE cyclic redundancy check (CRC) flit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 99,
+            "endChar": 122,
+            "quote": "said embedded ETE flits"
+          }
+        },
+        "introducing": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 193,
+            "endChar": 202,
+            "quote": "ETE flits"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 149,
+            "endChar": 172,
+            "quote": "said embedded ETE flits"
+          }
+        },
+        "introducing": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 193,
+            "endChar": 202,
+            "quote": "ETE flits"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 32,
+          "quote": "The method as recited in claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 42,
+          "endChar": 181,
+          "quote": "checking a packet header cyclic redundancy check (CRC), and discarding said embedded ETE flits responsive to an incorrect packet header CRC"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 96,
+              "quote": "a packet header cyclic redundancy check (CRC)"
+            },
+            "determiner": "a",
+            "head": "packet header cyclic redundancy check (crc)"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 136,
+              "quote": "said embedded ETE flits"
+            },
+            "determiner": "said",
+            "head": "embedded ete flits"
+          },
+          {
+            "anchor": {
+              "startChar": 151,
+              "endChar": 181,
+              "quote": "an incorrect packet header CRC"
+            },
+            "determiner": "an",
+            "head": "incorrect packet header crc"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 42,
+              "endChar": 51,
+              "quote": "checking "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 96,
+                "quote": "a packet header cyclic redundancy check (CRC)"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 96,
+              "endChar": 113,
+              "quote": ", and discarding "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 113,
+                "endChar": 136,
+                "quote": "said embedded ETE flits"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 136,
+              "endChar": 151,
+              "quote": " responsive to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 151,
+                "endChar": 181,
+                "quote": "an incorrect packet header CRC"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 113,
+            "endChar": 136,
+            "quote": "said embedded ETE flits"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 407,
+            "endChar": 447,
+            "quote": "a specified number of embedded ETE flits"
+          }
+        }
+      }
+    ]
+  }
+]

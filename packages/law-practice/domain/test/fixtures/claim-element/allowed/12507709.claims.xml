@@ -1,0 +1,22 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A slush machine, comprising:
+<claim-text>a material tank (<b>1</b>) including two support brackets (<b>11</b>) on two sides, respectively;</claim-text>
+<claim-text>an agitator component (<b>2</b>) including a body upper shell (<b>21</b>) having one side provided with an agitator (<b>22</b>) having one end extending into the material tank (<b>1</b>), and a driving mechanism (<b>23</b>) for driving the agitator (<b>22</b>);</claim-text>
+<claim-text>two support arms (<b>24</b>) corresponding to the support brackets (<b>11</b>) disposed on two sides of the body upper shell (<b>21</b>), respectively;</claim-text>
+<claim-text>a track (<b>241</b>) formed in each of the support arms (<b>24</b>) wherein the support bracket (<b>11</b>) is configured to slide along the track (<b>241</b>) to position the material tank (<b>1</b>) to a working position;</claim-text>
+<claim-text>a refrigeration component (<b>3</b>) having a top detachably connected to a drip tray (<b>31</b>) located below the material tank (<b>1</b>) wherein the body upper shell (<b>21</b>) is fixedly disposed on a top of the refrigeration component (<b>3</b>);</claim-text>
+<claim-text>positioning pins (<b>15</b>) disposed on two sides of the material tank (<b>1</b>), respectively;</claim-text>
+<claim-text>a lock buckle (<b>27</b>) movably disposed on one side of each of the support arms (<b>24</b>) and configured to rotate synchronously through a rotating shaft (<b>28</b>);</claim-text>
+<claim-text>a positioning channel (<b>271</b>) disposed on one side of the lock buckle (<b>27</b>);</claim-text>
+<claim-text>a notch (<b>242</b>) configured to connect to both the positioning channel (<b>271</b>) and the positioning pin (<b>15</b>) and disposed at one end of the track (<b>241</b>); and</claim-text>
+<claim-text>a fixed bracket (<b>4</b>) disposed at a bottom of one end of the material tank (<b>1</b>);</claim-text>
+<claim-text>wherein a bottom of the fixed bracket (<b>4</b>) contacts the top of the refrigeration component (<b>3</b>) and is configured to transmit an operation load to the refrigeration component (<b>3</b>);</claim-text>
+<claim-text>wherein a bottom end of the fixed bracket (<b>4</b>) is movably sleeved in a support groove (<b>351</b>); and</claim-text>
+<claim-text>wherein inside of the support groove (<b>351</b>) is provided with a reinforcing rib (<b>353</b>).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The slush machine of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein one side of the lock buckle (<b>27</b>) away from the positioning channel (<b>271</b>) is clamped with a lock buckle handle inner shell (<b>29</b>) through a buckle (<b>272</b>), further comprising a lock buckle handle outer shell (<b>291</b>) disposed on one side of the lock buckle handle inner shell (<b>29</b>), and a power module (<b>212</b>) disposed inside the body upper shell (<b>21</b>).</claim-text>
+</claim>
+</claims>

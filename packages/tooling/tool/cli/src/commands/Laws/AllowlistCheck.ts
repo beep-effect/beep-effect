@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { buildAllowlistSnapshotModuleFromJsoncText } from "@beep/repo-configs/internal/laws/EffectLawsAllowlistSnapshotCodegen";
 import { isNoNativeRuntimeExtraCheckHotspot } from "@beep/repo-configs/laws/NoNativeRuntimeHotspots";
 import { findRepoRoot } from "@beep/repo-utils";
@@ -21,11 +22,9 @@ import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { parse } from "jsonc-parser";
 import { Project } from "ts-morph";
 import { collectNativeRuntimeViolationKeys, NativeRuntimeViolationKeyOptions } from "./NoNativeRuntime.ts";
 import { formatSchemaDiagnostics } from "./SchemaDiagnostics.ts";
-import type { ParseError } from "jsonc-parser";
 
 const $I = $RepoCliId.create("commands/Laws/AllowlistCheck");
 
@@ -164,22 +163,10 @@ export class AllowlistCheckSummary extends S.Opaque<AllowlistCheckSummary, { rea
   )
 ) {}
 
-const parseAllowlistText = (text: string): Result.Result<unknown, ReadonlyArray<string>> => {
-  const parseErrors = A.empty<ParseError>();
-  const parsed = parse(text, parseErrors, {
-    allowTrailingComma: true,
-    disallowComments: false,
-  });
-
-  return Eq.equals(0, A.length(parseErrors))
-    ? Result.succeed(parsed)
-    : Result.fail(
-        pipe(
-          parseErrors,
-          A.map((parseError) => `parse error at offset ${parseError.offset}`)
-        )
-      );
-};
+const parseAllowlistText = (text: string): Result.Result<unknown, ReadonlyArray<string>> =>
+  Jsonc.parseResult(text).pipe(
+    Result.mapError((error) => A.map(error.errors, (detail) => `parse error at offset ${detail.offset}`))
+  );
 
 const validateEntryFiles = Effect.fn(function* (cwd: string, entries: ReadonlyArray<EffectLawsAllowlistEntry>) {
   const fs = yield* FileSystem.FileSystem;

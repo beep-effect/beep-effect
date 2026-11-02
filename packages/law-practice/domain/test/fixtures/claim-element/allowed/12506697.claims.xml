@@ -1,0 +1,75 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An operation method of user equipment (UE), comprising
+<claim-text>while a timer T3451 is running, not initiating a non-access stratum (NAS) procedure over a store and forward (S&amp;F) satellite cell in a tracking area identifier (TAI) list, unless the S&amp;F satellite cell broadcasts a same satellite identifier (ID) broadcasted by the S&amp;F satellite cell from which an accept message was received;</claim-text>
+<claim-text>receiving a request message,</claim-text>
+<claim-text>wherein if the UE supports S&amp;F satellite operation and if a network is operating in a S&amp;F mode, the request message includes a S&amp;F satellite operation parameter; and</claim-text>
+<claim-text>if a first field in the S&amp;F satellite operation parameter is set to “S&amp;F monitoring list present”, deleting any previously stored value for a S&amp;F monitoring list of a current Public Land Mobile Network (PLMN) and storing a S&amp;F monitoring list value for the current PLMN, provided in the S&amp;F satellite operation parameter.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first field is a Store and Forward Monitoring List Indication (SFMLI) field.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the request message is a detach request message.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the S&amp;F satellite operation parameter includes an estimated S&amp;F uplink delivery time duration field.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>receiving an attach accept message including a S&amp;F wait timer duration value associated with the timer T3451.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. A user equipment (UE), the UE comprising:
+<claim-text>at least one processor; and</claim-text>
+<claim-text>at least one computer memory operably connectable to the at least one processor and storing instructions that, when executed by the at least one processor, perform operations comprising:
+<claim-text>while a timer T3451 is running, not initiating a non-access stratum (NAS) procedure over a a store and forward (S&amp;F) satellite cell in a tracking area identifier (TAI) list, unless the S&amp;F satellite cell broadcasts a same satellite identifier (ID) broadcasted by the S&amp;F satellite cell from which an accept message was received;</claim-text>
+<claim-text>receiving a request message,</claim-text>
+<claim-text>wherein if the UE supports S&amp;F satellite operation and if a network is operating in a S&amp;F mode, the request message includes a S&amp;F satellite operation parameter; and</claim-text>
+<claim-text>if a first field in the S&amp;F satellite operation parameter is set to “S&amp;F monitoring list present”, deleting any previously stored value for a S&amp;F monitoring list of a current Public Land Mobile Network (PLMN) and storing a S&amp;F monitoring list value for the current PLMN, provided in the S&amp;F satellite operation parameter.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The UE of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the first field is a Store and Forward Monitoring List Indication (SFMLI) field.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The UE of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the request message is a detach request message.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The UE of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the S&amp;F satellite operation parameter includes an estimated S&amp;F uplink delivery time duration field.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The UE of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the operations further comprise:
+<claim-text>receiving an attach accept message including a S&amp;F wait timer duration value associated with the timer T3451.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A semiconductor chipset, comprising:
+<claim-text>at least one processor; and</claim-text>
+<claim-text>at least one memory capable of storing instructions and being connected electrically to the at least one processor operably,</claim-text>
+<claim-text>wherein operations, performed when the instructions are executed by the at least one processor, includes:
+<claim-text>while a timer T3451 is running, not initiating a non-access stratum (NAS) procedure over a a store and forward (S&amp;F satellite cell in a tracking area identifier (TAI) list, unless the S&amp;F satellite cell broadcasts a same satellite identifier (ID) broadcasted by the S&amp;F satellite cell from which an accept message was received;</claim-text>
+<claim-text>receiving a request message,</claim-text>
+<claim-text>wherein if the UE supports S&amp;F satellite operation and if a network is operating in a S&amp;F mode, the request message includes a S&amp;F satellite operation parameter; and</claim-text>
+<claim-text>if a first field in the S&amp;F satellite operation parameter is set to “S&amp;F monitoring list present”, deleting any previously stored value for a S&amp;F monitoring list of a current Public Land Mobile Network (PLMN) and storing a S&amp;F monitoring list value for the current PLMN, provided in the S&amp;F satellite operation parameter.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The semiconductor chipset of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the first field is a Store and Forward Monitoring List Indication (SFMLI) field.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The semiconductor chipset of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the request message is a detach request message.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The semiconductor chipset of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the S&amp;F satellite operation parameter includes an estimated S&amp;F uplink delivery time duration field.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The semiconductor chipset of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the operations further comprise:
+<claim-text>receiving an attach accept message including a S&amp;F wait timer duration value associated with the timer T3451.</claim-text>
+</claim-text>
+</claim>
+</claims>

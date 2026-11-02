@@ -1772,7 +1772,7 @@ export declare namespace HeadingValue {
    * @category type-level
    * @since 0.0.0
    */
-  export type Encoded = S.Codec.Encoded<typeof HeadingValue>;
+  export type Encoded = typeof HeadingValue.Encoded;
 }
 
 /**

@@ -8,7 +8,7 @@ import * as S from "effect/Schema";
 const runs = { arbitrary: fcRuns(100) };
 const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
   it.effect.prop(
-    name + ": encode/decode preserves values and never fails",
+    `${name}: encode/decode preserves values and never fails`,
     [Arbitrary.schema(schema)],
     ([value]) =>
       Effect.gen(function* () {

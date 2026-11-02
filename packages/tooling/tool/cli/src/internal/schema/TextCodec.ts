@@ -17,21 +17,21 @@ import * as Yaml from "effect/encoding/Yaml";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 
-const parseText =
-  (format: string, parse: (text: string) => unknown) =>
-  (text: string): Effect.Effect<unknown, S.SchemaError> =>
-    Effect.try({
-      try: () => parse(text),
-      catch: (cause) =>
-        new S.SchemaError(
-          new SchemaIssue.InvalidValue({
-            message: `Invalid ${format} input (${String(cause)}).`,
-          })
-        ),
-    });
+const invalidInput =
+  (format: string) =>
+  (cause: unknown): S.SchemaError =>
+    new S.SchemaError(
+      new SchemaIssue.InvalidValue({
+        message: `Invalid ${format} input (${String(cause)}).`,
+      })
+    );
 
-const parseYamlText = parseText("YAML", Yaml.parse);
-const parseTomlText = parseText("TOML", Toml.parse);
+const parseYamlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
+  Effect.try({ try: () => Yaml.parse(text), catch: invalidInput("YAML") });
+
+// `Toml.parse` reports malformed input as a failed `Result` instead of throwing.
+const parseTomlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
+  Effect.fromResult(Toml.parse(text)).pipe(Effect.mapError(invalidInput("TOML")));
 
 /**
  * Build a decoder from YAML text through a target decoder.

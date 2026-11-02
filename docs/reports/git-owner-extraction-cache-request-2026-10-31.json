@@ -1,0 +1,20 @@
+{
+  "previous": "921f97055f51a6e6117576e7929b872b7f1de1122ed7315b2083352a7aa7a119",
+  "review": {
+    "reviewer": "GPT-6.1-Sol independent parent review (PR2413)",
+    "reason": "Record only the five drift-named generated policy seal input closures after extracting six Git owner modules; no qualification granted.",
+    "basis": {
+      "path": "docs/reports/git-owner-extraction-cache-review-2026-10-31.md",
+      "sha256": "29035ff9a05bd39d6e1dea1b35369b97d1031a2b409ba320dcd762d91dc0ed68"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

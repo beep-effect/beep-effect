@@ -11,6 +11,7 @@ import { $PracticeGatewayId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as McpServer from "effect/ai/McpServer";
 import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -192,6 +193,11 @@ export class OnboardingGuide extends Context.Service<OnboardingGuide, Onboarding
  * The `onboard_practice` MCP prompt: the onboarding guide as a prompt the
  * lawyer can pick in Claude.
  *
+ * **Details**
+ *
+ * The guide is read once when the layer is built, because prompt handlers
+ * only see request-level services.
+ *
  * **Example** (Compose the prompt)
  *
  * ```ts
@@ -204,8 +210,12 @@ export class OnboardingGuide extends Context.Service<OnboardingGuide, Onboarding
  * @category layers
  * @since 0.0.0
  */
-export const OnboardingPromptLayer = McpServer.prompt({
-  name: ONBOARD_PRACTICE_PROMPT,
-  description: ONBOARDING_GUIDE_DESCRIPTION,
-  content: () => OnboardingGuide.useSync((guide) => guide.text),
-});
+export const OnboardingPromptLayer = Layer.unwrap(
+  OnboardingGuide.useSync((guide) =>
+    McpServer.prompt({
+      name: ONBOARD_PRACTICE_PROMPT,
+      description: ONBOARDING_GUIDE_DESCRIPTION,
+      content: () => Effect.succeed(guide.text),
+    })
+  )
+);

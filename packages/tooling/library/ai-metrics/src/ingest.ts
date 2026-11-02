@@ -13,6 +13,7 @@ import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import { parseSourceEventTime, SourceEventTimeOrder } from "./internal/source-event-time.ts";
 import { metricEventName, transcriptLines } from "./internal/transcript-utils.ts";
 import {
   AgentTurn,
@@ -167,7 +168,10 @@ const eventNameList: (events: ReadonlyArray<AgentTurn>) => ReadonlyArray<string>
 const timestampList: (events: ReadonlyArray<AgentTurn>) => ReadonlyArray<string> = flow(
   A.map((event) => event.timestamp),
   A.getSomes,
-  A.sort(Order.String)
+  A.map(parseSourceEventTime),
+  A.getSomes,
+  A.sort(SourceEventTimeOrder),
+  A.map((value) => value.text)
 );
 
 /**

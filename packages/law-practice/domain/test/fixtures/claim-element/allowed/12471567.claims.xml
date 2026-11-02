@@ -1,0 +1,48 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A radially contractible wearable structure, comprising radial contraction modules, a traction rope, and a driving module;
+<claim-text>wherein the radial contraction modules and the driving module are connected end to end to form a collar for a living organism to pass through, one side of each of the radial contraction modules close to the collar is configured to be connected to electric shock contacts, the radial contraction modules each have a contraction position that contracts in a direction close to a centerline of the collar to bring the electric shock contacts into contact with the living organism, and the radial contraction modules each also have an expansion position that expands outward in a direction away from the centerline of the collar to separate the electric shock contacts from the living organism;</claim-text>
+<claim-text>a first end of the traction rope is connected to the radial contraction module, and a second end of the traction rope is connected to the driving module; and</claim-text>
+<claim-text>the driving module is configured to wind the traction rope to shorten a portion of the traction rope outside the driving module to drive the radial contraction module to switch from the expansion position to the contraction position, and the driving module is also configured to release the traction rope to extend the portion of the traction rope outside the driving module to drive the radial contraction module to switch from the contraction position to the expansion position.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The radially contractible wearable structure according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein two radial contraction modules are provided; and
+<claim-text>the radially contractible wearable structure further comprises:</claim-text>
+<claim-text>an adjusting module, wherein the adjusting module, one of the radial contraction modules, the driving module, and the other of the radial contraction modules are connected end to end in sequence to form the collar, and the adjusting module is configured to adjust the size of the collar.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The radially contractible wearable structure according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the radial contraction module comprises a plurality of scissor units, each of the scissor units comprises a first rod and a second rod, the first rod and the second rod are articulated and capable of crossing each other, and the plurality of scissor units are articulated end to end in sequence around the centerline of the collar;
+<claim-text>among the plurality of scissor units, the scissor unit at a head end is articulated to a head end of the adjusting module, and the scissor unit at a tail end is articulated to the driving module; and</claim-text>
+<claim-text>the electric shock contacts are disposed on the scissor units.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The radially contractible wearable structure according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein two first rods and one second rod are comprised in the same scissor unit, and one of the first rods, the second rod and the other first rod are arranged in sequence in a height direction of the scissor unit;
+<claim-text>in two adjacent scissor units, a tail end of the second rod of a previous scissor unit is disposed between head ends of the two first rods in a latter scissor unit, and the tail end of the second rod of the previous scissor unit is articulated to the head ends of the two first rods of the latter scissor unit; and</claim-text>
+<claim-text>in two adjacent scissor units, a head end of the second rod in the latter scissor unit is disposed between tail ends of the two first rods in the previous scissor unit, and the head end of the second rod in the latter scissor unit is articulated to the tail ends of the two first rods in the previous scissor unit.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The radially contractible wearable structure according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein among the plurality of scissor units of the same radial contraction module, the two scissor units at the head and tail ends each have a length that is smaller than a length of any of the remaining scissor units.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The radially contractible wearable structure according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein among the plurality of scissor units, each of the long scissor units is further provided with an elastic return member for providing a driving force to the first rods and the second rod to drive the radial contraction module to switch from the contraction position to the expansion position when the portion of the traction rope outside the driving module is extended.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The radially contractible wearable structure according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the radial contraction module further comprises:
+<claim-text>a head connector between the driving module and the plurality of scissor units and connecting the driving module to the scissor units; and</claim-text>
+<claim-text>a tail connector between the plurality of scissor units and the adjusting module and connecting the scissor units to the adjusting module.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The radially contractible wearable structure according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the first end of the traction rope threads the scissor units successively, and the first end of the traction rope is connected to the scissor unit that is away from the driving module.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The radially contractible wearable structure according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the driving module comprises:
+<claim-text>an electric motor; and</claim-text>
+<claim-text>a reel, the reel being connected to an output shaft of the electric motor and being connected to the second end of the traction rope, the reel winding the traction rope along with forward rotation of the output shaft of the electric motor, and the reel releasing the traction rope along with reverse rotation of the output shaft of the electric motor.</claim-text>
+</claim-text>
+</claim>
+</claims>

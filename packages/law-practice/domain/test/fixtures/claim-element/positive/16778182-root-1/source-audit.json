@@ -1,0 +1,181 @@
+{
+  "familyId": "16778182-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.99,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the dosage",
+      "nativeQuote": "the dosage",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the feature extraction",
+      "nativeQuote": "the feature extraction",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the optimal sub-tree",
+      "nativeQuote": "the optimal sub-tree",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the required dosage",
+      "nativeQuote": "the required dosage",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the established decision tree",
+      "nativeQuote": "the established decision tree",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the output",
+      "nativeQuote": "the output",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the gini index",
+      "nativeQuote": "the Gini index",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the optimal feature",
+      "nativeQuote": "the optimal feature",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the optimal splitting point",
+      "nativeQuote": "the optimal splitting point",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the feature",
+      "nativeQuote": "the feature",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the sub-trees",
+      "nativeQuote": "the sub-trees",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the complete tree form",
+      "nativeQuote": "the complete tree form",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the sequence of the sub-trees",
+      "nativeQuote": "the sequence of the sub-trees",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the independent verification data set",
+      "nativeQuote": "the independent verification data set",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the cross-validation method",
+      "nativeQuote": "the cross-validation method",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the time axis",
+      "nativeQuote": "the time axis",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the output data",
+      "nativeQuote": "the output data",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    }
+  ],
+  "concerns": [
+    "All selected examiner phrases match. Complete original8-claim set is exact including selected1–7; original8 versus selected7 is whole-context count, not mismatch."
+  ],
+  "rationale": "Read actual112(b)/second-paragraph indefiniteness and selected natural dependency references; all selected descendants connect to declared root. Detailed examiner correspondence assessed with original-version evidence. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "16778182",
+    "nativePublicationNumber": "US20200250554A1",
+    "nativePublicationDate": "20200806",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "2e50c23d511a9b8689fcf2d20572c7af94f616bca09574fe86c13cad8819c8ba",
+    "sourceClaimsXmlSha256": "71568d42f9f2666720d7e05ac2217639d15527f90dd3d1c86ed51d71763e2b7d"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 50,
+    "retainedInventoryCount": 50,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "K62G095NRXEAPX3",
+        "officialDate": "2020-01-31T12:29:51.000-0500"
+      }
+    ],
+    "officeActionMailDate": "2022-06-13",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "K62G095NRXEAPX3",
+      "officialDate": "2020-01-31T12:29:51.000-0500",
+      "sha256": "8b2eb7487419667710be5ae0bd44b4585b130c366064600629a009dcc642ea8f",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8],
+      "sourceClaimCount": 8
+    }
+  ],
+  "nativeContextClaimCount": 8,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "K62G095NRXEAPX3",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 8
+    }
+  ]
+}

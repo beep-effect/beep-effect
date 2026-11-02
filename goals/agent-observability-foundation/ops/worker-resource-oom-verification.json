@@ -1,0 +1,158 @@
+{
+  "scope": "disposable synthetic worker only",
+  "productionRollout": false,
+  "fixtureSha256": "d429b77e24c40c8ca3cfe11e2d3d86b1418ed0d3d7f83be37e428b75ae95de25",
+  "runs": [
+    {
+      "unit": "beep-observation-proof-db4bf07912b3.service",
+      "observedCgroupLimits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "kernelLockOwnerVerified": true,
+      "secondOwnerExit": 73,
+      "startsPaused": true,
+      "bodyLimitBytes": 262144,
+      "oversizedBodyStatus": 413,
+      "configuredHeaderLimitBytes": 16384,
+      "oversizedHeaderProbeBytes": 25000,
+      "oversizedHeaderStatus": 431,
+      "incompleteHeaderClosedSeconds": 2.0,
+      "incompleteBodyRefusedSeconds": 1.005,
+      "incompleteBodyStatus": 503,
+      "fileDescriptorExhaustion": {
+        "opened": 245,
+        "exhausted": true
+      },
+      "cpuBurnDelta": {
+        "usage_usec": 1024989,
+        "nr_throttled": 21,
+        "throttled_usec": 1011137
+      },
+      "physicalSnapshotUnderResourceLimits": {
+        "manifest": {
+          "version": "observation-backup/v1",
+          "hostId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "namespaceId": "62a5719eccc8479fa41bdfc26cafee485b311df9766ecb3249859d3564c85fda",
+          "configDigest": "1b80b8e2a29264adba859a0b49f2fb81b15619027c6fea2f6abca0fbd64e9e94",
+          "snapshotDigest": "f9134624321d98badeeee496124f21f7300a9684116fc024e62c77aeee97bc1b",
+          "bytes": 147456,
+          "createdAt": 1793215577023
+        },
+        "manifestDigest": "7ac6e1cd888652fa91d28dbc07928c3df51c69aca26b5d0b29603b24c2acb505"
+      },
+      "memoryTermination": {
+        "Result": "oom-kill",
+        "MemoryPeak": "536870912",
+        "ExecMainCode": "2",
+        "ExecMainStatus": "9"
+      }
+    },
+    {
+      "unit": "beep-observation-proof-a26a9aa430e0.service",
+      "observedCgroupLimits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "kernelLockOwnerVerified": true,
+      "secondOwnerExit": 73,
+      "startsPaused": true,
+      "exactReceiptReplayAfterOOM": true,
+      "priorJournalIntegrity": true,
+      "explicitResumeRequired": true
+    }
+  ],
+  "proxies": [
+    {
+      "unit": "beep-observation-proxy-proof-4f47b71d94b7.service",
+      "observedCgroupLimits": {
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "25000 100000"
+      },
+      "observedFileDescriptorLimit": 128,
+      "coreDumpsDisabled": true,
+      "noNewPrivileges": true,
+      "loopbackListenerOwnerVerified": true,
+      "configurationSha256": "fae0d77cefe320a8ea7e4b82130aeabd8ea9d5ec794ee880672a0ece644c4e90",
+      "listener": "exclusive IPv4 loopback ephemeral port; private Unix upstream; admin disabled"
+    },
+    {
+      "unit": "beep-observation-proxy-proof-8a9e9cff198e.service",
+      "observedCgroupLimits": {
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "25000 100000"
+      },
+      "observedFileDescriptorLimit": 128,
+      "coreDumpsDisabled": true,
+      "noNewPrivileges": true,
+      "loopbackListenerOwnerVerified": true,
+      "configurationSha256": "53c1983ac2a812a84dc734f826b803131e72650731cf26fedf67fa9352af4256",
+      "listener": "exclusive IPv4 loopback ephemeral port; private Unix upstream; admin disabled"
+    }
+  ],
+  "proxyBinary": {
+    "version": "2.11.7",
+    "sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+    "archiveSha256": "727b91701a392de6ebc5027509f548bf39979e5216340d0faed8fa5e69c84f8b"
+  },
+  "result": "passed",
+  "aggregateMemoryCeilingBytes": 671088640,
+  "aggregateCpuQuotaPercent": 75,
+  "aggregateTasksCeiling": 128,
+  "databaseCeilingBytes": 1048576,
+  "perFileCeilingBytes": 2097152,
+  "aggregateFilesystemQuotaQualified": false,
+  "backendDeliveryQualified": false,
+  "runtimeEntrypoint": "test fixture only; not production launcher",
+  "receiptSha256": "baf7181d7e265d9c7d72de940eec01470320007204308d3a6fefa0f1d0887f80",
+  "cleanup": [
+    {
+      "unit": "beep-observation-proof-db4bf07912b3.service",
+      "mainPID": "0",
+      "activeState": "failed",
+      "result": "oom-kill",
+      "exitStatus": "9"
+    },
+    {
+      "unit": "beep-observation-proxy-proof-4f47b71d94b7.service",
+      "mainPID": "0",
+      "activeState": "inactive",
+      "result": "success",
+      "exitStatus": "0"
+    },
+    {
+      "unit": "beep-observation-proof-a26a9aa430e0.service",
+      "mainPID": "0",
+      "activeState": "inactive",
+      "result": "success",
+      "exitStatus": "0"
+    },
+    {
+      "unit": "beep-observation-proxy-proof-8a9e9cff198e.service",
+      "mainPID": "0",
+      "activeState": "inactive",
+      "result": "success",
+      "exitStatus": "0"
+    }
+  ],
+  "ownedWorkersStopped": true,
+  "verifierSha256": "f6accf6f34f2460f5376887e09e49392ac1983e8c75b97220e8aecb1760bb6d8",
+  "deliberateMemoryExhaustion": true,
+  "kernelAttribution": {
+    "timestamp": "2026-10-28T14:26:17-05:00",
+    "constraint": "CONSTRAINT_MEMCG",
+    "unit": "beep-observation-proof-db4bf07912b3.service",
+    "pid": 719818,
+    "globalOutOfMemory": false,
+    "notificationSideEffect": "KDE displayed Memory Shortage Avoided for this deliberate 512 MiB cgroup test"
+  },
+  "scopeNote": "Historical deliberate OOM qualification; routine verifier was subsequently changed to opt in explicitly to this test."
+}

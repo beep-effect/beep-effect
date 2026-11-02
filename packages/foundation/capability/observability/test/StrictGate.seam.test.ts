@@ -20,7 +20,7 @@ describe("strict gate seam", () => {
       expectTypeOf<Layer.Services<ReturnType<typeof Otlp.layer>>>().toEqualTypeOf<
         HttpClient.HttpClient | OtlpSerialization.OtlpSerialization
       >();
-      expectTypeOf<Layer.Success<ReturnType<typeof Otlp.layer>>>().toEqualTypeOf<never>();
+      expectTypeOf<Layer.Success<ReturnType<typeof Otlp.layer>>>().toEqualTypeOf<OtlpExporter.Flusher>();
     })
   );
 

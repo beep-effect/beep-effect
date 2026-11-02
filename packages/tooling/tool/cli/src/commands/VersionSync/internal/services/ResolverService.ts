@@ -21,7 +21,12 @@ import {
 import { BiomeSchemaState, buildBiomeReport, resolveBiomeSchema } from "../resolvers/BiomeResolver.ts";
 import { BunVersionState, buildBunReport, resolveBunVersions } from "../resolvers/BunResolver.ts";
 import { buildDockerReport, DockerImageState, resolveDockerImages } from "../resolvers/DockerResolver.ts";
-import { buildEffectReport, EffectCatalogState, resolveEffectCatalog } from "../resolvers/EffectResolver.ts";
+import {
+  buildEffectReport,
+  EffectCatalogState,
+  resolveEffectCatalog,
+  withEffectReleaseCommit,
+} from "../resolvers/EffectResolver.ts";
 import { buildNodeReport, resolveNodeVersions } from "../resolvers/NodeResolver.ts";
 import { readRootLockfile, resolveInstalledToolVersion } from "../resolvers/RootCatalog.ts";
 import { buildTurboReport, resolveTurboSchema, TurboSchemaState } from "../resolvers/TurboResolver.ts";
@@ -138,14 +143,14 @@ const resolveBiomeCategory = Effect.fn(function* (
     : O.none<VersionCategoryReport>();
 });
 
-const resolveEffectCategory = Effect.fn(function* (repoRoot: string) {
+const resolveEffectCategory = Effect.fn(function* (repoRoot: string, options: VersionSyncOptions) {
   const effectState = yield* resolveOrEmpty(
     "Effect catalog",
     resolveEffectCatalog(repoRoot),
     EffectCatalogState.make({})
   );
 
-  return buildEffectReport(effectState);
+  return buildEffectReport(yield* withEffectReleaseCommit(effectState, options.skipNetwork));
 });
 
 const resolveTurboCategory = Effect.fn(function* (
@@ -193,7 +198,7 @@ const resolve: ResolverServiceShape["resolve"] = Effect.fn(function* (repoRoot, 
   }
 
   if (categorySelection.shouldCheck(options, "effect")) {
-    categories = A.append(categories, yield* resolveEffectCategory(repoRoot));
+    categories = A.append(categories, yield* resolveEffectCategory(repoRoot, options));
   }
 
   if (categorySelection.shouldCheck(options, "turbo")) {

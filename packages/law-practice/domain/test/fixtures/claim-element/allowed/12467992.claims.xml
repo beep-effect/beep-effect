@@ -1,0 +1,48 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An NMR spectrometer comprising:
+<claim-text>an NMR magnet system mounted on a device for isolating vibrations of the NMR magnet system from the environment;</claim-text>
+<claim-text>a sample storage means for providing and temporarily storing NMR measurement samples to be measured; and</claim-text>
+<claim-text>a transport device for transporting an NMR measurement sample from the sample storage means into a measurement volume within the NMR magnet system, the transport device comprising a continuous, pneumatically bidirectionally operable, gastight transport tube that is mechanically flexibly constructed from a plurality of interconnected sub-members in the form of separate rigid tube sections, which can move relative to one another and are dimensionally stable with respect to a flow cross-section of the transport tube.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. A transport device for the pneumatic transport of NMR measurement samples from a sample storage means into a measurement volume within an NMR magnet system of an NMR spectrometer, comprising a continuous, pneumatically bidirectionally operable, gastight transport tube that is mechanically flexibly constructed from a plurality of interconnected sub-members in the form of separate rigid tube sections, which can move relative to one another and are dimensionally stable with respect to a flow cross-section of the transport tube, wherein the sub-members of the transport tube are configured such that, in the event of any axial displacement or tilting of immediately adjacent sub-members relative to one another, radially inner portions of the sub-members do not project into a clear flow cross-section in the interior of the transport tube through which the NMR measurement samples are pneumatically transported.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The transport device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein each of the sub-members of the transport tube have, in an end portion with which they connect to an immediately adjacent sub-member, a shape of either a positive or a negative ball joint segment, the positive ball joint segment precisely engaging in the negative ball joint segment of the adjacent sub-member such that the positive and negative ball joint segments abut each other surface-to-surface and exert a sealing function between the clear flow cross-section of the transport tube and an external environment in a transition region of the two ball joint segments.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The transport device according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, further comprising cylindrical partial surfaces that are part of the ball joint segments.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The transport device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the sub-members comprise, in an inner region of transition points between adjacent sub-members, a meshing toothed structure, an outer surface of which is conical.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The transport device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the transport tube is configured such that, at transition points between adjacent sub-members, a degree of relative movement possible between the two adjacent sub-members is limited so as to establish a minimum radius of curvature of the transport tube.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The transport device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the transport tube is configured such that transition points between adjacent sub-members allow for linear extensions in a longitudinal direction of the transport tube and can compensate for a mechanical offset of the NMR spectrometer.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The transport device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein at least some of the sub-members of the transport tube are identical.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The transport device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the transport tube comprises sub-members whose lengths and/or relative freedom of movement differ.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The transport device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the sub-members of the transport tube are configured to permit the transport tube to be repeatedly disassembled and reassembled without tools.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The transport device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein at least some sub-members of the transport tube have closable radial openings.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The transport device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein at least some sub-members of the transport tube are constructed entirely or partially from optically transparent material.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The transport device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the transport tube is constructed entirely or partially from electrically conductive material or is coated with such a material.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The transport device according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the transport tube comprises fastening elements for fastening it to parts of the NMR spectrometer and/or for coupling a plurality of transport tubes to one another at the same time.</claim-text>
+</claim>
+</claims>

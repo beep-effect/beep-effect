@@ -2,6 +2,8 @@
  * Effect service for the FreshBooks read API — identity resolution and
  * schema-decoded clients / invoices / payments verbs over `FetchHttpClient`.
  *
+ * **Details**
+ *
  * Token acquisition and single-use refresh-token rotation are owned by
  * {@link FreshbooksAuth}; this service consumes a valid bearer from it for
  * every call. Only read verbs are exposed — no write, delivery, or webhook

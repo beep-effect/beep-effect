@@ -1,0 +1,40 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for preparing a profiled microchannel plate heat exchanger, comprising the following steps:
+<claim-text>Step S<b>101</b>, performing slicing on a three-dimensional (3D) digital model of the profiled microchannel plate heat exchanger, and melting raw material powder layer by layer with a laser beam according to information of slices obtained by layering to obtain a multi-layer metal substrate; the multi-layer metal substrate comprising an array of hollow flow channels having a closed profile section and a lug portion; wherein the multi-layer metal substrate is printed layer by layer in a direction vertical to a core straight tube segment to prevent slag hanging from blocking the microchannels;</claim-text>
+<claim-text>Step S<b>102</b>, cleaning off powder from the multi-layer metal substrate obtained in step S<b>101</b>, and then cutting the multi-layer metal substrate into a plurality of single-layer metal plates, with a grinding tolerance of 0.1-1 mm left on upper and lower surfaces of each of the single-layer metal plates during cutting;</claim-text>
+<claim-text>Step S<b>103</b>, fastening and connecting countersunk holes of the lug portions of the metal plates obtained in step S<b>102</b> to a grinding machine by bolts to grind the upper and lower surfaces of the metal plates;</claim-text>
+<claim-text>Step S<b>104</b>, making flow channels on the metal plates obtained in step S<b>103</b> using array line electrode wires, with at least one of the flow channels having a large aspect ratio section and formed by cutting with the array line electrode wires; wherein the array line electrode wires are arranged at intervals, are X in number and are divided into Y groups, and the flow channels are made by X/Y downward pressings; and</claim-text>
+<claim-text>Step S<b>105</b>, removing a surface oxide layer and surface oil stains from the metal plate obtained in step S<b>104</b>, and cleaning and drying the metal plates; then sequentially compacting the metal plates layer by layer, fixing the plurality of the metal plates by the lug portions, then welding the plurality of the metal plates by vacuum diffusion welding, and finally cutting away the lug portions to obtain a profiled microchannel plate heat exchanger core.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method for preparing the profiled microchannel plate heat exchanger according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, in step S<b>101</b>, metal powder with a particle size of 5-35 um is used as the raw material powder, and argon gas is used as a protective gas to heat up to 60° C.; and in step S<b>102</b>, high pressure air and high pressure deionized water are used to clean off the powder inside the hollow flow channels of the multi-layer metal substrate.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method for preparing the profiled microchannel plate heat exchanger according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, a single-layer thickness of the metal plates obtained by grinding in step S<b>103</b> is not less than 0.3 mm, and a minimum characteristic size of the closed profile of the flow channels machined in step S<b>104</b> is not less than 0.1 mm.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method for preparing the profiled microchannel plate heat exchanger according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, flow channels with any section, including profiled section flow channels, can be machined in step S<b>104</b>.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method for preparing the profiled microchannel plate heat exchanger according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, the flow channels are machined in step S<b>104</b>, the flow channels of the same layer, and the flow channels between layers are isolated from each other.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method for preparing the profiled microchannel plate heat exchanger according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, in step S<b>101</b>, layer-by-layer printing is performed by Selective Laser Melting (SLM) to obtain the multi-layer metal substrate; and
+<claim-text>the SLM method comprises: printing a metal substrate by a laser metal fusion technique; scanning with a laser beam over a layer of metal powder along a predetermined path to melt and solidify the metal powder to form a predetermined pattern; and repeating the layer-to-layer scanning to print out a metal substrate with high design freedom to obtain the flow channels with a large depth-to-diameter ratio and a large aspect ratio as heat exchanger channels.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method for preparing the profiled microchannel plate heat exchanger according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, in step S<b>102</b>, the multi-layer metal substrate is cut into the plurality of single-layer metal plates by Wire cut Electrical Discharge Machining (WEDM).</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method for preparing the profiled microchannel plate heat exchanger according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, in step S<b>103</b>, the upper and lower surfaces of each of the metal plates are ground until the upper and lower surfaces of the metal plates are ground to smooth and flat surfaces with an accurate thickness.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method for preparing the profiled microchannel plate heat exchanger according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, in step S<b>104</b>, a complex flow channel is manufactured on the metal plate obtained by grinding in step S<b>103</b> by Micro Electrical Discharge Machining (micro-EDM).</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method for preparing the profiled microchannel plate heat exchanger according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, in step S<b>105</b>, the metal plates obtained in step S<b>103</b> are cleaned with acetic acid to remove a surface oxidation layer, then soaked in absolute ethyl alcohol to remove surface oil stains, and finally cleaned and dried with deionized water and high pressure air; and the lug portions are cut away by High-Speed Wire cut Electrical Discharge Machining (WEDM-HS).</claim-text>
+</claim>
+</claims>

@@ -1,0 +1,120 @@
+{
+  "familyId": "14260199-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the temperature",
+      "nativeQuote": "the temperature",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the liquid water",
+      "nativeQuote": "the liquid water",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the pressure",
+      "nativeQuote": "the pressure",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "cathode inlet air",
+      "nativeQuote": "cathode inlet air",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the drain",
+      "nativeQuote": "the drain",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the orifice",
+      "nativeQuote": "the orifice",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the drain",
+      "nativeQuote": "the drain",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the orifice",
+      "nativeQuote": "the orifice",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    }
+  ],
+  "concerns": [
+    "Full native/context19 equals original19, selected8 smaller scope. Original4 manually inspected: inserted page19/fileheader in clause explains nonexact comparison; substantive pressure/cathode wording same. Other selected1–3/5–8 exact original. Membership includes5→4,7→6, both→1."
+  ],
+  "rationale": "Read retained action and selected natural dependencies; actual ground presence distinguished from mere antecedent commentary. Original/version evidence investigated where needed. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "14260199",
+    "nativePublicationNumber": "US20150311547A1",
+    "nativePublicationDate": "20151029",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "08c98643029dcd0d123474a416b76e8b5c6c565b7c559a460de8947df8f8a29e",
+    "sourceClaimsXmlSha256": "5b2ce81b0552054f82bf832063dcf66a518267969ed212c5016d9b9b10c233e3"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 85,
+    "retainedInventoryCount": 85,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "HUDAWNTKPXXIFW3",
+        "officialDate": "2014-04-23T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2016-11-02",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "HUDAWNTKPXXIFW3",
+      "officialDate": "2014-04-23T00:00:00.000-0400",
+      "sha256": "ee14bfcecac2c1c2f0799920d7662b03d5ac4b07842d8115143ad9d3f282db10",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1, 2, 3, 5, 6, 7, 8, 10, 11, 12, 14, 15, 17, 18, 19
+      ],
+      "sourceClaimCount": 19
+    }
+  ],
+  "nativeContextClaimCount": 19,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "HUDAWNTKPXXIFW3",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": ["14260199"],
+      "headerMailRoomDates": ["2014-04-23"],
+      "applicationMatches": true,
+      "claimNodeCount": 20
+    }
+  ]
+}

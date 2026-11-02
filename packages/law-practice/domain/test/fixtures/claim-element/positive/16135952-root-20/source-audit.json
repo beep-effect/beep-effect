@@ -1,0 +1,121 @@
+{
+  "familyId": "16135952-root-20",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.99,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the stabilizing movements",
+      "nativeQuote": "the stabilizing movements",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the disk orienting mechanisms",
+      "nativeQuote": "the disk orienting mechanisms",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the disk rotation mechanisms",
+      "nativeQuote": "the disk rotation mechanisms",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the active tiles",
+      "nativeQuote": "the active tiles",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the swashplates",
+      "nativeQuote": "the swashplates",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the drive assemblies",
+      "nativeQuote": "the drive assemblies",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the active tile",
+      "nativeQuote": "the active tile",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "drive shafts",
+      "nativeQuote": "drive shafts",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    }
+  ],
+  "concerns": [
+    "Original full27 claims exact, including all selected. Examiner explicitly questions27 dependence on25 rather than26; native27 indeed depends25 and source dependency is preserved. All cited phrases match."
+  ],
+  "rationale": "Read actual112(b)/second-paragraph indefiniteness and selected natural dependency references; all selected descendants connect to declared root. Detailed examiner correspondence assessed with original-version evidence. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "16135952",
+    "nativePublicationNumber": "US20200088758A1",
+    "nativePublicationDate": "20200319",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "197c40aa3a93af7a9753067011dd0e489548e6953b7d3ccf949dacd1c427c276",
+    "sourceClaimsXmlSha256": "8a90a2eb3b68a640ce6272b2e69ab1541f278cfa075d0efd7b627663e5e03dcf"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 41,
+    "retainedInventoryCount": 41,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "JM9OM21YRXEAPX1",
+        "officialDate": "2018-09-19T17:51:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2020-04-27",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "JM9OM21YRXEAPX1",
+      "officialDate": "2018-09-19T17:51:00.000-0400",
+      "sha256": "cae3c499f4519ebaa003af1ae2de0ae692452bf6433b392988cd765dbae89a37",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        21, 22, 23, 24, 25, 26, 27
+      ],
+      "sourceClaimCount": 27
+    }
+  ],
+  "nativeContextClaimCount": 27,
+  "selectedClaimNumbers": [20, 21, 22, 23, 24, 25, 26, 27],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "JM9OM21YRXEAPX1",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 27
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18734099-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Existing source-audit is an eligibility proposal pending critic review. It reports original LXCZ6P1NXBLUEX3 claims 1–12 match native wording after printed Claim n prefixes are removed; provenance exactNonWhitespaceClaimNumbers is empty before that explicit reconciliation.",
+    "A second same-date inventory original has no cached original XML; the audited complete original is the stated corroboration.",
+    "Claim 10 preserves “the base seat member” with no earlier introduction; source grammar is not silently changed to “a”. Claim 12 does not depend on claim 2, so its “the upper end” of transfer rod cannot inherit claim 2’s “an upper end”."
+  ],
+  "annotationRationale": [
+    "Preamble subject retains comfort qualifier and actual dependency wording, ending before characterized transition. Explicit component enumeration, substantive coordinate clauses and causal functional clauses are independently represented. Nested component lists in claims 3, 6 and 9 receive sub-limitation children and part-of edges.",
+    "Every noun phrase and structural boundary was selected manually from canonical claims. Lexical heads preserve forward-extending third connecting rod, rotational connection point, upper backrest support body, L-shaped structure and other modifiers; trailing predicates and of-phrases are separate. Shared-determiner “left and right sides” stays one nonoverlapping term.",
+    "Explicit connections, movement and causal operations use functional-relation elements and ordered exact term/text parts. Structural form-only limitations retain limitation kind. No unstated function or claim construction is inferred.",
+    "Dependencies follow the actual natural wording: 2→1, 3→2, 4→3, 5→1, 6→5, 7–10→6, 11→1, 12→11. Root depends-on-element links identify inheritance of the complete claimed chair; cross-claim term edges resolve individual inherited entities through those ancestors.",
+    "First and second connecting rods introduced in claim 3 are separate from those introduced in claim 6. No sibling-claim antecedent is imported. Lower/upper end identities are qualified by their owning component, so claim 2 references to the transfer rod ends link only to its own a lower end/an upper end. Missing introductions for other ends, connection points, rotational range, angle and base seat member remain without fabricated antecedent edges.",
+    "The source is semantically annotatable despite absent introductions. Those absent introductions are preserved source defects, not automatically unresolved gold; no attorney indefiniteness conclusion is supplied."
+  ],
+  "independence": "Fresh source-grounded labels from canonical claims, native claims XML, provenance, source audit and ClaimElement schema shapes/coherence only. No P2 design, implementation, predictions, synthetic fixtures or conformance archives read. Helper only located manually selected quote offsets and checked schema/reference coherence.",
+  "sourceStatus": "Extractor source proposal; critic source review and attorney adjudication pending.",
+  "validation": "All 12 selected claims accounted exactly once; exact element/term spans, unique paths, nonoverlapping term ownership and cross-tree term reference existence mechanically checked."
+}

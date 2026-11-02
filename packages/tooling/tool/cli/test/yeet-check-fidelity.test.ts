@@ -32,6 +32,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const decodeGhStatusChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusCheck)));
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -128,12 +129,12 @@ const withGh = (checkArgs: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-      const [first, second] = command.args;
+      const [first, second] = commandArgs(command);
       if (command.command === "git") return Effect.succeed(handle(""));
       if (first === "pr" && second === "view") return Effect.succeed(handle(pullRequestJson));
       if (first === "pr" && second === "checks")
-        return Ref.update(checkArgs, A.append(command.args)).pipe(
-          Effect.as(handle(A.contains(command.args, "--required") ? requiredChecksJson : checksJson))
+        return Ref.update(checkArgs, A.append(commandArgs(command))).pipe(
+          Effect.as(handle(A.contains(commandArgs(command), "--required") ? requiredChecksJson : checksJson))
         );
       if (first === "api") return Effect.succeed(handle(threadsJson));
       return Effect.succeed(handle("[]"));

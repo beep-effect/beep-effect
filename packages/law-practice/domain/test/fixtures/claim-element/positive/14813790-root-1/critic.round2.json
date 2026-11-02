@@ -1,0 +1,39 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "14813790-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 8,
+    "resolvedTreesReviewed": 8,
+    "elementCount": 18,
+    "termCount": 68,
+    "functionalRelationCount": 10
+  },
+  "reviewNotes": [
+    "Full initial semantic review of all eight claims, beyond the earlier head-only revision. Root1 includes the resumptive shaft before its actual having transition. Counts, adjacent pairs, cone-angle comparisons and all functional limitations remain explicit.",
+    "Natural dependencies2\u20137\u21921 and8\u21921 are retained, including changed engine subject8. Rear-end/thickness properties and separate sibling formations are not silently equated. Shortened shaft, engine, joint and local stiffening-formation names have unique source roles; complete rear-end anchor and normalized head follow lexical-head/v1.",
+    "Every submitted tree decoded through ClaimElementTree. Independently checked exact UTF-16 element/term spans, nonoverlap, term ownership, antecedent endpoints and complete contiguous ordered functional-part reconstruction. Native XML agrees with canonical claims after permitted printed-number/whitespace normalization, and claims XML SHA256 matches provenance.",
+    "Read source-critic and source/rejection provenance; retained source eligibility is accepted separately. No fresh original-PDF/inventory authentication or attorney agreement is claimed. Genuine reference ambiguity remains explicit in extractor concerns."
+  ],
+  "independence": "Independent semantic critic; did not author these references. Reviewed exact canonical/native source, source critic, provenance, extractor and schemas against semantic-reference/v2, entity-mentions/v1 and lexical-head/v1. No production implementation, decomposer, P2-DESIGN, predictions or synthetic/conformance fixtures inspected. Helpers only validate manually reviewed source annotations. Only assigned critic receipts written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement"
+}

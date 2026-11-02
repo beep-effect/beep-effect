@@ -1,0 +1,125 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "11246782-root-28",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.97,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    28,
+    29,
+    30
+  ],
+  "findings": [],
+  "quotedEvidence": [
+    {
+      "claimNumber": 28,
+      "examinerPhrase": "the upper shell",
+      "nativeQuote": "the upper shell",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 28,
+      "examinerPhrase": "the hollow interior region",
+      "nativeQuote": "the hollow interior region",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 28,
+      "examinerPhrase": "the left swing arm",
+      "nativeQuote": "the left swing arm",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the belt-receiver slot",
+      "nativeQuote": "the belt-receiver slot",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the bottom wall",
+      "nativeQuote": "the bottom wall",
+      "literalMatchIgnoringCase": true
+    }
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "11246782",
+    "publicationNumber": "US20070080569A1",
+    "publicationDate": "20070412"
+  },
+  "digestEvidence": [
+    {
+      "file": "11246782.publication.xml",
+      "sha256": "7012dfce65ee20e9d6115148f4e42ab9a962a01056b76c39309c06bfdfaeb44c",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "164ba7cdb3667ac85de10f85eabec98fccac77c5cb3eca7c1e2d9a8ab0165144",
+      "matchesProvenance": true
+    }
+  ],
+  "independentPdfEvidence": [
+    {
+      "documentIdentifier": "EEWNAG79PP2GUI1",
+      "sha256": "5692a6eb95b86a9db1ea804386b7cab6003e14a3663dcf35535c25518756155f",
+      "independentlyViewedPages": [
+        7,
+        8
+      ]
+    },
+    {
+      "documentIdentifier": "EK7CX1Q0PPOPPY2",
+      "sha256": "9919628f3530df0ad7c75fd07dc1e62afa421c0cab660a2d8adecfeef1863d1b",
+      "independentlyViewedPages": [
+        1
+      ]
+    },
+    {
+      "documentIdentifier": "EKA9SX2RPP2GUI2",
+      "sha256": "b61c8ec5990a46ec8e93bdd34e1127f8c4d77aa115cea9cf61168e439bcabd26",
+      "independentlyViewedPages": [
+        1
+      ]
+    }
+  ],
+  "inventoryEvidence": {
+    "sha256": "25e667b0d39aa83537256d0f0cae34186b7ca0419599ef8b379f09cb2846d58c",
+    "declaredCount": 51,
+    "actualRows": 51,
+    "preOrOnActionClaimAndAmendmentRows": [
+      {
+        "documentIdentifier": "EK7CX1Q0PPOPPY2",
+        "documentCode": "A.PE",
+        "officialDate": "2006-02-27T00:00:00.000-0500"
+      },
+      {
+        "documentIdentifier": "EKA9SX2RPP2GUI2",
+        "documentCode": "REM",
+        "officialDate": "2006-02-27T00:00:00.000-0500"
+      },
+      {
+        "documentIdentifier": "EEWNAG79PP2GUI1",
+        "documentCode": "CLM",
+        "officialDate": "2005-10-07T00:00:00.000-0400"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "FCKH00ECPPOPPY5",
+        "documentCode": "CTNF",
+        "officialDate": "2008-02-12T00:00:00.000-0500"
+      }
+    ]
+  },
+  "evidence": [
+    "Original PDF7–8 visually inspected: coherent printed28independent,29/30→28, with original dangling upper/lower shell references preserved. Full selected bodies correspond; native coupled-to versus original coupled to is explicit punctuation-only difference.",
+    "Preliminary amendment cover PDF says Amendments to the Specification begin on page2. Remarks PDF says specification title changed to match original cover/transmittal title. This directly excludes a claim amendment, instead of inferring from noCLM entry.",
+    "Actual secondparagraph rejection15–19and22–30 expressly includes28–30; detailed same-number shell/interior/swing-arm/slot/wall phrases match."
+  ],
+  "rationale": "Independent same-number ground/wording, fullinventory, familymembership and original/amendment evidence reviewed. Chronology alone not accepted. Sourceeligibility only; semantic references and attorneyadjudication separate.",
+  "independence": "Only candidate source-critic changed; read supplied sources/XML/PDF pages/inventories. No active/source/expected edits, rules/predictions/network/secrets/git/delegation."
+}

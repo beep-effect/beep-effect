@@ -1,0 +1,78 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for producing an electromagnetic shielding gasket by means of a shielding substance that contains a silicone plastic mass, electrically-conducting components, and components that are expandable under the influence of heat, in which method the gasket substance is dispensed onto a foil, and after and/or during the dispensing is treated with heat, thereby obtaining its desired, predetermined expansion and/or shape. </claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the foil and the shielding gasket which is attached to the foil are disposed onto a housing and/or printed circuit board and/or housing parts. </claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the shielding gasket is separated from the foil and wherein the shielding gasket is disposed onto a housing and/or printed circuit board and/or housing parts. </claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the expandable particles, in the non-expanded state, have a diameter that is substantially in the range of 2 to 50 μm, and in the expanded state a diameter that is substantially in the range of approximately 30 to 200 μm. </claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the expandable components are micro spheres or micro hollow spheres consisting of a polymer or another plastic, which spheres are electrically nonconductive and, through heat treatment, are enlargeable in size by a factor of approximately 5 to 70 in volume. </claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein during the heat treatment the temperature of the shielding substance lies approximately in the range of 50° C. to 140° C. </claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein after the dispensing and after the heat treatment the shielding substance is essentially circular in cross section (bead, double bead). </claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein means are provided whereby the expansion is guided into a direction and/or shape that is associated with the purpose and/or is appropriate. </claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the expanded shielding substance undergoes locally a different (partial) heat treatment, in order to achieve targeted, different heights and/or widths of the expanded shielding substance and to lower the possible physical deformation forces. </claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A method for producing an electromagnetic shielding gasket by means of a shielding substance that contains a silicone plastic mass, electrically-conducting components, and components that are expandable under the influence of heat, in which method the gasket substance is dispensed onto a housing and/or printed circuit board and/or housing parts, and the silicone plastic mass is hardened after dispensing, and the shielding substance is treated with heat after hardening of the silicone plastic mass, thereby expanding the expandable components. </claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the expandable particles, in the non-expanded state, have a diameter that is substantially in the range of 2 to 50 μm, and in the expanded state a diameter that is substantially in the range of approximately 30 to 200 μm. </claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref> wherein the expandable components are micro spheres or micro hollow spheres consisting of a polymer or another plastic, which spheres are electrically nonconductive and, through heat treatment, are enlargeable in size by a factor of approximately 5 to 70 in volume. </claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein during the heat treatment the temperature of the shielding substance lies approximately in the range of 50° C. to 140° C. </claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein after the dispensing and after the heat treatment the shielding substance is essentially circular in cross section (bead, double bead). </claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein means are provided whereby the expansion is guided into a direction and/or shape that is associated with the purpose and/or is appropriate. </claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of claims <b>10</b>, wherein the expanded shielding substance undergoes locally a different (partial) heat treatment, in order to achieve targeted, different heights and/or widths of the expanded shielding substance and to lower the possible physical deformation forces. </claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. A method for producing an electromagnetically shielded housing, wherein the housing comprises at least two housing parts forming a gap between adjacent portions of the housing parts, comprising the steps of:
+<claim-text>a) dispensing an electromagnetic shielding substance that contains a silicone plastic mass, electrically-conducting components, and components that are expandable under the influence of heat onto adjacent portions of at least one of the housing parts; </claim-text>
+<claim-text>b) disposing the housing parts in a final position relative to each other; and </claim-text>
+<claim-text>c) treating the shielding substance with heat, thereby expanding the shielding substance. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the gap is of irregular diameter. </claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the expandable particles, in the non-expanded state, have a diameter that is substantially in the range of 2 to 50 μm, and in the expanded state a diameter that is substantially in the range of approximately 30 to 200 μm. </claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the expandable components are micro spheres or micro hollow spheres consisting of a polymer or another plastic, which spheres are electrically nonconductive and, through heat treatment, are enlargeable in size by a factor of approximately 5 to 70 in volume. </claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The method of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein during the heat treatment the temperature of the shielding substance lies approximately in the range of 50° C. to 140° C. </claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The method of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein after the dispensing and after the heat treatment the shielding substance is essentially circular in cross section (bead, double bead). </claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The method of claims <b>17</b>, wherein means are provided whereby the expansion is guided into a direction and/or shape that is associated with the purpose and/or is appropriate. </claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. The method of claims <b>17</b>, wherein the expanded shielding substance undergoes locally a different (partial) heat treatment, in order to achieve targeted, different heights and/or widths of the expanded shielding substance and to lower the possible physical deformation forces.</claim-text>
+</claim>
+</claims>

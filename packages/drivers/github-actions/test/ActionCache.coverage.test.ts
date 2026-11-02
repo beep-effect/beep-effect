@@ -16,6 +16,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { commandArgs } from "./support/commandArgs.ts";
 import { json, jsonStatus, resultsEnv, twirpFetch } from "./support/results.ts";
 import type { FileBlobTransfer } from "@beep/github-actions/BlobTransfer";
 
@@ -70,7 +71,7 @@ const fixture = (options: Options = {}) => {
         Effect.gen(function* () {
           if (options.spawnFails === true) return yield* fault;
           if ("args" in command && command.args[0] === "czPf") {
-            yield* fakeTar(fs, command.args, options.expectedPath);
+            yield* fakeTar(fs, commandArgs(command), options.expectedPath);
           }
           return ChildProcessSpawner.makeHandle({
             pid: ChildProcessSpawner.ProcessId(42),

@@ -12,6 +12,7 @@ try {
   Add-Type -AssemblyName System.Core
   $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User
   $sec = New-Object System.IO.Pipes.PipeSecurity
+  $sec.SetOwner($sid)
   $sec.AddAccessRule((New-Object System.IO.Pipes.PipeAccessRule($sid, [System.IO.Pipes.PipeAccessRights]::ReadWrite, [System.Security.AccessControl.AccessControlType]::Allow)))
   $server = New-Object System.IO.Pipes.NamedPipeServerStream($PipeName, [System.IO.Pipes.PipeDirection]::In, 1, [System.IO.Pipes.PipeTransmissionMode]::Byte, [System.IO.Pipes.PipeOptions]::Asynchronous, 4096, 4096, $sec)
   Status 'listening'

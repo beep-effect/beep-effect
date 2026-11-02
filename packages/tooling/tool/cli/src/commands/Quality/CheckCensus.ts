@@ -9,7 +9,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Cache from "effect/Cache";
 import * as Console from "effect/Console";
@@ -31,6 +30,7 @@ import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { runCaptured } from "../../internal/process/index.ts";
+import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import { resolveGitCommit, runGitLines } from "../../internal/repo-run/GitExec.ts";
 import {
   CHECK_CENSUS_BASELINE_PATH,
@@ -53,7 +53,7 @@ import { compilerOutputLines, isCompilerDiagnosticLine, nameFilterPredicate } fr
 import { jsdocGitErrorAdapter } from "./internal/JSDocRatchet.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type { FsUtils } from "@beep/repo-utils";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Quality/CheckCensus");
@@ -365,7 +365,11 @@ export class CheckCensusMissingOutput extends S.Opaque<CheckCensusMissingOutput,
   )
 ) {}
 
-type CensusEnvironment = FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner;
+type CensusEnvironment =
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner;
 
 const listProgramFiles = Effect.fn("CheckCensus.listProgramFiles")(function* (
   tsgoPath: string,
@@ -374,7 +378,7 @@ const listProgramFiles = Effect.fn("CheckCensus.listProgramFiles")(function* (
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const result = yield* runCaptured({
     command: tsgoPath,
@@ -403,7 +407,7 @@ const measureDiagnostics = Effect.fn("CheckCensus.measureDiagnostics")(function*
     readonly checkTimeMs: number;
   },
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const [elapsed, result] = yield* runCaptured({
     command: tsgoPath,
@@ -447,7 +451,7 @@ const measureProgram = Effect.fn("CheckCensus.measureProgram")(function* (
 ): Effect.fn.Return<
   { readonly program: CheckCensusProgram; readonly files: HashSet.HashSet<string> },
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const files = yield* listProgramFiles(tsgoPath, configPath, packageDir);
   const upstream = pipe(
@@ -880,7 +884,7 @@ export const selectCheckCensusPackages = Effect.fn("CheckCensus.selectPackages")
   QualityScriptCommandError,
   FileSystem.FileSystem | Path.Path | FsUtils
 > {
-  const workspaces = yield* resolveWorkspacePackages(repoRoot).pipe(
+  const workspaces = yield* workspaceManifests(repoRoot).pipe(
     QualityScriptCommandError.mapError("Failed to resolve workspace packages.")
   );
   const candidates = pipe(
@@ -948,7 +952,7 @@ const checkCensusBaselineProvenance = Effect.fn("CheckCensus.baselineProvenance"
 ): Effect.fn.Return<
   CheckCensusBaselineProvenance,
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const commit = yield* resolveGitCommit(repoRoot, "HEAD", jsdocGitErrorAdapter);
   const status = yield* runGitLines(repoRoot, ["status", "--porcelain"], jsdocGitErrorAdapter);

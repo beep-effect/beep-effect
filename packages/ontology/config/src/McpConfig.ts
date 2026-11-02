@@ -1,6 +1,8 @@
 /**
  * Server-only ontology MCP surface configuration contract.
  *
+ * **Details**
+ *
  * Kept separate from {@link OntologyServerConfig} because tool registration and
  * filesystem authority are different concerns with different blast radii:
  * `workspaceRoot` bounds what a write may touch, while this flag decides

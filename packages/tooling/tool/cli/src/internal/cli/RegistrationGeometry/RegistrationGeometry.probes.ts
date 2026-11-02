@@ -1,10 +1,5 @@
-import {
-  buildRepoDependencyIndex,
-  computeTransitiveClosure,
-  decodePackageJsonEffect,
-  resolveWorkspaceDirs,
-  toSortedRecord,
-} from "@beep/repo-utils";
+import { computeTransitiveClosure, decodePackageJsonEffect, toSortedRecord } from "@beep/repo-utils";
+import { ALL_DEPENDENCY_FIELDS } from "@beep/repo-workspaces/internal/dependencyFields";
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, Str, thunkFalse } from "@beep/utils";
@@ -25,6 +20,7 @@ import {
   IDENTITY_SHAPE_TEST_PATH,
   shapeTestRowAccessor,
 } from "../../../commands/DeletePackage/internal/ShapeTestRow.ts";
+import { workspaceDirectories, workspacePackages } from "../../RepoWorkspaces.ts";
 import { mentionsAnyToken, mentionsToken } from "../../WholeToken.ts";
 import { isLabsWorkspacePath } from "../Labs/index.ts";
 import { RegistrationGeometryError } from "./RegistrationGeometry.errors.ts";
@@ -438,22 +434,30 @@ const authoredKindFor = (file: string): DependentHitKind =>
 
 type WorkspaceEdge = { readonly owner: string; readonly bucket: string; readonly dependency: string };
 
+// Every manifest edge onto a workspace member, root manifest included: one row per bucket and dependency.
 const collectWorkspaceEdges = Effect.fn("RegistrationGeometry.collectWorkspaceEdges")(function* (
   repoRoot: string,
   targetName: string
 ) {
-  const dependencyIndex = yield* buildRepoDependencyIndex(repoRoot).pipe(
+  const packages = yield* workspacePackages(repoRoot).pipe(
     Effect.mapError(RegistrationGeometryError.newCause(`Failed to build dependency index for ${targetName}.`))
   );
-  let edges = A.empty<WorkspaceEdge>();
-  for (const [owner, deps] of HashMap.entries(dependencyIndex)) {
-    for (const [bucket, entries] of R.toEntries(deps.workspace)) {
-      for (const dependency of entries.pipe(toSortedRecord, R.keys)) {
-        edges = A.append(edges, { owner, bucket, dependency });
-      }
-    }
-  }
-  return edges;
+  const memberNames = HashSet.fromIterable(
+    A.map(
+      A.filter(packages, (pkg) => !pkg.isRootWorkspace),
+      (pkg) => pkg.name
+    )
+  );
+  return A.flatMap(packages, (pkg) =>
+    A.flatMap(ALL_DEPENDENCY_FIELDS, (bucket) =>
+      pipe(
+        R.keys(pkg[bucket]),
+        A.filter((dependency) => HashSet.has(memberNames, dependency)),
+        A.sort(Order.String),
+        A.map((dependency): WorkspaceEdge => ({ owner: pkg.name, bucket, dependency }))
+      )
+    )
+  );
 });
 
 const rootScriptHits = (
@@ -572,7 +576,7 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const workspaces = A.fromIterable(yield* resolveWorkspaceDirs(repoRoot));
+  const workspaces = A.fromIterable(yield* workspaceDirectories(repoRoot));
   const edges = yield* collectWorkspaceEdges(repoRoot, target.packageName);
   const reverse = A.reduce(edges, HashMap.empty<string, HashSet.HashSet<string>>(), (map, edge) =>
     addReverseEdge(map, edge.dependency, edge.owner)

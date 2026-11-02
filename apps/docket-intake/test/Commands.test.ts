@@ -98,6 +98,7 @@ const commandsLayer = (env: Readonly<Record<string, string>>) =>
     FilesLayer,
     FakeM365Layer,
     WiringLogLayer,
+    BunCrypto.layerSecureRandom,
     ConfigProvider.layer(ConfigProvider.fromUnknown(env))
   );
 

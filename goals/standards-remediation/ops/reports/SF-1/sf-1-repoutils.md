@@ -158,7 +158,7 @@ inlining an already-identical fields literal. Proof:
 ## Files touched
 
 - `packages/tooling/library/repo-utils/src/schemas/PackageJson.ts`
-- `packages/tooling/library/repo-utils/src/schemas/TSConfig.ts`
+- `packages/tooling/library/repo-tsconfig/src/TsconfigValidator.ts` (formerly repo-utils `src/schemas/TSConfig.ts`, deleted in effected-promotion 3-A6)
 - `packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts`
 - `packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts`
 - `packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts`

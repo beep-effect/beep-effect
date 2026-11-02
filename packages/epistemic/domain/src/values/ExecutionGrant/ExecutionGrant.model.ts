@@ -1,6 +1,8 @@
 /**
  * Execution grant value object: the unit of pre-authorized agent authority.
  *
+ * **Details**
+ *
  * A grant names what one principal may do — one operation against one sink —
  * under a pinned policy revision and an expiry. Grants are held only by the
  * enforcement boundary and are never issued to the agent as a credential, so

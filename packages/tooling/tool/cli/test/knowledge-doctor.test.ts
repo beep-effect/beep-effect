@@ -263,6 +263,30 @@ describe("knowledge doctor span extraction", () => {
   );
 
   it.effect(
+    "reads the frontmatter citation only from a closed YAML block, numbering the key as a document line",
+    Effect.fnUntraced(function* () {
+      const documentMarkers = (text: string) =>
+        A.map(
+          A.filter(
+            extractKnowledgeDocumentSpans("docs/guide.md", text, HashSet.empty()).markers,
+            (marker) => marker.form === "document"
+          ),
+          (marker) => [marker.commit, marker.line]
+        );
+      assert.deepStrictEqual(documentMarkers(doc("---", "title: t", `beep-historical: "${FOREIGN}"`, "---")), [
+        [FOREIGN, 3],
+      ]);
+      assert.deepStrictEqual(documentMarkers(`---\r\ntitle: t\r\nbeep-historical: ${FOREIGN}\r\n---\r\n`), [
+        [FOREIGN, 3],
+      ]);
+      // No closing fence is no frontmatter block (the shared FrontmatterSource grammar).
+      assert.deepStrictEqual(documentMarkers(doc("---", `beep-historical: ${FOREIGN}`, "", "Body.")), []);
+      assert.deepStrictEqual(documentMarkers(doc("---json", `beep-historical: ${FOREIGN}`, "---")), []);
+      assert.deepStrictEqual(documentMarkers(doc("---", "title: t", "---", `beep-historical: ${FOREIGN}`)), []);
+    })
+  );
+
+  it.effect(
     "reads an assertion only from a whole comment line: quoted, fenced, and mid-line markers are syntax",
     Effect.fnUntraced(function* () {
       const quoted = "Write `<!-- beep:assert path-exists docs/quoted.md -->` to assert a path.";
@@ -750,6 +774,68 @@ describe("knowledge static option surface", () => {
         ]);
         assert.strictEqual(KnowledgeCommandSurface.pruneStaticCommand(tree, []), tree);
         assert.deepStrictEqual(options("bare"), []);
+      })
+    );
+
+    it.effect(
+      "keeps command names usable while refusing dynamic, recursive, or untrusted flag declarations",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-opaque-option-surface-" });
+        const rootModule = path.join(tempRoot, ROOT_MODULE_PATH);
+        yield* fs.makeDirectory(path.dirname(rootModule), { recursive: true });
+        const cases = [
+          ["dynamicName", "Flag.String(Date.now().toString())"],
+          ["missingName", "Flag.String()"],
+          ["missingParam", "Flag.optional()"],
+          ["emptyPipe", "pipe()"],
+          ["dynamicParam", 'true ? Flag.String("left") : Flag.String("right")'],
+          ["bareAlternative", 'Flag.String("value").pipe(Flag.orElse)'],
+          ["nonCallTransform", 'Flag.String("value").pipe(42)'],
+          ["untrustedTransform", 'Flag.String("value").pipe(identity())'],
+          ["untrustedConstructor", 'Foreign.String("value")'],
+          ["recursiveFactory", "recursive()"],
+          ["unboundFactory", "named()"],
+          ["recursiveConst", "cycle"],
+          ["methodConfig", '{ method() { return Flag.String("value") } }'],
+        ];
+        yield* fs.writeFileString(
+          rootModule,
+          doc(
+            'import * as Command from "effect/cli/Command"',
+            'import * as Flag from "effect/cli/Flag"',
+            'import { pipe } from "effect/Function"',
+            "const Foreign = { String: (name: string) => Flag.String(name) }",
+            "const identity = () => (value: unknown) => value",
+            "const recursive = () => recursive()",
+            'const named = (name = "default") => Flag.String(name)',
+            "const cycle = cycle",
+            ...A.map(
+              cases,
+              ([name, expression]) => `const ${name}Command = Command.make("${name}", { value: ${expression} })`
+            ),
+            `export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([${A.join(
+              A.map(cases, ([name]) => `${name}Command`),
+              ", "
+            )}]))`,
+            ""
+          )
+        );
+
+        const tree = yield* KnowledgeCommandSurface.buildStaticCommandTree(tempRoot);
+
+        assert.deepStrictEqual(
+          A.map(tree.children, (child) => child.name),
+          A.map(cases, ([name]) => name)
+        );
+        for (const child of tree.children) {
+          assert.isUndefined(child.options, child.name);
+          assert.deepStrictEqual(KnowledgeCommandSurface.resolveStaticCommand(tree, [child.name]), [
+            "resolved",
+            [child.name],
+          ]);
+        }
       })
     );
 

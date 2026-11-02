@@ -8,17 +8,16 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Str } from "@beep/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { matchCodeownersOwners } from "../../internal/Codeowners.ts";
 import { KnowledgeDoctorInputError } from "./Knowledge.errors.ts";
 import { KnowledgeCommitSha } from "./Knowledge.refs.ts";
 import { KnowledgeBaselineKey } from "./KnowledgeDoctor.schemas.ts";
@@ -389,48 +388,6 @@ export const decodeKnowledgeLeasesReportJson: {
  * CODEOWNERS
  * ---------------------------------------------------------------------------------------------- */
 
-const globTokens: Readonly<Record<string, string>> = {
-  "**/": "(?:.*/)?",
-  "/**": "(?:/.*)?",
-  "**": ".*",
-  "*": "[^/]*",
-  "?": "[^/]",
-};
-
-const escapeRegExp = Str.replace(/[.+^${}()|[\]\\]/gu, "\\$&");
-
-const globSource = (glob: string): string =>
-  A.join(
-    A.map(Str.split(/(\*\*\/|\/\*\*|\*\*|\*|\?)/u)(glob), (token) =>
-      O.getOrElse(R.get(globTokens, token), () => escapeRegExp(token))
-    ),
-    ""
-  );
-
-// gitignore-style matching: a leading or inner slash anchors to the root, a trailing slash matches
-// only below a directory, and a matched directory owns everything under it.
-const codeownersPattern = (pattern: string): RegExp => {
-  const directoryOnly = Str.endsWith("/")(pattern);
-  const body = Str.replace(/^\/+|\/+$/gu, "")(pattern);
-  const anchored = Str.startsWith("/")(pattern) || Str.includes("/")(body);
-  const prefix = anchored ? "^" : "^(?:.*/)?";
-  const suffix = directoryOnly ? "/.*$" : "(?:/.*)?$";
-  return new RegExp(`${prefix}${globSource(body)}${suffix}`, "u");
-};
-
-type CodeownersRule = { readonly pattern: RegExp; readonly owners: ReadonlyArray<string> };
-
-const parseCodeownersLine = (line: string): O.Option<CodeownersRule> => {
-  const content = Str.trim(Str.replace(/(^|\s)#.*$/u, "")(line));
-  return pipe(
-    O.liftPredicate(content, Str.isNonEmpty),
-    O.map(Str.split(/\s+/u)),
-    O.flatMap((words) =>
-      O.map(A.head(words), (pattern) => ({ pattern: codeownersPattern(pattern), owners: A.drop(words, 1) }))
-    )
-  );
-};
-
 /**
  * Resolves the owner set of a repository path from `.github/CODEOWNERS` text.
  *
@@ -461,14 +418,11 @@ const parseCodeownersLine = (line: string): O.Option<CodeownersRule> => {
 export const resolveKnowledgeCodeowners: {
   (repoPath: string): (codeowners: string) => ReadonlyArray<string>;
   (codeowners: string, repoPath: string): ReadonlyArray<string>;
-} = dual(2, (codeowners: string, repoPath: string): ReadonlyArray<string> => {
-  const rules = A.getSomes(A.map(Str.split("\n")(codeowners), parseCodeownersLine));
-  return pipe(
-    A.findLast(rules, (rule) => rule.pattern.test(repoPath)),
-    O.map((rule) => rule.owners),
-    O.getOrElse(A.empty<string>)
-  );
-});
+} = dual(
+  2,
+  (codeowners: string, repoPath: string): ReadonlyArray<string> =>
+    O.getOrElse(matchCodeownersOwners(codeowners, repoPath), A.empty<string>)
+);
 
 /* -------------------------------------------------------------------------------------------------
  * Evaluation

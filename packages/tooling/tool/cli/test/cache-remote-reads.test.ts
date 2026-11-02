@@ -5,7 +5,7 @@ import {
 } from "@beep/repo-cli/commands/Cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -18,7 +18,11 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
-const platform = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const platform = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 const testLayer = CacheQualificationLive.pipe(Layer.provideMerge(platform));
 
 it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {

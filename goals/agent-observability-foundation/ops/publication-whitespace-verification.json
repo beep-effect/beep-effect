@@ -1,0 +1,24 @@
+{
+  "result": "passed",
+  "tokenSequencesUnchanged": true,
+  "changes": [
+    {
+      "file": "ops/verify-native-collector-route.py",
+      "beforeSha256": "24abce331d3c827d8a01620f9c31b78dac7893e3ecb74fca123542da59d8d5c9",
+      "afterSha256": "423bb981b234f8d43dd08dc4871c85eee8eb584b901fa9f0965868b59f877916",
+      "change": "trailing horizontal whitespace only"
+    },
+    {
+      "file": "ops/verify-worker-entrypoint.py",
+      "beforeSha256": "b41bb1c11b615e14420bbb862e473567ac4951fa0217e6c1b4153d64b6075aae",
+      "afterSha256": "df710022e3f00477a442f0fec062f25e3a202053a54fe476340aad521e5218df",
+      "change": "trailing horizontal whitespace only"
+    },
+    {
+      "file": "ops/verify-worker-resources.py",
+      "beforeSha256": "ffcdd3b66593b5b6f44c2f151de154bd4f86023150ad198bf5917d0ae72cdf39",
+      "afterSha256": "dd3b7662f2c9bc09137736b0c8d274e8dc2bf371fe23954b2910792c31078d87",
+      "change": "trailing horizontal whitespace only"
+    }
+  ]
+}

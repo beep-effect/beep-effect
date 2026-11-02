@@ -124,9 +124,15 @@ export const YAML_STRINGIFY_ERROR_CODES = ["CircularReference"] as const;
  * refusal: `modify` re-emits exactly one document, so a multi-document
  * stream fails typed rather than silently truncating documents 2..n.
  * `DirectiveCarryingDocument` is the directive refusal: the stringifier does
- * not re-emit `%YAML`/`%TAG` directive lines, and re-emitting a document
- * without its `%TAG` orphans every shorthand tag that depends on it — the
- * output would be unparseable — so modify fails typed rather than corrupting.
+ * not re-emit `%YAML`/`%TAG` directive lines, so modify keeps the source's
+ * directive prologue verbatim and renders only the body after it; when the
+ * `---` line ending the directives carries content the two cannot be split,
+ * and re-emitting without the `%TAG` would orphan every shorthand tag that
+ * depends on it, so modify fails typed rather than corrupting.
+ * `UnsupportedYamlVersion` is the version refusal: modify writes YAML 1.2,
+ * and under `%YAML 1.1` it also quotes every fresh string a 1.1 reader would
+ * coerce; any other declared version has no known resolution rules, so
+ * modify refuses rather than guessing.
  *
  * `CircularReference` and `NestingDepthExceeded` are the two limits on the
  * replacement value itself: `modify` lowers a plain JavaScript value into
@@ -153,6 +159,7 @@ export const YAML_MODIFY_ERROR_CODES = [
   "NotNavigable",
   "MultiDocumentStream",
   "DirectiveCarryingDocument",
+  "UnsupportedYamlVersion",
   "CircularReference",
   "NestingDepthExceeded",
 ] as const;

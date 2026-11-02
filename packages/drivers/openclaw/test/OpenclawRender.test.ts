@@ -26,10 +26,8 @@ import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -100,7 +98,7 @@ const ollamaProvider = (id: string) =>
     models: [OpenclawModelDeclaration.make({ id: "gemma3:4b", input: ["text"], name: "gemma3:4b" })],
   });
 
-it.layer(Layer.succeed(Crypto.Crypto, NodeCrypto.make))("@beep/openclaw render adapter", (it) => {
+it.layer(NodeCrypto.layer)("@beep/openclaw render adapter", (it) => {
   it.effect("renders the golden intent to byte-identical canonical JSON with the pinned content hash", () =>
     Effect.gen(function* () {
       const rendered = yield* renderOpenclawConfig(goldenDeploymentIntent);

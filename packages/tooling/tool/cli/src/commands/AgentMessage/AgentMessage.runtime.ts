@@ -31,6 +31,7 @@ import {
   RouterError,
   receivingGrantAllowsEnvelopeScope,
 } from "./AgentMessage.models.ts";
+import { AgentObservationOwner, AgentObservationRequest, openAgentMessageSession } from "./AgentMessage.observation.ts";
 import { EndpointDispatch, makeAgentMessageRouter } from "./AgentMessage.service.ts";
 import { AgentMessageStore } from "./AgentMessage.store.ts";
 import type { ManagedTurnResult } from "@beep/ai-provider-cli";
@@ -282,6 +283,10 @@ export const agentMessageServeCommand = Command.make(
   "serve",
   {
     stateDir: Flag.String("state-dir"),
+    observationDir: Flag.String("observation-dir").pipe(
+      Flag.withDescription("Explicit private observation enrollment; never auto-provisioned"),
+      Flag.optional
+    ),
     profileFile: Flag.String("profile-file").pipe(
       Flag.withDescription("Private owned native launch profile JSON; never an interactive home overlay")
     ),
@@ -296,7 +301,17 @@ export const agentMessageServeCommand = Command.make(
       Flag.withDescription("New lifecycle generation; replacement is fenced by unresolved calls")
     ),
   },
-  ({ stateDir, profileFile, grantFile, endpointId, participantId, ownerId, repositoryScope, generation }) =>
+  ({
+    stateDir,
+    observationDir,
+    profileFile,
+    grantFile,
+    endpointId,
+    participantId,
+    ownerId,
+    repositoryScope,
+    generation,
+  }) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       yield* requirePrivateAgentPath(profileFile, "File");
@@ -319,8 +334,20 @@ export const agentMessageServeCommand = Command.make(
           });
         }
       }
-      const sessions = yield* AiProviderCliSession;
-      const session = yield* sessions.open(profile);
+      const session = yield* openAgentMessageSession(
+        AgentObservationRequest.make({
+          profile,
+          owner: AgentObservationOwner.make({
+            endpointId,
+            ownerId,
+            generation,
+            repositoryScope,
+            workspace: yield* fs.realPath(profile.workspace),
+            provider: profile.provider,
+          }),
+          enrollmentDirectory: observationDir,
+        })
+      );
       const identity = session.identity;
       const backend = Match.value(identity.provider).pipe(
         Match.when("codex", () => "codex-app-server-stdio"),

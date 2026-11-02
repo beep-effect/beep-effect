@@ -1,0 +1,107 @@
+{
+  "schema": "security-scanning-closeout/v1",
+  "capturedAt": "2026-10-31",
+  "repository": "beep-effect/beep-effect",
+  "count": 9,
+  "alerts": [
+    {
+      "kind": "code-scanning",
+      "number": 4,
+      "url": "https://github.com/beep-effect/beep-effect/security/code-scanning/4",
+      "state": "dismissed",
+      "rule": "js/incomplete-sanitization",
+      "disposition": "false-positive",
+      "evidence": "research/2026-10-31-scanning.md",
+      "resolution": "false positive",
+      "verifiedAt": "2026-10-31"
+    },
+    {
+      "kind": "code-scanning",
+      "number": 9,
+      "url": "https://github.com/beep-effect/beep-effect/security/code-scanning/9",
+      "state": "dismissed",
+      "rule": "js/incomplete-url-substring-sanitization",
+      "disposition": "false-positive",
+      "evidence": "research/2026-10-31-scanning.md",
+      "resolution": "false positive",
+      "verifiedAt": "2026-10-31"
+    },
+    {
+      "kind": "code-scanning",
+      "number": 10,
+      "url": "https://github.com/beep-effect/beep-effect/security/code-scanning/10",
+      "state": "dismissed",
+      "rule": "js/incomplete-url-substring-sanitization",
+      "disposition": "false-positive",
+      "evidence": "research/2026-10-31-scanning.md",
+      "resolution": "false positive",
+      "verifiedAt": "2026-10-31"
+    },
+    {
+      "kind": "code-scanning",
+      "number": 11,
+      "url": "https://github.com/beep-effect/beep-effect/security/code-scanning/11",
+      "state": "dismissed",
+      "rule": "js/incomplete-url-substring-sanitization",
+      "disposition": "false-positive",
+      "evidence": "research/2026-10-31-scanning.md",
+      "resolution": "false positive",
+      "verifiedAt": "2026-10-31"
+    },
+    {
+      "kind": "secret-scanning",
+      "number": 1,
+      "url": "https://github.com/beep-effect/beep-effect/security/secret-scanning/1",
+      "state": "resolved",
+      "type": "Slack Incoming Webhook URL",
+      "disposition": "false-positive",
+      "evidence": "research/2026-10-31-scanning.md",
+      "resolution": "false_positive",
+      "verifiedAt": "2026-10-31"
+    },
+    {
+      "kind": "secret-scanning",
+      "number": 2,
+      "url": "https://github.com/beep-effect/beep-effect/security/secret-scanning/2",
+      "state": "resolved",
+      "type": "Amazon AWS Temporary Access Key ID",
+      "disposition": "expired",
+      "evidence": "research/2026-10-31-scanning.md",
+      "resolution": "revoked",
+      "verifiedAt": "2026-10-31"
+    },
+    {
+      "kind": "secret-scanning",
+      "number": 3,
+      "url": "https://github.com/beep-effect/beep-effect/security/secret-scanning/3",
+      "state": "resolved",
+      "type": "Amazon AWS Temporary Access Key ID",
+      "disposition": "expired",
+      "evidence": "research/2026-10-31-scanning.md",
+      "resolution": "revoked",
+      "verifiedAt": "2026-10-31"
+    },
+    {
+      "kind": "secret-scanning",
+      "number": 4,
+      "url": "https://github.com/beep-effect/beep-effect/security/secret-scanning/4",
+      "state": "resolved",
+      "type": "Amazon AWS Temporary Access Key ID",
+      "disposition": "expired",
+      "evidence": "research/2026-10-31-scanning.md",
+      "resolution": "revoked",
+      "verifiedAt": "2026-10-31"
+    },
+    {
+      "kind": "secret-scanning",
+      "number": 5,
+      "url": "https://github.com/beep-effect/beep-effect/security/secret-scanning/5",
+      "state": "resolved",
+      "type": "Tailscale API Key",
+      "disposition": "false-positive",
+      "evidence": "research/2026-10-31-scanning.md",
+      "resolution": "used_in_tests",
+      "verifiedAt": "2026-10-31"
+    }
+  ]
+}

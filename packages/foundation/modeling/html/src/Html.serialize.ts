@@ -649,14 +649,15 @@ const revalidateSafeHtmlAst = (value: SafeHtmlAst): Effect.Effect<HtmlRoot.Type,
   isSafeHtmlAst(value)
     ? conform(safeHtmlAstRoot(value)).pipe(
         Effect.flatMap(enforceSafeHtml),
-        Effect.map(safeHtmlAstRoot),
-        Effect.mapError(() =>
-          makeError(
-            [],
-            "invalidProof",
-            "The safe-HTML proof failed defense-in-depth conformance or policy revalidation"
-          )
-        )
+        Effect.mapBoth({
+          onFailure: () =>
+            makeError(
+              [],
+              "invalidProof",
+              "The safe-HTML proof failed defense-in-depth conformance or policy revalidation"
+            ),
+          onSuccess: safeHtmlAstRoot,
+        })
       )
     : Effect.fail(makeError([], "invalidProof", "The safe-HTML value was not issued by this module"));
 

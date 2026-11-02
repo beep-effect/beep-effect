@@ -1,6 +1,8 @@
 /**
  * LocalDate value object behavior.
  *
+ * **Details**
+ *
  * Provides pure constructors, predicates, ordering, date arithmetic, and string
  * boundary codecs for {@link Model}. Runtime validation that depends on the
  * relationship between year, month, and day lives here.

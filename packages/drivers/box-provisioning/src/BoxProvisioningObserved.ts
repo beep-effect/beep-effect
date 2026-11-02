@@ -313,7 +313,7 @@ export class BoxObservedCollaboration extends S.Opaque<BoxObservedCollaboration,
  *
  * ```ts
  * import { BoxObservedWebhook, BoxProviderId } from "@beep/box-provisioning/BoxProvisioningObserved"
- * import { HttpsUrl } from "@beep/schema"
+ * import { HttpsUrl } from "@beep/schema/URL"
  *
  * const webhook = BoxObservedWebhook.make({
  *   address: HttpsUrl.make("https://example.test/box/events"),

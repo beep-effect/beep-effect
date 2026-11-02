@@ -202,7 +202,9 @@ lint bundle, but separates the auditor from the generator; the walkers it
 would reuse — `Lint.command.ts:collectTypeScriptFiles`,
 `PackageTestImports.collectPackageSourceRoots` — can be imported from Lint
 either way; the 2026-08-30 capability gate replaced the latter with
-`@beep/repo-utils` `resolveWorkspaceDirs`, which Fallow already uses).
+the `@beep/repo-utils` workspace reader, which Fallow already used; since
+effected-promotion 4-A3 that reader is repo-cli `internal/RepoWorkspaces.ts`
+`workspaceDirectories`, over `@beep/repo-workspaces` `WorkspaceDiscovery`).
 Evidence: `synthesis/14-v4-enforcement-tooling.md` §1-2, §5.
 
 ## 2026-08-29 — rollout posture

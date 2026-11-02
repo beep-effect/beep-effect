@@ -6,13 +6,13 @@
  */
 
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
-import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import { workspaceDirectories } from "../RepoWorkspaces.ts";
 
 type WorkspaceOwnerFallback = {
   readonly prefix: string;
@@ -55,11 +55,11 @@ export const createWorkspaceOwnerResolver = Effect.fn("TSMorph.createWorkspaceOw
 ) {
   const workspaces =
     input.swallowWorkspaceErrors === true
-      ? yield* resolveWorkspaceDirs(input.root).pipe(
+      ? yield* workspaceDirectories(input.root).pipe(
           Effect.option,
           Effect.map(O.getOrElse(() => HashMap.empty<string, string>()))
         )
-      : yield* resolveWorkspaceDirs(input.root);
+      : yield* workspaceDirectories(input.root);
   const workspaceEntries = pipe(
     HashMap.toEntries(workspaces),
     A.map(([packageName, absolutePath]) => [packageName, toPosixPath(absolutePath)] as const),

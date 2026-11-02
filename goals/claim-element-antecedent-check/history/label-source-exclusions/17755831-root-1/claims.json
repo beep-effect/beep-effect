@@ -1,0 +1,82 @@
+{
+  "familyId": "17755831-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "An offset selector for determining an offset between an anchoring section and a joint section of a joint implant component, said offset selector comprising: a reference portion for determining the offset, a first adjustment device to adjust the distance to the reference portion, and a second adjustment device to adjust the orientation about an offset rotary axis (VA) relative to the reference portion, wherein the first adjustment device and the second adjustment device are coupled to each other, one of the first adjustment device and the second adjustment device are connected to the reference portion and the other one of the first adjustment device and the second adjustment device is connected to an adjustment portion, the adjustment portion being movable relative to the reference portion by a distance adjustable via the first adjustment device or by an angle adjustable via the second adjustment device.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The offset selector according to claim 1, wherein the first adjustment device is connected to the reference portion (2) and the second adjustment device is connected to the adjustment portion.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The offset selector of claim 1, wherein the reference portion is provided as a tool interface adapted to engage a tool.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The offset selector of claim 1, wherein the reference portion is formed as a recess, having a length which is at least the maximum width of the recess.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The offset selector of claim 1, wherein the adjustment portion comprises a coupling interface for being coupled to a tool in at least two positions or orientations.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The offset selector of claim 1, wherein the first adjustment device the second adjustment device comprises a latch mechanism which is adapted to adjust the distance or the orientation in steps.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The offset selector of claim 6, wherein the latch mechanism is a snap body latch mechanism comprising at least two snap bodies, each of the snap bodies acting between an outer body and an inner body and being biased in a radial direction, wherein the inner body is rotatably arranged in the outer body and one of the inner and outer bodies comprises a plurality of snap recesses, the snap bodies being reversibly engageable with the snap recesses.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The offset selector of claim 7, wherein the snap bodies are biased by an elastic insert, the elastic insert arranged at the inner body of the rotatable bodies, in recess in an inner side of the inner body.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The offset selector of claim 8, wherein the elastic insert has, in at least one of its end regions in the longitudinal direction, a snap body receiving recess for partially receiving one of the snap bodies.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The offset selector of claim 6, wherein the latch mechanism comprises an elastic latch mechanism including an elastic arm, the elastic arm being connected to a first of two bodies and comprising a latching member engageable with an engagement member, wherein the two bodies are movable in relation to each other and the second body comprises a plurality of said engaging members.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The offset selector of claim 10, wherein the first body is mounted to a pivot axis for being pivotable relative to the second body.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The offset selector of claim 11, wherein the distance between the pivot axis and the engagement location between the latching member and the engagement member is at least 5 mm.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The offset selector of claim 9, wherein the elastic arm has an actuation portion for disengaging the latching member of the elastic arm.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The offset selector of claim 1, wherein the first adjustment device or the second adjustment device comprises an indicator for indicating the distance or the orientation of the offset.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "A method for adjusting an offset between an anchoring section and a joint section of a joint implant component using an offset selector, in particular an offset selector according to claim 1, wherein the offset is defined by a distance and an orientation and wherein the method comprises the steps: bringing a reference portion of the offset selector in contact with a first tool for preparing an anchoring recess in the bone tissue of a patient; bringing a second tool into engagement with an adjustment portion of the offset selector; adjusting a distance between the reference portion and the adjustment portion by means of a first adjustment device; adjusting an orientation between the reference portion and the adjustment portion by means of a second adjustment device; wherein the reference portion and the adjustment portion are coupled in series via the first adjustment device and the second adjustment device.",
+      "sourceXmlParentClaimNumbers": [1]
+    }
+  ]
+}

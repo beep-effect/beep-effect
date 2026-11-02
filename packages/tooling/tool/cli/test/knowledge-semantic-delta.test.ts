@@ -29,7 +29,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
@@ -230,12 +230,12 @@ const unbootableProbeOracle = (
 });
 
 const independentDigestEffect = Effect.fn("KnowledgeTest.independentDigest")(function* (text: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto.digest("SHA-256", textEncoder.encode(text));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, textEncoder.encode(text));
   return Hex.encode(digest);
 });
 
-const independentDigest = (text: string): Effect.Effect<string, never, Crypto.Crypto> =>
+const independentDigest = (text: string): Effect.Effect<string, never, Digest.Digest> =>
   independentDigestEffect(text).pipe(Effect.orDie);
 
 const lp = (value: string): string => {

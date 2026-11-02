@@ -347,6 +347,28 @@ const walkTree: {
   }
 });
 
+// The inline text the block pass handed to the inline parser for each heading, keyed by the
+// heading's start offset. The block pass strips every continuation line's container prefix
+// (indentation, blockquote markers, list-item indentation) before inline parsing, so this is the
+// heading content exactly as the parser read it, still in source syntax. The document keeps only
+// the tree, so the pass runs again with the same dialect and frontmatter capture.
+const headingInlineTexts = (source: string, dialect: MarkdownDialect, root: Root): HashMap.HashMap<number, string> =>
+  Result.match(
+    parsePassResult(source, {
+      dialect,
+      frontmatter: A.some(root.children, (child) => child.type === "frontmatter"),
+    }),
+    {
+      onFailure: () => HashMap.empty<number, string>(),
+      onSuccess: (pass) =>
+        HashMap.fromIterable(
+          A.flatMap(pass.rawInlines, (slice) =>
+            slice.parent.type === "heading" ? [[slice.parent.position.start.offset, slice.text] as const] : []
+          )
+        ),
+    }
+  );
+
 // Depth-guarded pre-order search with early exit — `walkTree`'s visit callback
 // cannot stop the walk, and `find` should not pay for the rest of the tree
 // once it has its match.
@@ -739,6 +761,70 @@ export class MarkdownDocument extends S.Class<MarkdownDocument, { readonly brand
           A.lastNonEmpty(children).position.end.offset
         )(this.source),
     });
+  }
+
+  /**
+   * The source text of a heading's content with each continuation line's
+   * container prefix removed: what the parser read as the heading's inline
+   * content, still in source syntax.
+   *
+   * **Details**
+   *
+   * A multi-line setext heading inside a blockquote or list item repeats
+   * the container's prefix (indentation, `>` markers) on each continuation
+   * line. {@link MarkdownDocument.headingSource} keeps those characters;
+   * this reading is the text the block pass handed to the inline parser,
+   * which has them stripped, so a `>` that is literal text (indented four or
+   * more columns past its containers) or escaped stays. Line breaks are kept,
+   * and a one-line heading reads the same as `headingSource`. Each call runs
+   * the parse pass again; read {@link MarkdownDocument.headingContents} for
+   * every heading at once.
+   *
+   * **Example** (A quoted multi-line heading)
+   *
+   * ```ts
+   * import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
+   * import * as Effect from "effect/Effect";
+   *
+   * const doc = Effect.runSync(MarkdownDocument.parse("> Foo\n> *bar*\n> ===\n"));
+   * const [heading] = doc.headings;
+   * console.log(heading === undefined ? "" : doc.headingContent(heading.node)) // Foo\n*bar*
+   * ```
+   *
+   * @param heading - A heading node from this document's tree.
+   * @returns The heading content's source with container prefixes removed.
+   * @category getters
+   * @since 0.0.0
+   */
+  headingContent(heading: Heading): string {
+    return O.getOrElse(
+      HashMap.get(headingInlineTexts(this.source, this.dialect, this.root), heading.position.start.offset),
+      () => this.headingSource(heading)
+    );
+  }
+
+  /**
+   * {@link MarkdownDocument.headingContent} for every heading, in the order
+   * of {@link MarkdownDocument.headings}, from one parse pass.
+   *
+   * **Example** (Every heading's content)
+   *
+   * ```ts
+   * import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
+   * import * as Effect from "effect/Effect";
+   *
+   * const doc = Effect.runSync(MarkdownDocument.parse("# One\n\n> Two\n> lines\n> ===\n"));
+   * console.log(doc.headingContents) // ["One", "Two\nlines"]
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get headingContents(): ReadonlyArray<string> {
+    const texts = headingInlineTexts(this.source, this.dialect, this.root);
+    return A.map(this.headings, ({ node }) =>
+      O.getOrElse(HashMap.get(texts, node.position.start.offset), () => this.headingSource(node))
+    );
   }
 
   /**

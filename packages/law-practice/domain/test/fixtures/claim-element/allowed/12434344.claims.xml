@@ -1,0 +1,731 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A tool wear state monitoring method based on multiple types of signals, characterized by comprising:
+<claim-text>S<b>1</b>: obtaining cutting force data, acoustic emission signal data and vibration signal data of a tool in a machining process;</claim-text>
+<claim-text>S<b>2</b>: extracting a plurality of statistical features from the cutting force data and the acoustic emission signal data;</claim-text>
+<claim-text>S<b>3</b>: extracting a singularity feature from the vibration signal data by combining a singularity analysis with a wavelet transform;</claim-text>
+<claim-text>S<b>4</b>: building a tool wear state monitoring model based on a random forest;</claim-text>
+<claim-text>S<b>5</b>: using the extracted statistical features and the singularity feature as an input to preliminarily train the tool wear state monitoring model, and outputting preliminary tool wear results;</claim-text>
+<claim-text>S<b>6</b>: evaluating whether the preliminary tool wear result meets a preset condition; if yes, proceeding to S<b>9</b>; otherwise, proceeding to S<b>7</b>;</claim-text>
+<claim-text>S<b>7</b>: using a preliminarily trained tool wear state monitoring model to evaluate the importance of each statistical feature and singularity feature to determine key features that affect a tool wear state;</claim-text>
+<claim-text>S<b>8</b>: based on the key features, refining the tool wear state monitoring model;</claim-text>
+<claim-text>S<b>9</b>: obtaining real-time cutting force data, real-time acoustic emission signal data and real-time vibration signal data; and</claim-text>
+<claim-text>S<b>10</b>: based on the real-time cutting force data, the real-time acoustic emission signal data and the real-time vibration signal data, monitoring the tool wear state through the trained tool wear state monitoring model.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The tool wear state monitoring method based on multiple types of signals according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that the statistical features specifically comprise:
+<claim-text>a maximum value, median, average, standard deviation, peak value and root mean square of the cutting force data; and</claim-text>
+<claim-text>a maximum value, median, average, standard deviation and root mean square of the acoustic emission signal data.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The tool wear state monitoring method based on multiple types of signals according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that the S<b>3</b> specifically comprises:
+<claim-text>S<b>301</b>: using the wavelet transform to analyze multi-scale features of the vibration signal data;</claim-text>
+<claim-text>S<b>302</b>: performing a modulus maximum analysis on a wavelet transform coefficient at each scale to determine a number and intensity of maximum points;</claim-text>
+<claim-text>S<b>303</b>: based on the number and intensity of the maximum points, calculating a Lipschitz index at each scale;</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00009" num="00009">
+<math overflow="scroll">
+<mrow>
+<msub>
+<mi>α</mi>
+<mi>q</mi>
+</msub>
+<mo>=</mo>
+<mrow>
+<mfrac>
+<mn>1</mn>
+<msub>
+<mi>N</mi>
+<mi>q</mi>
+</msub>
+</mfrac>
+<mo>⁢</mo>
+<mrow>
+<munderover>
+<mo>∑</mo>
+<mrow>
+<mi>p</mi>
+<mo>=</mo>
+<mn>1</mn>
+</mrow>
+<msub>
+<mi>N</mi>
+<mi>q</mi>
+</msub>
+</munderover>
+<mrow>
+<msub>
+<mi>log</mi>
+<mn>2</mn>
+</msub>
+<mo>(</mo>
+<mfrac>
+<mrow>
+<mi>I</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<msub>
+<mi>m</mi>
+<mi>p</mi>
+</msub>
+<mo>)</mo>
+</mrow>
+<mrow>
+<mi>I</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<msub>
+<mi>m</mi>
+<mrow>
+<mi>p</mi>
+<mo>-</mo>
+<mn>1</mn>
+</mrow>
+</msub>
+<mo>)</mo>
+</mrow>
+</mfrac>
+<mo>)</mo>
+</mrow>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<claim-text>wherein α<sub>q </sub>represents a Lipschitz index at a q-th scale, N<sub>q </sub>represents a number of maximum points at a q-th scale, m<sub>p </sub>represents a p-th maximum point, m<sub>p-1 </sub>represents a p−1th maximum point, I(m<sub>p</sub>) represents an intensity of the p-th maximum point, I(m<sub>p-1</sub>) represents an intensity of the p−1th maximum point, and log represents a logarithmic function;</claim-text>
+<claim-text>S<b>304</b>: performing weighted averaging on the Lipschitz index at each scale to obtain a comprehensive Lipschitz index of the vibration signal data:</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00010" num="00010">
+<math overflow="scroll">
+<mrow>
+<mi>HE</mi>
+<mo>=</mo>
+<mrow>
+<mfrac>
+<mn>1</mn>
+<mi>Q</mi>
+</mfrac>
+<mo>⁢</mo>
+<mrow>
+<munderover>
+<mo>∑</mo>
+<mrow>
+<mi>q</mi>
+<mo>=</mo>
+<mn>1</mn>
+</mrow>
+<mi>Q</mi>
+</munderover>
+<mtext> </mtext>
+<mrow>
+<msub>
+<mi>α</mi>
+<mi>q</mi>
+</msub>
+<mo>·</mo>
+<mfrac>
+<msub>
+<mi>N</mi>
+<mi>q</mi>
+</msub>
+<mrow>
+<munderover>
+<mo>∑</mo>
+<mrow>
+<mi>k</mi>
+<mo>=</mo>
+<mn>1</mn>
+</mrow>
+<mi>Q</mi>
+</munderover>
+<mtext> </mtext>
+<msub>
+<mi>N</mi>
+<mi>k</mi>
+</msub>
+</mrow>
+</mfrac>
+</mrow>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<claim-text>wherein HE represents the comprehensive Lipschitz index, Q represents a total number of scales decomposed after the wavelet transform, N<sub>k </sub>represents a number of maximum points at a k-th scale, and</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00011" num="00011">
+<math overflow="scroll">
+<mrow>
+<munderover>
+<mo>∑</mo>
+<mrow>
+<mi>k</mi>
+<mo>=</mo>
+<mn>1</mn>
+</mrow>
+<mi>Q</mi>
+</munderover>
+<msub>
+<mi>N</mi>
+<mi>k</mi>
+</msub>
+</mrow>
+</math>
+</maths>
+</claim-text>
+<claim-text>represents a sum of numbers of maximum points at the Q scales;
+<claim-text>S<b>305</b>: using the comprehensive Lipschitz index as an output of the singularity feature.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The tool wear state monitoring method based on multiple types of signals according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that the S<b>4</b> specifically comprises:
+<claim-text>S<b>401</b>: based on the statistical features, building an original dataset;</claim-text>
+<claim-text>S<b>402</b>: randomly generating a plurality of bootstrapped samples from the original dataset; wherein each bootstrapped sample contains a plurality of sample data;</claim-text>
+<claim-text>S<b>403</b>: based on each bootstrapped sample, building a plurality of decision trees:</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00012" num="00012">
+<math overflow="scroll">
+<mrow>
+<mrow>
+<msub>
+<mi>T</mi>
+<mi>b</mi>
+</msub>
+<mo>(</mo>
+<mrow>
+<mi>x</mi>
+<mo>,</mo>
+<msub>
+<mi>h</mi>
+<mi>b</mi>
+</msub>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>=</mo>
+<mrow>
+<munderover>
+<mo>∑</mo>
+<mrow>
+<mi>m</mi>
+<mo>=</mo>
+<mn>1</mn>
+</mrow>
+<mi>M</mi>
+</munderover>
+<mrow>
+<msub>
+<mi>μ</mi>
+<mi>m</mi>
+</msub>
+<mo>⁢</mo>
+<mrow>
+<mi>I</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<msub>
+<mi>xòR</mi>
+<mi>m</mi>
+</msub>
+<mo>)</mo>
+</mrow>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<claim-text>wherein T<sub>b</sub>(x, h<sub>b</sub>) represents a predicted value of a b-th decision tree at input data x, x represents an input data point, h<sub>b </sub>represents a tree structure of the b-th decision tree, M represents a total number of leaf nodes in the decision trees, μ<sub>m </sub>represents an average of target values of all the samples in a m-th leaf node, R<sub>m </sub>represents a sample set of the m-th leaf node, I( ) represents an indicator function, I(xòR<sub>m</sub>)=1 represents a sample x belonging to the leaf node R<sub>m</sub>, and I(xòR<sub>m</sub>)=0 represents the sample x not belonging to the leaf node R<sub>m</sub>;</claim-text>
+<claim-text>S<b>404</b>: combining the decision trees to build the tool wear state monitoring model:</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00013" num="00013">
+<math overflow="scroll">
+<mrow>
+<mrow>
+<mover>
+<mi>Y</mi>
+<mo>^</mo>
+</mover>
+<mo>(</mo>
+<mi>x</mi>
+<mo>)</mo>
+</mrow>
+<mo>=</mo>
+<mrow>
+<mfrac>
+<mn>1</mn>
+<mi>B</mi>
+</mfrac>
+<mo>⁢</mo>
+<mrow>
+<munderover>
+<mo>∑</mo>
+<mrow>
+<mi>b</mi>
+<mo>=</mo>
+<mn>1</mn>
+</mrow>
+<mi>B</mi>
+</munderover>
+<mrow>
+<msub>
+<mi>T</mi>
+<mi>b</mi>
+</msub>
+<mo>(</mo>
+<mrow>
+<mi>x</mi>
+<mo>,</mo>
+<msub>
+<mi>h</mi>
+<mi>b</mi>
+</msub>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<claim-text>wherein Ŷ(x) represents a final predicted value of the random forest for the input data x, B represents a total number of trees in the random forest, x represents the input data point, h<sub>b </sub>represents the tree structure of the b-th decision tree, and T<sub>b</sub>(x, h<sub>b</sub>) represents the predicted value of the b-th decision tree at the input data x.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The tool wear state monitoring method based on multiple types of signals according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, characterized in that the S<b>403</b> specifically comprises:
+<claim-text>S<b>4031</b>: selecting a plurality of splitting variables in the bootstrapped samples;</claim-text>
+<claim-text>S<b>4032</b>: selecting a split point in each split variable, and dividing the split variables into left and right subsets based on the split point;</claim-text>
+<claim-text>S<b>4033</b>: using minimization of a residual sum of squares of each subset as a goal to determine an optimal split point:</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00014" num="00014">
+<math overflow="scroll">
+<mrow>
+<msub>
+<mi>min</mi>
+<mrow>
+<mi>j</mi>
+<mo>,</mo>
+<mi>s</mi>
+</mrow>
+</msub>
+<mo>[</mo>
+<mrow>
+<mrow>
+<msub>
+<mi>min</mi>
+<msub>
+<mi>μ</mi>
+<mn>1</mn>
+</msub>
+</msub>
+<mrow>
+<munder>
+<mo>∑</mo>
+<mrow>
+<msub>
+<mi>x</mi>
+<mi>i</mi>
+</msub>
+<mo>∈</mo>
+<mrow>
+<msub>
+<mi>R</mi>
+<mn>1</mn>
+</msub>
+<mo>(</mo>
+<mrow>
+<mi>j</mi>
+<mo>,</mo>
+<mi>s</mi>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+</munder>
+<msup>
+<mrow>
+<mo>(</mo>
+<mrow>
+<msub>
+<mi>y</mi>
+<mi>i</mi>
+</msub>
+<mo>-</mo>
+<msub>
+<mi>μ</mi>
+<mn>1</mn>
+</msub>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mn>2</mn>
+</msup>
+</mrow>
+</mrow>
+<mo>+</mo>
+<mrow>
+<msub>
+<mi>min</mi>
+<msub>
+<mi>μ</mi>
+<mn>2</mn>
+</msub>
+</msub>
+<mrow>
+<munder>
+<mo>∑</mo>
+<mrow>
+<msub>
+<mi>x</mi>
+<mi>i</mi>
+</msub>
+<mo>∈</mo>
+<mrow>
+<msub>
+<mi>R</mi>
+<mn>2</mn>
+</msub>
+<mo>(</mo>
+<mrow>
+<mi>j</mi>
+<mo>,</mo>
+<mi>s</mi>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+</munder>
+<msup>
+<mrow>
+<mo>(</mo>
+<mrow>
+<msub>
+<mi>y</mi>
+<mi>i</mi>
+</msub>
+<mo>-</mo>
+<msub>
+<mi>μ</mi>
+<mn>2</mn>
+</msub>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mn>2</mn>
+</msup>
+</mrow>
+</mrow>
+</mrow>
+<mo>]</mo>
+</mrow>
+</math>
+</maths>
+<claim-text>wherein min represents minimization, μ<sub>1 </sub>represents an average of target variables in the left subset, x<sub>i </sub>represents a feature vector of a i-th sample, R<sub>1 </sub>represents a split left subset, y<sub>i </sub>represents a target variable of the i-th sample, μ<sub>2 </sub>represents an average of target variables in the right subset, R<sub>2 </sub>represents a split right subset, j represents a feature, and s represents a split point;</claim-text>
+<claim-text>S<b>4034</b>: based on the optimal split point, dividing a current node into a left sub-node and a right sub-node, and recursively executing steps S<b>4031</b> to S<b>4034</b> on the left sub-node and the right sub-node;</claim-text>
+<claim-text>S<b>4035</b>: in a case that a number of samples in the bootstrapped samples is lower than a preset number or a depth of the trees reaches a maximum depth, the splitting is stopped, and the building of each decision trees is completed.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The tool wear state monitoring method based on multiple types of signals according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that the preset condition is specifically: prediction accuracy of the preliminary tool wear result being greater than eighty percent.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The tool wear state monitoring method based on multiple types of signals according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that the S<b>7</b> specifically comprises:
+<claim-text>S<b>701</b>: calculating feature importance evaluation values of the statistical features and the singularity feature through the following formula:</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00015" num="00015">
+<math overflow="scroll">
+<mrow>
+<mrow>
+<mi>VarImp</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<msub>
+<mi>x</mi>
+<mi>i</mi>
+</msub>
+<mo>)</mo>
+</mrow>
+<mo>=</mo>
+<mrow>
+<mfrac>
+<mn>1</mn>
+<msub>
+<mi>N</mi>
+<mi>T</mi>
+</msub>
+</mfrac>
+<mo>⁢</mo>
+<mrow>
+<munder>
+<mo>∑</mo>
+<mi>T</mi>
+</munder>
+<mtext> </mtext>
+<mrow>
+<munder>
+<mo>∑</mo>
+<mrow>
+<mrow>
+<mi>t</mi>
+<mo>∈</mo>
+<mrow>
+<mi>T</mi>
+<mo>:</mo>
+<mrow>
+<mi>v</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<msub>
+<mi>s</mi>
+<mi>t</mi>
+</msub>
+<mo>)</mo>
+</mrow>
+</mrow>
+</mrow>
+<mo>=</mo>
+<msub>
+<mi>x</mi>
+<mi>i</mi>
+</msub>
+</mrow>
+</munder>
+<mtext> </mtext>
+<mrow>
+<mrow>
+<mi>p</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<mi>t</mi>
+<mo>)</mo>
+</mrow>
+<mo>⁢</mo>
+<mrow>
+<msub>
+<mi>Δ</mi>
+<mi>i</mi>
+</msub>
+<mo>(</mo>
+<mrow>
+<msub>
+<mi>s</mi>
+<mi>t</mi>
+</msub>
+<mo>,</mo>
+<mi>t</mi>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+</mrow>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<maths id="MATH-US-00015-2" num="00015.2">
+<math overflow="scroll">
+<mrow>
+<mrow>
+<msub>
+<mi>Δ</mi>
+<mi>i</mi>
+</msub>
+<mo>(</mo>
+<mrow>
+<msub>
+<mi>s</mi>
+<mi>t</mi>
+</msub>
+<mo>,</mo>
+<mi>t</mi>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>=</mo>
+<mrow>
+<mrow>
+<mi>i</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<mi>t</mi>
+<mo>)</mo>
+</mrow>
+<mo>-</mo>
+<mrow>
+<msub>
+<mi>p</mi>
+<mn>1</mn>
+</msub>
+<mo>⁢</mo>
+<mrow>
+<mi>i</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<msub>
+<mi>t</mi>
+<mn>1</mn>
+</msub>
+<mo>)</mo>
+</mrow>
+</mrow>
+<mo>-</mo>
+<mrow>
+<msub>
+<mi>p</mi>
+<mn>2</mn>
+</msub>
+<mo>⁢</mo>
+<mrow>
+<mi>i</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<msub>
+<mi>t</mi>
+<mn>2</mn>
+</msub>
+<mo>)</mo>
+</mrow>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<maths id="MATH-US-00015-3" num="00015.3">
+<math overflow="scroll">
+<mrow>
+<mrow>
+<mrow>
+<mi>i</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<msub>
+<mi>t</mi>
+<mn>1</mn>
+</msub>
+<mo>)</mo>
+</mrow>
+<mo>=</mo>
+<mrow>
+<munder>
+<mo>∑</mo>
+<mrow>
+<msub>
+<mi>x</mi>
+<mi>i</mi>
+</msub>
+<mo>∈</mo>
+<msub>
+<mi>R</mi>
+<mn>1</mn>
+</msub>
+</mrow>
+</munder>
+<mtext> </mtext>
+<msup>
+<mrow>
+<mo>(</mo>
+<mrow>
+<msub>
+<mi>y</mi>
+<mi>i</mi>
+</msub>
+<mo>-</mo>
+<msub>
+<mover>
+<mi>y</mi>
+<mo>^</mo>
+</mover>
+<mn>1</mn>
+</msub>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mn>2</mn>
+</msup>
+</mrow>
+</mrow>
+<mo>,</mo>
+<mrow>
+<mrow>
+<mi>i</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<msub>
+<mi>t</mi>
+<mn>2</mn>
+</msub>
+<mo>)</mo>
+</mrow>
+<mo>=</mo>
+<mrow>
+<munder>
+<mo>∑</mo>
+<mrow>
+<msub>
+<mi>x</mi>
+<mi>i</mi>
+</msub>
+<mo>∈</mo>
+<msub>
+<mi>R</mi>
+<mn>2</mn>
+</msub>
+</mrow>
+</munder>
+<mtext> </mtext>
+<msup>
+<mrow>
+<mo>(</mo>
+<mrow>
+<msub>
+<mi>y</mi>
+<mi>i</mi>
+</msub>
+<mo>-</mo>
+<msub>
+<mover>
+<mi>y</mi>
+<mo>^</mo>
+</mover>
+<mn>2</mn>
+</msub>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mn>2</mn>
+</msup>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<claim-text>wherein VarImp(x<sub>i</sub>) represents an importance evaluation value of a feature x<sub>i</sub>, T represents a decision tree in the random forest, N<sub>T </sub>represents a total number of trees in the random forest, v(s<sub>t</sub>) represents a feature of a t-th split node, v(s<sub>t</sub>)=x<sub>i </sub>represents the feature of the t-th split node being split by the feature x<sub>i</sub>, p(t) represents a sample proportion in a node t, Δ<sub>i</sub>(s<sub>t</sub>, t) represents a reduction of a residual sum of squares brought about by the feature x<sub>i </sub>when the t-th node is split, i(t) represents a residual sum of squares of the t-th node, p<sub>1 </sub>represents a sample proportion of a left sub-node, p<sub>2 </sub>represents a sample proportion of a right sub-node, i(t<sub>1</sub>) represents a residual sum of squares of the left sub-node, i(t<sub>2</sub>) represents a residual sum of squares of the right sub-node, R<sub>1 </sub>represents a split left subset, R<sub>2 </sub>represents a split right subset, x<sub>i </sub>represents a i-th sample, y<sub>i </sub>represents a target variable of the i-th sample, ŷ<sub>1 </sub>represents an average of target variables of samples in the left subset, and ŷ<sub>2 </sub>represents an average of target variables of samples in the right subset;</claim-text>
+<claim-text>S<b>702</b>: sorting the importance evaluation values of each feature in descending order, and selecting the features corresponding to the feature importance evaluation values with the highest ranking as the key features.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The tool wear state monitoring method based on multiple types of signals according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that a manner of refining the tool wear state monitoring model specifically comprises:
+<claim-text>using minimization of a function value of a mean squared error loss function as a goal to refine the tool wear state monitoring model through an improved particle swarm optimization algorithm.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The tool wear state monitoring method based on multiple types of signals according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that after the S<b>10</b>, the method further comprises:
+<claim-text>recording the tool wear state, and generating a tool wear state report.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. A tool wear state monitoring system based on multiple types of signals, characterized by comprising:
+<claim-text>a processor;</claim-text>
+<claim-text>a memory having a computer-readable instruction stored thereon, the computer-readable instruction, when executed by the processor, implementing the tool wear state monitoring method based on multiple types of signals according to any one of <claim-ref idref="CLM-00001">claim 1</claim-ref>.</claim-text>
+</claim-text>
+</claim>
+</claims>

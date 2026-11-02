@@ -1,0 +1,133 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13575735-root-1",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.97,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "findings": [],
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the top surface",
+      "nativeQuote": "the top surface",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the connection frame",
+      "nativeQuote": "the connection frame",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the lateral direction",
+      "nativeQuote": "the lateral direction",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the rear side",
+      "nativeQuote": "the rear side",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the rear end",
+      "nativeQuote": "the rear end",
+      "literalMatchIgnoringCase": true
+    }
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "13575735",
+    "publicationNumber": "US20120294970A1",
+    "publicationDate": "20121122"
+  },
+  "digestEvidence": [
+    {
+      "file": "13575735.publication.xml",
+      "sha256": "5e3be35db5b293afee7a714c92ec44cf92e90830787632f2fdf814ef02c193d3",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "3699396cd783225323ecb7840391bd127d8765c12ca741961e701c6e047974d7",
+      "matchesProvenance": true
+    },
+    {
+      "file": "13575735.H55LI68PPXXIFW3.original.xml",
+      "sha256": "6cdba1c869a96682a11a916e421685e1f2542e287eabfbad452b7c935cdacec9",
+      "matchesProvenance": true
+    },
+    {
+      "file": "13575735.H5AXG8LHPXXIFW1.original.xml",
+      "sha256": "27eb3b2215d859e017ef2b1db6e687b6058a25188f678f5fe704ad6e142b3aff",
+      "matchesProvenance": true
+    }
+  ],
+  "independentPdfEvidence": [
+    {
+      "documentIdentifier": "H5AXG8LHPXXIFW1",
+      "sha256": "65af4fde5c79391141170689cf08063a6f9207a1581a0a881f771409bfef2387",
+      "independentlyViewedPages": [
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "inventoryEvidence": {
+    "sha256": "b8438bcda523288b9539879c415febd7256070d8ee0ddb22948ac835d7065f74",
+    "declaredCount": 43,
+    "actualRows": 43,
+    "preOrOnActionClaimAndAmendmentRows": [
+      {
+        "documentIdentifier": "H55LI68PPXXIFW3",
+        "documentCode": "CLM",
+        "officialDate": "2012-07-27T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "H55LI69TPXXIFW3",
+        "documentCode": "A.PE",
+        "officialDate": "2012-07-27T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "H5AXG8LHPXXIFW1",
+        "documentCode": "CLM",
+        "officialDate": "2012-07-27T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "H5AXHBUIPXXIFW1",
+        "documentCode": "REM",
+        "officialDate": "2012-07-27T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "H5AXI1VWPXXIFW1",
+        "documentCode": "REM",
+        "officialDate": "2012-07-27T00:00:00.000-0400"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "I8A52WO0PXXIFW4",
+        "documentCode": "CTNF",
+        "officialDate": "2015-04-13T00:00:00.000-0400"
+      }
+    ]
+  },
+  "evidence": [
+    "Marked PDF1–3 visually inspected: complete amended listing; selected1–4 labelled ORIGINAL,5 CURRENTLY AMENDED. Page3 printed4 visibly underlines claim1 and strikes any one of claims1to3. Native5→1 is directly corroborated.",
+    "Actual112(b)1–8 includes selected1–5; numbered top surface/connection frame/lateral direction/rear side/rear end phrases match. Natural2/3/5→1,4→3; no competing adopted selectedwording seen."
+  ],
+  "rationale": "Independent same-number ground/wording, fullinventory, familymembership and original/amendment evidence reviewed. Chronology alone not accepted. Sourceeligibility only; semantic references and attorneyadjudication separate.",
+  "independence": "Only candidate source-critic changed; read supplied sources/XML/PDF pages/inventories. No active/source/expected edits, rules/predictions/network/secrets/git/delegation."
+}

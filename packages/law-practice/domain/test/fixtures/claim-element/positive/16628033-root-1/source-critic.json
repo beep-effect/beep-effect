@@ -1,0 +1,80 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16628033-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20200383794", "A1", "20201210"],
+    "applicationReference": ["US", "16628033", "20180629"],
+    "officeActionDocumentIdentifiers": ["KMUHYPEFLDFLYX7"],
+    "officeActionMailDate": "2021-03-29"
+  },
+  "digestEvidence": [
+    {
+      "file": "16628033.publication.xml",
+      "sha256": "b94f9c6730b1a0315e41417d8fc67fc3ecd6508cb9872dc1ea22a93a98fa6899",
+      "matchesProvenance": true
+    },
+    {
+      "file": "16628033.claims.xml",
+      "sha256": "3f25838288dfa6cf3656be299299729ee233baceb2da782e7cd62846f4f825d4",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "3f25838288dfa6cf3656be299299729ee233baceb2da782e7cd62846f4f825d4",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "K674EBBMRXEAPX3",
+      "available": true,
+      "sha256": "d3abe390b7bf08a1f9a03078c1a04a85bba61dd1cc2a13a539170ebdd5d91c15",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 52,
+    "actualRows": 52,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2020-02-03T19:03:43.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "K674EBBMRXEAPX3"
+      }
+    ]
+  },
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the upper end",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the upper end"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the lower surface",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the lower surface"
+    }
+  ],
+  "assessment": "Original1-10 match native apart from whitespace. Actual rejection scope1,3-4,8-10; explicitly headed claim3 phrases bind source. Claim10 method uses joint according to1, a meaningful technical reference; do not assume legal dependence.",
+  "findings": [],
+  "limitations": [
+    "Cached public evidence only; original OCR corroboration only, never repaired into reference. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation inspected/performed.",
+  "officeActionGroundQuotes": [
+    "claims 1, 3-4, and 8-10 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention."
+  ]
+}

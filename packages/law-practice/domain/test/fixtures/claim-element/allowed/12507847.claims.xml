@@ -1,0 +1,39 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A blowing-suction machine, comprising a blowing-suction machine body, wherein the blowing-suction machine body comprises a handheld handle and an air blowing-suction machine component, an end portion of the handheld handle is provided with a connecting assembly connected to the air blowing-suction machine component, the air blowing-suction machine component comprises an air blowing-suction head assembly and a rotating bracket, a ball block and a fixing rack are disposed in the rotating bracket, the ball block is internally provided with a plurality of clamping slots, the air blowing-suction head assembly comprises a motor cover disposed on one side of the rotating bracket, one side of the motor cover is provided with a ball slot and a motor cover toothed portion connected to the rotating bracket, a spring is mounted on the ball slot, and a ball clamped in the clamping slot is disposed on the spring.</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The blowing-suction machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a motor is disposed in the motor cover, an air tube connecting member is disposed on one side of the motor cover, and an air inlet cover is disposed on the other side of the motor cover.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The blowing-suction machine according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein two ends of the motor cover are provided with a first motor cover thread and a second motor cover thread, the air inlet cover is internally provided with an inner air inlet cover thread, the first motor cover thread is threadedly connected to the inner air inlet cover thread, two ends of the air tube connecting member are internally provided with a first inner air tube connecting member thread and a second inner air tube connecting member thread, and the first inner air tube connecting member thread is threadedly connected to the second motor cover thread.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The blowing-suction machine according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein an air tube is disposed on one side of the air tube connecting member, the air tube is provided with a first air tube thread, and the first air tube thread is threadedly connected to the second inner air tube connecting member thread.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The blowing-suction machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein one side of the rotating bracket is connected to the motor cover toothed portion by using a bolt to be inserted into the motor cover toothed portion.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The blowing-suction machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein adjacent clamping slots are arranged at equal intervals along a circumferential direction.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The blowing-suction machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the connecting assembly comprises a connecting rod and a connecting member, the connecting member configured to lock, fix, and adjust two connecting rods is disposed between the adjacent connecting rods, and the connecting member can be configured to lengthen or shorten the connecting rod.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The blowing-suction machine according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the connecting member comprises a male end connector and a female end connector, the male end connector is connected to an end portion of one of the connecting rods through a screw, the female end connector is connected to an end portion of the other adjacent connecting rod through the screw, and a male wire terminal and a female wire terminal that are communicated are disposed in the male end connector and the female end connector respectively.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The blowing-suction machine according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the male end connector is connected to the female end connector through a threaded sleeve.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The blowing-suction machine according to <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein a positioning structure is disposed between the male end connector and the female end connector, the positioning structure comprises a positioning block and a positioning slot arranged corresponding to the positioning block, one of the positioning block and the positioning slot is disposed on the male end connector, the other is disposed on the female end connector, and the male end connector and the female end connector are positioned through matching between the positioning block and the positioning slot.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A method for using a blowing-suction machine for cleaning, adopting the blowing-suction machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the method comprises the following steps:
+<claim-text>adjusting an angle of an air blowing-suction head assembly through a rotary motor cover;</claim-text>
+<claim-text>selecting an air blowing mode or an air suction mode; and</claim-text>
+<claim-text>using the air blowing-suction head assembly for cleaning.</claim-text>
+</claim-text>
+</claim>
+</claims>

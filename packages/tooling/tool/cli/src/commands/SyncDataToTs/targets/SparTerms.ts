@@ -6,7 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
@@ -130,10 +130,8 @@ const project = Effect.fn("SyncDataToTs.SparTerms.project")(function* (pin: Spar
       return yield* fail(`Curated SPAR term has no explicit class/property declaration: ${term}`);
     }
   }
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(A.join(terms, "\n")))
-    .pipe(SyncDataToTsError.mapError("Failed to hash SPAR selected terms", targetId));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(A.join(terms, "\n")));
   if (Hex.encode(digest) !== pin.semanticSha256) return yield* fail("SPAR curated semantic digest mismatch.");
   return { pin, terms, source: sourceMetadata(source, { version: pin.version, published: pin.release }) };
 });

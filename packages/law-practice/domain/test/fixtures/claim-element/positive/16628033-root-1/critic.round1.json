@@ -1,0 +1,66 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16628033-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.97,
+  "confidenceScope": "Independent semantic structure/identified corrections; source acceptance is a separate source-critic result and attorney adjudication remains pending.",
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "findings": [
+    {
+      "severity": "actionable",
+      "claimNumber": 8,
+      "path": "8.b",
+      "quote": "thereof",
+      "span": [200, 207],
+      "issue": "Explicit possessive reference omitted from terms. In the other end thereof, thereof identifies the owner of the other end: the locating pin whose one end is described immediately before. It is currently hidden in functional connecting text.",
+      "requiredCorrection": "Add a nonoverlapping bare term anchored [200,207) quote thereof, head thereof; add antecedent to claim7.a a locating pin. Update8.b ordered functional parts so thereof is a locally owned term part, preserving surrounding exact text. Do not equate the other end with one end."
+    }
+  ],
+  "sourceEligibility": "Independent source critic accepted at0.98; this semantic review preserves that source decision without claiming attorney agreement.",
+  "audit": {
+    "treesReviewed": 10,
+    "elementsReviewed": 38,
+    "termsReviewed": 119,
+    "typedEdgesReviewed": 116,
+    "edgeKinds": {
+      "antecedent": 55,
+      "part-of": 28,
+      "functional": 24,
+      "depends-on-element": 9
+    },
+    "allElementAndTermUtf16SlicesVerified": true,
+    "allFunctionalTextSlicesVerified": true,
+    "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+    "allLocalAndCrossClaimTermEndpointsVerified": true,
+    "schemaDecode": "passed for every proposed tree",
+    "selectedScopeComplete": true
+  },
+  "independence": "Independent critic of these three families; did not produce their expected/extractor proposals. Reviewed exact canonical claims/context, provenance, source audit/source critic, semantic-reference/v2 and ClaimElement schema contracts. No implementation rules, predictions, synthetic fixtures, archived conformance, source repair, network, secrets, git or delegation. Helpers verified only supplied spans/schema/reference geometry.",
+  "attorneyAdjudication": "pending",
+  "rationale": [
+    "Reviewed38 elements/119 terms/116 typed edges and24 functional relationships. Exact source anchors, full lexical heads and current edge endpoints pass. One explicit possessive term is missing; no existing edge needs an invented anatomical introduction.",
+    "Actual claim10 references joint1. Its method subject and six operative steps remain source-clear; sibling4/5/7/9 cannot introduce sleeve, spring, bolt, locating pin or prosthetic notch into10. Claim9 cannot inherit claim7 locating pin either.",
+    "Claim3 upper end has no explicit grammatical owner; maintaining the exact relational clause without an owner/identity edge is appropriate."
+  ],
+  "ambiguityResolution": [
+    {
+      "claimNumber": 3,
+      "quote": "the upper end",
+      "resolution": "Claim4 provides later detail but is a descendant and cannot resolve claim3 by backward import. Keep upper end unlinked and its ownership uncertainty recorded."
+    },
+    {
+      "claimNumber": 8,
+      "quote": "the other end thereof",
+      "resolution": "The contrast one end of said locating pin / the other end thereof fixes the possessive owner as that pin. The ends are distinct entities, so add the possessive reference only."
+    },
+    {
+      "claimNumber": 10,
+      "quote": "the sleeve",
+      "resolution": "Claim1 contains no sleeve introduction. Missing edge is correct; do not import sibling4."
+    }
+  ]
+}

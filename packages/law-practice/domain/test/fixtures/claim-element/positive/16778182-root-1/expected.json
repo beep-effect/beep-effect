@@ -1,0 +1,2458 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 74,
+          "quote": "A method for predicting the dosage based on human physiological parameters"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 24,
+              "endChar": 34,
+              "quote": "the dosage"
+            },
+            "determiner": "the",
+            "head": "dosage"
+          },
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 74,
+              "quote": "human physiological parameters"
+            },
+            "determiner": "bare",
+            "head": "human physiological parameters"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 88,
+          "endChar": 189,
+          "quote": "obtaining dosage data and multiple human physiological parameter data of multiple testers as raw data"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 98,
+              "endChar": 109,
+              "quote": "dosage data"
+            },
+            "determiner": "bare",
+            "head": "dosage data"
+          },
+          {
+            "anchor": {
+              "startChar": 114,
+              "endChar": 157,
+              "quote": "multiple human physiological parameter data"
+            },
+            "determiner": "bare",
+            "head": "multiple human physiological parameter data"
+          },
+          {
+            "anchor": {
+              "startChar": 161,
+              "endChar": 177,
+              "quote": "multiple testers"
+            },
+            "determiner": "bare",
+            "head": "multiple testers"
+          },
+          {
+            "anchor": {
+              "startChar": 181,
+              "endChar": 189,
+              "quote": "raw data"
+            },
+            "determiner": "bare",
+            "head": "raw data"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 191,
+          "endChar": 256,
+          "quote": "preprocessing the raw data to obtain input data as a training set"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 205,
+              "endChar": 217,
+              "quote": "the raw data"
+            },
+            "determiner": "the",
+            "head": "raw data"
+          },
+          {
+            "anchor": {
+              "startChar": 228,
+              "endChar": 238,
+              "quote": "input data"
+            },
+            "determiner": "bare",
+            "head": "input data"
+          },
+          {
+            "anchor": {
+              "startChar": 242,
+              "endChar": 256,
+              "quote": "a training set"
+            },
+            "determiner": "a",
+            "head": "training set"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 258,
+          "endChar": 562,
+          "quote": "based on the input data, establishing a decision tree by classification and regression tree algorithm, which includes: generating the decision tree based on the feature extraction of the input data, and pruning the generated decision tree and selecting the optimal sub-tree by using a validation data set"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 267,
+              "endChar": 281,
+              "quote": "the input data"
+            },
+            "determiner": "the",
+            "head": "input data"
+          },
+          {
+            "anchor": {
+              "startChar": 296,
+              "endChar": 311,
+              "quote": "a decision tree"
+            },
+            "determiner": "a",
+            "head": "decision tree"
+          },
+          {
+            "anchor": {
+              "startChar": 315,
+              "endChar": 359,
+              "quote": "classification and regression tree algorithm"
+            },
+            "determiner": "bare",
+            "head": "classification and regression tree algorithm"
+          }
+        ]
+      },
+      {
+        "path": "1.c.i",
+        "anchor": {
+          "startChar": 377,
+          "endChar": 455,
+          "quote": "generating the decision tree based on the feature extraction of the input data"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 388,
+              "endChar": 405,
+              "quote": "the decision tree"
+            },
+            "determiner": "the",
+            "head": "decision tree"
+          },
+          {
+            "anchor": {
+              "startChar": 415,
+              "endChar": 437,
+              "quote": "the feature extraction"
+            },
+            "determiner": "the",
+            "head": "feature extraction"
+          },
+          {
+            "anchor": {
+              "startChar": 441,
+              "endChar": 455,
+              "quote": "the input data"
+            },
+            "determiner": "the",
+            "head": "input data"
+          }
+        ]
+      },
+      {
+        "path": "1.c.ii",
+        "anchor": {
+          "startChar": 461,
+          "endChar": 562,
+          "quote": "pruning the generated decision tree and selecting the optimal sub-tree by using a validation data set"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 469,
+              "endChar": 496,
+              "quote": "the generated decision tree"
+            },
+            "determiner": "the",
+            "head": "generated decision tree"
+          },
+          {
+            "anchor": {
+              "startChar": 511,
+              "endChar": 531,
+              "quote": "the optimal sub-tree"
+            },
+            "determiner": "the",
+            "head": "optimal sub-tree"
+          },
+          {
+            "anchor": {
+              "startChar": 541,
+              "endChar": 562,
+              "quote": "a validation data set"
+            },
+            "determiner": "a",
+            "head": "validation data set"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 564,
+          "endChar": 696,
+          "quote": "inputting a user's human physiological parameter data, and predicting the required dosage according to the established decision tree"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 574,
+              "endChar": 617,
+              "quote": "a user's human physiological parameter data"
+            },
+            "determiner": "a",
+            "head": "user's human physiological parameter data"
+          },
+          {
+            "anchor": {
+              "startChar": 634,
+              "endChar": 653,
+              "quote": "the required dosage"
+            },
+            "determiner": "the",
+            "head": "required dosage"
+          },
+          {
+            "anchor": {
+              "startChar": 667,
+              "endChar": 696,
+              "quote": "the established decision tree"
+            },
+            "determiner": "the",
+            "head": "established decision tree"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 88,
+              "endChar": 98,
+              "quote": "obtaining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 98,
+                "endChar": 109,
+                "quote": "dosage data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 109,
+              "endChar": 114,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 114,
+                "endChar": 157,
+                "quote": "multiple human physiological parameter data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 157,
+              "endChar": 161,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 161,
+                "endChar": 177,
+                "quote": "multiple testers"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 177,
+              "endChar": 181,
+              "quote": " as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 181,
+                "endChar": 189,
+                "quote": "raw data"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 191,
+              "endChar": 205,
+              "quote": "preprocessing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 205,
+                "endChar": 217,
+                "quote": "the raw data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 217,
+              "endChar": 228,
+              "quote": " to obtain "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 228,
+                "endChar": 238,
+                "quote": "input data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 238,
+              "endChar": 242,
+              "quote": " as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 242,
+                "endChar": 256,
+                "quote": "a training set"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c.i",
+        "parent": "1.c"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 377,
+              "endChar": 388,
+              "quote": "generating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c.i",
+              "anchor": {
+                "startChar": 388,
+                "endChar": 405,
+                "quote": "the decision tree"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 405,
+              "endChar": 415,
+              "quote": " based on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c.i",
+              "anchor": {
+                "startChar": 415,
+                "endChar": 437,
+                "quote": "the feature extraction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 437,
+              "endChar": 441,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c.i",
+              "anchor": {
+                "startChar": 441,
+                "endChar": 455,
+                "quote": "the input data"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c.ii",
+        "parent": "1.c"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c.ii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 461,
+              "endChar": 469,
+              "quote": "pruning "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c.ii",
+              "anchor": {
+                "startChar": 469,
+                "endChar": 496,
+                "quote": "the generated decision tree"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 496,
+              "endChar": 511,
+              "quote": " and selecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c.ii",
+              "anchor": {
+                "startChar": 511,
+                "endChar": 531,
+                "quote": "the optimal sub-tree"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 531,
+              "endChar": 541,
+              "quote": " by using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c.ii",
+              "anchor": {
+                "startChar": 541,
+                "endChar": 562,
+                "quote": "a validation data set"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 564,
+              "endChar": 574,
+              "quote": "inputting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 574,
+                "endChar": 617,
+                "quote": "a user's human physiological parameter data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 617,
+              "endChar": 634,
+              "quote": ", and predicting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 634,
+                "endChar": 653,
+                "quote": "the required dosage"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 653,
+              "endChar": 667,
+              "quote": " according to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 667,
+                "endChar": 696,
+                "quote": "the established decision tree"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 205,
+            "endChar": 217,
+            "quote": "the raw data"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 181,
+            "endChar": 189,
+            "quote": "raw data"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 267,
+            "endChar": 281,
+            "quote": "the input data"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 228,
+            "endChar": 238,
+            "quote": "input data"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c.i",
+          "anchor": {
+            "startChar": 441,
+            "endChar": 455,
+            "quote": "the input data"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 228,
+            "endChar": 238,
+            "quote": "input data"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c.i",
+          "anchor": {
+            "startChar": 388,
+            "endChar": 405,
+            "quote": "the decision tree"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 296,
+            "endChar": 311,
+            "quote": "a decision tree"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c.ii",
+          "anchor": {
+            "startChar": 469,
+            "endChar": 496,
+            "quote": "the generated decision tree"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 296,
+            "endChar": 311,
+            "quote": "a decision tree"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 667,
+            "endChar": 696,
+            "quote": "the established decision tree"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 296,
+            "endChar": 311,
+            "quote": "a decision tree"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 634,
+            "endChar": 653,
+            "quote": "the required dosage"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 24,
+            "endChar": 34,
+            "quote": "the dosage"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 53,
+          "endChar": 145,
+          "quote": "using generalized regression neural network to post-optimize the output of the decision tree"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 59,
+              "endChar": 96,
+              "quote": "generalized regression neural network"
+            },
+            "determiner": "bare",
+            "head": "generalized regression neural network"
+          },
+          {
+            "anchor": {
+              "startChar": 114,
+              "endChar": 124,
+              "quote": "the output"
+            },
+            "determiner": "the",
+            "head": "output"
+          },
+          {
+            "anchor": {
+              "startChar": 128,
+              "endChar": 145,
+              "quote": "the decision tree"
+            },
+            "determiner": "the",
+            "head": "decision tree"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 53,
+              "endChar": 59,
+              "quote": "using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 59,
+                "endChar": 96,
+                "quote": "generalized regression neural network"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 96,
+              "endChar": 114,
+              "quote": " to post-optimize "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 114,
+                "endChar": 124,
+                "quote": "the output"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 124,
+              "endChar": 128,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 128,
+                "endChar": 145,
+                "quote": "the decision tree"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 128,
+            "endChar": 145,
+            "quote": "the decision tree"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 296,
+            "endChar": 311,
+            "quote": "a decision tree"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 53,
+          "endChar": 146,
+          "quote": "using BADT to process null data specifically to post-optimize the output of the decision tree"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 59,
+              "endChar": 63,
+              "quote": "BADT"
+            },
+            "determiner": "bare",
+            "head": "badt"
+          },
+          {
+            "anchor": {
+              "startChar": 75,
+              "endChar": 84,
+              "quote": "null data"
+            },
+            "determiner": "bare",
+            "head": "null data"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 125,
+              "quote": "the output"
+            },
+            "determiner": "the",
+            "head": "output"
+          },
+          {
+            "anchor": {
+              "startChar": 129,
+              "endChar": 146,
+              "quote": "the decision tree"
+            },
+            "determiner": "the",
+            "head": "decision tree"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 53,
+              "endChar": 59,
+              "quote": "using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 59,
+                "endChar": 63,
+                "quote": "BADT"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 75,
+              "quote": " to process "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 75,
+                "endChar": 84,
+                "quote": "null data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 84,
+              "endChar": 115,
+              "quote": " specifically to post-optimize "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 115,
+                "endChar": 125,
+                "quote": "the output"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 125,
+              "endChar": 129,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 129,
+                "endChar": 146,
+                "quote": "the decision tree"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 146,
+            "quote": "the decision tree"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 296,
+            "endChar": 311,
+            "quote": "a decision tree"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 204,
+          "quote": "the generation of the decision tree uses the Gini index to select the optimal feature, and to determine the optimal splitting point of the feature at the same time"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 55,
+              "quote": "the generation"
+            },
+            "determiner": "the",
+            "head": "generation"
+          },
+          {
+            "anchor": {
+              "startChar": 59,
+              "endChar": 76,
+              "quote": "the decision tree"
+            },
+            "determiner": "the",
+            "head": "decision tree"
+          },
+          {
+            "anchor": {
+              "startChar": 82,
+              "endChar": 96,
+              "quote": "the Gini index"
+            },
+            "determiner": "the",
+            "head": "gini index"
+          },
+          {
+            "anchor": {
+              "startChar": 107,
+              "endChar": 126,
+              "quote": "the optimal feature"
+            },
+            "determiner": "the",
+            "head": "optimal feature"
+          },
+          {
+            "anchor": {
+              "startChar": 145,
+              "endChar": 172,
+              "quote": "the optimal splitting point"
+            },
+            "determiner": "the",
+            "head": "optimal splitting point"
+          },
+          {
+            "anchor": {
+              "startChar": 176,
+              "endChar": 187,
+              "quote": "the feature"
+            },
+            "determiner": "the",
+            "head": "feature"
+          },
+          {
+            "anchor": {
+              "startChar": 191,
+              "endChar": 204,
+              "quote": "the same time"
+            },
+            "determiner": "the",
+            "head": "same time"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 55,
+                "quote": "the generation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 55,
+              "endChar": 59,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 59,
+                "endChar": 76,
+                "quote": "the decision tree"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 76,
+              "endChar": 82,
+              "quote": " uses "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 82,
+                "endChar": 96,
+                "quote": "the Gini index"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 96,
+              "endChar": 107,
+              "quote": " to select "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 107,
+                "endChar": 126,
+                "quote": "the optimal feature"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 126,
+              "endChar": 145,
+              "quote": ", and to determine "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 145,
+                "endChar": 172,
+                "quote": "the optimal splitting point"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 172,
+              "endChar": 176,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 176,
+                "endChar": 187,
+                "quote": "the feature"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 187,
+              "endChar": 191,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 191,
+                "endChar": 204,
+                "quote": "the same time"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 76,
+            "quote": "the decision tree"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 296,
+            "endChar": 311,
+            "quote": "a decision tree"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 176,
+            "endChar": 187,
+            "quote": "the feature"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 107,
+            "endChar": 126,
+            "quote": "the optimal feature"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 33,
+          "endChar": 314,
+          "quote": "the pruning comprising: cutting off the sub-trees continuously from the bottom of the complete tree form of the decision tree; testing the sequence of the sub-trees on the independent verification data set by the cross-validation method, from which the optimal sub-tree is selected"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 33,
+              "endChar": 44,
+              "quote": "the pruning"
+            },
+            "determiner": "the",
+            "head": "pruning"
+          }
+        ]
+      },
+      {
+        "path": "5.a.i",
+        "anchor": {
+          "startChar": 57,
+          "endChar": 158,
+          "quote": "cutting off the sub-trees continuously from the bottom of the complete tree form of the decision tree"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 69,
+              "endChar": 82,
+              "quote": "the sub-trees"
+            },
+            "determiner": "the",
+            "head": "sub-trees"
+          },
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 111,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 137,
+              "quote": "the complete tree form"
+            },
+            "determiner": "the",
+            "head": "complete tree form"
+          },
+          {
+            "anchor": {
+              "startChar": 141,
+              "endChar": 158,
+              "quote": "the decision tree"
+            },
+            "determiner": "the",
+            "head": "decision tree"
+          }
+        ]
+      },
+      {
+        "path": "5.a.ii",
+        "anchor": {
+          "startChar": 160,
+          "endChar": 314,
+          "quote": "testing the sequence of the sub-trees on the independent verification data set by the cross-validation method, from which the optimal sub-tree is selected"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 168,
+              "endChar": 180,
+              "quote": "the sequence"
+            },
+            "determiner": "the",
+            "head": "sequence"
+          },
+          {
+            "anchor": {
+              "startChar": 184,
+              "endChar": 197,
+              "quote": "the sub-trees"
+            },
+            "determiner": "the",
+            "head": "sub-trees"
+          },
+          {
+            "anchor": {
+              "startChar": 201,
+              "endChar": 238,
+              "quote": "the independent verification data set"
+            },
+            "determiner": "the",
+            "head": "independent verification data set"
+          },
+          {
+            "anchor": {
+              "startChar": 242,
+              "endChar": 269,
+              "quote": "the cross-validation method"
+            },
+            "determiner": "the",
+            "head": "cross-validation method"
+          },
+          {
+            "anchor": {
+              "startChar": 282,
+              "endChar": 302,
+              "quote": "the optimal sub-tree"
+            },
+            "determiner": "the",
+            "head": "optimal sub-tree"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.i",
+        "parent": "5.a"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 57,
+              "endChar": 69,
+              "quote": "cutting off "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a.i",
+              "anchor": {
+                "startChar": 69,
+                "endChar": 82,
+                "quote": "the sub-trees"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 82,
+              "endChar": 101,
+              "quote": " continuously from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a.i",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 111,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 111,
+              "endChar": 115,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a.i",
+              "anchor": {
+                "startChar": 115,
+                "endChar": 137,
+                "quote": "the complete tree form"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 137,
+              "endChar": 141,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a.i",
+              "anchor": {
+                "startChar": 141,
+                "endChar": 158,
+                "quote": "the decision tree"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a.ii",
+        "parent": "5.a"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a.ii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 160,
+              "endChar": 168,
+              "quote": "testing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a.ii",
+              "anchor": {
+                "startChar": 168,
+                "endChar": 180,
+                "quote": "the sequence"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 180,
+              "endChar": 184,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a.ii",
+              "anchor": {
+                "startChar": 184,
+                "endChar": 197,
+                "quote": "the sub-trees"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 197,
+              "endChar": 201,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a.ii",
+              "anchor": {
+                "startChar": 201,
+                "endChar": 238,
+                "quote": "the independent verification data set"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 238,
+              "endChar": 242,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a.ii",
+              "anchor": {
+                "startChar": 242,
+                "endChar": 269,
+                "quote": "the cross-validation method"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 269,
+              "endChar": 282,
+              "quote": ", from which "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a.ii",
+              "anchor": {
+                "startChar": 282,
+                "endChar": 302,
+                "quote": "the optimal sub-tree"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 302,
+              "endChar": 314,
+              "quote": " is selected"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a.i",
+          "anchor": {
+            "startChar": 141,
+            "endChar": 158,
+            "quote": "the decision tree"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 296,
+            "endChar": 311,
+            "quote": "a decision tree"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a.ii",
+          "anchor": {
+            "startChar": 184,
+            "endChar": 197,
+            "quote": "the sub-trees"
+          }
+        },
+        "introducing": {
+          "path": "5.a.i",
+          "anchor": {
+            "startChar": 69,
+            "endChar": 82,
+            "quote": "the sub-trees"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a.ii",
+          "anchor": {
+            "startChar": 282,
+            "endChar": 302,
+            "quote": "the optimal sub-tree"
+          }
+        },
+        "introducing": {
+          "path": "1.c.ii",
+          "anchor": {
+            "startChar": 511,
+            "endChar": 531,
+            "quote": "the optimal sub-tree"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 33,
+          "endChar": 147,
+          "quote": "the preprocessing comprising: correlating the dosage data with the human physiological parameters on the time axis"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 33,
+              "endChar": 50,
+              "quote": "the preprocessing"
+            },
+            "determiner": "the",
+            "head": "preprocessing"
+          }
+        ]
+      },
+      {
+        "path": "6.a.i",
+        "anchor": {
+          "startChar": 63,
+          "endChar": 147,
+          "quote": "correlating the dosage data with the human physiological parameters on the time axis"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 75,
+              "endChar": 90,
+              "quote": "the dosage data"
+            },
+            "determiner": "the",
+            "head": "dosage data"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 130,
+              "quote": "the human physiological parameters"
+            },
+            "determiner": "the",
+            "head": "human physiological parameters"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 147,
+              "quote": "the time axis"
+            },
+            "determiner": "the",
+            "head": "time axis"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a.i",
+        "parent": "6.a"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 75,
+              "quote": "correlating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.i",
+              "anchor": {
+                "startChar": 75,
+                "endChar": 90,
+                "quote": "the dosage data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 90,
+              "endChar": 96,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.i",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 130,
+                "quote": "the human physiological parameters"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 130,
+              "endChar": 134,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.i",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 147,
+                "quote": "the time axis"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 75,
+            "endChar": 90,
+            "quote": "the dosage data"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 98,
+            "endChar": 109,
+            "quote": "dosage data"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 96,
+            "endChar": 130,
+            "quote": "the human physiological parameters"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 44,
+            "endChar": 74,
+            "quote": "human physiological parameters"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 33,
+          "endChar": 215,
+          "quote": "the preprocessing further comprising: processing the input data by ETL, and processing the output data of the decision tree by ETL again as input data, thereby continuously iterating"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 33,
+              "endChar": 50,
+              "quote": "the preprocessing"
+            },
+            "determiner": "the",
+            "head": "preprocessing"
+          }
+        ]
+      },
+      {
+        "path": "7.a.i",
+        "anchor": {
+          "startChar": 71,
+          "endChar": 103,
+          "quote": "processing the input data by ETL"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 82,
+              "endChar": 96,
+              "quote": "the input data"
+            },
+            "determiner": "the",
+            "head": "input data"
+          },
+          {
+            "anchor": {
+              "startChar": 100,
+              "endChar": 103,
+              "quote": "ETL"
+            },
+            "determiner": "bare",
+            "head": "etl"
+          }
+        ]
+      },
+      {
+        "path": "7.a.ii",
+        "anchor": {
+          "startChar": 109,
+          "endChar": 215,
+          "quote": "processing the output data of the decision tree by ETL again as input data, thereby continuously iterating"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 120,
+              "endChar": 135,
+              "quote": "the output data"
+            },
+            "determiner": "the",
+            "head": "output data"
+          },
+          {
+            "anchor": {
+              "startChar": 139,
+              "endChar": 156,
+              "quote": "the decision tree"
+            },
+            "determiner": "the",
+            "head": "decision tree"
+          },
+          {
+            "anchor": {
+              "startChar": 160,
+              "endChar": 163,
+              "quote": "ETL"
+            },
+            "determiner": "bare",
+            "head": "etl"
+          },
+          {
+            "anchor": {
+              "startChar": 173,
+              "endChar": 183,
+              "quote": "input data"
+            },
+            "determiner": "bare",
+            "head": "input data"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a.i",
+        "parent": "7.a"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 71,
+              "endChar": 82,
+              "quote": "processing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a.i",
+              "anchor": {
+                "startChar": 82,
+                "endChar": 96,
+                "quote": "the input data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 96,
+              "endChar": 100,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a.i",
+              "anchor": {
+                "startChar": 100,
+                "endChar": 103,
+                "quote": "ETL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a.ii",
+        "parent": "7.a"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a.ii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 109,
+              "endChar": 120,
+              "quote": "processing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a.ii",
+              "anchor": {
+                "startChar": 120,
+                "endChar": 135,
+                "quote": "the output data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 135,
+              "endChar": 139,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a.ii",
+              "anchor": {
+                "startChar": 139,
+                "endChar": 156,
+                "quote": "the decision tree"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 156,
+              "endChar": 160,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a.ii",
+              "anchor": {
+                "startChar": 160,
+                "endChar": 163,
+                "quote": "ETL"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 163,
+              "endChar": 173,
+              "quote": " again as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a.ii",
+              "anchor": {
+                "startChar": 173,
+                "endChar": 183,
+                "quote": "input data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 183,
+              "endChar": 215,
+              "quote": ", thereby continuously iterating"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a.ii",
+          "anchor": {
+            "startChar": 139,
+            "endChar": 156,
+            "quote": "the decision tree"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 296,
+            "endChar": 311,
+            "quote": "a decision tree"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a.i",
+          "anchor": {
+            "startChar": 82,
+            "endChar": 96,
+            "quote": "the input data"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 228,
+            "endChar": 238,
+            "quote": "input data"
+          }
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,47 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A manufacturing method of a gallium nitride (GaN)-based device based on patterned ohmic contact, comprising:
+<claim-text>step <b>1</b>, growing a nucleation layer, a buffer layer, a channel layer, an insertion layer, a barrier layer and a cap layer on a substrate layer sequentially in that order;</claim-text>
+<claim-text>step <b>2</b>, growing a silicon oxide (SiO<sub>2</sub>) mask layer on the cap layer;</claim-text>
+<claim-text>step <b>3</b>, coating photoresist on the SiO<sub>2 </sub>mask layer, and photolithographing ohmic contact region patterns on two sides of the photoresist;</claim-text>
+<claim-text>wherein an axis of each of the ohmic contact region patterns extends along a gate width direction, and opposite edges of the ohmic contact region patterns each comprise a plurality of arc-shaped edges and a plurality of flat edges; and</claim-text>
+<claim-text>wherein the plurality of arc-shaped edges and the plurality of flat edges are alternately arranged and sequentially connected; and each of the plurality of arc-shaped edges protrudes towards outward;</claim-text>
+<claim-text>step <b>4</b>, etching the SiO<sub>2 </sub>mask layer, the cap layer, the barrier layer, the insertion layer and a part of the channel layer corresponding to the ohmic contact region patterns to form ohmic contact recesses, and removing the photoresist;</claim-text>
+<claim-text>step <b>5</b>, epitaxially growing a n-type doped gallium nitride (n<sup>+</sup>-GaN) material or the n<sup>+</sup> a n-type doped indium gallium nitride (n<sup>+</sup>-InGaN) material on a surface of a product prepared in the step <b>4</b>;</claim-text>
+<claim-text>step <b>6</b>, removing the SiO<sub>2 </sub>mask layer to form epitaxial layers;</claim-text>
+<claim-text>step <b>7</b>, preparing a source electrode and a drain electrode on the epitaxial layers;</claim-text>
+<claim-text>step <b>8</b>, preparing a mesa isolation;</claim-text>
+<claim-text>step <b>9</b>, depositing a passivation layer on surfaces of the epitaxial layers and the cap layer, removing the passivation layer deposited on the source electrode and the drain electrode, and preparing a gate groove;</claim-text>
+<claim-text>step <b>10</b>, preparing a gate electrode; and</claim-text>
+<claim-text>step <b>11</b>, performing metal interconnect to obtain the GaN-based device based on patterned ohmic contact; wherein the GaN-based device based on patterned ohmic contact comprises:
+<claim-text>the substrate layer, the nucleation layer, the buffer layer, the channel layer, the insertion layer, the barrier layer and the cap layer sequentially arranged in that order from bottom to top;</claim-text>
+<claim-text>the ohmic contact recesses, defined on two ends of the cap layer respectively and extending into the channel layer; wherein an axis of each of the ohmic contact recesses extends along the gate width direction;</claim-text>
+<claim-text>the gate electrode, located between the ohmic contact recesses;
+<claim-text>wherein a side wall of each of the ohmic contact recesses close to the gate electrode comprises a plurality of arc-shaped side walls and a plurality of flat side walls;</claim-text>
+<claim-text>wherein the plurality of arc-shaped side walls and the plurality of flat side walls are alternately arranged and sequentially connected; and each of the plurality of arc-shaped side walls protrudes towards a direction of the gate electrode;</claim-text>
+</claim-text>
+<claim-text>the epitaxial layers, disposed in the ohmic contact recesses respectively, wherein an upper end of each of the epitaxial layers is located above the cap layer; and</claim-text>
+<claim-text>the passivation layer, covered on the cap layer and the epitaxial layers, wherein the source electrode and the drain electrode penetrate through the passivation layer and are disposed on the epitaxial layers respectively; and the gate electrode penetrates through the passivation layer and extends onto the cap layer; and</claim-text>
+</claim-text>
+<claim-text>wherein the epitaxial layers are made from the n<sup>+</sup>-GaN material or the n<sup>+</sup>-InGaN material.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The manufacturing method of the GaN-based device based on patterned ohmic contact as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the step <b>3</b> comprises:
+<claim-text>coating the photoresist on the SiO<sub>2 </sub>mask layer, exposing the ohmic contact region patterns on the two sides of the photoresist through a mask using a photolithography machine to obtain exposed ohmic contact region patterns, and developing the exposed ohmic contact region patterns to remove the photoresist on the ohmic contact region patterns.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The manufacturing method of the GaN-based device based on patterned ohmic contact as claimed in <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the step <b>4</b> comprises:
+<claim-text>step <b>41</b>, removing the SiO<sub>2 </sub>mask layer on the ohmic contact region patterns, and etching to remove the cap layer, the barrier layer, the insertion layer and the part of the channel layer corresponding to the ohmic contact region patterns, to define the ohmic contact recesses; and</claim-text>
+<claim-text>step <b>42</b>, removing the photoresist from a surface of a product prepared in the step <b>41</b>.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The manufacturing method of the GaN-based device based on patterned ohmic contact as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the step <b>7</b> comprises:
+<claim-text>step <b>71</b>, photolithographing a source electrode pattern and a drain electrode pattern on the epitaxial layers respectively;</claim-text>
+<claim-text>step <b>72</b>, evaporating titanium/gold (Ti/Au) metal electrodes through an electron beam evaporation device; and</claim-text>
+<claim-text>step <b>73</b>, stripping metals in unexposed regions to form the source electrode and the drain electrode.</claim-text>
+</claim-text>
+</claim>
+</claims>

@@ -6,12 +6,20 @@ Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
+## Current closeout evidence
+
+All eight original Cloud IDs remain Fixed. The 123 captured Dependabot IDs
+are resolved: 121 Fixed, two withdrawn. The seven October 28 Cloud IDs are
+also Fixed. The twenty newer dependency fixes merged in #2389, and their
+alerts were all Fixed on 2026-11-01. Code and secret scanning
+show zero open alerts. See [current revalidation](research/2026-10-31-revalidation.md).
+
 ## Mission
 
 Capture, validate, remediate, and close every open Codex Cloud security finding
 for `kriegcloud/beep-effect` in the 8-finding batch captured on 2026-10-20.
-Ship the fixes through one Yeet-driven PR, close the exact captured findings, and
-leave no packet-applicable finding open.
+Retain merged remediation and exact finding closure. Deliver final readiness
+and completion evidence through PR #2488 with no packet-applicable finding open.
 
 ## Launch
 
@@ -30,7 +38,15 @@ leave no packet-applicable finding open.
 5. [`ops/triage.json`](./ops/triage.json)
 6. [`findings/INDEX.md`](./findings/INDEX.md)
 
-## Current Phase
+## Historical verified state — 2026-10-28
+
+PR #1930 is merged, all eight original Cloud IDs are Fixed, and captured
+Dependabot alerts are closed (122 fixed, one withdrawn). The retained readiness
+provider returns verified in the owning clone. The resumed goal remains active
+for the seven findings in the linked supplemental packet. See
+[the exact-ID reconciliation](research/2026-10-28-cloud-refresh.md).
+
+## Historical execution state
 
 PR [#1930](https://github.com/beep-effect/beep-effect/pull/1930) is published; the parent-confirmed remote head is
 `02b5bd3f47`. It contains the eight Cloud remediations and scoped remediation for
@@ -63,25 +79,65 @@ materially invalid.
 
 ## Expanded Dependabot scope
 
-The same single PR also covers all 123 captured open GitHub Dependabot alerts
-(63 unique advisories after the post-publication refresh). See `ops/dependabot.json` for exact identities and
-`research/DEPENDABOT.md` for triage/history, with separate fixture, Python and
-Rust reports. The original eight-item Cloud manifest remains unchanged.
-Scoped remediation and proof are published in PR #1930. External closure remains
-post-merge and exact-ID bound. See the lane reports for runtime and scanner limits.
+The original 123 dependency IDs (63 advisories) remain separate from the eight
+Cloud identities. Their remediation merged in #1930; 121 are fixed and #426/#431
+are explicitly withdrawn. `ops/dependabot.json` and `research/DEPENDABOT.md`
+retain exact identities and qualification limits. Twenty newer IDs belong to
+the October 28 catalog; their fixes merged in #2389 and closure remains pending.
 
 ## Lifecycle and reflection boundary
 
-The same-PR reflection is retained at
-`history/reflections/2026-10-21-codex.md` as an interim `todo-codify` record.
-It does not declare completion. The manifest carries prospective closeout for
-PR #1930 while operative lifecycle remains active. After actual merge,
-merged-revision proof and exact-ID closure, retain the final addendum and genuine
-head-bound Yeet readiness verdict, then run:
+The October 21 reflection remains an interim historical record. The October 31
+reflection and accepted closeout report retain implementation and tooling proof.
+The manifest proposes closeout through #2488 while declared lifecycle remains
+active. Obtain and preserve its genuine final-head readiness verdict before
+merge; after merge and exact external closure, run:
 
 ```sh
 bun run beep goals completion refresh --slug codex-security-findings-2026-10-20
 ```
 
-The clone-scoped receipt derives `completed-retained` without a second PR or a
-premature tracked status flip. See `goals/README.md` for the completion contract.
+The clone-scoped verified receipt derives `completed-retained`. See
+`goals/README.md` for the completion contract.
+
+## October 28 supplemental batch
+
+The live inventory and supplied CSV agree on seven new findings. All seven are
+tracked in the [linked supplemental packet](../codex-security-findings-2026-10-28/README.md).
+See [the reconciliation receipt](research/2026-10-28-cloud-refresh.md) for the
+exact-ID mapping and the already merged #1930 state. Completion of this resumed
+goal requires both historical closeout verification and supplemental remediation.
+
+## Final acceptance — October 31
+
+Implementation and dependency fixes merged in #2389; original source fixes
+remain in merged #1930 and #2333. The
+[closeout reflection](history/reflections/2026-10-31-codex.md) retains their
+qualification and tooling lessons. #2488 is the final receipt PR for both
+packets. Its head-bound readiness, merge, exact external closure and verified
+completion receipts remain required; the proposal is not a completion claim.
+
+## Final receipt reconciliation — October 31
+
+Implementation PR #2389 merged at `ac8993e7773065c55b11e6b71b0f1471a0105d2f`.
+All 35 hosted check jobs ultimately passed on its accepted head; the separate
+optional Vercel statuses report deployment rate limits. The merge preceded this
+lane's positive canonical readiness capture. Later green checks do not supply
+that missing historical observation.
+
+PR #2416 merged, but its retained verdict is closeout-mode and bound to a
+pre-merge head, so it cannot qualify completion; #2488 replaces it as the final
+PR ([rebinding evidence](../codex-security-findings-2026-10-28/research/2026-11-01-final-closeout.md)).
+
+Final closeout PR [#2488](https://github.com/beep-effect/beep-effect/pull/2488)
+retains the merged implementation and must obtain genuine final-head canonical
+`merge-ready: yes` while it is still open. Preserve that evidence before merge.
+After #2488 merges and all exact external statuses are verified, run
+`goals completion refresh` for both packets. Their declared lifecycle remains
+`active` with prospective `completed-retained` until verified receipts derive
+completion. No gate is weakened and no readiness receipt is fabricated.
+
+Dependency IDs #450–#469 are Fixed (GitHub REST, observed 2026-11-01) and the
+Dependabot, code-scanning and secret-scanning open inventories are zero. See the
+[final closeout evidence](../codex-security-findings-2026-10-28/research/2026-11-01-final-closeout.md) and the earlier
+[accepted closeout evidence](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

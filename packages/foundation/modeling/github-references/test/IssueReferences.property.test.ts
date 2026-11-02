@@ -13,7 +13,7 @@ const roundTrips = <T, E>(
   arbitrary: Arbitrary.Arbitrary<T> = Arbitrary.schema(schema)
 ): void => {
   it.effect.prop(
-    name + ": encode/decode preserves values and never fails",
+    `${name}: encode/decode preserves values and never fails`,
     [arbitrary],
     ([value]) =>
       Effect.gen(function* () {
@@ -50,11 +50,11 @@ const Sample = S.Struct({
   colon: S.Boolean,
 });
 const stringifyBare = (value: Pick<G.BareLineReference, "keyword" | "issueNumber">): string =>
-  value.keyword + " #" + value.issueNumber;
+  `${value.keyword} #${value.issueNumber}`;
 const stringifyHarvest = (values: ReadonlyArray<G.IssueReference>): string => {
   let text = "";
   for (const value of values) {
-    const item = "#" + value.issueNumber;
+    const item = `#${value.issueNumber}`;
     text += Str.repeat(value.start - text.length)(" ");
     text += value.keyword + Str.repeat(value.end - value.start - value.keyword.length - item.length)(" ") + item;
   }
@@ -76,7 +76,7 @@ describe("IssueReferences property floor", () => {
     ([sample, noise]) =>
       Effect.sync(() => {
         for (const text of [
-          " " + Str.toUpperCase(sample.keyword) + (sample.colon ? ":" : "") + "\t#00" + sample.issue + " ",
+          ` ${Str.toUpperCase(sample.keyword)}${sample.colon ? ":" : ""}\t#00${sample.issue} `,
           noise,
         ]) {
           const parsed = G.parseBareLineReference(text);
@@ -169,9 +169,9 @@ describe("IssueReferences property floor", () => {
     [Arbitrary.schema(Sample)],
     ([sample]) =>
       Effect.sync(() => {
-        const inline = Str.toUpperCase(sample.keyword) + " #" + sample.issue;
+        const inline = `${Str.toUpperCase(sample.keyword)} #${sample.issue}`;
         assert.deepStrictEqual(
-          A.map(G.harvestIssueReferences(inline + "; " + inline), ({ keyword, issueNumber }) => ({
+          A.map(G.harvestIssueReferences(`${inline}; ${inline}`), ({ keyword, issueNumber }) => ({
             keyword,
             issueNumber,
           })),
@@ -180,15 +180,15 @@ describe("IssueReferences property floor", () => {
             { keyword: sample.keyword, issueNumber: sample.issue },
           ]
         );
-        assert.deepStrictEqual(G.harvestIssueReferences(sample.keyword + ": #" + sample.issue), []);
+        assert.deepStrictEqual(G.harvestIssueReferences(`${sample.keyword}: #${sample.issue}`), []);
         assert.deepStrictEqual(
-          G.parseBareLineReference(sample.keyword + ": #" + sample.issue),
+          G.parseBareLineReference(`${sample.keyword}: #${sample.issue}`),
           O.some({ keyword: sample.keyword, issueNumber: sample.issue })
         );
-        assert.deepStrictEqual(G.parseBareLineReference(inline + " trailing"), O.none());
-        assert.deepStrictEqual(G.harvestIssueReferences(sample.keyword + " " + sample.issue), []);
+        assert.deepStrictEqual(G.parseBareLineReference(`${inline} trailing`), O.none());
+        assert.deepStrictEqual(G.harvestIssueReferences(`${sample.keyword} ${sample.issue}`), []);
         assert.deepStrictEqual(
-          A.map(G.harvestIssueReferences(sample.keyword + " #9007199254740992; " + inline), (hit) => hit.issueNumber),
+          A.map(G.harvestIssueReferences(`${sample.keyword} #9007199254740992; ${inline}`), (hit) => hit.issueNumber),
           [sample.issue]
         );
       }),

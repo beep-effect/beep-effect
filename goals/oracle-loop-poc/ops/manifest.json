@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "oracle-loop-poc",
+    "packetId": "goal-packet/v1:2510f6486ac000f6552a57ee6947eeb36ffae6c9ae6347af8511d1f6f94ad6cf",
+    "title": "Oracle Loop POC",
+    "status": "active",
+    "created": "2026-10-28",
+    "updated": "2026-10-28",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/oracle-loop-poc",
+  "lifecycle": "active",
+  "mission": "Prove the admit-find-repair loop for agent work product in a lab app: Markdown, HTML and .docx admitted into the Doc hub through positioned codecs, findings addressed by model path, repair by splice, a generic profile and a stacked patent profile, pre-registered kill criteria. Outcome: go/no-go on promoting the core shapes.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/doc-hub-spokes",
+    "graduated": "2026-10-28"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/oracle-loop-poc/README.md",
+    "goals/oracle-loop-poc/SPEC.md",
+    "goals/oracle-loop-poc/PLAN.md",
+    "goals/oracle-loop-poc/GOAL.md",
+    "goals/oracle-loop-poc/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/oracle-loop-poc/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/oracle-loop-poc/GOAL.md)\" -le 4000",
+    "jq . goals/oracle-loop-poc/ops/manifest.json",
+    "rg -n \"oracle-loop-poc|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/oracle-loop-poc",
+    "git diff --check -- goals/oracle-loop-poc",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

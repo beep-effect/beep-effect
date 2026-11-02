@@ -1,0 +1,72 @@
+{
+  "familyId": "13687596-root-1",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the male/female type",
+      "nativeQuote": "the male/female type",
+      "literalMatch": true,
+      "explanation": "Exact selected1."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said interlock",
+      "nativeQuote": "said interlock",
+      "literalMatch": true,
+      "explanation": "Exact1."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the effect",
+      "nativeQuote": "the effect",
+      "literalMatch": true,
+      "explanation": "Exact12."
+    }
+  ],
+  "concerns": [
+    "Original HA5BUNXZPXXIFW2 is lowercase legacy XML, explaining prior sourceClaimCount0. Inspected parsed numbered claims1-12; selected wording matches apart from heading Claims1 and embedded page line numbers30 in9 and25 in12. Extra14 Claim nodes include non-numbered headings; native numbered count12 matches.",
+    "Publication identity/digest US20130136529A1/app13687596 verified; original2012-11-28 before OA2014-12-26;46/46 inventory no-intervening-CLM assertion corroborates exact content."
+  ],
+  "rationale": "Eligible after investigating apparent count0 as original-XML parser format gap, not a substantive version mismatch. Actual112(b) grounds and same-number phrase evidence match; dependencies naturally stay in root1 family.",
+  "sourceIdentity": {
+    "applicationNumber": "13687596",
+    "publicationNumber": "US20130136529A1",
+    "publicationDate": "2013-05-30",
+    "officeActionMailDate": "2014-12-26",
+    "officeActionDocumentIdentifiers": ["I41GT52DPXXIFW4"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20130136529 A1 20130530",
+      "application-reference": "US 13687596 20121128",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "HA5BUNXZPXXIFW2",
+        "officialDate": "2012-11-28T00:00:00.000-0500"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "HA5BUNXZPXXIFW2",
+        "officialDate": "2012-11-28T00:00:00.000-0500",
+        "sha256": "e2a6ccc6f0e4aae4c91406c6df3fbc015222393b386b01b89c438f574ed3a884",
+        "ocrCorroborationOnly": false,
+        "exactNonWhitespaceClaimNumbers": [],
+        "sourceClaimCount": 0
+      }
+    ],
+    "documentInventoryCount": 46,
+    "documentInventoryRows": 46,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

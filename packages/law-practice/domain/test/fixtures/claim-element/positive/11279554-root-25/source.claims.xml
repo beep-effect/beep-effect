@@ -1,0 +1,190 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A computer-implemented method of optimizing operations of a pipeline system, comprising:
+<claim-text>a) reading input data, wherein the input data describes the pipeline system; </claim-text>
+<claim-text>b) generating a population of solutions, wherein each solution in the population specifies a feasible production state for the pipeline system; </claim-text>
+<claim-text>c) evaluating each solution in the population and sorting the solutions in the population according to the evaluation; </claim-text>
+<claim-text>d) performing a genetic optimization process on the population until a termination condition specified by the input data is satisfied; </claim-text>
+<claim-text>e) selecting an optimized production solution from the population of solutions, wherein the optimized production solution has a highest evaluation, relative to the solutions in the population after the genetic optimization process is performed; and </claim-text>
+<claim-text>f) generating, for the optimized production solution, an optimized pressure solution specifying an output pressure for one or more delivery points of the pipeline system and an input pressure for one or more production nodes of the pipeline system, using a direct pressure optimization process. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein performing the genetic optimization process comprises:
+<claim-text>a) modifying at least one aspect of the feasible operational state specified by at least one solution in the population; </claim-text>
+<claim-text>b) simulating the operation of the pipeline system, according to the operational state specified by the modified solution; </claim-text>
+<claim-text>c) evaluating the performance of the modified solution; </claim-text>
+<claim-text>d) adding the modified solution to the population; and </claim-text>
+<claim-text>e) removing a solution from the population with a poorest evaluation, relative to the solutions in the population. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein modifying at least one aspect of the feasible operational state specified by at least one solution in the population, comprises:
+<claim-text>a) selecting a solution modification technique; </claim-text>
+<claim-text>b) selecting the at least one solution from the population to modify; and </claim-text>
+<claim-text>c) modifying the at least one solution, according to the selected solution modification technique. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the solution modification technique randomly modifies the least one aspect of the feasible operational state specified by the solution. </claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the solution modification technique modifies the at least one solution according to a heuristic rule. </claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the solution modification technique cross-breeds two or more solutions to generate the modified solution. </claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein modifying at least one aspect of the feasible operational state specified by at least one of the solutions in the population, comprises probabilistically selecting the one or more solutions, wherein a solution with a superior evaluation is more likely to be selected for modification than a solution with an inferior evaluation. </claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising, validating that the input data files describe a pipeline system that may be optimized. </claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the termination conditions specified by the input data comprise the termination conditions include at least one of a maximum number of solutions generated, a maximum amount of time spent, a maximum number of generations, and the generation of a solution that exceeds a specified evaluation. </claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein generating a population of solutions comprises, generating a first group of solutions and a second group of solutions, wherein the first group of solutions are generated according to heuristic rules and wherein the second group of solutions are generated using a random process. </claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the input data comprises at least one extensible markup language (XML) document. </claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the input data is retrieved from a pipeline status database that stores a current operational state of the pipeline system. </claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. A computer-readable medium containing a program which, when executed, performs an operation for optimizing the operations of a pipeline system, comprising:
+<claim-text>a) reading input data, wherein the input data describes the pipeline system to be optimized; </claim-text>
+<claim-text>b) generating a population of solutions, wherein each solution in the population specifies a feasible operational state for the pipeline system; </claim-text>
+<claim-text>c) evaluating each solution in the population and sorting the solutions in the population according to the evaluation; </claim-text>
+<claim-text>d) performing a genetic optimization process on the population until a termination condition specified by the input data is satisfied; </claim-text>
+<claim-text>e) selecting an optimized production solution from the population of solutions, wherein the optimized production solution has a highest evaluation, relative to the solutions in the population after the genetic optimization process is performed; and </claim-text>
+<claim-text>f) generating, for the optimized production solution, an optimized pressure solution specifying an output pressure for one or more delivery points of the pipeline system and an input pressure for one or more production nodes of the pipeline system, using a direct pressure optimization process. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The computer readable medium of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein performing the genetic optimization process, comprises:
+<claim-text>a) modifying at least one aspect of the feasible operational state specified by at least one solution in the population; </claim-text>
+<claim-text>b) simulating the operation of the pipeline system, according to the operational state specified by the modified solution; </claim-text>
+<claim-text>c) evaluating the performance of the modified solution; </claim-text>
+<claim-text>d) adding the modified solution to the population; and </claim-text>
+<claim-text>e) removing a solution from the population with the poorest evaluation. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The computer-readable medium of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein modifying at least one aspect of the feasible operational state specified by at least one solution in the population, comprises:
+<claim-text>a) selecting a solution modification technique; </claim-text>
+<claim-text>b) selecting the at least one solution from the population to modify; and </claim-text>
+<claim-text>c) modifying the at least one solution, according to the selected solution modification technique. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The computer-readable medium of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the solution modification technique randomly modifies the least one aspect of the feasible operational state specified by the solution. </claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The computer-readable medium of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the solution modification technique modifies the at least one solution according to a heuristic rule. </claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The computer-readable medium of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the solution modification technique cross-breeds two or more solutions to generate the modified solution. </claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The computer-readable medium of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein modifying at least one aspect of the feasible operational state specified by at least one of the solutions in the population, comprises probabilistically selecting the one or more solutions, wherein a solution with a superior evaluation is more likely to be selected for modification than a solution with an inferior evaluation. </claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The computer-readable medium of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the operation further comprises, validating that the input data files describe a pipeline system that may be optimized. </claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The computer-readable medium of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the termination conditions specified by the input data comprise the termination conditions include at least one of a maximum number of solutions generated, a maximum amount of time spent, a maximum number of generations, and the generation of a solution that exceeds a specified evaluation. </claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The computer-readable medium of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein generating a population of solutions comprises, generating a first group of solutions and a second group of solutions, wherein the first group of solutions are generated according to heuristic rules and wherein the second group of solutions are generated using a random process. </claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The computer-readable medium of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the input data comprises at least one extensible markup language (XML) document. </claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. The computer-readable medium of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the input data is retrieved from a pipeline status database that stores a current operational state of the pipeline system. </claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text><b>25</b>. A system for optimizing the operations of a pipeline system, comprising:
+<claim-text>a) a processor </claim-text>
+<claim-text>b) an optimization program, which when executed by the processor, is configured to: </claim-text>
+<claim-text>i) read input data, wherein the input data describes the pipeline system to be optimized; </claim-text>
+<claim-text>ii) generate a population of solutions, wherein each solution in the population specifies a feasible production state for the pipeline system; </claim-text>
+<claim-text>iii) evaluate each solution in the population of solutions; </claim-text>
+<claim-text>iv) perform a genetic optimization process on the population until a termination condition specified by the input data is satisfied; </claim-text>
+<claim-text>v) select an optimized production solution from the population of solutions, wherein the optimized production solution has a highest evaluation, relative to the solutions in the population after the genetic optimization process is performed; and </claim-text>
+<claim-text>vi) generate, for the optimized production solution, an optimized pressure solution specifying an output pressure for one or more delivery points of the pipeline system and an input pressure for one or more production nodes of the pipeline system, using a direct pressure optimization process. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00026" num="00026">
+<claim-text><b>26</b>. The system of <claim-ref idref="CLM-00025">claim 25</claim-ref>, wherein the optimization program is configured to perform the genetic optimization process by:
+<claim-text>a) modifying at least one aspect of the feasible operational state specified by at least one solutions in the population; </claim-text>
+<claim-text>b) simulating the operation of the pipeline system, according to the operational state specified by the modified solution; </claim-text>
+<claim-text>c) evaluating the performance of the modified solution; </claim-text>
+<claim-text>d) adding the modified solution to the population; and </claim-text>
+<claim-text>e) removing a solution from the population with the poorest evaluation, relative to the solutions in the population. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00027" num="00027">
+<claim-text><b>27</b>. The system of <claim-ref idref="CLM-00026">claim 26</claim-ref>, wherein the program is configured to modify the at least one aspect of the feasible operational state specified by at least one solution in the population by performing the steps of:
+<claim-text>a) selecting a solution modification technique; </claim-text>
+<claim-text>b) selecting the at least one solution from the population to modify; and </claim-text>
+<claim-text>c) modifying the at least one solution, according to the selected solution modification technique. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00028" num="00028">
+<claim-text><b>28</b>. The system of <claim-ref idref="CLM-00027">claim 27</claim-ref>, wherein the solution modification technique randomly modifies the least one aspect of the feasible operational state specified by the solution. </claim-text>
+</claim>
+<claim id="CLM-00029" num="00029">
+<claim-text><b>29</b>. The system of <claim-ref idref="CLM-00027">claim 27</claim-ref>, wherein the solution modification technique modifies the at least one solution according to a heuristic rule. </claim-text>
+</claim>
+<claim id="CLM-00030" num="00030">
+<claim-text><b>30</b>. The system of <claim-ref idref="CLM-00027">claim 27</claim-ref>, wherein the solution modification technique cross-breeds two or more solutions to generate the modified solution. </claim-text>
+</claim>
+<claim id="CLM-00031" num="00031">
+<claim-text><b>31</b>. The system of <claim-ref idref="CLM-00025">claim 25</claim-ref>, wherein modifying at least one aspect of the feasible operational state specified by at least one of the solutions in the population, comprises probabilistically selecting the one or more solutions, wherein a solution with a superior evaluation is more likely to be selected for modification than a solution with an inferior evaluation. </claim-text>
+</claim>
+<claim id="CLM-00032" num="00032">
+<claim-text><b>32</b>. The system of <claim-ref idref="CLM-00025">claim 25</claim-ref>, wherein the termination conditions specified by the input data comprise the termination conditions include at least one of a maximum number of solutions generated, a maximum amount of time spent, a maximum number of generations, and the generation of a solution that exceeds a specified evaluation. </claim-text>
+</claim>
+<claim id="CLM-00033" num="00033">
+<claim-text><b>33</b>. The system of <claim-ref idref="CLM-00025">claim 25</claim-ref>, wherein the optimization program is configured to generate a population of solutions by generating a first group of solutions and a second group of solutions, wherein the first group of solutions are generated according to heuristic rules and wherein the second group of solutions are generated using a random process. </claim-text>
+</claim>
+<claim id="CLM-00034" num="00034">
+<claim-text><b>34</b>. The system of <claim-ref idref="CLM-00025">claim 25</claim-ref>, wherein the input data is retrieved from a pipeline status database that stores a current operational state of the pipeline system. </claim-text>
+</claim>
+<claim id="CLM-00035" num="00035">
+<claim-text><b>35</b>. A method of optimizing the operations of a pipeline system, comprising:
+<claim-text>a) generating an optimized production solution for the production of material supplied to the pipeline system using a genetic algorithm optimization technique to optimize a population of seed solutions; and </claim-text>
+<claim-text>b) generating, for the optimized production solution, an optimized pressure solution specifying an output pressure present at one or more delivery points of the pipeline system and an input pressure to generate at one or more production nodes of the pipeline system, using a direct pressure optimization technique. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00036" num="00036">
+<claim-text><b>36</b>. The method of <claim-ref idref="CLM-00035">claim 35</claim-ref>, wherein the output pressures are within a required minimal delivery pressure for each respective delivery point and wherein the input pressures are within a maximal input pressure allowed for each respective production node of the pipeline system. </claim-text>
+</claim>
+<claim id="CLM-00037" num="00037">
+<claim-text><b>37</b>. The method of <claim-ref idref="CLM-00035">claim 35</claim-ref>, wherein generating an optimized solution for the production of material included in the pipeline system, comprises:
+<claim-text>a) reading input data, wherein the input data describes the pipeline system to be optimized; </claim-text>
+<claim-text>b) generating a population of solutions, wherein each solution in the population specifies a feasible production state for the pipeline system; </claim-text>
+<claim-text>c) evaluating each solution in the population and sorting the solutions in the population according to the evaluation; </claim-text>
+<claim-text>d) performing an optimization process on the population until a termination condition specified by the input data is satisfied, wherein the optimization process comprises. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00038" num="00038">
+<claim-text><b>38</b>. The method of <claim-ref idref="CLM-00037">claim 37</claim-ref>, wherein performing the genetic algorithm optimization technique comprises:
+<claim-text>a) modifying at least one aspect of the feasible operational state specified by at least one solutions in the population; </claim-text>
+<claim-text>b) simulating the operation of the pipeline system, according to the operational state specified by the modified solution; </claim-text>
+<claim-text>c) evaluating the performance of the modified solution; </claim-text>
+<claim-text>d) adding the modified solution to the population; and </claim-text>
+<claim-text>e) removing a solution from the population with the poorest evaluation, relative to the solutions in the population. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00039" num="00039">
+<claim-text><b>39</b>. The method of <claim-ref idref="CLM-00038">claim 38</claim-ref>, wherein modifying at least one aspect of at least one of the solution in the population, comprises:
+<claim-text>a) selecting a solution modification technique; </claim-text>
+<claim-text>b) selecting the at least one solution from the population to modify; and </claim-text>
+<claim-text>c) modifying the at least one solution, according to the selected solution modification technique.</claim-text>
+</claim-text>
+</claim>
+</claims>

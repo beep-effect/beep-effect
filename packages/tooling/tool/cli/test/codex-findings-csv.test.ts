@@ -59,7 +59,7 @@ const csv = (rows: ReadonlyArray<string>): string => `${A.join([A.join(CODEX_CSV
 const decode = (text: string) => decodeCodexFindingsCsv(text);
 const reason = (text: string) =>
   decodeCodexFindingsCsv(text).pipe(
-    Effect.map(() => "accepted"),
+    Effect.as("accepted"),
     Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
   );
 

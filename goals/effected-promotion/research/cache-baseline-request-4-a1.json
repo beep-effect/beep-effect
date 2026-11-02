@@ -1,0 +1,20 @@
+{
+  "previous": "a15c868e15cdb02c9360a93f33f51bab7c8351a39d6fea4911ec39ca6ed0b875",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effected-promotion 4-A1, refactor/qas-discovery-workspace-kit)",
+    "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/repo-workspaces workspace dependency for the QAS discovery adoption (map site #143); the task graphs gain only repo-workspaces build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-4-a1.md",
+      "sha256": "ed51615669ff4ed8d5bdfd8c573f66258580e94c115f6ddf7ac22d82c5aee297"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["@beep/repo-cli", "//"]
+}

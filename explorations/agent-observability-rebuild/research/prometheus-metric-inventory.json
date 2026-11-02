@@ -1,0 +1,942 @@
+{
+  "observedAt": "2026-10-28T02:21:38.775249+00:00",
+  "query": "count by (__name__) ({__name__=~\"otelcol_.*|codex_.*|claude_code_.*\"})",
+  "response": {
+    "status": "success",
+    "data": {
+      "resultType": "vector",
+      "result": [
+        {
+          "metric": {
+            "__name__": "codex_remote_models_fetch_update_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "70"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_remote_models_fetch_update_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_remote_models_fetch_update_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_bytes_bucket"
+          },
+          "value": [1793154098.765, "38"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_bytes_sum"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_bytes_count"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_count_total"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "70"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_entries_bucket"
+          },
+          "value": [1793154098.765, "32"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_entries_sum"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_entries_count"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_max_entry_bytes_bucket"
+          },
+          "value": [1793154098.765, "38"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_max_entry_bytes_sum"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_sqlite_logs_write_max_entry_bytes_count"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "claude_code_active_time_seconds_total"
+          },
+          "value": [1793154098.765, "4"]
+        },
+        {
+          "metric": {
+            "__name__": "claude_code_cost_usage_USD_total"
+          },
+          "value": [1793154098.765, "7"]
+        },
+        {
+          "metric": {
+            "__name__": "claude_code_token_usage_tokens_total"
+          },
+          "value": [1793154098.765, "28"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_connector_count_bucket"
+          },
+          "value": [1793154098.765, "16"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_connector_count_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_connector_count_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_response_bytes_bucket"
+          },
+          "value": [1793154098.765, "16"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_response_bytes_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_response_bytes_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_tool_count_bucket"
+          },
+          "value": [1793154098.765, "16"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_tool_count_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_installed_tool_count_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_read_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_read_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_read_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_refresh_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_refresh_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_refresh_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_snapshot_age_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_snapshot_age_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_apps_snapshot_age_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_auth_storage_duration_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "70"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_auth_storage_duration_milliseconds_sum"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_auth_storage_duration_milliseconds_count"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_auth_storage_operation_total"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_binding_catalog_raw_definition_json_bytes_bucket"
+          },
+          "value": [1793154098.765, "25"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_binding_catalog_raw_definition_json_bytes_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_binding_catalog_raw_definition_json_bytes_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_protocol_discovery_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "70"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_protocol_discovery_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_protocol_discovery_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_protocol_discovery_total"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_cache_publish_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "70"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_cache_publish_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_cache_publish_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_cache_write_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_cache_write_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_cache_write_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_fetch_uncached_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "70"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_fetch_uncached_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_fetch_uncached_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_list_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "70"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_list_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_mcp_tools_list_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_plugins_loaded_cache_request_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_remote_models_load_cache_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_remote_models_load_cache_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_remote_models_load_cache_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_rollout_compression_materialize_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_rollout_compression_read_io_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_rollout_compression_read_io_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_rollout_compression_read_io_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_rollout_compression_read_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_thread_history_sqlite_projection_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_websocket_event_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "1225"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_websocket_event_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_websocket_event_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_websocket_event_total"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_websocket_request_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "70"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_websocket_request_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_websocket_request_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_websocket_request_total"
+          },
+          "value": [1793154098.765, "2"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_hooks_run_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "140"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_hooks_run_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "4"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_hooks_run_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "4"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_hooks_run_total"
+          },
+          "value": [1793154098.765, "4"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_shell_snapshot_command_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_shell_snapshot_wait_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_shell_snapshot_wait_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_shell_snapshot_wait_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_tool_call_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "420"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_tool_call_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_tool_call_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_tool_call_total"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_tool_unified_exec_total"
+          },
+          "value": [1793154098.765, "3"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_tools_registered_bucket"
+          },
+          "value": [1793154098.765, "252"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_tools_registered_sum"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_tools_registered_count"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_web_search_results_payload_bytes_bucket"
+          },
+          "value": [1793154098.765, "16"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_web_search_results_payload_bytes_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_web_search_results_payload_bytes_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_websocket_continuation_total"
+          },
+          "value": [1793154098.765, "5"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_feature_state_total"
+          },
+          "value": [1793154098.765, "17"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_guardian_turn_blocking_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_guardian_turn_blocking_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_guardian_turn_blocking_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_multi_agent_result_delivery_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_catalog_entries_bucket"
+          },
+          "value": [1793154098.765, "192"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_catalog_entries_sum"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_catalog_entries_count"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "420"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_query_terms_bucket"
+          },
+          "value": [1793154098.765, "192"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_query_terms_sum"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_query_terms_count"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_reduction_bps_bucket"
+          },
+          "value": [1793154098.765, "192"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_reduction_bps_sum"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_reduction_bps_count"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_selected_entries_bucket"
+          },
+          "value": [1793154098.765, "192"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_selected_entries_sum"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_selected_entries_count"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_skills_shadow_selection_total"
+          },
+          "value": [1793154098.765, "12"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_startup_phase_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "210"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_startup_phase_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "6"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_startup_phase_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "6"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_startup_prewarm_age_at_first_turn_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_startup_prewarm_age_at_first_turn_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_startup_prewarm_age_at_first_turn_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_startup_prewarm_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_startup_prewarm_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_startup_prewarm_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_startup_prewarm_websocket_check_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_thread_started_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_e2e_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_e2e_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_e2e_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_memory_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_network_proxy_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_token_usage_bucket"
+          },
+          "value": [1793154098.765, "96"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_token_usage_sum"
+          },
+          "value": [1793154098.765, "6"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_token_usage_count"
+          },
+          "value": [1793154098.765, "6"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_tool_call_bucket"
+          },
+          "value": [1793154098.765, "16"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_tool_call_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_tool_call_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_ttfm_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_ttfm_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_ttfm_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_ttft_duration_ms_milliseconds_bucket"
+          },
+          "value": [1793154098.765, "35"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_ttft_duration_ms_milliseconds_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_ttft_duration_ms_milliseconds_count"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_turn_unified_exec_running_processes_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_conversation_turn_count_total"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_rollout_size_bytes_bucket"
+          },
+          "value": [1793154098.765, "16"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_rollout_size_bytes_sum"
+          },
+          "value": [1793154098.765, "1"]
+        },
+        {
+          "metric": {
+            "__name__": "codex_rollout_size_bytes_count"
+          },
+          "value": [1793154098.765, "1"]
+        }
+      ]
+    }
+  }
+}

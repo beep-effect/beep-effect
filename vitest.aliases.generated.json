@@ -688,7 +688,6 @@
     "./packages/foundation/modeling/schema/src/Float64Array.ts"
   ],
   "@beep/schema/Html": ["./packages/foundation/modeling/schema/src/Html.ts"],
-  "@beep/schema/Jsonc": ["./packages/foundation/modeling/schema/src/Jsonc.ts"],
   "@beep/schema/LocalDate": [
     "./packages/foundation/modeling/schema/src/LocalDate/index.ts"
   ],
@@ -1764,9 +1763,6 @@
   "@beep/repo-configs/cache": [
     "./packages/tooling/policy-pack/repo-configs/src/cache/index.ts"
   ],
-  "@beep/repo-cli/commands/Graft": [
-    "./packages/tooling/tool/cli/src/commands/Graft/index.ts"
-  ],
   "@beep/test-utils/test/Vitest": [
     "./packages/tooling/test-kit/test-utils/src/test/Vitest.test-kit.ts"
   ],
@@ -2230,5 +2226,38 @@
   ],
   "@beep/schema/CredentialPatternBank": [
     "./packages/foundation/modeling/schema/src/CredentialPatternBank/index.ts"
+  ],
+  "@beep/duckdb/DuckDbEventJournal": [
+    "./packages/drivers/duckdb/src/DuckDbEventJournal.service.ts"
+  ],
+  "@beep/duckdb/DuckDbEventLogServerEncrypted": [
+    "./packages/drivers/duckdb/src/DuckDbEventLogServerEncrypted.service.ts"
+  ],
+  "@beep/duckdb/DuckDbMessageStorage": [
+    "./packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts"
+  ],
+  "@beep/duckdb/DuckDbPersistedQueue": [
+    "./packages/drivers/duckdb/src/DuckDbPersistedQueue.service.ts"
+  ],
+  "@beep/duckdb/DuckDbPersistence": [
+    "./packages/drivers/duckdb/src/DuckDbPersistence.service.ts"
+  ],
+  "@beep/duckdb/DuckDbRunnerStorage": [
+    "./packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts"
+  ],
+  "@beep/epistemic-domain/values/Retention": [
+    "./packages/epistemic/domain/src/values/Retention/index.ts"
+  ],
+  "@beep/epistemic-server/Retention": [
+    "./packages/epistemic/server/src/Retention/index.ts"
+  ],
+  "@beep/epistemic-use-cases/Retention": [
+    "./packages/epistemic/use-cases/src/Retention/index.ts"
+  ],
+  "@beep/law-practice-domain/test": [
+    "./packages/law-practice/domain/src/test.ts"
+  ],
+  "@beep/repo-cli/commands/Holds": [
+    "./packages/tooling/tool/cli/src/commands/Holds/index.ts"
   ]
 }

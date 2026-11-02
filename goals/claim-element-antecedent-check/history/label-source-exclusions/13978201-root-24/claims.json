@@ -1,0 +1,329 @@
+{
+  "familyId": "13978201-root-24",
+  "rootClaimNumber": 24,
+  "labelClaimNumbers": [
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for changing a vehicle wheel held to the vehicle by nuts and retainer cleats comprising: using a mobile robot for removal and replacement of the wheel nuts and retainer cleats in combination with the use of a mobile mechanical wheel handler to grip and remove the wheel and to bring a replacement wheel into position before replacement of the wheel nuts and cleats by the robot.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "A method as claimed in claim 1 wherein the vehicle handler is an operator driven vehicle fitted with wheel gripper jaws.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "A method as claimed in claim 1 or claim 2, further comprising the step of laser scanning the wheel to identify the positions of the wheel nuts and retainer cleats and controlling operation of the robot in accordance with the positions so determined.",
+      "sourceXmlParentClaimNumbers": [
+        1,
+        2
+      ]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "A method as claimed in claim 3 wherein the robot moves nut and cleat removal tools sequentially to the determined positions of the nuts and cleats and manipulates those tools for removal and replacement of the nuts and cleats.",
+      "sourceXmlParentClaimNumbers": [
+        3
+      ]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "A method as claimed in any one of the preceding claims wherein on removal each nut and cleat is deposited by the robot at an individual storage location unique to that nut or cleat and for replacement each nut and cleat is retrieved by the robot from the respective storage location.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "A method as claimed in claim 5 wherein the storage locations for the nuts and cleats are provided by one or more storage nests.",
+      "sourceXmlParentClaimNumbers": [
+        5
+      ]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "A method for changing a vehicle wheel held to the vehicle by nuts and retainer cleats, comprising: laser scanning the wheel to identify the positions of the wheel nuts and retainer cleats; operating a mobile robot to remove the wheel nuts and retainer cleats; operating a mechanical wheel handler to remove the wheel and to replace it with a replacement wheel; and operating the mobile robot to replace the wheel retainer cleats and the nuts.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "A method as claimed in claim 7 wherein the wheel handler is an operator driven vehicle fitted with wheel gripper jaws.",
+      "sourceXmlParentClaimNumbers": [
+        7
+      ]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "A method as claimed in claim 7 or claim 8 wherein the laser scanning is performed by the mobile robot operating to manipulate a laser scanner tool.",
+      "sourceXmlParentClaimNumbers": [
+        7,
+        8
+      ]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A method as claimed in claim 9 wherein the mobile robot removes the wheel nuts and retainer cleats by manipulation of one or more removal tools in accordance with the positions of the nuts and cleats determined by the laser scanning.",
+      "sourceXmlParentClaimNumbers": [
+        9
+      ]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "A method as claimed in claim 10 wherein the one or more removal tools comprise a nut runner for operation in the removal and replacement of the nuts and a cleat gripper to grip the wheel cleats for removal and replacement of the cleats.",
+      "sourceXmlParentClaimNumbers": [
+        10
+      ]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "A method as claimed in claim 11 wherein the nut runner and the wheel cleat gripper are incorporated into a single removal tool.",
+      "sourceXmlParentClaimNumbers": [
+        11
+      ]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "A method as claimed in any one of claims 7 to 12 wherein on removal each nut and cleat is deposited by operation of the robot and respective removal tool at an individual storage location unique to that nut or cleat and for replacement each nut and cleat is retrieved by the robot from that individual storage location.",
+      "sourceXmlParentClaimNumbers": [
+        7,
+        12
+      ]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "A method as claimed in claim 13 wherein the storage locations for the nuts and cleats are provided by one or more storage nests.",
+      "sourceXmlParentClaimNumbers": [
+        13
+      ]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "A method as claimed in claim 14 wherein the nut storage locations are provided by a nut nest placed on the wheel hub by the robot prior to removal of the nuts and cleats.",
+      "sourceXmlParentClaimNumbers": [
+        14
+      ]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "A method as claimed in claim 15 wherein the nut nest remains on the wheel hub during removal of the wheel and replacement by a replacement wheel by operation of the wheel handler.",
+      "sourceXmlParentClaimNumbers": [
+        15
+      ]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "A method as claimed in any one of claims 14 to 16 wherein the cleat storage locations are provided by a cleat nest positioned by the robot on the ground adjacent the wheel.",
+      "sourceXmlParentClaimNumbers": [
+        14,
+        16
+      ]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "A method as claimed in claim 17 wherein the cleat nest is positioned on the ground by the robot after the nuts have been removed and placed on the nut storage nest.",
+      "sourceXmlParentClaimNumbers": [
+        17
+      ]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "A method as claimed in any one claims 14 to 18 wherein the nut and cleat storage locations are provided by a combined nut and cleat storage nest placed on the wheel hub by the robot prior to removal of the nuts and cleats.",
+      "sourceXmlParentClaimNumbers": [
+        14,
+        18
+      ]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "A method as claimed in claim 19 wherein the nut and cleat storage nest remains on the wheel hub during removal of the wheel and replacement with a replacement wheel by operation of the wheel handler.",
+      "sourceXmlParentClaimNumbers": [
+        19
+      ]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "A method as claimed in any one of the preceding claims wherein the robot is mounted on a self-propelled and steerable vehicle.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "A method as claimed in claim 10 wherein the one or more removal tools comprises a ring gripper tool to remove a spacer ring or rings.",
+      "sourceXmlParentClaimNumbers": [
+        10
+      ]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "A method as claimed in any one of claims 7 to 22 wherein buffing of the hubs of the vehicle which is performed by a buffing tool manipulated by the robot.",
+      "sourceXmlParentClaimNumbers": [
+        7,
+        22
+      ]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "Robotic apparatus comprising: a moveable vehicle; a robot carried by the vehicle and comprising a tool manipulator; a scanner tool manipulable by the tool manipulator and operable by the robot to identify a set of features at locations within a target range from the vehicle; and a specific task tool manipulable by the tool manipulator and operable by the robot repetitively to perform a specific task at a plurality of said locations.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "Apparatus as claimed in claim 24, further comprising a scanner tool holder to hold the scanner tool when not in use and the tool manipulator is operable to pick up the scanner tool and operate that tool to identify said set of features and then return it to the scanner tool holder.",
+      "sourceXmlParentClaimNumbers": [
+        24
+      ]
+    },
+    {
+      "claimNumber": 26,
+      "claimText": "Apparatus as claimed in claimed in claim 25 wherein the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "sourceXmlParentClaimNumbers": [
+        25
+      ]
+    },
+    {
+      "claimNumber": 27,
+      "claimText": "Apparatus as claimed in any one of claims 24 to 26 wherein the scanner tool is a laser scanner tool.",
+      "sourceXmlParentClaimNumbers": [
+        24
+      ]
+    },
+    {
+      "claimNumber": 28,
+      "claimText": "Apparatus as claimed in any one of claims 24 to 27, further comprising a specific task tool holder to hold the specific task tool when not in use and the tool manipulator is operable after the scanner tool has identified said set of features to pick up the specific task tool and move it sequentially to said plurality of locations for performance of said specific task at each of said plurality of locations.",
+      "sourceXmlParentClaimNumbers": [
+        24
+      ]
+    },
+    {
+      "claimNumber": 29,
+      "claimText": "Apparatus as claimed in claim 28 wherein the specific task tool holder is mounted on the vehicle or on a trolley attachable to the vehicle.",
+      "sourceXmlParentClaimNumbers": [
+        28
+      ]
+    },
+    {
+      "claimNumber": 30,
+      "claimText": "Apparatus as claimed in any one of claims 24 to 29 wherein the specific task tool is a nut runner to engage and rotate nuts.",
+      "sourceXmlParentClaimNumbers": [
+        24
+      ]
+    },
+    {
+      "claimNumber": 31,
+      "claimText": "Apparatus as claimed in claim 30 wherein the nut runner has a nut engagement head and a multiple speed head driver to rotate the head at differing speeds and torques.",
+      "sourceXmlParentClaimNumbers": [
+        30
+      ]
+    },
+    {
+      "claimNumber": 32,
+      "claimText": "Apparatus as claimed in claim 31 wherein the multiple speed head driver comprises a drive spindle connected to the nut engagement head and high and low speed drive motors selectively coupleable to the spindle.",
+      "sourceXmlParentClaimNumbers": [
+        31
+      ]
+    },
+    {
+      "claimNumber": 33,
+      "claimText": "Apparatus as claimed in any one of claims 24 to 32 wherein the specific task tool is one of a plurality of such tools manipulable by the tool manipulator and operable by the robot so as each to perform a different specific task at a respective plurality of said locations.",
+      "sourceXmlParentClaimNumbers": [
+        24
+      ]
+    },
+    {
+      "claimNumber": 34,
+      "claimText": "Apparatus as claimed in claim 33 wherein there is a specific task tool storage holder for each of the specific task tools and the tool manipulator is operable selectively to pick up and manipulate the specific task tools sequentially to perform respective specific tasks at respective selected locations and then return the specific task tools to the respective holders.",
+      "sourceXmlParentClaimNumbers": [
+        33
+      ]
+    },
+    {
+      "claimNumber": 35,
+      "claimText": "Apparatus as claimed in claim 33 or claim 34 for robotically performing specific tasks required in a vehicle wheel changing operation, wherein one of the specific task tools comprises a wheel cleat gripper to grip wheel retainer cleats for removal and replacement of the cleats.",
+      "sourceXmlParentClaimNumbers": [
+        33,
+        34
+      ]
+    },
+    {
+      "claimNumber": 36,
+      "claimText": "Robotic apparatus for robotically performing specific tasks required in a vehicle wheel changing operation, comprising a moveable vehicle positionable in the vicinity of a vehicle wheel to be removed; a robot carried by the vehicle and comprising a tool manipulator; a laser scanner tool manipulable by the tool manipulator and operable by the robot to identify a set of wheel retainer nuts and wheel retainer cleats on the wheel and to determine the locations of the nuts and cleats; and one or more specific task tools manipulable by the tool manipulator and operable by the robot to remove the nuts and cleats from the wheel.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 37,
+      "claimText": "Apparatus as claimed in claim 36 wherein said one or more specific task tools comprise a nut runner to engage and rotate the nuts and a wheel cleat gripper to grip the wheel retainer cleats for removal and replacement of the cleats.",
+      "sourceXmlParentClaimNumbers": [
+        36
+      ]
+    },
+    {
+      "claimNumber": 38,
+      "claimText": "Robotic apparatus as claimed in claim 37 wherein the nut runner and wheel cleat gripper are incorporated into a single specific task tool.",
+      "sourceXmlParentClaimNumbers": [
+        37
+      ]
+    },
+    {
+      "claimNumber": 39,
+      "claimText": "Robotic apparatus as claimed in claim 37 wherein the nut runner is incorporated in a first specific task tool and the wheel cleat gripper is incorporated in a second specific task tool operable sequentially after the operation of the nut runner tool.",
+      "sourceXmlParentClaimNumbers": [
+        37
+      ]
+    },
+    {
+      "claimNumber": 40,
+      "claimText": "Robotic apparatus as claimed in any one of claims 36 to 39, wherein the vehicle is self propelled and steerable.",
+      "sourceXmlParentClaimNumbers": [
+        36
+      ]
+    },
+    {
+      "claimNumber": 41,
+      "claimText": "A location sensing system for detecting the locations of wheel retaining nuts and/or cleats on a vehicle wheel, comprising; a laser distance measuring device; and a manipulator to move the laser distance measuring device in a two way scan to identify the plane of the wheel rim and an arcuate scan to identify the angular orientations of the nuts and/or cleats.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 42,
+      "claimText": "A system as claimed in claim 41 wherein said manipulator is operable by a robot also operable to perform nut and/or cleat removal and replacement activities to facilitate a wheel change.",
+      "sourceXmlParentClaimNumbers": [
+        41
+      ]
+    },
+    {
+      "claimNumber": 43,
+      "claimText": "A system as claimed in claim 42 wherein the robot has a control unit to receive signals from the laser distance measuring device indicative of the locations of the wheel nuts and/or cleats and subsequently to control the robot to perform the nut and/or cleat removal and replacement activities.",
+      "sourceXmlParentClaimNumbers": [
+        42
+      ]
+    },
+    {
+      "claimNumber": 44,
+      "claimText": "A system as claimed in claim 42 or claim 43 the robot is mounted on a robot vehicle positionable adjacent said wheel.",
+      "sourceXmlParentClaimNumbers": [
+        42,
+        43
+      ]
+    },
+    {
+      "claimNumber": 45,
+      "claimText": "A system as claimed in claim 44 wherein the robot vehicle is self propelled and steerable.",
+      "sourceXmlParentClaimNumbers": [
+        44
+      ]
+    }
+  ]
+}

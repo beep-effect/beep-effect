@@ -9,56 +9,35 @@
  */
 
 import * as Result from "effect/Result";
-import { shouldRenderFailureCause } from "./internal/cli/FailureRendering.ts";
-import { LINT_POLICY_SUBCOMMANDS } from "./internal/cli/LintRouting.ts";
-
-const LINT_POLICY_SUBCOMMAND_NAMES: ReadonlyArray<string> = LINT_POLICY_SUBCOMMANDS;
-const QUALITY_TASK_NAMES: ReadonlyArray<string> = ["build", "check", "test", "lint", "audit", "coverage"];
-const ROOT_CLI_GLOBAL_FLAG_NAMES: ReadonlyArray<string> = [
-  "--completions",
-  "--help",
-  "--log-level",
-  "--version",
-  "-h",
-  "-v",
-];
+import type * as HashSetType from "effect/HashSet";
+import type { DispatchTarget, RuntimeService } from "./internal/dispatch/Dispatch.schemas.ts";
 
 const { A, Str } = await import("@beep/utils");
 
-const isQualityTaskName = (value: string | undefined): boolean =>
-  value !== undefined && QUALITY_TASK_NAMES.includes(value);
-
-const isLintPolicySubcommand = (value: string | undefined): boolean =>
-  value !== undefined && LINT_POLICY_SUBCOMMAND_NAMES.includes(value);
-
-const isRootCliGlobalFlag = (value: string): boolean =>
-  ROOT_CLI_GLOBAL_FLAG_NAMES.includes(value) ||
-  A.some(ROOT_CLI_GLOBAL_FLAG_NAMES, (name) => Str.startsWith(`${name}=`)(value));
-
-const hasRootCliGlobalFlag = (argv: ReadonlyArray<string>): boolean => A.some(argv, isRootCliGlobalFlag);
-
-const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
-  isQualityTaskName(argv[0]) && !hasRootCliGlobalFlag(argv) && !(argv[0] === "lint" && isLintPolicySubcommand(argv[1]));
-
-const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
-
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
-const [Cause, ConfigProvider, Console, Effect, Exit, Layer, Option, R, Runtime] = await Promise.all([
-  import("effect/Cause"),
-  import("effect/ConfigProvider"),
-  import("effect/Console"),
-  import("effect/Effect"),
-  import("effect/Exit"),
-  import("effect/Layer"),
-  import("effect/Option"),
-  import("effect/Record"),
-  import("effect/Runtime"),
-]);
+const [ConfigProvider, Console, Effect, Layer, Logger, Option, R, Runtime, { CliRuntime }, { renderCliFailure }] =
+  await Promise.all([
+    import("effect/ConfigProvider"),
+    import("effect/Console"),
+    import("effect/Effect"),
+    import("effect/Layer"),
+    import("effect/Logger"),
+    import("effect/Option"),
+    import("effect/Record"),
+    import("effect/Runtime"),
+    import("@beep/cli-kit/CliRuntime"),
+    import("./internal/cli/FailureRendering.ts"),
+  ]);
 const { drainProcessStreams, ProcessStreamName, streamConsole, writeBestEffortLine } = await import(
   "./internal/cli/Stdout.ts"
 );
+const [Dispatch, { loadQualityTasks }, HashSet, Command] = await Promise.all([
+  import("./internal/dispatch/Dispatch.ts"),
+  import("./internal/dispatch/Dispatch.manifest.ts"),
+  import("effect/HashSet"),
+  import("effect/cli/Command"),
+]);
 const O = await import("effect/Option");
-const P = await import("effect/Predicate");
 
 /**
  * Foundation layer providing Node.js implementations of FileSystem, Path, and Terminal.
@@ -72,38 +51,35 @@ const P = await import("effect/Predicate");
  */
 const BaseLayers = Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunCrypto.layer);
 
+/**
+ * Effect's default loggers, provided around each whole program.
+ *
+ * `CliRuntime.main` installs `CliLogger` outermost for the failure report. The
+ * program itself keeps Effect's default loggers: `CliLogger` drops a logged
+ * `Cause` and renders an object message as `[object Object]`. Provided around
+ * the scoped program, not beside the platform layers, so a line logged while a
+ * layer builds or a finalizer runs keeps the stdout format it had before, like
+ * a command handler's line (SPEC W4-aa).
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+const ProgramLoggers = Logger.layer([Logger.defaultLogger, Logger.tracerLogger]);
+
+/**
+ * Run a program under {@link ProgramLoggers}, built once like every path's own layers.
+ *
+ * @param effect - The scoped CLI program to run with Effect's default loggers provided.
+ * @returns The same program with the logger context provided and the logger scope closed on exit.
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+const withProgramLoggers = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
+  Effect.scoped(Effect.flatMap(Layer.build(ProgramLoggers), (context) => Effect.provide(effect, context)));
+
 const argv = A.slice(process.argv, { start: 2 });
-
-const renderCliFailure = (exit: import("effect/Exit").Exit<unknown, unknown>) => {
-  if (Exit.isSuccess(exit)) {
-    return;
-  }
-
-  const error = Cause.squash(exit.cause);
-  if (!Runtime.getErrorReported(error)) {
-    return;
-  }
-
-  // Print the message, then the full cause. Previously this returned right after
-  // the message, so every typed error rendered as one bare sentence with no
-  // errno, path, or stack at ANY log level including --log-level debug. That is
-  // why the ai-metrics parquet-export regression sat unexplained for a month
-  // behind `Failed to read transcript input.`, and why the forwarder's systemd
-  // unit -- which captures 2000 bytes of stderr into status/latest.json -- had
-  // nothing useful to capture.
-  //
-  // The cause is appended rather than substituted so the common case still leads
-  // with the human-readable line.
-  if (P.hasProperty(error, "message") && P.isString(error.message)) {
-    writeBestEffortLine(process.stderr, process.stdout, `${error.message}\n`);
-    if (shouldRenderFailureCause(argv)) {
-      writeBestEffortLine(process.stderr, process.stdout, `${Cause.pretty(exit.cause)}\n`);
-    }
-    return;
-  }
-
-  writeBestEffortLine(process.stderr, process.stdout, `${Cause.pretty(exit.cause)}\n`);
-};
 
 /**
  * Reset the shared terminal on CLI exit.
@@ -167,123 +143,136 @@ const withHostTurboCacheDefaults = Effect.fn("RepoCli.withHostTurboCacheDefaults
 });
 
 const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
-  BunRuntime.runMain(Effect.provideService(effect, Console.Console, streamConsole), {
-    disableErrorReporting: true,
-    // The runner's onExit only hard-exits on a signal or nonzero code; a clean
-    // success is left to event-loop drain, so any handle a child leaves behind
-    // (turbo daemon sockets, stuck bun wrappers) wedges the process after its
-    // work is done — the CI class where a lane prints success and never exits.
-    // Keep defaultTeardown as the sole exit-code authority and force the exit
-    // the runner declines on success.
-    teardown: (exit, onExit) => {
-      // A dead stderr must not abort before the drain and exit.
-      Result.try(() => renderCliFailure(exit));
-      // A dead terminal must not abort before the drain and exit.
-      Result.try(restoreSharedTerminal);
-      Runtime.defaultTeardown(exit, (code) => {
-        // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
-        drainProcessStreams((failure) => {
-          if (Option.isSome(failure)) {
-            const { stream, message, droppedLines } = failure.value;
-            const channel = ProcessStreamName.is.stderr(stream) ? process.stdout : process.stderr;
-            const fallback = ProcessStreamName.is.stderr(stream) ? process.stderr : process.stdout;
-            writeBestEffortLine(
-              channel,
-              fallback,
-              `[beep-cli] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
-            );
-          }
-          onExit(code);
-          process.exit(code);
+  BunRuntime.runMain(
+    // The stream console wraps the whole run, so the failure report the kit
+    // writes through its logger goes through the same EPIPE-latching writers.
+    Effect.provideService(
+      CliRuntime.main(withProgramLoggers(effect), {
+        // Every path builds its own platform layer inside the program.
+        platform: Layer.empty,
+        // An unknown subcommand or a bad flag exits 1, as before the kit.
+        usageExitCode: 1,
+        render: renderCliFailure(argv),
+      }),
+      Console.Console,
+      streamConsole
+    ),
+    {
+      disableErrorReporting: true,
+      // The runner's onExit only hard-exits on a signal or nonzero code; a clean
+      // success is left to event-loop drain, so any handle a child leaves behind
+      // (turbo daemon sockets, stuck bun wrappers) wedges the process after its
+      // work is done — the CI class where a lane prints success and never exits.
+      // Keep defaultTeardown as the sole exit-code authority and force the exit
+      // the runner declines on success.
+      teardown: (exit, onExit) => {
+        // A dead terminal must not abort before the drain and exit.
+        Result.try(restoreSharedTerminal);
+        Runtime.defaultTeardown(exit, (code) => {
+          // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
+          drainProcessStreams((failure) => {
+            if (Option.isSome(failure)) {
+              const { stream, message, droppedLines } = failure.value;
+              const channel = ProcessStreamName.is.stderr(stream) ? process.stdout : process.stderr;
+              const fallback = ProcessStreamName.is.stderr(stream) ? process.stderr : process.stdout;
+              writeBestEffortLine(
+                channel,
+                fallback,
+                `[beep-cli] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
+              );
+            }
+            onExit(code);
+            process.exit(code);
+          });
         });
-      });
-    },
-  });
+      },
+    }
+  );
 
 /**
- * Top-level CLI program effect produced by running the root command tree
- * with the fully-resolved {@link DerivedLayers}.
+ * Build the platform base plus only the runtime services the dispatched groups declare.
  *
- * This is the value handed to `Effect.runPromise` to execute the CLI.
+ * Each extra Layer's module is imported only when a group needs it, so a group
+ * that declares none never loads `@beep/repo-utils` or the quality scheduler here.
  *
+ * @param services - The runtime services named by the dispatch target's routes.
+ * @returns The Layer providing the platform base and those services.
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+const runtimeLayerFor = Effect.fnUntraced(function* (services: HashSetType.HashSet<RuntimeService>) {
+  const needsRepoUtils = HashSet.has(services, "fs-utils") || HashSet.has(services, "ts-morph");
+  const repoUtils = needsRepoUtils ? O.some(yield* Effect.promise(() => import("@beep/repo-utils"))) : O.none();
+  const scheduler = HashSet.has(services, "memory-stats")
+    ? O.some(yield* Effect.promise(() => import("./internal/repo-run/QualityScheduler.ts")))
+    : O.none();
+  const extras = A.getSomes([
+    O.filter(
+      O.map(repoUtils, ({ FsUtilsLive }) => FsUtilsLive),
+      () => HashSet.has(services, "fs-utils")
+    ),
+    O.filter(
+      O.map(repoUtils, ({ TSMorphServiceLive }) => TSMorphServiceLive),
+      () => HashSet.has(services, "ts-morph")
+    ),
+    O.map(scheduler, ({ MemoryStatsLive }) => MemoryStatsLive),
+  ]);
+  return Layer.mergeAll(Layer.empty, ...extras).pipe(Layer.provideMerge(BaseLayers));
+});
+
+/**
+ * Run the command groups argv names through the lazy dispatch manifest.
+ *
+ * Only the named group's facade is imported and only its runtime services are
+ * built; the rest of the root renders from static help stubs
+ * (`internal/dispatch`).
+ *
+ * @param target - A command-group dispatch target (not the quality-task route).
+ * @returns The CLI program for that target.
  * @internal
  * @category use-cases
  * @since 0.0.0
  */
-let handledByQualityFastPath = false;
-
-if (canUseQualityTaskFastPath(argv)) {
-  const { parseQualityTaskInvocation, runQualityTask } = await import("./commands/Quality/Tasks.ts");
-  const qualityTaskInvocation = parseQualityTaskInvocation(argv);
-
-  if (O.isSome(qualityTaskInvocation)) {
-    handledByQualityFastPath = true;
-    const qualityProgram = Effect.scoped(
-      Layer.build(BaseLayers).pipe(
+const commandProgram = (target: DispatchTarget) =>
+  Effect.scoped(
+    Effect.flatMap(runtimeLayerFor(Dispatch.dispatchRuntimeServices(target)), (layer) =>
+      Layer.build(layer).pipe(
         Effect.flatMap(
           Effect.fnUntraced(function* (context) {
-            return yield* runQualityTask(qualityTaskInvocation.value).pipe(
+            const commands = yield* Dispatch.loadDispatchTarget(target);
+            return yield* Command.run(Dispatch.makeRootCommand(commands), { version: "0.0.0" }).pipe(
               withHostTurboCacheDefaults,
               Effect.provide(context)
             );
           })
         )
       )
-    );
-    runRepoCliMain(qualityProgram);
-  }
-}
-
-let handledByCiFastPath = false;
-
-if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
-  handledByCiFastPath = true;
-  const [{ ciCommand }, { FsUtilsLive }, Command] = await Promise.all([
-    import("./commands/Ci/index.ts"),
-    import("@beep/repo-utils"),
-    import("effect/cli/Command"),
-  ]);
-  const ciRootCommand = Command.make("beep-cli").pipe(
-    Command.withDescription("CLI tool for managing beep-effect monorepo packages"),
-    Command.withSubcommands([ciCommand])
+    )
   );
-  const CiLayers = FsUtilsLive.pipe(Layer.provideMerge(BaseLayers));
-  const ciProgram = Effect.scoped(
-    Layer.build(CiLayers).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (context) {
-          return yield* Command.run(ciRootCommand, { version: "0.0.0" }).pipe(
-            withHostTurboCacheDefaults,
-            Effect.provide(context)
-          );
-        })
+
+const dispatchTarget = Dispatch.resolveDispatchTarget(argv);
+
+// A quality-task invocation that does not parse falls back to the command groups, as before.
+const qualityTaskInvocation =
+  dispatchTarget._tag === "quality-task"
+    ? await loadQualityTasks().then(({ parseQualityTaskInvocation, runQualityTask }) =>
+        O.map(parseQualityTaskInvocation(argv), (invocation) => runQualityTask(invocation))
+      )
+    : O.none();
+
+if (O.isSome(qualityTaskInvocation)) {
+  runRepoCliMain(
+    Effect.scoped(
+      Layer.build(BaseLayers).pipe(
+        Effect.flatMap((context) =>
+          qualityTaskInvocation.value.pipe(withHostTurboCacheDefaults, Effect.provide(context))
+        )
       )
     )
   );
-  runRepoCliMain(ciProgram);
-}
-
-if (!handledByQualityFastPath && !handledByCiFastPath) {
-  const [{ FsUtilsLive, TSMorphServiceLive }, Command, { rootCommand }, { MemoryStatsLive }] = await Promise.all([
-    import("@beep/repo-utils"),
-    import("effect/cli/Command"),
-    import("./commands/Root.ts"),
-    import("./internal/repo-run/QualityScheduler.ts"),
-  ]);
-  const DerivedLayers = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive, MemoryStatsLive).pipe(
-    Layer.provideMerge(BaseLayers)
+} else {
+  runRepoCliMain(
+    commandProgram(dispatchTarget._tag === "quality-task" ? Dispatch.resolveCommandTarget(argv) : dispatchTarget)
   );
-  const commandProgram = Effect.scoped(
-    Layer.build(DerivedLayers).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (context) {
-          return yield* Command.run(rootCommand, { version: "0.0.0" }).pipe(
-            withHostTurboCacheDefaults,
-            Effect.provide(context)
-          );
-        })
-      )
-    )
-  );
-  runRepoCliMain(commandProgram);
 }

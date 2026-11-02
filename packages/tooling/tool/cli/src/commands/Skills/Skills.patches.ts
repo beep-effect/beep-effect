@@ -24,12 +24,12 @@ import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as Str from "effect/String";
+import { matchCodeownersOwners } from "../../internal/Codeowners.ts";
 import { diffLines, sameDiffLine } from "./internal/DiffLines.ts";
 import { readAtMergeBase } from "./internal/MergeBase.ts";
 import { SkillsCommandError } from "./Skills.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { DiffLine } from "./internal/DiffLines.ts";
 
@@ -234,46 +234,6 @@ export const renderUnifiedHunks: {
   return A.flatMap(hunkSpans(ops), (span) => renderHunk(ops, span));
 });
 
-const globTokens: Readonly<Record<string, string>> = {
-  "**/": "(?:.*/)?",
-  "/**": "(?:/.*)?",
-  "**": ".*",
-  "*": "[^/]*",
-  "?": "[^/]",
-};
-
-const escapeRegExp = Str.replace(/[.+^${}()|[\]\\]/gu, "\\$&");
-
-const globSource = (glob: string): string =>
-  A.join(
-    A.map(Str.split(glob, /(\*\*\/|\/\*\*|\*\*|\*|\?)/u), (token) =>
-      O.getOrElse(R.get(globTokens, token), () => escapeRegExp(token))
-    ),
-    ""
-  );
-
-// gitignore-style matching: a pattern with a leading or inner slash is anchored to the root, a
-// trailing slash matches only below a directory, and a matched directory owns everything under it.
-const codeownersPattern = (pattern: string): RegExp => {
-  const directoryOnly = Str.endsWith("/")(pattern);
-  const body = Str.replace(/^\/+|\/+$/gu, "")(pattern);
-  const anchored = Str.startsWith("/")(pattern) || Str.includes("/")(body);
-  const prefix = anchored ? "^" : "^(?:.*/)?";
-  const suffix = directoryOnly ? "/.*$" : "(?:/.*)?$";
-  return new RegExp(`${prefix}${globSource(body)}${suffix}`, "u");
-};
-
-type CodeownersRule = { readonly pattern: RegExp; readonly owners: ReadonlyArray<string> };
-
-const parseCodeownersLine = (line: string): O.Option<CodeownersRule> => {
-  const content = Str.trim(Str.replace(/(^|\s)#.*$/u, "")(line));
-  if (Str.isEmpty(content)) {
-    return O.none();
-  }
-  const [pattern, ...owners] = Str.split(content, /\s+/u);
-  return O.map(O.fromUndefinedOr(pattern), (value) => ({ pattern: codeownersPattern(value), owners }));
-};
-
 /**
  * Resolves the owner of a repository path from `.github/CODEOWNERS` text.
  *
@@ -306,13 +266,13 @@ const parseCodeownersLine = (line: string): O.Option<CodeownersRule> => {
 export const resolveCodeownersOwner: {
   (repoPath: string): (codeowners: string) => O.Option<string>;
   (codeowners: string, repoPath: string): O.Option<string>;
-} = dual(2, (codeowners: string, repoPath: string): O.Option<string> => {
-  const rules = A.getSomes(A.map(Str.split(codeowners, "\n"), parseCodeownersLine));
-  return O.flatMap(
-    A.findLast(rules, (rule) => rule.pattern.test(repoPath)),
-    (rule) => (A.isReadonlyArrayNonEmpty(rule.owners) ? O.some(A.join(rule.owners, " ")) : O.none())
-  );
-});
+} = dual(
+  2,
+  (codeowners: string, repoPath: string): O.Option<string> =>
+    O.flatMap(matchCodeownersOwners(codeowners, repoPath), (owners) =>
+      A.isReadonlyArrayNonEmpty(owners) ? O.some(A.join(owners, " ")) : O.none()
+    )
+);
 
 /**
  * Service contract that names the owner of a generated skill patch.
@@ -404,13 +364,13 @@ type MergeBaseCodeowners = { readonly base: string; readonly codeowners: O.Optio
 // the file yields `None`, which fails only when a patch actually needs an owner.
 const readMergeBaseCodeowners = Effect.fn("SkillPatchOwnerSource.readMergeBaseCodeowners")(function* (
   repoRoot: string
-): Effect.fn.Return<MergeBaseCodeowners, SkillsCommandError, ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto> {
+): Effect.fn.Return<MergeBaseCodeowners, SkillsCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   const read = yield* readAtMergeBase(repoRoot, CODEOWNERS_BASE_REF, CODEOWNERS_PATH, "patch ownership");
   return { base: read.base, codeowners: read.text };
 });
 
 const makeSkillPatchOwnerSource = Effect.gen(function* () {
-  const runtime = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto>();
+  const runtime = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner | Digest.Digest>();
   const cache = MutableHashMap.empty<string, MergeBaseCodeowners>();
   const codeownersAt = Effect.fn("SkillPatchOwnerSource.codeownersAt")(function* (repoRoot: string) {
     const cached = MutableHashMap.get(cache, repoRoot);

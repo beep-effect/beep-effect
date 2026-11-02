@@ -1,0 +1,87 @@
+{
+  "familyId": "16068637-root-11",
+  "rootClaimNumber": 11,
+  "labelClaimNumbers": [11, 12, 13, 14, 15, 16],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A friction self-piercing rivet (F-SPR), comprising: a semi-tubed rivet shank, with a wedge shaped cone tip at the bottom end, wherein the rivet has a rivet head that connecting with the upper end of the rivet shank; the rivet head has a chamfering and rotary driving structures at the upper end, and a positioning structure in the center; the rotary driving structure is a central symmetric, concave or convex surface; the positioning structure is a central symmetric and mirror symmetric, concave or convex surface.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The friction self-piercing rivet of claim 1, wherein the tip has a vertex conforming to the inner wall or outer wall of the rivet shank or between the inner wall and the outer wall.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The friction self-piercing rivet of claim 1, wherein the directed concave or convex surfaces is a non-mirror symmetric structure.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The friction self-piercing rivet of claim 1, wherein the rotatory driving structure has several wedge-shaped notches, plum blossom shaped bosses or a plum blossom shaped grooves evenly distributed along the circumferential direction.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The friction self-piercing rivet of claim 4, wherein the wedge-shaped notch has two intersecting planes, one of which is perpendicular to the surface of the rivet head, designed for bearing the circumferential torque, and the other one is tilted from the surface of the rivet head to the lower end for dynamic matching.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The friction self-piercing rivet of claim 4, wherein the plum blossom shaped bosses contain several petals evenly distributed along circumferential direction, which are used to bear circumferential torques.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The friction self-piercing rivet of claim 4, wherein the plum blossom shaped grooves contain several petals evenly distributed along circumferential direction, which are used to bear circumferential torques.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The friction self-piercing rivet of claim 1, wherein the positioning structure is a cone shaped groove or a conical protruding platform.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The friction self-piercing rivet of claim 8, wherein the cone shaped groove is coaxial with the semi-hollow rivet shank to ensure that the rotation axis of the rivet is coincided with its geometric axis when the driving torque is applied.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The friction self-piercing rivet of claim 8, wherein the conical protruding platform is coaxial with the semi-hollow rivet shank to ensure that the rotation axis of the rivet is coincided with its geometric axis when the driving torque is applied.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "A friction self-piercing riveting (F-SPR) system comprising: a driving spindle that is capable of driving the rivet for axial translational motion and radial rotational motion; a rivet comprising: a semi-tubed rivet shank, with a wedge shaped cone tip at the bottom end, wherein the rivet has a rivet head that connecting with the upper end of the rivet shank; the rivet head has a chamfering and rotary driving structures at the upper end, and a positioning structure in the center; the rotary driving structure is a central symmetric, concave or convex surface; the positioning structure is a central symmetric and mirror symmetric, concave or convex surface; a die on the top of the workpieces, wherein the driving spindle has a lower surface matching with the upper surface of the rivet head.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The F-SPR system of claim 11, wherein the matching is: {circle around (1)} when the rotatory driving system is in the form of several wedge-shaped notches, the driving spindle has several wedge-shaped projections evenly distributed along the circumferential direction on the bottom; wherein the number of the wedge-shaped projections is equal to the number of the wedge-shaped notches; wherein the shape of the wedge-shaped projections is complementary to the shape of the wedge-shaped notch. And: {circle around (2)} when the positioning structure is cone-shaped groove, the driving spindle has a positioning protruding on the bottom; wherein the positioning protrusion has the same taper with the positioning grooves; wherein the positioning protrusion has a height smaller than the depth of the positioning groove.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The F-SPR system of claim 11, wherein the wedge-shaped notch and wedge-shaped protrusion have chamfering on each edge for avoiding over positioning.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The F-SPR system of claim 11, wherein the die has an upper surface designing with fixed structures on the top end to control the flow of the workpieces.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The F-SPR system of claim 14, wherein the fixed structure includes a concave die with a flat surface, a pip die, a die with a concave flat bottom and a die with a through hole.",
+      "sourceXmlParentClaimNumbers": [14]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "A rivet rotational feeding method of the F-SPR system of claim 11 for joining workpieces, includes: Step 1, placing the rivet vertically under the driving spindle and applying appropriate resistance to restrain the axial translational motion and rotational motion of the rivet; Step 2, feeding the driving spindle straightly downwards to the upper surface of the rivet at a high rate; Step 3, feeding the driving spindle axially downward slowly and, at the same time, rotating the driving spindle to match the central positioning structures of the driving spindle automatically with the positioning structures in the center of the rivet head; Making the rotary driving structures on the bottom of the driving spindle contacting with the driving structures on the top of the rivet head; The mating surfaces of the rivet head and on the driving spindle contacting with each other, wherein the bottom surface of the driving spindle contacting with the top surface of the rivet head; during the matting of the driving spindle and the rivet, when the axial pressing force of the circumferential torque exerted on the rivet by the driving spindle exceeds the external resistance applied to the rivet, the rivet starts to move axially or circumferentially with the driving spindle; Step 4, when the driving spindle and the rivet move together approaching the surface of the workpieces, the speed and rate of the axial and circumferential motion of the driving spindle switch to the required process parameters of F-SPR process and drive the rivet to finish the F-SPR process under the setting process parameters.",
+      "sourceXmlParentClaimNumbers": [11]
+    }
+  ]
+}

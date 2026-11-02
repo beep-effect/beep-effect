@@ -1,0 +1,33 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "15276859-root-19",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    19,
+    20
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 2,
+    "resolvedTreesReviewed": 2,
+    "unresolvedClaimNumbers": [],
+    "elementCount": 6,
+    "termCount": 20,
+    "functionalRelationCount": 3
+  },
+  "reviewNotes": [
+    "Reviewed selected19–20 only. Root turbine engine and resumptive said engine, nested splitter-nose wall/flow and de-icing/heating/strip functions, exact full noun heads, actual20→19 dependency and cross-claim each-strip reference are coherent. Said engine refers to the sole introduced turbine engine; the surface uniquely refers to annular separation surface, and each strip to the sole at-least-one electric heating strip. These source-semantic conclusions are independent of examiner allegations. Context1–18 is neither silently scored nor used as ancestry. Relative that in upstream-wall clause remains anchored connecting text with explicit strip/wall participants. No actionable omission, ownership or identity issue found.",
+    "Independently checked every submitted element/term anchor, ordering, nonoverlap, ownership, actual local/foreign term endpoints and complete contiguous functional-part reconstruction. All submitted trees decode through ClaimElementTree. These mechanical passes do not replace semantic review.",
+    "Native source claims normalize exactly to full canonical/context text; source XML hash matches provenance. Read retained source critic and rejection provenance. Source eligibility remains separately accepted; no fresh original-PDF/inventory authentication claimed.",
+    "No universal extra relative/reciprocal-pronoun term requirement imposed; anchored connecting text is reviewed under entity-mentions/v1. Agent confidence is not attorney agreement."
+  ],
+  "independence": "Independent semantic critic; did not author these references. Read full canonical/native source/context, provenance, source critic, extractor, schema contracts and semantic-reference/v2 plus entity-mentions/v1. No production rules, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation. Only assigned critic.json receipts written.",
+  "attorneyAdjudication": "pending; confidence is not attorney agreement"
+}

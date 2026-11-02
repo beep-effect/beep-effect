@@ -269,8 +269,10 @@ const literalMatches = Effect.fnUntraced(function* (
   return yield* Effect.filter(inside, (literal) => {
     const target = path.join(workspace, literal);
     return statIfPresent(fs, target).pipe(
-      Effect.map(O.exists((info) => info.type === "File")),
-      Effect.mapError((cause) => CacheKeyReadError.make({ path: target, cause }))
+      Effect.mapBoth({
+        onFailure: (cause) => CacheKeyReadError.make({ path: target, cause }),
+        onSuccess: O.exists((info) => info.type === "File"),
+      })
     );
   });
 });
@@ -680,10 +682,9 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
     const digests = yield* Effect.forEach(
       ordered,
       (path) =>
-        fs.readFile(path).pipe(
-          Effect.mapError((cause) => CacheKeyReadError.make({ path, cause })),
-          Effect.map(sha256)
-        ),
+        fs
+          .readFile(path)
+          .pipe(Effect.mapBoth({ onFailure: (cause) => CacheKeyReadError.make({ path, cause }), onSuccess: sha256 })),
       // The `concurrency` option is load-bearing, not a tuning knob: `Effect.all`
       // defaults to `concurrency: 1`, so omitting it reads every file one at a
       // time and this whole shape buys nothing over a sequential loop. Bounded rather than `"unbounded"` because a pattern set can

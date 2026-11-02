@@ -1,0 +1,84 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "16628033-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.97,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "findings": [],
+  "reviewScope": {
+    "kind": "independent lexical-head-only revision review",
+    "headCount": 2,
+    "preservedSemanticReview": "critic.round2.json",
+    "previousRound": 2,
+    "currentRound": 3
+  },
+  "headReviewEvidence": [
+    {
+      "claimNumber": 1,
+      "path": "1.b",
+      "anchor": {
+        "startChar": 182,
+        "endChar": 190,
+        "quote": "one side"
+      },
+      "determiner": "bare",
+      "priorHead": "side",
+      "acceptedHead": "one side",
+      "disposition": "accepted under lexical-head/v1; exact source anchor and all non-head fields preserved"
+    },
+    {
+      "claimNumber": 8,
+      "path": "8.a",
+      "anchor": {
+        "startChar": 106,
+        "endChar": 113,
+        "quote": "one end"
+      },
+      "determiner": "bare",
+      "priorHead": "end",
+      "acceptedHead": "one end",
+      "disposition": "accepted under lexical-head/v1; exact source anchor and all non-head fields preserved"
+    }
+  ],
+  "reviewNotes": [
+    "Claim 1 recites disposition at one side of the tibial plateau structure; claim 8 recites the upper portion of one end of the locating pin. Each bare head retains one without extending into the nested of phrase or selecting an entity not stated by the claim.",
+    "The current change is accepted as a lexical-head-only revision of the prior independently accepted semantic reference. Earlier full semantic/source review evidence remains in the immutable prior-round critic receipt; this review does not claim fresh original-PDF or attorney authentication."
+  ],
+  "verification": [
+    "Read lexical-head/v1 and manually adjudicated each listed correction against exact canonical and native source claim context. Checked nearby pronominal/cardinal/minimum/partitive term heads for consistency with supported determiner tags.",
+    "Verified all head-review preservedPriorReceipts SHA-256 values, including the prior critic receipt. Existing critic.json was byte-identical to that preserved prior-round receipt before replacement.",
+    "Independently reversed exactly the reviewed head fields and compared the entire resulting JSON tree with expected.round2.json: equal. All anchors, determiners, elements, typed edges, dependency structure, functional parts and claim scope therefore remain unchanged.",
+    "Checked each changed term source anchor as half-open UTF-16 offsets. Native source.claims.xml SHA-256 matches provenance.claimsXmlSha256, and all native claims match canonical claims after only printed-number removal and whitespace normalization. No decomposer or implementation rule was used."
+  ],
+  "referenceSha256": "da81a272d2a193712c713548e7437adb9fe210738f611ed13916402e8888612c",
+  "extractorSha256": "ad833f41b317bb15d44808539d1de3423d8768ccc2b364be320a5db5645032a5",
+  "headReviewSha256": "52139144a59691ed8ec8df5e3edabe76b416b565b1f571a2cc64679358d3e513",
+  "preservedPriorCritic": {
+    "file": "critic.round2.json",
+    "sha256": "45bdcc7c831445573c1f4ab46b57fc768410991fe516c11a4f437009268f53d8",
+    "round": 2,
+    "verdict": "accepted",
+    "confidence": 0.97
+  },
+  "referenceConcernsDisposition": "Prior semantic and source concerns remain unchanged and explicitly documented in extractor.json and the preserved prior-round critic. Head changes add no antecedent, identity assertion, source repair or scope expansion.",
+  "independence": "Separate GPT-6.1-Sol medium critic session, independent of extractor. Only current critic.json files written. Reviewed protocol, canonical/native sources, existing semantic receipts and head-review diffs. No production/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or source/expected/extractor edits.",
+  "attorneyAdjudication": "unchanged; pending actual human review where required; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference acceptance only; no active sample admission, goal completion, accuracy result or human agreement claimed."
+}

@@ -133,10 +133,6 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
         yield* decodeModelId("grok-4.7")
       );
       assertSome(
-        O.map(pin("jsdoc.migrate-titles", "grok-cli"), (entry) => entry.modelId),
-        yield* decodeModelId("grok-4.7")
-      );
-      assertSome(
         O.map(pin("review.panel", "codex-cli"), (entry) => entry.modelId),
         yield* decodeModelId("gpt-6-astra")
       );

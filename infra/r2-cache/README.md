@@ -110,8 +110,10 @@ infra/r2-cache/workstation.sh install
 infra/r2-cache/workstation.sh enable /absolute/path/to/the/checkout
 ```
 
-The installed unprivileged `beep-turbo-r2.service` binds `127.0.0.1:9427`, limits
-restart attempts and memory, and runs two adapter workers. It receives storage
+The installed unprivileged `beep-turbo-r2.service` binds `127.0.0.1:9427` and limits
+restart attempts and memory. Its upstream HTTP-worker default follows host
+parallelism; the candidate worker guard below needs separate qualification and
+deployment. The service receives storage
 access but strips vault and application credentials from the adapter environment.
 A persistent failure leaves quality commands able to execute locally.
 
@@ -239,3 +241,187 @@ All Turbo-backed CI callers use the same optional startup in the existing setup
 action and exact-process cleanup at job exit. Protected main pushes write;
 same-repository PRs and main scheduled/manual jobs read. Forks stay local-only.
 The separate Cache Warm probe keeps its existing protected qualification path.
+
+## Signed-trial credentials with Alchemy
+
+The bucket remains owned by `BeepTurboR2Pilot` in stage `r2-pilot`. The separate
+`BeepTurboR2SignedCredentials` stack in stage `r2-signed-credentials` owns two
+bucket-scoped account tokens: object-read for the reader and object-read/write
+for the writer. It uses the pinned Cloudflare provider's typed permission names
+and bucket resource shape. The provider's `R2.S3Credentials` binding requires a
+Worker; these host/CI roles use its underlying `ApiToken.AccountApiToken`
+resource directly. API-token callers need `Account API Tokens Write`; an
+authorized OAuth provisioning flow can use `account_api_tokens:create`.
+
+Preview the ordinary bucket, then the separate credentials with an explicit UTC
+expiry from the rollout receipt:
+
+```sh
+op run --env-file="$HOME/.config/beep/r2-cache/provisioning.env" -- infra/r2-cache/alchemy.sh plan
+R2_SIGNED_TRIAL_EXPIRES_ON="2026-11-28T00:00:00Z" \
+  op run --env-file="$HOME/.config/beep/r2-cache/provisioning.env" -- \
+  infra/r2-cache/alchemy.sh plan-signed-credentials
+```
+
+Refresh the example cutoff before execution. Expiry must use whole-second UTC
+format (`YYYY-MM-DDTHH:mm:ssZ`), be in the future and within thirty days; the
+bucket name must be one literal valid name. Cloudflare rejects fractional
+seconds at this API boundary. The initial preview has two tokens to create,
+with no bucket, Worker or compute resources.
+`deploy-signed-credentials` applies that separate stack;
+`destroy-signed-credentials` revokes only its managed trial tokens after the
+trial consumers stop. Ordinary `plan|deploy|destroy` retains the bucket stack's
+existing ownership. Keep the deployment receipt, exact source and role handoff
+bound to the reviewed preview. A successful plan is not proof of token creation
+permissions or effective storage grants.
+
+After inspecting the exact plan, an unattended deployment may pass `--yes` as
+the wrapper's second argument. Plan and destruction actions reject that flag.
+The default still asks for interactive approval. The agent secret wrapper does
+not preserve an interactive Alchemy prompt; use its approved authentication
+lane and the explicit reviewed-deploy option instead of bypassing the wrapper.
+
+Local Alchemy state can contain token values and is restricted to owner mode
+0700; backup archives are private under the wrapper's umask. Stack outputs
+contain only the bucket name and expiry. The approved secret lane owns value
+handoff. The artifact HMAC key remains separate from both storage tokens and
+reaches clients only. These credential actions prepare grants; signed adapter
+startup, current qualification, rotation/rollback and observation are separate
+rollout gates.
+
+The 2026-10-29 trial created both roles through the pinned Alchemy provider
+using the existing Cloudflare CLI OAuth authorization. That authorization has
+`account_api_tokens:create`; the older provisioning API token was denied.
+The OAuth value was supplied to Alchemy in memory and was not copied into
+another credential file. A subsequent plan reports no changes. The roles
+remain unassigned to cache consumers, with expiry on 2026-11-28.
+That attended OAuth route is not a durable service credential; future token
+management needs a current approved management credential or current CLI login.
+
+From the repository root, the retained storage control checks the exact active
+policies against Alchemy's state, uploads a small owned object, requires the
+reader's exact bytes, rejects reader upload/deletion, then deletes both owned
+probe keys and requires 404 on both cleanup HEADs:
+
+```sh
+uv run --no-project --with boto3==1.43.121 python3 infra/r2-cache/trial-grants.py
+```
+
+It uses the existing owner-only Cloudflare CLI login and Alchemy state; it
+does not log token values or activate a consumer. Its receipt is under
+`.beep/producer-upload`. Run only while this exact trial and its expiry remain
+current. Storage-grant proof does not establish signed adapter startup, native
+restoration, protected producer publication or task qualification.
+
+## Signed-policy component lab
+
+`patches/4.0.20-signed-policy.patch` is a reviewed source patch to the exact
+upstream commit named by its adjacent metadata. It is unused by `adapter.sh`.
+Explicit `BEEP_CACHE_POLICY=signed-v1` requires a bearer, a canonical
+`BEEP_CACHE_NAMESPACE` beginning with `team_`, and
+`BEEP_CACHE_ACCESS_ROLE=reader|writer`. Each process binds one namespace and role;
+reader PUT and ambiguous/encoded selectors are denied before storage access.
+Writer uploads require one bounded opaque tag. The adapter never receives the
+artifact HMAC key or claims the tag proves a protected producer.
+
+Strict mode skips dotenv and telemetry initialization. A policy introduced only
+by cwd dotenv is rejected before logging initializes. Responses carry a finite
+`x-beep-cache-result`; an unclassified 404 stays `not-found`, and an unsuccessful
+PUT stays `write-ambiguous`. Explicit storage 429 responses retain the
+`throttled` class. A signed read with an unavailable metadata lookup fails as
+`backend-unavailable`, even when the object body was reachable. This preparation does not add production counters,
+trust-readiness, deployment authority or an accepted task profile.
+
+Prepare and check the reproducible source input:
+
+```sh
+RUSTUP_TOOLCHAIN=1.96.0 infra/r2-cache/policy.sh test-domain
+```
+
+Run `policy.sh cargo-test`, `policy.sh cargo-build` or
+`policy.sh cargo-build-musl` only inside the existing machine admission boundary
+or hosted CI. The caller must select the installed tested Rust 1.96.0 toolchain;
+no ordinary adapter startup compiles Rust. The source patch includes the root
+Cargo.lock metadata correction required by the release's Cargo.toml, maintained
+dotenvy and security dependency updates. The loopback server compiles the HTTP1
+and macros features it uses. Native artifact bytes remain opaque. The upstream
+MIT notice is retained in `patches/LICENSE.upstream.txt`.
+
+The optional `policy-lab.py` uses the pinned Python environment in
+`policy-lab-requirements.txt`. It starts two actual patched adapter processes and
+disposable loopback Moto S3, checks denials have zero storage calls, verifies
+metadata roundtrips, and tests valid and corrupt signed restores with both native
+Turbo pins. It takes `--adapter`, `--adapter-sha256` and `--output`; the executable
+must match the independently reviewed digest. Only synthetic credentials are used,
+and only exact owned child processes are stopped. See the packet's
+`research/adapter-policy-lab.json` for the local result and limits.
+
+The earlier policy candidate's statically linked x86_64 musl release build passed
+all20 wire, one startup-boundary and12 native controls on the current workstation. Earlier glibc
+receipts retain their original source inputs. The portable build uses installed
+Rust1.96.0 plus cargo-zigbuild0.20.1/Zig0.14.1, pinned in
+`policy-build-requirements.txt`; its checksum and byte size are retained beside
+the source patch. `cargo-build-musl` reproduces that build inside admission.
+Remote fleet execution, R2 grant negatives, producer attribution, rotation/rollback,
+deployment and representative observation remain required before activation.
+
+The current candidate fixes two Tokio core workers, two HTTP workers and two
+blocking threads per runtime. `cargo-test` includes the binary runtime test.
+Add `--runtime-envelope` to the process lab on Linux with an active systemd user
+manager to measure the actual executable, explicit environment, worker counts
+and cgroup limits at readiness and after load. The synthetic services have a
+two-CPU quota, 256 MiB memory cap and sixteen-task cap. Cleanup stops only fresh
+owned units and also proves an activating unit is stopped. All 33 original
+wire/startup/native controls pass with this envelope and zero adapter output;
+the source-bound results are `research/adapter-runtime-checkpoint.json` and
+`research/adapter-runtime-lab.json` under the trust packet. The actual deployed
+credential-launcher chain still requires its own resource and grant proof.
+
+`policy_runtime.py` owns the shared user-unit startup and observation code used
+by the runtime lab. Startup configuration travels through an anonymous pipe;
+it is absent from command arguments, unit properties and environment files.
+The caller installs the exhaustive cleanup scope before launch. Readiness and
+after-load checks bind the same actual PID and executable to the adapter's
+loopback listener and measured cgroup limits. Invalid executable pins, broader
+listeners, artifact keys and agent credentials are refused before a unit is
+allocated. Negative observations cover changed PIDs, wrong listeners, wrong
+executables and unexpected environment names. This component does not activate
+the signed producer or provide R2 grant/deployment qualification.
+
+Cleanup attempts every owned unit and child before reporting an aggregate
+failure. An ExitStack closes logs, temporary data and the storage fixture even
+if stopping or another closure fails. Three failure controls cover a stop
+timeout, a status-query failure and combined cleanup/log closure failures;
+the first two use real disposable units and a child process. A success receipt
+is written only after teardown finishes.
+
+Run `policy.sh cargo-security` inside admission or hosted CI for the pinned
+Cargo lock scan. It mounts only public lock/config inputs into the exact OSV
+image, without a home or credential store. The adjacent `osv-scanner.toml`
+contains one expiring source-specific advisory assessment. The driver loads it
+only for the exact reviewed block-buffer0.10.4 archive and sole resolution;
+absent, different or mixed versions get an unfiltered scan. Other advisory IDs
+remain active. The source review and panic regression are retained in
+`research/adapter-dependency-review.json` under the trust packet. No shared
+repository security exceptions change.
+
+
+### Signed trial exec boundary
+
+`adapter.sh serve-signed` prepares the exec boundary for the separately qualified
+signed trial. It requires `R2_SIGNED_ADAPTER`, `R2_SIGNED_ADAPTER_SHA256`,
+`BEEP_CACHE_NAMESPACE` and `BEEP_CACHE_ACCESS_ROLE` (`reader` or `writer`), alongside
+the existing endpoint, bucket, storage credentials and loopback bearer. The owner
+selects the executable and digest from independent hardened-build approval.
+Matching a caller-supplied digest alone grants no approval or producer authority.
+
+The mode verifies the executable pin before exec and forces `signed-v1`. The
+backend receives only its approved storage/bearer environment and the three
+policy fields. It receives no artifact signing key. Ordinary `serve` and
+`start-ci` keep their existing environment and behavior.
+
+This command supplies exec only. Its parent still owns private launch storage,
+the process/listener identity, the existing resource caps and bounded cleanup.
+Real signed exchanges, immutable producer publication and rollout require their
+own current proof. Run `infra/r2-cache/check.sh` for the synthetic exec-boundary
+and existing lifecycle checks; these checks make no R2 requests.

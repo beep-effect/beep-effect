@@ -1,0 +1,50 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "15927789-root-6",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "previousRound": 1,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 9,
+      "path": "9.a",
+      "anchor": {
+        "startChar": 138,
+        "endChar": 146,
+        "quote": "one side"
+      },
+      "determiner": "bare",
+      "beforeHead": "side",
+      "afterHead": "one side",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "that the transport unit is induced to move to the distal end point of one side of the wire which is calculated by the positioning module, under the ",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round1.json",
+      "sha256": "ee3e1fd957a4b7b4a6e76210de2a4efacda4d6279fabd0c8b5f56c0a253a39b1"
+    },
+    {
+      "file": "extractor.round1.json",
+      "sha256": "51f3f69ecf8832c1feb66d7c4e97115f9c888b176fb5000a557e4fe30fe56a11"
+    },
+    {
+      "file": "critic.round1.json",
+      "sha256": "03fadf11978d098970c03f780ae82a28c4d9a9c2693c5dddbd1f6497d2b04b7b"
+    }
+  ],
+  "missingPriorCritic": null,
+  "structureInvariant": "Expected trees are byte-for-byte semantically equal after replacing only audited head fields with their prior values. No anchors, determiners, edges, element structure, source or claim scope changed.",
+  "independence": "Targeted extractor correction from manually reviewed exact canonical/native source context and lexical-head/v1 only. Literal audit flags were checked individually; no generic parser/decomposer, production rules, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "unchanged; pending human review where already required"
+}

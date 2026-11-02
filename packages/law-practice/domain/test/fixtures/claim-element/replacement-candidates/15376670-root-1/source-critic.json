@@ -1,0 +1,121 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "15376670-root-1",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.99,
+  "verdict": "unresolved",
+  "reviewedClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+  ],
+  "findings": [
+    {
+      "claimNumber": 1,
+      "evidence": {
+        "nativeQuote": "the batter body",
+        "originalPdfQuote": "the barrel body",
+        "documentIdentifier": "IWNF1H1YRXEAPX3",
+        "pdfPage": 1
+      },
+      "requiredCorrection": "Keep source unresolved or replace; authoritative correction/version adjudication needed, never repair native wording."
+    },
+    {
+      "claimNumber": 2,
+      "evidence": {
+        "nativeQuote": "The roller blush assembly",
+        "originalPdfQuote": "The roller brush assembly",
+        "documentIdentifier": "IWNF1H1YRXEAPX3",
+        "pdfPage": 1
+      },
+      "requiredCorrection": "Retain entity-name mismatch hold."
+    }
+  ],
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the barrel body edge",
+      "nativeQuote": "the barrel body edge",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the tooth groove",
+      "nativeQuote": "the tooth groove",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the inner cavity",
+      "nativeQuote": "the inner cavity",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the center roller",
+      "nativeQuote": "the center roller",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the movable blade",
+      "nativeQuote": "the movable blade",
+      "literalMatchIgnoringCase": true
+    }
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "15376670",
+    "publicationNumber": "US20170311767A1",
+    "publicationDate": "20171102"
+  },
+  "digestEvidence": [
+    {
+      "file": "15376670.publication.xml",
+      "sha256": "8e3c4e2b57d4506cb1e80f1a995bbf8430f40ffba78369dfbe12eb50526aa3ce",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "69ce124fecc6b22322bfa87d5142909b6cf49959e2b4a3aa98515f4ef5ee1e24",
+      "matchesProvenance": true
+    },
+    {
+      "file": "15376670.IWNF1H1YRXEAPX3.original.xml",
+      "sha256": "a35004ac6514863d71ef319982a5861d91a17e5122dbe8c398534ea4a236733b",
+      "matchesProvenance": true
+    }
+  ],
+  "independentPdfEvidence": [
+    {
+      "documentIdentifier": "IWNF1H1YRXEAPX3",
+      "sha256": "131aa7d4e0a745175a8a6c3e35577caeb90551d7f1d3cebebfbd2c6c51b3baed",
+      "independentlyViewedPages": [1]
+    }
+  ],
+  "inventoryEvidence": {
+    "sha256": "9df18795f2a1086e09d274697246e205dca3bb0784cf509ea7af0d9919798407",
+    "declaredCount": 42,
+    "actualRows": 42,
+    "preOrOnActionClaimAndAmendmentRows": [
+      {
+        "documentIdentifier": "IWNF1H1YRXEAPX3",
+        "documentCode": "CLM",
+        "officialDate": "2016-12-13T00:00:00.000-0500"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "JC83NSXRRXEAPX4",
+        "documentCode": "CTNF",
+        "officialDate": "2018-01-11T00:00:00.000-0500"
+      }
+    ]
+  },
+  "evidence": [
+    "Original PDF1 (printed14) visually confirms barrel body, roller brush assembly. Native1 contains the batter body and native2 The roller blush assembly. This is a real native/original entity-name discrepancy; do not waive or repair source.",
+    "Actual112(b)1–19 and naturalfamily dependencies remain valid. Parsed original13nodes versus19printed claims is segmentation only, but resolving that does not cure entity-name conflict."
+  ],
+  "rationale": "Independent same-number ground/wording, fullinventory, familymembership and original/amendment evidence reviewed. Chronology alone not accepted. Sourceeligibility only; semantic references and attorneyadjudication separate.",
+  "independence": "Only candidate source-critic changed; read supplied sources/XML/PDF pages/inventories. No active/source/expected edits, rules/predictions/network/secrets/git/delegation."
+}

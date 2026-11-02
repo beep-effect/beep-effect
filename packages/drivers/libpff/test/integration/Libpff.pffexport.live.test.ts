@@ -12,6 +12,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -19,10 +20,14 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+// `NodeServices` no longer bundles crypto; the archive engine hashes through `Digest`.
+const TestServices = Layer.mergeAll(NodeServices.layer, NodeCrypto.layerDigest);
 
 const decodePosixPath = S.decodeEffect(PosixPath);
 
@@ -82,7 +87,7 @@ describe("@beep/libpff live pffexport", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  it.layer(NodeServices.layer, { excludeTestServices: true })(
+  it.layer(TestServices, { excludeTestServices: true })(
     "reports a runtime pffexport version and exports a real PST",
     (it) => {
       it.effect("reports a runtime pffexport version and exports a real PST", (context) =>
@@ -163,7 +168,7 @@ describe("@beep/libpff live pffexport", () => {
     }
   );
 
-  it.layer(NodeServices.layer, { excludeTestServices: true })(
+  it.layer(TestServices, { excludeTestServices: true })(
     "keeps a missing live source inside the operation error contract",
     (it) => {
       it.effect("keeps a missing live source inside the operation error contract", (context) =>

@@ -57,7 +57,8 @@ import {
 } from "./Inbox.ts";
 import { YeetPushToAckTimeline } from "./MonitorPolicy.ts";
 import { loadYeetRemediationWave, yeetRedSetKeyGained } from "./Remediation.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type { YeetHeadTimeline } from "./MonitorPolicy.ts";
 import type { YeetRemediationWave } from "./Remediation.ts";
 
@@ -354,7 +355,11 @@ const terminatedPortion = (text: string): string =>
  */
 export const loadYeetInboxView = Effect.fn("Yeet.loadYeetInboxView")(function* (
   repoRoot: string
-): Effect.fn.Return<YeetInboxView, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  YeetInboxView,
+  never,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   const fs = yield* FileSystem.FileSystem;
   const paths = yield* yeetInboxPaths(repoRoot);
   const exists = yield* fs.exists(paths.failuresPath).pipe(Effect.orElseSucceed(thunkFalse));
@@ -537,7 +542,11 @@ export const loadYeetPrWave = Effect.fn("Yeet.loadYeetPrWave")(function* (
   prNumber: number,
   returned: HashSet.HashSet<string>,
   accounted: O.Option<string> = O.none()
-): Effect.fn.Return<O.Option<YeetPrWave>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  O.Option<YeetPrWave>,
+  never,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   const fs = yield* FileSystem.FileSystem;
   const paths = yield* yeetInboxPaths(repoRoot);
   const text = yield* Effect.option(fs.readFileString(paths.failuresPath));
@@ -934,7 +943,11 @@ export const loadYeetPushToAckTimeline = Effect.fn("Yeet.loadYeetPushToAckTimeli
   repoRoot: string,
   timeline: YeetHeadTimeline,
   prNumber: O.Option<number>
-): Effect.fn.Return<YeetPushToAckTimeline, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  YeetPushToAckTimeline,
+  never,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   const view = yield* loadYeetInboxView(repoRoot);
   const row = firstRequiredRedRowFor(view.entries, timeline, prNumber);
   const firstSeen = yield* loadYeetHookFirstSeen(repoRoot);

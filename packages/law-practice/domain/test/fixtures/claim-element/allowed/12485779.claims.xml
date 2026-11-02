@@ -1,0 +1,83 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for a dynamic wireless power transfer (DWPT) system to charge an electric vehicle in motion, the method comprising:
+<claim-text>transmitting wireless power from a plurality of main transmitter coils;</claim-text>
+<claim-text>transmitting wireless power from one assisted coil disposed between each pair of adjacent main transmitter coils of the plurality of main transmitter coils;</claim-text>
+<claim-text>receiving the wireless power at a receiver coil when the electric vehicle is charged in motion;</claim-text>
+<claim-text>providing a primary compensation network coupled to the plurality of main transmitter coils and the assisted coils; and</claim-text>
+<claim-text>compensating for reactive power at a secondary side by a secondary compensation network coupled to the receiver coil,</claim-text>
+<claim-text>dimensions and positions of the assisted coils and parameters of the compensation network being configured to maintain a substantially constant mutual inductance profile between the transmitter coils and the receiver coil when the electric vehicle is charged in motion, thereby reducing power pulsation and providing a stable output voltage to a battery of the electric vehicle,</claim-text>
+<claim-text>the method further comprising optimizing dimensions of the assisted coils to minimize voltage fluctuations and reduce cross-coupling between the main transmitter coils and the assisted coils, and</claim-text>
+<claim-text>the optimizing of the dimensions comprising:
+<claim-text>defining a length ratio between the inner length and the outer length of the assisted coil and defining a width ratio between the inner width and the outer width of the assisted coil,</claim-text>
+<claim-text>searching the length ratio in a first predetermined range and searching the width ratio in a second predetermined range; and</claim-text>
+<claim-text>determining an optimized set of the length ratio and the width ratio that produces least fluctuation in output voltage of the DWPT system.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising optimizing a ratio between an inductance of a compensation network for the main transmitter coils and an inductance of a compensation network for the assisted coils to minimize fluctuation in output voltage of the DWPT system.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, a value of the ratio between the inductance of the compensation network for the main transmitter coils and the inductance of the compensation network for the assisted coils (r<sub>Lf</sub>) being in a range of 9 and 11.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising optimizing a number of turns in the assisted coils to reduce output voltage fluctuations of the DWPT system.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, an optimal value of the number of turns in the assisted coils being 3 or 4.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. A wireless power transfer system for dynamic charging of an electric vehicle, the wireless power transfer system comprising:
+<claim-text>a plurality of main transmitter coils;</claim-text>
+<claim-text>one assisted coil disposed between each pair of adjacent main transmitter coils of the plurality of main transmitter coils;</claim-text>
+<claim-text>a receiver coil configured to inductively couple with the main transmitter coils and the assisted coils; and</claim-text>
+<claim-text>a plurality of compensation networks respectively coupled to each of the plurality of main transmitter coils and the assisted coils,</claim-text>
+<claim-text>dimensions and positions of the assisted coils and parameters of the primary compensation network being configured to provide a substantially constant mutual inductance profile when the electric vehicle is charged in motion, thereby reducing power pulsation and providing a stable output voltage to a battery of the electric vehicle,</claim-text>
+<claim-text>the dimensions of the assisted coils being optimized to minimize voltage fluctuations and reduce cross-coupling between the main transmitter coils and the assisted coils,</claim-text>
+<claim-text>each assisted coil having a length ration (rx) and a width ratio (ry), and</claim-text>
+<claim-text>a value of the length ratio (rx) being in a range of 0.5 to 0.9, and a value of the width ratio (ry) being in a range of 0.6 to 0.9, to minimize fluctuation in output voltage of the wireless power transfer system.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, each compensation network of the plurality of compensation networks being a LCC compensation network.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, a ratio between an inductance of the LCC compensation network of the main transmitter coils and an inductance of the LCC compensation network of the assisted coils being optimized to minimize fluctuation in output voltage.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, a value of the ratio between the inductance of the LCC compensation network of the main transmitter coils and the inductance of the LCC compensation network of the assisted coils (r<sub>Lf</sub>) being in a range of 9 and 11.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, a number of turns in the at assisted coils being optimized to reduce output voltage fluctuations.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The system according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, an optimal value of the number of turns in the assisted coils being 3 or 4 for minimizing output voltage fluctuation.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, further comprising an inverter at an input side configured to generate high frequency for the plurality of main transmitter coils.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, the plurality of compensation networks being disposed between the inverter and the plurality of main transmitter coils and the assisted coils to reduce reactive power and realize the soft-switching.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. A method for optimizing a design of a dynamic wireless power transfer (DWPT) system for charging an electric vehicle in motion, the DWPT system including a plurality of main transmitter coils, one assisted coil disposed between each pair of adjacent main transmitter coils of the plurality of main transmitter coils, and a plurality of compensation networks respectively coupled to each of the plurality of main transmitter coils and the assisted coils, the method comprising following steps:
+<claim-text>(a) defining parameters of the main transmitter coils;</claim-text>
+<claim-text>(b) defining an outer length and an outer width of the assisted coils and defining an inner length and an inner width of the assisted coils;</claim-text>
+<claim-text>(c) defining a length ratio between the inner length and the outer length of the assisted coils and defining a width ratio between the inner width and the outer width of the assisted coils;</claim-text>
+<claim-text>(d) searching the length ratio in a first predetermined range and searching the width ratio in a second predetermined range;</claim-text>
+<claim-text>(e) during the step (d) of searching, determining an optimized set of the length ratio and the width ratio that produces least fluctuation in output voltage of the DWPT system;</claim-text>
+<claim-text>(f) determining whether the optimized set of the length ratio and the width ratio produces minimal cross-coupling between the main transmitter coils and the assisted coils;</claim-text>
+<claim-text>(g) if the condition of step (f) is not satisfied, go back to step (e);</claim-text>
+<claim-text>(h) if the condition of step (f) is satisfied, performing finding an optimized number of turns in the assisted coil until the least fluctuation in the output voltage of the DWPT system is obtained;</claim-text>
+<claim-text>(i) defining a ratio between compensation inductor of the main transmitter coils and compensation inductor of the assisted coils; and</claim-text>
+<claim-text>(j) performing searching for an optimized set of the length ratio and the width ratio that produces least fluctuation in output voltage of the DWPT system.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method according to <claim-ref idref="CLM-00014">claim 14</claim-ref>, the first predetermined range being between in a range of from 0.6 to 0.8.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method according to <claim-ref idref="CLM-00014">claim 14</claim-ref>, the second predetermined range being between in a range of from 0.6 to 0.9.</claim-text>
+</claim>
+</claims>

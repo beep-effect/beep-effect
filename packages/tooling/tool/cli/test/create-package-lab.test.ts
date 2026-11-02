@@ -1,3 +1,4 @@
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
 import {
   LAB_COMPOSERS_END_MARKER,
@@ -21,7 +22,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -35,7 +36,6 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as jsonc from "jsonc-parser";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -44,7 +44,7 @@ const formatSchemaIssues = SchemaIssue.makeFormatterStandardSchemaV1();
 const decodeUnknownLabManifestFromJsonStringEffect = S.decodeUnknownEffect(LabManifestFromJsonString);
 const encodeLabManifestFromJsonStringEffect = S.encodeEffect(LabManifestFromJsonString);
 
-const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer);
+const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
   FsUtilsLive.pipe(Layer.provideMerge(CommandPlatformLayer)),
@@ -129,10 +129,7 @@ const readJsonFile = Effect.fn(function* (filePath: string) {
 
 const readJsoncFile = Effect.fn(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  return jsonc.parse(yield* fs.readFileString(filePath), undefined, {
-    allowTrailingComma: true,
-    disallowComments: false,
-  });
+  return yield* Jsonc.parse(yield* fs.readFileString(filePath));
 });
 
 const markerIndex =

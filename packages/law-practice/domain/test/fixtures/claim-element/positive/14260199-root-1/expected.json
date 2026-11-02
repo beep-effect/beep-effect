@@ -1,0 +1,4300 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 67,
+          "quote": "A fuel cell system with a cathode subsystem, said cathode subsystem"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 18,
+              "quote": "A fuel cell system"
+            },
+            "determiner": "a",
+            "head": "fuel cell system"
+          },
+          {
+            "anchor": {
+              "startChar": 24,
+              "endChar": 43,
+              "quote": "a cathode subsystem"
+            },
+            "determiner": "a",
+            "head": "cathode subsystem"
+          },
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 67,
+              "quote": "said cathode subsystem"
+            },
+            "determiner": "said",
+            "head": "cathode subsystem"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 80,
+          "endChar": 97,
+          "quote": "a fuel cell stack"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 97,
+              "quote": "a fuel cell stack"
+            },
+            "determiner": "a",
+            "head": "fuel cell stack"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 99,
+          "endChar": 168,
+          "quote": "a cathode inlet line that provides cathode air to the fuel cell stack"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 99,
+              "endChar": 119,
+              "quote": "a cathode inlet line"
+            },
+            "determiner": "a",
+            "head": "cathode inlet line"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 145,
+              "quote": "cathode air"
+            },
+            "determiner": "bare",
+            "head": "cathode air"
+          },
+          {
+            "anchor": {
+              "startChar": 149,
+              "endChar": 168,
+              "quote": "the fuel cell stack"
+            },
+            "determiner": "the",
+            "head": "fuel cell stack"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 170,
+          "endChar": 255,
+          "quote": "a cathode exhaust line that exhausts a cathode exhaust gas out of the fuel cell stack"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 170,
+              "endChar": 192,
+              "quote": "a cathode exhaust line"
+            },
+            "determiner": "a",
+            "head": "cathode exhaust line"
+          },
+          {
+            "anchor": {
+              "startChar": 207,
+              "endChar": 228,
+              "quote": "a cathode exhaust gas"
+            },
+            "determiner": "a",
+            "head": "cathode exhaust gas"
+          },
+          {
+            "anchor": {
+              "startChar": 236,
+              "endChar": 255,
+              "quote": "the fuel cell stack"
+            },
+            "determiner": "the",
+            "head": "fuel cell stack"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 261,
+          "endChar": 396,
+          "quote": "a backpressure valve in the cathode exhaust line, said backpressure valve located downstream of a drip rail of the cathode exhaust line"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 261,
+              "endChar": 281,
+              "quote": "a backpressure valve"
+            },
+            "determiner": "a",
+            "head": "backpressure valve"
+          },
+          {
+            "anchor": {
+              "startChar": 285,
+              "endChar": 309,
+              "quote": "the cathode exhaust line"
+            },
+            "determiner": "the",
+            "head": "cathode exhaust line"
+          },
+          {
+            "anchor": {
+              "startChar": 311,
+              "endChar": 334,
+              "quote": "said backpressure valve"
+            },
+            "determiner": "said",
+            "head": "backpressure valve"
+          },
+          {
+            "anchor": {
+              "startChar": 357,
+              "endChar": 368,
+              "quote": "a drip rail"
+            },
+            "determiner": "a",
+            "head": "drip rail"
+          },
+          {
+            "anchor": {
+              "startChar": 372,
+              "endChar": 396,
+              "quote": "the cathode exhaust line"
+            },
+            "determiner": "the",
+            "head": "cathode exhaust line"
+          }
+        ]
+      },
+      {
+        "path": "1.e",
+        "anchor": {
+          "startChar": 406,
+          "endChar": 516,
+          "quote": "the drip rail includes a protrusion that prevents condensed water from building up near the backpressure valve"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 406,
+              "endChar": 419,
+              "quote": "the drip rail"
+            },
+            "determiner": "the",
+            "head": "drip rail"
+          },
+          {
+            "anchor": {
+              "startChar": 429,
+              "endChar": 441,
+              "quote": "a protrusion"
+            },
+            "determiner": "a",
+            "head": "protrusion"
+          },
+          {
+            "anchor": {
+              "startChar": 456,
+              "endChar": 471,
+              "quote": "condensed water"
+            },
+            "determiner": "bare",
+            "head": "condensed water"
+          },
+          {
+            "anchor": {
+              "startChar": 494,
+              "endChar": 516,
+              "quote": "the backpressure valve"
+            },
+            "determiner": "the",
+            "head": "backpressure valve"
+          }
+        ]
+      },
+      {
+        "path": "1.f",
+        "anchor": {
+          "startChar": 518,
+          "endChar": 633,
+          "quote": "said drip rail further including a sump that collects drips of condensed water from the protrusion of the drip rail"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 518,
+              "endChar": 532,
+              "quote": "said drip rail"
+            },
+            "determiner": "said",
+            "head": "drip rail"
+          },
+          {
+            "anchor": {
+              "startChar": 551,
+              "endChar": 557,
+              "quote": "a sump"
+            },
+            "determiner": "a",
+            "head": "sump"
+          },
+          {
+            "anchor": {
+              "startChar": 572,
+              "endChar": 596,
+              "quote": "drips of condensed water"
+            },
+            "determiner": "bare",
+            "head": "drips of condensed water"
+          },
+          {
+            "anchor": {
+              "startChar": 602,
+              "endChar": 616,
+              "quote": "the protrusion"
+            },
+            "determiner": "the",
+            "head": "protrusion"
+          },
+          {
+            "anchor": {
+              "startChar": 620,
+              "endChar": 633,
+              "quote": "the drip rail"
+            },
+            "determiner": "the",
+            "head": "drip rail"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 99,
+                "endChar": 119,
+                "quote": "a cathode inlet line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 119,
+              "endChar": 134,
+              "quote": " that provides "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 145,
+                "quote": "cathode air"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 145,
+              "endChar": 149,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 149,
+                "endChar": 168,
+                "quote": "the fuel cell stack"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 170,
+                "endChar": 192,
+                "quote": "a cathode exhaust line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 192,
+              "endChar": 207,
+              "quote": " that exhausts "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 207,
+                "endChar": 228,
+                "quote": "a cathode exhaust gas"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 228,
+              "endChar": 236,
+              "quote": " out of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 236,
+                "endChar": 255,
+                "quote": "the fuel cell stack"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 261,
+                "endChar": 281,
+                "quote": "a backpressure valve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 281,
+              "endChar": 285,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 285,
+                "endChar": 309,
+                "quote": "the cathode exhaust line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 309,
+              "endChar": 311,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 311,
+                "endChar": 334,
+                "quote": "said backpressure valve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 334,
+              "endChar": 357,
+              "quote": " located downstream of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 357,
+                "endChar": 368,
+                "quote": "a drip rail"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 368,
+              "endChar": 372,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 372,
+                "endChar": 396,
+                "quote": "the cathode exhaust line"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.e",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 406,
+                "endChar": 419,
+                "quote": "the drip rail"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 419,
+              "endChar": 429,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 429,
+                "endChar": 441,
+                "quote": "a protrusion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 441,
+              "endChar": 456,
+              "quote": " that prevents "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 456,
+                "endChar": 471,
+                "quote": "condensed water"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 471,
+              "endChar": 494,
+              "quote": " from building up near "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 494,
+                "endChar": 516,
+                "quote": "the backpressure valve"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.f",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.f",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 518,
+                "endChar": 532,
+                "quote": "said drip rail"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 532,
+              "endChar": 551,
+              "quote": " further including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 551,
+                "endChar": 557,
+                "quote": "a sump"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 557,
+              "endChar": 572,
+              "quote": " that collects "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 572,
+                "endChar": 596,
+                "quote": "drips of condensed water"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 596,
+              "endChar": 602,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 602,
+                "endChar": 616,
+                "quote": "the protrusion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 616,
+              "endChar": 620,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 620,
+                "endChar": 633,
+                "quote": "the drip rail"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 67,
+            "quote": "said cathode subsystem"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 24,
+            "endChar": 43,
+            "quote": "a cathode subsystem"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 149,
+            "endChar": 168,
+            "quote": "the fuel cell stack"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 97,
+            "quote": "a fuel cell stack"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 255,
+            "quote": "the fuel cell stack"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 97,
+            "quote": "a fuel cell stack"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 311,
+            "endChar": 334,
+            "quote": "said backpressure valve"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 261,
+            "endChar": 281,
+            "quote": "a backpressure valve"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 285,
+            "endChar": 309,
+            "quote": "the cathode exhaust line"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 192,
+            "quote": "a cathode exhaust line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 372,
+            "endChar": 396,
+            "quote": "the cathode exhaust line"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 192,
+            "quote": "a cathode exhaust line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 406,
+            "endChar": 419,
+            "quote": "the drip rail"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 357,
+            "endChar": 368,
+            "quote": "a drip rail"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 518,
+            "endChar": 532,
+            "quote": "said drip rail"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 357,
+            "endChar": 368,
+            "quote": "a drip rail"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 620,
+            "endChar": 633,
+            "quote": "the drip rail"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 357,
+            "endChar": 368,
+            "quote": "a drip rail"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 494,
+            "endChar": 516,
+            "quote": "the backpressure valve"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 261,
+            "endChar": 281,
+            "quote": "a backpressure valve"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 602,
+            "endChar": 616,
+            "quote": "the protrusion"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 429,
+            "endChar": 441,
+            "quote": "a protrusion"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The system according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 351,
+          "quote": "a controller that is programmed to determine the temperature of the backpressure valve and to estimate the liquid water near the backpressure valve, said controller performing a freeze purge strategy if the temperature and liquid water near the backpressure valve reach predetermined threshold values"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 63,
+              "quote": "a controller"
+            },
+            "determiner": "a",
+            "head": "controller"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 111,
+              "quote": "the temperature"
+            },
+            "determiner": "the",
+            "head": "temperature"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 137,
+              "quote": "the backpressure valve"
+            },
+            "determiner": "the",
+            "head": "backpressure valve"
+          },
+          {
+            "anchor": {
+              "startChar": 154,
+              "endChar": 170,
+              "quote": "the liquid water"
+            },
+            "determiner": "the",
+            "head": "liquid water"
+          },
+          {
+            "anchor": {
+              "startChar": 176,
+              "endChar": 198,
+              "quote": "the backpressure valve"
+            },
+            "determiner": "the",
+            "head": "backpressure valve"
+          },
+          {
+            "anchor": {
+              "startChar": 200,
+              "endChar": 215,
+              "quote": "said controller"
+            },
+            "determiner": "said",
+            "head": "controller"
+          },
+          {
+            "anchor": {
+              "startChar": 227,
+              "endChar": 250,
+              "quote": "a freeze purge strategy"
+            },
+            "determiner": "a",
+            "head": "freeze purge strategy"
+          },
+          {
+            "anchor": {
+              "startChar": 254,
+              "endChar": 286,
+              "quote": "the temperature and liquid water"
+            },
+            "determiner": "the",
+            "head": "temperature and liquid water"
+          },
+          {
+            "anchor": {
+              "startChar": 292,
+              "endChar": 314,
+              "quote": "the backpressure valve"
+            },
+            "determiner": "the",
+            "head": "backpressure valve"
+          },
+          {
+            "anchor": {
+              "startChar": 321,
+              "endChar": 351,
+              "quote": "predetermined threshold values"
+            },
+            "determiner": "bare",
+            "head": "predetermined threshold values"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "A fuel cell system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 63,
+                "quote": "a controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 96,
+              "quote": " that is programmed to determine "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 111,
+                "quote": "the temperature"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 111,
+              "endChar": 115,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 115,
+                "endChar": 137,
+                "quote": "the backpressure valve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 137,
+              "endChar": 154,
+              "quote": " and to estimate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 154,
+                "endChar": 170,
+                "quote": "the liquid water"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 170,
+              "endChar": 176,
+              "quote": " near "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 176,
+                "endChar": 198,
+                "quote": "the backpressure valve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 198,
+              "endChar": 200,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 200,
+                "endChar": 215,
+                "quote": "said controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 215,
+              "endChar": 227,
+              "quote": " performing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 227,
+                "endChar": 250,
+                "quote": "a freeze purge strategy"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 250,
+              "endChar": 254,
+              "quote": " if "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 254,
+                "endChar": 286,
+                "quote": "the temperature and liquid water"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 286,
+              "endChar": 292,
+              "quote": " near "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 292,
+                "endChar": 314,
+                "quote": "the backpressure valve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 314,
+              "endChar": 321,
+              "quote": " reach "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 321,
+                "endChar": 351,
+                "quote": "predetermined threshold values"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 215,
+            "quote": "said controller"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 63,
+            "quote": "a controller"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 137,
+            "quote": "the backpressure valve"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 261,
+            "endChar": 281,
+            "quote": "a backpressure valve"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 176,
+            "endChar": 198,
+            "quote": "the backpressure valve"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 261,
+            "endChar": 281,
+            "quote": "a backpressure valve"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 292,
+            "endChar": 314,
+            "quote": "the backpressure valve"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 261,
+            "endChar": 281,
+            "quote": "a backpressure valve"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The system according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 158,
+          "quote": "a by-pass line that selectively directs cathode inlet air to the cathode exhaust line using a by-pass valve"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 65,
+              "quote": "a by-pass line"
+            },
+            "determiner": "a",
+            "head": "by-pass line"
+          },
+          {
+            "anchor": {
+              "startChar": 91,
+              "endChar": 108,
+              "quote": "cathode inlet air"
+            },
+            "determiner": "bare",
+            "head": "cathode inlet air"
+          },
+          {
+            "anchor": {
+              "startChar": 112,
+              "endChar": 136,
+              "quote": "the cathode exhaust line"
+            },
+            "determiner": "the",
+            "head": "cathode exhaust line"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 158,
+              "quote": "a by-pass valve"
+            },
+            "determiner": "a",
+            "head": "by-pass valve"
+          }
+        ]
+      },
+      {
+        "path": "3.b",
+        "anchor": {
+          "startChar": 160,
+          "endChar": 234,
+          "quote": "said by-pass valve located near the cathode inlet line in the by-pass line"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 160,
+              "endChar": 178,
+              "quote": "said by-pass valve"
+            },
+            "determiner": "said",
+            "head": "by-pass valve"
+          },
+          {
+            "anchor": {
+              "startChar": 192,
+              "endChar": 214,
+              "quote": "the cathode inlet line"
+            },
+            "determiner": "the",
+            "head": "cathode inlet line"
+          },
+          {
+            "anchor": {
+              "startChar": 218,
+              "endChar": 234,
+              "quote": "the by-pass line"
+            },
+            "determiner": "the",
+            "head": "by-pass line"
+          }
+        ]
+      },
+      {
+        "path": "3.c",
+        "anchor": {
+          "startChar": 236,
+          "endChar": 407,
+          "quote": "said by-pass line including at least one turn downstream of the by-pass valve that prevents water in the cathode exhaust line from back splashing against the by-pass valve"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 236,
+              "endChar": 253,
+              "quote": "said by-pass line"
+            },
+            "determiner": "said",
+            "head": "by-pass line"
+          },
+          {
+            "anchor": {
+              "startChar": 264,
+              "endChar": 281,
+              "quote": "at least one turn"
+            },
+            "determiner": "at-least-one",
+            "head": "turn"
+          },
+          {
+            "anchor": {
+              "startChar": 296,
+              "endChar": 313,
+              "quote": "the by-pass valve"
+            },
+            "determiner": "the",
+            "head": "by-pass valve"
+          },
+          {
+            "anchor": {
+              "startChar": 328,
+              "endChar": 333,
+              "quote": "water"
+            },
+            "determiner": "bare",
+            "head": "water"
+          },
+          {
+            "anchor": {
+              "startChar": 337,
+              "endChar": 361,
+              "quote": "the cathode exhaust line"
+            },
+            "determiner": "the",
+            "head": "cathode exhaust line"
+          },
+          {
+            "anchor": {
+              "startChar": 390,
+              "endChar": 407,
+              "quote": "the by-pass valve"
+            },
+            "determiner": "the",
+            "head": "by-pass valve"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "A fuel cell system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 65,
+                "quote": "a by-pass line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 65,
+              "endChar": 91,
+              "quote": " that selectively directs "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 91,
+                "endChar": 108,
+                "quote": "cathode inlet air"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 108,
+              "endChar": 112,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 112,
+                "endChar": 136,
+                "quote": "the cathode exhaust line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 136,
+              "endChar": 143,
+              "quote": " using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 158,
+                "quote": "a by-pass valve"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "3.b",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 160,
+                "endChar": 178,
+                "quote": "said by-pass valve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 178,
+              "endChar": 192,
+              "quote": " located near "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 192,
+                "endChar": 214,
+                "quote": "the cathode inlet line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 214,
+              "endChar": 218,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 218,
+                "endChar": 234,
+                "quote": "the by-pass line"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "3.c",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.c",
+              "anchor": {
+                "startChar": 236,
+                "endChar": 253,
+                "quote": "said by-pass line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 253,
+              "endChar": 264,
+              "quote": " including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.c",
+              "anchor": {
+                "startChar": 264,
+                "endChar": 281,
+                "quote": "at least one turn"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 281,
+              "endChar": 296,
+              "quote": " downstream of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.c",
+              "anchor": {
+                "startChar": 296,
+                "endChar": 313,
+                "quote": "the by-pass valve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 313,
+              "endChar": 328,
+              "quote": " that prevents "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.c",
+              "anchor": {
+                "startChar": 328,
+                "endChar": 333,
+                "quote": "water"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 333,
+              "endChar": 337,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.c",
+              "anchor": {
+                "startChar": 337,
+                "endChar": 361,
+                "quote": "the cathode exhaust line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 361,
+              "endChar": 390,
+              "quote": " from back splashing against "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.c",
+              "anchor": {
+                "startChar": 390,
+                "endChar": 407,
+                "quote": "the by-pass valve"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 112,
+            "endChar": 136,
+            "quote": "the cathode exhaust line"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 192,
+            "quote": "a cathode exhaust line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.c",
+          "anchor": {
+            "startChar": 337,
+            "endChar": 361,
+            "quote": "the cathode exhaust line"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 192,
+            "quote": "a cathode exhaust line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 160,
+            "endChar": 178,
+            "quote": "said by-pass valve"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 158,
+            "quote": "a by-pass valve"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 218,
+            "endChar": 234,
+            "quote": "the by-pass line"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 65,
+            "quote": "a by-pass line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.c",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 253,
+            "quote": "said by-pass line"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 65,
+            "quote": "a by-pass line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.c",
+          "anchor": {
+            "startChar": 296,
+            "endChar": 313,
+            "quote": "the by-pass valve"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 158,
+            "quote": "a by-pass valve"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.c",
+          "anchor": {
+            "startChar": 390,
+            "endChar": 407,
+            "quote": "the by-pass valve"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 158,
+            "quote": "a by-pass valve"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 192,
+            "endChar": 214,
+            "quote": "the cathode inlet line"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 99,
+            "endChar": 119,
+            "quote": "a cathode inlet line"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The system according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 128,
+          "quote": "a charge air cooler and a water vapor transfer unit in the cathode inlet line"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 70,
+              "quote": "a charge air cooler"
+            },
+            "determiner": "a",
+            "head": "charge air cooler"
+          },
+          {
+            "anchor": {
+              "startChar": 75,
+              "endChar": 102,
+              "quote": "a water vapor transfer unit"
+            },
+            "determiner": "a",
+            "head": "water vapor transfer unit"
+          },
+          {
+            "anchor": {
+              "startChar": 106,
+              "endChar": 128,
+              "quote": "the cathode inlet line"
+            },
+            "determiner": "the",
+            "head": "cathode inlet line"
+          }
+        ]
+      },
+      {
+        "path": "4.b",
+        "anchor": {
+          "startChar": 138,
+          "endChar": 267,
+          "quote": "the charge air cooler is located in the cathode inlet line and feeds into the water vapor transfer unit in the cathode inlet line"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 138,
+              "endChar": 159,
+              "quote": "the charge air cooler"
+            },
+            "determiner": "the",
+            "head": "charge air cooler"
+          },
+          {
+            "anchor": {
+              "startChar": 174,
+              "endChar": 196,
+              "quote": "the cathode inlet line"
+            },
+            "determiner": "the",
+            "head": "cathode inlet line"
+          },
+          {
+            "anchor": {
+              "startChar": 212,
+              "endChar": 241,
+              "quote": "the water vapor transfer unit"
+            },
+            "determiner": "the",
+            "head": "water vapor transfer unit"
+          },
+          {
+            "anchor": {
+              "startChar": 245,
+              "endChar": 267,
+              "quote": "the cathode inlet line"
+            },
+            "determiner": "the",
+            "head": "cathode inlet line"
+          }
+        ]
+      },
+      {
+        "path": "4.c",
+        "anchor": {
+          "startChar": 269,
+          "endChar": 322,
+          "quote": "said charge air cooler being cooled by a coolant loop"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 269,
+              "endChar": 291,
+              "quote": "said charge air cooler"
+            },
+            "determiner": "said",
+            "head": "charge air cooler"
+          },
+          {
+            "anchor": {
+              "startChar": 308,
+              "endChar": 322,
+              "quote": "a coolant loop"
+            },
+            "determiner": "a",
+            "head": "coolant loop"
+          }
+        ]
+      },
+      {
+        "path": "4.d",
+        "anchor": {
+          "startChar": 332,
+          "endChar": 624,
+          "quote": "a pressure sensor is positioned on the charge air cooler such that the pressure of the cathode inlet air is measured after the air is cooled by the charge air cooler and the pressure of the cathode inlet air is measured before the water vapor transfer unit adds water to the cathode inlet air"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 332,
+              "endChar": 349,
+              "quote": "a pressure sensor"
+            },
+            "determiner": "a",
+            "head": "pressure sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 367,
+              "endChar": 388,
+              "quote": "the charge air cooler"
+            },
+            "determiner": "the",
+            "head": "charge air cooler"
+          },
+          {
+            "anchor": {
+              "startChar": 399,
+              "endChar": 411,
+              "quote": "the pressure"
+            },
+            "determiner": "the",
+            "head": "pressure"
+          },
+          {
+            "anchor": {
+              "startChar": 415,
+              "endChar": 436,
+              "quote": "the cathode inlet air"
+            },
+            "determiner": "the",
+            "head": "cathode inlet air"
+          },
+          {
+            "anchor": {
+              "startChar": 455,
+              "endChar": 462,
+              "quote": "the air"
+            },
+            "determiner": "the",
+            "head": "air"
+          },
+          {
+            "anchor": {
+              "startChar": 476,
+              "endChar": 497,
+              "quote": "the charge air cooler"
+            },
+            "determiner": "the",
+            "head": "charge air cooler"
+          },
+          {
+            "anchor": {
+              "startChar": 502,
+              "endChar": 514,
+              "quote": "the pressure"
+            },
+            "determiner": "the",
+            "head": "pressure"
+          },
+          {
+            "anchor": {
+              "startChar": 518,
+              "endChar": 539,
+              "quote": "the cathode inlet air"
+            },
+            "determiner": "the",
+            "head": "cathode inlet air"
+          },
+          {
+            "anchor": {
+              "startChar": 559,
+              "endChar": 588,
+              "quote": "the water vapor transfer unit"
+            },
+            "determiner": "the",
+            "head": "water vapor transfer unit"
+          },
+          {
+            "anchor": {
+              "startChar": 594,
+              "endChar": 599,
+              "quote": "water"
+            },
+            "determiner": "bare",
+            "head": "water"
+          },
+          {
+            "anchor": {
+              "startChar": 603,
+              "endChar": 624,
+              "quote": "the cathode inlet air"
+            },
+            "determiner": "the",
+            "head": "cathode inlet air"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "A fuel cell system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 70,
+                "quote": "a charge air cooler"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 70,
+              "endChar": 75,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 75,
+                "endChar": 102,
+                "quote": "a water vapor transfer unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 102,
+              "endChar": 106,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 106,
+                "endChar": 128,
+                "quote": "the cathode inlet line"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "4.b",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 138,
+                "endChar": 159,
+                "quote": "the charge air cooler"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 159,
+              "endChar": 174,
+              "quote": " is located in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 174,
+                "endChar": 196,
+                "quote": "the cathode inlet line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 196,
+              "endChar": 212,
+              "quote": " and feeds into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 212,
+                "endChar": 241,
+                "quote": "the water vapor transfer unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 241,
+              "endChar": 245,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.b",
+              "anchor": {
+                "startChar": 245,
+                "endChar": 267,
+                "quote": "the cathode inlet line"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "4.c",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.c",
+              "anchor": {
+                "startChar": 269,
+                "endChar": 291,
+                "quote": "said charge air cooler"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 291,
+              "endChar": 308,
+              "quote": " being cooled by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.c",
+              "anchor": {
+                "startChar": 308,
+                "endChar": 322,
+                "quote": "a coolant loop"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "4.d",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 332,
+                "endChar": 349,
+                "quote": "a pressure sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 349,
+              "endChar": 367,
+              "quote": " is positioned on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 367,
+                "endChar": 388,
+                "quote": "the charge air cooler"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 388,
+              "endChar": 399,
+              "quote": " such that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 399,
+                "endChar": 411,
+                "quote": "the pressure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 411,
+              "endChar": 415,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 415,
+                "endChar": 436,
+                "quote": "the cathode inlet air"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 436,
+              "endChar": 455,
+              "quote": " is measured after "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 455,
+                "endChar": 462,
+                "quote": "the air"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 462,
+              "endChar": 476,
+              "quote": " is cooled by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 476,
+                "endChar": 497,
+                "quote": "the charge air cooler"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 497,
+              "endChar": 502,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 502,
+                "endChar": 514,
+                "quote": "the pressure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 514,
+              "endChar": 518,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 518,
+                "endChar": 539,
+                "quote": "the cathode inlet air"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 539,
+              "endChar": 559,
+              "quote": " is measured before "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 559,
+                "endChar": 588,
+                "quote": "the water vapor transfer unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 588,
+              "endChar": 594,
+              "quote": " adds "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 594,
+                "endChar": 599,
+                "quote": "water"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 599,
+              "endChar": 603,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.d",
+              "anchor": {
+                "startChar": 603,
+                "endChar": 624,
+                "quote": "the cathode inlet air"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 106,
+            "endChar": 128,
+            "quote": "the cathode inlet line"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 99,
+            "endChar": 119,
+            "quote": "a cathode inlet line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.b",
+          "anchor": {
+            "startChar": 174,
+            "endChar": 196,
+            "quote": "the cathode inlet line"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 99,
+            "endChar": 119,
+            "quote": "a cathode inlet line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.b",
+          "anchor": {
+            "startChar": 245,
+            "endChar": 267,
+            "quote": "the cathode inlet line"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 99,
+            "endChar": 119,
+            "quote": "a cathode inlet line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.b",
+          "anchor": {
+            "startChar": 138,
+            "endChar": 159,
+            "quote": "the charge air cooler"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 70,
+            "quote": "a charge air cooler"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.c",
+          "anchor": {
+            "startChar": 269,
+            "endChar": 291,
+            "quote": "said charge air cooler"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 70,
+            "quote": "a charge air cooler"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.d",
+          "anchor": {
+            "startChar": 367,
+            "endChar": 388,
+            "quote": "the charge air cooler"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 70,
+            "quote": "a charge air cooler"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.d",
+          "anchor": {
+            "startChar": 476,
+            "endChar": 497,
+            "quote": "the charge air cooler"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 70,
+            "quote": "a charge air cooler"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.b",
+          "anchor": {
+            "startChar": 212,
+            "endChar": 241,
+            "quote": "the water vapor transfer unit"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 75,
+            "endChar": 102,
+            "quote": "a water vapor transfer unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.d",
+          "anchor": {
+            "startChar": 559,
+            "endChar": 588,
+            "quote": "the water vapor transfer unit"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 75,
+            "endChar": 102,
+            "quote": "a water vapor transfer unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.d",
+          "anchor": {
+            "startChar": 415,
+            "endChar": 436,
+            "quote": "the cathode inlet air"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 134,
+            "endChar": 145,
+            "quote": "cathode air"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.d",
+          "anchor": {
+            "startChar": 455,
+            "endChar": 462,
+            "quote": "the air"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 134,
+            "endChar": 145,
+            "quote": "cathode air"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.d",
+          "anchor": {
+            "startChar": 518,
+            "endChar": 539,
+            "quote": "the cathode inlet air"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 134,
+            "endChar": 145,
+            "quote": "cathode air"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.d",
+          "anchor": {
+            "startChar": 603,
+            "endChar": 624,
+            "quote": "the cathode inlet air"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 134,
+            "endChar": 145,
+            "quote": "cathode air"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The system according to claim 4"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 249,
+          "quote": "a drain that is directly below the water vapor transfer unit, said drain including a sump that drains liquid water from the water vapor transfer unit into the cathode exhaust line through an orifice"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 58,
+              "quote": "a drain"
+            },
+            "determiner": "a",
+            "head": "drain"
+          },
+          {
+            "anchor": {
+              "startChar": 82,
+              "endChar": 111,
+              "quote": "the water vapor transfer unit"
+            },
+            "determiner": "the",
+            "head": "water vapor transfer unit"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 123,
+              "quote": "said drain"
+            },
+            "determiner": "said",
+            "head": "drain"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 140,
+              "quote": "a sump"
+            },
+            "determiner": "a",
+            "head": "sump"
+          },
+          {
+            "anchor": {
+              "startChar": 153,
+              "endChar": 165,
+              "quote": "liquid water"
+            },
+            "determiner": "bare",
+            "head": "liquid water"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 200,
+              "quote": "the water vapor transfer unit"
+            },
+            "determiner": "the",
+            "head": "water vapor transfer unit"
+          },
+          {
+            "anchor": {
+              "startChar": 206,
+              "endChar": 230,
+              "quote": "the cathode exhaust line"
+            },
+            "determiner": "the",
+            "head": "cathode exhaust line"
+          },
+          {
+            "anchor": {
+              "startChar": 239,
+              "endChar": 249,
+              "quote": "an orifice"
+            },
+            "determiner": "an",
+            "head": "orifice"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "4"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "A fuel cell system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 58,
+                "quote": "a drain"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 58,
+              "endChar": 82,
+              "quote": " that is directly below "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 82,
+                "endChar": 111,
+                "quote": "the water vapor transfer unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 111,
+              "endChar": 113,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 113,
+                "endChar": 123,
+                "quote": "said drain"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 123,
+              "endChar": 134,
+              "quote": " including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 140,
+                "quote": "a sump"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 140,
+              "endChar": 153,
+              "quote": " that drains "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 153,
+                "endChar": 165,
+                "quote": "liquid water"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 165,
+              "endChar": 171,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 171,
+                "endChar": 200,
+                "quote": "the water vapor transfer unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 200,
+              "endChar": 206,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 206,
+                "endChar": 230,
+                "quote": "the cathode exhaust line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 230,
+              "endChar": 239,
+              "quote": " through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 239,
+                "endChar": 249,
+                "quote": "an orifice"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 206,
+            "endChar": 230,
+            "quote": "the cathode exhaust line"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 192,
+            "quote": "a cathode exhaust line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 82,
+            "endChar": 111,
+            "quote": "the water vapor transfer unit"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 75,
+            "endChar": 102,
+            "quote": "a water vapor transfer unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 171,
+            "endChar": 200,
+            "quote": "the water vapor transfer unit"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 75,
+            "endChar": 102,
+            "quote": "a water vapor transfer unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 113,
+            "endChar": 123,
+            "quote": "said drain"
+          }
+        },
+        "introducing": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 58,
+            "quote": "a drain"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The system according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 109,
+          "quote": "a screen that sits in the drain directly above the orifice"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 59,
+              "quote": "a screen"
+            },
+            "determiner": "a",
+            "head": "screen"
+          },
+          {
+            "anchor": {
+              "startChar": 73,
+              "endChar": 82,
+              "quote": "the drain"
+            },
+            "determiner": "the",
+            "head": "drain"
+          },
+          {
+            "anchor": {
+              "startChar": 98,
+              "endChar": 109,
+              "quote": "the orifice"
+            },
+            "determiner": "the",
+            "head": "orifice"
+          }
+        ]
+      },
+      {
+        "path": "6.b",
+        "anchor": {
+          "startChar": 119,
+          "endChar": 333,
+          "quote": "a portion of the drain that includes the orifice and the screen extends into the cathode exhaust line such that heat from the cathode exhaust line is able to melt ice that may accumulate at the orifice of the drain"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 128,
+              "quote": "a portion"
+            },
+            "determiner": "a",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 132,
+              "endChar": 141,
+              "quote": "the drain"
+            },
+            "determiner": "the",
+            "head": "drain"
+          },
+          {
+            "anchor": {
+              "startChar": 156,
+              "endChar": 167,
+              "quote": "the orifice"
+            },
+            "determiner": "the",
+            "head": "orifice"
+          },
+          {
+            "anchor": {
+              "startChar": 172,
+              "endChar": 182,
+              "quote": "the screen"
+            },
+            "determiner": "the",
+            "head": "screen"
+          },
+          {
+            "anchor": {
+              "startChar": 196,
+              "endChar": 220,
+              "quote": "the cathode exhaust line"
+            },
+            "determiner": "the",
+            "head": "cathode exhaust line"
+          },
+          {
+            "anchor": {
+              "startChar": 231,
+              "endChar": 235,
+              "quote": "heat"
+            },
+            "determiner": "bare",
+            "head": "heat"
+          },
+          {
+            "anchor": {
+              "startChar": 241,
+              "endChar": 265,
+              "quote": "the cathode exhaust line"
+            },
+            "determiner": "the",
+            "head": "cathode exhaust line"
+          },
+          {
+            "anchor": {
+              "startChar": 282,
+              "endChar": 285,
+              "quote": "ice"
+            },
+            "determiner": "bare",
+            "head": "ice"
+          },
+          {
+            "anchor": {
+              "startChar": 309,
+              "endChar": 320,
+              "quote": "the orifice"
+            },
+            "determiner": "the",
+            "head": "orifice"
+          },
+          {
+            "anchor": {
+              "startChar": 324,
+              "endChar": 333,
+              "quote": "the drain"
+            },
+            "determiner": "the",
+            "head": "drain"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "A fuel cell system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 59,
+                "quote": "a screen"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 59,
+              "endChar": 73,
+              "quote": " that sits in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 73,
+                "endChar": 82,
+                "quote": "the drain"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 82,
+              "endChar": 98,
+              "quote": " directly above "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 98,
+                "endChar": 109,
+                "quote": "the orifice"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "6.b",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 128,
+                "quote": "a portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 128,
+              "endChar": 132,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 132,
+                "endChar": 141,
+                "quote": "the drain"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 141,
+              "endChar": 156,
+              "quote": " that includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 156,
+                "endChar": 167,
+                "quote": "the orifice"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 167,
+              "endChar": 172,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 172,
+                "endChar": 182,
+                "quote": "the screen"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 182,
+              "endChar": 196,
+              "quote": " extends into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 196,
+                "endChar": 220,
+                "quote": "the cathode exhaust line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 220,
+              "endChar": 231,
+              "quote": " such that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 231,
+                "endChar": 235,
+                "quote": "heat"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 235,
+              "endChar": 241,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 241,
+                "endChar": 265,
+                "quote": "the cathode exhaust line"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 265,
+              "endChar": 282,
+              "quote": " is able to melt "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 282,
+                "endChar": 285,
+                "quote": "ice"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 285,
+              "endChar": 309,
+              "quote": " that may accumulate at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 309,
+                "endChar": 320,
+                "quote": "the orifice"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 320,
+              "endChar": 324,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.b",
+              "anchor": {
+                "startChar": 324,
+                "endChar": 333,
+                "quote": "the drain"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.b",
+          "anchor": {
+            "startChar": 196,
+            "endChar": 220,
+            "quote": "the cathode exhaust line"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 192,
+            "quote": "a cathode exhaust line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.b",
+          "anchor": {
+            "startChar": 241,
+            "endChar": 265,
+            "quote": "the cathode exhaust line"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 192,
+            "quote": "a cathode exhaust line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.b",
+          "anchor": {
+            "startChar": 172,
+            "endChar": 182,
+            "quote": "the screen"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 59,
+            "quote": "a screen"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.b",
+          "anchor": {
+            "startChar": 132,
+            "endChar": 141,
+            "quote": "the drain"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 82,
+            "quote": "the drain"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.b",
+          "anchor": {
+            "startChar": 324,
+            "endChar": 333,
+            "quote": "the drain"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 82,
+            "quote": "the drain"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.b",
+          "anchor": {
+            "startChar": 156,
+            "endChar": 167,
+            "quote": "the orifice"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 98,
+            "endChar": 109,
+            "quote": "the orifice"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.b",
+          "anchor": {
+            "startChar": 309,
+            "endChar": 320,
+            "quote": "the orifice"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 98,
+            "endChar": 109,
+            "quote": "the orifice"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The system according to claim 6"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 147,
+          "quote": "the portion of the drain that is near the screen and the orifice is made of a thermally conductive material"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 51,
+              "quote": "the portion"
+            },
+            "determiner": "the",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 55,
+              "endChar": 64,
+              "quote": "the drain"
+            },
+            "determiner": "the",
+            "head": "drain"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 88,
+              "quote": "the screen"
+            },
+            "determiner": "the",
+            "head": "screen"
+          },
+          {
+            "anchor": {
+              "startChar": 93,
+              "endChar": 104,
+              "quote": "the orifice"
+            },
+            "determiner": "the",
+            "head": "orifice"
+          },
+          {
+            "anchor": {
+              "startChar": 116,
+              "endChar": 147,
+              "quote": "a thermally conductive material"
+            },
+            "determiner": "a",
+            "head": "thermally conductive material"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "6"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "A fuel cell system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 40,
+                "endChar": 51,
+                "quote": "the portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 51,
+              "endChar": 55,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 55,
+                "endChar": 64,
+                "quote": "the drain"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 64,
+              "endChar": 78,
+              "quote": " that is near "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 78,
+                "endChar": 88,
+                "quote": "the screen"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 88,
+              "endChar": 93,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 93,
+                "endChar": 104,
+                "quote": "the orifice"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 104,
+              "endChar": 116,
+              "quote": " is made of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 116,
+                "endChar": 147,
+                "quote": "a thermally conductive material"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 40,
+            "endChar": 51,
+            "quote": "the portion"
+          }
+        },
+        "introducing": {
+          "path": "6.b",
+          "anchor": {
+            "startChar": 119,
+            "endChar": 128,
+            "quote": "a portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 78,
+            "endChar": 88,
+            "quote": "the screen"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 59,
+            "quote": "a screen"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 55,
+            "endChar": 64,
+            "quote": "the drain"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 82,
+            "quote": "the drain"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 93,
+            "endChar": 104,
+            "quote": "the orifice"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 98,
+            "endChar": 109,
+            "quote": "the orifice"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The system according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 146,
+          "quote": "the backpressure valve is an inverted P-valve that is located in a hill region of the cathode exhaust line"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 62,
+              "quote": "the backpressure valve"
+            },
+            "determiner": "the",
+            "head": "backpressure valve"
+          },
+          {
+            "anchor": {
+              "startChar": 66,
+              "endChar": 85,
+              "quote": "an inverted P-valve"
+            },
+            "determiner": "an",
+            "head": "inverted p-valve"
+          },
+          {
+            "anchor": {
+              "startChar": 105,
+              "endChar": 118,
+              "quote": "a hill region"
+            },
+            "determiner": "a",
+            "head": "hill region"
+          },
+          {
+            "anchor": {
+              "startChar": 122,
+              "endChar": 146,
+              "quote": "the cathode exhaust line"
+            },
+            "determiner": "the",
+            "head": "cathode exhaust line"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "A fuel cell system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 40,
+                "endChar": 62,
+                "quote": "the backpressure valve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 62,
+              "endChar": 66,
+              "quote": " is "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 66,
+                "endChar": 85,
+                "quote": "an inverted P-valve"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 85,
+              "endChar": 105,
+              "quote": " that is located in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 105,
+                "endChar": 118,
+                "quote": "a hill region"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 122,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 122,
+                "endChar": 146,
+                "quote": "the cathode exhaust line"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 122,
+            "endChar": 146,
+            "quote": "the cathode exhaust line"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 192,
+            "quote": "a cathode exhaust line"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 40,
+            "endChar": 62,
+            "quote": "the backpressure valve"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 261,
+            "endChar": 281,
+            "quote": "a backpressure valve"
+          }
+        }
+      }
+    ]
+  }
+]

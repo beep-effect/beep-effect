@@ -77,7 +77,8 @@ import {
   KnowledgeSemanticDeltaReport,
   KnowledgeTrackedEntry,
 } from "./Knowledge.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CapturedStreams } from "../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
@@ -1120,7 +1121,7 @@ export const guardKnowledgeCloneAttributes = (
 ): Effect.Effect<
   void,
   KnowledgeOperationalError | KnowledgeCloneAttributesError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > =>
   guardCloneLocalGitAttributes(repoRoot, gitAdapter, KnowledgeCloneAttributesError.at, (attributesPath) =>
     KnowledgeOperationalError.new(`Failed to stat clone-local git attributes "${attributesPath}".`)
@@ -1335,7 +1336,7 @@ const decodeCommandProbeOutput = (
   currentCheckoutRoot: string,
   archiveRoot: string,
   scratchRoot: string
-): Effect.Effect<ReadonlyArray<KnowledgeCommandProbeResult>, KnowledgeOperationalError> => {
+): Effect.Effect<ReadonlyArray<KnowledgeCommandProbeResult>, KnowledgeOperationalError, Digest.Digest> => {
   const lines = Str.isEmpty(result.stdout) ? A.empty<string>() : Str.split(/\r?\n/u)(result.stdout);
   const actualCount = A.length(lines);
   const diagnostic = renderProbeStreams(result, currentCheckoutRoot, archiveRoot, scratchRoot);
@@ -1397,12 +1398,20 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
 ): Effect.fn.Return<
   KnowledgeArchiveOracle,
   KnowledgeOperationalError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const runtime = yield* Effect.context<
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    | Digest.Digest
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
   >();
   yield* fs
     .makeDirectory(scratchRoot, { recursive: true })
@@ -1840,7 +1849,8 @@ const refsTreeLive = (treeish: string) =>
   Effect.scoped(Effect.flatMap(makeKnowledgeTreeOracle(treeish), scanKnowledgeRefsTree));
 
 type KnowledgeServiceRequirements =
-  | Crypto.Crypto
+  | Digest.Digest
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner;

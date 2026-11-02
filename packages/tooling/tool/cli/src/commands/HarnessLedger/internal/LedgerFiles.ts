@@ -120,8 +120,10 @@ export const appendLedgerRows = Effect.fn("HarnessLedger.appendLedgerRows")(func
     .pipe(Effect.mapError(HarnessLedgerIoError.wrap(`Failed to create ${dir}.`)));
   const encoded = yield* Effect.forEach(rows, (row) =>
     HarnessLedgerRow.encodeJsonEffect(row).pipe(
-      Effect.map((line) => [ledgerMonthOf(row.createdAt), line] as const),
-      Effect.mapError(HarnessLedgerIoError.wrap(`Failed to encode ledger row ${row.rowId}.`))
+      Effect.mapBoth({
+        onFailure: HarnessLedgerIoError.wrap(`Failed to encode ledger row ${row.rowId}.`),
+        onSuccess: (line) => [ledgerMonthOf(row.createdAt), line] as const,
+      })
     )
   );
   const months = pipe(

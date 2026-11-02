@@ -1,0 +1,272 @@
+{
+  "schemaVersion": "cache-task-descriptions-feature-review/v1",
+  "recordedAt": "2026-10-30T19:12:16.111265+00:00",
+  "authority": "Final current-tree optional-feature disposition with pinned synthetic native evidence; no real computation qualification, cache enablement or measured production benefit.",
+  "sourceBaseRevision": "d39e9ee2945c4d8e2dda46767f3400a49426f661",
+  "feature": "task-descriptions",
+  "owner": "turborepo-quality-cache-adoption",
+  "disposition": "accepted-retain-current-absence",
+  "rationale": "The optional field has no current declaration or execution benefit. Preserve current absent metadata; adding a parallel source of task documentation is not a caching optimization and changes raw configuration inputs on these pins. Do not weaken inputs to make a documentation edit hit.",
+  "reopenWhen": "A concrete task-inspection or UI consumer needs descriptions and a reviewed source/configuration change justifies their maintenance and invalidation cost.",
+  "sourceCensus": {
+    "workspaces": 190,
+    "configuredGraphNodes": 4586,
+    "executableComputations": 2571,
+    "configurationFiles": 22,
+    "explicitTaskDefinitions": 101,
+    "descriptionDeclarations": 0,
+    "configurationSources": [
+      {
+        "path": "apps/docket-intake/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+      },
+      {
+        "path": "apps/labs/api-docs/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+      },
+      {
+        "path": "apps/labs/ciops/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+      },
+      {
+        "path": "apps/oip-web/turbo.json",
+        "sha256": "dba3f716c7a3ec2b6241eeffd2004a31c054c0e1e4ac8ab572ccc3a4d5a3e468"
+      },
+      {
+        "path": "apps/practice-claude-mod/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+      },
+      {
+        "path": "apps/practice-identify/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+      },
+      {
+        "path": "apps/practice-m365-contacts/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+      },
+      {
+        "path": "apps/practice-mail-tagging/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+      },
+      {
+        "path": "apps/practice-review-hub/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+      },
+      {
+        "path": "apps/practice-setup/turbo.json",
+        "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+      },
+      {
+        "path": "apps/professional-desktop/turbo.json",
+        "sha256": "fbabf0485199158999e72970af6f5551adfb690191bad72aab962d415554b543"
+      },
+      {
+        "path": "apps/storybook/turbo.json",
+        "sha256": "1e2b850fcd13e1031be1dcdb1f9b42678d76827f032250d871955a815c2f4dac"
+      },
+      {
+        "path": "apps/todox/turbo.json",
+        "sha256": "d9022d5089c8a38fc122e1804847c0fb90699b2c2aff49b4de496d18fcc37a8d"
+      },
+      {
+        "path": "infra/turbo.json",
+        "sha256": "3466632a41e387b7b6fe8c455d81771b77bb3997fa521bf5559624c499df4340"
+      },
+      {
+        "path": "packages/foundation/modeling/identity/turbo.json",
+        "sha256": "b2cf6ff3291c134a7ee884245d21fbedf5bf6ef87f3c9131407db4492b005a97"
+      },
+      {
+        "path": "packages/foundation/primitive/types/turbo.json",
+        "sha256": "6c8d1d6e3c12318fa0273a3ec1585487e4661e8a80bda2ccf5d48a2c821dedd4"
+      },
+      {
+        "path": "packages/tooling/library/ai-sync/turbo.json",
+        "sha256": "5cc095a94e178fcb27d2c0a266300a0e7551a39e5833d7e9b8a8f432e5b8d77e"
+      },
+      {
+        "path": "packages/tooling/policy-pack/repo-configs/turbo.json",
+        "sha256": "a8d6070aa5f31cb7d0f9fd42550a5adba806912fdd18ca84c18ee47f5649987b"
+      },
+      {
+        "path": "packages/tooling/test-kit/fc-runs/turbo.json",
+        "sha256": "427d28a29603a6fd99910c3de7f75fee1b5437f345e52890300c994753c3bf57"
+      },
+      {
+        "path": "packages/tooling/test-kit/test-runner/turbo.json",
+        "sha256": "427d28a29603a6fd99910c3de7f75fee1b5437f345e52890300c994753c3bf57"
+      },
+      {
+        "path": "packages/tooling/tool/cli/turbo.json",
+        "sha256": "c52155e26db44b552bf3462bf1da200496fb5792050908fd2f16dd80f2483f8d"
+      },
+      {
+        "path": "turbo.json",
+        "sha256": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf"
+      }
+    ],
+    "rootManifestSha256": "640d51eba1db211244fef7c066eaa179c2740a4bbe192e3d8b2e2afe37c6daeb",
+    "rawCensusSha256": "b683182b589e8641f56a2833e4963744982a2667c9c091adab9dc71787b157a3",
+    "reproduce": "bun --no-env-file run beep cache census --output .beep/cache-description-review-census.json",
+    "unresolvedCensusObligations": 2
+  },
+  "nativeEvidence": {
+    "report": "native-input-controls.json",
+    "reportSha256": "9836301c128039634372740edc66c65b98405770c7718df2ff7104b765c517d9",
+    "driver": {
+      "path": "goals/turborepo-quality-cache-adoption/research/native-input-controls.py",
+      "sha256": "fa9da8492570fbe75c956916bfbaa22706eafee32d74ea7870f4209aa3d0fb1b"
+    },
+    "clients": {
+      "stable": {
+        "reportedVersion": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+      },
+      "canary": {
+        "reportedVersion": "2.11.9-canary.1",
+        "sha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb"
+      }
+    },
+    "observedClientVersions": {
+      "stable": "2.11.10",
+      "canary": "2.11.9-canary.1"
+    },
+    "cases": 22,
+    "descriptionCases": [
+      {
+        "channel": "stable",
+        "control": "description-only-change",
+        "kind": "asserted-invariant",
+        "cacheStatus": "MISS",
+        "taskHash": "d9a283eebc86e493",
+        "sameHashAsPrior": false,
+        "outputMatches": true,
+        "exit": 0,
+        "nativeLogBytes": 544,
+        "taskInputsSha256": "3781d40cecbb768cc1b2b1f0bc8dc2ed78de8b75b9e3cfea7586a26652c97971",
+        "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+        "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+        "taskInputsIncludeTurboConfig": true,
+        "globalInputsIncludeTurboConfig": false,
+        "descriptionInResolvedDefinition": false
+      },
+      {
+        "channel": "stable",
+        "control": "description-edit",
+        "kind": "asserted-invariant",
+        "cacheStatus": "MISS",
+        "taskHash": "cebfb1043b4bf776",
+        "sameHashAsPrior": false,
+        "outputMatches": true,
+        "exit": 0,
+        "nativeLogBytes": 544,
+        "taskInputsSha256": "618f3d6de5e17dbc8981ffd92dd2a35260332f0dbd81554363c49ee18b7f4f76",
+        "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+        "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+        "taskInputsIncludeTurboConfig": true,
+        "globalInputsIncludeTurboConfig": false,
+        "descriptionInResolvedDefinition": false
+      },
+      {
+        "channel": "stable",
+        "control": "description-remove",
+        "kind": "asserted-invariant",
+        "cacheStatus": "HIT",
+        "taskHash": "505fd9e2a5bc033f",
+        "sameHashAsPrior": false,
+        "outputMatches": true,
+        "exit": 0,
+        "nativeLogBytes": 557,
+        "taskInputsSha256": "5963556848a325ecb97b9f35a7746c6ade331e53b0bb0b2c7ec2004887bd4dc8",
+        "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+        "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+        "taskInputsIncludeTurboConfig": true,
+        "globalInputsIncludeTurboConfig": false,
+        "descriptionInResolvedDefinition": false
+      },
+      {
+        "channel": "canary",
+        "control": "description-only-change",
+        "kind": "asserted-invariant",
+        "cacheStatus": "MISS",
+        "taskHash": "d9a283eebc86e493",
+        "sameHashAsPrior": false,
+        "outputMatches": true,
+        "exit": 0,
+        "nativeLogBytes": 544,
+        "taskInputsSha256": "3781d40cecbb768cc1b2b1f0bc8dc2ed78de8b75b9e3cfea7586a26652c97971",
+        "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+        "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+        "taskInputsIncludeTurboConfig": true,
+        "globalInputsIncludeTurboConfig": false,
+        "descriptionInResolvedDefinition": false
+      },
+      {
+        "channel": "canary",
+        "control": "description-edit",
+        "kind": "asserted-invariant",
+        "cacheStatus": "MISS",
+        "taskHash": "cebfb1043b4bf776",
+        "sameHashAsPrior": false,
+        "outputMatches": true,
+        "exit": 0,
+        "nativeLogBytes": 544,
+        "taskInputsSha256": "618f3d6de5e17dbc8981ffd92dd2a35260332f0dbd81554363c49ee18b7f4f76",
+        "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+        "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+        "taskInputsIncludeTurboConfig": true,
+        "globalInputsIncludeTurboConfig": false,
+        "descriptionInResolvedDefinition": false
+      },
+      {
+        "channel": "canary",
+        "control": "description-remove",
+        "kind": "asserted-invariant",
+        "cacheStatus": "HIT",
+        "taskHash": "505fd9e2a5bc033f",
+        "sameHashAsPrior": false,
+        "outputMatches": true,
+        "exit": 0,
+        "nativeLogBytes": 557,
+        "taskInputsSha256": "5963556848a325ecb97b9f35a7746c6ade331e53b0bb0b2c7ec2004887bd4dc8",
+        "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+        "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+        "taskInputsIncludeTurboConfig": true,
+        "globalInputsIncludeTurboConfig": false,
+        "descriptionInResolvedDefinition": false
+      }
+    ],
+    "mechanism": "The description is absent from the resolved task definition; global-input and resolved-definition digests are unchanged. The raw turbo.json file is included in task inputs, so add/edit changes that input digest and task hash; removal restores the prior digest/hash and HIT.",
+    "reproduce": "python3 goals/turborepo-quality-cache-adoption/research/native-input-controls.py"
+  },
+  "driverControls": {
+    "schemaVersion": "cache-description-driver-controls/v1",
+    "recordedAt": "2026-10-30T19:06:18.295883+00:00",
+    "driverSha256": "fa9da8492570fbe75c956916bfbaa22706eafee32d74ea7870f4209aa3d0fb1b",
+    "controls": [
+      {
+        "control": "make the edited description identical to its predecessor",
+        "exit": 1,
+        "expectedCacheAssertion": true,
+        "logSha256": "23e54dde36b2dad4ae23d29dc21a0f7759acd9e8cda78b2b0157031e0521ce4c"
+      },
+      {
+        "control": "refuse disabled Python assertions",
+        "exit": 64,
+        "expectedRefusal": true,
+        "logSha256": "4af0b39d58730210db79358c0b39177ba83904772834fc25e80200674d13f008"
+      }
+    ],
+    "sourceRestoredExactly": true,
+    "restoredPositiveExit": 0
+  },
+  "limits": [
+    "Only the recorded Linux single-package globalConfiguration synthetic profile is exercised.",
+    "A feature review is not a tuple-specific semantic-input, portability, signing, shadow or remote qualification receipt.",
+    "The raw census is retained privately; this bounded review does not overwrite the existing computation population or its 198 source reviews.",
+    "No task descriptions, task cache flags, semantic input exclusions, credentials, epochs or production cache settings changed.",
+    "Both full goals and every real computation/cohort/observation acceptance requirement remain open."
+  ],
+  "allAcceptanceUnproven": true,
+  "configurationChanges": false
+}

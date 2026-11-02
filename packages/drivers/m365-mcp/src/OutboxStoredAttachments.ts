@@ -23,7 +23,7 @@ import {
 } from "@beep/m365";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { pipe } from "effect/Function";
@@ -221,10 +221,10 @@ export const readStoredAttachments = Effect.fn("OutboxStoredAttachments.read")(f
 ): Effect.fn.Return<
   ReadonlyArray<OutboxAttachmentDigest>,
   M365Error | OutboxStoredAttachmentError,
-  M365 | Crypto.Crypto
+  M365 | Digest.Digest
 > {
   const m365 = yield* M365;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const userId = O.some(request.mailbox);
   const listed = yield* m365.listMessageAttachments(
     M365ListMessageAttachmentsRequest.make({ messageId: request.draftId, userId })
@@ -276,7 +276,7 @@ export const readStoredAttachments = Effect.fn("OutboxStoredAttachments.read")(f
           userId,
         })
       );
-      const digest = yield* crypto.digest("SHA-256", content.bytes);
+      const digest = yield* crypto.digest(Digest.sha256, content.bytes);
       return OutboxAttachmentDigest.make({
         name: pipe(
           attachment.name,

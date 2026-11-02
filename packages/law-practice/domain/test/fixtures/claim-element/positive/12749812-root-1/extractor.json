@@ -1,0 +1,66 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "12749812-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "a specified number of embedded ETE flits / said embedded ETE flits",
+      "reason": "Complete quantified number-of NP retained. In removing a specified number of embedded ETE flits, the source predicate identifies a selected flit collection, not a numeric count object. Later removed/embedded flit references1/2/3/10 unambiguously refer to that collection; no individual is selected. Claim9 instead follows8 locally converted/inserted group."
+    },
+    {
+      "quote": "a number of ETE messages / said ETE messages",
+      "reason": "Complete number-of NP retained. Removal predicates identify the selected message collection; said ETE messages8.b refers to that group without choosing a member. Converted ETE flits8.b then supply8.c/9 explicit inserted-group references. No count-object/message identity is invented."
+    },
+    {
+      "quote": "a correct ETE CRC flit / an incorrect packet header CRC",
+      "reason": "Indefinite condition phrases remain independent literal source introductions; correctness does not force a new physical identity edge or borrow CRC from sibling2/7."
+    },
+    {
+      "quote": "said packet header / the packet",
+      "reason": "Header references follow the explicitly defined packet-header role; packet references follow incoming packet1.b. This preserves method-local roles and does not equate every generic packet instance."
+    },
+    {
+      "quote": "a maximum flits",
+      "reason": "Malformed lexical source is retained exactly, with head maximum flits. No silent correction to maximum number or fabricated count noun."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation of exact canonical/native claims. Explicit manually selected element and noun-phrase spans are serialized; no source decomposition algorithm, production rules, predictions, synthetic fixtures or prior conformance labels used. Complete lexical heads, nested determiner terms, natural dependency and source-supported entity identities retained. Functional edges preserve complete source text and ordered participants. Independent critic pending; agent confidence is not attorney agreement.",
+  "referenceNotes": [],
+  "sourceValidation": {
+    "claimsXmlSha256": "6b10f44cbce96b1d760664dae240868b26765fec95dd7460566a836427bf63b7",
+    "sourceEligibility": "Retained independent source critic accepted. No fresh original-PDF/inventory authentication claimed."
+  },
+  "counts": {
+    "trees": 10,
+    "elements": 25,
+    "terms": 61,
+    "edges": 69
+  },
+  "independence": "Extractor did not read production implementation, decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or prior structural labels for this family. Helpers locate only manually chosen exact source quotes, serialize annotations and validate spans. Only assigned expected.json/extractor.json written.",
+  "attorneyAdjudication": "pending",
+  "validation": {
+    "schema": "All trees decode through declared ClaimElementTree schema; no production decomposer invoked.",
+    "anchors": "Exact UTF-16 spans, ordered nonoverlapping term ownership, source order, antecedent endpoints and complete contiguous functional reconstruction checked.",
+    "native": "All canonical/context claims match native XML under permitted normalization; source XML digest matches provenance.",
+    "independentSemanticCritic": "Pending; extractor validation is not independent semantic acceptance."
+  }
+}

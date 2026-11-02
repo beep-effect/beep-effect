@@ -5,10 +5,11 @@
  * @since 0.0.0
  */
 
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
-import { FsUtils, GlobOptions, readPackageJsonFile, resolveWorkspacePackages, toSortedRecord } from "@beep/repo-utils";
+import { FsUtils, GlobOptions, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -20,13 +21,14 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { isTurboCacheControlArg } from "../../internal/cli/TurboCache.ts";
-import { globMatches } from "../../internal/GlobPattern.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
+import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import {
   CacheCensusNode,
   CacheCensusReport,
@@ -40,6 +42,8 @@ const TurboWorkspaceList = S.Struct({
   packages: S.Struct({ items: S.Array(S.Struct({ name: S.String, path: S.String })) }),
 });
 const TurboConfiguration = S.Struct({ tasks: S.Record(S.String, S.Unknown) });
+const decodeJsonObjectText = Jsonc.bind(S.JsonObject).decode;
+const decodeTurboConfigurationText = Jsonc.bind(TurboConfiguration).decode;
 const TurboDefinition = S.Struct({
   ...CacheTaskConfiguration.fields,
   passThroughEnv: S.String.pipe(S.Array, S.OptionFromNullOr),
@@ -74,7 +78,11 @@ const TurboRuntimePlan = S.Struct({
 const decodeTurboRuntimePlanJson = S.decodeUnknownEffect(S.fromJsonString(TurboRuntimePlan));
 
 /**
- * Resolve an already-installed native Turbo binary without launcher overrides or installation fallback.
+ * Resolve a caller-selected or already-installed native Turbo binary without launcher inference.
+ *
+ * **Details**
+ * A selected executable must already be verified by the caller. Resolution only
+ * canonicalizes its path; it neither grants trust nor installs a client.
  *
  * **Example** (Plan native client resolution)
  *
@@ -84,11 +92,18 @@ const decodeTurboRuntimePlanJson = S.decodeUnknownEffect(S.fromJsonString(TurboR
  * console.assert(Effect.isEffect(resolveCacheTurboBinary("/repo")))
  * ```
  *
+ * @param root - Workspace root used for installed client discovery.
+ * @param executable - An optional caller-verified native executable.
+ * @returns The canonical native executable path.
  * @category queries
  * @since 0.0.0
  */
-export const resolveCacheTurboBinary = Effect.fn("Cache.resolveTurboBinary")(function* (root: string) {
+export const resolveCacheTurboBinary = Effect.fn("Cache.resolveTurboBinary")(function* (
+  root: string,
+  executable: O.Option<string> = O.none()
+) {
   const fs = yield* FileSystem.FileSystem;
+  if (O.isSome(executable)) return yield* fs.realPath(executable.value);
   const path = yield* Path.Path;
   const platform = yield* Match.value(yield* HostProcessPlatform).pipe(
     Match.when("linux", () => Effect.succeed("linux")),
@@ -130,6 +145,9 @@ const capture = Effect.fn("CacheCensus.capture")(function* (
       TURBO_TEAM: "",
       TURBO_API: "",
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: "",
+      // Inspection uses explicit cache flags; inherited legacy flags conflict even on a dry run.
+      TURBO_REMOTE_ONLY: undefined,
+      TURBO_REMOTE_CACHE_READ_ONLY: undefined,
       TURBO_TELEMETRY_DISABLED: "1",
       TURBO_BINARY_PATH: "",
     },
@@ -317,6 +335,57 @@ export const cacheTaskSelectionArgs = Effect.fn("Cache.taskSelectionArgs")(funct
   return A.appendAll(A.appendAll(selected, ["--dry=json", "--cache=local:"]), forwardedArgs);
 });
 
+// Turbo env entries are glob patterns (`BEEP_*`). The dot dialect keeps the
+// previous matcher's behaviour, which never special-cased a leading dot, and a
+// `!` or `#` prefix stays a literal character to the compiler: Turbo's own
+// negation is read below, and Turbo has no comment entries. `?`, `[..]`, `{a,b}`,
+// `+(..)`, `\` and an in-segment `**` are minimatch magic here where the old
+// compiler read them literally; no live entry uses them (R2b oracle,
+// `dialectMagic` section).
+const turboEnvGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
+const isTurboEnvExclusion = Str.startsWith("!");
+
+/**
+ * Whether some Turbo `env` or `passThroughEnv` entry forwards `BIOME_CONFIG_PATH`.
+ *
+ * **Details**
+ *
+ * Entries are glob patterns under the dot dialect. A `!`-prefixed entry is a
+ * Turbo exclusion: it forwards nothing, and it never subtracts a positive match
+ * either, because the identity-profile gate rejects a positive declaration
+ * conservatively even when a later negative would exclude the profile (the
+ * previous matcher read the `!` as a literal, which matched no env name, so the
+ * set of forwarding entries is unchanged). An entry the glob compiler rejects
+ * fails with `CacheCommandError`: a configuration failure, not a defect.
+ *
+ * **Example** (A Turbo exclusion forwards nothing)
+ *
+ * ```ts
+ * import { forwardsBiomeConfigPath } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(forwardsBiomeConfigPath(["!BIOME_CONFIG_PATH"]))) // false
+ * console.log(Effect.runSync(forwardsBiomeConfigPath(["BIOME_*"]))) // true
+ * ```
+ *
+ * @param entries - Turbo `env` or `passThroughEnv` entries.
+ * @returns Whether a positive entry matches `BIOME_CONFIG_PATH`.
+ * @category queries
+ * @since 0.0.0
+ */
+export const forwardsBiomeConfigPath = Effect.fn("Cache.forwardsBiomeConfigPath")(function* (
+  entries: ReadonlyArray<string>
+) {
+  const patterns = yield* Effect.forEach(A.filter(entries, P.not(isTurboEnvExclusion)), (entry) =>
+    Effect.fromResult(GlobPattern.compileResult(entry, turboEnvGlob)).pipe(
+      Effect.mapError((error) =>
+        CacheCommandError.new(`Turbo env entry ${entry} is not a glob pattern: ${error.message}`)
+      )
+    )
+  );
+  return A.some(patterns, (pattern) => pattern.matches("BIOME_CONFIG_PATH"));
+});
+
 const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileScope")(function* (
   root: string,
   rows: ReadonlyArray<CacheCensusWorkspace>,
@@ -329,7 +398,7 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
   );
   if (
     !A.contains(identity.configuration.passThroughEnv, "BIOME_CONFIG_PATH") ||
-    A.some(identity.configuration.env, (pattern) => globMatches(pattern)("BIOME_CONFIG_PATH"))
+    (yield* forwardsBiomeConfigPath(identity.configuration.env))
   )
     return yield* CacheCommandError.new(
       "Identity lint profile routing must use passThroughEnv, with profile bytes hashed as inputs."
@@ -356,12 +425,12 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
         : []
     ),
   ];
-  if (A.some(outsideProfile, (pattern) => globMatches(pattern)("BIOME_CONFIG_PATH")))
+  if (yield* forwardsBiomeConfigPath(outsideProfile))
     return yield* CacheCommandError.new("Identity lint profile must not be forwarded globally or to another task.");
 });
 
 /**
- * Select tasks through the installed native client and verify their manifest commands.
+ * Select tasks through the exact native client and verify their manifest commands.
  *
  * **Details**
  * No tasks execute and no toolchain profile is required. Transit nodes retain
@@ -371,7 +440,8 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
  * with caching disabled, and rejects global or cross-task profile forwarding.
  * Positive matching declarations are rejected conservatively even if a later
  * negative pattern would exclude the profile. This neither calculates an
- * identity nor grants reuse.
+ * identity nor grants reuse. A caller-selected executable must already be verified;
+ * native launcher inference is disabled so it cannot delegate to an installed client.
  *
  * **Example** (Select a package and its task dependencies)
  *
@@ -382,22 +452,27 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
  * console.assert(Effect.isEffect(collectCacheTaskSelection(".", ["run", "lint", "--filter=@beep/identity"])))
  * ```
  *
+ * @param repoRoot - Workspace root whose scripts and native task inputs are inspected.
+ * @param args - Execution arguments to convert to a read-only native plan.
+ * @param executable - An optional caller-verified client whose input semantics must be retained.
+ * @returns The selected nodes with exact native inputs and resolved task configuration.
  * @category queries
  * @since 0.0.0
  */
 export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")(function* (
   repoRoot: string,
-  args: ReadonlyArray<string>
+  args: ReadonlyArray<string>,
+  executable: O.Option<string> = O.none()
 ) {
   const selectedArgs = yield* cacheTaskSelectionArgs(args);
   const paths = yield* Path.Path;
   const root = paths.resolve(repoRoot);
-  const turbo = yield* resolveCacheTurboBinary(root);
-  const dry = yield* capture(root, turbo, selectedArgs).pipe(
+  const turbo = yield* resolveCacheTurboBinary(root, executable);
+  const dry = yield* capture(root, turbo, A.prepend(selectedArgs, "--skip-infer")).pipe(
     Effect.flatMap(decodeTurboRuntimePlanJson),
     CacheCommandError.mapError("Native task selection did not produce a valid dry plan.")
   );
-  const workspaces = yield* resolveWorkspacePackages(root);
+  const workspaces = yield* workspaceManifests(root);
   const rootManifest = yield* readPackageJsonFile(paths.join(root, "package.json"));
   const rows = [
     CacheCensusWorkspace.make({
@@ -450,7 +525,9 @@ export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")
  * Cache reads and writes are disabled. Graph-only nodes carry no command.
  * Entrypoint source files are fingerprinted for subsequent semantic review;
  * the unresolved list prevents that source inventory from being mistaken for
- * a fully reviewed computation contract.
+ * a fully reviewed computation contract. A caller-selected executable must
+ * already be verified. All native inspections disable launcher inference,
+ * retaining that client's own input hashing semantics.
  *
  * **Example** (Plan an executable census)
  *
@@ -461,19 +538,25 @@ export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")
  * console.assert(Effect.isEffect(computation))
  * ```
  *
+ * @param repoRoot - Workspace root whose declared quality computations are inspected.
+ * @param executable - An optional caller-verified client whose input semantics must be retained.
+ * @returns The exact-client workspace, task, input and configuration census.
  * @category queries
  * @since 0.0.0
  */
-export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function* (repoRoot: string) {
+export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function* (
+  repoRoot: string,
+  executable: O.Option<string> = O.none()
+) {
   const fs = yield* FileSystem.FileSystem;
   const paths = yield* Path.Path;
   const fsUtils = yield* FsUtils;
   const root = paths.resolve(repoRoot);
-  const turbo = yield* resolveCacheTurboBinary(root);
-  const workspaces = yield* resolveWorkspacePackages(root).pipe(
+  const turbo = yield* resolveCacheTurboBinary(root, executable);
+  const workspaces = yield* workspaceManifests(root).pipe(
     CacheCommandError.mapError("Cannot discover workspace manifests.")
   );
-  const query = yield* capture(root, turbo, ["query", "ls", "--output", "json"]).pipe(
+  const query = yield* capture(root, turbo, ["--skip-infer", "query", "ls", "--output", "json"]).pipe(
     Effect.flatMap(decodeTurboWorkspaceListJson),
     CacheCommandError.mapError("Turbo workspace query did not match the census wire contract.")
   );
@@ -499,10 +582,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   );
   const rootJson = yield* fs
     .readFileString(paths.join(root, "turbo.json"))
-    .pipe(
-      Effect.flatMap(decodeJsoncTextAs(S.JsonObject)),
-      CacheCommandError.mapError("Invalid root Turbo configuration.")
-    );
+    .pipe(Effect.flatMap(decodeJsonObjectText), CacheCommandError.mapError("Invalid root Turbo configuration."));
   const rootConfig = yield* decodeTurboConfiguration(rootJson).pipe(
     CacheCommandError.mapError("Root Turbo tasks are invalid.")
   );
@@ -521,7 +601,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
         const child = yield* fs
           .readFileString(paths.join(root, childPath))
           .pipe(
-            Effect.flatMap(decodeJsoncTextAs(TurboConfiguration)),
+            Effect.flatMap(decodeTurboConfigurationText),
             CacheCommandError.mapError("Invalid child Turbo configuration.")
           );
         tasks = A.appendAll(
@@ -546,6 +626,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   }
   const selectedTasks = pipe(tasks, A.dedupe, A.sort(Order.String));
   const dry = yield* capture(root, turbo, [
+    "--skip-infer",
     "run",
     ...selectedTasks,
     "--dry=json",
@@ -579,7 +660,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   );
   return CacheCensusReport.make({
     revision: Str.trim(yield* capture(root, "git", ["rev-parse", "HEAD"])),
-    turboVersion: Str.trim(yield* capture(root, turbo, ["--version"])),
+    turboVersion: Str.trim(yield* capture(root, turbo, ["--skip-infer", "--version"])),
     rootScripts: toSortedRecord(rootManifest.scripts),
     globalConfiguration: R.filter(rootJson, (_, key) => key !== "tasks" && key !== "$schema"),
     workspaces: workspaceRows,

@@ -1,0 +1,20 @@
+{
+  "previous": "daf5edc283c0d555903b3dd0bc8bc1e24919e1bcaf3cb1d1700a856dfc2e157a",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effected-promotion wave 3-A7, refactor/tsconfig-sync-schemas-onto-tsconfig)",
+    "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/tsconfig workspace dependency for the TsconfigSync.schemas adoption; the task graphs gain only direct edges to tsconfig build/transit, which were already in the graph through @beep/repo-tsconfig, as measured in the review; no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-3-a7.md",
+      "sha256": "fe6b7c9824488855e892925e2027e7537d43cca7d8709c137925e64387102e8c"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["@beep/repo-cli"]
+}

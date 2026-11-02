@@ -20,6 +20,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { LenientFieldIssue } from "@beep/package-json/LenientManifest";
+import type { PackageDecodeError } from "@beep/package-json/Package";
 import type { PackageJsonSyntaxError } from "@beep/package-json/PackageJsonFormat";
 
 const $I = $RepoCliId.create("internal/ManifestRead");
@@ -66,6 +67,21 @@ export class DegradedManifestFieldError extends S.TaggedError<
 
 const describeIssue = (issue: LenientFieldIssue): string => `${issue.field} is not ${issue.expected}`;
 
+/** Fail when one of the `read` fields degraded; otherwise pass the manifest through. */
+const requireFieldShapes =
+  (read: ReadonlyArray<string>) =>
+  (manifest: LenientManifest): Effect.Effect<LenientManifest, DegradedManifestFieldError> => {
+    const degraded = A.filter(manifest.issues, (issue) => A.contains(read, issue.field));
+    return A.isReadonlyArrayNonEmpty(degraded)
+      ? Effect.fail(
+          DegradedManifestFieldError.make({
+            message: `package.json field ${A.join(A.map(degraded, describeIssue), "; ")}.`,
+            fields: A.map(degraded, (issue) => issue.field),
+          })
+        )
+      : Effect.succeed(manifest);
+  };
+
 /**
  * Build a `package.json` text parser that reads through `LenientManifest` and
  * fails when one of `fields` degraded.
@@ -95,16 +111,44 @@ const describeIssue = (issue: LenientFieldIssue): string => `${issue.field} is n
 export const manifestParser = (
   fields: ReadonlyArray<ManifestField>
 ): ((text: string) => Effect.Effect<LenientManifest, PackageJsonSyntaxError | DegradedManifestFieldError>) => {
-  const read: ReadonlyArray<string> = fields;
+  const requireShapes = requireFieldShapes(fields);
   return Effect.fn("ManifestRead.parse")(function* (text: string) {
-    const manifest = yield* LenientManifest.parse(text);
-    const degraded = A.filter(manifest.issues, (issue) => A.contains(read, issue.field));
-    if (A.isReadonlyArrayNonEmpty(degraded)) {
-      return yield* DegradedManifestFieldError.make({
-        message: `package.json field ${A.join(A.map(degraded, describeIssue), "; ")}.`,
-        fields: A.map(degraded, (issue) => issue.field),
-      });
-    }
-    return manifest;
+    return yield* requireShapes(yield* LenientManifest.parse(text));
+  });
+};
+
+/**
+ * Build a decoder for an already-parsed `package.json` value that reads through
+ * `LenientManifest` and fails when one of `fields` degraded.
+ *
+ * **Details**
+ *
+ * The verdict of {@link manifestParser}, for a caller that already holds the
+ * parsed JSON (a discovery record's as-read manifest), so the file is not read
+ * and parsed a second time. A value that is not a JSON object fails as the
+ * kit's `PackageDecodeError`.
+ *
+ * **Example** (Decode a parsed manifest)
+ *
+ * ```ts
+ * import { manifestDecoder } from "@beep/repo-cli/test/SharedInternals"
+ * import * as Effect from "effect/Effect"
+ *
+ * const decode = manifestDecoder(["name"])
+ * const manifest = Effect.runSync(decode({ name: "@beep/demo" }))
+ * console.log(manifest.name) // @beep/demo
+ * ```
+ *
+ * @param fields - The fields the caller reads; each must keep its JSON shape when present.
+ * @returns A decoder from a parsed `package.json` value to the lenient manifest.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const manifestDecoder = (
+  fields: ReadonlyArray<ManifestField>
+): ((input: unknown) => Effect.Effect<LenientManifest, PackageDecodeError | DegradedManifestFieldError>) => {
+  const requireShapes = requireFieldShapes(fields);
+  return Effect.fn("ManifestRead.decode")(function* (input: unknown) {
+    return yield* requireShapes(yield* LenientManifest.decode(input));
   });
 };

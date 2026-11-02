@@ -3,7 +3,7 @@ import { appendTurboSummary, CiRunnerOutputsLive, ciLaneCommand, runCiLocal } fr
 import { FsUtilsLive } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
@@ -20,7 +20,8 @@ import * as TestConsole from "effect/testing/TestConsole";
 
 const TestLayer = Layer.mergeAll(
   NodeServices.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
   TestConsole.layer
 );
 const ciTest = it.layer(TestLayer, { timeout: "30 seconds" });

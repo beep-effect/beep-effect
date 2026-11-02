@@ -1,15 +1,9 @@
 import * as NodeURL from "node:url";
 import { doctestFenceInfo, doctestSourceMarker, isDoctestSourcePath } from "@beep/repo-cli/test/Docgen";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
-import {
-  FsUtils,
-  FsUtilsLive,
-  findRepoRoot,
-  readPackageJsonFile,
-  resolveWorkspacePackages,
-  toSortedRecord,
-} from "@beep/repo-utils";
-import { NodeServices } from "@effect/platform-node";
+import { workspaceManifests } from "@beep/repo-cli/test/SharedInternals";
+import { FsUtils, FsUtilsLive, findRepoRoot, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -25,7 +19,7 @@ import * as Str from "effect/String";
 import "vitest/config";
 import { resolveConfig } from "vitest/node";
 
-const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const fixture = NodeURL.fileURLToPath(new URL("./fixtures/doctest-lane/package/", import.meta.url));
 
 // These configs override test.include (coverage.include is a different selector).
@@ -157,7 +151,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("doctest l
       const fs = yield* FileSystem.FileSystem;
       const fsUtils = yield* FsUtils;
       const path = yield* Path.Path;
-      const workspaces = yield* resolveWorkspacePackages(root);
+      const workspaces = yield* workspaceManifests(root);
       let owners = 0;
       for (const [name, workspace] of workspaces) {
         const dir = workspace.dir;

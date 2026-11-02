@@ -197,14 +197,15 @@ it.layer(Layer.merge(TaxonomyLoader.layer, BunFileSystem.layer), { timeout: "30 
         );
         const emailConcept = A.findFirst(loaded.concepts, ({ iri }) => iri === emailMessageIri);
 
-        expect(O.map(emailConcept, ({ alignments }) => alignments)).toEqual(
-          O.some([
-            {
+        assertSome(
+          O.map(emailConcept, ({ alignments }) => alignments),
+          [
+            ConceptAlignment.make({
               conceptIri: folioEmailCommunicationIri,
               kind: "closeMatch",
               sourceIri: folioEmailCommunicationSourceIri,
-            },
-          ])
+            }),
+          ]
         );
       })
     );

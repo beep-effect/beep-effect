@@ -1,0 +1,110 @@
+{
+  "familyId": "13062032-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "Method for non-destructive ultrasound inspection, wherein at least one ultrasonic pulse is radiated by means of at least one ultrasonic transmitter into a workpiece to be inspected and the ultrasonic pulse is reflected on boundary surfaces in the workpiece, the reflected ultrasound is received by means of at least one ultrasonic receiver and the associated signals are evaluated, and the ultrasound in the process passes through a leading body which is disposed between the workpiece and the transmitter or receiver, wherein the method comprises at least one step for determining sound velocity in the leading body by means of a phased array comprised of selectively controllable transducers, wherein at least one first transducer of the phased array acts as a transmitter of at least one ultrasonic pulse, and at least one second transducer of the phased array acts as a receiver of the ultrasonic pulse, respectively, and the sound velocity in the leading body is determined at least by means of a travel time measurement of the ultrasound along the shortest sound path of the ultrasound between said spaced transducers.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "Method according to claim 1, wherein, in the step for determining the sound velocity in the leading body, the sound velocity is determined by means of at least one back-face echo of the leading body.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "Method according to claim 1, wherein the shortest sound path is calculated geometrically or by numerical simulation.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "Method according to claim 1, wherein the leading body is wedge-shaped or has two plane-parallel surfaces.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "Method according to claim 1, wherein the leading body comprises a thermoplastic synthetic material.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "Method according to claim 1, wherein, in the step for determining the sound velocity in the leading body, the latter is uncoupled.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "Method according to claim 2, wherein the method comprises at least one further step in which travel time of the back-face echo of the leading body's coupling surface adjoining, or to be adjoined to, the workpiece is determined for at least one transducer of the phased array acting as a transmitter or receiver.",
+      "sourceXmlParentClaimNumbers": [
+        2
+      ]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "Method according to claim 1, wherein the phased array comprises the at least one ultrasonic transmitter which, for the non-destructive ultrasound inspection, emits at least one ultrasonic pulse into the workpiece to be inspected, and the at least one ultrasonic receiver which receives the ultrasonic pulses.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "Method according to claim 1, wherein the phased array comprises more than two selectively controllable transducers.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "Method according to claim 1, wherein the sound velocity in the leading body determined in the step for determining the sound velocity is used in the evaluation of the signals from the ultrasound inspection of the workpiece.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "Method according to claim 1, wherein the outermost transducers of the phased array are used in the step for determining the sound velocity.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "Method according to claim 1, wherein the evaluation in the step for determining the sound velocity is carried out by means of triggering to a pulse peak of the received pulse echo.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "Device for carrying out the method according to claim 1, comprising at least one ultrasonic transmitter for emitting at least one ultrasonic pulse into a workpiece to be inspected, with the ultrasonic pulses being reflected on boundary surfaces in the workpiece, and at least one ultrasonic receiver for receiving the reflected ultrasound, an evaluation unit for evaluating the associated signals, and a leading body which is disposed between the workpiece and the transmitter or receiver such that the ultrasound passes through it, wherein the device comprises a phased array of selectively controllable transducers for carrying out the at least one step for determining the sound velocity in the leading body, wherein, respectively, at least one first transducer of the phased array acts as a transmitter of at least one ultrasonic pulse, and at least one second transducer of the phased array acts as a receiver of the ultrasonic pulse, and the sound velocity in the leading body is determined at least by means of a travel time measurement of the ultrasound along the shortest sound path of the ultrasound between said spaced transducers.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    }
+  ]
+}

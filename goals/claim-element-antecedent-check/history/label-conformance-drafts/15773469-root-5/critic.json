@@ -1,0 +1,53 @@
+{
+  "familyId": "15773469-root-5",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "resolvedClaimNumbers": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "resolvedLabelSetVerdict": "accepted",
+  "familyCoverage": "structural-labels-accepted",
+  "findings": [],
+  "unresolved": [],
+  "audit": {
+    "resolvedTrees": 7,
+    "elements": 25,
+    "terms": 125,
+    "typedEdges": 24,
+    "allProposedElementAndTermUtf16SlicesVerified": true,
+    "allSelectedClaimsMatchNativeXml": true,
+    "claimsXmlSha256Matches": true,
+    "headsDeterminersEdgesAndMembershipManuallyReviewed": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  },
+  "rationale": [
+    "Family membership agrees with natural-language dependencies: independent 5; 6/7/8/9->5; 10/11->9. Context 1-4 is excluded from scored labels. All selected claims have the intended supported wherein boundary, so embedded characterized in that phrases are retained inside limitations rather than grounds for unsupported-transition abstention.",
+    "Claim 5 sequential-steps colon correctly creates parent 5.a and seven roman sub-limitations. Claims 6-9 each have two top-level semicolon limitations; 10-11 each have one. Parent anchors end at the colon and do not rescan child text.",
+    "Every term and all 24 typed edges are correct. No same-claim uniquely introduced equal head warrants an antecedent edge: repeated plurality-of introductions make later injectors references non-unique; other exact introductions follow their referring term or do not match. Their end course is correctly retained as bare explicit abstention.",
+    "Claim 5 a “end at [2577,2583) is correct: the initial curly quote is not in the declared punctuation-stop set; end is the first token, and of stops its head. Anchor starts at a and ends at end. Do not silently substitute a semantic signal noun phrase. The source quote and grammatical irregularity are preserved.",
+    "Office action KJCUP25EDFLYX10 of 2021-01-04 rejects claims 1-11 and specifically discusses 5 and 7-11; 6 is included in the blanket rejection. Publication 2018-11-08 precedes rejection. Exact original OCR comparisons include selected 6 and 8 only; all label text remains native publication, with partial corroboration and qualified in-force association."
+  ],
+  "sourceQualification": "Native publication supplies label characters. Retained hashes, dates, inventory counts and examiner recitations were checked for consistency; the underlying full document inventory and original office-action pages were not independently retrieved in this offline lane. Original comparison records are corroboration, never a replacement gold source. No attorney in-force confirmation is claimed.",
+  "independence": "No decomposer/policy implementation, rule fixtures, predictions or live reports read or executed. Read source/proposal artifacts and protocol/design/schema. Helpers checked source normalization, hashes and existing source slices, and located manually identified corrective quotes only.",
+  "acceptanceScope": "No legal definiteness or complete semantic coverage is asserted. A changes-required verdict blocks resolved-label acceptance until revision and re-review; unresolved claims remain in frozen coverage denominators. Root schema/span checks and attorney sampling remain separate."
+}

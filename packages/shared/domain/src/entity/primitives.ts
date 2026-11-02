@@ -52,7 +52,7 @@ const StableToken = S.NonEmptyString.check(
  * ```ts
  * import * as Effect from "effect/Effect";
  * import { Sha256 } from "@beep/shared-domain/entity/primitives"
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {

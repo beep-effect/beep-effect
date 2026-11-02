@@ -35,7 +35,7 @@ import { SkillPatchApplyError } from "./Skills.errors.ts";
 import { SkillTreeMode, SkillUpstreamContentFile } from "./Skills.schemas.ts";
 import { SkillHunkReport } from "./SkillsRelock.schemas.ts";
 import { SkillPatchHunk } from "./SkillsReview.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { SkillPatchApplyReason, SkillsCommandError } from "./Skills.errors.ts";
 import type { SkillHunkStatus } from "./SkillsRelock.schemas.ts";
 
@@ -728,7 +728,7 @@ const toReports = Effect.fn("SkillPatches.toReports")(function* (
   patch: string,
   file: string,
   verdicts: ReadonlyArray<HunkVerdict>
-): Effect.fn.Return<ReadonlyArray<SkillHunkReport>, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<ReadonlyArray<SkillHunkReport>, SkillsCommandError, Digest.Digest> {
   return yield* Effect.forEach(
     verdicts,
     Effect.fnUntraced(function* (verdict) {
@@ -805,7 +805,7 @@ export const classifySkillPatchHunks = Effect.fn("SkillPatches.classifySkillPatc
 ): Effect.fn.Return<
   { readonly rows: ReadonlyArray<SkillHunkReport>; readonly tree: ReadonlyArray<SkillUpstreamContentFile> },
   SkillsCommandError,
-  Crypto.Crypto
+  Digest.Digest
 > {
   const parsed = yield* Effect.result(parsePatch(patch, text));
   if (Result.isFailure(parsed)) {
@@ -876,7 +876,7 @@ const toPatchHunks = Effect.fn("SkillPatches.toPatchHunks")(function* (
   patch: string,
   file: string,
   listed: ReadonlyArray<ListedHunk>
-): Effect.fn.Return<ReadonlyArray<SkillPatchHunk>, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<ReadonlyArray<SkillPatchHunk>, SkillsCommandError, Digest.Digest> {
   return yield* Effect.forEach(
     listed,
     Effect.fnUntraced(function* (entry) {
@@ -924,7 +924,7 @@ const toPatchHunks = Effect.fn("SkillPatches.toPatchHunks")(function* (
 export const listSkillPatchHunks = Effect.fn("SkillPatches.listSkillPatchHunks")(function* (
   patch: string,
   text: string
-): Effect.fn.Return<ReadonlyArray<SkillPatchHunk>, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<ReadonlyArray<SkillPatchHunk>, SkillsCommandError, Digest.Digest> {
   const parsed = yield* Effect.result(parsePatch(patch, text));
   if (Result.isFailure(parsed)) {
     return yield* toPatchHunks(patch, parsed.failure.file, [

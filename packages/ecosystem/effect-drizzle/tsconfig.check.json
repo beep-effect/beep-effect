@@ -7,6 +7,9 @@
       "path": "../../drivers/pglite/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/markdown/tsconfig.json"
+    },
+    {
       "path": "../../tooling/library/repo-utils/tsconfig.json"
     },
     {

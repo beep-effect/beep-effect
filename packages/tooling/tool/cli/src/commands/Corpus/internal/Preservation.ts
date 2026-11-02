@@ -61,7 +61,7 @@ import {
   T7ArchiveProvenanceRecord,
   T7PreservationOptions,
 } from "./Preservation.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { PreservationCommandError } from "../Corpus.errors.ts";
 import type { ArchiveWriterShape, PreservationManifestStoreShape } from "./Preservation.contracts.ts";
@@ -136,9 +136,9 @@ const CollectorManifestRecordJson = JsonStringCodec(CollectorManifestRecord);
 const InheritedLossRowJson = JsonStringCodec(InheritedLossRow);
 
 type PreservationRequirements =
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner;
 type ApprovedCapacityPreflight = Extract<CapacityPreflight, { readonly kind: "approved" }>;
 
@@ -1148,7 +1148,11 @@ const inheritedLossLedgerMatches = Effect.fn("Preservation.inheritedLossLedgerMa
 
 const destinationFreeBytes = Effect.fn("Preservation.destinationFreeBytes")(function* (
   corpusRoot: string
-): Effect.fn.Return<number, PreservationArchiveIoError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  number,
+  PreservationArchiveIoError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runCapturedStreams({
     args: ["-Pk", "--", corpusRoot],
     command: "df",
@@ -1511,7 +1515,7 @@ const archiveObjectToTerminal = Effect.fn("Preservation.archiveObjectToTerminal"
 ): Effect.fn.Return<
   A.NonEmptyReadonlyArray<PreservationManifestRow>,
   PreservationArchiveIoError | PreservationCeilingExceededError,
-  FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
 > {
   const key = identityKey(identity);
   const fs = yield* FileSystem.FileSystem;

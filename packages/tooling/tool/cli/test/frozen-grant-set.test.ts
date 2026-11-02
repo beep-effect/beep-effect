@@ -2,7 +2,7 @@ import { FrozenGrantSetRulesOptions, runFrozenGrantSetRules } from "@beep/repo-c
 import { TSMorphServiceLive } from "@beep/repo-utils/TSMorph/index";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -12,7 +12,11 @@ import * as Path from "effect/Path";
 import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
-const testLayer = Layer.mergeAll(NodeServices.layer, TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const testLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  TSMorphServiceLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 const writeProjectFile = Effect.fn(function* (relativePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

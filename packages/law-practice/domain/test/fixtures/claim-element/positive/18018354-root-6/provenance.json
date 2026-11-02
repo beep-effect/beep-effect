@@ -1,0 +1,51 @@
+{
+  "applicationNumber": "18018354",
+  "publicationNumber": "US20230354979A1",
+  "publicationDate": "2023-11-09",
+  "nativeXmlSha256": "a42a0639c86d86d07ae094148f526c555cf33e49e98b3150a7f06f0c5f370370",
+  "claimsXmlSha256": "7e6b0075712bfca5defb71a4032ef00ae5185c67f8a15db72e9e767ced157ee8",
+  "officeActionDocumentIdentifiers": [
+    "MBF31JZIWFYBX95"
+  ],
+  "officeActionMailDate": "2025-06-03",
+  "officeActionSection112Text": [
+    "claims 1-19 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention. the examiner strongly suggested that appropriate corrections be made to clarify the claim scope.\r\nwith respect to claim 1, the claim recites the following, each of which renders the claim indefinite:\r\n“the high-magnification photographing image” on line 4-5 (unclear antecedent basis);\r\n“the normal state, the dry state, the oily state, the dandruff scalp, and the hair loss state” on line 6 (unclear antecedent basis);\r\n“the big data server” on line 6 (unclear antecedent basis);\r\n“the storage unit” on line 7 (unclear antecedent basis);\r\n“the user id” on line 7-8 (unclear antecedent basis);\r\n“the user unit information” on line 8 (unclear antecedent basis);\r\n“the dcs db” on line 13 (unclear antecedent basis);\r\n“the elapse of the time” on line 18 (unclear antecedent basis);\r\n“the form” on line 18 (unclear antecedent basis);\r\n“the characteristic of each pixel” on line 19 (unclear antecedent basis);\r\n“the number of times” on line 27 (unclear antecedent basis);\r\n“the transceiving unit” on line 34 (unclear antecedent basis);\r\n“the user” on line 34 (unclear antecedent basis);\r\n“the behavior change analysis” on line 36 (unclear antecedent basis);\r\n“the input unit” on line 53 (unclear antecedent basis);\r\nwith respect to claim 2, the claim recites the following, each of which renders the claim indefinite:\r\n“the member subscription module” on line 1 (unclear antecedent basis);\r\nwith respect to claim 3, the claim recites the following, each of which renders the claim indefinite:\r\n“the hair diagnoser” on line 2 (unclear antecedent basis);\r\n“the transceving unit” on line 5 (unclear antecedent basis);\r\n“the network” on line 8 (unclear antecedent basis);\r\n“the scalp and the hair” on line 19 (unclear antecedent basis);\r\n“the high-magnification photographing image” on line 35 (unclear antecedent basis);\r\n“the state of connecting the data session” on line 37 (unclear antecedent basis);\r\n“the query” on line 41 (unclear antecedent basis);\r\n“the pattern information” on line 47 (unclear antecedent basis);\r\n“the normal state, the dry state, the oily state, the sensitive state, the dandruff scalp, and the hair loss state” on line 47-48 (unclear antecedent basis);\r\n“the big data server” on line 48 (unclear antecedent basis);\r\n“the ai server” on line 56 (unclear antecedent basis);\r\n“the dcs db” on line 58 (unclear antecedent basis);\r\n“the distribution file program” on line 58 (unclear antecedent basis);\r\n“the behavior change analysis” on line 67 (unclear antecedent basis);\r\n“the decisional information” on line 78 (unclear antecedent basis);\r\n“the anti-dandruff shampoo, and the hair loss shampoo” on line 81 (unclear antecedent basis);\r\n“the predetermined change step information” on line 93 (unclear antecedent basis);\r\n“the positive relevance and the negative relevance” on line 118 (unclear antecedent basis);\r\n“the decisional balance” on line 127 (unclear antecedent basis);\r\n“the individual” on line 133 (unclear antecedent basis);\r\nwith respect to claim 6, the claim recites the following, each of which renders the claim indefinite:\r\n“the user id” on line 6 (unclear antecedent basis);\r\n“the positive aspect” on line 6-7 (unclear antecedent basis);\r\n“the approval item” on line 7 (unclear antecedent basis);\r\n“the higher step” on line 7 (unclear antecedent basis);\r\n“the change steps” on line 8 (unclear antecedent basis);\r\n“the movement” on line 9 (unclear antecedent basis);\r\n“the negative aspect” on line 11-12 (unclear antecedent basis);\r\n“the decisional balance information” on line 15 (unclear antecedent basis);\r\nwith respect to claim 7, the claim recites the following, each of which renders the claim indefinite:\r\n“the lower step” on line 9 (unclear antecedent basis);\r\nwith respect to claim 18, the claim recites the following, each of which renders the claim indefinite:\r\n“the transceiving unit” on line 7 (unclear antecedent basis);\r\n“the user id, the password” on line 12 (unclear antecedent basis);\r\n“the “user unit information”” on line 13 (unclear antecedent basis);\r\n“the time of receiving the id and the password” on line 13-14 (unclear antecedent basis);\r\n“the high-magnification photographing image of the user” on line 16 (unclear antecedent basis);\r\n“the time of outputting the initial hair/scalp analysis information” on line 27 (unclear antecedent basis);\r\n“the output unit” on line 28 (unclear antecedent basis);\r\n“the transmission of the initial hair/scalp analysis information” on line 28-29 (unclear antecedent basis);\r\n“the number of times and a cycle of scalp scaling” on line 37-38 (unclear antecedent basis);\r\n“the behavior change analysis” on line 47 (unclear antecedent basis);\r\n“the positive aspect” on line 60 (unclear antecedent basis);\r\n“the negative aspect” on line 61 (unclear antecedent basis);\r\n“the input unit” on line 79 (unclear antecedent basis);\r\n“the practice performer” on line 116-117 (unclear antecedent basis);\r\n“the decisional balance information” on line 120 (unclear antecedent basis);\r\n“the aggregated quantitative numerical value” on line 122-123 (unclear antecedent basis);\r\n“the timeline” on line 128 (unclear antecedent basis);\r\n“the cycle of each timeline” on line 132 (unclear antecedent basis);\r\n“the set of the vr image” on line 144 (unclear antecedent basis);\r\n“the time elapses to the user” on line 146 (unclear antecedent basis);\r\n“the approval and non-approval items” on line 4 (unclear antecedent basis);\r\n“the higher step” on line 9 (unclear antecedent basis);\r\n“the movement” on line 12 (unclear antecedent basis);\r\n“the lower step” on line 20 (unclear antecedent basis);\r\nclaims 4-5 and 8-17 are rejected for the same reason due to their dependence on rejected claim 3 and claim 7, respectively."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "LDEVK141XBLUEX3",
+      "officialDate": "2023-01-27T13:45:43.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "LDEVK141XBLUEX3",
+      "officialDate": "2023-01-27T13:45:43.000-0500",
+      "sha256": "84d90f00800f9b2d7b4aa89d76547d689baa2f475ebece84392f1bb42238d6d1",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        13,
+        15
+      ],
+      "sourceClaimCount": 19
+    }
+  ],
+  "documentInventoryCount": 37,
+  "documentInventoryRows": 37,
+  "primaryCpc": "A45D  19/005",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/18018354",
+    "https://api.uspto.gov/api/v1/patent/applications/18018354/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

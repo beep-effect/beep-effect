@@ -166,7 +166,7 @@ const outcomeFields = {
  * ```ts
  * import { BoxContentActionApplied } from "@beep/box-provisioning/BoxContentMigrationReceipt"
  * import { BoxProviderId } from "@beep/box-provisioning/BoxProvisioningObserved"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const outcome = BoxContentActionApplied.make({
  *   actionDigest: Sha256Hex.make("a".repeat(64)),
@@ -196,7 +196,7 @@ export class BoxContentActionApplied extends S.Opaque<BoxContentActionApplied, {
  * ```ts
  * import { BoxContentActionSkipped } from "@beep/box-provisioning/BoxContentMigrationReceipt"
  * import { BoxProviderId } from "@beep/box-provisioning/BoxProvisioningObserved"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const outcome = BoxContentActionSkipped.make({
  *   actionDigest: Sha256Hex.make("a".repeat(64)),
@@ -225,7 +225,7 @@ export class BoxContentActionSkipped extends S.Opaque<BoxContentActionSkipped, {
  * ```ts
  * import { BoxContentActionBlocked } from "@beep/box-provisioning/BoxContentMigrationReceipt"
  * import { BoxProviderId } from "@beep/box-provisioning/BoxProvisioningObserved"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as O from "effect/Option"
  *
  * const outcome = BoxContentActionBlocked.make({
@@ -260,7 +260,7 @@ export class BoxContentActionBlocked extends S.Opaque<BoxContentActionBlocked, {
  *
  * ```ts
  * import { BoxContentActionFailed } from "@beep/box-provisioning/BoxContentMigrationReceipt"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as O from "effect/Option"
  *
  * const outcome = BoxContentActionFailed.make({
@@ -296,7 +296,7 @@ export class BoxContentActionFailed extends S.Opaque<BoxContentActionFailed, { r
  *
  * ```ts
  * import { BoxContentActionNotAttempted } from "@beep/box-provisioning/BoxContentMigrationReceipt"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const outcome = BoxContentActionNotAttempted.make({
  *   actionDigest: Sha256Hex.make("a".repeat(64)),

@@ -352,13 +352,13 @@ const makeLookup = (kg: typeof PracticeKgMatterLookup.Service, mentions: DocketM
     const forms = A.dedupe(A.flatMap(A.map(references, Str.trim), lookupForms));
     const results = yield* Effect.forEach(forms, (form) =>
       kg.lookup(PracticeKgMatterLookupRequest.make({ reference: form })).pipe(
-        Effect.map(
-          (result: PracticeKgMatterLookupResult): FormResult => ({
+        Effect.mapBoth({
+          onFailure: lookupFailed,
+          onSuccess: (result: PracticeKgMatterLookupResult): FormResult => ({
             form,
             matters: A.filter(result.matters, namesMatter),
-          })
-        ),
-        Effect.mapError(lookupFailed)
+          }),
+        })
       )
     );
     // Only when no reference names a matter are the documents searched for mentions: a number

@@ -1,0 +1,77 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A water generation unit configured to extract water from ambient air, the water generation unit comprising:
+<claim-text>a housing defining therewithin an extraction chamber, the housing comprising one or more sidewalls defining a housing opening, the housing further comprising a liquid-passable housing bottom comprising a perforated plate configured to support thereon a thermoresponsive sorbent medium;</claim-text>
+<claim-text>an air-supply arrangement configured, in a supply position thereof, to introduce ambient air into the extraction chamber via the housing opening, the air-supply arrangement comprising a circulation device configured to create an airflow into the extraction chamber from the ambient air;</claim-text>
+<claim-text>a heating arrangement configured, in a heating position thereof, to facilitate heating of the extraction chamber; and</claim-text>
+<claim-text>an accumulation arrangement comprising an accumulation element disposed below the housing bottom, the accumulation element being configured to facilitate accumulation of water which passes from the extraction chamber through the perforated plate.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The water generation unit according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the air-supply arrangement further comprises a supply cover configured to selectively bring the air-supply arrangement into its supply position by being moved into registration with the housing opening, thereby closing it; and</claim-text>
+<claim-text>the heating arrangement comprises a heating cover configured to selectively bring the heating arrangement into its heating position by being moved into registration with the housing opening, thereby closing it.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The water generation unit according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the supply cover and/or the heating cover are hingedly articulated to the housing.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The water generation unit according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>the air-supply arrangement further comprises a supply actuator configured to selectively move the supply cover into and out of registration with the housing opening; and</claim-text>
+<claim-text>the heating arrangement comprises a heating actuator configured to selectively move the heating cover into and out of registration with the housing opening.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The water generation unit according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the air-supply arrangement further comprising a support structure configured, in the supply position, to dispose the circulation device such that an air outlet thereof is spaced from the housing opening.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The water generation unit according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, the support structure being formed as a frustrum, the base of the frustrum being disposed at the housing opening, and the air outlet of the circulation device being disposed at the top of the frustrum.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The water generation unit according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the heating arrangement is configured to facilitate heating of the extraction chamber by utilizing solar radiation impinging thereon.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The water generation unit according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the heating arrangement comprises a window opening sealingly closed by a substantially transparent window panel configured to allow solar radiation impinging thereon to heat the extraction chamber.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The water generation unit according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the window panel comprises one or more glass sheets.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The water generation unit according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the window panel comprises one or more optical coatings configured to increase the transmission of solar radiation therethrough.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The water generation unit according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the window panel comprises a transparent photovoltaic panel.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. The water generation unit according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the heating arrangement further comprises a solar thermal absorber configured to be disposed within the extraction chamber, the solar thermal absorber configured to convert solar radiation impinging thereon into heat, and to release the heat into the extraction chamber.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The water generation unit according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the solar thermal absorber is made of a thermally permeable material.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. The water generation unit according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the accumulation arrangement further comprising a trough, the accumulation element being configured such liquid accumulated therein drains into the trough.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. The water generation unit according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, comprising the thermoresponsive sorbent medium.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. The water generation unit according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, the thermoresponsive sorbent medium being arranged on the perforated plate in a sorbent layer, the sorbent layer being configured to provide fluid paths for water to flow therethrough to the perforated plate.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text>17. The water generation unit according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the thermoresponsive sorbent medium comprises a zeolite material.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text>18. The water generation unit according to <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the zeolite material comprises a 13X zeolite, an AQSOA zeolite, a LiX zeolite, a NaX zeolite, an HBEA zeolite, and/or a 3A zeolite.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text>19. The water generation unit according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the thermoresponsive sorbet medium comprises a metal-organic framework, a hygroscopic hydrogel, and/or a covalent-organic framework.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text>20. A water generation system comprising:
+<claim-text>one or more water generation units according to <claim-ref idref="CLM-00001">claim 1</claim-ref>;</claim-text>
+<claim-text>a water storage arrangement comprising one or more storage units, and being configured to store therein water extracted by the one or more water generation units; and</claim-text>
+<claim-text>a collection arrangement in fluid connection with the accumulation arrangements of the one or more water generation units and with the water storage arrangement, the collection arrangement comprising one or more pumps configured to facilitate collection of water from the water generation units and storage thereof in the one or more storage units.</claim-text>
+</claim-text>
+</claim>
+</claims>

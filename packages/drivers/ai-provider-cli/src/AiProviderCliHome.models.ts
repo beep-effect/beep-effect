@@ -1,6 +1,8 @@
 /**
  * Schema-backed HOME-layout payloads for Claude and Codex CLI isolation.
  *
+ * **Details**
+ *
  * Shapes ported from t3code (MIT, Copyright 2026 T3 Tools Inc.)
  * `apps/server/src/provider/Drivers/CodexHomeLayout.ts` and `ClaudeHome.ts`.
  *

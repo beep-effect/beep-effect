@@ -1,0 +1,220 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "16963517-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "findings": [
+    {
+      "id": "C1",
+      "category": "cross-panel-identity-collapse",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 1,
+          "path": "1.a.iv",
+          "anchor": {
+            "startChar": 1021,
+            "endChar": 1029,
+            "quote": "the hook"
+          },
+          "head": "hook",
+          "currentIntroducing": {
+            "claimNumber": 1,
+            "path": "1.a.iii",
+            "anchor": {
+              "startChar": 806,
+              "endChar": 812,
+              "quote": "a hook"
+            },
+            "head": "hook"
+          }
+        },
+        {
+          "claimNumber": 8,
+          "path": "8.a.iv.i",
+          "anchor": {
+            "startChar": 855,
+            "endChar": 880,
+            "quote": "the first assembly cavity"
+          },
+          "head": "first assembly cavity",
+          "currentIntroducing": {
+            "claimNumber": 8,
+            "path": "8.a.iii",
+            "anchor": {
+              "startChar": 428,
+              "endChar": 451,
+              "quote": "a first assembly cavity"
+            },
+            "head": "first assembly cavity"
+          }
+        }
+      ],
+      "reason": "Claim1 says the hook of another panel, but links it to the target panel first-side hook. Claim8 says the first assembly cavity of the first side of this adjacent panel, but links it to the cavity just introduced on the target panel first side. These are corresponding structures on separately mentioned panels; an antecedent identity edge cannot collapse the instances.",
+      "correction": "Remove those identity edges (1.a.iv [1021,1029)→1.a.iii [806,812);8.a.iv.i [855,880)→8.a.iii first-cavity introduction) unless exact source evidence establishes shared physical identity. Preserve panel ownership/adjacency in functional text and record unintroduced/ambiguous adjacent-panel component references without inventing an introduction."
+    },
+    {
+      "id": "C2",
+      "category": "lost-possessive-heads",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 1,
+          "path": "1.a.ii",
+          "anchor": {
+            "startChar": 546,
+            "endChar": 560,
+            "quote": "their clipping"
+          },
+          "head": "clipping"
+        },
+        {
+          "claimNumber": 1,
+          "path": "1.b",
+          "anchor": {
+            "startChar": 1187,
+            "endChar": 1204,
+            "quote": "its final section"
+          },
+          "head": "final section"
+        },
+        {
+          "claimNumber": 1,
+          "path": "1.e",
+          "anchor": {
+            "startChar": 1739,
+            "endChar": 1756,
+            "quote": "their final shape"
+          },
+          "head": "final shape"
+        },
+        {
+          "claimNumber": 2,
+          "path": "2.a",
+          "anchor": {
+            "startChar": 169,
+            "endChar": 186,
+            "quote": "its final section"
+          },
+          "head": "final section"
+        },
+        {
+          "claimNumber": 8,
+          "path": "8.a.ii",
+          "anchor": {
+            "startChar": 262,
+            "endChar": 276,
+            "quote": "their clipping"
+          },
+          "head": "clipping"
+        },
+        {
+          "claimNumber": 8,
+          "path": "8.a.iii",
+          "anchor": {
+            "startChar": 607,
+            "endChar": 623,
+            "quote": "whose upper side"
+          },
+          "head": "upper side"
+        },
+        {
+          "claimNumber": 8,
+          "path": "8.a.iv.iii",
+          "anchor": {
+            "startChar": 1191,
+            "endChar": 1201,
+            "quote": "whose base"
+          },
+          "head": "base"
+        },
+        {
+          "claimNumber": 11,
+          "path": "11.a.ii",
+          "anchor": {
+            "startChar": 252,
+            "endChar": 259,
+            "quote": "its end"
+          },
+          "head": "end"
+        },
+        {
+          "claimNumber": 11,
+          "path": "11.a.iii",
+          "anchor": {
+            "startChar": 352,
+            "endChar": 359,
+            "quote": "its end"
+          },
+          "head": "end"
+        }
+      ],
+      "reason": "Submitted bare possessive terms preserve their exact quotes but heads drop its/their/whose. The protocol explicitly preserves meaningful possessives in lexical heads; these are noun phrases supplying actual surface/shape/end/clipping references, not standalone relative connectors to be omitted.",
+      "correction": "Preserve the possessive component in each normalized bare head (its final section, their clipping, their final shape, whose upper side, whose base, its end). Keep exact anchors and analyze antecedents separately; retaining ownership wording does not justify an invented surface/end introduction. Apply consistently to all listed terms."
+    },
+    {
+      "id": "C3",
+      "category": "withheld-clear-formed-recess-reference",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 1,
+          "path": "1.d",
+          "anchor": {
+            "startChar": 1609,
+            "endChar": 1619,
+            "quote": "the recess"
+          },
+          "head": "recess",
+          "suggestedIntroducing": {
+            "claimNumber": 1,
+            "path": "1.b",
+            "anchor": {
+              "startChar": 1372,
+              "endChar": 1388,
+              "quote": "an insert recess"
+            },
+            "head": "insert recess"
+          }
+        }
+      ],
+      "reason": "The blank-forming step introduces a single insert recess and a tab; the ensuing local heating/raising step raises that tab towards the recess. Earlier cavities are not named recesses and no second recess is introduced in claim1. This local manufacturing sequence supplies an unambiguous reference despite other unresolved panel instances.",
+      "correction": "Add the recess [1609,1619)→an insert recess [1372,1388) in1.b. Preserve source insert spelling and other genuine panel/cavity ambiguity; no source-word repair or independent6 donation."
+    }
+  ],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 11,
+    "resolvedTreesReviewed": 11,
+    "unresolvedClaimNumbers": [],
+    "elementCount": 45,
+    "termCount": 245,
+    "functionalRelationCount": 30
+  },
+  "reviewNotes": [
+    "Reviewed selected1–5/7–12 only; independent6 is context, not an ancestor donor. Printed prefixes remain literal in canonical source and offsets start after them without normalization repair. Main method forming transition follows embedded panel context; retained nested panel structure and strip structural alternatives preserve the source grouping. Branch-local strip references are properly separated. Curved bearing-point references4/10 are not supplied by sibling2. Many multi-panel side/protrusion/cavity identities remain genuinely unresolved and are not forced.",
+    "Independently checked every submitted element/term anchor, ordering, nonoverlap, ownership, actual local/foreign term endpoints and complete contiguous functional-part reconstruction. All submitted trees decode through ClaimElementTree. These mechanical passes do not replace semantic review.",
+    "Native source claims normalize exactly to full canonical/context text; source XML hash matches provenance. Read retained source critic and rejection provenance. Source eligibility remains separately accepted; no fresh original-PDF/inventory authentication claimed.",
+    "No universal extra relative/reciprocal-pronoun term requirement imposed; anchored connecting text is reviewed under entity-mentions/v1. Agent confidence is not attorney agreement."
+  ],
+  "independence": "Independent semantic critic; did not author these references. Read full canonical/native source/context, provenance, source critic, extractor, schema contracts and semantic-reference/v2 plus entity-mentions/v1. No production rules, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation. Only assigned critic.json receipts written.",
+  "attorneyAdjudication": "pending; confidence is not attorney agreement"
+}

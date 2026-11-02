@@ -13,7 +13,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "./SourceTextIdentity.ts";
 import { isUtf16Boundary, TextAnchor } from "./TextAnchor.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $ProvenanceId.create("VerifiedTextAnchor");
 const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
@@ -579,14 +579,14 @@ export const toTextAnchorVerificationReceipt = (verified: VerifiedTextAnchor): T
  * Effect.runPromise(program).then((verified) => console.log(verified.source.sourceRef))
  * ```
  *
- * @effects Requires `Crypto.Crypto` to hash the raw source text; failures use
+ * @effects Requires `Digest.Digest` to hash the raw source text; failures use
  * the sanitized {@link VerifiedTextAnchorError} channel.
  * @category validation
  * @since 0.0.0
  */
 export const verifySourceTextIdentity = Effect.fn("VerifiedTextAnchor.verifySourceTextIdentity")(function* (
   input: VerifySourceTextIdentityInput
-): Effect.fn.Return<VerifiedSourceText, VerifiedTextAnchorError, Crypto.Crypto> {
+): Effect.fn.Return<VerifiedSourceText, VerifiedTextAnchorError, Digest.Digest> {
   const expectedSource = copySourceTextIdentity(input.expectedSource);
   const source = copySourceTextIdentity(input.source);
   const sourceText = input.sourceText;
@@ -601,8 +601,10 @@ export const verifySourceTextIdentity = Effect.fn("VerifiedTextAnchor.verifySour
     return yield* VerifiedTextAnchorError.fromReason("stale-source");
   }
   const sourceTextDigest = yield* decodeSha256HexFromBytes(Uint8Array.from(utf8Encoder.encode(sourceText))).pipe(
-    Effect.map((digest) => SourceTextDigest.make(`sha256:${digest}`)),
-    Effect.mapError(() => VerifiedTextAnchorError.fromReason("stale-source"))
+    Effect.mapBoth({
+      onFailure: () => VerifiedTextAnchorError.fromReason("stale-source"),
+      onSuccess: (digest) => SourceTextDigest.make(`sha256:${digest}`),
+    })
   );
   if (!sourceTextDigestEquivalence(sourceTextDigest, source.textDigest)) {
     return yield* VerifiedTextAnchorError.fromReason("stale-source");
@@ -711,14 +713,14 @@ export const verifyTextAnchorAgainstVerifiedSource = Effect.fn("VerifiedTextAnch
  * Effect.runPromise(program).then((verified) => console.log(verified.anchor.quote))
  * ```
  *
- * @effects Requires `Crypto.Crypto` to hash the raw source text; failures use
+ * @effects Requires `Digest.Digest` to hash the raw source text; failures use
  * the sanitized {@link VerifiedTextAnchorError} channel.
  * @category validation
  * @since 0.0.0
  */
 export const verifyTextAnchor = Effect.fn("VerifiedTextAnchor.verify")(function* (
   input: VerifyTextAnchorInput
-): Effect.fn.Return<VerifiedTextAnchor, VerifiedTextAnchorError, Crypto.Crypto> {
+): Effect.fn.Return<VerifiedTextAnchor, VerifiedTextAnchorError, Digest.Digest> {
   const verifiedSource = yield* verifySourceTextIdentity(
     VerifySourceTextIdentityInput.make({
       expectedSource: input.expectedSource,

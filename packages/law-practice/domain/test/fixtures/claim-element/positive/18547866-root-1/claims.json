@@ -1,0 +1,109 @@
+{
+  "familyId": "18547866-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A fuel cell module comprising: a housing; a fuel cell stack arranged within the housing; and an oxidant gas supply plate that is arranged adjacent to the fuel cell stack within the housing and that has an inner space for flowing an oxidant to be supplied to the fuel cell stack, wherein the oxidant gas supply plate is positioned separated away from an inner wall of the housing on a first direction side so that a space of the oxidant gas supply plate on the fuel cell stack side communicates with a space of the fuel cell stack on the side opposite to the fuel cell stack side; the oxidant gas supply plate has a surface facing the fuel cell stack and a surface on the opposite side of the fuel cell stack, both being connected directly or indirectly to the housing.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The fuel cell module according to claim 1, wherein an off-gas outlet of the fuel cell stack is located flush with the distal end of the inner space of the oxidant gas supply plate or on the first direction side of the inner space of the oxidant gas supply plate in the first direction.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The fuel cell module according to claim 1, wherein an off-gas outlet of the fuel cell stack is located on the opposite side of the first direction than the distal end of the inner space of the oxidant gas supply plate.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The fuel cell module according to claim 1, wherein the oxidant gas supply plate has a first plate portion and a second plate portion located opposite each other, the first plate portion has a supply plate inlet, the second plate portion has a supply plate outlet, and the supply plate inlet is provided in the vicinity of the center of the fuel cell stack in a stacking direction.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The fuel cell module according to claim 4, wherein the oxidant gas flows into the oxidant gas supply plate from the supply plate inlet, flows in one direction within the oxidant gas supply plate, then turns back and flows out from the supply plate outlet.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The fuel cell module according to claim 5, wherein the supply plate inlet and the supply plate outlet are located at different positions, when viewed from the normal direction of a main surface of the oxidant gas supply plate, and the oxidant gas supply plate has a heat-insulating portion between the supply plate inlet and the supply plate outlet, when viewed from the normal direction of the main surface of the oxidant gas supply plate.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The fuel cell module according to claim 6, further comprising: a cover portion that covers the heat-insulating portion.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The fuel cell module according to claim 4, wherein the oxidant gas supply plate has an isolating portion that is located at least between the supply plate inlet and the supply plate outlet, when viewed from the normal direction of the main surface of the oxidant gas supply plate, and that partially divides the inner space into an inner space on the supply plate inlet side and an inner space on the supply plate outlet side.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The fuel cell module according to claim 8, wherein the isolating portion is substantially linearly symmetrical with respect to a straight line connecting the supply plate inlet and the supply plate outlet, when viewed from the normal direction of the main surface of the oxidant gas supply plate.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The fuel cell module according to claim 8, wherein the isolating portion has portions extending from the supply plate outlet to the supply plate inlet side on both sides of a line segment connecting the supply plate inlet and the supply plate outlet, when viewed from the normal direction of the main surface of the oxidant gas supply plate.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The fuel cell module according to claim 4, wherein a flow regulating portion is provided, between the supply plate inlet and the supply plate outlet, in at least one of the first plate portion and the second plate portion, the flow regulating portion rising from the one to the other and at least extending, when viewed from the normal direction of the main surface of the oxidant gas supply plate, in a direction intersecting the direction from the supply plate inlet to the supply plate outlet.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The fuel cell module according to claim 11, wherein the flow regulating portion has at least one first flow regulating portion in at least one of the first plate portion and the second plate portion, the first flow regulating portion rising from the one to the other and contacting the other, and the first flow regulating portion proximate to the supply plate inlet is curved in a direction from the supply plate outlet to the supply plate inlet, when viewed from the normal direction of the main surface of the oxidant gas supply plate.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The fuel cell module according to claim 11, wherein the flow-regulating portion has a second flow regulating portion in at least one of the first plate portion and the second plate portion, the second flow regulating portion having a gap in a facing direction between the first plate portion and the second plate portion while rising from the one to the other.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The fuel cell module according to claim 4, wherein a portion of the second plate portion facing the supply plate inlet is recessed to the side opposite to the first plate portion.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The fuel cell module according to claim 1, further comprising: a reformer located in the first direction from the fuel cell stack, the reformer having a reforming portion that generates, by performing water vapor reforming, a gas to be supplied to the fuel cell stack within the housing, and a vaporizing portion that is located in a second direction, which is a direction intersecting the first direction, from the reforming portion and that vaporizes water to supply a water vapor to the reforming portion; and an exhaust gas lead-out portion that causes, in the flow of an off-gas discharged from the fuel cell stack to the reformer side, the off-gas to flow toward the center of the housing in the second direction.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The fuel cell module according to claim 1, further comprising: a reformer located in the first direction from the fuel cell stack, the reformer having a reforming portion that generates, by performing water vapor reforming, a gas to be supplied to the fuel cell stack within the housing, and a vaporizing portion that is located in a second direction, which is a direction intersecting the first direction, from the reforming portion and that vaporizes water to supply a water vapor to the reforming portion; and an exhaust gas lead-out portion that causes, in the flow of an off-gas discharged from the fuel cell stack to the reformer side, the off-gas to flow toward the opposite side of the second direction.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The fuel cell module according to claim 15, further comprising: a heat-insulating material on the opposite side of the fuel cell stack from the oxidant gas supply plate, the heat-insulating material having a recessed portion formed in the vicinity of the location of the reformer in the first direction, when viewed from the fuel cell stack side, the recessed portion extending along the second direction.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The fuel cell module according to claim 1, wherein, in the first direction and a width direction perpendicular to the normal direction of the main surface of the oxidant gas supply plate, a width of the inner space of the oxidant gas supply plate on the first direction side is larger than a width of the inner space of the oxidant gas supply plate on the opposite side of the first direction.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The fuel cell module according to claim 18, wherein the width of the inner space on the first direction side is larger than the width of the fuel cell stack, and the width of the inner space on the opposite side of the first direction is the same as the width of the fuel cell stack.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "A fuel cell device comprising the fuel cell module according to claim 1.",
+      "sourceXmlParentClaimNumbers": [1]
+    }
+  ]
+}

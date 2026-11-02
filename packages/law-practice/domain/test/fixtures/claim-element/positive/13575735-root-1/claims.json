@@ -1,0 +1,65 @@
+{
+  "familyId": "13575735-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A curl-shaping device for paperboard, comprising: a conveying part adapted to convey the paperboard; a compressing part having a plurality of compression rollers arranged in a row above the conveying part to pressurize the top surface of the paperboard, supporting frames adapted to support the ends of the shafts of the compression rollers to allow the compression rollers to be rotated, a connecting frame adapted to connect the supporting frames one another to allow the compression rollers to apply the top surface of the paperboard with the forces applied equally therefrom, and an upper frame extended upwardly from one end of the top surface of the connection frame in such a manner as to be bent in the lateral direction; a curl-shaping part disposed at one side of the conveying part to form a curled portion along the lateral side of the paperboard, the curl-shaping part being composed of a lower mold and an upper mold, the lower mold having a paperboard underside support plate adapted to support the underside surface of the lateral end of the paperboard moving from an introducing portion into which the paperboard is introduced to a discharging portion from which the paperboard is discharged, a first stepped protrusion formed vertically on the paperboard underside support plate in such a manner as to become inclined inwardly in the moving direction of the paperboard, and a curl-shaping groove formed along the first stepped protrusion surface in such a manner as to become gradually curved from the introducing portion toward the discharging portion, and the upper mold having a paperboard top support plate disposed on top of the lower mold and having a second stepped protrusion formed to be brought into close contact with the first stepped protrusion of the paperboard underside support plate; and a natural cooling and shaping part adapted to naturally cool the curled portion of the paperboard, while maintaining the curled portion passed through the curl-shaping groove in the shape, the natural cooling and shaping part having a curl-cooling groove extended from the curl-shaping groove formed at the discharging portion and having a shape corresponding to the curled portion to allow the curled portion to be passed therethrough.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The curl-shaping device for paperboard according to claim 1, wherein the curl-cooling groove of the natural cooling and shaping part is extended linearly from the curl-shaping groove at the discharging portion in such a manner as to correspond to the curl-shaping groove at the discharging portion.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The curl-shaping device for paperboard according to claim 1, further comprising a paperboard lateral side guide disposed on the opposite side to one side of the paperboard where the curled portion is formed, the paperboard lateral side guide comprising: a plurality of rollers arranged in a row in such a manner as to be brought into close contact with the opposite side to one side of the paperboard where the curled portion is formed; a roller connection frame connected to the ends of the shafts of the rollers in such a manner as to connect the rollers one another and having an operating space formed at the inside thereof; a pressurizing plate disposed at the rear side of the inside of the operating space of the roller connection frame; pressurizing springs disposed spaced equally apart from each other between the roller connection frame and the pressurizing plate; and an operating cylinder having a front end rod connected to the rear side of the pressurizing plate.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The curl-shaping device for paperboard according to claim 3, wherein the paperboard lateral side guide further comprises a bent protrusion formed bent inwardly at both side edges of the rear end of the roller connection frame to prevent the pressurizing plate from being separated from the roller connection frame.",
+      "sourceXmlParentClaimNumbers": [
+        3
+      ]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The curl-shaping device for paperboard according to claim 1, wherein the lower mold has a heat wire disposed thereon in parallel to the curl-shaping groove.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "A curl-shaping device for paperboard, comprising: curl-shaping parts disposed correspondingly at both lateral sides of a conveying part to form curled portions along both lateral sides of the paperboard, each curl-shaping part being composed of a lower mold and an upper mold, the lower mold having a paperboard underside support plate adapted to support the underside surface of the lateral end of the paperboard moving from an introducing portion into which the paperboard is introduced to a discharging portion from which the paperboard is discharged, a first stepped protrusion formed vertically on the paperboard underside support plate in such a manner as to become inclined inwardly in the moving direction of the paperboard, and a curl-shaping groove formed along the first stepped protrusion surface in such a manner as to become gradually curved from the introducing portion toward the discharging portion, and the upper mold having a paperboard top support plate disposed on top of the lower mold and having a second stepped protrusion formed to be brought into close contact with the first stepped protrusion of the paperboard underside support plate; natural cooling and shaping parts adapted to naturally cool the curled portions of the paperboard, while maintaining the curled portions passed through the curl-shaping grooves in the shape, each natural cooling and shaping part having a curl-cooling groove extended from the curl-shaping groove formed at the discharging portion and having a shape corresponding to the curled portion to allow the curled portion to be passed therethrough; lateral frames connected correspondingly to the external sides of the curl-shaping parts; and push cylinders whose rods connected to the center portions of the external sides of the lateral frames.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The curl-shaping device for paperboard according to claim 6, further comprising a compressing part having a plurality of compression rollers arranged in a row above the conveying part conveying the paperboard to pressurize the top surface of the paperboard, supporting frames adapted to support the ends of the shafts of the compression rollers to allow the compression rollers to be rotated, a connecting frame adapted to connect the supporting frames one another to allow the compression rollers to apply the top surface of the paperboard with the forces applied equally therefrom, and an upper frame extended upwardly from one end of the top surface of the connection frame in such a manner as to be bent in the lateral direction, the compressing part being connected to any one of the lateral frames disposed symmetrically on left and right sides thereof.",
+      "sourceXmlParentClaimNumbers": [
+        6
+      ]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The curl-shaping device for paperboard according to claim 6, further comprising a compressing part having a plurality of compression rollers arranged in a row above the conveying part conveying the paperboard to pressurize the top surface of the paperboard, supporting frames adapted to support the ends of the shafts of the compression rollers to allow the compression rollers to be rotated, a connecting frame adapted to connect the supporting frames one another to allow the compression rollers to apply the top surface of the paperboard with the forces applied equally therefrom, and an upper frame extended upwardly from one end of the top surface of the connection frame in such a manner as to be bent in the lateral direction, the compressing part being connected to both of the lateral frames disposed symmetrically on left and right sides thereof.",
+      "sourceXmlParentClaimNumbers": [
+        6
+      ]
+    }
+  ]
+}

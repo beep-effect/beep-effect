@@ -27,7 +27,7 @@ import {
 import { GithubJobRecord, GithubJobStepRecord, githubJobHasFailedStep } from "@beep/repo-cli/test/SharedInternals";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -50,7 +50,8 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { parseDocument } from "yaml";
+import { commandArgs } from "./support/commandArgs.ts";
+import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const LOST_MESSAGE =
@@ -346,9 +347,9 @@ type GhReply = readonly [key: string, exitCode: number, output: string];
 const ghSpawner = (replies: ReadonlyArray<GhReply>, commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    const key = command.args[0] === "api" ? (command.args[1] ?? "") : A.join(command.args, " ");
+    const key = commandArgs(command)[0] === "api" ? (commandArgs(command)[1] ?? "") : A.join(commandArgs(command), " ");
     const reply = A.findFirst(replies, ([candidate]) => candidate === key);
-    return Ref.update(commands, A.append(command.args)).pipe(
+    return Ref.update(commands, A.append(commandArgs(command))).pipe(
       Effect.andThen(
         O.match(reply, {
           onNone: () => Effect.succeed(handle(1, `gh: unscripted ${key} (HTTP 404)`)),
@@ -407,7 +408,7 @@ const failedAttemptReplies: ReadonlyArray<GhReply> = [
 
 // The suite's runner outputs: only the step-summary test publishes through it.
 const rerunOutputs = ActionOutputs.recording();
-const platform = Layer.mergeAll(NodeServices.layer, TestConsole.layer, rerunOutputs.layer);
+const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer, rerunOutputs.layer);
 const logs = TestConsole.logLines.pipe(Effect.map(A.map(String)), Effect.map(A.join("\n")));
 const errors = TestConsole.errorLines.pipe(Effect.map(A.map(String)), Effect.map(A.join("\n")));
 const decideRun = (runInput: CiRerunRunnerLossInput) =>
@@ -820,36 +821,37 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
       const readYaml = (relative: string) =>
-        fs.readFileString(path.join(repoRoot, relative)).pipe(
-          Effect.map((text) => {
-            const document = parseDocument(text);
-            expect(document.errors).toEqual([]);
-            return { text, value: document.toJS() };
-          })
-        );
+        fs
+          .readFileString(path.join(repoRoot, relative))
+          .pipe(Effect.map((text) => ({ text, value: parseWorkflowYaml(text) })));
       const workflow = yield* readYaml(".github/workflows/rerun-runner-loss.yml");
       const check = yield* readYaml(".github/workflows/check.yml");
       const heavyAdmit = yield* readYaml(".github/workflows/heavy-admit.yml");
-      expect(workflow.value.on).toEqual({
-        workflow_run: { workflows: [check.value.name, heavyAdmit.value.name], types: ["completed"] },
+      expect(yamlAt(workflow.value, ["on"])).toEqual({
+        workflow_run: {
+          workflows: [yamlAt(check.value, ["name"]), yamlAt(heavyAdmit.value, ["name"])],
+          types: ["completed"],
+        },
       });
-      expect(workflow.value.permissions).toEqual({});
-      expect(workflow.value.concurrency["cancel-in-progress"]).toBe(false);
-      const job = workflow.value.jobs.rerun;
-      expect(job["runs-on"]).toBe("ubuntu-24.04");
-      expect(job.if).toContain("github.event.workflow_run.conclusion == 'failure'");
-      expect(job.if).toContain("vars.BEEP_RERUN_RUNNER_LOSS != 'false'");
-      expect(job.permissions).toEqual({
+      expect(yamlAt(workflow.value, ["permissions"])).toEqual({});
+      expect(yamlAt(workflow.value, ["concurrency", "cancel-in-progress"])).toBe(false);
+      const job = (path: ReadonlyArray<string | number>) => yamlAt(workflow.value, ["jobs", "rerun", ...path]);
+      expect(job(["runs-on"])).toBe("ubuntu-24.04");
+      expect(job(["if"])).toContain("github.event.workflow_run.conclusion == 'failure'");
+      expect(job(["if"])).toContain("vars.BEEP_RERUN_RUNNER_LOSS != 'false'");
+      expect(job(["permissions"])).toEqual({
         actions: "write",
         checks: "read",
         contents: "read",
         "pull-requests": "read",
       });
-      expect(job.steps[0].with).toEqual({
+      expect(job(["steps", 0, "with"])).toEqual({
         ref: "${{ github.event.repository.default_branch }}",
         "persist-credentials": false,
       });
-      expect(job.steps[2].run).toBe('bun run beep ci rerun-runner-loss --run-id "$RUN_ID" --attempt "$RUN_ATTEMPT"');
+      expect(job(["steps", 2, "run"])).toBe(
+        'bun run beep ci rerun-runner-loss --run-id "$RUN_ID" --attempt "$RUN_ATTEMPT"'
+      );
       const code = pipe(
         Str.split(workflow.text, "\n"),
         A.filter((line) => !Str.startsWith("#")(Str.trim(line))),
@@ -896,7 +898,7 @@ const reviewReplies = HashMap.make(
 );
 const reviewSpawner = ChildProcessSpawner.make((command) => {
   if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-  const key = A.join(command.args, " ");
+  const key = A.join(commandArgs(command), " ");
   return key === `api --jq .sha repos/{owner}/{repo}/commits/${SPAWN_FAILURE_SHA}`
     ? Effect.fail(
         PlatformError.systemError({
@@ -909,7 +911,7 @@ const reviewSpawner = ChildProcessSpawner.make((command) => {
     : Effect.succeed(O.getOrElse(HashMap.get(reviewReplies, key), () => handle(1, `gh: unscripted ${key} (HTTP 404)`)));
 });
 const reviewPlatform = Layer.merge(
-  NodeServices.layer,
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
   Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, reviewSpawner)
 );
 

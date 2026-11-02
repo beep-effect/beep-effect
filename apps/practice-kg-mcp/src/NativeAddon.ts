@@ -29,6 +29,7 @@
  * @since 0.0.0
  */
 import * as NodeModule from "node:module";
+import { currentHostPlatform } from "@beep/utils/HostProcess";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -237,7 +238,7 @@ export const installNativeAddonResolver = (
     const resolved = resolveNativeAddon(request, process.execPath, (path) =>
       O.isSome(O.liftThrowable(require.resolve)(path))
     );
-    if (O.isSome(resolved) && process.platform === "win32" && !dllDirectorySet) {
+    if (O.isSome(resolved) && currentHostPlatform === "win32" && !dllDirectorySet) {
       dllDirectorySet = true;
       Effect.runSync(registerDllDirectory(executableDirectory(resolved.value)));
     }

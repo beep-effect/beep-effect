@@ -38,6 +38,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -286,7 +287,7 @@ const scriptedSpawner = (
 ) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("the squash reader never spawns a piped command");
-    const line = A.join([command.command, ...command.args], " ");
+    const line = A.join([command.command, ...commandArgs(command)], " ");
     const record = Ref.update(calls, A.append(line));
     if (command.command === "bunx") {
       return script.commitlint === undefined

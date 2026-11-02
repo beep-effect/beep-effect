@@ -69,7 +69,7 @@ const passesIdentityComposerSmokeTest = (value: IdentityComposerCandidate, ident
  * **Example** (Check composer versus object)
  *
  * ```ts
- * import { $SharedDomainId } from "@beep/identity"
+ * import { $SharedDomainId } from "@beep/identity/packages"
  * import { isIdentityComposer } from "@beep/shared-domain/identity"
  *
  * console.log(isIdentityComposer($SharedDomainId)) // true
@@ -102,7 +102,7 @@ export const isIdentityComposer = (value: unknown): value is IdentityComposerTyp
  * **Example** (Schema-check identity composers)
  *
  * ```ts
- * import { $SharedDomainId } from "@beep/identity"
+ * import { $SharedDomainId } from "@beep/identity/packages"
  * import { AnyIdentityComposer } from "@beep/shared-domain/identity"
  * import * as S from "effect/Schema"
  *

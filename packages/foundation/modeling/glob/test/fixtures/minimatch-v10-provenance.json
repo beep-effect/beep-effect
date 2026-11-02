@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "oracle": {
+    "package": "minimatch",
+    "version": "10.2.6",
+    "entrySha256": "d224f71f20d7c206fcc5b7e9f747324c7698345a0b2c28d717dd9cf698306783",
+    "publishedTarballIntegrity": "sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==",
+    "publishedTarballSha256": "5a3d2c8074a28229665727e47b8a1090941856a7962905efe05d20d3760355f8",
+    "publishedSourceFilesVerified": 12
+  },
+  "referenceHead": "0e601a3d55f88d875ca49d47931e216a5a328aa2",
+  "sourceFiles": {
+    "internal/ast.coverage.test.ts": "9d0d0387fcb667c208d321789c8ba5d53af9f88cf66ab923827c45381a3cb456",
+    "compliance.test.ts": "dce508b35a87f92cd4d58b7c8f2bde73b638dc398d38b5289841fdd583de7f08",
+    "engine.test.ts": "422d7f40e8d4f9690cbddd41a124f0614744bdefc4010ae2345d6908f05f6ded",
+    "internal/segmentMatcher.test.ts": "8169bf8b376f617c971fafec64b5e6931d26de97ea24b984a5a5fd29621eac29",
+    "internal/minimatch.coverage.test.ts": "9b814727a31fd4ee0c7fe2d088774fc2332bc86d271863b3061764341d7bb8a6",
+    "GlobPattern.test.ts": "32d2d7d4c2921eb84e5ccb601ee7becd04cdff53963508a15bdfdc7a62b665c6",
+    "internal/minimatch.property.test.ts": "b1a05c79dfc0843d2ea2227aef1e377b2cc4908bb63687a29f646da46d4cc7c5",
+    "internal/ast.property.test.ts": "698cee9f8ba48b2c7bdd7986e937c276e7c70c7c9fe32dbe86939e394c3d8f5f"
+  },
+  "counts": {
+    "fragments": 5403,
+    "matching": 2043,
+    "regularExpressions": 495,
+    "optimizer": 108,
+    "propertyPatterns": 2541,
+    "samples": 8000
+  },
+  "samplePlans": [
+    {
+      "name": "compliance-default",
+      "count": 2000,
+      "size": 30,
+      "seed": "beep-minimatch-10.2.6-compliance-default-v1"
+    },
+    {
+      "name": "compliance-options",
+      "count": 2000,
+      "size": 30,
+      "seed": "beep-minimatch-10.2.6-compliance-options-v1"
+    },
+    {
+      "name": "public-facade",
+      "count": 2000,
+      "size": 30,
+      "seed": "beep-minimatch-10.2.6-public-facade-v1"
+    },
+    {
+      "name": "minimatch-property",
+      "count": 2000,
+      "size": 30,
+      "seed": "beep-minimatch-10.2.6-minimatch-property-v1"
+    },
+    {
+      "name": "ast-property",
+      "count": 2000,
+      "size": 30,
+      "seed": "beep-minimatch-10.2.6-ast-property-v1"
+    }
+  ],
+  "limits": {
+    "generatedPatternMaxParts": 12,
+    "seed": "beep-minimatch-10.2.6-corpus-v1",
+    "generatedPatterns": 512
+  },
+  "files": {
+    "minimatch-v10-compliance-default.json": {
+      "bytes": 216873,
+      "sha256": "5ee408c4d1f3cd7a540679ba9aef5fa8b334cce6cbb381ce5ca4fa71b28bfe18"
+    },
+    "minimatch-v10-compliance-options.json": {
+      "bytes": 504194,
+      "sha256": "bcc0b191590a964e3dace68da077a5b1092135c9eb6d6e5bda6b94736fc326f2"
+    },
+    "minimatch-v10-fragments-1.json": {
+      "bytes": 227848,
+      "sha256": "34548d7894be77768cd7d5bccd2593893279d7e7e5a36bc552403c1b73ee67e7"
+    },
+    "minimatch-v10-fragments-2.json": {
+      "bytes": 606498,
+      "sha256": "0b8cc8c46afc4693bd244790cfec27d780f7ff36130550ff3a310a6c4b4524e3"
+    },
+    "minimatch-v10-fragments-3.json": {
+      "bytes": 669476,
+      "sha256": "8047f820ce6bbe0cb7db949c04f00c81464533e82c7cd074a566cad1fc74aeed"
+    },
+    "minimatch-v10-matches.json": {
+      "bytes": 208634,
+      "sha256": "22ed9b520900305bb6fa343feaf1e26ae4b9d49753d578a98264d47077bc960c"
+    },
+    "minimatch-v10-minimatch-property.json": {
+      "bytes": 375146,
+      "sha256": "ef9db742af0bab61b8674208a24816b52c05e0d0d51fdd9f78b02ac0df71d70e"
+    },
+    "minimatch-v10-optimizer.json": {
+      "bytes": 504584,
+      "sha256": "d774340e6a99c3935a755313997d4c0006b2491c9575c7bbb08dd4f88a62b642"
+    },
+    "minimatch-v10-patterns.json": {
+      "bytes": 120186,
+      "sha256": "2a2d5b4b1be754e3cc418e7df799ba07fb3135aac8276ce1678b8d73169025b0"
+    },
+    "minimatch-v10-public-facade.json": {
+      "bytes": 173389,
+      "sha256": "59ae571f06a567c09daca3a74eefbbbd320f905220a36d5a3f0013c06ae93bc5"
+    },
+    "minimatch-v10-regexp.json": {
+      "bytes": 424921,
+      "sha256": "185483553962a63837634ad97ed4c50e0c42696d1f06191e0669e10a82c426fc"
+    }
+  },
+  "canonicalFormatting": "Repository-pinned Biome formatter; hashes bind the formatted bytes."
+}

@@ -35,6 +35,7 @@ const recordedDocumentsJson = `{
       "documentCodeDescriptionText": "Claims",
       "directionCategory": "INCOMING",
       "downloadOptionBag": [
+        { "mimeTypeIdentifier": "PDF", "downloadUrl": "${downloadBase}/SYNTHCLM2.pdf" },
         { "mimeTypeIdentifier": "XML", "downloadUrl": "${downloadBase}/SYNTHCLM2.xml" }
       ]
     },
@@ -56,7 +57,7 @@ const recordedDocumentsJson = `{
 const recordedClaimsXml = `<?xml version="1.0" encoding="UTF-8"?>
 <claims id="claims">
 <claim id="CLM-00001" num="00001">
-<claim-text>1. A lamp comprising:
+<claim-text>1: A lamp comprising:
 <claim-text>a base &amp; a stem;</claim-text>
 <claim-text>a bulb held by the stem; and</claim-text>
 <claim-text>a switch wired to the bulb.</claim-text>
@@ -71,8 +72,52 @@ const recordedClaimsXml = `<?xml version="1.0" encoding="UTF-8"?>
 /** `SYNTHCLM1` is only a scanned PDF: a PDF header followed by bytes that are not UTF-8. */
 const recordedScannedPdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37, 0x0a, 0xff, 0xfe, 0x00]);
 
+/** A native grant whose claims carry OCR confidence data, which the native source excludes. */
+const recordedOcrGrantXml = `<?xml version="1.0" encoding="UTF-8"?>
+<claims id="claims"><OCRConfidenceData/>
+<claim id="CLM-00001" num="00001"><claim-text>1. A lamp comprising a base.</claim-text></claim>
+</claims>
+`;
+
 /** Recorded responses by URL suffix. */
 export const recordedResponses: ReadonlyArray<readonly [suffix: string, body: string | Uint8Array]> = [
+  [
+    `/applications/search?q=${encodeURIComponent("applicationMetaData.earliestPublicationNumber:US20260100001A*")}`,
+    `{
+      "patentFileWrapperDataBag": [{
+        "applicationNumberText": "${recordedApplication}",
+        "applicationMetaData": { "earliestPublicationNumber": "US20260100001A1" },
+        "pgpubDocumentMetaData": {
+          "productIdentifier": "APPXML", "xmlFileName": "native-publication.xml",
+          "fileLocationURI": "https://api.uspto.gov/native-publication.xml"
+        }
+      }]
+    }`,
+  ],
+  ["/native-publication.xml", recordedClaimsXml],
+  [
+    `/applications/search?q=${encodeURIComponent("applicationMetaData.patentNumber:10200001")}`,
+    `{
+      "patentFileWrapperDataBag": [{
+        "applicationNumberText": "${recordedApplication}",
+        "applicationMetaData": { "patentNumber": "10200001" },
+        "grantDocumentMetaData": {
+          "productIdentifier": "PTGRXML", "xmlFileName": "native-grant.xml",
+          "fileLocationURI": "https://api.uspto.gov/native-grant.xml"
+        }
+      }]
+    }`,
+  ],
+  ["/native-grant.xml", recordedOcrGrantXml],
+  [
+    `/applications/search?q=${encodeURIComponent("applicationMetaData.earliestPublicationNumber:US20260100002A*")}`,
+    `{
+      "patentFileWrapperDataBag": [{
+        "applicationNumberText": "${recordedApplication}",
+        "applicationMetaData": { "earliestPublicationNumber": "US20260100002A1" }
+      }]
+    }`,
+  ],
   [`/api/v1/patent/applications/${recordedApplication}/documents`, recordedDocumentsJson],
   ["/SYNTHCLM2.xml", recordedClaimsXml],
   ["/SYNTHCLM1.pdf", recordedScannedPdf],

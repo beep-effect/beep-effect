@@ -353,8 +353,10 @@ export const FsUtilsLive: Layer.Layer<FsUtils, never, FileSystem.FileSystem | Pa
 
     const readJson: FsUtilsShape["readJson"] = Effect.fn(function* (filePath) {
       return yield* fs.readFileString(filePath).pipe(
-        Effect.mapError((e) => NoSuchFileError.make({ path: filePath, message: `Failed to read file: ${e.message}` })),
-        Effect.map(decodeJsonString)
+        Effect.mapBoth({
+          onFailure: (e) => NoSuchFileError.make({ path: filePath, message: `Failed to read file: ${e.message}` }),
+          onSuccess: decodeJsonString,
+        })
       );
     });
 

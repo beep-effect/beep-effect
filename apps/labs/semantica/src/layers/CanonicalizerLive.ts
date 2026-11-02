@@ -7,7 +7,7 @@ import {
   verifyTextAnchor,
 } from "@beep/provenance";
 import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
@@ -17,10 +17,10 @@ import { Canonicalizer } from "@/services/Canonicalizer";
 const utf8Encoder = new TextEncoder();
 
 const makeCanonicalizer = Effect.gen(function* () {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const hashText = Effect.fn("Canonicalizer.hashText")((text: string) =>
     S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(text)).pipe(
-      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.provideService(Digest.Digest, crypto),
       Effect.orDie
     )
   );
@@ -48,14 +48,15 @@ const makeCanonicalizer = Effect.gen(function* () {
           sourceText: canonical.text,
         })
       ).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
-        Effect.map(toTextAnchorVerificationReceipt),
-        Effect.mapError((cause) =>
-          AnchorRejected.make({
-            cause,
-            message: "The candidate anchor does not match the canonical source text.",
-          })
-        )
+        Effect.provideService(Digest.Digest, crypto),
+        Effect.mapBoth({
+          onFailure: (cause) =>
+            AnchorRejected.make({
+              cause,
+              message: "The candidate anchor does not match the canonical source text.",
+            }),
+          onSuccess: toTextAnchorVerificationReceipt,
+        })
       );
     }),
   });

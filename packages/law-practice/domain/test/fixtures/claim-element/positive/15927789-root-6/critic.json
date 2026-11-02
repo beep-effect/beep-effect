@@ -1,0 +1,66 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "15927789-root-6",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "findings": [],
+  "reviewScope": {
+    "kind": "independent lexical-head-only revision review",
+    "headCount": 1,
+    "preservedSemanticReview": "critic.round1.json",
+    "previousRound": 1,
+    "currentRound": 2
+  },
+  "headReviewEvidence": [
+    {
+      "claimNumber": 9,
+      "path": "9.a",
+      "anchor": {
+        "startChar": 138,
+        "endChar": 146,
+        "quote": "one side"
+      },
+      "determiner": "bare",
+      "priorHead": "side",
+      "acceptedHead": "one side",
+      "disposition": "accepted under lexical-head/v1; exact source anchor and all non-head fields preserved"
+    }
+  ],
+  "reviewNotes": [
+    "Claim 9 recites the distal end point of one side of the wire. The count/selector one belongs in the bare side head; the separate wire phrase and connecting of language remain unchanged. This does not choose or introduce an unstated side.",
+    "The current change is accepted as a lexical-head-only revision of the prior independently accepted semantic reference. Earlier full semantic/source review evidence remains in the immutable prior-round critic receipt; this review does not claim fresh original-PDF or attorney authentication."
+  ],
+  "verification": [
+    "Read lexical-head/v1 and manually adjudicated each listed correction against exact canonical and native source claim context. Checked nearby pronominal/cardinal/minimum/partitive term heads for consistency with supported determiner tags.",
+    "Verified all head-review preservedPriorReceipts SHA-256 values, including the prior critic receipt. Existing critic.json was byte-identical to that preserved prior-round receipt before replacement.",
+    "Independently reversed exactly the reviewed head fields and compared the entire resulting JSON tree with expected.round1.json: equal. All anchors, determiners, elements, typed edges, dependency structure, functional parts and claim scope therefore remain unchanged.",
+    "Checked each changed term source anchor as half-open UTF-16 offsets. Native source.claims.xml SHA-256 matches provenance.claimsXmlSha256, and all native claims match canonical claims after only printed-number removal and whitespace normalization. No decomposer or implementation rule was used."
+  ],
+  "referenceSha256": "bb8cce114a2ebd178c30a4f3baa3a72f6a16cedbc5b6639afe79e8f1864b4012",
+  "extractorSha256": "fdf4a3c7ce5b03f7f95de926fa130e5318ba66577994b62f3b11881eac3aca69",
+  "headReviewSha256": "61a36d72b951a776aff64352548354e8030bbf1cdeaa602c778360c6b563105a",
+  "preservedPriorCritic": {
+    "file": "critic.round1.json",
+    "sha256": "03fadf11978d098970c03f780ae82a28c4d9a9c2693c5dddbd1f6497d2b04b7b",
+    "round": 1,
+    "verdict": "accepted",
+    "confidence": 0.96
+  },
+  "referenceConcernsDisposition": "Prior semantic and source concerns remain unchanged and explicitly documented in extractor.json and the preserved prior-round critic. Head changes add no antecedent, identity assertion, source repair or scope expansion.",
+  "independence": "Separate GPT-6.1-Sol medium critic session, independent of extractor. Only current critic.json files written. Reviewed protocol, canonical/native sources, existing semantic receipts and head-review diffs. No production/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or source/expected/extractor edits.",
+  "attorneyAdjudication": "unchanged; pending actual human review where required; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference acceptance only; no active sample admission, goal completion, accuracy result or human agreement claimed."
+}

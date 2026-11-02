@@ -1,0 +1,60 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "13070851-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "reviewScope": {
+    "claimCount": 7,
+    "elementCount": 15,
+    "termCount": 38,
+    "edgeCount": 45,
+    "functionalRelationCount": 8
+  },
+  "findings": [],
+  "verification": [
+    "Read selected canonical claims, all expected elements/terms/typed edges and extractor rationale; reviewed native source XML and independent source-critic evidence. Source eligibility is separately accepted; no fresh original-PDF/full-inventory authentication claimed.",
+    "Independent checks passed every exact UTF-16 anchor, term order/nonoverlap/ownership and normalized head shape, full contiguous functional reconstruction and exact participating terms, local/foreign endpoint membership and true dependency ancestry, path uniqueness and no duplicate edges. Native XML digest matches provenance and canonical/native source strings match under permitted printed-number/whitespace normalization. Geometry supplements manual semantics; no decomposer was called."
+  ],
+  "referenceSha256": "556c3c32543d7ad45ea1327aa7351d98d3424711843fe45a1a2897944b007ced",
+  "extractorSha256": "32250362d7e8ffb1cd39b4246d1b6d49fd0bc8756dd321b6b837e5143f09e411",
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json written. Source/model/tree/edge schema evidence only; no production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference review only; no active sample admission, goal completion, human agreement or accuracy result claimed.",
+  "reviewNotes": [
+    "All seven claims reviewed against source and model schemas. The CC-deactivation subject, UE/RRC/CA initialisms, flushing/deactivation condition, UL/DL linkage, PHICH feedback and MAC/timer alternatives preserve complete lexical names and functional relationships. First definite HARQ entity has no fabricated noun introduction.",
+    "Claims5/6 explicitly refer to any of1–4. Their four dependency edges enumerate natural alternatives without deleting the source alternative wording; every alternative shares the same unique root UL/DL entities. Claim7 depends5, not6. No external telecommunications assumptions are needed for the explicit acronym/role identities.",
+    "The complete malformed the said UL CC source span and the tag remain; normalized head ul cc omits grammatical determiners without rewriting source. Trees/resolvedClaimNumbers now follow numeric1–7 order. Alternative dependency semantics and every typed edge are unchanged; no actionable finding remains."
+  ],
+  "priorFindingDispositions": [
+    {
+      "id": "stacked-determiner-in-head",
+      "disposition": "resolved",
+      "evidence": "Only stacked-determiner head normalized to ul cc with full anchor/tag/edge retained; expected/extractor claim order now1–7. After reversing that head change and sorting, the entire prior JSON tree matches."
+    },
+    {
+      "id": "reference-claim-order",
+      "disposition": "resolved",
+      "evidence": "Only stacked-determiner head normalized to ul cc with full anchor/tag/edge retained; expected/extractor claim order now1–7. After reversing that head change and sorting, the entire prior JSON tree matches."
+    }
+  ],
+  "preservedPriorCritic": {
+    "file": "critic.round1.json",
+    "sha256": "240b2e55465d376a3e56a555aad0758cbca5a2542527128b74c7f896f8e39904"
+  },
+  "referenceConcernsDisposition": "Remaining source-specific concerns retained. Independent exact-delta review confirms every prior finding resolved without adding new unresolved identity choices."
+}

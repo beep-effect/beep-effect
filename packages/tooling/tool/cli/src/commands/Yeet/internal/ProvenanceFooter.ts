@@ -44,7 +44,8 @@ import {
 } from "./Provenance.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
 import type { DomainError } from "@beep/repo-utils";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber, PrProvenanceRole } from "./Provenance.ts";
@@ -415,10 +416,10 @@ const writePrBody = Effect.fn("ProvenanceFooter.writePrBody")(function* (
 });
 
 type ReconcileRequirements =
-  | Crypto.Crypto
+  | Digest.Digest
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
+  | Digest.Digest
   | ChildProcessSpawner.ChildProcessSpawner;
 
 const yieldToConcurrentEdit = Effect.fn("ProvenanceFooter.yieldToConcurrentEdit")(function* (
@@ -428,7 +429,11 @@ const yieldToConcurrentEdit = Effect.fn("ProvenanceFooter.yieldToConcurrentEdit"
   bodyPath: string,
   writtenBody: string,
   foreign: PrBodyEdit
-): Effect.fn.Return<ProvenanceStampOutcome, DomainError | S.SchemaError | YeetCommandError, ReconcileRequirements> {
+): Effect.fn.Return<
+  ProvenanceStampOutcome,
+  DomainError | S.SchemaError | YeetCommandError,
+  ReconcileRequirements | SecureRandom.SecureRandom
+> {
   const finalReadback = yield* readPrBody(capture, context, prNumber);
   const restoring = Str.Equivalence(finalReadback, writtenBody);
   if (restoring) {
@@ -449,7 +454,11 @@ const verifyReconciledBody = Effect.fn("ProvenanceFooter.verifyReconciledBody")(
   rendered: string,
   sourceBody: string,
   preservedForeign: O.Option<PrBodyEdit>
-): Effect.fn.Return<ProvenanceStampOutcome, DomainError | S.SchemaError | YeetCommandError, ReconcileRequirements> {
+): Effect.fn.Return<
+  ProvenanceStampOutcome,
+  DomainError | S.SchemaError | YeetCommandError,
+  ReconcileRequirements | SecureRandom.SecureRandom
+> {
   const readback = yield* readPrBody(capture, context, prNumber);
   const bodyDrifted = !Str.Equivalence(bodyWithoutProvenanceFooter(readback), bodyWithoutProvenanceFooter(sourceBody));
   const footerMissing = !Str.Equivalence(splicePrProvenanceFooter(readback, rendered), readback);
@@ -489,7 +498,11 @@ const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrit
   round: number,
   knownBodies: HashSet.HashSet<string>,
   preservedForeign: O.Option<PrBodyEdit>
-): Effect.fn.Return<ProvenanceStampOutcome, DomainError | S.SchemaError | YeetCommandError, ReconcileRequirements> {
+): Effect.fn.Return<
+  ProvenanceStampOutcome,
+  DomainError | S.SchemaError | YeetCommandError,
+  ReconcileRequirements | SecureRandom.SecureRandom
+> {
   const writtenBody = splicePrProvenanceFooter(sourceBody, rendered);
   const known = pipe(knownBodies, HashSet.add(sourceBody), HashSet.add(writtenBody));
   yield* writePrBody(capture, context, prNumber, bodyPath, writtenBody);
@@ -858,7 +871,11 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
 ): Effect.fn.Return<
   ProvenanceStampOutcome,
   never,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | import("effect/process/ChildProcessSpawner").ChildProcessSpawner
+  | Digest.Digest
+  | FileSystem.FileSystem
+  | Path.Path
+  | import("effect/process/ChildProcessSpawner").ChildProcessSpawner
+  | SecureRandom.SecureRandom
 > {
   return yield* Effect.gen(function* () {
     const registry = registryOverride ?? (yield* makePrSessionRegistryLive());

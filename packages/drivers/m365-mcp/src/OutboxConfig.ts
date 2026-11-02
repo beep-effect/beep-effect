@@ -147,8 +147,10 @@ const present = flow(O.map(Str.trim), O.filter(Str.isNonEmpty));
 const optionalText = (name: string): Effect.Effect<O.Option<string>, OutboxConfigError> =>
   Config.String(name).pipe(
     Config.option,
-    Effect.map(present),
-    Effect.mapError(() => OutboxConfigError.make({ message: `${name} could not be read.` }))
+    Effect.mapBoth({
+      onFailure: () => OutboxConfigError.make({ message: `${name} could not be read.` }),
+      onSuccess: present,
+    })
   );
 
 // An `op://` value means the server was started without `op run`: never authenticate with a reference.

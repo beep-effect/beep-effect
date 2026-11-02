@@ -1,0 +1,281 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "15752303-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "findings": [],
+  "priorFindingDispositions": [],
+  "reviewedGranularityCases": [
+    {
+      "claimNumber": 8,
+      "path": "8.a",
+      "anchor": {
+        "startChar": 178,
+        "endChar": 183,
+        "quote": "which"
+      },
+      "action": "remove-redundant-relative-term-retain-source-clause",
+      "reason": "Of which introduces the modifying faces/film clause for explicit an aluminum (AL) or (EVOH) foil in this same relation. Retain foil, two faces and film terms plus complete covering relation. This existing limitation has no functional edge; preserve its exact complete source anchor and unrelated structure rather than inventing a new functional edge in this targeted pass.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "8.a",
+            "anchor": {
+              "startChar": 178,
+              "endChar": 183,
+              "quote": "which"
+            }
+          },
+          "introducing": {
+            "path": "8.a",
+            "anchor": {
+              "startChar": 143,
+              "endChar": 174,
+              "quote": "an aluminum (AL) or (EVOH) foil"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claimNumber": 15,
+      "path": "15.a",
+      "anchor": {
+        "startChar": 253,
+        "endChar": 258,
+        "quote": "which"
+      },
+      "action": "term-to-functional-text",
+      "reason": "Of which introduces the modifying flat-summit/bottom clause for explicit a capsule, also repeated as the capsule in this function. Retain capsule, bottom, summit, ring and opening participants and complete relation.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "15.a",
+            "anchor": {
+              "startChar": 253,
+              "endChar": 258,
+              "quote": "which"
+            }
+          },
+          "introducing": {
+            "path": "15.a",
+            "anchor": {
+              "startChar": 123,
+              "endChar": 132,
+              "quote": "a capsule"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "verifiedExactChanges": {
+    "removedTerms": [
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 178,
+          "endChar": 183,
+          "quote": "which"
+        },
+        "determiner": "bare",
+        "head": "which"
+      },
+      {
+        "path": "15.a",
+        "anchor": {
+          "startChar": 253,
+          "endChar": 258,
+          "quote": "which"
+        },
+        "determiner": "bare",
+        "head": "which"
+      }
+    ],
+    "addedTerms": [],
+    "removedNonfunctionalEdges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 178,
+            "endChar": 183,
+            "quote": "which"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 174,
+            "quote": "an aluminum (AL) or (EVOH) foil"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 253,
+            "endChar": 258,
+            "quote": "which"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 132,
+            "quote": "a capsule"
+          }
+        }
+      }
+    ],
+    "unchangedElementStructure": true,
+    "unchangedFunctionalSourceReconstruction": true,
+    "referenceSha256": "6c3a2c4589b9e32e42940b12c9719048a55d7c4a7fdf3a0e5844cea7e8ae32ed"
+  },
+  "reviewScope": {
+    "claimCount": 16,
+    "elementCount": 46,
+    "termCount": 170,
+    "edgeCount": 142
+  },
+  "reviewNotes": [
+    "Targeted independent review under semantic-reference/v2/entity-mentions/v1 and the specific SPEC granularity decision; read the per-family granularity-review receipt, exact canonical changed contexts, prior/current reference snapshots and prior critic receipt. This is not a new source-eligibility or full original-document audit.",
+    "Independently compared the immediate pre-repair snapshot with current expected: element paths, kinds and spans are unchanged; term changes are exactly the listed removals/additions; nonfunctional edge changes are exactly the associated antecedent removals; every functional edge reconstructs the identical entire owner text before and after, with contiguous ordered source spans and valid local term ownership.",
+    "All current element/term/functional/antecedent anchors were checked against canonical UTF-16 text. Owned terms are ordered and nonoverlapping, local/foreign references exist, and typed containment/dependency endpoints are coherent. No source wording or unsupported introduction was supplied. Runtime schema success is reported in the extractor granularity receipt; this critic independently checked the specified geometry/schema constraints without rerunning production code.",
+    "Each removed relative/reciprocal surface retains its complete literal source clause or functional text and explicit governing participant(s). This applies source grammar individually; it is not a spelling-based blanket pronoun deletion rule.",
+    "Claim 8 has no pre-existing functional edge. Its removed which remains within the unchanged full limitation source span and the foil/faces/film terms remain explicit; no new functional edge was invented solely for this consistency repair."
+  ],
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "15752303-root-1",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.96,
+      "confidenceScope": "Source-grounded semantic annotation, including explicit unresolved referential concerns; source eligibility and attorney agreement separately governed.",
+      "verdict": "accepted",
+      "reviewedClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "findings": [],
+      "acceptanceBlockers": [],
+      "priorRounds": [],
+      "sourceEligibility": "accepted separately by source critic; not re-certified in structural lane",
+      "attorneyAdjudication": "pending",
+      "rationale": [
+        "Reviewed all46 elements,172 complete lexical terms and144 typed edges, including19 explicit functional relations. Construction and material lists preserve nesting; exact native reference numerals, membrane terminology and amended dependency text remain unchanged.",
+        "Actual dependencies2-13->1,14->13,15->1,16->15 are preserved. Root1 membrane seal5 at the top edge remains distinct from sealed bottom membrane14. Subsequent explicit14 references identify the bottom membrane; branch137/132 spelling is not repaired. Claim10 and14 do not import sibling5 branches or cross brace.",
+        "Claim14 inserted/other capsule is distinguished from the receiving root capsule, and its membrane is not assigned a same-owner root membrane edge. Production15 introduces its local mold/capsule parts and references follow that owner rather than a generic matching head. Claim16 membrane filter14 is not automatically identified with membrane seal14 solely by numeral or intended manufacturing use; the concern remains explicit. No actionable semantic finding remains."
+      ],
+      "ambiguityResolution": [
+        {
+          "claimNumber": 7,
+          "quote": "the membrane seal",
+          "span": [
+            86,
+            103
+          ],
+          "resolution": "Explicit14 and the bottom sealed-membrane context distinguish it from top edge seal5. Same-clause later unnumbered membrane seal refers to this14 entity."
+        },
+        {
+          "claimNumber": 14,
+          "quote": "this other capsule",
+          "span": [
+            306,
+            324
+          ],
+          "resolution": "Refers to local an inserted capsule[196,215), while the capsule in which it is nested is the receiving root capsule. Do not collapse owners."
+        },
+        {
+          "claimNumber": 16,
+          "quote": "the membrane filter",
+          "span": [
+            106,
+            125
+          ],
+          "resolution": "Reference14 and matching operation suggest association, but changed filter/seal noun-function wording is not enough to force identity. Existing explicit concern and absent edge preserve source uncertainty without affecting clear functional structure."
+        }
+      ],
+      "audit": {
+        "treesReviewed": 16,
+        "elementsReviewed": 46,
+        "termsReviewed": 172,
+        "elementAndTermAnchorsVerified": 218,
+        "functionalTextAnchorsVerified": 102,
+        "typedEdgesReviewed": 144,
+        "edgeKinds": {
+          "part-of": 30,
+          "functional": 19,
+          "antecedent": 80,
+          "depends-on-element": 15
+        },
+        "allElementAndTermUtf16SlicesVerified": true,
+        "allFunctionalTextSlicesVerified": true,
+        "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+        "allLocalAndCrossClaimTermEndpointsVerified": true,
+        "nestedListContainmentVerified": true,
+        "uniqueTermOwnershipVerified": true,
+        "selectedNativeClaimTextAndClaimsXmlDigestVerified": true,
+        "schemaDecode": "separate-root-validation",
+        "selectedScopeComplete": true
+      },
+      "independence": "Independent critic, not producer. Read exact canonical native source/context, fresh semantic proposals, protocol and schemas; no implementation/rules/predictions/synthetic/conformance archives/network/secrets/git/delegation. Helpers verified supplied source normalization,digest,spans,ordered functional parts and reference geometry only. No decomposer was run or reimplemented.",
+      "acceptanceScope": "Both extractor0.95 and critic0.96 meet threshold with no actionable semantic finding. Clear functional structure is accepted while missing or genuinely ambiguous identities remain explicitly recorded. No claim construction, attorney verdict, unrestricted semantic accuracy or corpus completion is asserted."
+    }
+  ],
+  "sourceConcerns": [],
+  "attorneyAdjudication": "pending; critic confidence is not attorney agreement",
+  "roundLimit": {
+    "finalPermittedRound": false,
+    "noFourthAgentRound": true
+  },
+  "independence": "Independent targeted semantic critic. Only this family critic.json written. No expected/source/code edits, production rules/predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers compare authorized reference snapshots and check exact span/schema geometry only.",
+  "corpusStatus": "Incremental reference consistency review; no active sample admission, goal completion, or attorney agreement claimed."
+}

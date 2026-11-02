@@ -1,0 +1,20 @@
+{
+  "previous": "1d99c977719f66a8e7a650e466b71b979f28da3136f367c716c9ac1955d93632",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (hold-ledger-inventory, feat/hold-ledger-inventory)",
+    "reason": "Re-record the root subject after adding the //#lint:holds cheap-gates task and its generated policy seal (goals/hold-ledger slice 2); other root computations drift on root input bytes only; no qualification is granted.",
+    "basis": {
+      "path": "goals/hold-ledger/research/cache-baseline-review-2026-10-31-inventory.md",
+      "sha256": "f8a9aad85df928c8bb43ea183b631a897dbc14e2a2987c3a3e826c24f1a04dd4"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

@@ -90,6 +90,7 @@ export { CacheConformanceProxyOptions, makeCacheConformanceFaultProxy } from "./
  * @since 0.0.0
  */
 export {
+  CacheConformanceBackendResult,
   CacheConformanceBearers,
   CacheConformanceCase,
   CacheConformanceCaseClass,
@@ -154,6 +155,8 @@ export {
   CacheConformanceWireCheck,
   CacheConformanceWireOutcome,
   cacheConformanceLabCaseIds,
+  classifyCacheConformanceBackendResult,
+  classifyCacheConformanceMediaType,
   classifyCacheConformanceStatus,
   readCacheConformanceReply,
   runCacheConformanceLabCase,
@@ -198,28 +201,17 @@ export {
  */
 export { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
 /**
- * Synthetic experiment requests and local observation receipts.
+ * Local fixture observation records shared by the pilot and conformance runners.
  *
  * @category schemas
  * @since 0.0.0
  */
 export {
   CacheCaptureViolation,
-  CacheFixtureRuntime,
   CacheLocalOrigin,
   CacheSyntheticCheck,
-  CacheSyntheticNonExecution,
-  CacheSyntheticReceipt,
-  CacheSyntheticRequest,
   CacheSyntheticRun,
 } from "./Cache.experiment.schemas.ts";
-/**
- * Run admitted synthetic cache comparisons.
- *
- * @category cli-commands
- * @since 0.0.0
- */
-export { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
 /**
  * Runtime identity input validation.
  *
@@ -337,7 +329,12 @@ export { validateCacheProtocolExecution, validateCacheProtocolObservation } from
  * @category commands
  * @since 0.0.0
  */
-export { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep, runCacheRuntimeTasks } from "./Cache.runtime.ts";
+export {
+  assertCacheRuntimeKeyUnspecified,
+  cacheRuntimeStep,
+  resolveCacheSigningPosture,
+  runCacheRuntimeTasks,
+} from "./Cache.runtime.ts";
 /**
  * Public cache command schemas and errors.
  *
@@ -366,6 +363,10 @@ export {
   CacheRunMode,
   CacheRuntimeExecutable,
   CacheRuntimeLinkerSnapshot,
+  CacheSigningKeyState,
+  CacheSigningPosture,
+  CacheSigningRequest,
+  CacheSigningRole,
   CacheToolchainSnapshot,
   CacheTransitionRequest,
   CacheWallTime,
@@ -385,3 +386,4 @@ export {
   type CacheQualificationServiceShape,
   encodeCachePolicyBaselineText,
 } from "./Cache.service.ts";
+export { CacheHostedProducerVerifier, CacheHostedProducerVerifierLive } from "./Cache.workflow.github.ts";

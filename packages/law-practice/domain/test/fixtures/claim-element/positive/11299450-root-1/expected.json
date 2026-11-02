@@ -1,0 +1,5031 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 1087,
+          "quote": "A method for efficiently encoding navigational state in a Portal, wherein said Portal is running in a server system, wherein said server system includes a communication component which allows communication between said Portal and client's browser via a communication channel, wherein said Portal determines the layout of the requested Portal page, invokes rendering of the various page elements belonging to said Portal page, and transmits said Portal page to the client's browser for displaying, wherein at least one page element of said Portal page provides an URL functionality for initiating rendering a new page or new page element by said Portal, wherein each user interaction by clicking said URL at said page element generates a new navigational state at said Portal side, wherein the latest navigational state describes the current view of said Portal as the result of all previous navigational interactions of a particular client, wherein said at least latest navigational state is saved by said Portal, wherein in response to a client request for a new Portal page said method"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 34,
+              "endChar": 52,
+              "quote": "navigational state"
+            },
+            "determiner": "bare",
+            "head": "navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 56,
+              "endChar": 64,
+              "quote": "a Portal"
+            },
+            "determiner": "a",
+            "head": "portal"
+          },
+          {
+            "anchor": {
+              "startChar": 1037,
+              "endChar": 1053,
+              "quote": "a client request"
+            },
+            "determiner": "a",
+            "head": "client request"
+          },
+          {
+            "anchor": {
+              "startChar": 1058,
+              "endChar": 1075,
+              "quote": "a new Portal page"
+            },
+            "determiner": "a",
+            "head": "new portal page"
+          },
+          {
+            "anchor": {
+              "startChar": 1076,
+              "endChar": 1087,
+              "quote": "said method"
+            },
+            "determiner": "said",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 74,
+          "endChar": 115,
+          "quote": "said Portal is running in a server system"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 74,
+              "endChar": 85,
+              "quote": "said Portal"
+            },
+            "determiner": "said",
+            "head": "portal"
+          },
+          {
+            "anchor": {
+              "startChar": 100,
+              "endChar": 115,
+              "quote": "a server system"
+            },
+            "determiner": "a",
+            "head": "server system"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 125,
+          "endChar": 274,
+          "quote": "said server system includes a communication component which allows communication between said Portal and client's browser via a communication channel"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 143,
+              "quote": "said server system"
+            },
+            "determiner": "said",
+            "head": "server system"
+          },
+          {
+            "anchor": {
+              "startChar": 153,
+              "endChar": 178,
+              "quote": "a communication component"
+            },
+            "determiner": "a",
+            "head": "communication component"
+          },
+          {
+            "anchor": {
+              "startChar": 192,
+              "endChar": 205,
+              "quote": "communication"
+            },
+            "determiner": "bare",
+            "head": "communication"
+          },
+          {
+            "anchor": {
+              "startChar": 214,
+              "endChar": 225,
+              "quote": "said Portal"
+            },
+            "determiner": "said",
+            "head": "portal"
+          },
+          {
+            "anchor": {
+              "startChar": 230,
+              "endChar": 246,
+              "quote": "client's browser"
+            },
+            "determiner": "bare",
+            "head": "client's browser"
+          },
+          {
+            "anchor": {
+              "startChar": 251,
+              "endChar": 274,
+              "quote": "a communication channel"
+            },
+            "determiner": "a",
+            "head": "communication channel"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 284,
+          "endChar": 495,
+          "quote": "said Portal determines the layout of the requested Portal page, invokes rendering of the various page elements belonging to said Portal page, and transmits said Portal page to the client's browser for displaying"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 284,
+              "endChar": 295,
+              "quote": "said Portal"
+            },
+            "determiner": "said",
+            "head": "portal"
+          },
+          {
+            "anchor": {
+              "startChar": 307,
+              "endChar": 317,
+              "quote": "the layout"
+            },
+            "determiner": "the",
+            "head": "layout"
+          },
+          {
+            "anchor": {
+              "startChar": 321,
+              "endChar": 346,
+              "quote": "the requested Portal page"
+            },
+            "determiner": "the",
+            "head": "requested portal page"
+          },
+          {
+            "anchor": {
+              "startChar": 356,
+              "endChar": 365,
+              "quote": "rendering"
+            },
+            "determiner": "bare",
+            "head": "rendering"
+          },
+          {
+            "anchor": {
+              "startChar": 369,
+              "endChar": 394,
+              "quote": "the various page elements"
+            },
+            "determiner": "the",
+            "head": "various page elements"
+          },
+          {
+            "anchor": {
+              "startChar": 408,
+              "endChar": 424,
+              "quote": "said Portal page"
+            },
+            "determiner": "said",
+            "head": "portal page"
+          },
+          {
+            "anchor": {
+              "startChar": 440,
+              "endChar": 456,
+              "quote": "said Portal page"
+            },
+            "determiner": "said",
+            "head": "portal page"
+          },
+          {
+            "anchor": {
+              "startChar": 460,
+              "endChar": 480,
+              "quote": "the client's browser"
+            },
+            "determiner": "the",
+            "head": "client's browser"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 505,
+          "endChar": 651,
+          "quote": "at least one page element of said Portal page provides an URL functionality for initiating rendering a new page or new page element by said Portal"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 505,
+              "endChar": 530,
+              "quote": "at least one page element"
+            },
+            "determiner": "at-least-one",
+            "head": "page element"
+          },
+          {
+            "anchor": {
+              "startChar": 534,
+              "endChar": 550,
+              "quote": "said Portal page"
+            },
+            "determiner": "said",
+            "head": "portal page"
+          },
+          {
+            "anchor": {
+              "startChar": 560,
+              "endChar": 580,
+              "quote": "an URL functionality"
+            },
+            "determiner": "an",
+            "head": "url functionality"
+          },
+          {
+            "anchor": {
+              "startChar": 596,
+              "endChar": 605,
+              "quote": "rendering"
+            },
+            "determiner": "bare",
+            "head": "rendering"
+          },
+          {
+            "anchor": {
+              "startChar": 606,
+              "endChar": 616,
+              "quote": "a new page"
+            },
+            "determiner": "a",
+            "head": "new page"
+          },
+          {
+            "anchor": {
+              "startChar": 620,
+              "endChar": 636,
+              "quote": "new page element"
+            },
+            "determiner": "bare",
+            "head": "new page element"
+          },
+          {
+            "anchor": {
+              "startChar": 640,
+              "endChar": 651,
+              "quote": "said Portal"
+            },
+            "determiner": "said",
+            "head": "portal"
+          }
+        ]
+      },
+      {
+        "path": "1.e",
+        "anchor": {
+          "startChar": 661,
+          "endChar": 779,
+          "quote": "each user interaction by clicking said URL at said page element generates a new navigational state at said Portal side"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 661,
+              "endChar": 682,
+              "quote": "each user interaction"
+            },
+            "determiner": "bare",
+            "head": "user interaction"
+          },
+          {
+            "anchor": {
+              "startChar": 695,
+              "endChar": 703,
+              "quote": "said URL"
+            },
+            "determiner": "said",
+            "head": "url"
+          },
+          {
+            "anchor": {
+              "startChar": 707,
+              "endChar": 724,
+              "quote": "said page element"
+            },
+            "determiner": "said",
+            "head": "page element"
+          },
+          {
+            "anchor": {
+              "startChar": 735,
+              "endChar": 759,
+              "quote": "a new navigational state"
+            },
+            "determiner": "a",
+            "head": "new navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 763,
+              "endChar": 779,
+              "quote": "said Portal side"
+            },
+            "determiner": "said",
+            "head": "portal side"
+          }
+        ]
+      },
+      {
+        "path": "1.f",
+        "anchor": {
+          "startChar": 789,
+          "endChar": 939,
+          "quote": "the latest navigational state describes the current view of said Portal as the result of all previous navigational interactions of a particular client"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 789,
+              "endChar": 818,
+              "quote": "the latest navigational state"
+            },
+            "determiner": "the",
+            "head": "latest navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 829,
+              "endChar": 845,
+              "quote": "the current view"
+            },
+            "determiner": "the",
+            "head": "current view"
+          },
+          {
+            "anchor": {
+              "startChar": 849,
+              "endChar": 860,
+              "quote": "said Portal"
+            },
+            "determiner": "said",
+            "head": "portal"
+          },
+          {
+            "anchor": {
+              "startChar": 864,
+              "endChar": 874,
+              "quote": "the result"
+            },
+            "determiner": "the",
+            "head": "result"
+          },
+          {
+            "anchor": {
+              "startChar": 878,
+              "endChar": 916,
+              "quote": "all previous navigational interactions"
+            },
+            "determiner": "bare",
+            "head": "all previous navigational interactions"
+          },
+          {
+            "anchor": {
+              "startChar": 920,
+              "endChar": 939,
+              "quote": "a particular client"
+            },
+            "determiner": "a",
+            "head": "particular client"
+          }
+        ]
+      },
+      {
+        "path": "1.g",
+        "anchor": {
+          "startChar": 949,
+          "endChar": 1012,
+          "quote": "said at least latest navigational state is saved by said Portal"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 949,
+              "endChar": 988,
+              "quote": "said at least latest navigational state"
+            },
+            "determiner": "said",
+            "head": "at least latest navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 1001,
+              "endChar": 1012,
+              "quote": "said Portal"
+            },
+            "determiner": "said",
+            "head": "portal"
+          }
+        ]
+      },
+      {
+        "path": "1.h",
+        "anchor": {
+          "startChar": 1122,
+          "endChar": 1273,
+          "quote": "creating a base navigational state which describes that part of the latest navigational state that is identical across all URLs of said new Portal page"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1131,
+              "endChar": 1156,
+              "quote": "a base navigational state"
+            },
+            "determiner": "a",
+            "head": "base navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 1173,
+              "endChar": 1182,
+              "quote": "that part"
+            },
+            "determiner": "bare",
+            "head": "part"
+          },
+          {
+            "anchor": {
+              "startChar": 1186,
+              "endChar": 1215,
+              "quote": "the latest navigational state"
+            },
+            "determiner": "the",
+            "head": "latest navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 1241,
+              "endChar": 1249,
+              "quote": "all URLs"
+            },
+            "determiner": "bare",
+            "head": "all urls"
+          },
+          {
+            "anchor": {
+              "startChar": 1253,
+              "endChar": 1273,
+              "quote": "said new Portal page"
+            },
+            "determiner": "said",
+            "head": "new portal page"
+          }
+        ]
+      },
+      {
+        "path": "1.i",
+        "anchor": {
+          "startChar": 1275,
+          "endChar": 1527,
+          "quote": "creating for each URL included in said new Portal page to be rendered and not contained in said base navigational state an URL specific delta navigational state which describes the state transition of said specific URL when said specific URL is invoked"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1288,
+              "endChar": 1296,
+              "quote": "each URL"
+            },
+            "determiner": "bare",
+            "head": "url"
+          },
+          {
+            "anchor": {
+              "startChar": 1309,
+              "endChar": 1329,
+              "quote": "said new Portal page"
+            },
+            "determiner": "said",
+            "head": "new portal page"
+          },
+          {
+            "anchor": {
+              "startChar": 1366,
+              "endChar": 1394,
+              "quote": "said base navigational state"
+            },
+            "determiner": "said",
+            "head": "base navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 1395,
+              "endChar": 1435,
+              "quote": "an URL specific delta navigational state"
+            },
+            "determiner": "an",
+            "head": "url specific delta navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 1452,
+              "endChar": 1472,
+              "quote": "the state transition"
+            },
+            "determiner": "the",
+            "head": "state transition"
+          },
+          {
+            "anchor": {
+              "startChar": 1476,
+              "endChar": 1493,
+              "quote": "said specific URL"
+            },
+            "determiner": "said",
+            "head": "specific url"
+          },
+          {
+            "anchor": {
+              "startChar": 1499,
+              "endChar": 1516,
+              "quote": "said specific URL"
+            },
+            "determiner": "said",
+            "head": "specific url"
+          }
+        ]
+      },
+      {
+        "path": "1.j",
+        "anchor": {
+          "startChar": 1529,
+          "endChar": 1607,
+          "quote": "encoding said base navigational state into the header of said Portal page once"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1538,
+              "endChar": 1566,
+              "quote": "said base navigational state"
+            },
+            "determiner": "said",
+            "head": "base navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 1572,
+              "endChar": 1582,
+              "quote": "the header"
+            },
+            "determiner": "the",
+            "head": "header"
+          },
+          {
+            "anchor": {
+              "startChar": 1586,
+              "endChar": 1602,
+              "quote": "said Portal page"
+            },
+            "determiner": "said",
+            "head": "portal page"
+          }
+        ]
+      },
+      {
+        "path": "1.k",
+        "anchor": {
+          "startChar": 1609,
+          "endChar": 1713,
+          "quote": "encoding each URL specific delta navigational state into its assigned URL being part of said Portal page"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1618,
+              "endChar": 1660,
+              "quote": "each URL specific delta navigational state"
+            },
+            "determiner": "bare",
+            "head": "url specific delta navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 1666,
+              "endChar": 1682,
+              "quote": "its assigned URL"
+            },
+            "determiner": "bare",
+            "head": "assigned url"
+          },
+          {
+            "anchor": {
+              "startChar": 1689,
+              "endChar": 1693,
+              "quote": "part"
+            },
+            "determiner": "bare",
+            "head": "part"
+          },
+          {
+            "anchor": {
+              "startChar": 1697,
+              "endChar": 1713,
+              "quote": "said Portal page"
+            },
+            "determiner": "said",
+            "head": "portal page"
+          }
+        ]
+      },
+      {
+        "path": "1.l",
+        "anchor": {
+          "startChar": 1719,
+          "endChar": 1853,
+          "quote": "generating and transmitting a response to said client's browser including said new Portal page for displaying by said client's browser"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1747,
+              "endChar": 1757,
+              "quote": "a response"
+            },
+            "determiner": "a",
+            "head": "response"
+          },
+          {
+            "anchor": {
+              "startChar": 1761,
+              "endChar": 1782,
+              "quote": "said client's browser"
+            },
+            "determiner": "said",
+            "head": "client's browser"
+          },
+          {
+            "anchor": {
+              "startChar": 1793,
+              "endChar": 1813,
+              "quote": "said new Portal page"
+            },
+            "determiner": "said",
+            "head": "new portal page"
+          },
+          {
+            "anchor": {
+              "startChar": 1832,
+              "endChar": 1853,
+              "quote": "said client's browser"
+            },
+            "determiner": "said",
+            "head": "client's browser"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 74,
+                "endChar": 85,
+                "quote": "said Portal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 85,
+              "endChar": 100,
+              "quote": " is running in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 100,
+                "endChar": 115,
+                "quote": "a server system"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 125,
+                "endChar": 143,
+                "quote": "said server system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 143,
+              "endChar": 153,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 153,
+                "endChar": 178,
+                "quote": "a communication component"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 178,
+              "endChar": 192,
+              "quote": " which allows "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 192,
+                "endChar": 205,
+                "quote": "communication"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 205,
+              "endChar": 214,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 214,
+                "endChar": 225,
+                "quote": "said Portal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 225,
+              "endChar": 230,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 230,
+                "endChar": 246,
+                "quote": "client's browser"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 246,
+              "endChar": 251,
+              "quote": " via "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 251,
+                "endChar": 274,
+                "quote": "a communication channel"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 284,
+                "endChar": 295,
+                "quote": "said Portal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 295,
+              "endChar": 307,
+              "quote": " determines "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 307,
+                "endChar": 317,
+                "quote": "the layout"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 317,
+              "endChar": 321,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 321,
+                "endChar": 346,
+                "quote": "the requested Portal page"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 346,
+              "endChar": 356,
+              "quote": ", invokes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 356,
+                "endChar": 365,
+                "quote": "rendering"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 365,
+              "endChar": 369,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 369,
+                "endChar": 394,
+                "quote": "the various page elements"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 394,
+              "endChar": 408,
+              "quote": " belonging to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 408,
+                "endChar": 424,
+                "quote": "said Portal page"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 424,
+              "endChar": 440,
+              "quote": ", and transmits "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 440,
+                "endChar": 456,
+                "quote": "said Portal page"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 456,
+              "endChar": 460,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 460,
+                "endChar": 480,
+                "quote": "the client's browser"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 480,
+              "endChar": 495,
+              "quote": " for displaying"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 505,
+                "endChar": 530,
+                "quote": "at least one page element"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 530,
+              "endChar": 534,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 534,
+                "endChar": 550,
+                "quote": "said Portal page"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 550,
+              "endChar": 560,
+              "quote": " provides "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 560,
+                "endChar": 580,
+                "quote": "an URL functionality"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 580,
+              "endChar": 596,
+              "quote": " for initiating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 596,
+                "endChar": 605,
+                "quote": "rendering"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 605,
+              "endChar": 606,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 606,
+                "endChar": 616,
+                "quote": "a new page"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 616,
+              "endChar": 620,
+              "quote": " or "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 620,
+                "endChar": 636,
+                "quote": "new page element"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 636,
+              "endChar": 640,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 640,
+                "endChar": 651,
+                "quote": "said Portal"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.e",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 661,
+                "endChar": 682,
+                "quote": "each user interaction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 682,
+              "endChar": 695,
+              "quote": " by clicking "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 695,
+                "endChar": 703,
+                "quote": "said URL"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 703,
+              "endChar": 707,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 707,
+                "endChar": 724,
+                "quote": "said page element"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 724,
+              "endChar": 735,
+              "quote": " generates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 735,
+                "endChar": 759,
+                "quote": "a new navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 759,
+              "endChar": 763,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 763,
+                "endChar": 779,
+                "quote": "said Portal side"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.f",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.f",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 789,
+                "endChar": 818,
+                "quote": "the latest navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 818,
+              "endChar": 829,
+              "quote": " describes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 829,
+                "endChar": 845,
+                "quote": "the current view"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 845,
+              "endChar": 849,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 849,
+                "endChar": 860,
+                "quote": "said Portal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 860,
+              "endChar": 864,
+              "quote": " as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 864,
+                "endChar": 874,
+                "quote": "the result"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 874,
+              "endChar": 878,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 878,
+                "endChar": 916,
+                "quote": "all previous navigational interactions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 916,
+              "endChar": 920,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 920,
+                "endChar": 939,
+                "quote": "a particular client"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.g",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.g",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 949,
+                "endChar": 988,
+                "quote": "said at least latest navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 988,
+              "endChar": 1001,
+              "quote": " is saved by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1001,
+                "endChar": 1012,
+                "quote": "said Portal"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.h",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.h",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1122,
+              "endChar": 1131,
+              "quote": "creating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.h",
+              "anchor": {
+                "startChar": 1131,
+                "endChar": 1156,
+                "quote": "a base navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1156,
+              "endChar": 1173,
+              "quote": " which describes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.h",
+              "anchor": {
+                "startChar": 1173,
+                "endChar": 1182,
+                "quote": "that part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1182,
+              "endChar": 1186,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.h",
+              "anchor": {
+                "startChar": 1186,
+                "endChar": 1215,
+                "quote": "the latest navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1215,
+              "endChar": 1241,
+              "quote": " that is identical across "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.h",
+              "anchor": {
+                "startChar": 1241,
+                "endChar": 1249,
+                "quote": "all URLs"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1249,
+              "endChar": 1253,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.h",
+              "anchor": {
+                "startChar": 1253,
+                "endChar": 1273,
+                "quote": "said new Portal page"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.i",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1275,
+              "endChar": 1288,
+              "quote": "creating for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.i",
+              "anchor": {
+                "startChar": 1288,
+                "endChar": 1296,
+                "quote": "each URL"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1296,
+              "endChar": 1309,
+              "quote": " included in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.i",
+              "anchor": {
+                "startChar": 1309,
+                "endChar": 1329,
+                "quote": "said new Portal page"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1329,
+              "endChar": 1366,
+              "quote": " to be rendered and not contained in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.i",
+              "anchor": {
+                "startChar": 1366,
+                "endChar": 1394,
+                "quote": "said base navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1394,
+              "endChar": 1395,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.i",
+              "anchor": {
+                "startChar": 1395,
+                "endChar": 1435,
+                "quote": "an URL specific delta navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1435,
+              "endChar": 1452,
+              "quote": " which describes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.i",
+              "anchor": {
+                "startChar": 1452,
+                "endChar": 1472,
+                "quote": "the state transition"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1472,
+              "endChar": 1476,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.i",
+              "anchor": {
+                "startChar": 1476,
+                "endChar": 1493,
+                "quote": "said specific URL"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1493,
+              "endChar": 1499,
+              "quote": " when "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.i",
+              "anchor": {
+                "startChar": 1499,
+                "endChar": 1516,
+                "quote": "said specific URL"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1516,
+              "endChar": 1527,
+              "quote": " is invoked"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.j",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.j",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1529,
+              "endChar": 1538,
+              "quote": "encoding "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.j",
+              "anchor": {
+                "startChar": 1538,
+                "endChar": 1566,
+                "quote": "said base navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1566,
+              "endChar": 1572,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.j",
+              "anchor": {
+                "startChar": 1572,
+                "endChar": 1582,
+                "quote": "the header"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1582,
+              "endChar": 1586,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.j",
+              "anchor": {
+                "startChar": 1586,
+                "endChar": 1602,
+                "quote": "said Portal page"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1602,
+              "endChar": 1607,
+              "quote": " once"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.k",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.k",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1609,
+              "endChar": 1618,
+              "quote": "encoding "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.k",
+              "anchor": {
+                "startChar": 1618,
+                "endChar": 1660,
+                "quote": "each URL specific delta navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1660,
+              "endChar": 1666,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.k",
+              "anchor": {
+                "startChar": 1666,
+                "endChar": 1682,
+                "quote": "its assigned URL"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1682,
+              "endChar": 1689,
+              "quote": " being "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.k",
+              "anchor": {
+                "startChar": 1689,
+                "endChar": 1693,
+                "quote": "part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1693,
+              "endChar": 1697,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.k",
+              "anchor": {
+                "startChar": 1697,
+                "endChar": 1713,
+                "quote": "said Portal page"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.l",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.l",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1719,
+              "endChar": 1747,
+              "quote": "generating and transmitting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.l",
+              "anchor": {
+                "startChar": 1747,
+                "endChar": 1757,
+                "quote": "a response"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1757,
+              "endChar": 1761,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.l",
+              "anchor": {
+                "startChar": 1761,
+                "endChar": 1782,
+                "quote": "said client's browser"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1782,
+              "endChar": 1793,
+              "quote": " including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.l",
+              "anchor": {
+                "startChar": 1793,
+                "endChar": 1813,
+                "quote": "said new Portal page"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1813,
+              "endChar": 1832,
+              "quote": " for displaying by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.l",
+              "anchor": {
+                "startChar": 1832,
+                "endChar": 1853,
+                "quote": "said client's browser"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 1076,
+            "endChar": 1087,
+            "quote": "said method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 85,
+            "quote": "said Portal"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 56,
+            "endChar": 64,
+            "quote": "a Portal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 125,
+            "endChar": 143,
+            "quote": "said server system"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 100,
+            "endChar": 115,
+            "quote": "a server system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 214,
+            "endChar": 225,
+            "quote": "said Portal"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 56,
+            "endChar": 64,
+            "quote": "a Portal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 284,
+            "endChar": 295,
+            "quote": "said Portal"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 56,
+            "endChar": 64,
+            "quote": "a Portal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 460,
+            "endChar": 480,
+            "quote": "the client's browser"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 230,
+            "endChar": 246,
+            "quote": "client's browser"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 640,
+            "endChar": 651,
+            "quote": "said Portal"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 56,
+            "endChar": 64,
+            "quote": "a Portal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 707,
+            "endChar": 724,
+            "quote": "said page element"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 505,
+            "endChar": 530,
+            "quote": "at least one page element"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 849,
+            "endChar": 860,
+            "quote": "said Portal"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 56,
+            "endChar": 64,
+            "quote": "a Portal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 1001,
+            "endChar": 1012,
+            "quote": "said Portal"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 56,
+            "endChar": 64,
+            "quote": "a Portal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1253,
+            "endChar": 1273,
+            "quote": "said new Portal page"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 1058,
+            "endChar": 1075,
+            "quote": "a new Portal page"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1309,
+            "endChar": 1329,
+            "quote": "said new Portal page"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 1058,
+            "endChar": 1075,
+            "quote": "a new Portal page"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1366,
+            "endChar": 1394,
+            "quote": "said base navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1131,
+            "endChar": 1156,
+            "quote": "a base navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1476,
+            "endChar": 1493,
+            "quote": "said specific URL"
+          }
+        },
+        "introducing": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1288,
+            "endChar": 1296,
+            "quote": "each URL"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1499,
+            "endChar": 1516,
+            "quote": "said specific URL"
+          }
+        },
+        "introducing": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1288,
+            "endChar": 1296,
+            "quote": "each URL"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.j",
+          "anchor": {
+            "startChar": 1538,
+            "endChar": 1566,
+            "quote": "said base navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1131,
+            "endChar": 1156,
+            "quote": "a base navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.k",
+          "anchor": {
+            "startChar": 1618,
+            "endChar": 1660,
+            "quote": "each URL specific delta navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1395,
+            "endChar": 1435,
+            "quote": "an URL specific delta navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.l",
+          "anchor": {
+            "startChar": 1761,
+            "endChar": 1782,
+            "quote": "said client's browser"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 230,
+            "endChar": 246,
+            "quote": "client's browser"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.l",
+          "anchor": {
+            "startChar": 1793,
+            "endChar": 1813,
+            "quote": "said new Portal page"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 1058,
+            "endChar": 1075,
+            "quote": "a new Portal page"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.l",
+          "anchor": {
+            "startChar": 1832,
+            "endChar": 1853,
+            "quote": "said client's browser"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 230,
+            "endChar": 246,
+            "quote": "client's browser"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 156,
+          "quote": "said base navigational state and said delta navigational state are encoded in said Portal page in a serialized form"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 69,
+              "quote": "said base navigational state"
+            },
+            "determiner": "said",
+            "head": "base navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 74,
+              "endChar": 103,
+              "quote": "said delta navigational state"
+            },
+            "determiner": "said",
+            "head": "delta navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 135,
+              "quote": "said Portal page"
+            },
+            "determiner": "said",
+            "head": "portal page"
+          },
+          {
+            "anchor": {
+              "startChar": 139,
+              "endChar": 156,
+              "quote": "a serialized form"
+            },
+            "determiner": "a",
+            "head": "serialized form"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 69,
+                "quote": "said base navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 69,
+              "endChar": 74,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 74,
+                "endChar": 103,
+                "quote": "said delta navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 103,
+              "endChar": 119,
+              "quote": " are encoded in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 135,
+                "quote": "said Portal page"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 135,
+              "endChar": 139,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 139,
+                "endChar": 156,
+                "quote": "a serialized form"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2.a",
+        "ancestor": "1.j"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 41,
+            "endChar": 69,
+            "quote": "said base navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1131,
+            "endChar": 1156,
+            "quote": "a base navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 103,
+            "quote": "said delta navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1395,
+            "endChar": 1435,
+            "quote": "an URL specific delta navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 66,
+          "endChar": 188,
+          "quote": "receiving client request for a new Portal page which includes said base navigational state and said delta navigation state"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 76,
+              "endChar": 90,
+              "quote": "client request"
+            },
+            "determiner": "bare",
+            "head": "client request"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 112,
+              "quote": "a new Portal page"
+            },
+            "determiner": "a",
+            "head": "new portal page"
+          },
+          {
+            "anchor": {
+              "startChar": 128,
+              "endChar": 156,
+              "quote": "said base navigational state"
+            },
+            "determiner": "said",
+            "head": "base navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 161,
+              "endChar": 188,
+              "quote": "said delta navigation state"
+            },
+            "determiner": "said",
+            "head": "delta navigation state"
+          }
+        ]
+      },
+      {
+        "path": "3.b",
+        "anchor": {
+          "startChar": 190,
+          "endChar": 267,
+          "quote": "de-serializing said base navigational state and said delta navigational state"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 205,
+              "endChar": 233,
+              "quote": "said base navigational state"
+            },
+            "determiner": "said",
+            "head": "base navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 238,
+              "endChar": 267,
+              "quote": "said delta navigational state"
+            },
+            "determiner": "said",
+            "head": "delta navigational state"
+          }
+        ]
+      },
+      {
+        "path": "3.c",
+        "anchor": {
+          "startChar": 269,
+          "endChar": 385,
+          "quote": "merging said delta navigational state with base navigational state resulting in a new latest base navigational state"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 277,
+              "endChar": 306,
+              "quote": "said delta navigational state"
+            },
+            "determiner": "said",
+            "head": "delta navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 312,
+              "endChar": 335,
+              "quote": "base navigational state"
+            },
+            "determiner": "bare",
+            "head": "base navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 349,
+              "endChar": 385,
+              "quote": "a new latest base navigational state"
+            },
+            "determiner": "a",
+            "head": "new latest base navigational state"
+          }
+        ]
+      },
+      {
+        "path": "3.d",
+        "anchor": {
+          "startChar": 387,
+          "endChar": 514,
+          "quote": "presenting said new latest base navigational state in a hierarchical tree-like object representation for serialization purposes"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 398,
+              "endChar": 437,
+              "quote": "said new latest base navigational state"
+            },
+            "determiner": "said",
+            "head": "new latest base navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 441,
+              "endChar": 487,
+              "quote": "a hierarchical tree-like object representation"
+            },
+            "determiner": "a",
+            "head": "hierarchical tree-like object representation"
+          },
+          {
+            "anchor": {
+              "startChar": 492,
+              "endChar": 514,
+              "quote": "serialization purposes"
+            },
+            "determiner": "bare",
+            "head": "serialization purposes"
+          }
+        ]
+      },
+      {
+        "path": "3.e",
+        "anchor": {
+          "startChar": 516,
+          "endChar": 617,
+          "quote": "pre-serializing said new latest base navigational state before starting rendering of said Portal page"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 532,
+              "endChar": 571,
+              "quote": "said new latest base navigational state"
+            },
+            "determiner": "said",
+            "head": "new latest base navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 588,
+              "endChar": 597,
+              "quote": "rendering"
+            },
+            "determiner": "bare",
+            "head": "rendering"
+          },
+          {
+            "anchor": {
+              "startChar": 601,
+              "endChar": 617,
+              "quote": "said Portal page"
+            },
+            "determiner": "said",
+            "head": "portal page"
+          }
+        ]
+      },
+      {
+        "path": "3.f",
+        "anchor": {
+          "startChar": 623,
+          "endChar": 730,
+          "quote": "including said pre-serialized new latest base navigational state into the HTML base tag of said Portal page"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 633,
+              "endChar": 687,
+              "quote": "said pre-serialized new latest base navigational state"
+            },
+            "determiner": "said",
+            "head": "pre-serialized new latest base navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 693,
+              "endChar": 710,
+              "quote": "the HTML base tag"
+            },
+            "determiner": "the",
+            "head": "html base tag"
+          },
+          {
+            "anchor": {
+              "startChar": 714,
+              "endChar": 730,
+              "quote": "said Portal page"
+            },
+            "determiner": "said",
+            "head": "portal page"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 66,
+              "endChar": 76,
+              "quote": "receiving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 76,
+                "endChar": 90,
+                "quote": "client request"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 90,
+              "endChar": 95,
+              "quote": " for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 95,
+                "endChar": 112,
+                "quote": "a new Portal page"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 112,
+              "endChar": 128,
+              "quote": " which includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 128,
+                "endChar": 156,
+                "quote": "said base navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 156,
+              "endChar": 161,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 161,
+                "endChar": 188,
+                "quote": "said delta navigation state"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "3.b",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 190,
+              "endChar": 205,
+              "quote": "de-serializing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 205,
+                "endChar": 233,
+                "quote": "said base navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 233,
+              "endChar": 238,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 238,
+                "endChar": 267,
+                "quote": "said delta navigational state"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "3.c",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 269,
+              "endChar": 277,
+              "quote": "merging "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.c",
+              "anchor": {
+                "startChar": 277,
+                "endChar": 306,
+                "quote": "said delta navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 306,
+              "endChar": 312,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.c",
+              "anchor": {
+                "startChar": 312,
+                "endChar": 335,
+                "quote": "base navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 335,
+              "endChar": 349,
+              "quote": " resulting in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.c",
+              "anchor": {
+                "startChar": 349,
+                "endChar": 385,
+                "quote": "a new latest base navigational state"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "3.d",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.d",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 387,
+              "endChar": 398,
+              "quote": "presenting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.d",
+              "anchor": {
+                "startChar": 398,
+                "endChar": 437,
+                "quote": "said new latest base navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 437,
+              "endChar": 441,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.d",
+              "anchor": {
+                "startChar": 441,
+                "endChar": 487,
+                "quote": "a hierarchical tree-like object representation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 487,
+              "endChar": 492,
+              "quote": " for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.d",
+              "anchor": {
+                "startChar": 492,
+                "endChar": 514,
+                "quote": "serialization purposes"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "3.e",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.e",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 516,
+              "endChar": 532,
+              "quote": "pre-serializing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.e",
+              "anchor": {
+                "startChar": 532,
+                "endChar": 571,
+                "quote": "said new latest base navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 571,
+              "endChar": 588,
+              "quote": " before starting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.e",
+              "anchor": {
+                "startChar": 588,
+                "endChar": 597,
+                "quote": "rendering"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 597,
+              "endChar": 601,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.e",
+              "anchor": {
+                "startChar": 601,
+                "endChar": 617,
+                "quote": "said Portal page"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "3.f",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.f",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 623,
+              "endChar": 633,
+              "quote": "including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.f",
+              "anchor": {
+                "startChar": 633,
+                "endChar": 687,
+                "quote": "said pre-serialized new latest base navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 687,
+              "endChar": 693,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.f",
+              "anchor": {
+                "startChar": 693,
+                "endChar": 710,
+                "quote": "the HTML base tag"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 710,
+              "endChar": 714,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.f",
+              "anchor": {
+                "startChar": 714,
+                "endChar": 730,
+                "quote": "said Portal page"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.a",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.b",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.c",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.d",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.e",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.f",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 128,
+            "endChar": 156,
+            "quote": "said base navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1131,
+            "endChar": 1156,
+            "quote": "a base navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 205,
+            "endChar": 233,
+            "quote": "said base navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1131,
+            "endChar": 1156,
+            "quote": "a base navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 238,
+            "endChar": 267,
+            "quote": "said delta navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1395,
+            "endChar": 1435,
+            "quote": "an URL specific delta navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.c",
+          "anchor": {
+            "startChar": 277,
+            "endChar": 306,
+            "quote": "said delta navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1395,
+            "endChar": 1435,
+            "quote": "an URL specific delta navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.c",
+          "anchor": {
+            "startChar": 312,
+            "endChar": 335,
+            "quote": "base navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1131,
+            "endChar": 1156,
+            "quote": "a base navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.d",
+          "anchor": {
+            "startChar": 398,
+            "endChar": 437,
+            "quote": "said new latest base navigational state"
+          }
+        },
+        "introducing": {
+          "path": "3.c",
+          "anchor": {
+            "startChar": 349,
+            "endChar": 385,
+            "quote": "a new latest base navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.e",
+          "anchor": {
+            "startChar": 532,
+            "endChar": 571,
+            "quote": "said new latest base navigational state"
+          }
+        },
+        "introducing": {
+          "path": "3.c",
+          "anchor": {
+            "startChar": 349,
+            "endChar": 385,
+            "quote": "a new latest base navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.f",
+          "anchor": {
+            "startChar": 633,
+            "endChar": 687,
+            "quote": "said pre-serialized new latest base navigational state"
+          }
+        },
+        "introducing": {
+          "path": "3.c",
+          "anchor": {
+            "startChar": 349,
+            "endChar": 385,
+            "quote": "a new latest base navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 161,
+            "endChar": 188,
+            "quote": "said delta navigation state"
+          }
+        },
+        "introducing": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1395,
+            "endChar": 1435,
+            "quote": "an URL specific delta navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.e",
+          "anchor": {
+            "startChar": 601,
+            "endChar": 617,
+            "quote": "said Portal page"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 95,
+            "endChar": 112,
+            "quote": "a new Portal page"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.f",
+          "anchor": {
+            "startChar": 714,
+            "endChar": 730,
+            "quote": "said Portal page"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 95,
+            "endChar": 112,
+            "quote": "a new Portal page"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 321,
+          "quote": "said encoding of each URL specific delta navigational state is based on a serialization method which operates on a delta proxy object that records the modifications on the underlying hierarchical tree-like object representation representing said new latest base navigational state"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 54,
+              "quote": "said encoding"
+            },
+            "determiner": "said",
+            "head": "encoding"
+          },
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 100,
+              "quote": "each URL specific delta navigational state"
+            },
+            "determiner": "bare",
+            "head": "url specific delta navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 135,
+              "quote": "a serialization method"
+            },
+            "determiner": "a",
+            "head": "serialization method"
+          },
+          {
+            "anchor": {
+              "startChar": 154,
+              "endChar": 174,
+              "quote": "a delta proxy object"
+            },
+            "determiner": "a",
+            "head": "delta proxy object"
+          },
+          {
+            "anchor": {
+              "startChar": 188,
+              "endChar": 205,
+              "quote": "the modifications"
+            },
+            "determiner": "the",
+            "head": "modifications"
+          },
+          {
+            "anchor": {
+              "startChar": 209,
+              "endChar": 268,
+              "quote": "the underlying hierarchical tree-like object representation"
+            },
+            "determiner": "the",
+            "head": "underlying hierarchical tree-like object representation"
+          },
+          {
+            "anchor": {
+              "startChar": 282,
+              "endChar": 321,
+              "quote": "said new latest base navigational state"
+            },
+            "determiner": "said",
+            "head": "new latest base navigational state"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 54,
+                "quote": "said encoding"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 54,
+              "endChar": 58,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 58,
+                "endChar": 100,
+                "quote": "each URL specific delta navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 100,
+              "endChar": 113,
+              "quote": " is based on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 113,
+                "endChar": 135,
+                "quote": "a serialization method"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 135,
+              "endChar": 154,
+              "quote": " which operates on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 154,
+                "endChar": 174,
+                "quote": "a delta proxy object"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 174,
+              "endChar": 188,
+              "quote": " that records "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 188,
+                "endChar": 205,
+                "quote": "the modifications"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 205,
+              "endChar": 209,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 209,
+                "endChar": 268,
+                "quote": "the underlying hierarchical tree-like object representation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 268,
+              "endChar": 282,
+              "quote": " representing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 282,
+                "endChar": 321,
+                "quote": "said new latest base navigational state"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4.a",
+        "ancestor": "1.k"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 58,
+            "endChar": 100,
+            "quote": "each URL specific delta navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1395,
+            "endChar": 1435,
+            "quote": "an URL specific delta navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 4"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 205,
+          "quote": "said hierarchical tree-like object representation contains nodes which are described by name, value, and attributes being all represented by character based strings"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 90,
+              "quote": "said hierarchical tree-like object representation"
+            },
+            "determiner": "said",
+            "head": "hierarchical tree-like object representation"
+          },
+          {
+            "anchor": {
+              "startChar": 100,
+              "endChar": 105,
+              "quote": "nodes"
+            },
+            "determiner": "bare",
+            "head": "nodes"
+          },
+          {
+            "anchor": {
+              "startChar": 129,
+              "endChar": 133,
+              "quote": "name"
+            },
+            "determiner": "bare",
+            "head": "name"
+          },
+          {
+            "anchor": {
+              "startChar": 135,
+              "endChar": 140,
+              "quote": "value"
+            },
+            "determiner": "bare",
+            "head": "value"
+          },
+          {
+            "anchor": {
+              "startChar": 146,
+              "endChar": 156,
+              "quote": "attributes"
+            },
+            "determiner": "bare",
+            "head": "attributes"
+          },
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 205,
+              "quote": "character based strings"
+            },
+            "determiner": "bare",
+            "head": "character based strings"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 90,
+                "quote": "said hierarchical tree-like object representation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 90,
+              "endChar": 100,
+              "quote": " contains "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 100,
+                "endChar": 105,
+                "quote": "nodes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 105,
+              "endChar": 129,
+              "quote": " which are described by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 129,
+                "endChar": 133,
+                "quote": "name"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 133,
+              "endChar": 135,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 135,
+                "endChar": 140,
+                "quote": "value"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 140,
+              "endChar": 146,
+              "quote": ", and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 146,
+                "endChar": 156,
+                "quote": "attributes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 156,
+              "endChar": 182,
+              "quote": " being all represented by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 182,
+                "endChar": 205,
+                "quote": "character based strings"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "4"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5.a",
+        "ancestor": "4.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 238,
+          "quote": "the structure and/or nodes within said structure of said hierarchical tree-like object representation is read by a read-only programming interface and modified by a read-write programming interface"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 54,
+              "quote": "the structure"
+            },
+            "determiner": "the",
+            "head": "structure"
+          },
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 67,
+              "quote": "nodes"
+            },
+            "determiner": "bare",
+            "head": "nodes"
+          },
+          {
+            "anchor": {
+              "startChar": 75,
+              "endChar": 89,
+              "quote": "said structure"
+            },
+            "determiner": "said",
+            "head": "structure"
+          },
+          {
+            "anchor": {
+              "startChar": 93,
+              "endChar": 142,
+              "quote": "said hierarchical tree-like object representation"
+            },
+            "determiner": "said",
+            "head": "hierarchical tree-like object representation"
+          },
+          {
+            "anchor": {
+              "startChar": 154,
+              "endChar": 187,
+              "quote": "a read-only programming interface"
+            },
+            "determiner": "a",
+            "head": "read-only programming interface"
+          },
+          {
+            "anchor": {
+              "startChar": 204,
+              "endChar": 238,
+              "quote": "a read-write programming interface"
+            },
+            "determiner": "a",
+            "head": "read-write programming interface"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 54,
+                "quote": "the structure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 54,
+              "endChar": 62,
+              "quote": " and/or "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 62,
+                "endChar": 67,
+                "quote": "nodes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 67,
+              "endChar": 75,
+              "quote": " within "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 75,
+                "endChar": 89,
+                "quote": "said structure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 89,
+              "endChar": 93,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 93,
+                "endChar": 142,
+                "quote": "said hierarchical tree-like object representation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 142,
+              "endChar": 154,
+              "quote": " is read by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 154,
+                "endChar": 187,
+                "quote": "a read-only programming interface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 187,
+              "endChar": 204,
+              "quote": " and modified by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 204,
+                "endChar": 238,
+                "quote": "a read-write programming interface"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6.a",
+        "ancestor": "5.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 206,
+          "quote": "said serialization method for the URL specific delta navigational state is executed during the rendering of said Portal page to be submitted to said client's browser"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 66,
+              "quote": "said serialization method"
+            },
+            "determiner": "said",
+            "head": "serialization method"
+          },
+          {
+            "anchor": {
+              "startChar": 71,
+              "endChar": 112,
+              "quote": "the URL specific delta navigational state"
+            },
+            "determiner": "the",
+            "head": "url specific delta navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 132,
+              "endChar": 145,
+              "quote": "the rendering"
+            },
+            "determiner": "the",
+            "head": "rendering"
+          },
+          {
+            "anchor": {
+              "startChar": 149,
+              "endChar": 165,
+              "quote": "said Portal page"
+            },
+            "determiner": "said",
+            "head": "portal page"
+          },
+          {
+            "anchor": {
+              "startChar": 185,
+              "endChar": 206,
+              "quote": "said client's browser"
+            },
+            "determiner": "said",
+            "head": "client's browser"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 66,
+                "quote": "said serialization method"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 66,
+              "endChar": 71,
+              "quote": " for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 71,
+                "endChar": 112,
+                "quote": "the URL specific delta navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 112,
+              "endChar": 132,
+              "quote": " is executed during "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 132,
+                "endChar": 145,
+                "quote": "the rendering"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 145,
+              "endChar": 149,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 149,
+                "endChar": 165,
+                "quote": "said Portal page"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 165,
+              "endChar": 185,
+              "quote": " to be submitted to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 185,
+                "endChar": 206,
+                "quote": "said client's browser"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7.a",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 71,
+            "endChar": 112,
+            "quote": "the URL specific delta navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1395,
+            "endChar": 1435,
+            "quote": "an URL specific delta navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 185,
+            "endChar": 206,
+            "quote": "said client's browser"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 230,
+            "endChar": 246,
+            "quote": "client's browser"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 135,
+          "quote": "said serialization result is further compressed by one or more standard compression algorithms"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 66,
+              "quote": "said serialization result"
+            },
+            "determiner": "said",
+            "head": "serialization result"
+          },
+          {
+            "anchor": {
+              "startChar": 92,
+              "endChar": 135,
+              "quote": "one or more standard compression algorithms"
+            },
+            "determiner": "at-least-one",
+            "head": "standard compression algorithms"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 66,
+                "quote": "said serialization result"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 66,
+              "endChar": 92,
+              "quote": " is further compressed by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 92,
+                "endChar": 135,
+                "quote": "one or more standard compression algorithms"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8.a",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 8"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 87,
+          "quote": "said compression algorithms are GZip, Zip, RLE"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 68,
+              "quote": "said compression algorithms"
+            },
+            "determiner": "said",
+            "head": "compression algorithms"
+          },
+          {
+            "anchor": {
+              "startChar": 73,
+              "endChar": 77,
+              "quote": "GZip"
+            },
+            "determiner": "bare",
+            "head": "gzip"
+          },
+          {
+            "anchor": {
+              "startChar": 79,
+              "endChar": 82,
+              "quote": "Zip"
+            },
+            "determiner": "bare",
+            "head": "zip"
+          },
+          {
+            "anchor": {
+              "startChar": 84,
+              "endChar": 87,
+              "quote": "RLE"
+            },
+            "determiner": "bare",
+            "head": "rle"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 68,
+                "quote": "said compression algorithms"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 68,
+              "endChar": 73,
+              "quote": " are "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 73,
+                "endChar": 77,
+                "quote": "GZip"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 79,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 79,
+                "endChar": 82,
+                "quote": "Zip"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 82,
+              "endChar": 84,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 84,
+                "endChar": 87,
+                "quote": "RLE"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "8"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9.a",
+        "ancestor": "8.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 41,
+            "endChar": 68,
+            "quote": "said compression algorithms"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 92,
+            "endChar": 135,
+            "quote": "one or more standard compression algorithms"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 9"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 169,
+          "quote": "said compressed serialization result representing said delta navigational state is encoded into the path information of said URL"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 77,
+              "quote": "said compressed serialization result"
+            },
+            "determiner": "said",
+            "head": "compressed serialization result"
+          },
+          {
+            "anchor": {
+              "startChar": 91,
+              "endChar": 120,
+              "quote": "said delta navigational state"
+            },
+            "determiner": "said",
+            "head": "delta navigational state"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 157,
+              "quote": "the path information"
+            },
+            "determiner": "the",
+            "head": "path information"
+          },
+          {
+            "anchor": {
+              "startChar": 161,
+              "endChar": 169,
+              "quote": "said URL"
+            },
+            "determiner": "said",
+            "head": "url"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 77,
+                "quote": "said compressed serialization result"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 91,
+              "quote": " representing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 91,
+                "endChar": 120,
+                "quote": "said delta navigational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 120,
+              "endChar": 137,
+              "quote": " is encoded into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 137,
+                "endChar": 157,
+                "quote": "the path information"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 157,
+              "endChar": 161,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 161,
+                "endChar": 169,
+                "quote": "said URL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "9"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10.a",
+        "ancestor": "8.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 91,
+            "endChar": 120,
+            "quote": "said delta navigational state"
+          }
+        },
+        "introducing": {
+          "path": "1.i",
+          "anchor": {
+            "startChar": 1395,
+            "endChar": 1435,
+            "quote": "an URL specific delta navigational state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      }
+    ]
+  }
+]

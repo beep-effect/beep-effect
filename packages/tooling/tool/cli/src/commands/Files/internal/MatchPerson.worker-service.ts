@@ -26,7 +26,7 @@ import { OutputBound, runCapturedStreams } from "../../../internal/process/StepE
 import { MatchPersonError } from "./MatchPerson.errors.ts";
 import { prepareAdaFaceArtifacts, verifyPersonMatchModelArtifacts } from "./MatchPerson.model-store.ts";
 import { decodePersonMatchWorkerReportJson, PERSON_MATCH_MAX_REPORTED_FACES } from "./MatchPerson.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type {
@@ -222,11 +222,10 @@ export const PersonMatchModelArtifactVerifier: Context.Reference<PersonMatchMode
 );
 
 type WorkerServiceRequirements =
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
   | HttpClient.HttpClient
-  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner;
 
 const {
@@ -244,8 +243,10 @@ const {
 
 const readOptionalConfig = (name: string): Effect.Effect<O.Option<string>, MatchPersonConfigError> =>
   Config.option(Config.String(name)).pipe(
-    Effect.map(flow(O.map(Str.trim), O.filter(Str.isNonEmpty))),
-    Effect.mapError((cause) => configError(`Failed to read optional person-match configuration ${name}.`, cause))
+    Effect.mapBoth({
+      onFailure: (cause) => configError(`Failed to read optional person-match configuration ${name}.`, cause),
+      onSuccess: flow(O.map(Str.trim), O.filter(Str.isNonEmpty)),
+    })
   );
 
 const canonicalizeRocmLibraryDirectory = Effect.fn("Files.PersonMatchWorker.canonicalizeRocmLibraryDirectory")(
@@ -371,7 +372,7 @@ const prepareBackendArtifacts = Effect.fn("Files.PersonMatchWorker.prepareBacken
 ): Effect.fn.Return<
   O.Option<PreparedAdaFaceArtifacts>,
   MatchPersonModelAcquisitionError | MatchPersonModelIntegrityError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | HttpClient.HttpClient
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | HttpClient.HttpClient
 > {
   return yield* Match.value(options.backend).pipe(
     Match.when("buffalo-l", () => Effect.succeed(O.none<PreparedAdaFaceArtifacts>())),
@@ -815,7 +816,11 @@ const capturedCommandFailureMessage = (summary: string, stdout: string, stderr: 
 
 const validateWorkerLock = Effect.fn("Files.PersonMatchWorker.validateLock")(function* (
   inputs: CanonicalMatchPersonInputs
-): Effect.fn.Return<void, PersonMatchWorkerServiceError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  PersonMatchWorkerServiceError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runCapturedStreams({
     command: inputs.uvPath,
     args: ["lock", "--check", "--project", workerProjectDirectory, "--python", "3.12", "--no-python-downloads"],
@@ -862,7 +867,7 @@ const materializeWorkerEnvironment = Effect.fn("Files.PersonMatchWorker.material
 ): Effect.fn.Return<
   MaterializedPersonMatchWorkerEnvironment,
   MatchPersonWorkerEnvironmentSetupError | PersonMatchWorkerServiceError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const workerLibraryPath = yield* resolveWorkerLibraryPath(options, inputs, environment);
   const processEnvironment = workerProcessEnvironment(inputs, environment, workerLibraryPath);
@@ -964,7 +969,7 @@ const materializeInitialWorkerEnvironment = Effect.fn("Files.PersonMatchWorker.m
   ): Effect.fn.Return<
     MaterializedPersonMatchWorkerEnvironment,
     PersonMatchWorkerServiceError,
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > {
     return yield* materializeWorkerEnvironment(options, inputs, environment).pipe(
       Effect.catchTag("MatchPersonWorkerEnvironmentSetupError", (error) =>

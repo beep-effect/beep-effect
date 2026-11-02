@@ -438,7 +438,7 @@ from a real security failure) before shipping such a fix.
     If the merged change touched a systemd unit renderer, re-render the
     installed units from the swept clone with
     `bun run beep research install-timers --refresh` and/or
-    `bun run beep graft deep install-timer --refresh` (see
+    `bun run beep refs install-timer --refresh` (see
     `docs/runbooks/systemd-timers.md`). Do not hand any of this to the operator.
 
 `yeet closeout` is read-first. It classifies review threads and bot findings and
@@ -458,9 +458,9 @@ comments exist). Deep review is on-demand:
 
 `yeet publish` is push-first by default (push-first-publish, 2026-10-05):
 
-- Gate before the push: cheap-gates tier + head-install preflight. No
-  admission ticket is taken; the publish never queues behind another
-  session's full proof.
+- Gate before the push: cheap-gates tier + head-install preflight. The schema-catalog
+  scan holds weighted admission for its measured memory cost. If admission or
+  local gates wait ten minutes, use the hosted escape in AGENTS.md.
 - After the push: `gh pr create --draft`, `ready-for-heavy` label (skipped on
   docs-only diffs and on PRs that already existed), provenance stamp, then
   `monitor --until-ready --detach` is submitted and publish exits with the PR
@@ -480,8 +480,8 @@ comments exist). Deep review is on-demand:
 `bun run beep yeet ready` flips a draft at content-final once the head has a
 passing `yeet final-check` receipt, no required check is red, and every thread
 is answered; refusals name `pr-open`, `no-required-red`, `threads-resolved` or
-`final-check`. The S32 re-request push, the review window and
-`ready-pending-flip`: [`references/merge-loop.md`](references/merge-loop.md#ready).
+`final-check`. A main-merge head that only refreshed inventories or packet files carries an
+ancestor's receipt (`final <F> #N receipt <R>`); that rule, S32, the review window: [`references/merge-loop.md`](references/merge-loop.md#ready).
 
 ## References
 

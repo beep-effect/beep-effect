@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -24,7 +24,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import { getNodeValue } from "jsonc-parser";
 import { asArrayBufferView } from "../../internal/cli/Bytes.ts";
 import { collectText } from "../../internal/process/StepExec.ts";
 import { makePublicationLedger, publicationSuffix } from "../../internal/publication/PublicationLedger.ts";
@@ -100,7 +99,7 @@ const decodeJournal = S.decodeEffect(S.fromJsonString(ModelsApplyJournal));
 const failure = (message: string) => ModelsLocatorError.make({ message });
 const nativeFields = S.Record(S.String, S.Unknown);
 const encodeValue = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-const decodeJsonText = (text: string) => modelsParseJson(text).pipe(Effect.map(getNodeValue));
+const decodeJsonText = (text: string) => modelsParseJson(text).pipe(Effect.map((tree) => tree.toValue()));
 
 // Mask exactly the owned leaves in parsed native data. This assertion is
 // independent of the stronger byte-preservation assertion below.
@@ -817,7 +816,7 @@ export const modelsAtomicExchangeOrLive = Effect.serviceOption(ModelsAtomicExcha
 const makeApply = Effect.fn("ModelsApply.make")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const validate = validateSyntax;
   const eligibility = (
     file: string,
@@ -839,7 +838,7 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
   const hashBytes = Effect.fnUntraced(function* (bytes: Uint8Array) {
     return Hex.encode(
       yield* crypto
-        .digest("SHA-256", asArrayBufferView(bytes))
+        .digest(Digest.sha256, asArrayBufferView(bytes))
         .pipe(ModelsLocatorError.mapError("Cannot fingerprint configuration."))
     );
   });
@@ -1194,8 +1193,20 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
       ];
     // An abandoned publication's backup copies an untouched target; a writer that
     // died between recording `abandoned` and dropping it leaves it for here.
-    if (initial.publication.state._tag === "abandoned")
+    if (initial.publication.state._tag === "abandoned") {
+      if (!(yield* ownsArtifacts(backupDirectory, initial, "publication", initial.publication)))
+        return [
+          ModelsRecoveryReport.make({
+            journal: initial.id,
+            role: "publication",
+            result: refuse(
+              "foreign-artifact",
+              "Abandoned publication contains a foreign artifact; nothing was removed."
+            ),
+          }),
+        ];
       yield* Effect.forEach(O.toArray(initial.publication.backup), discard, { discard: true });
+    }
     let journal = initial;
     const reports: Array<ModelsRecoveryReport> = [];
     for (const role of ModelsPublicationRole.literals) {

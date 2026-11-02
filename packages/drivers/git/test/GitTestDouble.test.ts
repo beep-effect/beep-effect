@@ -83,24 +83,19 @@ describe("Git.makeTest", () => {
 
   it.effect("an unstubbed method DIES with a defect naming the method", () =>
     Effect.gen(function* () {
-      // No honest default exists for any of the twenty-six methods — a
+      // No honest default exists for an unstubbed method — a
       // fabricated answer would leak into consumer logic as fact — so the
       // default is a defect, not a typed failure a test could swallow.
       const double = Git.makeTest({ revParse: () => Effect.succeed("sha") });
-      const exit = yield* Effect.exit(double.status(cwd));
-      assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
-      if (Exit.isFailure(exit)) {
-        assert.isFalse(A.some(exit.cause.reasons, Cause.isFailReason));
-        assert.isTrue(Cause.hasDies(exit.cause));
-        const die = O.getOrUndefined(A.findFirst(exit.cause.reasons, Cause.isDieReason));
-        assert.isDefined(die);
-        const defect = die?.defect;
-        assert.instanceOf(defect, NotStubbedError);
-        assert.strictEqual(
-          defect.message,
-          "Git.makeTest: status() was called but not stubbed — no honest default exists for a test double; pass a `status` override."
-        );
-      }
+      assertExitFailure(
+        yield* Effect.exit(double.status(cwd)),
+        Cause.die(
+          NotStubbedError.make({
+            message:
+              "Git.makeTest: status() was called but not stubbed — no honest default exists for a test double; pass a `status` override.",
+          })
+        )
+      );
     })
   );
 

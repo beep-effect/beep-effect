@@ -54,7 +54,7 @@ const expectWireRoundTrip = <C extends S.Codec<unknown, unknown>>(schema: C, val
   expect(encode(schema, decode(schema, value))).toEqual(value);
 };
 
-const graphInfoGithubWire: S.Codec.Encoded<typeof GraphInfo> = {
+const graphInfoGithubWire: typeof GraphInfo.Encoded = {
   num_classes: 1025,
   num_properties: 175,
   title: "FOLIO Ontology",
@@ -65,7 +65,7 @@ const graphInfoGithubWire: S.Codec.Encoded<typeof GraphInfo> = {
   github_repo_branch: "2.0.0",
 };
 
-const graphInfoHttpWire: S.Codec.Encoded<typeof GraphInfo> = {
+const graphInfoHttpWire: typeof GraphInfo.Encoded = {
   num_classes: 1025,
   num_properties: 175,
   title: "FOLIO Ontology",
@@ -74,7 +74,7 @@ const graphInfoHttpWire: S.Codec.Encoded<typeof GraphInfo> = {
   http_url: "https://example.com/ontology.owl",
 };
 
-const owlClassWire: S.Codec.Encoded<typeof OWLClass> = {
+const owlClassWire: typeof OWLClass.Encoded = {
   iri: "R8pNPutX0TN6DlEqkyZuxSw",
   label: "Lessor",
   sub_class_of: ["oS5FqyVBbOYQbhqb0G28oZR"],
@@ -84,7 +84,7 @@ const owlClassWire: S.Codec.Encoded<typeof OWLClass> = {
   definition: "A party that grants a right to use something in return for payment.",
 };
 
-const owlObjectPropertyWire: S.Codec.Encoded<typeof OWLObjectProperty> = {
+const owlObjectPropertyWire: typeof OWLObjectProperty.Encoded = {
   iri: "R6qohvM786wjw0MNQJg9Dq",
   label: "drafted",
   sub_property_of: ["RparentProperty"],
@@ -93,11 +93,11 @@ const owlObjectPropertyWire: S.Codec.Encoded<typeof OWLObjectProperty> = {
   definition: "A relationship indicating that something was drafted.",
 };
 
-const owlSearchResultsWire: S.Codec.Encoded<typeof OWLSearchResults> = {
+const owlSearchResultsWire: typeof OWLSearchResults.Encoded = {
   results: [[owlClassWire, 0.95]],
 };
 
-const httpValidationErrorWire: S.Codec.Encoded<typeof HTTPValidationError> = {
+const httpValidationErrorWire: typeof HTTPValidationError.Encoded = {
   detail: [
     {
       loc: ["body", 0, "iri"],

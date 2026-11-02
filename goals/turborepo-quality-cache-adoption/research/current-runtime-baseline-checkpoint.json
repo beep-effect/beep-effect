@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "cache-current-runtime-baseline-checkpoint/v1",
+  "recordedAt": "2026-10-29T11:09:16.498560+00:00",
+  "authority": "reviewed-baseline-and-runtime-observation-only",
+  "baseline": {
+    "path": "standards/cache-qualification-baseline.json",
+    "beforeSha256": "a3624d8a0d2b02ff697755ef3e39abb6914314d08a43a271d0b620b9063d5832",
+    "sha256": "8e7c9e20996b1c4c4d92acdbf966aef3e6af7e1086a1b8f0a634d7ddcd5bdaa4",
+    "previousProfile": "local-linux-x64-bun1.4.2",
+    "profile": "local-linux-x64-bun1.4.4",
+    "previousEpoch": "qualification-v2",
+    "epoch": "qualification-v3",
+    "scopeUnchanged": true,
+    "effectiveProjectionUnchanged": true,
+    "changedReviewSubjects": ["//"],
+    "carriedReviews": 188,
+    "droppedReviews": 0
+  },
+  "review": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-baseline-review.md",
+    "sha256": "5e95d5e96383350f068d827913faa80268d9e06867876b7a6b3681a824b7ed5e"
+  },
+  "actualPublicFingerprint": {
+    "key": {
+      "computation": "@beep/identity#lint",
+      "layer": "turbo-task-result",
+      "profile": "local-linux-x64-bun1.4.4",
+      "epoch": "qualification-v3"
+    },
+    "configurationDigest": "f7cee29e2108193a5b772d4ba94a9627c5e25f6747547bc2f7614d3a82aa7230",
+    "toolchainDigest": "1093355e211c18a2735d4185bf86a3fe3330276be234720e582906c57592ae51",
+    "privateReportSha256": "5b0d715e9e378ebd5783b5ce5beb93ec67834266d2037359119d8c4e36c1bec0",
+    "priorHistoricalProfileRefusal": true
+  },
+  "staleCompareAndSwap": {
+    "expectedRejection": true,
+    "exit": 1,
+    "baselineUnchanged": true,
+    "ledgerUnchanged": true,
+    "logSha256": "3fd4e298dc6d44defcce79d6b1a02e3e951a8520a5cc25d4e3f4297b1a53a6ac"
+  },
+  "audit": {
+    "blockingFindings": 0,
+    "unassessedCachedComputations": 1621,
+    "logSha256": "a3022655e9d2b028417f26b499c7f4f9c380687d2f87c6148d60682824577276"
+  },
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "cacheFlagsChanged": false,
+  "qualified": false,
+  "signedTrialActivated": false,
+  "hostedProducerPublished": false,
+  "scope": "Explicit baseline profile/epoch review through the existing single writer; no older qualification is inherited and no signing namespace or consumer changes.",
+  "existingWriterRegression": {
+    "runtime": "Node",
+    "passed": 45,
+    "files": 4,
+    "seconds": 6.34,
+    "logSha256": "0e58793e855803616b0adbeca93e328d2e9ccb6ca1f0cbdd73ce23d20ac93c7e"
+  }
+}

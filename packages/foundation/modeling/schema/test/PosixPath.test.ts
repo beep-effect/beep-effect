@@ -30,7 +30,7 @@ describe("PosixPath", () => {
     Effect.fnUntraced(function* () {
       const failure1 = yield* Effect.exit(decodePosixPathEffect("packages\\common\\schema"));
       pipe(failure1, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure1)) {
+      if (Exit.isFailure(failure1) && Exit.hasFails(failure1)) {
         expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Expected a string matching"
         );

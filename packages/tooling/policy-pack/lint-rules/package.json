@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/jsonc": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",

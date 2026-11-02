@@ -144,10 +144,16 @@ export class YamlParseOptions extends S.Opaque<YamlParseOptions, { readonly bran
  * package's `singleQuote: false` output. It is a fallback selector only:
  * scalars that need no quoting stay plain, and an explicit
  * `defaultScalarStyle` of `"single-quoted"` or `"double-quoted"` still wins.
- * On that plain fallback path, values carrying a tab, a carriage return or
- * any other C0 control character are always emitted double-quoted whichever
- * `quoteStyle` is set, since only double quotes can escape them into a form
- * that round-trips exactly.
+ * `"auto"` reproduces the `yaml` npm package's default choice per value:
+ * single quotes for a value holding `"` and no `'` (`'say "hi"'`), double
+ * quotes otherwise, and an interior tab left plain (`a<TAB>b`), or kept
+ * literal inside single quotes when the value needs them. One difference
+ * stays: a value that starts with a document marker (`---`, `...`) is quoted
+ * under every style, where `yaml` leaves it plain inside a collection. On that plain
+ * fallback path, values carrying a carriage return or any other C0 control
+ * character are always emitted double-quoted whichever `quoteStyle` is set,
+ * since only double quotes can escape them into a form that round-trips
+ * exactly; under `"single"` and `"double"` a tab is escaped the same way.
  *
  * Construct with the validated `YamlStringifyOptions.make({ ... })` static —
  * the kit convention (never `new`). Call sites that take a
@@ -227,7 +233,8 @@ export class YamlStringifyOptions extends S.Opaque<YamlStringifyOptions, { reado
      * Quote style used when a `plain`-styled scalar requires quoting. Default
      * `"single"`. `"double"` renders
      * the same scalars double-quoted instead, matching the `yaml` npm
-     * package's `singleQuote: false` output.
+     * package's `singleQuote: false` output, and `"auto"` picks the quote per
+     * value like that package's default.
      *
      * **Details**
      *
@@ -241,7 +248,7 @@ export class YamlStringifyOptions extends S.Opaque<YamlStringifyOptions, { reado
     quoteStyle: S.optionalKey(QuoteStyle).pipe(
       $I.annoteKey("YamlStringifyOptions.quoteStyle", {
         description:
-          'Quote style used when a `plain`-styled scalar requires quoting. Default `"single"`. `"double"` renders the same scalars double-quoted instead, matching the `yaml` npm package\'s `singleQuote: false` output.',
+          'Quote style used when a `plain`-styled scalar requires quoting. Default `"single"`. `"double"` renders the same scalars double-quoted instead, matching the `yaml` npm package\'s `singleQuote: false` output; `"auto"` picks per value like that package\'s default (single quotes for a value holding a double quote and no single quote, double otherwise) and leaves an interior tab plain.',
       })
     ),
     /**

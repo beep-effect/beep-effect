@@ -7,7 +7,7 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { runTmpfsWorktreesStep } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -16,6 +16,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
@@ -299,7 +300,7 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
 });
 
 describe("tmpfs reap", () => {
-  it.layer(NodeServices.layer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: false, timeout: "30 seconds" })((it) => {
     it.effect("resolves the persistent cache root through every configuration fallback", () =>
       Effect.flatMap(temporaryDirectory, (root) =>
         Effect.gen(function* () {
@@ -1629,7 +1630,11 @@ describe("tmpfs reap", () => {
         )
     );
   });
-  it.layer(NodeServices.layer, { concurrent: false, timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), {
+    concurrent: false,
+    timeout: "30 seconds",
+    excludeTestServices: true,
+  })((it) => {
     it.effect("sweep step reaps this repo's idle tmpfs worktree and reports the reclaim", () =>
       Effect.flatMap(temporaryDirectory, (root) =>
         Effect.gen(function* () {

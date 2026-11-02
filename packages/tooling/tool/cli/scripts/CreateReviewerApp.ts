@@ -4,7 +4,7 @@
  */
 
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
@@ -104,8 +104,8 @@ const fetchWith =
     Effect.runPromise(Effect.provideContext(handle(request), context));
 
 const serve = Effect.gen(function* () {
-  const crypto = yield* Crypto.Crypto;
-  const nonce = yield* crypto.randomUUIDv4();
+  const crypto = yield* SecureRandom.SecureRandom;
+  const nonce = yield* crypto.uuidV4();
   const manifest = yield* decodeJson(yield* Effect.promise(() => Bun.file(MANIFEST_URL).text())).pipe(
     Effect.flatMap(decodeManifest)
   );

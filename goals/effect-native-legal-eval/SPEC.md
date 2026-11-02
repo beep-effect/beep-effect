@@ -27,7 +27,8 @@ operator-approved upstream C&H harness run as an external baseline.
 ## Target Surfaces
 
 - Existing QA judge inventory/check/evidence surfaces.
-- Existing worker-eval criterion-call patterns.
+- Existing worker-eval criterion-call patterns (the command was retired in
+  beep-cli-composition W0; source at [f16d82e9f1](https://github.com/beep-effect/beep-effect/blob/f16d82e9f16d72f64d42b40284bf2867566e796b/packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts#L639)).
 - A schema-first Effect-native rubric, result, scoring, and typed judge service
   surface in the appropriate tooling/evaluation boundary.
 - On-demand synthetic C&H asset metadata, containment, and baseline evidence.

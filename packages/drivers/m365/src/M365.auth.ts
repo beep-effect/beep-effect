@@ -3,6 +3,8 @@
  * delegated lane below, and the app-only lane (`M365Auth.makeAppOnlyLayer`,
  * client-credentials against Graph `/.default`, certificate-first).
  *
+ * **Details**
+ *
  * The delegated lane implements OAuth2 authorization-code + PKCE as a public client via
  * `@azure/msal-node` with silent refresh, optionally persisting the MSAL token
  * cache encrypted via `@azure/msal-node-extensions` when `tokenCachePath` is

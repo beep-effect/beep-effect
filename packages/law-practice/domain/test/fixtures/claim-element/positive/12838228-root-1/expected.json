@@ -1,0 +1,3788 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 92,
+          "quote": "An image erasing apparatus configured to erase an image on a recording medium, the apparatus"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 26,
+              "quote": "An image erasing apparatus"
+            },
+            "determiner": "an",
+            "head": "image erasing apparatus"
+          },
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 55,
+              "quote": "an image"
+            },
+            "determiner": "an",
+            "head": "image"
+          },
+          {
+            "anchor": {
+              "startChar": 59,
+              "endChar": 77,
+              "quote": "a recording medium"
+            },
+            "determiner": "a",
+            "head": "recording medium"
+          },
+          {
+            "anchor": {
+              "startChar": 79,
+              "endChar": 92,
+              "quote": "the apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 105,
+          "endChar": 165,
+          "quote": "a paper feeding tray configured to feed the recording medium"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 105,
+              "endChar": 125,
+              "quote": "a paper feeding tray"
+            },
+            "determiner": "a",
+            "head": "paper feeding tray"
+          },
+          {
+            "anchor": {
+              "startChar": 145,
+              "endChar": 165,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 167,
+          "endChar": 353,
+          "quote": "a sensor group including a double-feed detection sensor configured to detect double feed of the recording medium and a media sensor configured to detect thickness of the recording medium"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 167,
+              "endChar": 181,
+              "quote": "a sensor group"
+            },
+            "determiner": "a",
+            "head": "sensor group"
+          }
+        ]
+      },
+      {
+        "path": "1.b.i",
+        "anchor": {
+          "startChar": 192,
+          "endChar": 279,
+          "quote": "a double-feed detection sensor configured to detect double feed of the recording medium"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 192,
+              "endChar": 222,
+              "quote": "a double-feed detection sensor"
+            },
+            "determiner": "a",
+            "head": "double-feed detection sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 259,
+              "endChar": 279,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          }
+        ]
+      },
+      {
+        "path": "1.b.ii",
+        "anchor": {
+          "startChar": 284,
+          "endChar": 353,
+          "quote": "a media sensor configured to detect thickness of the recording medium"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 284,
+              "endChar": 298,
+              "quote": "a media sensor"
+            },
+            "determiner": "a",
+            "head": "media sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 333,
+              "endChar": 353,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 355,
+          "endChar": 432,
+          "quote": "a recording-medium conveying device configured to convey the recording medium"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 355,
+              "endChar": 390,
+              "quote": "a recording-medium conveying device"
+            },
+            "determiner": "a",
+            "head": "recording-medium conveying device"
+          },
+          {
+            "anchor": {
+              "startChar": 412,
+              "endChar": 432,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 434,
+          "endChar": 559,
+          "quote": "a collecting device provided in the recording-medium conveying device and configured to drop and collect the recording medium"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 434,
+              "endChar": 453,
+              "quote": "a collecting device"
+            },
+            "determiner": "a",
+            "head": "collecting device"
+          },
+          {
+            "anchor": {
+              "startChar": 466,
+              "endChar": 503,
+              "quote": "the recording-medium conveying device"
+            },
+            "determiner": "the",
+            "head": "recording-medium conveying device"
+          },
+          {
+            "anchor": {
+              "startChar": 539,
+              "endChar": 559,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          }
+        ]
+      },
+      {
+        "path": "1.e",
+        "anchor": {
+          "startChar": 561,
+          "endChar": 691,
+          "quote": "a heating device configured to heat the recording medium to temperature equal to or higher than erasing temperature of a developer"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 561,
+              "endChar": 577,
+              "quote": "a heating device"
+            },
+            "determiner": "a",
+            "head": "heating device"
+          },
+          {
+            "anchor": {
+              "startChar": 597,
+              "endChar": 617,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          },
+          {
+            "anchor": {
+              "startChar": 680,
+              "endChar": 691,
+              "quote": "a developer"
+            },
+            "determiner": "a",
+            "head": "developer"
+          }
+        ]
+      },
+      {
+        "path": "1.f",
+        "anchor": {
+          "startChar": 693,
+          "endChar": 751,
+          "quote": "a stacking device configured to stack the recording medium"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 693,
+              "endChar": 710,
+              "quote": "a stacking device"
+            },
+            "determiner": "a",
+            "head": "stacking device"
+          },
+          {
+            "anchor": {
+              "startChar": 731,
+              "endChar": 751,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          }
+        ]
+      },
+      {
+        "path": "1.g",
+        "anchor": {
+          "startChar": 757,
+          "endChar": 1207,
+          "quote": "a control unit configured to cause, the recording-medium conveying device to collect the recording medium in the collecting device if the recording medium is judged non-conveyable on the basis of an output of the sensor group and cause the recording-medium conveying device to convey the recording medium in a direction of the heating device to erase an image if the recording medium is judged conveyable on the basis of an output of the sensor group"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 757,
+              "endChar": 771,
+              "quote": "a control unit"
+            },
+            "determiner": "a",
+            "head": "control unit"
+          },
+          {
+            "anchor": {
+              "startChar": 793,
+              "endChar": 830,
+              "quote": "the recording-medium conveying device"
+            },
+            "determiner": "the",
+            "head": "recording-medium conveying device"
+          },
+          {
+            "anchor": {
+              "startChar": 842,
+              "endChar": 862,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          },
+          {
+            "anchor": {
+              "startChar": 866,
+              "endChar": 887,
+              "quote": "the collecting device"
+            },
+            "determiner": "the",
+            "head": "collecting device"
+          },
+          {
+            "anchor": {
+              "startChar": 891,
+              "endChar": 911,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          },
+          {
+            "anchor": {
+              "startChar": 940,
+              "endChar": 949,
+              "quote": "the basis"
+            },
+            "determiner": "the",
+            "head": "basis"
+          },
+          {
+            "anchor": {
+              "startChar": 953,
+              "endChar": 962,
+              "quote": "an output"
+            },
+            "determiner": "an",
+            "head": "output"
+          },
+          {
+            "anchor": {
+              "startChar": 966,
+              "endChar": 982,
+              "quote": "the sensor group"
+            },
+            "determiner": "the",
+            "head": "sensor group"
+          },
+          {
+            "anchor": {
+              "startChar": 993,
+              "endChar": 1030,
+              "quote": "the recording-medium conveying device"
+            },
+            "determiner": "the",
+            "head": "recording-medium conveying device"
+          },
+          {
+            "anchor": {
+              "startChar": 1041,
+              "endChar": 1061,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          },
+          {
+            "anchor": {
+              "startChar": 1065,
+              "endChar": 1076,
+              "quote": "a direction"
+            },
+            "determiner": "a",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 1080,
+              "endChar": 1098,
+              "quote": "the heating device"
+            },
+            "determiner": "the",
+            "head": "heating device"
+          },
+          {
+            "anchor": {
+              "startChar": 1108,
+              "endChar": 1116,
+              "quote": "an image"
+            },
+            "determiner": "an",
+            "head": "image"
+          },
+          {
+            "anchor": {
+              "startChar": 1120,
+              "endChar": 1140,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          },
+          {
+            "anchor": {
+              "startChar": 1165,
+              "endChar": 1174,
+              "quote": "the basis"
+            },
+            "determiner": "the",
+            "head": "basis"
+          },
+          {
+            "anchor": {
+              "startChar": 1178,
+              "endChar": 1187,
+              "quote": "an output"
+            },
+            "determiner": "an",
+            "head": "output"
+          },
+          {
+            "anchor": {
+              "startChar": 1191,
+              "endChar": 1207,
+              "quote": "the sensor group"
+            },
+            "determiner": "the",
+            "head": "sensor group"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 105,
+                "endChar": 125,
+                "quote": "a paper feeding tray"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 125,
+              "endChar": 145,
+              "quote": " configured to feed "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 145,
+                "endChar": 165,
+                "quote": "the recording medium"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b.i",
+        "parent": "1.b"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b.i",
+              "anchor": {
+                "startChar": 192,
+                "endChar": 222,
+                "quote": "a double-feed detection sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 222,
+              "endChar": 259,
+              "quote": " configured to detect double feed of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b.i",
+              "anchor": {
+                "startChar": 259,
+                "endChar": 279,
+                "quote": "the recording medium"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b.ii",
+        "parent": "1.b"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b.ii",
+              "anchor": {
+                "startChar": 284,
+                "endChar": 298,
+                "quote": "a media sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 298,
+              "endChar": 333,
+              "quote": " configured to detect thickness of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b.ii",
+              "anchor": {
+                "startChar": 333,
+                "endChar": 353,
+                "quote": "the recording medium"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 355,
+                "endChar": 390,
+                "quote": "a recording-medium conveying device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 390,
+              "endChar": 412,
+              "quote": " configured to convey "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 412,
+                "endChar": 432,
+                "quote": "the recording medium"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 434,
+                "endChar": 453,
+                "quote": "a collecting device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 453,
+              "endChar": 466,
+              "quote": " provided in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 466,
+                "endChar": 503,
+                "quote": "the recording-medium conveying device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 503,
+              "endChar": 539,
+              "quote": " and configured to drop and collect "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 539,
+                "endChar": 559,
+                "quote": "the recording medium"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.e",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 561,
+                "endChar": 577,
+                "quote": "a heating device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 577,
+              "endChar": 597,
+              "quote": " configured to heat "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 597,
+                "endChar": 617,
+                "quote": "the recording medium"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 617,
+              "endChar": 680,
+              "quote": " to temperature equal to or higher than erasing temperature of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 680,
+                "endChar": 691,
+                "quote": "a developer"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.f",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.f",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 693,
+                "endChar": 710,
+                "quote": "a stacking device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 710,
+              "endChar": 731,
+              "quote": " configured to stack "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 731,
+                "endChar": 751,
+                "quote": "the recording medium"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.g",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.g",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 757,
+                "endChar": 771,
+                "quote": "a control unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 771,
+              "endChar": 793,
+              "quote": " configured to cause, "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 793,
+                "endChar": 830,
+                "quote": "the recording-medium conveying device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 830,
+              "endChar": 842,
+              "quote": " to collect "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 842,
+                "endChar": 862,
+                "quote": "the recording medium"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 862,
+              "endChar": 866,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 866,
+                "endChar": 887,
+                "quote": "the collecting device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 887,
+              "endChar": 891,
+              "quote": " if "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 891,
+                "endChar": 911,
+                "quote": "the recording medium"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 911,
+              "endChar": 940,
+              "quote": " is judged non-conveyable on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 940,
+                "endChar": 949,
+                "quote": "the basis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 949,
+              "endChar": 953,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 953,
+                "endChar": 962,
+                "quote": "an output"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 962,
+              "endChar": 966,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 966,
+                "endChar": 982,
+                "quote": "the sensor group"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 982,
+              "endChar": 993,
+              "quote": " and cause "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 993,
+                "endChar": 1030,
+                "quote": "the recording-medium conveying device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1030,
+              "endChar": 1041,
+              "quote": " to convey "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1041,
+                "endChar": 1061,
+                "quote": "the recording medium"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1061,
+              "endChar": 1065,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1065,
+                "endChar": 1076,
+                "quote": "a direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1076,
+              "endChar": 1080,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1080,
+                "endChar": 1098,
+                "quote": "the heating device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1098,
+              "endChar": 1108,
+              "quote": " to erase "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1108,
+                "endChar": 1116,
+                "quote": "an image"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1116,
+              "endChar": 1120,
+              "quote": " if "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1120,
+                "endChar": 1140,
+                "quote": "the recording medium"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1140,
+              "endChar": 1165,
+              "quote": " is judged conveyable on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1165,
+                "endChar": 1174,
+                "quote": "the basis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1174,
+              "endChar": 1178,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1178,
+                "endChar": 1187,
+                "quote": "an output"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1187,
+              "endChar": 1191,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1191,
+                "endChar": 1207,
+                "quote": "the sensor group"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 79,
+            "endChar": 92,
+            "quote": "the apparatus"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "An image erasing apparatus"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 145,
+            "endChar": 165,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b.i",
+          "anchor": {
+            "startChar": 259,
+            "endChar": 279,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b.ii",
+          "anchor": {
+            "startChar": 333,
+            "endChar": 353,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 412,
+            "endChar": 432,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 466,
+            "endChar": 503,
+            "quote": "the recording-medium conveying device"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 355,
+            "endChar": 390,
+            "quote": "a recording-medium conveying device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 539,
+            "endChar": 559,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 597,
+            "endChar": 617,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 731,
+            "endChar": 751,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 793,
+            "endChar": 830,
+            "quote": "the recording-medium conveying device"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 355,
+            "endChar": 390,
+            "quote": "a recording-medium conveying device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 842,
+            "endChar": 862,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 866,
+            "endChar": 887,
+            "quote": "the collecting device"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 434,
+            "endChar": 453,
+            "quote": "a collecting device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 891,
+            "endChar": 911,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 966,
+            "endChar": 982,
+            "quote": "the sensor group"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 167,
+            "endChar": 181,
+            "quote": "a sensor group"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 993,
+            "endChar": 1030,
+            "quote": "the recording-medium conveying device"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 355,
+            "endChar": 390,
+            "quote": "a recording-medium conveying device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 1041,
+            "endChar": 1061,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 1080,
+            "endChar": 1098,
+            "quote": "the heating device"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 561,
+            "endChar": 577,
+            "quote": "a heating device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 1120,
+            "endChar": 1140,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 1191,
+            "endChar": 1207,
+            "quote": "the sensor group"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 167,
+            "endChar": 181,
+            "quote": "a sensor group"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 225,
+          "quote": "the collecting device is set downstream in a recording medium conveyance direction of the sensor group and upstream in the recording medium conveying direction of the heating device"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 65,
+              "quote": "the collecting device"
+            },
+            "determiner": "the",
+            "head": "collecting device"
+          },
+          {
+            "anchor": {
+              "startChar": 87,
+              "endChar": 126,
+              "quote": "a recording medium conveyance direction"
+            },
+            "determiner": "a",
+            "head": "recording medium conveyance direction"
+          },
+          {
+            "anchor": {
+              "startChar": 130,
+              "endChar": 146,
+              "quote": "the sensor group"
+            },
+            "determiner": "the",
+            "head": "sensor group"
+          },
+          {
+            "anchor": {
+              "startChar": 163,
+              "endChar": 203,
+              "quote": "the recording medium conveying direction"
+            },
+            "determiner": "the",
+            "head": "recording medium conveying direction"
+          },
+          {
+            "anchor": {
+              "startChar": 207,
+              "endChar": 225,
+              "quote": "the heating device"
+            },
+            "determiner": "the",
+            "head": "heating device"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 65,
+                "quote": "the collecting device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 65,
+              "endChar": 87,
+              "quote": " is set downstream in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 87,
+                "endChar": 126,
+                "quote": "a recording medium conveyance direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 126,
+              "endChar": 130,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 130,
+                "endChar": 146,
+                "quote": "the sensor group"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 146,
+              "endChar": 163,
+              "quote": " and upstream in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 163,
+                "endChar": 203,
+                "quote": "the recording medium conveying direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 203,
+              "endChar": 207,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 207,
+                "endChar": 225,
+                "quote": "the heating device"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "The apparatus"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "An image erasing apparatus"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 44,
+            "endChar": 65,
+            "quote": "the collecting device"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 434,
+            "endChar": 453,
+            "quote": "a collecting device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 130,
+            "endChar": 146,
+            "quote": "the sensor group"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 167,
+            "endChar": 181,
+            "quote": "a sensor group"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 163,
+            "endChar": 203,
+            "quote": "the recording medium conveying direction"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 126,
+            "quote": "a recording medium conveyance direction"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 207,
+            "endChar": 225,
+            "quote": "the heating device"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 561,
+            "endChar": 577,
+            "quote": "a heating device"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 428,
+          "quote": "the collecting device includes: a driving roller and a driven roller configured to nip the recording medium to thereby covey the recording medium; a roller lifting and lowering device configured to lift and lower the driving roller; and a movable plate configured to rotatably support the driven roller and open in a direction perpendicular to the recording medium conveying direction"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 65,
+              "quote": "the collecting device"
+            },
+            "determiner": "the",
+            "head": "collecting device"
+          }
+        ]
+      },
+      {
+        "path": "3.a.i",
+        "anchor": {
+          "startChar": 76,
+          "endChar": 189,
+          "quote": "a driving roller and a driven roller configured to nip the recording medium to thereby covey the recording medium"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 76,
+              "endChar": 92,
+              "quote": "a driving roller"
+            },
+            "determiner": "a",
+            "head": "driving roller"
+          },
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 112,
+              "quote": "a driven roller"
+            },
+            "determiner": "a",
+            "head": "driven roller"
+          },
+          {
+            "anchor": {
+              "startChar": 131,
+              "endChar": 151,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 189,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          }
+        ]
+      },
+      {
+        "path": "3.a.ii",
+        "anchor": {
+          "startChar": 191,
+          "endChar": 275,
+          "quote": "a roller lifting and lowering device configured to lift and lower the driving roller"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 191,
+              "endChar": 227,
+              "quote": "a roller lifting and lowering device"
+            },
+            "determiner": "a",
+            "head": "roller lifting and lowering device"
+          },
+          {
+            "anchor": {
+              "startChar": 257,
+              "endChar": 275,
+              "quote": "the driving roller"
+            },
+            "determiner": "the",
+            "head": "driving roller"
+          }
+        ]
+      },
+      {
+        "path": "3.a.iii",
+        "anchor": {
+          "startChar": 281,
+          "endChar": 428,
+          "quote": "a movable plate configured to rotatably support the driven roller and open in a direction perpendicular to the recording medium conveying direction"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 281,
+              "endChar": 296,
+              "quote": "a movable plate"
+            },
+            "determiner": "a",
+            "head": "movable plate"
+          },
+          {
+            "anchor": {
+              "startChar": 329,
+              "endChar": 346,
+              "quote": "the driven roller"
+            },
+            "determiner": "the",
+            "head": "driven roller"
+          },
+          {
+            "anchor": {
+              "startChar": 359,
+              "endChar": 370,
+              "quote": "a direction"
+            },
+            "determiner": "a",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 388,
+              "endChar": 428,
+              "quote": "the recording medium conveying direction"
+            },
+            "determiner": "the",
+            "head": "recording medium conveying direction"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a.i",
+        "parent": "3.a"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a.i",
+              "anchor": {
+                "startChar": 76,
+                "endChar": 92,
+                "quote": "a driving roller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 92,
+              "endChar": 97,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a.i",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 112,
+                "quote": "a driven roller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 112,
+              "endChar": 131,
+              "quote": " configured to nip "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a.i",
+              "anchor": {
+                "startChar": 131,
+                "endChar": 151,
+                "quote": "the recording medium"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 151,
+              "endChar": 169,
+              "quote": " to thereby covey "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a.i",
+              "anchor": {
+                "startChar": 169,
+                "endChar": 189,
+                "quote": "the recording medium"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a.ii",
+        "parent": "3.a"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a.ii",
+              "anchor": {
+                "startChar": 191,
+                "endChar": 227,
+                "quote": "a roller lifting and lowering device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 227,
+              "endChar": 257,
+              "quote": " configured to lift and lower "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a.ii",
+              "anchor": {
+                "startChar": 257,
+                "endChar": 275,
+                "quote": "the driving roller"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a.iii",
+        "parent": "3.a"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a.iii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a.iii",
+              "anchor": {
+                "startChar": 281,
+                "endChar": 296,
+                "quote": "a movable plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 296,
+              "endChar": 329,
+              "quote": " configured to rotatably support "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a.iii",
+              "anchor": {
+                "startChar": 329,
+                "endChar": 346,
+                "quote": "the driven roller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 346,
+              "endChar": 359,
+              "quote": " and open in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a.iii",
+              "anchor": {
+                "startChar": 359,
+                "endChar": 370,
+                "quote": "a direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 370,
+              "endChar": 388,
+              "quote": " perpendicular to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a.iii",
+              "anchor": {
+                "startChar": 388,
+                "endChar": 428,
+                "quote": "the recording medium conveying direction"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "The apparatus"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "An image erasing apparatus"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 44,
+            "endChar": 65,
+            "quote": "the collecting device"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 434,
+            "endChar": 453,
+            "quote": "a collecting device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a.i",
+          "anchor": {
+            "startChar": 131,
+            "endChar": 151,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a.i",
+          "anchor": {
+            "startChar": 169,
+            "endChar": 189,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a.ii",
+          "anchor": {
+            "startChar": 257,
+            "endChar": 275,
+            "quote": "the driving roller"
+          }
+        },
+        "introducing": {
+          "path": "3.a.i",
+          "anchor": {
+            "startChar": 76,
+            "endChar": 92,
+            "quote": "a driving roller"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a.iii",
+          "anchor": {
+            "startChar": 329,
+            "endChar": 346,
+            "quote": "the driven roller"
+          }
+        },
+        "introducing": {
+          "path": "3.a.i",
+          "anchor": {
+            "startChar": 97,
+            "endChar": 112,
+            "quote": "a driven roller"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a.iii",
+          "anchor": {
+            "startChar": 388,
+            "endChar": 428,
+            "quote": "the recording medium conveying direction"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 126,
+            "quote": "a recording medium conveyance direction"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 3"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 185,
+          "quote": "the collecting device further includes, in a lower part of the collecting device, a collection box in which the recording medium is collected"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 65,
+              "quote": "the collecting device"
+            },
+            "determiner": "the",
+            "head": "collecting device"
+          },
+          {
+            "anchor": {
+              "startChar": 87,
+              "endChar": 99,
+              "quote": "a lower part"
+            },
+            "determiner": "a",
+            "head": "lower part"
+          },
+          {
+            "anchor": {
+              "startChar": 103,
+              "endChar": 124,
+              "quote": "the collecting device"
+            },
+            "determiner": "the",
+            "head": "collecting device"
+          },
+          {
+            "anchor": {
+              "startChar": 126,
+              "endChar": 142,
+              "quote": "a collection box"
+            },
+            "determiner": "a",
+            "head": "collection box"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 172,
+              "quote": "the recording medium"
+            },
+            "determiner": "the",
+            "head": "recording medium"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "3"
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 65,
+                "quote": "the collecting device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 65,
+              "endChar": 87,
+              "quote": " further includes, in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 87,
+                "endChar": 99,
+                "quote": "a lower part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 99,
+              "endChar": 103,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 103,
+                "endChar": 124,
+                "quote": "the collecting device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 124,
+              "endChar": 126,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 126,
+                "endChar": 142,
+                "quote": "a collection box"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 142,
+              "endChar": 152,
+              "quote": " in which "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 152,
+                "endChar": 172,
+                "quote": "the recording medium"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 172,
+              "endChar": 185,
+              "quote": " is collected"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "The apparatus"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "An image erasing apparatus"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 44,
+            "endChar": 65,
+            "quote": "the collecting device"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 434,
+            "endChar": 453,
+            "quote": "a collecting device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 103,
+            "endChar": 124,
+            "quote": "the collecting device"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 434,
+            "endChar": 453,
+            "quote": "a collecting device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 152,
+            "endChar": 172,
+            "quote": "the recording medium"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 59,
+            "endChar": 77,
+            "quote": "a recording medium"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 3"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 96,
+          "quote": "the movable plate has plural teeth on a side thereof"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 61,
+              "quote": "the movable plate"
+            },
+            "determiner": "the",
+            "head": "movable plate"
+          },
+          {
+            "anchor": {
+              "startChar": 66,
+              "endChar": 78,
+              "quote": "plural teeth"
+            },
+            "determiner": "bare",
+            "head": "plural teeth"
+          },
+          {
+            "anchor": {
+              "startChar": 82,
+              "endChar": 88,
+              "quote": "a side"
+            },
+            "determiner": "a",
+            "head": "side"
+          },
+          {
+            "anchor": {
+              "startChar": 89,
+              "endChar": 96,
+              "quote": "thereof"
+            },
+            "determiner": "bare",
+            "head": "thereof"
+          }
+        ]
+      },
+      {
+        "path": "5.b",
+        "anchor": {
+          "startChar": 102,
+          "endChar": 196,
+          "quote": "the collecting device further includes a motor having a gear that meshes with the plural teeth"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 102,
+              "endChar": 123,
+              "quote": "the collecting device"
+            },
+            "determiner": "the",
+            "head": "collecting device"
+          },
+          {
+            "anchor": {
+              "startChar": 141,
+              "endChar": 148,
+              "quote": "a motor"
+            },
+            "determiner": "a",
+            "head": "motor"
+          },
+          {
+            "anchor": {
+              "startChar": 156,
+              "endChar": 162,
+              "quote": "a gear"
+            },
+            "determiner": "a",
+            "head": "gear"
+          },
+          {
+            "anchor": {
+              "startChar": 180,
+              "endChar": 196,
+              "quote": "the plural teeth"
+            },
+            "determiner": "the",
+            "head": "plural teeth"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "3"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 61,
+                "quote": "the movable plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 61,
+              "endChar": 66,
+              "quote": " has "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 66,
+                "endChar": 78,
+                "quote": "plural teeth"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 78,
+              "endChar": 82,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 82,
+                "endChar": 88,
+                "quote": "a side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 88,
+              "endChar": 89,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 89,
+                "endChar": 96,
+                "quote": "thereof"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "5.b",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 102,
+                "endChar": 123,
+                "quote": "the collecting device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 123,
+              "endChar": 141,
+              "quote": " further includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 141,
+                "endChar": 148,
+                "quote": "a motor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 148,
+              "endChar": 156,
+              "quote": " having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 156,
+                "endChar": 162,
+                "quote": "a gear"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 162,
+              "endChar": 180,
+              "quote": " that meshes with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 180,
+                "endChar": 196,
+                "quote": "the plural teeth"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "The apparatus"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "An image erasing apparatus"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 44,
+            "endChar": 61,
+            "quote": "the movable plate"
+          }
+        },
+        "introducing": {
+          "path": "3.a.iii",
+          "anchor": {
+            "startChar": 281,
+            "endChar": 296,
+            "quote": "a movable plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 89,
+            "endChar": 96,
+            "quote": "thereof"
+          }
+        },
+        "introducing": {
+          "path": "3.a.iii",
+          "anchor": {
+            "startChar": 281,
+            "endChar": 296,
+            "quote": "a movable plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 102,
+            "endChar": 123,
+            "quote": "the collecting device"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 434,
+            "endChar": 453,
+            "quote": "a collecting device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 180,
+            "endChar": 196,
+            "quote": "the plural teeth"
+          }
+        },
+        "introducing": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 66,
+            "endChar": 78,
+            "quote": "plural teeth"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 262,
+          "quote": "the collecting device further includes: a first brush roller set above the recording-medium conveying device; and a second brush roller set below the recording-medium conveying device and supported by the movable plate"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 65,
+              "quote": "the collecting device"
+            },
+            "determiner": "the",
+            "head": "collecting device"
+          }
+        ]
+      },
+      {
+        "path": "6.a.i",
+        "anchor": {
+          "startChar": 84,
+          "endChar": 152,
+          "quote": "a first brush roller set above the recording-medium conveying device"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 84,
+              "endChar": 104,
+              "quote": "a first brush roller"
+            },
+            "determiner": "a",
+            "head": "first brush roller"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 152,
+              "quote": "the recording-medium conveying device"
+            },
+            "determiner": "the",
+            "head": "recording-medium conveying device"
+          }
+        ]
+      },
+      {
+        "path": "6.a.ii",
+        "anchor": {
+          "startChar": 158,
+          "endChar": 262,
+          "quote": "a second brush roller set below the recording-medium conveying device and supported by the movable plate"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 158,
+              "endChar": 179,
+              "quote": "a second brush roller"
+            },
+            "determiner": "a",
+            "head": "second brush roller"
+          },
+          {
+            "anchor": {
+              "startChar": 190,
+              "endChar": 227,
+              "quote": "the recording-medium conveying device"
+            },
+            "determiner": "the",
+            "head": "recording-medium conveying device"
+          },
+          {
+            "anchor": {
+              "startChar": 245,
+              "endChar": 262,
+              "quote": "the movable plate"
+            },
+            "determiner": "the",
+            "head": "movable plate"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a.i",
+        "parent": "6.a"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.i",
+              "anchor": {
+                "startChar": 84,
+                "endChar": 104,
+                "quote": "a first brush roller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 104,
+              "endChar": 115,
+              "quote": " set above "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.i",
+              "anchor": {
+                "startChar": 115,
+                "endChar": 152,
+                "quote": "the recording-medium conveying device"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a.ii",
+        "parent": "6.a"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.ii",
+              "anchor": {
+                "startChar": 158,
+                "endChar": 179,
+                "quote": "a second brush roller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 179,
+              "endChar": 190,
+              "quote": " set below "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.ii",
+              "anchor": {
+                "startChar": 190,
+                "endChar": 227,
+                "quote": "the recording-medium conveying device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 227,
+              "endChar": 245,
+              "quote": " and supported by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a.ii",
+              "anchor": {
+                "startChar": 245,
+                "endChar": 262,
+                "quote": "the movable plate"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "The apparatus"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "An image erasing apparatus"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 44,
+            "endChar": 65,
+            "quote": "the collecting device"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 434,
+            "endChar": 453,
+            "quote": "a collecting device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 152,
+            "quote": "the recording-medium conveying device"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 355,
+            "endChar": 390,
+            "quote": "a recording-medium conveying device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a.ii",
+          "anchor": {
+            "startChar": 190,
+            "endChar": 227,
+            "quote": "the recording-medium conveying device"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 355,
+            "endChar": 390,
+            "quote": "a recording-medium conveying device"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 145,
+          "quote": "the roller lifting and lowering device lifts and lowers the driving roller and the first brush roller"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 82,
+              "quote": "the roller lifting and lowering device"
+            },
+            "determiner": "the",
+            "head": "roller lifting and lowering device"
+          },
+          {
+            "anchor": {
+              "startChar": 100,
+              "endChar": 118,
+              "quote": "the driving roller"
+            },
+            "determiner": "the",
+            "head": "driving roller"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 145,
+              "quote": "the first brush roller"
+            },
+            "determiner": "the",
+            "head": "first brush roller"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "5"
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 82,
+                "quote": "the roller lifting and lowering device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 82,
+              "endChar": 100,
+              "quote": " lifts and lowers "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 100,
+                "endChar": 118,
+                "quote": "the driving roller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 123,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 145,
+                "quote": "the first brush roller"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "The apparatus"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "An image erasing apparatus"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 44,
+            "endChar": 82,
+            "quote": "the roller lifting and lowering device"
+          }
+        },
+        "introducing": {
+          "path": "3.a.ii",
+          "anchor": {
+            "startChar": 191,
+            "endChar": 227,
+            "quote": "a roller lifting and lowering device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 100,
+            "endChar": 118,
+            "quote": "the driving roller"
+          }
+        },
+        "introducing": {
+          "path": "3.a.i",
+          "anchor": {
+            "startChar": 76,
+            "endChar": 92,
+            "quote": "a driving roller"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 136,
+          "quote": "the brush roller rotates in a direction opposite to the recording medium conveying direction"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 60,
+              "quote": "the brush roller"
+            },
+            "determiner": "the",
+            "head": "brush roller"
+          },
+          {
+            "anchor": {
+              "startChar": 72,
+              "endChar": 83,
+              "quote": "a direction"
+            },
+            "determiner": "a",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 136,
+              "quote": "the recording medium conveying direction"
+            },
+            "determiner": "the",
+            "head": "recording medium conveying direction"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "5"
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 60,
+                "quote": "the brush roller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 60,
+              "endChar": 72,
+              "quote": " rotates in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 72,
+                "endChar": 83,
+                "quote": "a direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 83,
+              "endChar": 96,
+              "quote": " opposite to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 136,
+                "quote": "the recording medium conveying direction"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "The apparatus"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "An image erasing apparatus"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 96,
+            "endChar": 136,
+            "quote": "the recording medium conveying direction"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 126,
+            "quote": "a recording medium conveyance direction"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 81,
+          "quote": "the brush roller is formed of plastic"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 60,
+              "quote": "the brush roller"
+            },
+            "determiner": "the",
+            "head": "brush roller"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "5"
+      },
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 60,
+                "quote": "the brush roller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 60,
+              "endChar": 81,
+              "quote": " is formed of plastic"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "The apparatus"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "An image erasing apparatus"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 85,
+          "quote": "the brush roller is formed of animal hair"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 60,
+              "quote": "the brush roller"
+            },
+            "determiner": "the",
+            "head": "brush roller"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "5"
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 60,
+                "quote": "the brush roller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 60,
+              "endChar": 85,
+              "quote": " is formed of animal hair"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 13,
+            "quote": "The apparatus"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "An image erasing apparatus"
+          }
+        }
+      }
+    ]
+  }
+]

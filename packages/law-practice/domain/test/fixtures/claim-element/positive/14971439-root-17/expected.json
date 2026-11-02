@@ -1,0 +1,1585 @@
+[
+  {
+    "claimNumber": 17,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "17",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 30,
+          "quote": "A tube-fitting-assembly method"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 30,
+              "quote": "A tube-fitting-assembly method"
+            },
+            "determiner": "a",
+            "head": "tube-fitting-assembly method"
+          }
+        ]
+      },
+      {
+        "path": "17.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 229,
+          "quote": "providing a tube-fitting assembly having sections of tube, having a circumferential point-seal surface, longitudinal axis, transverse shoulder, threaded socket, and threaded plug-nut"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 57,
+              "endChar": 80,
+              "quote": "a tube-fitting assembly"
+            },
+            "determiner": "a",
+            "head": "tube-fitting assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 88,
+              "endChar": 104,
+              "quote": "sections of tube"
+            },
+            "determiner": "bare",
+            "head": "sections of tube"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 149,
+              "quote": "a circumferential point-seal surface"
+            },
+            "determiner": "a",
+            "head": "circumferential point-seal surface"
+          },
+          {
+            "anchor": {
+              "startChar": 151,
+              "endChar": 168,
+              "quote": "longitudinal axis"
+            },
+            "determiner": "bare",
+            "head": "longitudinal axis"
+          },
+          {
+            "anchor": {
+              "startChar": 170,
+              "endChar": 189,
+              "quote": "transverse shoulder"
+            },
+            "determiner": "bare",
+            "head": "transverse shoulder"
+          },
+          {
+            "anchor": {
+              "startChar": 191,
+              "endChar": 206,
+              "quote": "threaded socket"
+            },
+            "determiner": "bare",
+            "head": "threaded socket"
+          },
+          {
+            "anchor": {
+              "startChar": 212,
+              "endChar": 229,
+              "quote": "threaded plug-nut"
+            },
+            "determiner": "bare",
+            "head": "threaded plug-nut"
+          }
+        ]
+      },
+      {
+        "path": "17.b",
+        "anchor": {
+          "startChar": 236,
+          "endChar": 1259,
+          "quote": "providing a the tube-fitting-assembly ferrule comprising: (a) a ferrule body adapted to encircle the longitudinal axis of the tube, having an inner and outer surface in relation to the tube, and having a forward end oriented toward the transverse shoulder and the threaded socket; and (b) a ferrule forward face on said forward end of said ferrule body, adapted to contact the transverse shoulder at an angle which promotes a desired deformation of said ferrule body upon compression; where pressure applied by the threaded plug nut against a rearward end of said ferrule body compresses said ferrule forward face against the transverse shoulder, producing a deformation constricting said inner surface of said ferrule body against the tube exterior surface, and bulging said outer surface of said ferrule body against the threaded socket interior surface; and where said deformations of said ferrule body create an additional sealing force against the circumferential point-seal surface between the connected tube sections"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 246,
+              "endChar": 281,
+              "quote": "a the tube-fitting-assembly ferrule"
+            },
+            "determiner": "a",
+            "head": "the tube-fitting-assembly ferrule"
+          }
+        ]
+      },
+      {
+        "path": "17.b.i",
+        "anchor": {
+          "startChar": 298,
+          "endChar": 515,
+          "quote": "a ferrule body adapted to encircle the longitudinal axis of the tube, having an inner and outer surface in relation to the tube, and having a forward end oriented toward the transverse shoulder and the threaded socket"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 298,
+              "endChar": 312,
+              "quote": "a ferrule body"
+            },
+            "determiner": "a",
+            "head": "ferrule body"
+          },
+          {
+            "anchor": {
+              "startChar": 333,
+              "endChar": 354,
+              "quote": "the longitudinal axis"
+            },
+            "determiner": "the",
+            "head": "longitudinal axis"
+          },
+          {
+            "anchor": {
+              "startChar": 358,
+              "endChar": 366,
+              "quote": "the tube"
+            },
+            "determiner": "the",
+            "head": "tube"
+          },
+          {
+            "anchor": {
+              "startChar": 375,
+              "endChar": 401,
+              "quote": "an inner and outer surface"
+            },
+            "determiner": "an",
+            "head": "inner and outer surface"
+          },
+          {
+            "anchor": {
+              "startChar": 417,
+              "endChar": 425,
+              "quote": "the tube"
+            },
+            "determiner": "the",
+            "head": "tube"
+          },
+          {
+            "anchor": {
+              "startChar": 438,
+              "endChar": 451,
+              "quote": "a forward end"
+            },
+            "determiner": "a",
+            "head": "forward end"
+          },
+          {
+            "anchor": {
+              "startChar": 468,
+              "endChar": 491,
+              "quote": "the transverse shoulder"
+            },
+            "determiner": "the",
+            "head": "transverse shoulder"
+          },
+          {
+            "anchor": {
+              "startChar": 496,
+              "endChar": 515,
+              "quote": "the threaded socket"
+            },
+            "determiner": "the",
+            "head": "threaded socket"
+          }
+        ]
+      },
+      {
+        "path": "17.b.ii",
+        "anchor": {
+          "startChar": 525,
+          "endChar": 719,
+          "quote": "a ferrule forward face on said forward end of said ferrule body, adapted to contact the transverse shoulder at an angle which promotes a desired deformation of said ferrule body upon compression"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 525,
+              "endChar": 547,
+              "quote": "a ferrule forward face"
+            },
+            "determiner": "a",
+            "head": "ferrule forward face"
+          },
+          {
+            "anchor": {
+              "startChar": 551,
+              "endChar": 567,
+              "quote": "said forward end"
+            },
+            "determiner": "said",
+            "head": "forward end"
+          },
+          {
+            "anchor": {
+              "startChar": 571,
+              "endChar": 588,
+              "quote": "said ferrule body"
+            },
+            "determiner": "said",
+            "head": "ferrule body"
+          },
+          {
+            "anchor": {
+              "startChar": 609,
+              "endChar": 632,
+              "quote": "the transverse shoulder"
+            },
+            "determiner": "the",
+            "head": "transverse shoulder"
+          },
+          {
+            "anchor": {
+              "startChar": 636,
+              "endChar": 644,
+              "quote": "an angle"
+            },
+            "determiner": "an",
+            "head": "angle"
+          },
+          {
+            "anchor": {
+              "startChar": 660,
+              "endChar": 681,
+              "quote": "a desired deformation"
+            },
+            "determiner": "a",
+            "head": "desired deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 685,
+              "endChar": 702,
+              "quote": "said ferrule body"
+            },
+            "determiner": "said",
+            "head": "ferrule body"
+          },
+          {
+            "anchor": {
+              "startChar": 708,
+              "endChar": 719,
+              "quote": "compression"
+            },
+            "determiner": "bare",
+            "head": "compression"
+          }
+        ]
+      },
+      {
+        "path": "17.b.iii",
+        "anchor": {
+          "startChar": 727,
+          "endChar": 1091,
+          "quote": "pressure applied by the threaded plug nut against a rearward end of said ferrule body compresses said ferrule forward face against the transverse shoulder, producing a deformation constricting said inner surface of said ferrule body against the tube exterior surface, and bulging said outer surface of said ferrule body against the threaded socket interior surface"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 727,
+              "endChar": 735,
+              "quote": "pressure"
+            },
+            "determiner": "bare",
+            "head": "pressure"
+          },
+          {
+            "anchor": {
+              "startChar": 747,
+              "endChar": 768,
+              "quote": "the threaded plug nut"
+            },
+            "determiner": "the",
+            "head": "threaded plug nut"
+          },
+          {
+            "anchor": {
+              "startChar": 777,
+              "endChar": 791,
+              "quote": "a rearward end"
+            },
+            "determiner": "a",
+            "head": "rearward end"
+          },
+          {
+            "anchor": {
+              "startChar": 795,
+              "endChar": 812,
+              "quote": "said ferrule body"
+            },
+            "determiner": "said",
+            "head": "ferrule body"
+          },
+          {
+            "anchor": {
+              "startChar": 824,
+              "endChar": 849,
+              "quote": "said ferrule forward face"
+            },
+            "determiner": "said",
+            "head": "ferrule forward face"
+          },
+          {
+            "anchor": {
+              "startChar": 858,
+              "endChar": 881,
+              "quote": "the transverse shoulder"
+            },
+            "determiner": "the",
+            "head": "transverse shoulder"
+          },
+          {
+            "anchor": {
+              "startChar": 893,
+              "endChar": 906,
+              "quote": "a deformation"
+            },
+            "determiner": "a",
+            "head": "deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 920,
+              "endChar": 938,
+              "quote": "said inner surface"
+            },
+            "determiner": "said",
+            "head": "inner surface"
+          },
+          {
+            "anchor": {
+              "startChar": 942,
+              "endChar": 959,
+              "quote": "said ferrule body"
+            },
+            "determiner": "said",
+            "head": "ferrule body"
+          },
+          {
+            "anchor": {
+              "startChar": 968,
+              "endChar": 993,
+              "quote": "the tube exterior surface"
+            },
+            "determiner": "the",
+            "head": "tube exterior surface"
+          },
+          {
+            "anchor": {
+              "startChar": 1007,
+              "endChar": 1025,
+              "quote": "said outer surface"
+            },
+            "determiner": "said",
+            "head": "outer surface"
+          },
+          {
+            "anchor": {
+              "startChar": 1029,
+              "endChar": 1046,
+              "quote": "said ferrule body"
+            },
+            "determiner": "said",
+            "head": "ferrule body"
+          },
+          {
+            "anchor": {
+              "startChar": 1055,
+              "endChar": 1091,
+              "quote": "the threaded socket interior surface"
+            },
+            "determiner": "the",
+            "head": "threaded socket interior surface"
+          }
+        ]
+      },
+      {
+        "path": "17.b.iv",
+        "anchor": {
+          "startChar": 1103,
+          "endChar": 1259,
+          "quote": "said deformations of said ferrule body create an additional sealing force against the circumferential point-seal surface between the connected tube sections"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1103,
+              "endChar": 1120,
+              "quote": "said deformations"
+            },
+            "determiner": "said",
+            "head": "deformations"
+          },
+          {
+            "anchor": {
+              "startChar": 1124,
+              "endChar": 1141,
+              "quote": "said ferrule body"
+            },
+            "determiner": "said",
+            "head": "ferrule body"
+          },
+          {
+            "anchor": {
+              "startChar": 1149,
+              "endChar": 1176,
+              "quote": "an additional sealing force"
+            },
+            "determiner": "an",
+            "head": "additional sealing force"
+          },
+          {
+            "anchor": {
+              "startChar": 1185,
+              "endChar": 1223,
+              "quote": "the circumferential point-seal surface"
+            },
+            "determiner": "the",
+            "head": "circumferential point-seal surface"
+          },
+          {
+            "anchor": {
+              "startChar": 1232,
+              "endChar": 1259,
+              "quote": "the connected tube sections"
+            },
+            "determiner": "the",
+            "head": "connected tube sections"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "17.a",
+        "parent": "17"
+      },
+      {
+        "kind": "functional",
+        "element": "17.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 47,
+              "endChar": 57,
+              "quote": "providing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 80,
+                "quote": "a tube-fitting assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 80,
+              "endChar": 88,
+              "quote": " having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 88,
+                "endChar": 104,
+                "quote": "sections of tube"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 104,
+              "endChar": 113,
+              "quote": ", having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 113,
+                "endChar": 149,
+                "quote": "a circumferential point-seal surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 149,
+              "endChar": 151,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 151,
+                "endChar": 168,
+                "quote": "longitudinal axis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 168,
+              "endChar": 170,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 170,
+                "endChar": 189,
+                "quote": "transverse shoulder"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 189,
+              "endChar": 191,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 191,
+                "endChar": 206,
+                "quote": "threaded socket"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 206,
+              "endChar": 212,
+              "quote": ", and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 212,
+                "endChar": 229,
+                "quote": "threaded plug-nut"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "17.b",
+        "parent": "17"
+      },
+      {
+        "kind": "part-of",
+        "child": "17.b.i",
+        "parent": "17.b"
+      },
+      {
+        "kind": "functional",
+        "element": "17.b.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.i",
+              "anchor": {
+                "startChar": 298,
+                "endChar": 312,
+                "quote": "a ferrule body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 312,
+              "endChar": 333,
+              "quote": " adapted to encircle "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.i",
+              "anchor": {
+                "startChar": 333,
+                "endChar": 354,
+                "quote": "the longitudinal axis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 354,
+              "endChar": 358,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.i",
+              "anchor": {
+                "startChar": 358,
+                "endChar": 366,
+                "quote": "the tube"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 366,
+              "endChar": 375,
+              "quote": ", having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.i",
+              "anchor": {
+                "startChar": 375,
+                "endChar": 401,
+                "quote": "an inner and outer surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 401,
+              "endChar": 417,
+              "quote": " in relation to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.i",
+              "anchor": {
+                "startChar": 417,
+                "endChar": 425,
+                "quote": "the tube"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 425,
+              "endChar": 438,
+              "quote": ", and having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.i",
+              "anchor": {
+                "startChar": 438,
+                "endChar": 451,
+                "quote": "a forward end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 451,
+              "endChar": 468,
+              "quote": " oriented toward "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.i",
+              "anchor": {
+                "startChar": 468,
+                "endChar": 491,
+                "quote": "the transverse shoulder"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 491,
+              "endChar": 496,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.i",
+              "anchor": {
+                "startChar": 496,
+                "endChar": 515,
+                "quote": "the threaded socket"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "17.b.ii",
+        "parent": "17.b"
+      },
+      {
+        "kind": "functional",
+        "element": "17.b.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.ii",
+              "anchor": {
+                "startChar": 525,
+                "endChar": 547,
+                "quote": "a ferrule forward face"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 547,
+              "endChar": 551,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.ii",
+              "anchor": {
+                "startChar": 551,
+                "endChar": 567,
+                "quote": "said forward end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 567,
+              "endChar": 571,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.ii",
+              "anchor": {
+                "startChar": 571,
+                "endChar": 588,
+                "quote": "said ferrule body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 588,
+              "endChar": 609,
+              "quote": ", adapted to contact "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.ii",
+              "anchor": {
+                "startChar": 609,
+                "endChar": 632,
+                "quote": "the transverse shoulder"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 632,
+              "endChar": 636,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.ii",
+              "anchor": {
+                "startChar": 636,
+                "endChar": 644,
+                "quote": "an angle"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 644,
+              "endChar": 660,
+              "quote": " which promotes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.ii",
+              "anchor": {
+                "startChar": 660,
+                "endChar": 681,
+                "quote": "a desired deformation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 681,
+              "endChar": 685,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.ii",
+              "anchor": {
+                "startChar": 685,
+                "endChar": 702,
+                "quote": "said ferrule body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 702,
+              "endChar": 708,
+              "quote": " upon "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.ii",
+              "anchor": {
+                "startChar": 708,
+                "endChar": 719,
+                "quote": "compression"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "17.b.iii",
+        "parent": "17.b"
+      },
+      {
+        "kind": "functional",
+        "element": "17.b.iii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 727,
+                "endChar": 735,
+                "quote": "pressure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 735,
+              "endChar": 747,
+              "quote": " applied by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 747,
+                "endChar": 768,
+                "quote": "the threaded plug nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 768,
+              "endChar": 777,
+              "quote": " against "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 777,
+                "endChar": 791,
+                "quote": "a rearward end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 791,
+              "endChar": 795,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 795,
+                "endChar": 812,
+                "quote": "said ferrule body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 812,
+              "endChar": 824,
+              "quote": " compresses "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 824,
+                "endChar": 849,
+                "quote": "said ferrule forward face"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 849,
+              "endChar": 858,
+              "quote": " against "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 858,
+                "endChar": 881,
+                "quote": "the transverse shoulder"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 881,
+              "endChar": 893,
+              "quote": ", producing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 893,
+                "endChar": 906,
+                "quote": "a deformation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 906,
+              "endChar": 920,
+              "quote": " constricting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 920,
+                "endChar": 938,
+                "quote": "said inner surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 938,
+              "endChar": 942,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 942,
+                "endChar": 959,
+                "quote": "said ferrule body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 959,
+              "endChar": 968,
+              "quote": " against "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 968,
+                "endChar": 993,
+                "quote": "the tube exterior surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 993,
+              "endChar": 1007,
+              "quote": ", and bulging "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 1007,
+                "endChar": 1025,
+                "quote": "said outer surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1025,
+              "endChar": 1029,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 1029,
+                "endChar": 1046,
+                "quote": "said ferrule body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1046,
+              "endChar": 1055,
+              "quote": " against "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iii",
+              "anchor": {
+                "startChar": 1055,
+                "endChar": 1091,
+                "quote": "the threaded socket interior surface"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "17.b.iv",
+        "parent": "17.b"
+      },
+      {
+        "kind": "functional",
+        "element": "17.b.iv",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iv",
+              "anchor": {
+                "startChar": 1103,
+                "endChar": 1120,
+                "quote": "said deformations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1120,
+              "endChar": 1124,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iv",
+              "anchor": {
+                "startChar": 1124,
+                "endChar": 1141,
+                "quote": "said ferrule body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1141,
+              "endChar": 1149,
+              "quote": " create "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iv",
+              "anchor": {
+                "startChar": 1149,
+                "endChar": 1176,
+                "quote": "an additional sealing force"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1176,
+              "endChar": 1185,
+              "quote": " against "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iv",
+              "anchor": {
+                "startChar": 1185,
+                "endChar": 1223,
+                "quote": "the circumferential point-seal surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1223,
+              "endChar": 1232,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b.iv",
+              "anchor": {
+                "startChar": 1232,
+                "endChar": 1259,
+                "quote": "the connected tube sections"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.i",
+          "anchor": {
+            "startChar": 333,
+            "endChar": 354,
+            "quote": "the longitudinal axis"
+          }
+        },
+        "introducing": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 151,
+            "endChar": 168,
+            "quote": "longitudinal axis"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.i",
+          "anchor": {
+            "startChar": 468,
+            "endChar": 491,
+            "quote": "the transverse shoulder"
+          }
+        },
+        "introducing": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 189,
+            "quote": "transverse shoulder"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.i",
+          "anchor": {
+            "startChar": 496,
+            "endChar": 515,
+            "quote": "the threaded socket"
+          }
+        },
+        "introducing": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 191,
+            "endChar": 206,
+            "quote": "threaded socket"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.ii",
+          "anchor": {
+            "startChar": 551,
+            "endChar": 567,
+            "quote": "said forward end"
+          }
+        },
+        "introducing": {
+          "path": "17.b.i",
+          "anchor": {
+            "startChar": 438,
+            "endChar": 451,
+            "quote": "a forward end"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.ii",
+          "anchor": {
+            "startChar": 571,
+            "endChar": 588,
+            "quote": "said ferrule body"
+          }
+        },
+        "introducing": {
+          "path": "17.b.i",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 312,
+            "quote": "a ferrule body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.ii",
+          "anchor": {
+            "startChar": 609,
+            "endChar": 632,
+            "quote": "the transverse shoulder"
+          }
+        },
+        "introducing": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 189,
+            "quote": "transverse shoulder"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.ii",
+          "anchor": {
+            "startChar": 685,
+            "endChar": 702,
+            "quote": "said ferrule body"
+          }
+        },
+        "introducing": {
+          "path": "17.b.i",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 312,
+            "quote": "a ferrule body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.iii",
+          "anchor": {
+            "startChar": 747,
+            "endChar": 768,
+            "quote": "the threaded plug nut"
+          }
+        },
+        "introducing": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 212,
+            "endChar": 229,
+            "quote": "threaded plug-nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.iii",
+          "anchor": {
+            "startChar": 795,
+            "endChar": 812,
+            "quote": "said ferrule body"
+          }
+        },
+        "introducing": {
+          "path": "17.b.i",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 312,
+            "quote": "a ferrule body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.iii",
+          "anchor": {
+            "startChar": 824,
+            "endChar": 849,
+            "quote": "said ferrule forward face"
+          }
+        },
+        "introducing": {
+          "path": "17.b.ii",
+          "anchor": {
+            "startChar": 525,
+            "endChar": 547,
+            "quote": "a ferrule forward face"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.iii",
+          "anchor": {
+            "startChar": 858,
+            "endChar": 881,
+            "quote": "the transverse shoulder"
+          }
+        },
+        "introducing": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 189,
+            "quote": "transverse shoulder"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.iii",
+          "anchor": {
+            "startChar": 942,
+            "endChar": 959,
+            "quote": "said ferrule body"
+          }
+        },
+        "introducing": {
+          "path": "17.b.i",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 312,
+            "quote": "a ferrule body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.iii",
+          "anchor": {
+            "startChar": 1029,
+            "endChar": 1046,
+            "quote": "said ferrule body"
+          }
+        },
+        "introducing": {
+          "path": "17.b.i",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 312,
+            "quote": "a ferrule body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.iv",
+          "anchor": {
+            "startChar": 1124,
+            "endChar": 1141,
+            "quote": "said ferrule body"
+          }
+        },
+        "introducing": {
+          "path": "17.b.i",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 312,
+            "quote": "a ferrule body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.iv",
+          "anchor": {
+            "startChar": 1185,
+            "endChar": 1223,
+            "quote": "the circumferential point-seal surface"
+          }
+        },
+        "introducing": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 113,
+            "endChar": 149,
+            "quote": "a circumferential point-seal surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b.iv",
+          "anchor": {
+            "startChar": 1232,
+            "endChar": 1259,
+            "quote": "the connected tube sections"
+          }
+        },
+        "introducing": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 88,
+            "endChar": 104,
+            "quote": "sections of tube"
+          }
+        }
+      }
+    ]
+  }
+]

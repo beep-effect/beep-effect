@@ -621,11 +621,6 @@
     "reason": "Self-recursive schema: S.suspend((): S.Codec<JsonSchema, ...>) needs the class Self type (an Opaque cannot satisfy it without retyping ~15 renderer functions)."
   },
   {
-    "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-    "class": "TSConfig",
-    "reason": "Class semantics: tests assert toBeInstanceOf(TSConfig) and the class decode's excess-property failure message."
-  },
-  {
     "file": "packages/foundation/modeling/ontology/src/internal/ClassificationXml.ts",
     "class": "IpcEntry",
     "reason": "Self-recursive schema: S.suspend((): S.Codec<IpcEntry, Encoded>) needs the class Self type; Opaque's Rebuild type carries no brand (TS2322)."

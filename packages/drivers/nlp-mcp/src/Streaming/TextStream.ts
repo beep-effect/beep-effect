@@ -1,6 +1,8 @@
 /**
  * Line-oriented text streaming helpers backing the streaming file tools.
  *
+ * **Details**
+ *
  * Provides memory-efficient, line-by-line access to text files using the
  * platform {@link FileSystem.FileSystem} and {@link Path.Path} services
  * (`FileSystem.stream` -\> `Stream.decodeText` -\> `Stream.splitLines`). All

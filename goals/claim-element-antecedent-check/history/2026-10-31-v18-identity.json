@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "claim-comment-only-replay/v1",
+  "baselineCommit": "8d073dbd02",
+  "change": "JSDoc example headings only",
+  "implementationDigest": "79fcf232dd1b8be3fd8b32bf743efcc709536a910f4aae3cfbba3e1c0d865fac",
+  "strictMatches": 37,
+  "all34ProtectedPassesRetained": true,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "runs": [
+    {
+      "lane": "positive",
+      "byteIdenticalPredictions": 55,
+      "resultsSha256": "06eb615c8ff39bf2ae41dd4cbc290d6c27f8109591cfa6a7006c8985d90d23fd",
+      "scoresIdenticalExceptDigest": true
+    },
+    {
+      "lane": "allowed",
+      "byteIdenticalPredictions": 196,
+      "resultsSha256": "6369364259c564834373f094a116ab6395ce2d21072737bed9ad45fd36352edd",
+      "scoresIdenticalExceptDigest": true
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   CiLaneRunOptions,
   CiLocalStepPlan,
@@ -148,6 +149,7 @@ import {
   writeCoverageRegressionBaseline,
 } from "@beep/repo-cli/test/Quality";
 import {
+  clearTurboCacheSecretSessionVerdictsForTesting,
   hasRemoteTurboCacheArgs,
   isCiSync,
   localOnlyTurboCacheArgs,
@@ -157,7 +159,6 @@ import {
 } from "@beep/repo-cli/test/SharedInternals";
 import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "@beep/repo-cli/test/Yeet";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { Percentage } from "@beep/schema/Percentage";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -172,7 +173,6 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -185,7 +185,6 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -196,6 +195,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { PolicySweepProgram } from "@beep/repo-cli/commands/Quality";
 import type { GateOrderLaneClass, GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
@@ -226,8 +226,8 @@ const PlatformLayer = Layer.mergeAll(
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
 );
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
-const decodeCoverageRegressionBaselineJsoncForTesting = decodeJsoncTextAs(CoverageRegressionBaseline);
+const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = Jsonc.bind(GithubChecksFallowFeatureMatrix).decode;
+const decodeCoverageRegressionBaselineJsoncForTesting = Jsonc.bind(CoverageRegressionBaseline).decode;
 const isDomainError = S.is(DomainError);
 const isQualityTaskFailed = S.is(QualityTaskFailed);
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
@@ -324,6 +324,37 @@ const temporaryRepository = Effect.gen(function* () {
   return repositoryPath;
 });
 
+// A root declaring `workspaces`, plus one `test:integration`-owning package per
+// directory, named `@beep/<dir with "/" as "-">`.
+const writeIntegrationWorkspace = Effect.fnUntraced(function* (
+  repositoryPath: string,
+  workspaces: ReadonlyArray<string>,
+  packageDirs: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.writeFileString(
+    path.join(repositoryPath, "package.json"),
+    yield* encodeJson({ name: "@beep/test-root", private: true, workspaces })
+  );
+  yield* Effect.forEach(
+    packageDirs,
+    Effect.fnUntraced(function* (packageDir) {
+      const absoluteDir = path.join(repositoryPath, packageDir);
+      yield* fs.makeDirectory(absoluteDir, { recursive: true });
+      yield* fs.writeFileString(
+        path.join(absoluteDir, "package.json"),
+        yield* encodeJson({
+          name: `@beep/${Str.replaceAll("/", "-")(packageDir)}`,
+          private: true,
+          scripts: { "test:integration": "vitest run test/integration" },
+        })
+      );
+    }),
+    { discard: true }
+  );
+});
+
 // The single coverage invocation for a `bun run coverage <argv>` shape; root
 // coverage itself plans at run time, so this is the unit the runtime composes.
 const coverageStepOf = (argv: ReadonlyArray<string>): QualityTaskStep =>
@@ -396,6 +427,12 @@ const withoutCiEffect = <Out, E, R>(use: Effect.Effect<Out, E, R>): Effect.Effec
     undefined,
     withEnvVarEffect("GITHUB_ACTIONS", undefined, withEnvVarEffect("CONTINUOUS_INTEGRATION", undefined, use))
   );
+
+const withEnvVarsEffect = <Out, E, Req>(
+  values: Readonly<Record<string, string | undefined>>,
+  use: Effect.Effect<Out, E, Req>
+): Effect.Effect<Out, E, Req> =>
+  A.reduce(R.toEntries(values), use, (inner, [name, value]) => withEnvVarEffect(name, value, inner));
 
 const isTurboConcurrencyArg = (arg: string): boolean =>
   arg === "--concurrency" || Str.startsWith("--concurrency=")(arg);
@@ -615,11 +652,11 @@ const cheapGatesSpawner = (
 ) =>
   ChildProcessSpawner.make((command) => {
     if (ChildProcess.isStandardCommand(command)) {
-      const commandText = A.join([command.command, ...command.args], " ");
+      const commandText = A.join([command.command, ...commandArgs(command)], " ");
       A.appendInPlace(spawned, commandText);
-      const output = A.contains(command.args, "--is-shallow-repository")
+      const output = A.contains(commandArgs(command), "--is-shallow-repository")
         ? "false"
-        : A.contains(command.args, "--show-current")
+        : A.contains(commandArgs(command), "--show-current")
           ? "feature/cheap-gates"
           : "";
       const exitCode = A.contains(A.map(failedCommands, key), key(commandText)) ? 1 : 0;
@@ -890,8 +927,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           if (!ChildProcess.isStandardCommand(command)) {
             return Effect.die("SAST test requires a standard command");
           }
-          A.appendInPlace(commands, [command.command, ...command.args]);
-          const output = A.contains(command.args, "--name-only") ? `${ignored}\n${changed}\n` : "";
+          A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
+          const output = A.contains(commandArgs(command), "--name-only") ? `${ignored}\n${changed}\n` : "";
           return Effect.succeed(qualityCommandHandle(output, 0));
         });
         yield* runGithubChecks("sast").pipe(
@@ -899,7 +936,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
         );
-        const scan = A.findFirst(commands, (args) => A.contains(args, "semgrep/semgrep"));
+        const scan = A.findFirst(commands, (args) => A.contains(args, "scan"));
         scan.pipe(O.isSome, assertTrue);
         if (O.isSome(scan)) {
           expect(A.takeRight(scan.value, 5)).toEqual(["--include", `/${ignored}`, "--include", `/${changed}`, "."]);
@@ -909,6 +946,56 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           NodeURL.fileURLToPath(new URL("../../../../../.semgrepignore", import.meta.url))
         );
         expect(ignoreRules).toContain("goals/**/history/outputs/");
+      })
+    );
+
+    it.effect("runs the first-party Semgrep rule tests before the changed-file filter", () =>
+      Effect.gen(function* () {
+        const commands: Array<ReadonlyArray<string>> = [];
+        const spawner = ChildProcessSpawner.make((command) => {
+          if (!ChildProcess.isStandardCommand(command)) {
+            return Effect.die("SAST test requires a standard command");
+          }
+          A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
+          return Effect.succeed(qualityCommandHandle("", 0));
+        });
+        yield* runGithubChecks("sast").pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+          Effect.provideServiceEffect(Console.Console, TestConsole.make),
+          TestClock.withLive
+        );
+        const ruleTests = A.findFirst(commands, (args) => A.contains(args, "--test"));
+        assertSome(O.map(ruleTests, A.takeRight(3)), [
+          "--config",
+          "/src/.semgrep/first-party.yml",
+          "/src/goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts",
+        ]);
+        // No changed JavaScript/TypeScript files: the scan is skipped, the rule tests are not.
+        expect(A.filter(commands, (args) => A.contains(args, "scan"))).toEqual([]);
+      })
+    );
+
+    it.effect("pairs every first-party Semgrep rule with ruleid and ok fixture cases", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const read = (relative: string) =>
+          fs.readFileString(NodeURL.fileURLToPath(new URL(`../../../../../${relative}`, import.meta.url)));
+        const rules = yield* read(".semgrep/first-party.yml");
+        const fixture = yield* read(
+          "goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts"
+        );
+        const ruleIds = pipe(
+          Str.split(rules, "\n"),
+          A.map(Str.trim),
+          A.filter(Str.startsWith("- id: ")),
+          A.map(Str.slice(6))
+        );
+        expect(ruleIds).toContain("beep-no-eval");
+        const unpaired = A.filter(
+          ruleIds,
+          (id) => !Str.includes(`// ruleid: ${id}\n`)(fixture) || !Str.includes(`// ok: ${id}\n`)(fixture)
+        );
+        expect(unpaired).toEqual([]);
       })
     );
 
@@ -922,8 +1009,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           if (!ChildProcess.isStandardCommand(command)) {
             return Effect.die("SAST test requires a standard command");
           }
-          A.appendInPlace(commands, [command.command, ...command.args]);
-          const output = A.contains(command.args, "--name-only") ? A.join(changed, "\n") : "";
+          A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
+          const output = A.contains(commandArgs(command), "--name-only") ? A.join(changed, "\n") : "";
           return Effect.succeed(qualityCommandHandle(output, 0));
         });
         yield* runGithubChecks("sast").pipe(
@@ -936,7 +1023,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
         );
-        const scan = A.findFirst(commands, (args) => A.contains(args, "semgrep/semgrep"));
+        const scan = A.findFirst(commands, (args) => A.contains(args, "scan"));
         scan.pipe(O.isSome, assertTrue);
         if (O.isSome(scan)) {
           expect(A.takeRight(scan.value, 9)).toEqual([
@@ -1269,6 +1356,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:retired-iri-authorities",
         "lint:schema-tag-idioms",
+        "lint:holds",
         "lint:schema-first",
         "lint:effect-vitest",
         "lint:allowlist",
@@ -1512,6 +1600,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "repo-sanity:syncpack",
         "repo-sanity:sherif",
         "repo-sanity:config-typecheck",
+        "repo-sanity:goals-ops-typecheck",
         "repo-sanity:bun-audit",
         "quality:cache-policy",
       ]);
@@ -1519,7 +1608,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(lanes[0]?.step.args).toEqual(["run", "beep", "quality", "changeset-graph"]);
       expect(lanes[2]?.step.args).toEqual(expectedTurboArgs("fallow:boundaries:config-check", ["--summarize"]));
       expect(lanes[6]?.step.args).toEqual(["run", "check:configs"]);
-      expect(lanes[7]?.step.args).toEqual(["run", "beep", "quality", "bun-audit"]);
+      expect(lanes[7]?.step).toMatchObject({
+        command: "bunx",
+        args: ["tsrs", "-p", "goals/tsconfig.ops.json", "--noEmit", "--pretty", "false"],
+      });
+      expect(lanes[8]?.step.args).toEqual(["run", "beep", "quality", "bun-audit"]);
       expect(qualityLaneArgs(lanes, "quality:cache-policy")).toEqual(["run", "beep", "quality", "cache-policy"]);
       for (const mode of ["repo-sanity", "quality", "pre-push"] as const) {
         expect(qualityLaneArgs(githubCheckLanesForModeForTesting("/repo", mode), "quality:cache-policy")).toEqual([
@@ -2577,54 +2670,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             } finally {
               spawnSync.mockRestore();
             }
-          },
-          Effect.provideServiceEffect(Console.Console, TestConsole.make)
-        ),
-        Effect.provideServiceEffect(Console.Console, TestConsole.make)
-      )
-    );
-
-    it.effect(
-      "surfaces platform crypto failures while identifying and staging lane proofs",
-      flow(
-        Effect.fnUntraced(
-          function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-crypto-failure-" });
-            yield* initializeLaneProofRepository(tempRoot);
-
-            const lane = laneProofTestLane(tempRoot, "proof:crypto", "preflight", "process.exit(0)");
-            const platformCrypto = yield* Crypto.Crypto;
-            const cryptoFailure = PlatformError.badArgument({ module: "Crypto", method: "test" });
-
-            const withoutIndexIdentity = yield* prepareLaneProofSession([lane], "active").pipe(
-              Effect.provideService(Crypto.Crypto, {
-                ...platformCrypto,
-                randomUUIDv4: () => Effect.fail(cryptoFailure),
-              })
-            );
-            assertNone(withoutIndexIdentity);
-
-            const digestFailure = yield* prepareLaneProofSession([lane], "active").pipe(
-              Effect.provideService(Crypto.Crypto, { ...platformCrypto, digest: () => Effect.fail(cryptoFailure) }),
-              Effect.flip
-            );
-            expect(digestFailure.message).toBe("Failed to hash lane-proof identity.");
-
-            const session = yield* Effect.fromOption(yield* prepareLaneProofSession([lane], "active"));
-            let identityCalls = 0;
-            const stagingFailure = yield* persistLaneProofs(session, [[lane, 12]]).pipe(
-              Effect.provideService(Crypto.Crypto, {
-                ...platformCrypto,
-                randomUUIDv4: () =>
-                  Effect.suspend(() => {
-                    identityCalls = identityCalls + 1;
-                    return identityCalls > 1 ? Effect.fail(cryptoFailure) : platformCrypto.randomUUIDv4();
-                  }),
-              }),
-              Effect.flip
-            );
-            expect(stagingFailure.message).toBe("Failed to create lane-proof staging identity.");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -4013,6 +4058,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:retired-iri-authorities",
         "lint:schema-tag-idioms",
+        "lint:holds",
         "lint:tsconfig-overlay",
         "lint:package-test-typecheck",
         "lint:effect-vitest",
@@ -4066,7 +4112,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "quality:test-tsgo",
       ]);
       expect(taskNames(O.getOrThrow(A.get(full, 1)))).toEqual([
-        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(15)),
+        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(16)),
         ...pipe(A.get(local, 2), O.getOrThrow, taskNames),
       ]);
       // A local full-scope plan (no review base) leaves the two git-delta knowledge checks and the
@@ -4165,6 +4211,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:retired-effect-paths",
           "lint:retired-iri-authorities",
           "lint:schema-tag-idioms",
+          "lint:holds",
           "quality:test-tsgo",
           "knowledge:doctor",
         ];
@@ -4434,7 +4481,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           `--maxWorkers=${workers}`,
         ]);
       }
-      for (const selector of ["missing[selector]", "missing", "!B"]) {
+      // The last selector passes the selector grammar but trips the glob compiler's pattern-length guard.
+      for (const selector of ["missing[selector]", "missing", "!B", pipe("a", Str.repeat(65_537))]) {
         assertNone(resolveCoverageSelector(owners, selector));
         expect(A.takeRight(coverageStepForTesting("/repo", [`--filter=${selector}`], owners).args, 1)).toEqual([
           "--maxWorkers=2",
@@ -8464,80 +8512,150 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
+    // The aggregate lint lane opens a remote-cache secret session whenever the
+    // Turbo credentials are 1Password references, and the session verdict comes
+    // from spawning `op run -- true`. Each case pins the reference-backed
+    // posture, clears the cached verdicts and puts its own `op` first on PATH,
+    // so neither the host `op` nor the host's TURBO_* values decide the label.
+    const aggregateLintFailureWithOp = Effect.fnUntraced(function* (opScript: ReadonlyArray<string>) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tmpDir = process.cwd();
+      const binDir = path.join(tmpDir, "bin");
+      const commandLogPath = path.join(tmpDir, "quality-commands.log");
+      const fakeBunxPath = path.join(binDir, "bunx");
+      const fakeBunPath = path.join(binDir, "bun");
+      const fakeOpPath = path.join(binDir, "op");
+
+      yield* fs.makeDirectory(binDir, { recursive: true });
+      yield* fs.writeFileString(
+        fakeBunxPath,
+        A.join(
+          [
+            "#!/usr/bin/env sh",
+            "printf 'bunx %s\\n' \"$*\" >> quality-commands.log",
+            'if [ "$1" = "turbo" ] && [ "$2" = "run" ] && [ "$3" = "lint" ]; then',
+            "  exit 7",
+            "fi",
+            "exit 0",
+            "",
+          ],
+          "\n"
+        )
+      );
+      yield* fs.writeFileString(
+        fakeBunPath,
+        A.join(
+          [
+            "#!/usr/bin/env sh",
+            "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
+            'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
+            "exit 0",
+            "",
+          ],
+          "\n"
+        )
+      );
+      yield* fs.writeFileString(fakeOpPath, A.join(opScript, "\n"));
+      yield* fs.chmod(fakeBunxPath, 0o755);
+      yield* fs.chmod(fakeBunPath, 0o755);
+      yield* fs.chmod(fakeOpPath, 0o755);
+      yield* Effect.sync(clearTurboCacheSecretSessionVerdictsForTesting);
+
+      const [exit, lintStepCount] = yield* withEnvVarsEffect(
+        {
+          PATH: `${binDir}:${Bun.env.PATH ?? ""}`,
+          TURBO_API: "http://127.0.0.1:9427",
+          TURBO_TOKEN: "op://fixture-vault/turbo/token",
+          TURBO_TEAM: "fixture-team",
+          TURBO_CACHE: "local:rw,remote:r",
+          BEEP_TURBO_TRUSTED_WRITER: undefined,
+        },
+        // The default ConfigProvider snapshots the environment on first use, so a
+        // worker started under CI=true would keep `isCi` true and skip the probe;
+        // a provider built inside the pinned scope reads the cleared CI signals.
+        // The step count is derived inside the same scope from the plan the
+        // runtime executes (aggregate lane plus every policy step), so a lint
+        // step added on another branch, or a CI-only step, never skews it.
+        withoutCiEffect(
+          runQualityTask(getInvocation(["lint"])).pipe(
+            Effect.exit,
+            Effect.zip(Effect.sync(() => A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"]))))),
+            Effect.provideServiceEffect(
+              ConfigProvider.ConfigProvider,
+              Effect.sync(() => ConfigProvider.fromEnv())
+            )
+          )
+        )
+      );
+
+      assertTrue(exit._tag === "Failure");
+      const failure = Cause.squash(exit.cause);
+      expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+      assertTrue(isQualityTaskGroupFailed(failure));
+      expect(failure.exitCode).toBe(7);
+
+      const commandLog = yield* fs.readFileString(commandLogPath);
+      // The session probe reached the fixture `op`, never the host binary.
+      expect(commandLog).toContain("op run -- true");
+      // The aggregate fails first; ordered policy diagnostics still execute.
+      expect(commandLog).toContain("cache execute -- run lint");
+      expect(commandLog).toContain("lint:effect-imports");
+      expect(commandLog).toContain("lint:roadmap-refs");
+      expect(commandLog).toContain("lint:typos");
+
+      const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+      expect(logText).toContain(`[beep-cli] lint:policy: running ${lintStepCount} ordered step(s)`);
+
+      return {
+        failedLabels: A.map(failure.failures, (step) => step.label),
+        wrappedAggregate: pipe(commandLog, Str.includes("op run -- bun ")),
+      };
+    });
+
     it.effect("keeps running repo-wide root lint policy checks after aggregate lint fails", () =>
       Effect.andThen(
         temporaryRepository,
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const tmpDir = process.cwd();
-          const binDir = path.join(tmpDir, "bin");
-          const commandLogPath = path.join(tmpDir, "quality-commands.log");
-          const fakeBunxPath = path.join(binDir, "bunx");
-          const fakeBunPath = path.join(binDir, "bun");
+        // A missing, expired or denied 1Password session degrades the aggregate
+        // to an unwrapped local-only run, so its label carries no session suffix.
+        aggregateLintFailureWithOp([
+          "#!/usr/bin/env sh",
+          "printf 'op %s\\n' \"$*\" >> quality-commands.log",
+          "exit 78",
+          "",
+        ]).pipe(
+          Effect.map(({ failedLabels, wrappedAggregate }) => {
+            expect(failedLabels).toEqual(["lint"]);
+            expect(wrappedAggregate).toBe(false);
+          })
+        )
+      ).pipe(
+        Effect.provideServiceEffect(Console.Console, TestConsole.make),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make),
+        TestClock.withLive
+      )
+    );
 
-          yield* fs.makeDirectory(binDir, { recursive: true });
-          yield* fs.writeFileString(
-            fakeBunxPath,
-            A.join(
-              [
-                "#!/usr/bin/env sh",
-                "printf 'bunx %s\\n' \"$*\" >> quality-commands.log",
-                'if [ "$1" = "turbo" ] && [ "$2" = "run" ] && [ "$3" = "lint" ]; then',
-                "  exit 7",
-                "fi",
-                "exit 0",
-                "",
-              ],
-              "\n"
-            )
-          );
-          yield* fs.writeFileString(
-            fakeBunPath,
-            A.join(
-              [
-                "#!/usr/bin/env sh",
-                "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
-                'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
-                "exit 0",
-                "",
-              ],
-              "\n"
-            )
-          );
-          yield* fs.chmod(fakeBunxPath, 0o755);
-          yield* fs.chmod(fakeBunPath, 0o755);
-
-          const exit = yield* withEnvVarEffect(
-            "PATH",
-            `${binDir}:${Bun.env.PATH ?? ""}`,
-            Effect.exit(runQualityTask(getInvocation(["lint"])))
-          );
-
-          assertTrue(exit._tag === "Failure");
-          if (Exit.isFailure(exit)) {
-            const failure = Cause.squash(exit.cause);
-            expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
-            if (isQualityTaskGroupFailed(failure)) {
-              expect(failure.exitCode).toBe(7);
-              expect(A.map(failure.failures, (step) => step.label)).toEqual(["lint"]);
-            }
-          }
-
-          const commandLog = yield* fs.readFileString(commandLogPath);
-          // The aggregate fails first; ordered policy diagnostics still execute.
-          expect(commandLog).toContain("cache execute -- run lint");
-          expect(commandLog).toContain("lint:effect-imports");
-          expect(commandLog).toContain("lint:roadmap-refs");
-          expect(commandLog).toContain("lint:typos");
-
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          // Derived from the same plan the runtime executes (aggregate lane plus
-          // every policy step), so a lint step added on another branch does not
-          // break this assertion when the two land together in a merge.
-          const lintStepCount = A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"])));
-          expect(logText).toContain(`[beep-cli] lint:policy: running ${lintStepCount} ordered step(s)`);
-        })
+    it.effect("labels the failed aggregate lint with its op run session when 1Password is usable", () =>
+      Effect.andThen(
+        temporaryRepository,
+        // A usable session wraps the aggregate in `op run --` and, by design
+        // (`turboSecretSessionStep`), suffixes its label with " (op run)".
+        aggregateLintFailureWithOp([
+          "#!/usr/bin/env sh",
+          "printf 'op %s\\n' \"$*\" >> quality-commands.log",
+          '[ "$1" = "run" ] || exit 0',
+          "shift",
+          'while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done',
+          '[ "$#" -gt 0 ] && shift',
+          'exec "$@"',
+          "",
+        ]).pipe(
+          Effect.map(({ failedLabels, wrappedAggregate }) => {
+            expect(failedLabels).toEqual(["lint (op run)"]);
+            expect(wrappedAggregate).toBe(true);
+          })
+        )
       ).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -8651,6 +8769,74 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
 
           deepStrictEqual(filters, []);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    // pnpm `packages:` lists reach the owner scan through `WorkspacePatterns`, so
+    // a pattern other than a trailing `/*` must expand as a glob, not a literal.
+    it.effect("expands a recursive workspace pattern below its base", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(tmpDir, ["packages/**"], ["packages/top", "packages/group/nested"]);
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/packages-group-nested", "--filter=@beep/packages-top"]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    it.effect("expands a mid-path workspace wildcard to the matching directories only", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(tmpDir, ["apps/*/web"], ["apps/one/web", "apps/two/web", "apps/two/api"]);
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/apps-one-web", "--filter=@beep/apps-two-web"]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    // A brace list without wildcards has no glob magic yet names several paths,
+    // so it walks through the enumerator rather than a literal `{api,web}` join.
+    it.effect("expands a brace workspace pattern without wildcards to each alternative", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(
+            tmpDir,
+            ["packages/{api,web}"],
+            ["packages/api", "packages/web", "packages/other"]
+          );
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/packages-api", "--filter=@beep/packages-web"]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    it.effect("drops workspace candidates a negated pattern excludes", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(
+            tmpDir,
+            ["packages/*", "libs/**", "!packages/private-*", "!libs/**/internal"],
+            ["packages/public", "packages/private-a", "libs/core", "libs/core/internal"]
+          );
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/libs-core", "--filter=@beep/packages-public"]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );

@@ -23,7 +23,7 @@
 // surface) and the real Git service itself for checkout, which IS part of
 // the surface this package owns.
 
-import { Git, NotARepositoryError } from "@beep/git/Git";
+import { Git, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 import { runCollected } from "@beep/git/internal/run";
 import { $GitId } from "@beep/identity/packages";
 import { NodeServices } from "@effect/platform-node";
@@ -207,6 +207,73 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
         const afterDeletion = yield* git.show(fixture.dir, fixture.commit2, "deleted.txt");
         assertSome(beforeDeletion, "will be deleted\n");
         assertNone(afterDeletion);
+      })
+    );
+
+    it.effect("show recognizes missing paths after Git configuration warnings", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        yield* Effect.acquireUseRelease(
+          runFixtureGit(fixture.dir, ["config", "--local", "core.fsyncObjectFiles", "true"]),
+          () =>
+            Effect.gen(function* () {
+              const raw = yield* runCollected(
+                ChildProcess.setCwd(
+                  ChildProcess.make("git", ["show", `${fixture.commit1}:missing.txt`], {
+                    env: FIXTURE_ENV,
+                    extendEnv: true,
+                  }),
+                  fixture.dir
+                )
+              );
+              assert.strictEqual(raw.exitCode, 128);
+              assert.isTrue(Str.startsWith("warning: core.fsyncObjectFiles is deprecated")(raw.stderr));
+              assert.isTrue(Str.includes("\nfatal: path 'missing.txt' does not exist in")(raw.stderr));
+              yield* Effect.forEach(
+                ["missing.txt", "unknown revision", "prefix\nnot a git repository"],
+                (path) => git.show(fixture.dir, fixture.commit1, path).pipe(Effect.map(assertNone)),
+                { discard: true }
+              );
+            }),
+          () => runFixtureGit(fixture.dir, ["config", "--local", "--unset", "core.fsyncObjectFiles"])
+        );
+      })
+    );
+
+    it.effect("show keeps diagnostic-like missing filenames in the absent-at-ref case", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* Effect.forEach(
+          A.make(
+            "not a git repository",
+            "unknown revision",
+            "bad revision",
+            "Not a valid object name",
+            "invalid object name",
+            "couldn't find remote ref",
+            "prefix\nnot a git repository"
+          ),
+          (path) => git.show(fixture.dir, fixture.commit1, path).pipe(Effect.map(assertNone)),
+          { discard: true }
+        );
+        const onDisk = path.join(fixture.dir, "unknown revision");
+        yield* Effect.acquireUseRelease(
+          fs.writeFileString(onDisk, "present on disk but not committed\n"),
+          () => git.show(fixture.dir, fixture.commit1, "unknown revision").pipe(Effect.map(assertNone)),
+          () => fs.remove(onDisk).pipe(Effect.orDie)
+        );
+      })
+    );
+
+    it.effect("show does not turn an invalid ref containing absence wording into a missing file", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        for (const ref of ["does not exist in", "missing\nfatal: path 'spoof' does not exist in 'HEAD'"]) {
+          const failure = yield* git.show(fixture.dir, ref, "a.txt").pipe(Effect.flip);
+          assert.instanceOf(failure, UnknownRefError);
+        }
       })
     );
 

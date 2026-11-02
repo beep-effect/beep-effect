@@ -1,0 +1,20 @@
+{
+  "previous": "921f97055f51a6e6117576e7929b872b7f1de1122ed7315b2083352a7aa7a119",
+  "review": {
+    "reviewer": "Codex (PR #2386, accepted R5b main integration review)",
+    "reason": "Preserve accepted R5b dependency reviews and current v3 profile while acknowledging exactly four producer-verifier quality-seal inputs; no qualification or activation.",
+    "basis": {
+      "path": "goals/turborepo-cache-trust-observability/research/producer-accepted-r5b-baseline-review-2026-10-31.md",
+      "sha256": "3f17578608ae74f3721f1bb2fb3760cc5946efa71417ffe150029b0360448313"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

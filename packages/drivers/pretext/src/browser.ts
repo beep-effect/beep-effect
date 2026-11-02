@@ -2,6 +2,8 @@
  * Impure capture surface: live font-metrics capture in a browser-grade
  * runtime.
  *
+ * **Details**
+ *
  * Requires `Intl.Segmenter` and a Canvas 2D context (`OffscreenCanvas` or a
  * DOM canvas); absence is a typed failure at capture time, never a crash.
  * The pure contracts re-exported here make this entrypoint self-sufficient

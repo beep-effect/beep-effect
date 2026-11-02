@@ -1,0 +1,2017 @@
+[
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 650,
+          "quote": "A method of detecting an angular velocity using a cantilever vibration gyro including a piezoelectric element which has a first side and a second side, the first side provided with a drive electrode and a pair of detection electrodes, the drive electrode disposed between the pair of detection electrodes with predetermined gaps, the second side opposed to the first side and provided with a common electrode, the cantilever vibration gyro vibrating by a drive signal input between the drive electrode and the common electrode and generating a pair of detected signals corresponding to Coriolis force from the pair of detection electrodes, the method"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 22,
+              "endChar": 41,
+              "quote": "an angular velocity"
+            },
+            "determiner": "an",
+            "head": "angular velocity"
+          },
+          {
+            "anchor": {
+              "startChar": 640,
+              "endChar": 650,
+              "quote": "the method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 48,
+          "endChar": 638,
+          "quote": "a cantilever vibration gyro including a piezoelectric element which has a first side and a second side, the first side provided with a drive electrode and a pair of detection electrodes, the drive electrode disposed between the pair of detection electrodes with predetermined gaps, the second side opposed to the first side and provided with a common electrode, the cantilever vibration gyro vibrating by a drive signal input between the drive electrode and the common electrode and generating a pair of detected signals corresponding to Coriolis force from the pair of detection electrodes"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 48,
+              "endChar": 75,
+              "quote": "a cantilever vibration gyro"
+            },
+            "determiner": "a",
+            "head": "cantilever vibration gyro"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 109,
+              "quote": "a piezoelectric element"
+            },
+            "determiner": "a",
+            "head": "piezoelectric element"
+          },
+          {
+            "anchor": {
+              "startChar": 120,
+              "endChar": 132,
+              "quote": "a first side"
+            },
+            "determiner": "a",
+            "head": "first side"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 150,
+              "quote": "a second side"
+            },
+            "determiner": "a",
+            "head": "second side"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 166,
+              "quote": "the first side"
+            },
+            "determiner": "the",
+            "head": "first side"
+          },
+          {
+            "anchor": {
+              "startChar": 181,
+              "endChar": 198,
+              "quote": "a drive electrode"
+            },
+            "determiner": "a",
+            "head": "drive electrode"
+          },
+          {
+            "anchor": {
+              "startChar": 203,
+              "endChar": 233,
+              "quote": "a pair of detection electrodes"
+            },
+            "determiner": "a",
+            "head": "pair of detection electrodes"
+          },
+          {
+            "anchor": {
+              "startChar": 235,
+              "endChar": 254,
+              "quote": "the drive electrode"
+            },
+            "determiner": "the",
+            "head": "drive electrode"
+          },
+          {
+            "anchor": {
+              "startChar": 272,
+              "endChar": 304,
+              "quote": "the pair of detection electrodes"
+            },
+            "determiner": "the",
+            "head": "pair of detection electrodes"
+          },
+          {
+            "anchor": {
+              "startChar": 310,
+              "endChar": 328,
+              "quote": "predetermined gaps"
+            },
+            "determiner": "bare",
+            "head": "predetermined gaps"
+          },
+          {
+            "anchor": {
+              "startChar": 330,
+              "endChar": 345,
+              "quote": "the second side"
+            },
+            "determiner": "the",
+            "head": "second side"
+          },
+          {
+            "anchor": {
+              "startChar": 357,
+              "endChar": 371,
+              "quote": "the first side"
+            },
+            "determiner": "the",
+            "head": "first side"
+          },
+          {
+            "anchor": {
+              "startChar": 390,
+              "endChar": 408,
+              "quote": "a common electrode"
+            },
+            "determiner": "a",
+            "head": "common electrode"
+          },
+          {
+            "anchor": {
+              "startChar": 410,
+              "endChar": 439,
+              "quote": "the cantilever vibration gyro"
+            },
+            "determiner": "the",
+            "head": "cantilever vibration gyro"
+          },
+          {
+            "anchor": {
+              "startChar": 453,
+              "endChar": 467,
+              "quote": "a drive signal"
+            },
+            "determiner": "a",
+            "head": "drive signal"
+          },
+          {
+            "anchor": {
+              "startChar": 482,
+              "endChar": 501,
+              "quote": "the drive electrode"
+            },
+            "determiner": "the",
+            "head": "drive electrode"
+          },
+          {
+            "anchor": {
+              "startChar": 506,
+              "endChar": 526,
+              "quote": "the common electrode"
+            },
+            "determiner": "the",
+            "head": "common electrode"
+          },
+          {
+            "anchor": {
+              "startChar": 542,
+              "endChar": 568,
+              "quote": "a pair of detected signals"
+            },
+            "determiner": "a",
+            "head": "pair of detected signals"
+          },
+          {
+            "anchor": {
+              "startChar": 586,
+              "endChar": 600,
+              "quote": "Coriolis force"
+            },
+            "determiner": "bare",
+            "head": "coriolis force"
+          },
+          {
+            "anchor": {
+              "startChar": 606,
+              "endChar": 638,
+              "quote": "the pair of detection electrodes"
+            },
+            "determiner": "the",
+            "head": "pair of detection electrodes"
+          }
+        ]
+      },
+      {
+        "path": "7.b",
+        "anchor": {
+          "startChar": 663,
+          "endChar": 722,
+          "quote": "applying a bias voltage to the pair of detection electrodes"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 672,
+              "endChar": 686,
+              "quote": "a bias voltage"
+            },
+            "determiner": "a",
+            "head": "bias voltage"
+          },
+          {
+            "anchor": {
+              "startChar": 690,
+              "endChar": 722,
+              "quote": "the pair of detection electrodes"
+            },
+            "determiner": "the",
+            "head": "pair of detection electrodes"
+          }
+        ]
+      },
+      {
+        "path": "7.c",
+        "anchor": {
+          "startChar": 724,
+          "endChar": 759,
+          "quote": "adding the pair of detected signals"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 731,
+              "endChar": 759,
+              "quote": "the pair of detected signals"
+            },
+            "determiner": "the",
+            "head": "pair of detected signals"
+          }
+        ]
+      },
+      {
+        "path": "7.d",
+        "anchor": {
+          "startChar": 761,
+          "endChar": 854,
+          "quote": "delaying a phase of the detected signal obtained through the addition by a first phase amount"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 770,
+              "endChar": 777,
+              "quote": "a phase"
+            },
+            "determiner": "a",
+            "head": "phase"
+          },
+          {
+            "anchor": {
+              "startChar": 781,
+              "endChar": 800,
+              "quote": "the detected signal"
+            },
+            "determiner": "the",
+            "head": "detected signal"
+          },
+          {
+            "anchor": {
+              "startChar": 818,
+              "endChar": 830,
+              "quote": "the addition"
+            },
+            "determiner": "the",
+            "head": "addition"
+          },
+          {
+            "anchor": {
+              "startChar": 834,
+              "endChar": 854,
+              "quote": "a first phase amount"
+            },
+            "determiner": "a",
+            "head": "first phase amount"
+          }
+        ]
+      },
+      {
+        "path": "7.e",
+        "anchor": {
+          "startChar": 856,
+          "endChar": 1013,
+          "quote": "controlling the detected signal delayed by the first phase amount to a predetermined voltage amplitude and outputting the detected signal as the drive signal"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 868,
+              "endChar": 887,
+              "quote": "the detected signal"
+            },
+            "determiner": "the",
+            "head": "detected signal"
+          },
+          {
+            "anchor": {
+              "startChar": 899,
+              "endChar": 921,
+              "quote": "the first phase amount"
+            },
+            "determiner": "the",
+            "head": "first phase amount"
+          },
+          {
+            "anchor": {
+              "startChar": 925,
+              "endChar": 958,
+              "quote": "a predetermined voltage amplitude"
+            },
+            "determiner": "a",
+            "head": "predetermined voltage amplitude"
+          },
+          {
+            "anchor": {
+              "startChar": 974,
+              "endChar": 993,
+              "quote": "the detected signal"
+            },
+            "determiner": "the",
+            "head": "detected signal"
+          },
+          {
+            "anchor": {
+              "startChar": 997,
+              "endChar": 1013,
+              "quote": "the drive signal"
+            },
+            "determiner": "the",
+            "head": "drive signal"
+          }
+        ]
+      },
+      {
+        "path": "7.f",
+        "anchor": {
+          "startChar": 1015,
+          "endChar": 1067,
+          "quote": "differential-amplifying the pair of detected signals"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1039,
+              "endChar": 1067,
+              "quote": "the pair of detected signals"
+            },
+            "determiner": "the",
+            "head": "pair of detected signals"
+          }
+        ]
+      },
+      {
+        "path": "7.g",
+        "anchor": {
+          "startChar": 1069,
+          "endChar": 1203,
+          "quote": "delaying the phase of the detected signal obtained through the addition by a second phase amount different from the first phase amount"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1078,
+              "endChar": 1087,
+              "quote": "the phase"
+            },
+            "determiner": "the",
+            "head": "phase"
+          },
+          {
+            "anchor": {
+              "startChar": 1091,
+              "endChar": 1110,
+              "quote": "the detected signal"
+            },
+            "determiner": "the",
+            "head": "detected signal"
+          },
+          {
+            "anchor": {
+              "startChar": 1128,
+              "endChar": 1140,
+              "quote": "the addition"
+            },
+            "determiner": "the",
+            "head": "addition"
+          },
+          {
+            "anchor": {
+              "startChar": 1144,
+              "endChar": 1165,
+              "quote": "a second phase amount"
+            },
+            "determiner": "a",
+            "head": "second phase amount"
+          },
+          {
+            "anchor": {
+              "startChar": 1181,
+              "endChar": 1203,
+              "quote": "the first phase amount"
+            },
+            "determiner": "the",
+            "head": "first phase amount"
+          }
+        ]
+      },
+      {
+        "path": "7.h",
+        "anchor": {
+          "startChar": 1209,
+          "endChar": 1330,
+          "quote": "synchronously detecting the differential-amplified signal based on the detected signal delayed by the second phase amount"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1233,
+              "endChar": 1266,
+              "quote": "the differential-amplified signal"
+            },
+            "determiner": "the",
+            "head": "differential-amplified signal"
+          },
+          {
+            "anchor": {
+              "startChar": 1276,
+              "endChar": 1295,
+              "quote": "the detected signal"
+            },
+            "determiner": "the",
+            "head": "detected signal"
+          },
+          {
+            "anchor": {
+              "startChar": 1307,
+              "endChar": 1330,
+              "quote": "the second phase amount"
+            },
+            "determiner": "the",
+            "head": "second phase amount"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 640,
+            "endChar": 650,
+            "quote": "the method"
+          }
+        },
+        "introducing": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 152,
+            "endChar": 166,
+            "quote": "the first side"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 120,
+            "endChar": 132,
+            "quote": "a first side"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 235,
+            "endChar": 254,
+            "quote": "the drive electrode"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 181,
+            "endChar": 198,
+            "quote": "a drive electrode"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 272,
+            "endChar": 304,
+            "quote": "the pair of detection electrodes"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 203,
+            "endChar": 233,
+            "quote": "a pair of detection electrodes"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 330,
+            "endChar": 345,
+            "quote": "the second side"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 137,
+            "endChar": 150,
+            "quote": "a second side"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 357,
+            "endChar": 371,
+            "quote": "the first side"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 120,
+            "endChar": 132,
+            "quote": "a first side"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 410,
+            "endChar": 439,
+            "quote": "the cantilever vibration gyro"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 48,
+            "endChar": 75,
+            "quote": "a cantilever vibration gyro"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 482,
+            "endChar": 501,
+            "quote": "the drive electrode"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 181,
+            "endChar": 198,
+            "quote": "a drive electrode"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 506,
+            "endChar": 526,
+            "quote": "the common electrode"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 390,
+            "endChar": 408,
+            "quote": "a common electrode"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 606,
+            "endChar": 638,
+            "quote": "the pair of detection electrodes"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 203,
+            "endChar": 233,
+            "quote": "a pair of detection electrodes"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 48,
+                "endChar": 75,
+                "quote": "a cantilever vibration gyro"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 75,
+              "endChar": 86,
+              "quote": " including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 86,
+                "endChar": 109,
+                "quote": "a piezoelectric element"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 109,
+              "endChar": 120,
+              "quote": " which has "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 120,
+                "endChar": 132,
+                "quote": "a first side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 132,
+              "endChar": 137,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 137,
+                "endChar": 150,
+                "quote": "a second side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 150,
+              "endChar": 152,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 152,
+                "endChar": 166,
+                "quote": "the first side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 166,
+              "endChar": 181,
+              "quote": " provided with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 181,
+                "endChar": 198,
+                "quote": "a drive electrode"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 198,
+              "endChar": 203,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 203,
+                "endChar": 233,
+                "quote": "a pair of detection electrodes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 233,
+              "endChar": 235,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 235,
+                "endChar": 254,
+                "quote": "the drive electrode"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 254,
+              "endChar": 272,
+              "quote": " disposed between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 272,
+                "endChar": 304,
+                "quote": "the pair of detection electrodes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 304,
+              "endChar": 310,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 310,
+                "endChar": 328,
+                "quote": "predetermined gaps"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 328,
+              "endChar": 330,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 330,
+                "endChar": 345,
+                "quote": "the second side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 345,
+              "endChar": 357,
+              "quote": " opposed to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 357,
+                "endChar": 371,
+                "quote": "the first side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 371,
+              "endChar": 390,
+              "quote": " and provided with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 390,
+                "endChar": 408,
+                "quote": "a common electrode"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 408,
+              "endChar": 410,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 410,
+                "endChar": 439,
+                "quote": "the cantilever vibration gyro"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 439,
+              "endChar": 453,
+              "quote": " vibrating by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 453,
+                "endChar": 467,
+                "quote": "a drive signal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 467,
+              "endChar": 482,
+              "quote": " input between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 482,
+                "endChar": 501,
+                "quote": "the drive electrode"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 501,
+              "endChar": 506,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 506,
+                "endChar": 526,
+                "quote": "the common electrode"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 526,
+              "endChar": 542,
+              "quote": " and generating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 542,
+                "endChar": 568,
+                "quote": "a pair of detected signals"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 568,
+              "endChar": 586,
+              "quote": " corresponding to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 586,
+                "endChar": 600,
+                "quote": "Coriolis force"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 600,
+              "endChar": 606,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 606,
+                "endChar": 638,
+                "quote": "the pair of detection electrodes"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.b",
+          "anchor": {
+            "startChar": 690,
+            "endChar": 722,
+            "quote": "the pair of detection electrodes"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 203,
+            "endChar": 233,
+            "quote": "a pair of detection electrodes"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.b",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 663,
+              "endChar": 672,
+              "quote": "applying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 672,
+                "endChar": 686,
+                "quote": "a bias voltage"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 686,
+              "endChar": 690,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 690,
+                "endChar": 722,
+                "quote": "the pair of detection electrodes"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.c",
+          "anchor": {
+            "startChar": 731,
+            "endChar": 759,
+            "quote": "the pair of detected signals"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 542,
+            "endChar": 568,
+            "quote": "a pair of detected signals"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.c",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 724,
+              "endChar": 731,
+              "quote": "adding "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.c",
+              "anchor": {
+                "startChar": 731,
+                "endChar": 759,
+                "quote": "the pair of detected signals"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "7.d",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.d",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 761,
+              "endChar": 770,
+              "quote": "delaying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.d",
+              "anchor": {
+                "startChar": 770,
+                "endChar": 777,
+                "quote": "a phase"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 777,
+              "endChar": 781,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.d",
+              "anchor": {
+                "startChar": 781,
+                "endChar": 800,
+                "quote": "the detected signal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 800,
+              "endChar": 818,
+              "quote": " obtained through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.d",
+              "anchor": {
+                "startChar": 818,
+                "endChar": 830,
+                "quote": "the addition"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 830,
+              "endChar": 834,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.d",
+              "anchor": {
+                "startChar": 834,
+                "endChar": 854,
+                "quote": "a first phase amount"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.e",
+          "anchor": {
+            "startChar": 868,
+            "endChar": 887,
+            "quote": "the detected signal"
+          }
+        },
+        "introducing": {
+          "path": "7.d",
+          "anchor": {
+            "startChar": 781,
+            "endChar": 800,
+            "quote": "the detected signal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.e",
+          "anchor": {
+            "startChar": 899,
+            "endChar": 921,
+            "quote": "the first phase amount"
+          }
+        },
+        "introducing": {
+          "path": "7.d",
+          "anchor": {
+            "startChar": 834,
+            "endChar": 854,
+            "quote": "a first phase amount"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.e",
+          "anchor": {
+            "startChar": 974,
+            "endChar": 993,
+            "quote": "the detected signal"
+          }
+        },
+        "introducing": {
+          "path": "7.d",
+          "anchor": {
+            "startChar": 781,
+            "endChar": 800,
+            "quote": "the detected signal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.e",
+          "anchor": {
+            "startChar": 997,
+            "endChar": 1013,
+            "quote": "the drive signal"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 453,
+            "endChar": 467,
+            "quote": "a drive signal"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.e",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.e",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 856,
+              "endChar": 868,
+              "quote": "controlling "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.e",
+              "anchor": {
+                "startChar": 868,
+                "endChar": 887,
+                "quote": "the detected signal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 887,
+              "endChar": 899,
+              "quote": " delayed by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.e",
+              "anchor": {
+                "startChar": 899,
+                "endChar": 921,
+                "quote": "the first phase amount"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 921,
+              "endChar": 925,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.e",
+              "anchor": {
+                "startChar": 925,
+                "endChar": 958,
+                "quote": "a predetermined voltage amplitude"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 958,
+              "endChar": 974,
+              "quote": " and outputting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.e",
+              "anchor": {
+                "startChar": 974,
+                "endChar": 993,
+                "quote": "the detected signal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 993,
+              "endChar": 997,
+              "quote": " as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.e",
+              "anchor": {
+                "startChar": 997,
+                "endChar": 1013,
+                "quote": "the drive signal"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.f",
+          "anchor": {
+            "startChar": 1039,
+            "endChar": 1067,
+            "quote": "the pair of detected signals"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 542,
+            "endChar": 568,
+            "quote": "a pair of detected signals"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.f",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.f",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1015,
+              "endChar": 1039,
+              "quote": "differential-amplifying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.f",
+              "anchor": {
+                "startChar": 1039,
+                "endChar": 1067,
+                "quote": "the pair of detected signals"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.g",
+          "anchor": {
+            "startChar": 1078,
+            "endChar": 1087,
+            "quote": "the phase"
+          }
+        },
+        "introducing": {
+          "path": "7.d",
+          "anchor": {
+            "startChar": 770,
+            "endChar": 777,
+            "quote": "a phase"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.g",
+          "anchor": {
+            "startChar": 1091,
+            "endChar": 1110,
+            "quote": "the detected signal"
+          }
+        },
+        "introducing": {
+          "path": "7.d",
+          "anchor": {
+            "startChar": 781,
+            "endChar": 800,
+            "quote": "the detected signal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.g",
+          "anchor": {
+            "startChar": 1128,
+            "endChar": 1140,
+            "quote": "the addition"
+          }
+        },
+        "introducing": {
+          "path": "7.d",
+          "anchor": {
+            "startChar": 818,
+            "endChar": 830,
+            "quote": "the addition"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.g",
+          "anchor": {
+            "startChar": 1181,
+            "endChar": 1203,
+            "quote": "the first phase amount"
+          }
+        },
+        "introducing": {
+          "path": "7.d",
+          "anchor": {
+            "startChar": 834,
+            "endChar": 854,
+            "quote": "a first phase amount"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.g",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.g",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1069,
+              "endChar": 1078,
+              "quote": "delaying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.g",
+              "anchor": {
+                "startChar": 1078,
+                "endChar": 1087,
+                "quote": "the phase"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1087,
+              "endChar": 1091,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.g",
+              "anchor": {
+                "startChar": 1091,
+                "endChar": 1110,
+                "quote": "the detected signal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1110,
+              "endChar": 1128,
+              "quote": " obtained through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.g",
+              "anchor": {
+                "startChar": 1128,
+                "endChar": 1140,
+                "quote": "the addition"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1140,
+              "endChar": 1144,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.g",
+              "anchor": {
+                "startChar": 1144,
+                "endChar": 1165,
+                "quote": "a second phase amount"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1165,
+              "endChar": 1181,
+              "quote": " different from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.g",
+              "anchor": {
+                "startChar": 1181,
+                "endChar": 1203,
+                "quote": "the first phase amount"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.h",
+          "anchor": {
+            "startChar": 1276,
+            "endChar": 1295,
+            "quote": "the detected signal"
+          }
+        },
+        "introducing": {
+          "path": "7.d",
+          "anchor": {
+            "startChar": 781,
+            "endChar": 800,
+            "quote": "the detected signal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.h",
+          "anchor": {
+            "startChar": 1307,
+            "endChar": 1330,
+            "quote": "the second phase amount"
+          }
+        },
+        "introducing": {
+          "path": "7.g",
+          "anchor": {
+            "startChar": 1144,
+            "endChar": 1165,
+            "quote": "a second phase amount"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.h",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.h",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1209,
+              "endChar": 1233,
+              "quote": "synchronously detecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.h",
+              "anchor": {
+                "startChar": 1233,
+                "endChar": 1266,
+                "quote": "the differential-amplified signal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1266,
+              "endChar": 1276,
+              "quote": " based on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.h",
+              "anchor": {
+                "startChar": 1276,
+                "endChar": 1295,
+                "quote": "the detected signal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1295,
+              "endChar": 1307,
+              "quote": " delayed by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.h",
+              "anchor": {
+                "startChar": 1307,
+                "endChar": 1330,
+                "quote": "the second phase amount"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "The detection method according to claim 7"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 20,
+              "quote": "The detection method"
+            },
+            "determiner": "the",
+            "head": "detection method"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 168,
+          "quote": "the vibration gyro is caused to self-oscillate at a frequency higher than a resonance frequency of the vibration gyro"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 69,
+              "quote": "the vibration gyro"
+            },
+            "determiner": "the",
+            "head": "vibration gyro"
+          },
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 112,
+              "quote": "a frequency"
+            },
+            "determiner": "a",
+            "head": "frequency"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 146,
+              "quote": "a resonance frequency"
+            },
+            "determiner": "a",
+            "head": "resonance frequency"
+          },
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 168,
+              "quote": "the vibration gyro"
+            },
+            "determiner": "the",
+            "head": "vibration gyro"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 20,
+            "quote": "The detection method"
+          }
+        },
+        "introducing": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "7"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 69,
+            "quote": "the vibration gyro"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 48,
+            "endChar": 75,
+            "quote": "a cantilever vibration gyro"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 150,
+            "endChar": 168,
+            "quote": "the vibration gyro"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 48,
+            "endChar": 75,
+            "quote": "a cantilever vibration gyro"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 69,
+                "quote": "the vibration gyro"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 69,
+              "endChar": 101,
+              "quote": " is caused to self-oscillate at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 112,
+                "quote": "a frequency"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 112,
+              "endChar": 125,
+              "quote": " higher than "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 125,
+                "endChar": 146,
+                "quote": "a resonance frequency"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 146,
+              "endChar": 150,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 150,
+                "endChar": 168,
+                "quote": "the vibration gyro"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

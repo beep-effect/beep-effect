@@ -1,14 +1,15 @@
 // @vitest-environment node
 
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
-import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
@@ -52,6 +53,8 @@ import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect/Function";
 import { generateF1Pdfs } from "../scripts/generate-f1-pdfs";
 
+const BunPlatformLive = Layer.merge(BunServices.layer, BunCrypto.layer);
+
 const ManifestFromJsonString = S.fromJsonString(CorpusManifest);
 const decodeManifestFromJsonString = S.decodeEffect(ManifestFromJsonString);
 
@@ -74,7 +77,7 @@ const rejectsManifest = (input: unknown) =>
   decodeUnknownCorpusManifest(input).pipe(Effect.exit, Effect.map(Exit.isFailure));
 
 describe("W1 corpus manifest", () => {
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("decodes the committed E5 cache-preview manifest", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -99,7 +102,7 @@ describe("W1 corpus manifest", () => {
     expect(CorpusPaperId.make("057e356e94f8")).toBe("057e356e94f8");
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("round-trips the committed schema and rejects unsorted, duplicate, and wrong-hash rows", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -152,7 +155,7 @@ describe("W1 corpus manifest", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("reports the mutated paper id through both the service and Command.runWith", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -225,7 +228,7 @@ describe("F1 fixtures", () => {
     expect(decodeFailure._tag).toBe("F1IndexDecodeFailed");
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("rejects paths outside the direct F1 documents root in fixtures and indexes", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -263,7 +266,7 @@ describe("F1 fixtures", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("preserves every fixture id when duplicate relative paths drift", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -324,10 +327,10 @@ describe("F1 fixtures", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("reproduces every committed PDF byte-for-byte in two independent directories", () =>
       Effect.gen(function* () {
-        const crypto = yield* Crypto.Crypto;
+        const crypto = yield* Digest.Digest;
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const firstDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-f1-pdf-first-" });
@@ -335,7 +338,7 @@ describe("F1 fixtures", () => {
         const names = A.make("pdf-two-column.pdf", "pdf-multipage.pdf", "pdf-truncated.pdf");
         const hashBytes = Effect.fnUntraced(function* (bytes: Uint8Array) {
           return yield* S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(
-            Effect.provideService(Crypto.Crypto, crypto),
+            Effect.provideService(Digest.Digest, crypto),
             Effect.orDie
           );
         });

@@ -251,7 +251,7 @@ D6  Migration posture: hard cut everywhere, one record, one gate.
 | 2026-10-20 | D5: fold the two drift authorities into `$I`; evidence predicate types bump to `/v2`. | Operator brief. Verbatim above; the changeset clause is superseded by I8. | Same as D1. |
 | 2026-10-20 | D6: hard cut everywhere, one record, one gate. | Operator brief. Verbatim above; I5 and I6 make the two law rules precise. | Same as D1. |
 
-### Agent rulings I1 to I18
+### Agent rulings I1 to I21
 
 Orchestrator rulings made while executing the brief. Each is agent-decided
 under the AGENTS.md autonomy charter. Unless a row says otherwise, reverse it
@@ -278,6 +278,20 @@ with `git revert` of the PR and a re-run of
 | 2026-10-20 | I16: frozen artifacts (goal data JSONL with source hashes, raw Grok JSONL, training-corpus fixtures) are rewritten. Where code reads a file and verifies a hash over the changed text, the recorded hash is updated in the same change, or the case is reported. | D6 is a hard cut; history and the root research tree are the only exemptions. | Default. |
 | 2026-10-20 | I17: closeout follows `goals/README.md` as of #1928. The final PR keeps `initiative.status` at `active` and adds `proposedCloseout` and the reflection; the orchestrator fills `finalPullRequest` and the gating `yeet-verdict` evidence after publish. | It is the current written packet standard and is schema-validated. Supersedes the brief's closeout line where it differs. | Remove `proposedCloseout` and flip status with `bun run beep goals set-status`. |
 | 2026-10-21 | I18: QA files stamped under the retired XMP namespace URI are not read back. ExifTool binds the `beepQA` prefix to the new URI through the rendered `-config`, so an old stamp reads under a temporary prefix and its provenance decodes as `None`; the constant's JSDoc says so. | D6 forbids an alias or rebase map, nothing in the repo reads QA provenance back today, and the 2026-10-20 probe found no durable stamps outside `history/` evidence. Raised by the #1946 review (round 1). | Register the retired URI under a second prefix and accept that group in `provenanceFromRawTags`. |
+
+### Closeout recovery on 2026-10-28
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-28 | I19: deliver a fresh evidence closeout PR from current main and bind its final head, readiness verdict and merge receipt. Keep the original #1946 evidence as history and the operative lifecycle active. | `goals completion refresh` returned unsatisfied for #1946: required Effect Diagnostics failed at merge, Lint was unknown, the review window was open, and the declared Yeet verdict was unreadable. The retained receipt is `history/2026-10-28-original-completion-receipt.json`. A merged PR alone does not satisfy the current completion contract. | Revert the closeout PR to restore the #1946 proposal; its failed completion receipt remains historical evidence. |
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-28 | I20: use the AGENTS.md ten-minute publication fallback and hosted CI after cancelling the local publish job. | The cheap-gates step exceeded ten minutes while regenerating the JSDoc inventory. Completed package audits and local gate results remain evidence; unfinished JSDoc regeneration and head-install preflight are disclosed in the PR. | Re-run the local publication preflight after capacity allows. |
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-28 | I21: retain the completed full coverage receipt and disclose coverage proof reuse as a local skip for reviewer-request and packet-evidence-only successors; replay all other final-check gates and require fresh hosted readiness on the final head. | Full coverage passed on `5248ae2184`. The tool-owned S32 commit has the identical tree, and the review correction changes only packet evidence outside the coverage input set. The verification record lists the evidence and environment-specific audit failures. | Run coverage again on the final head and replace the disclosed skip with its actual result. |
 
 ## Exception Ledger
 

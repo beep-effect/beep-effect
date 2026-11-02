@@ -5,7 +5,7 @@ import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { it } from "@beep/test-runner";
 import * as O from "@beep/utils/Option";
 import { describe, expect } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -74,10 +74,17 @@ describe("toAnnotatedDocument", () => {
       O.map(mention, (m) => m.span),
       span
     );
-    expect(O.map(mention, (m) => Str.slice(m.span.start, m.span.end)(sourceText))).toEqual(
+    deepStrictEqual(
+      O.map(mention, (m) => Str.slice(m.span.start, m.span.end)(sourceText)),
       O.map(mention, (m) => m.text)
     );
-    expect(O.map(mention, (m) => m.id)).toEqual(O.flatMap(entity, (e) => A.head(e.mentions)));
-    expect(O.map(mention, (m) => m.chunkId)).toEqual(O.map(chunk, (c) => c.id));
+    deepStrictEqual(
+      O.map(mention, (m) => m.id),
+      O.flatMap(entity, (e) => A.head(e.mentions))
+    );
+    deepStrictEqual(
+      O.map(mention, (m) => m.chunkId),
+      O.map(chunk, (c) => c.id)
+    );
   });
 });

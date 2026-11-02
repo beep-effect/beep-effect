@@ -2,6 +2,9 @@
 
 Effect-based monorepo utilities for repository analysis and workspace management.
 
+Workspace discovery and the workspace dependency graph live in `@beep/repo-workspaces`
+(`WorkspaceDiscovery`, `DependencyGraph`).
+
 ## Quick Start
 
 ```typescript
@@ -11,15 +14,12 @@ import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import { NodeFileSystem, NodePath } from "@effect/platform-node"
 import {
-  FsUtils, FsUtilsLive, findRepoRoot, resolveWorkspaceDirs,
-  buildRepoDependencyIndex, topologicalSort,
+  FsUtilsLive, findRepoRoot, topologicalSort,
   TSMorphService, TSMorphServiceLive, TsMorphProjectScopeRequest, TsMorphScopeEntrypoint
 } from "@beep/repo-utils"
 
 const program = Effect.gen(function* () {
   const root = yield* findRepoRoot()
-  const workspaces = yield* resolveWorkspaceDirs(root)
-  const depIndex = yield* buildRepoDependencyIndex(root)
   const buildOrder = yield* topologicalSort(HashMap.make(["app", HashSet.make("lib")], ["lib", HashSet.empty<string>()]))
   const tsmorph = yield* TSMorphService
   const scope = yield* tsmorph.resolveProjectScope(
@@ -30,7 +30,7 @@ const program = Effect.gen(function* () {
       referencePolicy: "followReferences"
     })
   )
-  return { root, workspaces, depIndex, buildOrder, scope }
+  return { root, buildOrder, scope }
 }).pipe(
   Effect.provide(TSMorphServiceLive),
   Effect.provide(FsUtilsLive),
@@ -44,11 +44,8 @@ const program = Effect.gen(function* () {
 |--------|-------------|---------|
 | **FsUtils** | `FsUtils`, `FsUtilsLive` | glob, readJson, writeJson, modifyFile, existsOrThrow |
 | **Root** | `findRepoRoot` | Walk upward for `.git`/`bun.lock` markers |
-| **Workspaces** | `resolveWorkspaceDirs` | Expand workspace globs to `HashMap<name, dir>` |
-| **Dependencies** | `extractWorkspaceDependencies` | Classify deps as workspace vs NPM |
-| **DependencyIndex** | `buildRepoDependencyIndex` | Full `HashMap<pkg, TypedDeps>` for monorepo |
 | **Graph** | `topologicalSort`, `detectCycles`, `computeTransitiveClosure` | Dependency graph analysis |
-| **TsConfig** | `collectTsConfigPaths` | Find all tsconfig files per workspace |
+| **TsConfig** | `collectTsConfigPaths` | Find all tsconfig files for the root and the workspace directories the caller names |
 | **PackageJson** | `PackageJson`, `decodePackageJson` | Strict repo package.json model extending `@beep/package-json` `PackageManifest` |
 | **TSMorphService** | `TSMorphService`, `TSMorphServiceLive` | Scoped ts-morph graph extraction, deterministic JSDoc derivation, symbol query/search, and JSDoc validate/plan/apply/drift flows |
 

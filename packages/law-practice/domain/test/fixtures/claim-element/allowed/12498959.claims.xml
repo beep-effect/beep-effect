@@ -1,0 +1,124 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system for transforming program control flow data into space-filling curves for anomaly detection, the system comprising:
+<claim-text>a processor; and</claim-text>
+<claim-text>a machine-readable medium in operable communication with the processor and having instructions stored thereon that, when executed by the processor, perform the following steps:</claim-text>
+<claim-text>a) collecting inflection points (IFPs) representing execution behavior of an embedded program executed on a microcontroller (MCU) emulated in a virtual environment;</claim-text>
+<claim-text>b) mapping the collected IFPs onto a space-filling curve to generate an image-like spatial representation of a control flow of the embedded program, the space-filling curve providing a locality-preserving transformation of a trace of the control flow of the embedded program; and</claim-text>
+<claim-text>c) utilizing a machine learning (ML) model on the space-filling curve representing execution behavior to detect anomalies, thereby enabling enhanced security measures for an embedded system by modifying execution of the embedded program in response to detected anomalies,</claim-text>
+<claim-text>step b) comprising the sub-steps of
+<claim-text>b1) determining an order of the space-filling curve based on length of dimensional requirements of data of the trace;</claim-text>
+<claim-text>b2) generating a representation of the space-filling curve having a coordinate space sufficient to accommodate a1 data points in the trace;</claim-text>
+<claim-text>b3) mapping each data point from the trace to a unique coordinate on the space-filling curve, following a traversal path of the space-filling curve;</claim-text>
+<claim-text>b4) determining a memory location associated with each data point based on its origin in execution of the embedded program;</claim-text>
+<claim-text>b5) assigning a color value, including a red-green-blue (RGB) value, to each data point based on its associated memory location or region within an address space; and</claim-text>
+<claim-text>b6) rendering a visual representation of mapped trace data on the space-filling curve, that the assigned RGB values visually encode memory distribution or program control flow behavior.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, step a) comprising the sub-steps of:
+<claim-text>a1) virtualizing the MCU to create a virtual execution environment for the embedded program;</claim-text>
+<claim-text>a2) executing the embedded program within the virtualized MCU environment;</claim-text>
+<claim-text>a3) interfacing with the virtualized MCU using a debugger configured to support program state inspection and instruction tracing;</claim-text>
+<claim-text>a4) extracting assembly-level instructions from the virtualized MCU during execution;</claim-text>
+<claim-text>a5) monitoring memory of the virtualized MCU for changes occurring during execution; and</claim-text>
+<claim-text>a6) collecting data corresponding to one or more IFPs during execution of the embedded program via the debugger interface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, each coordinate on the space-filling curve corresponding to a pixel in the generated image-like spatial representation.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the ML model used in step c) comprising a convolutional neural network (CNN).</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the trace comprising a single iteration over a main loop of the embedded program, capturing all IFPs, each iteration generating a corresponding execution trace.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the IFPs including control-transfer instructions comprising conditional branch instructions, unconditional jump instructions, and subroutine call instructions.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the trace comprising a list of memory locations corresponding to IFPs in the program control flow.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the space-filling curve comprising a Hilbert curve used to preserve locality in a spatial mapping.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the space-filling curve further comprising an order that defines a maximum capacity of data points, with a number of data points in an execution trace constrained to be less than a total number of points corresponding to the order of the space-filling curve.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A method for transforming program control flow data into space-filling curves for anomaly detection, the method comprising:
+<claim-text>a) collecting inflection points (IFPs) representing execution behavior of an embedded program executed on a microcontroller (MCU) emulated in a virtual environment;</claim-text>
+<claim-text>b) mapping the collected IFPs onto a space-filling curve to generate an image-like spatial representation of a control flow of the embedded program, the space-filling curve providing a locality-preserving transformation of a trace of the control flow of the embedded program; and</claim-text>
+<claim-text>c) utilizing a machine learning (ML) model on the space-filling curve representing execution behavior to detect anomalies, thereby enabling enhanced security measures for an embedded system by modifying execution of the embedded program in response to detected anomalies,</claim-text>
+<claim-text>step b) comprising the sub-steps of
+<claim-text>b1) determining an order of the space-filling curve based on length or dimensional requirements of data of the trace;</claim-text>
+<claim-text>b2) generating a representation of the space-filling curve having a coordinate space sufficient to accommodate all data points in the trace;</claim-text>
+<claim-text>b3) mapping each data point from the trace to a unique coordinate on the space-filling curve, following a traversal path of the space-filling curve;</claim-text>
+<claim-text>b4) determining a memory location associated with each data point based on its origin in execution the embedded program;</claim-text>
+<claim-text>b5) assigning a color value, including a red-green-blue (RGB) value, to each data point based on its associated memory location or region within an address space, and</claim-text>
+<claim-text>b6) rendering a visual representation of mapped trace data on the space-filling curve, that the assigned RGB values visually encode memory distribution or program control flow behavior.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, step a) comprising the sub-steps of:
+<claim-text>a1) virtualizing the MCU to create a virtual execution environment for the embedded program;</claim-text>
+<claim-text>a2) executing the embedded program within the virtualized MCU environment;</claim-text>
+<claim-text>a3) interfacing with the virtualized MCU using a debugger configured to support program state inspection and instruction tracing;</claim-text>
+<claim-text>a4) extracting assembly-level instructions from the virtualized MCU during execution;</claim-text>
+<claim-text>a5) monitoring memory of the virtualized MCU for changes occurring during execution; and</claim-text>
+<claim-text>a6) collecting data corresponding to one or more IFPs during execution of the embedded program via the debugger interface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, each coordinate on the space-filling curve corresponding to a pixel in the generated image-like spatial representation.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, the ML model used in step c) comprising a convolutional neural network (CNN).</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, the trace comprising a single iteration over a main loop of the embedded program, capturing all IFPs, each iteration generating a corresponding execution trace.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, the IFPs including control-transfer instructions comprising conditional branch instructions, unconditional jump instructions, and subroutine call instructions.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, the trace comprising a list of memory locations corresponding to IFPs in the program control flow.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, the space-filling curve comprising a Hilbert curve used to preserve locality in a spatial mapping, the space-filling curve further comprising an order that defines a maximum capacity of data points, with s number of data points in an execution trace constrained to be less than a total number of points corresponding to the order of the space-filling curve.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. A system for transforming program control flow data into space-filling curves for anomaly detection, the system comprising:
+<claim-text>a processor; and</claim-text>
+<claim-text>a machine-readable medium in operable communication with the processor and having instructions stored thereon that, when executed by the processor, perform the following steps:</claim-text>
+<claim-text>a) collecting inflection points (IFPs) representing execution behavior of an embedded program executed on a microcontroller (MCU) emulated in a virtual environment;</claim-text>
+<claim-text>b) mapping the collected IFPs onto a space-filling curve to generate an image-like spatial representation of a control flow of the embedded program, the space-filling curve providing a locality-preserving transformation of a trace of the control flow of the embedded program; and</claim-text>
+<claim-text>c) utilizing a machine learning (ML) model on the space-filling curve representing execution behavior to detect anomalies, thereby enabling enhanced security measures for an embedded system by modifying execution of the embedded program in response to detected anomalies,</claim-text>
+<claim-text>step a) comprising the sub-steps of:
+<claim-text>a1) virtualizing the MCU to create a virtual execution environment for the embedded program;</claim-text>
+<claim-text>a2) executing the embedded program within the virtualized MCU environment;</claim-text>
+<claim-text>a3) interfacing with the virtualized MCU using a debugger configured to support program state inspection and instruction tracing;</claim-text>
+<claim-text>a4) extracting assembly-level instructions from the virtualized MCU during execution;</claim-text>
+<claim-text>a5) monitoring memory of the virtualized MCU for changes occurring during execution; and</claim-text>
+<claim-text>a6) collecting data corresponding to one or more IFPs during execution of the embedded program via the debugger interface,</claim-text>
+</claim-text>
+<claim-text>step b) comprising the sub-steps of:
+<claim-text>b1) determining an order of the space-filling curve based on length or dimensional requirements of data of the trace;</claim-text>
+<claim-text>b2) generating a representation of the space-filling curve having a coordinate space sufficient to accommodate all data points in the trace;</claim-text>
+<claim-text>b3) mapping each data point from the trace to a unique coordinate on the space-filling curve, following a traversal path of the space-filling curve;</claim-text>
+<claim-text>b4) determining a memory location associated with each data point based on its origin in execution of the embedded program;</claim-text>
+<claim-text>b5) assigning a color value, including a red-green-blue (RGB) value, to each data point based on its associated memory location or region within an address space; and</claim-text>
+<claim-text>b6) rendering a visual representation of mapped trace data on the space-filling curve, that the assigned RGB values visually encode memory distribution or program control flow behavior,</claim-text>
+</claim-text>
+<claim-text>each coordinate on the space-filling curve corresponding to a pixel in the generated image like spatial representation,</claim-text>
+<claim-text>the ML model used in step c) comprising a convolutional neural network (CNN),</claim-text>
+<claim-text>the trace comprising a single iteration over a main loop of the embedded program, capturing all IFPs, each iteration generating a corresponding execution trace,</claim-text>
+<claim-text>the IFPs including control-transfer instructions comprising conditional branch instructions, unconditional jump instructions, and subroutine call instructions,</claim-text>
+<claim-text>the trace comprising a list of memory locations corresponding to IFPs in the program control flow, and</claim-text>
+<claim-text>the space-filling curve comprising a Hilbert curve used to preserve locality in a spatial mapping, the space-filling curve further comprising an order that defines a maximum capacity of data points, with a number of data points in the execution trace constrained to be less than a total number of points corresponding to the order of the space-filling curve.</claim-text>
+</claim-text>
+</claim>
+</claims>

@@ -16,7 +16,7 @@ import {
   readCogneeSettings,
   VAULT_DIRS,
 } from "@beep/repo-cli/test/Research";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -38,9 +38,11 @@ const isCogneeApiUrl = S.is(CogneeApiUrl);
 
 const testLayer = Layer.mergeAll(
   ResearchCommandServiceLive.pipe(
-    Layer.provideMerge(FetchHttpClient.layer.pipe(Layer.provideMerge(NodeServices.layer)))
+    Layer.provideMerge(
+      FetchHttpClient.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+    )
   ),
-  NodeServices.layer
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
 );
 
 // A stand-in Cognee that answers every request with a redirect off the loopback

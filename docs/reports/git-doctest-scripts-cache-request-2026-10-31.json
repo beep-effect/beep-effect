@@ -1,0 +1,20 @@
+{
+  "previous": "838f4f5bf992cbded4fdf132bf44ecbcfbfbde9e768ed38e24258b312ecd03ad",
+  "review": {
+    "reviewer": "GPT-6.1-Sol independent parent review (approved PR2413 doctest scripts)",
+    "reason": "Record only nine audit-named Git computations after canonical doctest script generation, including one new unassessed doctest task; existing script values unchanged and no qualification granted.",
+    "basis": {
+      "path": "docs/reports/git-doctest-scripts-cache-review-2026-10-31.md",
+      "sha256": "dce3a2fe8e715662b5e46387f14f97b003384ba86e56c298397b9a9770465dff"
+    }
+  },
+  "subjects": ["@beep/git"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

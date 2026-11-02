@@ -9,7 +9,7 @@ import {
 import { repoRunOutputBound, runCaptured } from "@beep/repo-cli/test/Process";
 import { it } from "@beep/test-runner";
 import { A, N, O, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -20,6 +20,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { FleetCheckout, FleetSnapshot } from "@beep/repo-cli/commands/Worktree";
 
 const SCAN_TIMEOUT_MILLIS = 60_000;
@@ -31,7 +32,11 @@ const README_MAIN = "# fleet fixture\n\nshared line (main)\n";
 const TURBO_BASE = '{ "tasks": {} }\n';
 const TURBO_MOVED = '{ "tasks": { "check": {} } }\n';
 
-const testLayer = Layer.mergeAll(NodeServices.layer, FleetMirrorServiceLive.pipe(Layer.provide(NodeServices.layer)));
+const testLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  FleetMirrorServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 
 const $I = $RepoCliId.create("test/worktree-fleet-scan");
 
@@ -53,7 +58,7 @@ const legacyListingSpawnerLayer = Layer.effect(
           ChildProcess.isStandardCommand(command) &&
           command.command === "git" &&
           O.contains(command.options.cwd)(alpha) &&
-          A.join(command.args, " ") === "worktree list --porcelain -z"
+          A.join(commandArgs(command), " ") === "worktree list --porcelain -z"
         ) {
           return yield* spawner.spawn(ChildProcess.make("git", ["worktree", "list", "--porcelain"], command.options));
         }

@@ -1,0 +1,449 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "12656234-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "reviewScope": {
+    "claimCount": 10,
+    "elementCount": 52,
+    "termCount": 372,
+    "edgeCount": 162,
+    "functionalRelationCount": 33
+  },
+  "findings": [
+    {
+      "id": "missing-local-semantic-references",
+      "kind": "missing-source-supported-antecedents",
+      "cases": [
+        {
+          "referring": {
+            "path": "1.d",
+            "anchor": {
+              "startChar": 1163,
+              "endChar": 1190,
+              "quote": "the transaction information"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1.b",
+            "anchor": {
+              "startChar": 636,
+              "endChar": 674,
+              "quote": "its associated transaction information"
+            }
+          },
+          "reason": "Concrete received transaction information is explicitly nominally recited in1.b; these broad local information references occur in the same per-transaction method sequence. No generic/concrete identity or specific buy/sell subset need be invented."
+        },
+        {
+          "referring": {
+            "path": "1.d",
+            "anchor": {
+              "startChar": 1252,
+              "endChar": 1279,
+              "quote": "the transaction information"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1.b",
+            "anchor": {
+              "startChar": 636,
+              "endChar": 674,
+              "quote": "its associated transaction information"
+            }
+          },
+          "reason": "Concrete received transaction information is explicitly nominally recited in1.b; these broad local information references occur in the same per-transaction method sequence. No generic/concrete identity or specific buy/sell subset need be invented."
+        },
+        {
+          "referring": {
+            "path": "1.e",
+            "anchor": {
+              "startChar": 1367,
+              "endChar": 1394,
+              "quote": "the transaction information"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1.b",
+            "anchor": {
+              "startChar": 636,
+              "endChar": 674,
+              "quote": "its associated transaction information"
+            }
+          },
+          "reason": "Concrete received transaction information is explicitly nominally recited in1.b; these broad local information references occur in the same per-transaction method sequence. No generic/concrete identity or specific buy/sell subset need be invented."
+        },
+        {
+          "referring": {
+            "path": "2.b",
+            "anchor": {
+              "startChar": 499,
+              "endChar": 541,
+              "quote": "the minimum representation time period \u201ct\u201d"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "2.b",
+            "anchor": {
+              "startChar": 264,
+              "endChar": 307,
+              "quote": "each minimum representation time period \u201ct\u201d"
+            }
+          },
+          "reason": "The same local minimum representation time period is explicitly quantified and named t before these repeated interval references."
+        },
+        {
+          "referring": {
+            "path": "2.b",
+            "anchor": {
+              "startChar": 735,
+              "endChar": 773,
+              "quote": "the minimum representation time period"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "2.b",
+            "anchor": {
+              "startChar": 264,
+              "endChar": 307,
+              "quote": "each minimum representation time period \u201ct\u201d"
+            }
+          },
+          "reason": "The same local minimum representation time period is explicitly quantified and named t before these repeated interval references."
+        },
+        {
+          "referring": {
+            "path": "3.a",
+            "anchor": {
+              "startChar": 101,
+              "endChar": 136,
+              "quote": "the minimum representation time \u201ct\u201d"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "2.b",
+            "anchor": {
+              "startChar": 264,
+              "endChar": 307,
+              "quote": "each minimum representation time period \u201ct\u201d"
+            }
+          },
+          "reason": "Claim3 depends on2 and uses the explicitly named minimum-representation interval t; dropping period in the referring phrase does not create another time variable."
+        },
+        {
+          "referring": {
+            "path": "3.b",
+            "anchor": {
+              "startChar": 470,
+              "endChar": 483,
+              "quote": "the value \u201c1\u201d"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1.d",
+            "anchor": {
+              "startChar": 1144,
+              "endChar": 1157,
+              "quote": "the value \u201c1\u201d"
+            }
+          },
+          "reason": "The same explicitly defined side-variable code value is recited in root1.d and reused for that same variable in3.b; no financial interpretation or new value is inferred."
+        },
+        {
+          "referring": {
+            "path": "3.b",
+            "anchor": {
+              "startChar": 607,
+              "endChar": 620,
+              "quote": "the value \u201c2\u201d"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1.d",
+            "anchor": {
+              "startChar": 1233,
+              "endChar": 1246,
+              "quote": "the value \u201c2\u201d"
+            }
+          },
+          "reason": "The same explicitly defined side-variable code value is recited in root1.d and reused for that same variable in3.b; no financial interpretation or new value is inferred."
+        },
+        {
+          "referring": {
+            "path": "7.b",
+            "anchor": {
+              "startChar": 579,
+              "endChar": 599,
+              "quote": "the first sell level"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1.a.v",
+            "anchor": {
+              "startChar": 387,
+              "endChar": 407,
+              "quote": "the first sell level"
+            }
+          },
+          "reason": "Trailing volume definition reuses the same qualified first book level already referenced earlier in7.b and defined in root1; there is no alternative qualified level candidate."
+        },
+        {
+          "referring": {
+            "path": "7.b",
+            "anchor": {
+              "startChar": 645,
+              "endChar": 664,
+              "quote": "the first buy level"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "1.a.vi",
+            "anchor": {
+              "startChar": 459,
+              "endChar": 478,
+              "quote": "the first buy level"
+            }
+          },
+          "reason": "Trailing volume definition reuses the same qualified first book level already referenced earlier in7.b and defined in root1; there is no alternative qualified level candidate."
+        },
+        {
+          "referring": {
+            "path": "8.b",
+            "anchor": {
+              "startChar": 742,
+              "endChar": 768,
+              "quote": "the normalized buy volumes"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "8.b",
+            "anchor": {
+              "startChar": 565,
+              "endChar": 591,
+              "quote": "the normalized buy volumes"
+            }
+          },
+          "reason": "A repeated local normalized-volume collection in the intensity clause refers to the same explicitly named collection earlier in this relation; this does not equate a buy/sell subset to all normalized volumes."
+        },
+        {
+          "referring": {
+            "path": "8.b",
+            "anchor": {
+              "startChar": 954,
+              "endChar": 981,
+              "quote": "the normalized sell volumes"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "8.b",
+            "anchor": {
+              "startChar": 774,
+              "endChar": 801,
+              "quote": "the normalized sell volumes"
+            }
+          },
+          "reason": "A repeated local normalized-volume collection in the intensity clause refers to the same explicitly named collection earlier in this relation; this does not equate a buy/sell subset to all normalized volumes."
+        },
+        {
+          "referring": {
+            "path": "9.a",
+            "anchor": {
+              "startChar": 186,
+              "endChar": 198,
+              "quote": "the gradient"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "9.a",
+            "anchor": {
+              "startChar": 73,
+              "endChar": 83,
+              "quote": "a gradient"
+            }
+          },
+          "reason": "Within the same calculation/definition, VVti is defined as the gradient just calculated for each normalized volume. The root is the explicit a gradient nominal; no introduction is fabricated from the verb calculating."
+        },
+        {
+          "referring": {
+            "path": "10.g",
+            "anchor": {
+              "startChar": 1907,
+              "endChar": 1909,
+              "quote": "it"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "10.g",
+            "anchor": {
+              "startChar": 1880,
+              "endChar": 1890,
+              "quote": "the member"
+            }
+          },
+          "reason": "In if the member buys as much as it sells, it has the immediate grammatical member subject as its unique local referent. This does not identify which of the two transaction members that role instantiates."
+        },
+        {
+          "referring": {
+            "path": "10.h",
+            "anchor": {
+              "startChar": 2085,
+              "endChar": 2101,
+              "quote": "the four volumes"
+            }
+          },
+          "sourceSupportedIntroduction": {
+            "path": "10.e",
+            "anchor": {
+              "startChar": 1387,
+              "endChar": 1420,
+              "quote": "the volumes Vlb, Vls, Vmb and Vms"
+            }
+          },
+          "reason": "The four volumes names exactly the explicitly enumerated complete four-volume collection in10.e, rather than a buy/sell subset or an arbitrarily chosen single volume."
+        }
+      ],
+      "reason": "The annotations preserve these explicit noun/proform mentions but leave their unique local or actual-ancestor references unlinked. These cases do not require selecting one physical transaction/member, coercing a volume subset into an entire group, or resolving uncertain ownership. Semantic-reference/v2 requires source-supported identities across qualified or shortened heads as well as exact strings.",
+      "correction": "Add the exact listed source-supported antecedents (or provide a concrete source-specific competing referent that warrants withholding an individual case). Preserve all source anchors, entity scopes, functional parts and MathML/canonical strings. Keep genuine generic/concrete/member/subset ambiguity separate from these explicit local identities."
+    },
+    {
+      "id": "outer-each-in-bare-heads",
+      "kind": "head-convention-inconsistency",
+      "cases": [
+        {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 157,
+            "endChar": 173,
+            "quote": "each transaction"
+          },
+          "actualHead": "each transaction",
+          "suggestedHead": "transaction"
+        },
+        {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 264,
+            "endChar": 307,
+            "quote": "each minimum representation time period \u201ct\u201d"
+          },
+          "actualHead": "each minimum representation time period \u201ct\u201d",
+          "suggestedHead": "minimum representation time period \u201ct\u201d"
+        },
+        {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 156,
+            "endChar": 179,
+            "quote": "each buy and sell level"
+          },
+          "actualHead": "each buy and sell level",
+          "suggestedHead": "buy and sell level"
+        },
+        {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 156,
+            "endChar": 179,
+            "quote": "each buy and sell level"
+          },
+          "actualHead": "each buy and sell level",
+          "suggestedHead": "buy and sell level"
+        },
+        {
+          "path": "6.b",
+          "anchor": {
+            "startChar": 550,
+            "endChar": 566,
+            "quote": "each price level"
+          },
+          "actualHead": "each price level",
+          "suggestedHead": "price level"
+        },
+        {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 108,
+            "quote": "each registered level"
+          },
+          "actualHead": "each registered level",
+          "suggestedHead": "registered level"
+        },
+        {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 88,
+            "endChar": 110,
+            "quote": "each normalized volume"
+          },
+          "actualHead": "each normalized volume",
+          "suggestedHead": "normalized volume"
+        },
+        {
+          "path": "9.b",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 443,
+            "quote": "each level"
+          },
+          "actualHead": "each level",
+          "suggestedHead": "level"
+        },
+        {
+          "path": "10.b.v",
+          "anchor": {
+            "startChar": 840,
+            "endChar": 851,
+            "quote": "each member"
+          },
+          "actualHead": "each member",
+          "suggestedHead": "member"
+        },
+        {
+          "path": "10.d",
+          "anchor": {
+            "startChar": 1138,
+            "endChar": 1149,
+            "quote": "each volume"
+          },
+          "actualHead": "each volume",
+          "suggestedHead": "volume"
+        }
+      ],
+      "reason": "Each is the outer distributive determiner in these noun phrases, rather than a lexical modifier of transaction, period, level, volume or member. The bare tag permits unsupported determiner surfaces but does not require every anchor word in the lexical head. Each is not a cardinal count, lower bound, ordinal or a substantive modifier like own.",
+      "correction": "Remove only the outer each from these normalized heads, keeping complete source anchors and distributive language in the functional representation. Retain meaningful numeric counts and source qualifiers; do not apply a generic stop-word rule."
+    }
+  ],
+  "reviewNotes": [
+    "Read the exact ten-claim canonical source, all52elements/372terms/162edges and complete source-defined metadata/transaction/classification/pressure/normalization/gradient/member/pie relationships. Root definition list and execution sequence remain distinct; true natural ancestries are3\u21922\u21921,5\u21923\u21922\u21921,6\u21922\u21921,7\u21926\u21922\u21921,8\u21922\u21921,9\u21928\u21922\u21921 and10\u21921. No sibling borrowing is justified.",
+    "Retained source-critic round2 accepts public source eligibility and records MathML normalization coverage. Native formula ratios, fractions/radicals, indices and private-use glyphs are anchored as their exact flattened canonical strings. Do not invent slash/radical operators or treat representation loss as an unresolved source-version label. No mathematical/financial reconstruction was used to choose these references.",
+    "Genuine transaction-instance, per-member-role, pressure/gradient subset and lower/right-sum ambiguities remain source-specific. In particular the local it\u2192member finding does not resolve a global member identity, and the four-volume finding targets the explicitly enumerated collective rather than any subset.",
+    "Full quoted variable/value names, source use graphic interface alias, malformed beingthe, native y and determinated spellings remain exact. Existing supported book/interface/side-variable aliases and distinct conditional branches are preserved. The listed missing references and each-head findings prevent acceptance of this round."
+  ],
+  "verification": [
+    "Independent checks passed every exact UTF-16 source anchor, ordered nonoverlapping term ownership, normalized head shape, complete contiguous functional-source reconstruction, exact participating terms, endpoint membership and true dependency ancestry, path uniqueness and absence of duplicate edges. Native XML SHA-256 matches provenance and all canonical/context claims equal native under permitted printed-number/whitespace normalization. Checks supplement semantic audit and never call a decomposer."
+  ],
+  "referenceSha256": "b5d8ed434c3da9fa0604bd20b8bde9499f257be6fc1bbf9d3c16a4d6fcc42a09",
+  "extractorSha256": "9109bc2d5213517146def8092f3157242b554971fa4a1da74bc28c08a97f27fd",
+  "independence": "Separate GPT-6.1-Sol medium critic session, independent of extractor. Only assigned critic.json written. Source and model/tree/edge schemas only; no production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "roundLimit": "Round1 of at most3 extractor/critic rounds; return exact findings to extractor.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference review only; no active sample admission, goal completion, accuracy result or human agreement claimed."
+}

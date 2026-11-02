@@ -1,6 +1,8 @@
 /**
  * Client-side observability for the desktop chat webview.
  *
+ * **Details**
+ *
  * The webview exports logs, traces, and metrics over OTLP via effect's native
  * exporter (`effect/observability`, no OpenTelemetry SDK dependency),
  * as `professional-desktop-web`. Critically, the effect tracer puts the active

@@ -1,0 +1,262 @@
+{
+  "familyId": "13846690-root-15",
+  "rootClaimNumber": 15,
+  "labelClaimNumbers": [15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A coupling adapted to connect to at least two adjacent desalination membranes, said coupling comprising at least one sensor adapted to measure at least one of the following: a) quality of a fluid passing through at least one of said membranes at the area of the coupling; and b) flow rate of a fluid passing through at least one of said membranes at the area of the coupling.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The coupling of claim 1, wherein the at least two membranes are housed in at least one pressure vessel, wherein the at least one pressure vessel has a longitudinal axis, further comprising a plurality of sensors disposed along said longitudinal axis, wherein each of said plurality of sensors is located at least in one of said PV, one of said desalination membranes and the coupling, and wherein each of said plurality of sensors is adapted to measure at least one of the following: a) quality of a fluid passing through at least one of said two or more desalination membranes; and b) flow rate of a fluid passing through at least one of said two or more desalination membrane.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The coupling according to claim 1, wherein said sensor is operated continuously, measuring parameters throughout its operation or said sensor is adapted to operate in bursts, sampling the above parameters along predetermined periods of time.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The coupling according to claim 1, wherein said sensor is adapted to be operated using an internal power source or said sensor is adapted to be operated using an external power source and wherein said external power source is optionally electrical induction.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The coupling according to claim 1, wherein said sensor is adapted to transmit data produced based on the measurement taken thereby, to an outside source.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The coupling according to claim 5, wherein said coupling is further provided with a data reading arrangement comprising a reader connected to a mainframe computer (MFC), and a displacement mechanism adapted for displacement of said reader.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The coupling according to claim 6, wherein said reader constitutes said outside source and wherein said sensor is optionally adapted for operation by said reader and wherein said reader is optionally used as an external power source.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The coupling according to claim 6, wherein transfer of data from said sensor to said reader is performed in a wireless manner.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The coupling according to claim 8, wherein data collected from said sensors is used to perform an analysis of conditions of different membranes within different PVs for providing an indication of failure or malfunction in one of the membranes.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The coupling according to claim 1, wherein the coupling is provided with a coupling unit disposed internally to the main conduits of the membranes, wherein said coupling unit has a first portion which may be fitted into the conduit of one membrane and a second portion which may be fitted into the conduit of the adjacent membrane.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The coupling according to claim 1, wherein the coupling is provided with a coupling unit and wherein said coupling unit is in the form of a fastener disposed externally to the main conduits of the membranes.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The coupling of claim 1, wherein said sensor measures said quality of fluid according to at least one of the following categories: feed fluid, permeate fluid or rejected fluid.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The coupling of claim 12, wherein said fluid has salinity and wherein said quality of fluid is measured according to a degree of salinity of each of said categories.",
+      "sourceXmlParentClaimNumbers": [12]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The coupling of claim 1, wherein said sensor measures said flow rate in comparison to a predefined threshold.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "A membrane system comprising at least two adjacent membranes adapted to be connected to each other comprising at least one sensor adapted to measure at least one of the following: a) quality of a fluid passing through said membrane; and b) flow rate of a fluid passing through said membrane.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The membrane system of claim 15, wherein said sensor is operated continuously, measuring parameters throughout its operation or said sensor is adapted to operate in bursts, sampling the above parameters along predetermined periods of time.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The membrane system according to claim 15, wherein said sensor is adapted to be operated using an internal power source or said sensor is adapted to be operated using an external power source and wherein said external power source is optionally electrical induction.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The membrane system according to claim 17, wherein said sensor is adapted to transmit data produced based on the measurement taken thereby, to an outside source.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The membrane system according to claim 18, wherein said coupling is further provided with a data reading arrangement comprising a reader connected to a mainframe computer (MFC), a displacement mechanism adapted for displacement of said reader, and a cable connecting said reader to said displacement mechanism.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The membrane system according to claim 19, wherein said reader constitutes said outside source and wherein said sensor is optionally adapted for operation by said reader and wherein said reader is optionally used as an external power source.",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The membrane system according to claim 19, wherein transfer of data from said sensor to said reader is performed in a wireless manner.",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The membrane system according to claim 21, wherein said membranes are adapted to be received in a pressure vessel and wherein data collected from said sensors is used to perform an analysis of conditions of different membranes within different PVs for providing an indication of failure or malfunction in one of the membranes.",
+      "sourceXmlParentClaimNumbers": [21]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The membrane system according to claim 15, wherein the coupling is provided with a coupling unit disposed internally to the main conduits of the membranes, wherein said coupling unit has a first portion which may be fitted into the conduit of one membrane and a second portion which may be fitted into the conduit of the adjacent membrane.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The membrane system according to claim 15, wherein the coupling is provided with a coupling unit and wherein said coupling unit is in the form of a fastener disposed externally to the main conduits of the membranes.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "A pressure vessel adapted to receive one or more desalination membranes, said pressure vessel includes at least one sensor, said sensor adapted to measure at least one of the following: a) quality of a fluid passing through at least one of said membranes at the area of the coupling; and b) flow rate of a fluid passing through at least one of said membranes at the area of the coupling.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 26,
+      "claimText": "The pressure vessel of claim 25, wherein said sensor is operated continuously, measuring parameters throughout its operation or said sensor is adapted to operate in bursts, sampling the above parameters along predetermined periods of time.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 27,
+      "claimText": "The pressure vessel according to claim 25, wherein said sensor is adapted to be operated using an internal power source or said sensor is adapted to be operated using an external power source and wherein said external power source is optionally electrical induction.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 28,
+      "claimText": "The pressure vessel according to claim 25, wherein said sensor is adapted to transmit data produced based on the measurement taken thereby, to an outside source.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 29,
+      "claimText": "The pressure vessel according to claim 28, wherein said coupling is further provided with a data reading arrangement comprising a reader connected to a mainframe computer (MFC), and a displacement mechanism adapted for displacement of said reader.",
+      "sourceXmlParentClaimNumbers": [28]
+    },
+    {
+      "claimNumber": 30,
+      "claimText": "The pressure vessel according to claim 29, wherein said reader constitutes said outside source and wherein said sensor is optionally adapted for operation by said reader and wherein said reader is optionally used as an external power source.",
+      "sourceXmlParentClaimNumbers": [29]
+    },
+    {
+      "claimNumber": 31,
+      "claimText": "The pressure vessel according to claim 29, wherein transfer of data from said sensor to said reader is performed in a wireless manner.",
+      "sourceXmlParentClaimNumbers": [29]
+    },
+    {
+      "claimNumber": 32,
+      "claimText": "The pressure vessel according to claim 25, wherein data collected from said sensors is used to perform an analysis of conditions of different membranes within different PVs for providing an indication of failure or malfunction in one of the membranes.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 33,
+      "claimText": "The pressure vessel according to claim 25, wherein the coupling is provided with a coupling unit disposed internally to the main conduits of the membranes, wherein said coupling unit has a first portion which may be fitted into the conduit of one membrane and a second portion which may be fitted into the conduit of the adjacent membrane.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 34,
+      "claimText": "The pressure vessel according to claim 25, wherein the coupling is provided with a coupling unit and wherein said coupling unit is in the form of a fastener disposed externally to the main conduits of the membranes.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 35,
+      "claimText": "A membrane adapted to be connected to at least one sensor, said sensor adapted to measure at least one of the following: a) quality of a fluid passing through said membrane; and b) flow rate of a fluid passing through said membrane.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 36,
+      "claimText": "The membrane of claim 36, wherein said sensor is operated continuously, measuring parameters throughout its operation or said sensor is adapted to operate in bursts, sampling the above parameters along predetermined periods of time.",
+      "sourceXmlParentClaimNumbers": [36]
+    },
+    {
+      "claimNumber": 37,
+      "claimText": "The membrane according to claim 36, wherein said sensor is adapted to be operated using an internal power source or said sensor is adapted to be operated using an external power source and wherein said external power source is optionally electrical induction.",
+      "sourceXmlParentClaimNumbers": [36]
+    },
+    {
+      "claimNumber": 38,
+      "claimText": "The membrane according to claim 37, wherein said sensor is adapted to transmit data produced based on the measurement taken thereby, to an outside source.",
+      "sourceXmlParentClaimNumbers": [37]
+    },
+    {
+      "claimNumber": 39,
+      "claimText": "The membrane according to claim 38, wherein said coupling is further provided with a data reading arrangement comprising a reader connected to a mainframe computer (ME( ) a displacement mechanism adapted for displacement of said reader, and a cable connecting said reader to said displacement mechanism.",
+      "sourceXmlParentClaimNumbers": [38]
+    },
+    {
+      "claimNumber": 40,
+      "claimText": "The membrane according to claim 39, wherein said reader constitutes said outside source and wherein said sensor is optionally adapted for operation by said reader and wherein said reader is optionally used as an external power source.",
+      "sourceXmlParentClaimNumbers": [39]
+    },
+    {
+      "claimNumber": 41,
+      "claimText": "The membrane according to claim 39, wherein transfer of data from said sensor to said reader is performed in a wireless manner.",
+      "sourceXmlParentClaimNumbers": [39]
+    },
+    {
+      "claimNumber": 42,
+      "claimText": "The membrane according to claim 41, wherein said membranes are adapted to be received in a pressure vessel and wherein data collected from said sensors is used to perform an analysis of conditions of different membranes within different PVs for providing an indication of failure or malfunction in one of the membranes.",
+      "sourceXmlParentClaimNumbers": [41]
+    },
+    {
+      "claimNumber": 43,
+      "claimText": "The membrane according to claim 35, wherein the sensor is disposed internally to the main conduits of the membrane.",
+      "sourceXmlParentClaimNumbers": [35]
+    },
+    {
+      "claimNumber": 44,
+      "claimText": "The membrane system according to claim 35, wherein the sensor is disposed externally to the main conduits of the membrane.",
+      "sourceXmlParentClaimNumbers": [35]
+    },
+    {
+      "claimNumber": 45,
+      "claimText": "A method for monitoring conditions of a plurality of desalination membranes in a PV, comprising: providing said membranes with sensors according to claims 1 to 11, receiving input data collected from said sensors, analyzing said data and providing output data indicative of said conditions for at least one of said membranes.",
+      "sourceXmlParentClaimNumbers": [1, 11]
+    },
+    {
+      "claimNumber": 46,
+      "claimText": "The method according to claim 45, wherein said analysis includes normalization of values measured by at least one sensor so as to display a qualitative graph of the membrane conditions, in the form allowing alerting the operator of a possible malfunction without requiring the operator's knowledge said values.",
+      "sourceXmlParentClaimNumbers": [45]
+    },
+    {
+      "claimNumber": 47,
+      "claimText": "A desalination system comprising: a) an array of vertically disposed PVs, each PV accommodating one or more desalination membranes; b) a pipeline grid adapted for conducting fluid to be desalinated to said PVs and produced permeate from said PVs; c) a plurality of sensors disposed along the longitudinal axis of each PV, adapted to measure flow rate and/or quality of fluid passing through said one or more membranes; and d) a reader connected to an MFC adapted to be displaced along said PV, to be aligned with at least one of said plurality of sensors, to receive data therefrom, wherein said system is optionally completely automated and controlled by the MFC; and wherein each PV and each membrane therein optionally have their own index number recognizable by the MFC.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 48,
+      "claimText": "A system according to claim 47, wherein said system is adapted for automatically performing the method of claim 45 for a plurality of desalination membranes in a plurality of PVs.",
+      "sourceXmlParentClaimNumbers": [45, 47]
+    },
+    {
+      "claimNumber": 49,
+      "claimText": "A desalination system comprising at least one row of PVs, each having a feed inlet at a first end thereof and a brine outlet at a second end thereof and containing at least one desalination membrane, said PV being adapted for passage of fluid to be desalinated between said first and said second end, wherein said feed inlet is fitted with a first sensor adapted for acquiring a first set of parameters of a test substance introduced into said fluid and passing therealong inside the PV, and said brine outlet is fitted with a second sensor adapted for acquiring a second set of parameters of the test substance.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 50,
+      "claimText": "A desalination system according to claim 49, wherein the acquired sets of parameters are adapted for use in diagnosis of parameters of the fluid flowing through said PV from said feed inlet to said brine outlet.",
+      "sourceXmlParentClaimNumbers": [49]
+    },
+    {
+      "claimNumber": 51,
+      "claimText": "A desalination system according to claim 50, wherein said parameters are concentration C of the test substance and indication of the time t in which said concentration was measured and wherein said test substance is optionally Rhodamine.",
+      "sourceXmlParentClaimNumbers": [50]
+    }
+  ]
+}

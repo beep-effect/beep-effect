@@ -8,11 +8,19 @@
 // package's own `src` loads builtins (`process.getBuiltinModule`), so no suite
 // imports a builtin.
 
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import type * as Layer from "effect/Layer";
+import * as Layer from "effect/Layer";
+import type * as Digest from "effect/crypto/Digest";
 
-/** The Node platform services (filesystem, path, spawner, terminal) the real-process suites provide. */
-export const nativePlatform: Layer.Layer<NodeServices.NodeServices> = NodeServices.layer;
+/**
+ * The Node platform services (filesystem, path, spawner, terminal) the real-process suites provide, plus the
+ * `Digest` family the cache key and artifact hashing read (`NodeServices` no longer bundles crypto).
+ */
+export const nativePlatform: Layer.Layer<NodeServices.NodeServices | Digest.Digest> = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layerDigest
+);
 
 /** The host's `node:fs`; the fixtures use its synchronous members. */
 export const hostFs: typeof import("node:fs") = process.getBuiltinModule("node:fs");

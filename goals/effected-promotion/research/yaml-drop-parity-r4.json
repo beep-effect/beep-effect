@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "tool": "goals/effected-promotion/ops/yaml-drop-parity.ts",
+  "commit": "b57f716c40ed007ba154b24202062c21fc057685",
+  "stringify": {
+    "sites": [
+      {
+        "site": "ai-metrics compose.ts",
+        "cases": 1,
+        "outcomes": {
+          "identical": 1
+        }
+      },
+      {
+        "site": "repo-cli Models.manifest.service.ts",
+        "cases": 2,
+        "outcomes": {
+          "identical": 2
+        }
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "cases": 4184,
+        "outcomes": {
+          "identical": 4184
+        }
+      }
+    ],
+    "nonIdentical": [],
+    "unclassified": 0
+  },
+  "vaultSkips": {
+    "unreadable": 0,
+    "undecodable": 135
+  },
+  "parse": {
+    "sites": [
+      {
+        "site": "repo-cli FallowQuality + workflow tests",
+        "cases": 18,
+        "outcomes": {
+          "identical": 18
+        }
+      },
+      {
+        "site": "repo-cli VersionSync compose read",
+        "cases": 1,
+        "outcomes": {
+          "identical": 1
+        }
+      },
+      {
+        "site": "repo-cli Runners.service.ts",
+        "cases": 2,
+        "outcomes": {
+          "identical": 2
+        }
+      },
+      {
+        "site": "repo-cli ChangesetGraph.ts",
+        "cases": 9,
+        "outcomes": {
+          "identical": 8,
+          "both-reject": 1
+        }
+      },
+      {
+        "site": "negative corpus",
+        "cases": 6,
+        "outcomes": {
+          "both-reject": 6
+        }
+      }
+    ],
+    "nonIdentical": [
+      {
+        "site": "repo-cli ChangesetGraph.ts",
+        "id": "corpus-6",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-0",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-1",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-2",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-3",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-4",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-5",
+        "outcome": "both-reject"
+      }
+    ],
+    "unclassified": 0
+  },
+  "edit": {
+    "sites": [
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "cases": 20,
+        "outcomes": {
+          "byte-minimal": 14,
+          "identical": 6
+        }
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.replaceNodeVersionWithFile",
+        "cases": 2,
+        "outcomes": {
+          "document-rerender": 1,
+          "byte-minimal": 1
+        }
+      }
+    ],
+    "nonIdentical": [
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/actions/setup-monorepo-ci/action.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.replaceNodeVersionWithFile",
+        "id": ".github/actions/setup-monorepo-ci/action.yml#node-version",
+        "outcome": "document-rerender"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/check.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.replaceNodeVersionWithFile",
+        "id": ".github/workflows/check.yml#node-version",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/data-sync.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/deploy-beep-effect-web.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/fleet-lane-probe.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/heavy-admit.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/heavy.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/hub-pipe-security.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/knowledge-baseline-mint.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/property-laws-nightly.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/release-desktop.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/rerun-runner-loss.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/skills-update-train.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/storybook.yml#name",
+        "outcome": "byte-minimal"
+      }
+    ],
+    "unclassified": 0
+  },
+  "locator": {
+    "sites": [
+      {
+        "site": "repo-cli Models.locator.service.ts",
+        "cases": 429,
+        "outcomes": {
+          "identical": 429
+        }
+      }
+    ],
+    "nonIdentical": [],
+    "unclassified": 0
+  },
+  "repoInputs": {
+    "count": 27,
+    "sha256": "a50c2a383936c9320fcc87813350fccbaeeaf7a87a445ad640aad3c0dd3adfa3"
+  },
+  "changesetReferences": {
+    "count": 16,
+    "sha256": "0ea6e5965af42c441b811ba76014bfcba04b9a38b8a574b52cc7ff56bc737863"
+  },
+  "cli": [
+    {
+      "command": "beep quality changeset-graph",
+      "exitCode": 0,
+      "stdoutSha256": "f3ffe08401f38f79cae59f6e4e7606070b8ccf0540af9279d251e59b0584072d",
+      "stdoutLines": 1
+    }
+  ],
+  "comparison": {
+    "baseline": "goals/effected-promotion/research/yaml-drop-parity-r4-before.json",
+    "identical": true,
+    "differing": []
+  }
+}

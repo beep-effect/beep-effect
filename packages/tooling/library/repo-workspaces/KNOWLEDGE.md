@@ -13,8 +13,8 @@ Upstream paths map onto this package as follows: `packages/workspaces/` is
 the same name, and `@effected/npm` is `@beep/npm-spec`. The `@effected/workspaces/testing`
 subpath (`WorkspaceLayering`, `LayerPolicy`, `SourceBoundary`, `PackedInstall`) is
 `@beep/repo-workspaces/testing` since wave 4-W-b; its upstream `__test__/e2e/` suites are
-`test/integration/e2e/` here, and the lab-wide `layering.int` and `peerClosure.int` suites stay
-under `scratchpad/test/workspaces/integration/`. Where the text names a record's shape or a
+`test/integration/e2e/` here; the lab-wide `layering.int` and `peerClosure.int` suites were
+deleted with the lab (last held under `scratchpad/test/workspaces/integration/` at `bb2134fcb952e07580c4cebf2586c901f090ef5b`). Where the text names a record's shape or a
 layer's requirements, read README.md → Provenance: the plain records and option bags are
 branded `S.Opaque` structs taken as their `Encoded` forms, and the config-dependency layers
 read through `FileSystem` and `Path`. The upstream `pnpm` commands below do not apply;

@@ -29,7 +29,7 @@ import { WorktreeCommandError } from "./Worktree.errors.ts";
 import { FleetLivenessReadings, parseWorktreePorcelain, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
 import { runWorktreeGitCapture, WorktreeRemovalService } from "./Worktree.service.ts";
 import type { DomainError } from "@beep/repo-utils";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { WorktreeReapSkipReason } from "./Reap.schemas.ts";
 import type { FleetLivenessVerdict, FleetProbeReading, WorktreeListEntry } from "./Worktree.schemas.ts";
@@ -48,7 +48,7 @@ type ReapCommandRunner = (
   command: string,
   args: ReadonlyArray<string>,
   cwd: string
-) => Effect.Effect<ProbeCapture, DomainError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
+) => Effect.Effect<ProbeCapture, DomainError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
 
 type ReapLivenessRequest = {
   readonly targetPath: string;
@@ -125,7 +125,7 @@ const successfulOutput = Effect.fn("WorktreeReap.successfulOutput")(function* (
   command: string,
   args: ReadonlyArray<string>,
   cwd: string
-): Effect.fn.Return<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runner(command, args, cwd).pipe(Effect.option);
   return O.flatMap(result, (capture) =>
     capture.exitCode === 0 && !capture.truncated ? O.some(capture.output) : O.none()
@@ -137,7 +137,11 @@ const ghPrList = Effect.fn("WorktreeReap.ghPrList")(function* (
   cwd: string,
   branch: string,
   state: "merged" | "open"
-): Effect.fn.Return<O.Option<ReadonlyArray<GhPr>>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  O.Option<ReadonlyArray<GhPr>>,
+  never,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const output = yield* successfulOutput(
     runner,
     "gh",
@@ -154,7 +158,7 @@ const classifyPr = Effect.fn("WorktreeReap.classifyPr")(function* (
   runner: ReapCommandRunner,
   cwd: string,
   branch: string
-): Effect.fn.Return<PrClassification, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<PrClassification, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   // Open must win over merged: a revived branch can carry an old merged PR AND a live
   // open PR, and retiring it would delete in-flight work along with its branch.
   const open = yield* ghPrList(runner, cwd, branch, "open");
@@ -202,7 +206,7 @@ const readIdleHours = Effect.fn("WorktreeReap.readIdleHours")(function* (
   path: Path.Path,
   entry: WorktreeListEntry,
   nowMillis: number
-): Effect.fn.Return<IdleReading, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<IdleReading, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const commitOutput = yield* successfulOutput(runner, "git", ["log", "-1", "--format=%ct", "HEAD"], entry.path);
   const headPathOutput = yield* successfulOutput(
     runner,
@@ -236,7 +240,7 @@ const readIdleHours = Effect.fn("WorktreeReap.readIdleHours")(function* (
 const measureBytes = Effect.fn("WorktreeReap.measureBytes")(function* (
   runner: ReapCommandRunner,
   entry: WorktreeListEntry
-): Effect.fn.Return<O.Option<number>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<number>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const output = yield* successfulOutput(runner, "du", ["-sb", "--", entry.path], entry.path);
   return pipe(
     output,
@@ -334,7 +338,7 @@ const probeEvidence = Effect.fnUntraced(function* (
   ctx: AssessContext,
   entry: WorktreeListEntry,
   branch: string
-): Effect.fn.Return<EvidenceProbe, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<EvidenceProbe, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const pr = yield* classifyPr(ctx.runner, entry.path, branch);
   if (pr.failed) {
     return {
@@ -396,7 +400,7 @@ const assessCandidate = Effect.fn("WorktreeReap.assessCandidate")(function* (
 ): Effect.fn.Return<
   CandidateAssessment,
   never,
-  FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const branch = O.fromNullishOr(entry.branch);
   const base = {
@@ -543,7 +547,7 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
 ): Effect.fn.Return<
   CandidateAssessment,
   never,
-  FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (O.isSome(assessed.skipReason)) {
     return { candidate: assessed, warnings: A.empty(), authorizedHead: O.none() };
@@ -634,7 +638,11 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
 ): Effect.fn.Return<
   WorktreeReapReport,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | WorktreeRemovalService
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

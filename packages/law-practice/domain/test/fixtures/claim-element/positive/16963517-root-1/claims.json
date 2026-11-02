@@ -1,0 +1,67 @@
+{
+  "familyId": "16963517-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "1) Method for manufacturing a plastic covering panel comprising two pairs of parallel sides to be assembled by its pairs of sides with other panels of the same type the pairs of sides of which have matching assembly profiles, one top and one bottom, with the sides of the panels being assembled on the junction planes, with each panel; One pair of sides for the assembly, by the pivoting of the panel side into the matching side of another already laid panel and one pair of transverse sides for the assembly by the interleaving of the forms and their clipping by this movement in the corresponding transverse side of another already installed panel, A first transverse side having a junction plane at the edge of the tarp of the panel, continuing in a locking cavity opening to the top and in the form of a hook. The second transverse side matching the first side and having an upper edge in the junction plane terminating in a protrusion and separated from the panel body by the assembly cavity of a panel fitting over the hook of another panel and a protrusion housed in this cavity of the other panel, wherein we form a blank from the pair of transverse sides, giving the first side its final section and by forming on the second side, and assembly cavity opening into the bottom of the profile and a protrusion with a beak entering the junction plane and followed by an insert recess from the junction plane, the bottom of which extends in a tab and protrudes from the base of the protrusion. the area at the base of the tab is heated locally, Then when this area has softened, the tab is raised towards the recess to form the lock, and the form is stabilized by cooling it to obtain the panel whose two transverse sides have assumed their final shape.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "2) Method of manufacturing a plastic covering panel according to claim 1, wherein the blank of the pair of transverse sides is formed by lathe milling the first side to its final section and by milling, forming on the second side an assembly cavity opening out into the bottom of the profile and a protrusion with a beak, followed by an inset recess from the junction plane and the bottom of which continues by a curved convex bearing point which connects to the beginning of a groove, extending by a protruding tab from the base of the protrusion.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "3) Method of manufacturing a plastic covering panel according to claim 2, wherein at least one of the sides is machined by milling.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "4) Method of manufacturing a plastic covering panel according to claim 1, wherein A rounded groove is formed connecting the curved bearing point and side of base of tab.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "5) Method of manufacturing a plastic covering panel according to claim 1, wherein the tab is formed at an inclination angle with respect to the junction plane of the panel which is greater than 90°.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "6) Method of manufacturing a plastic covering panel comprising two pairs of parallel sides to be assembled with other panels of the same type the pairs of sides of which have matching assembly profiles. the panel having; one pair of sides for the assembly, by the pivoting of the panel side into the matching side of another already laid panel and one pair of transverse sides for the assembly by the interleaving of the forms and their clipping together by this pivoting movement in the corresponding transverse side of another already installed panel, The first side of this pair of sides has a hook and a first assembly cavity, opening into the top of the panel, through which the junction plane of the two sides and having a locking cavity inset from the junction plane and whose upper side forms a bearing surface, The second side of this pair of sides has a second assembly cavity opening into the bottom of the panel and receiving the first hook of the adjacent panel and an inverted hook forming a protrusion entering the first assembly cavity of the first side of this adjacent panel, The side of the protrusion has a beak the bearing surface of which is in the junction plane, to reach the top of the panel A recess inset from the junction plane continuing to the bottom by a flexible lock in the shape of an inclined tab, oriented towards the top and whose base derives from protrusion, wherein the blank of the pair of transverse sides is formed by lathe milling the first side to its final section and by lathe milling, forming on the second side, an assembly cavity opening out into the bottom of the profile and a protrusion with a beak and followed by a recess inset from the junction plane and the bottom of which connects to the beginning of a groove, extending by a protruding tab from the base of the protrusion. the area at the base of the tab is heated locally, then when this area has softened, the tab is raised towards the recess to form the lock, and the form is stabilized by cooling it to obtain the panel whose two transverse side shave assumed their final shape.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "7) A plastic covering panel comprising two pairs of parallel sides to be assembled with other panels of the same type the pairs of sides of which have matching assembly profiles wherein the panel is made according to the process of claim 1:",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "8) Covering panel according to claim 7, wherein it includes one pair of sides for assembly, by the pivoting of the panel side into the matching side of another already laid panel and one pair of transverse sides for assembly by the interleaving of the forms and their clipping by this pivoting movement in the corresponding transverse side of another already installed panel, the first side of this pair of sides has a hook and a first assembly cavity, opening into the top of the panel, through which the junction plane of the two sides passes and having a locking cavity inset from the junction plane and whose upper side forms a bearing surface, the second side of this pair of sides has a second assembly cavity opening into the bottom of the panel and receiving the first hook of the adjacent panel and an inverted hook forming a protrusion entering the first assembly cavity of the first side of this adjacent panel, the side of the protrusion has a beak the bearing surface of which is in the junction plane, to reach the top of the panel a recess inset from the junction plane continuing to the bottom by a flexible lock in the shape of an inclined tab, oriented towards the top and whose base derives from protrusion,",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "9) Covering panel according to claim 8, wherein the inset recess of the junction plane has a base continuing in a curved and convex support connecting with the beginning of the groove and extending in the tab.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "10) Covering panel according to claim 8, wherein it has a rounded groove connecting the curved bearing point and side of base of tab.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "11) Covering panel according to claim 8, wherein the lock is formed from a strip chosen from a group comprising: A strip with local reduction of the thickness A strip with an enlarged base compared to the thickness of the strip which decreases towards its end, A strip with a reduced base compared to the thickness of the strip which increases towards its end, A strip with an increased bearing surface.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "12) Covering panel according to claim 8, wherein the two transverse sides each end in a hook, preceded by a corresponding assembly cavity, The hook of the first transverse side of a panel being engaged in the cavity of the second transverse side of a preceding panel and reciprocally, the cavity of the second transverse side of the panel receiving the hook of the first transverse side of the following panel, The side forming a beak, of hook of a panel has a locking cavity of which the side forms a bearing surface for the lock of the previous panel and the side forming the nose above the assembly cavity of the previous panel is followed by a lock beneath the nose.",
+      "sourceXmlParentClaimNumbers": [8]
+    }
+  ]
+}

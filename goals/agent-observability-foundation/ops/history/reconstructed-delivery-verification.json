@@ -1,0 +1,176 @@
+{
+  "recordedAt": "2026-10-28T22:59:01.206399+00:00",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "deliberateMemoryExhaustion": false,
+  "goalComplete": false,
+  "runs": [
+    {
+      "unit": "beep-observation-entry-proof-af7dea04966e.service",
+      "startsPaused": true,
+      "limits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "secondOwnerExit": 73,
+      "socketMode": "0600",
+      "stopped": true
+    },
+    {
+      "unit": "beep-observation-entry-proof-a8d28ff66745.service",
+      "startsPaused": true,
+      "limits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "secondOwnerExit": 73,
+      "socketMode": "0600",
+      "stopped": true
+    },
+    {
+      "unit": "beep-observation-entry-proof-846241905a9b.service",
+      "refused": "ownership",
+      "mainPid": 0
+    },
+    {
+      "unit": "beep-observation-entry-proof-08178d0af9d2.service",
+      "refused": "resources",
+      "mainPid": 0
+    },
+    {
+      "unit": "beep-observation-entry-proof-f09bd8a70c63.service",
+      "refused": "ownership",
+      "mainPid": 0
+    },
+    {
+      "unit": "beep-observation-entry-proof-7c6d0de34660.service",
+      "refused": "socket",
+      "mainPid": 0
+    }
+  ],
+  "result": "passed",
+  "sourceStartsPaused": true,
+  "sourceAutonomousRead": true,
+  "sourcePartialTailPersists": true,
+  "sourceCursorSurvivesRestart": true,
+  "sourceCoverageRemainsUnknown": true,
+  "startsPaused": true,
+  "autonomousSend": true,
+  "acceptedMissingReadbackDegraded": true,
+  "exactReceiptReplayAfterRestart": true,
+  "noBlindResend": true,
+  "privateCanaryAbsent": true,
+  "scopedSocketCleanup": true,
+  "noFixtureRoutes": true,
+  "databaseIntegrity": true,
+  "backendPostCount": 2,
+  "nativeBackendPostCount": 1,
+  "reconstructedBackendPostCount": 1,
+  "unsafeCreationModeRefused": true,
+  "symlinkFixture": "/tmp/obs-link-ksf7p_r2",
+  "socketFixture": "/tmp/obs-socket-nf9pkoz3",
+  "missingLockRefused": true,
+  "symlinkDatabasePreserved": true,
+  "activeSocketPreserved": true,
+  "cleanup": [
+    {
+      "unit": "beep-observation-entry-proof-af7dea04966e.service",
+      "mainPid": 0,
+      "activeState": "inactive"
+    },
+    {
+      "unit": "beep-observation-entry-proof-a8d28ff66745.service",
+      "mainPid": 0,
+      "activeState": "inactive"
+    },
+    {
+      "unit": "beep-observation-entry-proof-846241905a9b.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-08178d0af9d2.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-f09bd8a70c63.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-7c6d0de34660.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    }
+  ],
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/internal/observation-export-reader.ts": "0357f6731c543c9334eea413e7d8ee3b7d60fa478b8539a6baa9b4736f266da5",
+    "packages/tooling/library/ai-metrics/src/transcript-export.ts": "0813e7c386aee8a9fb940675469b6151813ad4fdbabc17ed97d2eb00740f982d",
+    "packages/tooling/library/ai-metrics/src/native-delivery.ts": "8222ed4defc44ffb4e965834ce89b42ca4893e6d37240e5bd0ec0dbd239336d5",
+    "packages/tooling/library/ai-metrics/src/native-readback.ts": "e1d512a1af92047826bc6bb2f6842664c37d5807c318121093c2d776b7874f13",
+    "packages/tooling/library/ai-metrics/src/native-schedule.ts": "91edc3a2a18d0e4f1799d7d514bb85810fa3f06c8a9b473e0772483939116829",
+    "packages/tooling/library/ai-metrics/src/observation-runtime.ts": "1a7803b08aa18acfb88b103787ca664dd0d74eabef19cd56056b7bd1095dc199",
+    "packages/tooling/library/ai-metrics/src/observation-worker.ts": "ff40d5aba2da301c693e2ba8d1ae062ef8bb806cd381769d8400cfb51281c17f",
+    "packages/tooling/library/ai-metrics/src/index.ts": "691d2103cf04241561467f437bda54b5c57b5ddcf21ea423073f04c83ec82b53",
+    "packages/tooling/library/ai-metrics/test/transcript-export.test.ts": "07305f6bbb48a8a85221c9274ad7a8ba6d67a1dcbc4015bee6557ee7b40e8576",
+    "packages/tooling/library/ai-metrics/test/native-schedule.test.ts": "bf8e99c3ac70be85a7507bfb9d8ebf1602563c472a004f422e8881e0e6526715",
+    "packages/tooling/library/ai-metrics/test/observation-runtime.test.ts": "d84aea11e59705df51f30682f4031ab9245591cf80b6d98e6b6d5003b9296ea6",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "31564e4340b8fe3d1a84bdc70a6cfef94afeae34ed89419b5cb9100103b9abd6"
+  },
+  "scope": "Actual private worker with synthetic native and reconstructed delivery to a loopback receiver; exact read-back unit fixtures, not actual reconstructed Phoenix qualification",
+  "targetProfile": "observation-target/v3",
+  "scheduleProfile": "observation-schedule/v2",
+  "reconstructedProjection": "transcript-export/v1",
+  "collectorPhoenixReconstructionQualified": false,
+  "productionEnrolled": false,
+  "fullSpecAcceptanceStillOpen": true,
+  "metricsFormat": {
+    "command": "promtool check metrics",
+    "version": "3.15.1",
+    "result": "passed",
+    "sample": "ops/reconstructed-delivery-metrics.prom"
+  },
+  "cliTypecheck": {
+    "command": "bunx --bun tsgo -p packages/tooling/tool/cli/tsconfig.json --noEmit",
+    "result": "passed",
+    "exitCode": 0,
+    "memoryPeakGiB": 3.1,
+    "swapBytes": 0,
+    "note": "Final later changes only extend absent-field keys and update comments; no exported type signature changes."
+  },
+  "remaining": [
+    "Actual collector/Phoenix reconstruction route qualification and UI interpretation",
+    "Independent identity/coverage and lag evidence",
+    "Managed frontend/service, external alerts and backup lifecycle",
+    "CLI/desktop and bounded live canary with rollback",
+    "Required reviews and repository publication/closeout"
+  ],
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 121.6,
+    "docgenSeconds": 13.0,
+    "memoryPeakGiB": 5.5,
+    "swapBytes": 0,
+    "execution": "One agent-runs.slice job, MemoryHigh 7 GiB, MemoryMax 8 GiB, zero additional swap, CPUQuota 200%, TasksMax 256, 300-second lifetime; RAYON_NUM_THREADS=2 and BIOME_THREADS=2."
+  },
+  "focusedVerification": {
+    "initialRun": {
+      "files": 5,
+      "tests": 32,
+      "result": "passed"
+    },
+    "additionalRun": {
+      "files": 2,
+      "tests": 12,
+      "result": "passed"
+    },
+    "finalAddedCases": "Mixed native/reconstructed scheduling, missing-time/conflicted-session snapshots, scanning instead of false idle, and invented native route ID refusal are covered by the final passing full package audit. Counts from overlapping runs are not additive."
+  }
+}

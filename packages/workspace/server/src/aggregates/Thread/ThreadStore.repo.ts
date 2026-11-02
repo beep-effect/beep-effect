@@ -39,7 +39,7 @@ import { InMemoryState, MessageEntityInput, ThreadEntityInput, TurnEntityInput }
 import type { CuidState } from "@beep/schema/Cuid";
 import type { ToolCallItem } from "@beep/workspace-domain/entities/Turn";
 import type { MessageInsert } from "@beep/workspace-tables/entities/Message";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const THREAD_TABLE_NAME = WorkspaceIdentity.ThreadId.tableName;
 const TURN_TABLE_NAME = WorkspaceIdentity.TurnId.tableName;
@@ -134,35 +134,13 @@ const turnIndexOrder = Order.mapInput(Order.Number, (turn: Turn) => turn.turnInd
 
 const emptyState = InMemoryState.make({});
 
-const publicIdUnavailable =
-  (entityType: string) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, ThreadStoreServer.Thread.ThreadStoreUnavailable, R> =>
-    effect.pipe(
-      Effect.tapError((cause) =>
-        Effect.logDebug("Workspace ThreadStore adapter failed to generate a public id").pipe(
-          Effect.annotateLogs({ entityType, cause })
-        )
-      ),
-      Effect.mapError(() =>
-        ThreadStoreServer.Thread.ThreadStoreUnavailable.make({
-          reason: `generate ${entityType} public id failed`,
-        })
-      )
-    );
-
 const makePublicIdGenerators = Effect.fn("Workspace.ThreadStore.makePublicIdGenerators")(function* () {
-  const context = yield* Effect.context<CuidState | Crypto.Crypto>();
+  const context = yield* Effect.context<CuidState | Digest.Digest>();
 
   return {
-    message: PublicEntityId.generate(WorkspaceIdentity.MessageId).pipe(
-      Effect.provide(context),
-      publicIdUnavailable("Message")
-    ),
-    thread: PublicEntityId.generate(WorkspaceIdentity.ThreadId).pipe(
-      Effect.provide(context),
-      publicIdUnavailable("Thread")
-    ),
-    turn: PublicEntityId.generate(WorkspaceIdentity.TurnId).pipe(Effect.provide(context), publicIdUnavailable("Turn")),
+    message: PublicEntityId.generate(WorkspaceIdentity.MessageId).pipe(Effect.provide(context)),
+    thread: PublicEntityId.generate(WorkspaceIdentity.ThreadId).pipe(Effect.provide(context)),
+    turn: PublicEntityId.generate(WorkspaceIdentity.TurnId).pipe(Effect.provide(context)),
   };
 });
 

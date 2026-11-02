@@ -1,0 +1,670 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "1",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 47,
+          "quote": "A chair with improved comfort, characterized by"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "A chair"
+            },
+            "determiner": "a",
+            "head": "chair"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 60,
+          "endChar": 324,
+          "quote": "an upper backrest, a lower backrest, a backrest bracket, and a base, wherein the backrest bracket is rotatably mounted on the base, the upper backrest is rotatably mounted on the backrest bracket, and the lower backrest is rotatably connected to the upper backrest"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 60,
+              "endChar": 77,
+              "quote": "an upper backrest"
+            },
+            "determiner": "an",
+            "head": "upper backrest"
+          },
+          {
+            "anchor": {
+              "startChar": 79,
+              "endChar": 95,
+              "quote": "a lower backrest"
+            },
+            "determiner": "a",
+            "head": "lower backrest"
+          },
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 115,
+              "quote": "a backrest bracket"
+            },
+            "determiner": "a",
+            "head": "backrest bracket"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 127,
+              "quote": "a base"
+            },
+            "determiner": "a",
+            "head": "base"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 157,
+              "quote": "the backrest bracket"
+            },
+            "determiner": "the",
+            "head": "backrest bracket"
+          },
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 190,
+              "quote": "the base"
+            },
+            "determiner": "the",
+            "head": "base"
+          },
+          {
+            "anchor": {
+              "startChar": 192,
+              "endChar": 210,
+              "quote": "the upper backrest"
+            },
+            "determiner": "the",
+            "head": "upper backrest"
+          },
+          {
+            "anchor": {
+              "startChar": 235,
+              "endChar": 255,
+              "quote": "the backrest bracket"
+            },
+            "determiner": "the",
+            "head": "backrest bracket"
+          },
+          {
+            "anchor": {
+              "startChar": 261,
+              "endChar": 279,
+              "quote": "the lower backrest"
+            },
+            "determiner": "the",
+            "head": "lower backrest"
+          },
+          {
+            "anchor": {
+              "startChar": 306,
+              "endChar": 324,
+              "quote": "the upper backrest"
+            },
+            "determiner": "the",
+            "head": "upper backrest"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 326,
+          "endChar": 543,
+          "quote": "a transfer rod and a transmission device are also provided between the upper backrest and the base, with two ends of the transfer rod rotatably connected to the upper backrest and the transmission device, respectively"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 326,
+              "endChar": 340,
+              "quote": "a transfer rod"
+            },
+            "determiner": "a",
+            "head": "transfer rod"
+          },
+          {
+            "anchor": {
+              "startChar": 345,
+              "endChar": 366,
+              "quote": "a transmission device"
+            },
+            "determiner": "a",
+            "head": "transmission device"
+          },
+          {
+            "anchor": {
+              "startChar": 393,
+              "endChar": 411,
+              "quote": "the upper backrest"
+            },
+            "determiner": "the",
+            "head": "upper backrest"
+          },
+          {
+            "anchor": {
+              "startChar": 416,
+              "endChar": 424,
+              "quote": "the base"
+            },
+            "determiner": "the",
+            "head": "base"
+          },
+          {
+            "anchor": {
+              "startChar": 443,
+              "endChar": 459,
+              "quote": "the transfer rod"
+            },
+            "determiner": "the",
+            "head": "transfer rod"
+          },
+          {
+            "anchor": {
+              "startChar": 483,
+              "endChar": 501,
+              "quote": "the upper backrest"
+            },
+            "determiner": "the",
+            "head": "upper backrest"
+          },
+          {
+            "anchor": {
+              "startChar": 506,
+              "endChar": 529,
+              "quote": "the transmission device"
+            },
+            "determiner": "the",
+            "head": "transmission device"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 545,
+          "endChar": 965,
+          "quote": "wherein when the backrest bracket tilts backward, under the action of the transmission device, the transfer rod moves relative to the backrest bracket, causing the upper backrest to rotate forward relative to the backrest bracket due to the action of the transfer rod, the lower end of the upper backrest approaches the backrest bracket backward, and the angle between the upper backrest and the lower backrest decreases"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 558,
+              "endChar": 593,
+              "quote": "the backrest bracket tilts backward"
+            },
+            "determiner": "the",
+            "head": "backrest bracket tilts backward"
+          },
+          {
+            "anchor": {
+              "startChar": 601,
+              "endChar": 611,
+              "quote": "the action"
+            },
+            "determiner": "the",
+            "head": "action"
+          },
+          {
+            "anchor": {
+              "startChar": 615,
+              "endChar": 638,
+              "quote": "the transmission device"
+            },
+            "determiner": "the",
+            "head": "transmission device"
+          },
+          {
+            "anchor": {
+              "startChar": 640,
+              "endChar": 671,
+              "quote": "the transfer rod moves relative"
+            },
+            "determiner": "the",
+            "head": "transfer rod moves relative"
+          },
+          {
+            "anchor": {
+              "startChar": 675,
+              "endChar": 695,
+              "quote": "the backrest bracket"
+            },
+            "determiner": "the",
+            "head": "backrest bracket"
+          },
+          {
+            "anchor": {
+              "startChar": 705,
+              "endChar": 723,
+              "quote": "the upper backrest"
+            },
+            "determiner": "the",
+            "head": "upper backrest"
+          },
+          {
+            "anchor": {
+              "startChar": 754,
+              "endChar": 778,
+              "quote": "the backrest bracket due"
+            },
+            "determiner": "the",
+            "head": "backrest bracket due"
+          },
+          {
+            "anchor": {
+              "startChar": 782,
+              "endChar": 792,
+              "quote": "the action"
+            },
+            "determiner": "the",
+            "head": "action"
+          },
+          {
+            "anchor": {
+              "startChar": 796,
+              "endChar": 812,
+              "quote": "the transfer rod"
+            },
+            "determiner": "the",
+            "head": "transfer rod"
+          },
+          {
+            "anchor": {
+              "startChar": 814,
+              "endChar": 827,
+              "quote": "the lower end"
+            },
+            "determiner": "the",
+            "head": "lower end"
+          },
+          {
+            "anchor": {
+              "startChar": 831,
+              "endChar": 860,
+              "quote": "the upper backrest approaches"
+            },
+            "determiner": "the",
+            "head": "upper backrest approaches"
+          },
+          {
+            "anchor": {
+              "startChar": 861,
+              "endChar": 890,
+              "quote": "the backrest bracket backward"
+            },
+            "determiner": "the",
+            "head": "backrest bracket backward"
+          },
+          {
+            "anchor": {
+              "startChar": 896,
+              "endChar": 905,
+              "quote": "the angle"
+            },
+            "determiner": "the",
+            "head": "angle"
+          },
+          {
+            "anchor": {
+              "startChar": 914,
+              "endChar": 932,
+              "quote": "the upper backrest"
+            },
+            "determiner": "the",
+            "head": "upper backrest"
+          },
+          {
+            "anchor": {
+              "startChar": 937,
+              "endChar": 965,
+              "quote": "the lower backrest decreases"
+            },
+            "determiner": "the",
+            "head": "lower backrest decreases"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 137,
+            "endChar": 157,
+            "quote": "the backrest bracket"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 97,
+            "endChar": 115,
+            "quote": "a backrest bracket"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 182,
+            "endChar": 190,
+            "quote": "the base"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 121,
+            "endChar": 127,
+            "quote": "a base"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 192,
+            "endChar": 210,
+            "quote": "the upper backrest"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 60,
+            "endChar": 77,
+            "quote": "an upper backrest"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 235,
+            "endChar": 255,
+            "quote": "the backrest bracket"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 97,
+            "endChar": 115,
+            "quote": "a backrest bracket"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 261,
+            "endChar": 279,
+            "quote": "the lower backrest"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 79,
+            "endChar": 95,
+            "quote": "a lower backrest"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 306,
+            "endChar": 324,
+            "quote": "the upper backrest"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 60,
+            "endChar": 77,
+            "quote": "an upper backrest"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 393,
+            "endChar": 411,
+            "quote": "the upper backrest"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 60,
+            "endChar": 77,
+            "quote": "an upper backrest"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 416,
+            "endChar": 424,
+            "quote": "the base"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 121,
+            "endChar": 127,
+            "quote": "a base"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 443,
+            "endChar": 459,
+            "quote": "the transfer rod"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 326,
+            "endChar": 340,
+            "quote": "a transfer rod"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 483,
+            "endChar": 501,
+            "quote": "the upper backrest"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 60,
+            "endChar": 77,
+            "quote": "an upper backrest"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 506,
+            "endChar": 529,
+            "quote": "the transmission device"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 345,
+            "endChar": 366,
+            "quote": "a transmission device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 615,
+            "endChar": 638,
+            "quote": "the transmission device"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 345,
+            "endChar": 366,
+            "quote": "a transmission device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 675,
+            "endChar": 695,
+            "quote": "the backrest bracket"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 97,
+            "endChar": 115,
+            "quote": "a backrest bracket"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 705,
+            "endChar": 723,
+            "quote": "the upper backrest"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 60,
+            "endChar": 77,
+            "quote": "an upper backrest"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 796,
+            "endChar": 812,
+            "quote": "the transfer rod"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 326,
+            "endChar": 340,
+            "quote": "a transfer rod"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 914,
+            "endChar": 932,
+            "quote": "the upper backrest"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 60,
+            "endChar": 77,
+            "quote": "an upper backrest"
+          }
+        }
+      }
+    ]
+  }
+]

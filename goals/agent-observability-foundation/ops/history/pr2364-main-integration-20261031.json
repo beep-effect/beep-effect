@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "foundation-main-integration-verification/v1",
+  "sourceParent": "4dff0193ea52486795a7591a7d4b5feafa41907c",
+  "incomingMain": "92db2438c19425bc55ee629673eadebaed43aed4",
+  "schemaInventoryRefresh": {
+    "ownedScopes": {},
+    "unit": "foundation-pr2364-schema-resume-1-20261031.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 43049865216,
+    "peakObservedBytes": 6602248192,
+    "minimumAvailableBytes": 18570186752,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 58,
+    "pidsLimitEvents": 0,
+    "observedPhases": [],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "canonicalJSDocGeneration": {
+    "ownedScopes": {},
+    "unit": "foundation-pr2364-main-jsdoc-20261031.service",
+    "profile": "catalog",
+    "memoryStopBytes": 17179869184,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 53491847168,
+    "peakObservedBytes": 5940088832,
+    "minimumAvailableBytes": 20490620928,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 118,
+    "pidsLimitEvents": 0,
+    "observedPhases": [],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "cacheAudit": "Cache policy: 0 blocking findings; 1655 unassessed cached computations.",
+  "notificationProof": {
+    "runtime": "Node22.23.4",
+    "testsPassed": 30,
+    "guard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-notifier-proof2-20261031.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 26637430784,
+      "peakObservedBytes": 912891904,
+      "minimumAvailableBytes": 20493131776,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 89,
+      "pidsLimitEvents": 0,
+      "observedPhases": [],
+      "exitCode": 0,
+      "orphanCleanup": []
+    }
+  },
+  "workerFullSuite": {
+    "baseHead": "4dff0193ea52486795a7591a7d4b5feafa41907c",
+    "runtime": "Node24.21.0 with Bun1.4.2 child executable",
+    "passed": 809,
+    "failed": 25,
+    "qualification": "Diagnostic run; 24 notification cases require missing GNU awk; one backup hostile fixture was masked by UMask0077 and has since been corrected."
+  },
+  "workerBun144": {
+    "binarySha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
+    "fourSocketModulesPassed": 29,
+    "backupAfterExplicitChmodPassed": 7,
+    "nativeUdsShimPassed": 2,
+    "nodeOnlyPortReservationTestsSkipped": 3
+  },
+  "sourceHashes": {
+    "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts": "a66c36d4808dd6b5790981f41a54b9f04972eb47736accca56b64bc310d69b57",
+    "packages/tooling/library/ai-metrics/test/observation-backup.test.ts": "bdf040713bf60d9e619bd7a41b320b46ad9a32330d750ac248ac0b67044db3ac"
+  },
+  "recoveryHold": {
+    "forwarderService": "masked/inactive/MainPID0",
+    "forwarderTimer": "masked/inactive"
+  },
+  "pending": [
+    "current integrated head hosted CI and final-check",
+    "fresh declared CLI/desktop disposable and live canary",
+    "acceptance matrix and lifecycle closeout"
+  ],
+  "goalComplete": false
+}

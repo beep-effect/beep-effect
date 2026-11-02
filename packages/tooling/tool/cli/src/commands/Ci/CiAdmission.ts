@@ -39,7 +39,7 @@ import {
   readHeavyAdmissionEvent,
   renderHeavyAdmissionSummary,
 } from "./HeavyAdmission.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
@@ -132,7 +132,7 @@ export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
 ): Effect.fn.Return<
   HeavyAdmission,
   CiCommandError,
-  FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | ActionOutputs
+  SecureRandom.SecureRandom | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner | ActionOutputs
 > {
   const rawEventName = yield* Effect.fromOption(input.eventName, () =>
     CiCommandError.make({ message: "ci admission needs an event name: set GITHUB_EVENT_NAME or pass --event-name." })

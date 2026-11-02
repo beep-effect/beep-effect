@@ -1,0 +1,62 @@
+{
+  "familyId": "14657939-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A back-up roll device for conducting corner deformation on a chamfered continuous casting slab, wherein the chamfered continuous casting slab is provided with two to four original chamfered bevels, and each original chamfered bevel has an obtuse angle on the wide face of the continuous casting slab, wherein, the back-up roll device comprises back-up rolls with α-angle bevels, movable bearing seats, bearing seat moving rails, bearing seat motion holding mechanisms, and inner arc or outer arc frames of a casting machine; the back-up rolls with α-angle bevels are arranged on the inner arc and/or outer arc frames of the horizontal segment of the casting machine, and support surfaces of the back-up rolls with α-angle bevels make contact with and squeeze obtuse angles adjacent to the wide face of the inner or outer arc on the chamfered continuous casting slab, so that each obtuse angle is squeezed into two larger obtuse angles.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1, wherein the corner deformation completed by squeezing the continuous casting slab with the back-up roll device is: each original chamfered bevel is squeezed into two chamfered bevels, and the total length of L1+L2 of the two squeezed chamfered bevels is longer than the length S of the original chamfered bevel.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1, wherein the angles α formed between the support surfaces of the back-up rolls with α-angle bevels and the horizontal plane (or the wide face of the casting slab) are 15°-30°.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1, wherein the thickness of the chamfered continuous casting slab is 130-450 mm, the original chamfer angle β is 25°-45°, and the length S of the original chamfered bevel is 30-85 mm; and the length L2 of the squeezed chamfered bevel is 10-50 mm, and the height H is 3-25 mm.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1, wherein the support surfaces of the back-up rolls with α-angle bevels are selected from one of the following conditions: a, bevels; b, curved surfaces; c, bevels and a plane; d, curved surfaces and a plane; in the conditions c and d, the height of the plane parts of the support surfaces are kept consistent with that of the supporting plane of the casting slab supported by the inner arc or outer arc of a roll arrangement of the casting machine.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1, wherein the bearing seat motion holding mechanisms, which are used for holding and moving the bearing seats, have a structure of hydraulically driving a piston rod or a structure of electrically driving a lead screw to rotate.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1, wherein displacement sensors for measuring the working positions of the back-up rolls with α-angle bevels are arranged in the holding mechanisms for moving the bearing seats.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1, wherein the bearing seat moving rails for moving the movable bearing seats are square or dovetailed.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The back-up roll device for conducting corner deformation on the chamfered continuous casting slab of claim 1, wherein the back-up rolls with α-angle bevels are arranged on the position of the last back-up roll of the last horizontal segment of the casting machine, or hung over the outlet of the horizontal segment, or arranged on the position of any back-up roll of any horizontal segment.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A method for conducting corner deformation on a chamfered continuous casting slab, wherein the back-up rolls with α-angle bevels are arranged on the inner arc and/or outer arc frames of the horizontal segment of the casting machine, and the support surfaces of the back-up rolls with α-angle bevels make contact with and squeeze smaller obtuse angles adjacent to the wide face of the inner or outer arc on the chamfered continuous casting slab, so that each smaller obtuse angle is squeezed into two larger obtuse angles.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The method for conducting corner deformation on the chamfered continuous casting slab of claim 10, wherein the corner deformation completed by squeezing the continuous casting slab with the back-up roll device is: each original chamfered bevel is squeezed into two chamfered bevels, and the total length of L1+L2 of the two squeezed chamfered bevels is longer than the length S of the original chamfered bevel.",
+      "sourceXmlParentClaimNumbers": [10]
+    }
+  ]
+}

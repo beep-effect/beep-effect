@@ -11,6 +11,7 @@ import {
   OpenPanelCommand,
   Panel,
   PanelConstraints,
+  PanelConstraintsChangedEvent,
   PanelId,
   PanelPatch,
   RendererKey,
@@ -23,7 +24,7 @@ import {
 } from "@beep/dock";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -143,13 +144,13 @@ describe("panel and group updates", () => {
             )
           )
         );
-        expect(constrained.events).toEqual([
-          {
+        deepStrictEqual(constrained.events, [
+          PanelConstraintsChangedEvent.make({
             kind: "panelConstraintsChanged",
             panelId: panelOne.id,
             groupId: groupOne,
             constraints: O.some(constraints),
-          },
+          }),
         ]);
         assertSome(O.getOrThrow(DockWorkspace.findPanel(constrained.state, panelOne.id)).constraints, constraints);
         const cleared = yield* requireChanged(

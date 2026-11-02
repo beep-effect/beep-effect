@@ -136,8 +136,7 @@ const readNormalizedTokensFromWink = (
 ): Effect.Effect<ReadonlyArray<string>, VectorizerError> =>
   engine.getWinkDoc(document.text).pipe(
     Effect.flatMap((winkDoc) => decodeStringArray(winkDoc.tokens().out(its.normal), "readNormalizedTokens")),
-    Effect.map(A.fromIterable),
-    Effect.mapError(VectorizerError.fromCause("readNormalizedTokens"))
+    Effect.mapBoth({ onFailure: VectorizerError.fromCause("readNormalizedTokens"), onSuccess: A.fromIterable })
   );
 
 const observeVectorizer = (operation: string) =>

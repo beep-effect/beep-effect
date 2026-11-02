@@ -1,0 +1,107 @@
+{
+  "familyId": "11457178-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A data processing system comprising: a processor; a memory hierarchy coupled to the processor and having at least one lower level storage device; a prefetch engine (PE) associated with the processor and which includes: a plurality of history tables, each of which is utilized to track a set of different patterns for received requests; and logic for enabling simultaneous tracking of multiple different patterns for accessing the storage device via the plurality of history tables.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The data processing system of claim 1, wherein: said plurality of history tables are ordered for sequential access based on a check of simple patterns at a first table and another set of more complicated patterns at subsequent tables in the sequence, wherein each table is accessed via an associated index found within an address, such that said PE simultaneously supports multiple patterns; and said logic further comprises logic for: parsing a received address for a first index corresponding to the first history table, wherein an index for each of the plurality of history tables can be provided by a different set of bits or the same set of bits within the address, and multiple indices are provided within the address each corresponding to one of the plurality of history tables; and enabling ordered access to said plurality of history tables utilizing said indices, wherein said plurality of history tables are accessed in a preset order to substantially eliminate interference between the different patterns.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The data processing system of claim 2, said logic for enabling ordered access further comprising logic for: determining at a first history table among the plurality of history tables whether a received address fits a first pattern of the first history table; and when the address fits the first pattern of the first history table, identifying the address as belonging to a stream having that first pattern and initiating a prefetch stream.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The data processing system of claim 1, wherein when an address does not fit the first pattern of the first history table, said logic further comprises logic for: forwarding the address to a next sequential history table within the preset order; checking the second history table for a match of its second pattern to the address; and when no match of the second pattern is found at the second sequential table, iteratively forwarding the address to the next sequential table(s) to be checked against the pattern(s) of the next sequential table(s) until a last table is reached within the preset order.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The data processing system of claim 4, wherein: said first history table and each subsequent history table is identified by the corresponding index within the plurality of indices; when the address does not fit the pattern of a current history table to which the current index corresponds, parsing the address for a next index corresponding to the next history table in the preset order; and when the address does not fit the pattern of the next history table, sequentially parsing said address for subsequent indices corresponding to subsequent history tables supported within the PE until either a last history table is checked or a match of the pattern is found for the address.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The data processing system of claim 1, wherein each PE includes a reference prediction unit and a prefetch request issue unit, said reference prediction unit further comprising: at least one reference prediction table having associated therewith a reference/stream prediction logic, which predicts future references based on issued references; and at least one active streams table, each table providing one or more entries of for active streams, wherein each of said at least one active streams table includes prefetch request issue logic, which sends out prefetch requests at calculated times; wherein when the stream detection logic detects that the address is part of a stream within the first table, a pre-fetch stream is initiated and the address is not forwarded to the second table.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The data processing system of claim 1, wherein: said logic within said PE comprises a two-table stride prediction algorithm, wherein a first “simple-pattern” history table is utilized to detect simple streams and a second “complicated-pattern” history table is utilized to detect other hard-to-detect streams; wherein said first table and said second table are organized as set-associative caches and indexed by specific bits of an address within a received request, wherein a respective value of each set of index bits determines how large a region to check for access patterns, and wherein using different bits enables the PE to look into small regions for simple patterns, such as unit and small non-unit strides and large regions for other strides, such as large strides and avoid an interferences among small strides, and between small strides and large strides.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The data processing system of claim 1, wherein: each set of index bits correspond to a specific stride history table, and when said processor executes according to a big endian addressing scheme/configuration and said system includes two history tables, a large stride history table is indexed by more significant bits within the address while a smaller stride history table is indexed by less significant bits within the address; and when the PE receives an address, said logic further comprises logic for: first selecting a set of bits providing a smallest value index to index into a corresponding table with a smallest stride; accessing the corresponding table having the smallest stride via the smallest value index; and when the prefetch logic does not detect a stride within the corresponding table, forwarding the address to the second table with a next highest value index and initiating a check of the second table to detect a larger stride, wherein a stride detected at the second table is larger than another stride detected at the first table.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The data processing system of claim 1, wherein said logic further comprising logic for: automatically determining a stride pattern associated with a received prefetch request having an address.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The data processing system of claim 9, wherein said logic for automatically determining a stride pattern comprises: a stride evaluation component, said component having a plurality of registers each having at least three updateable entries utilized for analyzing a single stride pattern; wherein a first entry provides a current state of the corresponding register, a second entry tracks the previous address received, and a third entry is utilized to store a stride pattern/length determined as the difference between the previous address and a subsequent address; logic for storing a first address received as the previous address within a first register; logic for computing a first stride length by subtracting the previous address from a subsequently received second address and recording the first stride length within the third entry of the second register; logic, when a third address is received, for computing a second stride length by subtracting the second address from the third address; logic for comparing the second stride length with the first stride length; and when the second stride length matches the first stride length, signaling detection of a presence of a stream and initiating a stream prefetch with a stride pattern equivalent to one of the second and the first stride lengths.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "A method for enabling a prefetch engine (PE) to detect and support hardware prefetching with streams of different patterns in accesses, said method comprising: providing a plurality of history tables associated with the PE, wherein each of the plurality of history tables are utilized to detect different access patterns; providing a separate index for each of the plurality of history tables within the address of a prefetch request, wherein each of said separate index is provided by a different set of bits of the address; dynamically determining a stride pattern of a received prefetch request via ordered access to one or more of said plurality of history tables, wherein said plurality of history tables are accessed in a preset sequential order to reduce interference between different access patterns; and enabling simultaneous tracking of multiple different stride patterns for accessing the storage device via the plurality of history tables.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The method of claim 11, wherein said dynamically determining a stride pattern comprises: accessing a first history table among the plurality of history tables to determine whether the address fits the stride pattern of the first history table; and when the address fits the stride pattern of the first history table, identifying the address as belonging to a stream and initiating a corresponding prefetch stream. when the stride pattern does not fits that of the first history table: forwarding the address to a next sequential history table within the preset order; checking the next sequential table for a match of its stride pattern to the address; and when the stride pattern of the next sequential table does not match the address, iteratively forwarding the address to the next sequential table(s) to be checked against the stride pattern of each table in sequence until a last table is reached within the preset order.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The method of claim 11, wherein the index for each of the plurality of history tables is derived from sets of bits within the address, said method further comprising: parsing a received address for a first index corresponding to the first history table; and when the address does not fit the pattern of the first history table to which the first index corresponds, parsing the address for a second index corresponding to the second history table and when the address does not fit the pattern of the second history table; and sequentially parsing said address for subsequent indices corresponding to subsequent history tables supported within the PE until either a last history table is checked or a match of the pattern is found for the address.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The method of claim 11, wherein: said plurality of history tables are ordered for sequential access based on a check of unit and small stride patterns at a first table and larger stride patterns at subsequent tables in the sequence, wherein each table is accessed via an associated index found within a prefetch address, such that said PE simultaneously supports multiple patterns; and said method further comprises: parsing a received address for a first index corresponding to the first history table, wherein an index for each of the plurality of history tables is provided by a different set of bits within the address, and multiple indices are provided within the address each corresponding to one of the plurality of history tables; and enabling ordered access to said plurality of history tables utilizing said indices, wherein said plurality of history tables are accessed in a preset order to substantially eliminate interference between the multiple different stride patterns.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The method of claim 11, wherein said first history table and each subsequent history table is identified by the corresponding index within the plurality of indices, said method for enabling ordered access further comprises: determining at a first history table among the plurality of history tables whether a received address fits a first stride pattern of the first history table; and when the address fits the first stride pattern of the first history table, identifying the address as belonging to a stream having that first stride pattern and initiating a prefetch stream; when the address does not fit the pattern of a current history table to which the current index corresponds, such that the address does not fit the first stride pattern of the first history table, parsing the address for a next index corresponding to the next history table in the preset order; and forwarding the address to a next sequential history table within the preset order; checking the second history table for a match of its second stride pattern to the address; and when no match of the second stride pattern is found at the second sequential table, iteratively forwarding the address to the next sequential table(s) to be checked against the stride pattern(s) of the next sequential table(s) until a last table is reached within the preset order; wherein, when the address does not fit the pattern of the next history table, sequentially parsing said address for subsequent indices corresponding to subsequent history tables supported within the PE until either a last history table is checked or a match of the stride pattern is found for the address, wherein when a stream detection logic detects that the physical address is part of a stream within the small stride table, a pre-fetch stream is initiated and the address is not forwarded to the large stride table.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The method of claim 11, wherein: said logic within said PE comprises a two-table stride prediction algorithm, wherein a first “small stride” history table is utilized to detect unit and small, non-unit stride streams and a second “large stride” history table is utilized to detect large, non-unit stride streams; wherein said first table and said second table are organized as set-associative caches and indexed by specific bits of an address within a prefetch request, wherein a respective value of each set of index bits determines how large a region to check for access patterns, and wherein using different bits enables the PE to look into small regions for unit and small non-unit strides and large regions for large strides and avoid an interferences among small strides, and between small strides and large strides.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The method of claim 11, wherein: each set of index bits correspond to a specific stride history table, and when said processor executes according to a big endian addressing scheme/configuration and said system includes two history tables, a large stride history table is indexed by more significant bits within the address while a smaller stride history table is indexed by less significant bits within the address; and when the PE receives an address, said method further comprises: first selecting a set of bits providing a smallest value index to index into a corresponding table with a smallest stride; accessing the corresponding table having the smallest stride via the smallest value index; and when the prefetch logic does not detect a stride within the corresponding table, forwarding the address to the second table with a next highest value index and initiating a check of the second table to detect a larger stride, wherein a stride detected at the second table is larger than another stride detected at the first table.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The method of claim 11, further comprising: automatically determining a stride pattern associated with a received prefetch request having an address, wherein said automatically determining a stride pattern utilizes a stride evaluation component, said component having a plurality of registers each having at least three updatable entries utilized for analyzing a single stride pattern, wherein a first entry provides a current state of the corresponding register, a second entry tracks the previous address received, and a third entry is utilized to store a stride pattern/length determined as the difference between the previous address and a subsequent address; storing a first address received as the previous address within a first register; computing a first stride length by subtracting the previous address from a subsequently received second address and recording the first stride length within the third entry of the second register; when a third address is received, computing a second stride length by subtracting the second address from the third address; comparing the second stride length with the first stride length; and when the second stride length matches the first stride length, signaling detection of a presence of a stream and initiating a stream prefetch with a stride pattern equivalent to one of the second and the first stride lengths.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "A computer program product comprising a computer readable medium and program code on the computer readable medium that when executed provides the functions of claim 18.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "A computer program product comprising a computer readable medium and program code on the computer readable medium that when executed provides the functions of claim 11.",
+      "sourceXmlParentClaimNumbers": [11]
+    }
+  ]
+}

@@ -7,7 +7,8 @@ import {
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -16,19 +17,9 @@ import * as S from "effect/Schema";
 import { sha256, toHex } from "./support/Sha256.ts";
 import type { JsoncDigest } from "@beep/jsonc";
 
-// A real SHA-256 backend over WebCrypto, wired through core's Crypto.make so
+// A real SHA-256 backend over WebCrypto, through core's own WebCrypto layers so
 // the tests exercise the exact service contract consumers provide.
-const CryptoTest = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-    digest: (algorithm, data) =>
-      Effect.map(
-        Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data))),
-        (buffer) => new Uint8Array(buffer)
-      ),
-  })
-);
+const CryptoTest = Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto);
 
 // The consumer-side binding the sync twins take: a pure SHA-256 pinned to the
 // FIPS vectors below and, through the hashText cases, to WebCrypto.
@@ -220,6 +211,105 @@ describe("JsoncFingerprint", () => {
       const benign: Record<string, unknown> = { a: 1 };
       Object.defineProperty(benign, "b", { enumerable: true, get: () => 2 });
       assertSuccess(JsoncFingerprint.canonicalizeResult(benign), '{"a":1,"b":2}');
+    });
+
+    it("fails typed on visited Proxy metadata traps at the container's escaped path", () => {
+      const proxies: ReadonlyArray<object> = [
+        new Proxy(
+          {},
+          {
+            getPrototypeOf() {
+              throw new Error("prototype trap");
+            },
+          }
+        ),
+        new Proxy(
+          {},
+          {
+            ownKeys() {
+              throw new Error("keys trap");
+            },
+          }
+        ),
+        new Proxy(
+          { a: 1 },
+          {
+            getOwnPropertyDescriptor() {
+              throw new Error("descriptor trap");
+            },
+          }
+        ),
+        new Proxy([], {
+          get(target, key, receiver) {
+            if (key === "length") throw new Error("length trap");
+            return Reflect.get(target, key, receiver);
+          },
+        }),
+      ];
+      for (const proxy of proxies) {
+        const root = failure(proxy);
+        const nested = failure({ "a/b": { "x~y": proxy } });
+        assert.deepStrictEqual([root.code, root.path], ["UnrepresentableValue", ""]);
+        assert.deepStrictEqual([nested.code, nested.path], ["UnrepresentableValue", "/a~1b/x~0y"]);
+        assert.include(nested.detail, "metadata");
+      }
+    });
+
+    it("fails typed on revoked object and array Proxies without losing the nested path", () => {
+      for (const target of [{}, []]) {
+        const { proxy, revoke } = Proxy.revocable(target, {});
+        revoke();
+        const error = failure({ nested: proxy });
+        assert.deepStrictEqual([error.code, error.path], ["UnrepresentableValue", "/nested"]);
+      }
+    });
+
+    it("canonicalizes benign object and array Proxies without changing their values", () => {
+      const object = new Proxy({ b: 2, a: 1 }, {});
+      const array = new Proxy([object, 3], {});
+      assertSuccess(JsoncFingerprint.canonicalizeResult(array), '[{"a":1,"b":2},3]');
+    });
+
+    it("does not inspect a later Proxy when an earlier member has already failed", () => {
+      let inspections = 0;
+      const later = new Proxy(
+        {},
+        {
+          getPrototypeOf() {
+            inspections++;
+            throw new Error("later prototype inspected");
+          },
+          ownKeys() {
+            inspections++;
+            throw new Error("later keys inspected");
+          },
+        }
+      );
+      const error = failure({ a: undefined, b: later });
+      assert.deepStrictEqual([error.code, error.path], ["UnrepresentableValue", "/a"]);
+      assert.strictEqual(inspections, 0);
+    });
+
+    it.effect("reports Proxy metadata failures through the Effect error channel", () => {
+      const proxy = new Proxy(
+        {},
+        {
+          ownKeys() {
+            throw new Error("keys trap");
+          },
+        }
+      );
+      return Effect.gen(function* () {
+        const result = yield* Effect.result(JsoncFingerprint.canonicalize({ nested: proxy }));
+        assertFailure(
+          result,
+          JsoncCanonicalizeError.make({
+            code: "UnrepresentableValue",
+            path: "/nested",
+            detail: "inspecting this value's metadata threw; canonicalization requires inspectable JSON values",
+          })
+        );
+      });
     });
 
     // Regression (review R1): every member was evaluated before `Result.all`

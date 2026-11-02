@@ -1,4 +1,3 @@
-import { lintCommand } from "@beep/repo-cli";
 import {
   CapabilityProjection,
   capabilityDoctorFindings,
@@ -26,7 +25,7 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -53,14 +52,14 @@ const encodeGoalCompletionReceiptJson = S.encodeEffect(S.fromJsonString(GoalComp
 const encodeGoalManifestJson = S.encodeEffect(S.fromJsonString(GoalManifest));
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
-const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
-  PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
-  FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer))
+  NodeCrypto.layer,
+  PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
@@ -588,6 +587,77 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
   );
 
   it.effect(
+    "flags every-phase-complete only while the packet still owns its status",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* runGit(["init", "-b", "main"]);
+        yield* runGit(["config", "user.name", "Fixture"]);
+        yield* runGit(["config", "user.email", "fixture@example.invalid"]);
+        const phases = [
+          { id: "P0", status: "complete" },
+          { id: "P1", status: "complete" },
+        ];
+        // Declared status is the packet's own: all phases complete means it must move.
+        yield* writeActivePacket("owned");
+        yield* writeProjectFile(
+          "goals/owned/ops/manifest.json",
+          `${encodeJson({
+            schemaVersion: "initiative-manifest/v2",
+            initiative: { id: "owned", title: "owned", status: "active" },
+            lifecycle: "active",
+            completionGate: COMPLETION_GATE,
+            phases,
+          })}\n`
+        );
+        // A proposed closeout keeps "active" by design (set-status refuses to flip it);
+        // completion is derived from receipts, so the phase rule must stay quiet.
+        yield* writeActivePacket("proposed");
+        yield* writeProjectFile(
+          "goals/proposed/ops/manifest.json",
+          `${encodeJson({
+            schemaVersion: "initiative-manifest/v2",
+            initiative: { id: "proposed", title: "proposed", status: "active" },
+            lifecycle: "active",
+            completionGate: {
+              ...COMPLETION_GATE,
+              acceptanceEvidence: [{ kind: "yeet-verdict", ref: ".beep/yeet/verdict.json", gating: true }],
+            },
+            proposedCloseout: { status: "completed-retained", finalPullRequest: 7 },
+            phases,
+          })}\n`
+        );
+        yield* writeBaseline([]);
+        yield* runGit(["add", "."]);
+        yield* runGit(["commit", "-m", "chore: phase fixtures"]);
+        // "owned" introduces a new blocking finding, so the doctor reports exit 1.
+        let exit: Exit.Exit<unknown, unknown> = Exit.void;
+        const output = yield* captureOutput(
+          runGoalsCommand(["doctor"]).pipe(
+            Effect.provideService(
+              GoalCompletionIo,
+              GoalCompletionIo.of({
+                git: Effect.fn("GoalsDoctorTest.phaseGit")(() => Effect.succeed("git@github.com:example/repo.git")),
+                github: Effect.fn("GoalsDoctorTest.phaseGitHub")(() => Effect.die("offline phase fixture used GitHub")),
+              })
+            ),
+            Effect.exit,
+            Effect.tap((result) =>
+              Effect.sync(() => {
+                exit = result;
+              })
+            )
+          )
+        );
+        expectReportedFailure(exit);
+        expect(output).toContain("owned [phases-terminal-but-active]");
+        expect(output).not.toContain("proposed [phases-terminal-but-active]");
+        expect(output).toContain("proposed [completion-gate-unknown]");
+      }),
+    20_000
+  );
+
+  it.effect(
     "flags an active packet a squash merge cited and nobody touched since, and nothing else",
     () =>
       Effect.gen(function* () {
@@ -653,19 +723,6 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         expect(output).not.toContain("noted [stale-active]");
         expect(output).not.toContain("fresh [active-after-merge]");
         expect(output).not.toContain("fresh [stale-active]");
-      }),
-    20_000
-  );
-
-  it.effect(
-    "exposes the same ratchet through the beep lint goal-packets alias",
-    () =>
-      Effect.gen(function* () {
-        yield* temporaryWorkingDirectory;
-        yield* writeDriftedPacket("demo");
-        yield* writeBaseline([]);
-        const exit = yield* Effect.exit(runLintCommand(["goal-packets"]));
-        expectReportedFailure(exit);
       }),
     20_000
   );

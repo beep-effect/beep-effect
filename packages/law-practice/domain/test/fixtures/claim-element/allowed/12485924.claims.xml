@@ -1,0 +1,138 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An autonomous vehicle control system, comprising:
+<claim-text>at least one sensor configured to capture video data of an environment surrounding an autonomous vehicle;</claim-text>
+<claim-text>a controller including a processor having:
+<claim-text>a vehicle control circuitry;</claim-text>
+<claim-text>a surrounding scanning circuitry configured to detect pedestrians, vehicles, and traffic signs using the captured video data and a trained object detection model;</claim-text>
+<claim-text>a traffic light state recognition circuitry configured to detect and distinguish a state of a traffic light between whether the state is a flashing signal or regular cyclic state colors;</claim-text>
+<claim-text>a traffic condition monitoring circuitry configured to operate when the traffic light is in the regular (non-flashing) cyclic state, analyze congestion at an intersection, calculate distance from nearby vehicles, and determine whether there is sufficient green light time to safely cross the intersection without blocking traffic,</claim-text>
+<claim-text>wherein the vehicle control circuitry is configured to execute a stop instruction to stop the autonomous vehicle when at least one pedestrian is detected by the surrounding scanning circuitry,</claim-text>
+</claim-text>
+<claim-text>adjust a movement of the autonomous vehicle based on speed and distance measured by the surrounding scanning circuitry, and</claim-text>
+<claim-text>change the movement of the autonomous vehicle based on a traffic sign recognized by the surrounding scanning circuitry.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein
+<claim-text>the vehicle control circuitry is further configured to</claim-text>
+<claim-text>immediately execute the stop instruction to stop the autonomous vehicle when the traffic light state recognition circuitry detects that the traffic light is flashing and when the surrounding scanning circuitry detects the at least one pedestrian, wherein the autonomous vehicle remains stopped until the surrounding scanning circuitry verifies that the at least one pedestrian has cleared a path of the autonomous vehicle;</claim-text>
+<claim-text>the surrounding scanning circuitry is further configured to check a presence of the nearby vehicles when the at least one pedestrian is not detected,</claim-text>
+<claim-text>wherein the vehicle control circuitry is further configured to</claim-text>
+<claim-text>calculate a distance to the nearby vehicles and a speed of the nearby vehicles to assess whether it is safe for the autonomous vehicle to proceed, and</claim-text>
+<claim-text>execute an instruction to slow down or stop the autonomous vehicle when a nearby vehicle is within a predetermined distance or is moving above a predetermined speed.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>wherein the surrounding scanning circuitry is further configured to recognize a mandatory stop sign, and wherein the vehicle control circuitry is configured to execute the stop instruction to stop the autonomous vehicle.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>wherein the surrounding scanning circuitry is further configured to recognize a speed-reducing sign, wherein the vehicle control circuitry is configured to reduce the speed of the autonomous vehicle to a level specified by the speed-reducing sign.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>wherein the surrounding scanning circuitry is further configured to recognize a proceed with caution sign, and wherein the vehicle control circuitry is configured to proceed to move the autonomous vehicle cautiously.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein,
+<claim-text>the traffic condition monitoring circuitry is further configured to assess a level of congestion at the intersection when the traffic light state recognition circuitry detects that the traffic light is in the normal state in which the traffic light is steady green or yellow, and wherein</claim-text>
+<claim-text>the vehicle control circuitry is further configured to proceed to move the autonomous vehicle safely when no congestion is detected;</claim-text>
+<claim-text>calculate distance to the nearby vehicles and speed of the nearby vehicles, and assess whether it is safe for the autonomous vehicle to proceed through the intersection, when high congestion is detected; and</claim-text>
+<claim-text>execute an instruction to stop or slow down the autonomous vehicle to avoid causing congestion when proceeding creates a lane blockage condition for the vehicles.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the vehicle control circuitry is further configured to
+<claim-text>calculate a remaining time for the green light to ensure the autonomous vehicle can safely cross the intersection before the traffic light turns yellow or red when the traffic light state recognition circuitry detects that the traffic light is in the normal state in which the traffic light is steady green; and</claim-text>
+<claim-text>execute the stop instruction to stop the autonomous vehicle and wait for a next green light when there is insufficient time for the autonomous vehicle to cross the intersection safely.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the traffic condition monitoring circuitry is further configured to assess a congestion level at the intersection by calculating vehicle density based on a number of vehicles detected in a region.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the surrounding scanning circuitry is further configured to detect the pedestrians, the vehicles, and the traffic signs using the captured video data and a trained deep learning model to detect and analyze multiple objects, including the pedestrians, the nearby vehicles, and their proximity in terms of speed and distance.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a training circuitry configured to train
+<claim-text>a multiple obstacle detector in the surrounding scanning circuitry to detect objects in surroundings, including the pedestrians, the vehicles, and the traffic signs; and</claim-text>
+<claim-text>a traffic light states recognizer model in the traffic light state recognition circuitry to detect the state of traffic lights, including detection of flashing signals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A method of controlling an autonomous vehicle, comprising:
+<claim-text>capturing, by at least one sensor, video data of an environment surrounding the autonomous vehicle;</claim-text>
+<claim-text>detecting, by a surrounding scanning circuitry, at least one pedestrian, at least one vehicle, and a traffic sign using the captured video data and a trained object detection model;</claim-text>
+<claim-text>detecting, by a traffic light state recognition circuitry, a state of a traffic light, and identifying whether the state is a flashing signal or regular state colors;</claim-text>
+<claim-text>operating a traffic condition monitoring circuitry when the traffic light is in a normal (non-flashing) state;</claim-text>
+<claim-text>analyzing congestion at an intersection;</claim-text>
+<claim-text>calculating distance from nearby vehicles; and</claim-text>
+<claim-text>determining whether there is sufficient green light time to safely cross the intersection without blocking traffic,</claim-text>
+<claim-text>wherein</claim-text>
+<claim-text>when a presence of the at least one pedestrian is detected, executing, by a vehicle control circuitry, a stop instruction to stop the autonomous vehicle;</claim-text>
+<claim-text>measuring speed and distance of the nearby vehicles;</claim-text>
+<claim-text>adjusting, by the vehicle control circuitry, a movement of the autonomous vehicle based on the measured speed and distance of the nearby vehicles; and</claim-text>
+<claim-text>changing, by the vehicle control circuitry, the movement of the autonomous vehicle based on the detected traffic sign.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>when the traffic light state recognition circuitry detects that the traffic light is flashing, checking, by the surrounding scanning circuitry, for the at least one pedestrian;</claim-text>
+<claim-text>when the at least one pedestrian is detected, immediately executing the stop instruction to stop the autonomous vehicle, wherein the autonomous vehicle remains stopped until the surrounding scanning circuitry verifies that the at least one pedestrian has cleared a path of the autonomous vehicle;</claim-text>
+<claim-text>when the at least one pedestrian is not detected, checking, by the surrounding scanning circuitry, a presence of the nearby vehicles;</claim-text>
+<claim-text>calculating a distance to the nearby vehicles and the speed of the nearby vehicles to assess whether it is safe for the autonomous vehicle to proceed, wherein when a nearby vehicle is within a predetermined distance or is moving above a predetermined speed, the vehicle control circuitry executes an instruction to slow down or stop the autonomous vehicle.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>recognizing, by the surrounding scanning circuitry, a mandatory stop sign; and</claim-text>
+<claim-text>executing, by the vehicle control circuitry, the stop instruction to stop the autonomous vehicle.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>recognizing, by the surrounding scanning circuitry, a speed-reducing sign; and</claim-text>
+<claim-text>reducing, by the vehicle control circuitry, the speed of the autonomous vehicle to a level specified by the speed-reducing sign.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>recognizing, by the surrounding scanning circuitry, a proceed with caution sign; and</claim-text>
+<claim-text>proceeding, by the vehicle control circuitry, the movement of the autonomous vehicle cautiously.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>when the traffic light state recognition circuitry detects that the traffic light is in the normal state in which the traffic light is steady green or yellow,</claim-text>
+<claim-text>assessing, by the traffic condition monitoring circuitry, a level of congestion at the intersection;</claim-text>
+<claim-text>when no congestion is detected, proceeding, by the vehicle control circuitry, the movement of the autonomous vehicle safely;</claim-text>
+<claim-text>when high congestion is detected, calculating distance to the nearby vehicles and speed of the nearby vehicles;</claim-text>
+<claim-text>assessing whether it is safe for the autonomous vehicle to proceed through the intersection;</claim-text>
+<claim-text>when it is determined that proceeding creates a lane blockage condition for vehicles, executing an instruction, by the vehicle control circuitry, to stop or slow down the autonomous vehicle to avoid causing congestion.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, further comprising:
+<claim-text>when the traffic light state recognition circuitry</claim-text>
+<claim-text>detects that the traffic light is in the normal state, in which the traffic light is steady green, calculating a remaining time for green light to ensure the autonomous vehicle can safely cross the intersection before the traffic light turns yellow or red;</claim-text>
+<claim-text>when there is insufficient time for the autonomous vehicle to cross the intersection safely, executing, by the vehicle control circuitry, an instruction to stop the autonomous vehicle and wait for a next green light.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, further comprising assessing, by the traffic condition monitoring circuitry, a congestion level at the intersection by calculating vehicle density based on a number of vehicles detected in a region.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, further comprising detecting, by the surrounding scanning circuitry, pedestrians, vehicles, and traffic signs using the captured video data and a trained deep learning model to detect and analyze multiple objects, including the pedestrians, the nearby vehicles, and their proximity in terms of speed and distance.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising: training
+<claim-text>a multiple obstacle detector in the surrounding scanning circuitry to detect objects in surroundings, including pedestrians, vehicles, and traffic signs; and</claim-text>
+<claim-text>a traffic light states recognizer model in the traffic light state recognition circuitry to detect the state of traffic lights, including detection of flashing signals.</claim-text>
+</claim-text>
+</claim>
+</claims>

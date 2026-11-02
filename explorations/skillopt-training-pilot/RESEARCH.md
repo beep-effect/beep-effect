@@ -21,7 +21,8 @@ same validation gate.
 ### 2026-07-06 — codex recon (full report summarized; produced for the grill session)
 
 1. **Rollout runner pattern EXISTS**:
-   `packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts`
+   [`QualityWorkerEval.ts` at f16d82e9f1](https://github.com/beep-effect/beep-effect/blob/f16d82e9f16d72f64d42b40284bf2867566e796b/packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts)
+   (retired in beep-cli-composition W0)
    runs `@openai/codex-sdk` workers with `approvalPolicy: "never"`,
    `sandboxMode: "read-only"`, network disabled, structured-JSON output
    contract, deterministic package-stratified task selection, isolated temp

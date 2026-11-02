@@ -1,0 +1,86 @@
+{
+  "familyId": "17617663-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "An electromagnetic stirring device for the secondary cooling zone of slab continuous casting, characterized in that the device comprises a main body of the electromagnetic stirring device, an opening adjustment assembly and a secondary cooling assembly; the main body of the electromagnetic stirring device comprises a protective shell (3), a phase sequence control assembly, as well as an iron core (4) and an electromagnetic coil (5) disposed within the protective shell (3), the opening adjustment assembly comprises a cylinder (7), a fixing base (8), a movable joint shaft (12) and multiple pieces of silicon steel sheet group inserts (13); the multiple pieces of silicon steel sheet group inserts (13) are sequentially connected by the movable joint shaft (12) to form movable joints so that the silicon steel sheet group inserts (13) are rotatable around the movable joint shaft (12), and the multiple movable joints are connected with the iron core (4) to form a closed annular structure; an electromagnetic coil (5) is wound on the iron core (4), and the electromagnetic coil (5) is operated by the phase sequence control assembly for generating an alternating magnetic field in the closed annular structure, and a casting slab (1) passes through the alternating magnetic field in the closed annular structure; the cylinder (7), which is fixedly installed on the outside of the main body of the electromagnetic stirring device through the fixing base, has a piston end connected with the main body of the electromagnetic stirring device and thus providing driven force for the opening and closing of the movable joint, the secondary cooling assembly comprises a cooling water inlet (9) disposed at an end outside the protective shell (3) and multiple cooling water nozzles (10) spaced apart from each other and disposed at an end inside the protective shell (3) and facing the casting slab (1), cooling water is transmitted through the cooling water inlet (9) into the protective shell (3) so that the electromagnetic coil (5) and the iron core (4) are completely immersed therein, and the cooling water is then sprayed onto the surface of the casting slab (1) through the multiple cooling water nozzles (10).",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The electromagnetic stirring device for the secondary cooling zone of slab continuous casting of claim 1, characterized in that the main body of the electromagnetic stirring device is subjected to a stirring current frequency f1 of 2 Hz to 15 Hz.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The electromagnetic stirring device for the secondary cooling zone of slab continuous casting of claim 1, characterized in that the phase sequence control assembly comprises a water-cooled cable (6), an alternating phase conversion circuit, a fuse FU and a disconnecting switch QS; the water-cooled cable (6) comprises a first stirring current inlet line L1, a second stirring current inlet line L2 and a third stirring current inlet line L3 which are connected to an external three-phase power supply at one end and are connected to the electromagnetic coil (5) via the disconnecting switch QS, the fuse FU and through the alternating phase conversion circuit at the other end.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The electromagnetic stirring device for the secondary cooling zone of slab continuous casting of claim 3, characterized in that the alternating phase conversion circuit comprises a first contactor KM1, a second contactor KM2, an alternating voltage u1, a transformer T, a first diode D1, a second diode D2 and a resistor R, wherein the alternating voltage u1 is connected to the primary of the transformer T, the anodes of the first diode D1 and the second diode D2 are respectively connected to the secondary output terminal of the transformer T, the cathode of the first diode D1 is connected to the secondary input terminal of the transformer T through the first contactor KM1 and the resistor R, and the cathode of the second diode D2 is connected to the secondary input terminal of the of the transformer T through the second contactor KM2 and the resistor R; the first contactor KM1 and the second contactor KM2 are connected to the electromagnetic coil (5), wherein the phase sequence by which the first contactor KM1 is connected to the electromagnetic coil (5) is reversed to the phase sequence by which the second contactor KM2 is connected to the electromagnetic coil (5), and the on-off of the first contactor KM1 and the second contactor KM2 are respectively controlled by the alternating phase conversion circuit.",
+      "sourceXmlParentClaimNumbers": [
+        3
+      ]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The electromagnetic stirring device for the secondary cooling zone of slab continuous casting of claim 4, characterized in that the alternating voltage u1 has a frequency f2 of 0.1 Hz to 1 Hz.",
+      "sourceXmlParentClaimNumbers": [
+        4
+      ]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The electromagnetic stirring device for the secondary cooling zone of slab continuous casting of claim 3, characterized in that the phase sequence control assembly further comprises a thermal relay FR through which the first contactor KM1 and the second contactor KM2 are respectively connected to the electromagnetic coil (5).",
+      "sourceXmlParentClaimNumbers": [
+        3
+      ]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The electromagnetic stirring device for the secondary cooling zone of slab continuous casting of claim 1, characterized in that the protective shell (3) comprises a tooth head end concaved inwardly at both sides to form a cambered structure, wherein the tooth head end of the protective shell (3) extends toward the casting slab (1) and is arranged between two segmented rollers (2), and the cambered structure of the protective shell (3) conforms to the profiles of the segmented rollers (2).",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The electromagnetic stirring device for the secondary cooling zone of slab continuous casting of claim 1, characterized in that water sealing gaskets (11) are arranged at the connections between both ends of the pair of iron cores (4) and the protective shell (3).",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "A method for electromagnetic stirring with the electromagnetic stirring device for the secondary cooling zone of slab continuous casting of claim 1, characterized in that the method comprises the following steps: step 1: driving the silicon steel sheet group insert (13) with the cylinder (7) to rotate the same around the movable joint shaft (12), thus adjusting the opening degree of the closed annular structure according to the thickness of the casting slab (1); step 2: energizing the phase sequence control assembly through the alternating phase conversion circuit so that the electromagnetic coil (5) wound around the iron core (4) produces a periodically alternative magnetic field in the closed annular structure, thus electromagnetically stirring the molten steel in a back-and-forth alternative mode; and step 3: introducing cooling water into the protective shell (3) through the cooling water inlet (9) and completely immersing the electromagnetic coil (5) and the iron core (4) therein, and then spraying the cooling water onto the surface of the casting slab (1) through the multiple cooling water nozzles (10).",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method for electromagnetic stirring with the electromagnetic stirring device for the secondary cooling zone of slab continuous casting of claim 9, characterized in that the step 2) further comprises the following sub-steps: step 2.1: turning the first diode D1 of the alternating phase conversion circuit to forwardly conducting state and allowing a commutation current of positive half cycle to pass through the first contactor KM1 of the phase sequence control assembly, thus energizing the first contactor KM1 to work; step 2.2: generating a magnetic field with the electromagnetic coil (5) wound around the iron core (4) and connecting the three-phase power supply to the electromagnetic stirring coil (5) with a phase sequence of U-V-W so that the molten steel is subjected to forward electromagnetic stirring; step 2.3: turning the second diode D2 of the alternating phase conversion circuit to forward conducting state and allowing a commutation current of negative half cycle to pass through the second contactor KM2 of the phase sequence control assembly, thus energizing the second contactor KM2 to work; step 2.4: generating a magnetic field with the electromagnetic coil (5) wound around the iron core (4) and connecting the three-phase power supply to the electromagnetic stirring coil (5) with a phase sequence of W-V-U so that the molten steel is subjected to backward electromagnetic stirring; and step 2.5: alternatively turning the first diode D1 and the second diode D2 to conducting state via the alternating voltage u1 of the alternating phase conversion circuit, alternatively turning on and off the first contactor KM1 and the second contactor KM2, thus alternating the phase sequence of the three phase power supply and periodically reversing the electromagnetic stirring direction.",
+      "sourceXmlParentClaimNumbers": [
+        9
+      ]
+    }
+  ]
+}

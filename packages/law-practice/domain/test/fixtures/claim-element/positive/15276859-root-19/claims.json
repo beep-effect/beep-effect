@@ -1,0 +1,107 @@
+{
+  "familyId": "15276859-root-19",
+  "rootClaimNumber": 19,
+  "labelClaimNumbers": [19, 20],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "An axial turbine engine splitter nose, said nose comprising: an annular separation surface with a circular leading edge, the surface structured and operable to separate an upstream flow into two annular flows; and an electrical de-icing device with an electrical heating element; the electrical heating element comprises at least one electric heating strip which is structured and operable to prevent the formation of ice on the annular surface.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, wherein each strip crosses radially the circular leading edge.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, further comprising a heated annular zone in which each strip is inset, the at least one strip occupying at least 10% of the heated zone.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, wherein each strip performs U-turns.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, wherein the electrical heating element comprises a plurality of heating strips and two connectors each connected to the strips, wherein one connector is an internal connector arranged radially on the inside of the leading edge and one connector is an external connector arranged radially on the outside of the leading edge.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, wherein the de-icing device comprises a plurality of heating strips that are parallel.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, wherein the heating element comprises a plurality of heating strips that are parallel and extend alongside each other.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, further comprising an annular hook for fixing an external shroud, each strip axially straddling the annular hook.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, further comprising a layer of dielectric material with two strata of dielectric material, each strip being arranged at an interface between the strata.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The axial turbine engine splitter nose according to claim 9, wherein the strata comprise a downstream stratum and an upstream stratum having a thermal conductivity that is greater than that of the downstream stratum, each strip being inset in a thickness of the upstream stratum.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, wherein all strips radially intersect a majority of the circumference of the leading edge.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, further comprising an annular cavity and an annular partition separating the annular cavity from the annular flows.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The axial turbine engine splitter nose according to claim 12, wherein the heating element is arranged at an interface between the cavity and the annular partition.",
+      "sourceXmlParentClaimNumbers": [12]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, further comprising an annular partition with a variable-thickness portion forming an annular body, the body having a maximum thickness in a region of the leading edge.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The axial turbine engine splitter nose according to claim 14, wherein the annular body comprises an external annular step delimiting axially the heating element and the dielectric layer.",
+      "sourceXmlParentClaimNumbers": [14]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The axial turbine engine splitter nose according to claim 1, further comprising an organically based composite material forming the partition.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "An axial turbine engine compressor comprising a splitter nose, the splitter nose comprising: an annular separation surface with a compressor circular leading edge, the surface structured and operable to separate an upstream flow into a primary flow entering the compressor and a secondary flow; and an electrical de-icing device with an electric heating element; the electric heating element comprises at least one electric heating strip which is structured and operable to prevent the formation of ice on the annular surface, the electric heating strip strengthening the annular separation surface level of the compressor circular leading edge.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The axial turbine engine compressor according to claim 17, further comprising an external shroud and an annular series of stator vanes extending radially from the external shroud, the shroud being fixed to the splitter nose via an annular hook.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "A turbine engine, said engine comprising: a splitter nose, wherein the splitter nose comprises: an annular wall with an annular separation surface with a circular leading edge, the surface structured and operable to separate an upstream flow into a primary flow and a secondary flow; and an electrical de-icing device with an electric heating element, the electric heating element comprises at least one electric heating strip that is disposed upstream the annular wall.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The turbine engine according to claim 19, further comprising an electric source structured and operable to produce electric current and electrically power each strip.",
+      "sourceXmlParentClaimNumbers": [19]
+    }
+  ]
+}

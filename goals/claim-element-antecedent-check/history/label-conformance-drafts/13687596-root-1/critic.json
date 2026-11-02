@@ -1,0 +1,149 @@
+{
+  "familyId": "13687596-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "resolvedLabelSetVerdict": "accepted",
+  "familyCoverage": "structural-labels-accepted",
+  "findings": [],
+  "unresolved": [],
+  "audit": {
+    "resolvedTrees": 12,
+    "elements": 24,
+    "terms": 214,
+    "typedEdges": 46,
+    "allProposedElementAndTermUtf16SlicesVerified": true,
+    "allSelectedClaimsMatchNativeXml": true,
+    "claimsXmlSha256Matches": true,
+    "headsDeterminersEdgesAndMembershipManuallyReviewed": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  },
+  "rationale": [
+    "Claim 1 now selects the explicit main method comprising at [154,164); root is [0,153) and sole limitation 1.a is [166,1420). The earlier assembly comprising remains exact source wording within the preamble. The standalone colon creates no header element.",
+    "Quantified composite-part and said-method terms have moved to root; former sub-limitation terms now belong to 1.a. The sole part-of edge and all seven antecedent edge endpoint owners were manually rechecked and are correct. No 1.a.i remains, and no source wording or term anchor/head was fabricated. Claim 6 and12 boundary decisions remain as reviewed in round 1.",
+    "The round 1 main-boundary finding is resolved; the complete receipt is preserved in priorRounds.",
+    "All current element/term UTF-16 source slices, selected-claim XML normalization, claims XML hash and existing local edge references were rechecked. No further actionable structural label finding remains. Original membership, rejection association and provenance qualifications remain as reviewed; this round does not independently certify source-version eligibility or attorney agreement."
+  ],
+  "sourceQualification": "Native publication provides every labelled character. Retained hashes, dates, document-inventory counts and rejection passages were checked for internal consistency, without independent retrieval of original office-action pages or underlying inventory. Original extracted-zero comparison is not exact-text corroboration. Attorney in-force confirmation remains pending.",
+  "independence": "No decomposer/policy implementation, rule fixtures, baseline predictions or live reports read/run. Helpers verify prescribed source normalization, selected spans and hashes only. No invalid replacement family was used.",
+  "acceptanceScope": "Structural contract acceptance is subject to root schema/span checks and separate attorney sampling. Changes-required blocks resolved-label acceptance until correction/re-review. No full semantic recall or legal definiteness is asserted.",
+  "priorRounds": [
+    {
+      "familyId": "13687596-root-1",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.98,
+      "verdict": "changes-required",
+      "reviewedClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "resolvedClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "resolvedLabelSetVerdict": "changes-required",
+      "familyCoverage": "label-corrections-required",
+      "findings": [
+        {
+          "claimNumber": 1,
+          "evidence": {
+            "currentRootSpan": [
+              0,
+              36
+            ],
+            "incidentalTransitionContext": "A method for elaborating an assembly comprising at least one composite structure part",
+            "intendedTransitionContext": "one metal structure part, said method comprising: a step for assembling",
+            "intendedPreambleEndChar": 153,
+            "intendedTransitionSpan": [
+              154,
+              164
+            ],
+            "intendedLimitationSpan": [
+              166,
+              1420
+            ]
+          },
+          "requiredCorrection": "Use the main method transition comprising at [154,164), not the earlier comprising modifier of assembly at [37,47). Root preamble should extend through said method at [0,153), retaining all source words and terms in that span. The standalone transition colon does not form an element. The rest is one limitation 1.a [166,1420), not a colon header plus 1.a.i. Reassign the quantified composite-part and said-method terms to root, reassign former sub-limitation terms to 1.a, and update part-of and antecedent endpoint paths accordingly. Preserve every term source anchor/head and infer no new source wording."
+        }
+      ],
+      "unresolved": [],
+      "audit": {
+        "resolvedTrees": 12,
+        "elements": 25,
+        "terms": 214,
+        "typedEdges": 47,
+        "allProposedElementAndTermUtf16SlicesVerified": true,
+        "allSelectedClaimsMatchNativeXml": true,
+        "claimsXmlSha256Matches": true,
+        "headsDeterminersEdgesAndMembershipManuallyReviewed": true,
+        "schemaDecode": "pending-root",
+        "attorneySpotCheck": "pending"
+      },
+      "rationale": [
+        "Claim 1 first comprising modifies the assembly elaborated by the method. The explicit said method comprising: introduces the method steps and is the intended main boundary. The current first-literal choice therefore creates an artificial header/sub-limitation and requires the structural correction in findings.",
+        "Claim 6 supported comprising after said assembly correctly introduces assembly constituents. Claim 12 of the type comprising directly introduces the sub-assembly constituents and is likewise supportable as the main transition. Neither has claim 1 nested assembly-versus-method switch; do not mechanically move either boundary to a later wherein.",
+        "All 239 existing proposed anchors match source exactly; all term heads/determiners were audited and remain correct even where claim 1 requires owner/path reassignment. Source at least one of and said or openings in claim 2 have empty heads and correctly create no separate term. Possessive its/their terms correctly remain bare abstentions.",
+        "All existing semantic antecedent matches are correct, but claim 1 endpoint paths must follow the boundary correction. Remaining containment/dependency edges are correct. Natural-language membership:2->1,3->2,4->1,5->4,6->1,7/8/11/12->6,9/10->8. The explicit assembly/method references in 6 and12 remain dependencies under the protocol.",
+        "Office action I41GT52DPXXIFW4 of 2014-12-26 rejects1-12 and quotes source passages in1,3,4,5,6,9,12. Native publication2013-05-30 predates rejection. Original comparison extracted zero claims, so it establishes no exact-text corroboration; in-force association remains qualified by the retained inventory assertion and examiner correspondence."
+      ],
+      "sourceQualification": "Native publication provides every labelled character. Retained hashes, dates, document-inventory counts and rejection passages were checked for internal consistency, without independent retrieval of original office-action pages or underlying inventory. Original extracted-zero comparison is not exact-text corroboration. Attorney in-force confirmation remains pending.",
+      "independence": "No decomposer/policy implementation, rule fixtures, baseline predictions or live reports read/run. Helpers verify prescribed source normalization, selected spans and hashes only. No invalid replacement family was used.",
+      "acceptanceScope": "Structural contract acceptance is subject to root schema/span checks and separate attorney sampling. Changes-required blocks resolved-label acceptance until correction/re-review. No full semantic recall or legal definiteness is asserted."
+    }
+  ]
+}

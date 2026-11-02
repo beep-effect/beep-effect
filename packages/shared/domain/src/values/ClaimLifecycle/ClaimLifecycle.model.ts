@@ -1,6 +1,8 @@
 /**
  * Claim lifecycle value schemas.
  *
+ * **Details**
+ *
  * Shared-kernel product language: the admission lifecycle of a claim, deliberately
  * shared across knowledge verticals (epistemic owns the gate/projection mechanism;
  * law-practice and future verticals type their work-product state from this same

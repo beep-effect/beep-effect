@@ -33,11 +33,7 @@ import { WorktreeRemovalServiceLive } from "../Worktree/Worktree.service.ts";
 import { yeetGhCommand } from "./Gh.command.ts";
 import { writeYeetAckReceipt, YeetAckObservedResolution, YeetAckReceipt } from "./internal/Ack.ts";
 import { runYeetEconomicsCommand } from "./internal/Economics.ts";
-import {
-  runYeetFallowFeedback,
-  runYeetFallowFixtureCheck,
-  runYeetPlanContractCheck,
-} from "./internal/FallowFeedback.ts";
+import { runYeetFallowFeedback } from "./internal/FallowFeedback.ts";
 import { YeetFinalCheckOptions } from "./internal/FinalCheck.schemas.ts";
 import { runYeetFinalCheck } from "./internal/FinalCheck.ts";
 import { validateProofJobDetach } from "./internal/Guards.ts";
@@ -337,36 +333,6 @@ const fallowRunStartedAtFlag = Flag.String("run-started-at").pipe(
   Flag.withDefault("")
 );
 
-const fallowAssertFlag = Flag.String("assert").pipe(
-  Flag.withDescription("Comma-separated fixture assertions to enforce"),
-  Flag.withDefault("")
-);
-
-const fromStdinFlag = Flag.Boolean("from-stdin").pipe(
-  Flag.withDefault(false),
-  Flag.withDescription("Read a Yeet plan JSON document from stdin")
-);
-
-const expectStepIdFlag = Flag.String("expect-step-id").pipe(
-  Flag.withDescription("Required plan step id"),
-  Flag.withDefault("")
-);
-
-const expectStepLabelFlag = Flag.String("expect-step-label").pipe(
-  Flag.withDescription("Required plan step label"),
-  Flag.withDefault("")
-);
-
-const expectCommandFlag = Flag.String("expect-command").pipe(
-  Flag.withDescription("Required plan step command"),
-  Flag.withDefault("")
-);
-
-const expectArgsFlag = Flag.String("expect-args").pipe(
-  Flag.withDescription("Required plan step args rendered as a space-separated string"),
-  Flag.withDefault("")
-);
-
 const inboxUnackedFlag = Flag.Boolean("unacked").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Show only rows without an ack receipt")
@@ -552,6 +518,10 @@ export const yeetMonitorDurationMillis = Effect.fn("Yeet.monitorDurationMillis")
 const monitorFlags = {
   ...detachedFlags,
   ...sharedFlags,
+  pollInterval: Flag.String("poll-interval").pipe(
+    Flag.withDefault(""),
+    Flag.withDescription("Positive polling duration for --until-ready or --until-merged (default 30 seconds)")
+  ),
   summary: summaryFlag,
   stateRoot: yeetStateRootFlag,
   settleTimeout: settleTimeoutFlag,
@@ -868,8 +838,10 @@ const jobStatusCommand = Command.make(
           root,
           O.getSomesStruct({ PATH: yield* configStringOption("PATH") })
         ).pipe(
-          Effect.mapError(YeetCommandError.new("Failed to read job telemetry.")),
-          Effect.map((result) => (result.exitCode === 0 ? O.some(result.output) : O.none<string>()))
+          Effect.mapBoth({
+            onFailure: YeetCommandError.new("Failed to read job telemetry."),
+            onSuccess: (result) => (result.exitCode === 0 ? O.some(result.output) : O.none<string>()),
+          })
         );
     if (options.json) {
       yield* Console.log(
@@ -1096,6 +1068,7 @@ const yeetMonitorCommand = Command.make(
   monitorFlags,
   Effect.fn("Yeet.monitorCommand")(function* ({
     stateRoot,
+    pollInterval,
     settleTimeout,
     untilEvent,
     untilMerged,
@@ -1103,6 +1076,15 @@ const yeetMonitorCommand = Command.make(
     watch,
     ...options
   }) {
+    if (Str.isNonEmpty(pollInterval) && !untilMerged && !untilReady)
+      return yield* YeetCommandError.make({ message: "--poll-interval requires --until-ready or --until-merged." });
+    const interval = Str.isEmpty(pollInterval)
+      ? undefined
+      : Duration.millis(
+          yield* durationMillis(pollInterval).pipe(
+            Effect.mapError(YeetCommandError.new("--poll-interval requires a positive finite duration."))
+          )
+        );
     if (options.detach) return yield* provideYeetStateRoot(runYeetMode("monitor", options), stateRoot);
     const route = yeetMonitorCommandRoute({
       plan: options.plan,
@@ -1125,9 +1107,14 @@ const yeetMonitorCommand = Command.make(
         "invalid-until-event": rejectYeetUntilEventPairing,
         "invalid-until-ready": rejectYeetUntilReadyPairing,
         "ready-loop": reportDetachedMonitor(
-          runYeetMergeLoop(options, { policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }) }).pipe(Effect.asVoid)
+          runYeetMergeLoop(options, {
+            pollInterval: interval,
+            policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }),
+          }).pipe(Effect.asVoid)
         ),
-        "merge-loop": reportDetachedMonitor(runYeetMergeLoop(options, { settleTimeoutMs }).pipe(Effect.asVoid)),
+        "merge-loop": reportDetachedMonitor(
+          runYeetMergeLoop(options, { pollInterval: interval, settleTimeoutMs }).pipe(Effect.asVoid)
+        ),
         watch: reportDetachedMonitor(runYeetWatchLoop(options, untilEvent, { settleTimeoutMs })),
       }[route],
       stateRoot
@@ -1287,10 +1274,6 @@ const yeetResumeCommand = Command.make(
     )
 ).pipe(Command.withDescription("Resume an agent session recorded for a pull request"));
 
-const yeetPrePushHookCommand = Command.make("pre-push-hook", sharedFlags, (options) =>
-  runYeetMode("pre-push-hook", options)
-).pipe(Command.withDescription("Reuse exact Yeet full-proof state for git pre-push hooks when safe"));
-
 const yeetFallowFeedbackCommand = Command.make(
   "fallow-feedback",
   {
@@ -1301,18 +1284,6 @@ const yeetFallowFeedbackCommand = Command.make(
   },
   ({ advisory, emit, from, runStartedAt }) => runYeetFallowFeedback({ advisory, emit, from, runStartedAt })
 ).pipe(Command.withDescription("Convert Fallow advisory envelopes into a Yeet QualityIssueIndex"));
-
-const yeetFallowFixtureCheckCommand = Command.make(
-  "fallow-fixture-check",
-  {
-    assert: fallowAssertFlag,
-    emit: fallowEmitFlag,
-    fixturePath: Argument.String("fixture-path").pipe(
-      Argument.withDescription("Fallow report-envelope fixture document")
-    ),
-  },
-  ({ assert, emit, fixturePath }) => runYeetFallowFixtureCheck({ assertions: assert, emit, fixturePath })
-).pipe(Command.withDescription("Verify Fallow envelope fixtures map into Yeet quality issues"));
 
 const yeetInboxListCommand = Command.make("list", inboxListFlags, runYeetInboxList).pipe(
   Command.withDescription("List the checkout's failure inbox rows joined with ack state and wave liveness")
@@ -1377,7 +1348,7 @@ const yeetEconomicsCommand = Command.make(
   {
     json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Render the economics report as JSON (yeet-economics/v1)")
+      Flag.withDescription("Render the economics report as JSON (yeet-economics/v2)")
     ),
     branch: Flag.String("branch").pipe(
       Flag.optional,
@@ -1394,22 +1365,9 @@ const yeetEconomicsCommand = Command.make(
   runYeetEconomicsCommand
 ).pipe(
   Command.withDescription(
-    "Print where the checkout's proof minutes went: attempt mixes, wrapper and inner lanes, first failure, red-to-green episodes, and terminations"
+    "Print where the checkout's proof minutes went: attempt mixes, wrapper and inner lanes, the review lane (rounds to ready, reviewer precision), first failure, red-to-green episodes, and terminations"
   )
 );
-
-const yeetPlanContractCheckCommand = Command.make(
-  "plan-contract-check",
-  {
-    expectArgs: expectArgsFlag,
-    expectCommand: expectCommandFlag,
-    expectStepId: expectStepIdFlag,
-    expectStepLabel: expectStepLabelFlag,
-    fromStdin: fromStdinFlag,
-  },
-  ({ expectArgs, expectCommand, expectStepId, expectStepLabel, fromStdin }) =>
-    runYeetPlanContractCheck({ expectArgs, expectCommand, expectStepId, expectStepLabel, fromStdin })
-).pipe(Command.withDescription("Assert a Yeet plan contains an exact named step"));
 
 /**
  * Command that repairs, verifies, or publishes repository work through Yeet.
@@ -1450,10 +1408,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetJobCommand,
     yeetProofReportCommand,
     yeetEconomicsCommand,
-    yeetPrePushHookCommand,
     yeetFallowFeedbackCommand,
-    yeetFallowFixtureCheckCommand,
-    yeetPlanContractCheckCommand,
     yeetGhCommand,
   ])
 );

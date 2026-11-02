@@ -1,0 +1,54 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13272881-root-1",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
+  ],
+  "findings": [],
+  "evidence": [
+    "Actual112(b)1–17 ground. Original14–17 and directly following UNKNOWN continuation nodes independently inspected: drill/removal/insulator attachment clauses continue the same numbered claim; no next printed number is merged into native.",
+    "Natural methods13/14/15/16/17 explicitly incorporate jigs1/2/4/7/9, allroot1. Examiner two contact positions versus native two contact portions is an isolated misquotation, not silently exact; other numbered guide wires/hole/orientation correspondence matches."
+  ],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "nativePublicationSha256": "20f2ff520e876a56d47fedf0d69b43a5bf4011c2db4dab5e5a43609cdb10edfa",
+    "nativePublicationHashMatches": true,
+    "sourceClaimsXmlSha256": "04987cc18c70c2ae42e809ee05178c8acd42174a6a7cd22ad36ef3ff7fd8e37a",
+    "sourceClaimsHashMatches": true,
+    "fullInventorySha256": "f636243093c23cc321d402be3320aa3f283a63c0346a7fdf45943ad6536f821a",
+    "inventoryReportedCount": 39,
+    "inventoryActualRows": 39,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "GTQ89WH1PPOPPY2",
+        "documentCode": "CLM",
+        "officialDate": "2011-10-13T00:00:00.000-0400",
+        "description": "Claims"
+      }
+    ],
+    "citedOfficeActionInventoryRows": [
+      {
+        "documentIdentifier": "HQ6R9XW9PXXIFW4",
+        "documentCode": "CTNF",
+        "officialDate": "2014-01-08T00:00:00.000-0500"
+      }
+    ],
+    "originalCachedHashes": [
+      {
+        "documentIdentifier": "GTQ89WH1PPOPPY2",
+        "exists": true,
+        "sha256": "34d6239634fc15367d4e0da8e842111d92e504c0eec146c1c95600c5d564dd30",
+        "sha256Matches": true
+      }
+    ]
+  },
+  "extractorVerdictReviewed": "eligible",
+  "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+  "rationale": "Numbered ground, actual family membership and operative source versions assessed separately. Full inventory chronology is supporting evidence only; unreadable/missing/dependency-conflicting originals remain unresolved."
+}

@@ -1,0 +1,30 @@
+{
+  "kind": "documentation-only-canary-source-binding",
+  "previousCommit": "6afc5c38256249b372794789b7faa4ecda25409f",
+  "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+  "transformation": "Replace exactly one JSDoc dataRoot example string with /var/lib/beep/ai-metrics; no line count, executable source, annotation, export, tag or example-presence change.",
+  "verification": {
+    "runtime": "Bun 1.4.4",
+    "oldSourceSha256": "842e6f4e0e4ea06fc6afdda14b29c30a0c1ab50ca8bae36ec104efdd9e41051c",
+    "currentSourceSha256": "29262f4dc088cbbff393af1c4aed64128b067d37a5fd2b42f8d00abaf57186cf",
+    "transpiledSha256": "4a169f12b0604488a1c656948634f319a701ffd39eaf3cde180896554bef2aa8",
+    "transpiledBytesEqual": true
+  },
+  "stages": {
+    "current-disposable": {
+      "archivedBindings": 88,
+      "byteIdenticalCurrentSources": 87,
+      "documentedCommentOnlySourceDelta": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+      "otherMismatches": []
+    },
+    "current-live": {
+      "archivedBindings": 87,
+      "byteIdenticalCurrentSources": 86,
+      "documentedCommentOnlySourceDelta": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+      "otherMismatches": []
+    }
+  },
+  "generatedArtifacts": "Example text is not serialized in JSDoc inventory; the change preserves its presence/tags/locations. Schema and instrumentation catalog inputs are unchanged. No canonical output requires regeneration for this comment-only edit.",
+  "scope": "Current full-file bytes differ for one comment-only source. Archived execution hashes and receipts remain unchanged; this is a byte-equal transpilation binding, not a fresh behavioral canary or proof of an entire binary/dependency rollback.",
+  "recoveryHold": "Unchanged; no service, source archive or real harness accessed."
+}

@@ -39,7 +39,14 @@ export {
   JsoncTextHashOptions,
 } from "./JsoncFingerprint.ts";
 export { JsoncFormatter } from "./JsoncFormatter.ts";
-export { JsoncModificationError, JsoncModifier, JsoncModifyOptions } from "./JsoncModifier.ts";
+export {
+  JsoncFormattedModifyOptions,
+  JsoncModificationError,
+  JsoncModifier,
+  JsoncModifyOptions,
+  JsoncPlacementError,
+  JsoncPlacementFailure,
+} from "./JsoncModifier.ts";
 export { JsoncNode, JsoncNodeType, JsoncPath, JsoncSegment } from "./JsoncNode.ts";
 export { JsoncVisitor, JsoncVisitorEvent } from "./JsoncVisitor.ts";
 export type { JsoncBoundCodec } from "./Jsonc.ts";

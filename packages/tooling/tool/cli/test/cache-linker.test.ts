@@ -4,11 +4,12 @@ import {
   inspectCacheLinkerResolution,
   parseCacheLinkerOutput,
 } from "@beep/repo-cli/test/Cache";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
@@ -16,7 +17,7 @@ const isCacheRuntimeLinkerSnapshot = S.is(CacheRuntimeLinkerSnapshot);
 
 const isCacheLinkerResolution = S.is(CacheLinkerResolution);
 
-it.layer(NodeServices.layer)("runtime startup library identity", (it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("runtime startup library identity", (it) => {
   it.effect("normalizes address and ordering noise while preserving library aliases", () =>
     Effect.gen(function* () {
       const first = yield* parseCacheLinkerOutput(

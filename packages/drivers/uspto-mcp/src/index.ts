@@ -1,6 +1,8 @@
 /**
  * `@beep/uspto-mcp` public package entrypoint.
  *
+ * **Details**
+ *
  * Thin MCP host wiring `@beep/uspto` through `@beep/mcp-kit`: credential-keyed
  * composition, the `api_key_required` envelope, and progressive field-tier
  * projection against USPTO's `documentBag`-shaped file-wrapper responses.

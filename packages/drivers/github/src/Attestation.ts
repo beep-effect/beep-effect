@@ -133,7 +133,7 @@ const ListResponse = S.Struct({
  * **Details**
  *
  * Upload and listing only. Building a statement belongs to `@beep/sbom`, and
- * signing it into a bundle to the Sigstore signer (still in the effected lab);
+ * signing it into a bundle to the Sigstore signer (deferred as `@beep/sigstore`);
  * assembling those into a pipeline belongs to the consumer.
  *
  * @public

@@ -1,6 +1,8 @@
 /**
  * Deterministic fixture implementation of the assistant-turn generation kernel.
  *
+ * **Details**
+ *
  * This kernel performs no real LLM work: it derives a fixed, scripted block
  * sequence from the last `user` item's text. It is total (never fails) and
  * deterministic, which makes it the CI contract agent for the turn pipeline.

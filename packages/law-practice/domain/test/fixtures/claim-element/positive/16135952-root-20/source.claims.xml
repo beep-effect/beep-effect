@@ -1,0 +1,111 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system for vertically stabilizing objects, comprising:
+<claim-text>a motion system with an upper support surface for receiving an object that is positionable in a vertical state;</claim-text>
+<claim-text>a sensor assembly with at least one sensor generating sensor data by tracking at least one of three dimensional (3D) position of the object, acceleration of the object, or angular movement for the object; and</claim-text>
+<claim-text>a controller with a processor running a stabilizing module to process the sensor data to determine when the object is tipping away from the vertical state, wherein, in response to the tipping away of the object from the vertical state, the stabilizing module generates control signals to modify operations of the motion system to move at least a portion of the upper support surface in contact with a lower contact surface of the object through one or more stabilizing movements, whereby the object remains balanced in the vertical state.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the stabilizing module further determines a direction the object is moving during the tipping away from the vertical state, wherein the control signals are generated so that the stabilizing movements of the portion of the upper support surface move the lower contact surface in a direction matching the direction the object is moving, and</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the stabilizing movements are selected to move the lower contact surface of the object toward a location that is vertically below a center of gravity of the object.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the sensor comprises at least one of an inertial measurement unit (IMU) mounted on the object, an optical tracker mounted on the object combined with an optical sensor for generating the sensor data, and a magnetic tracker mounted on the object combined with a magnetic sensor for generating the sensor data.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the stabilizing module processes the sensor data to determine an angular rate for the object and wherein the stabilizing module generates the control signals when the angular rate exceeds a predefined maximum value for angular rate.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the motion system is operable to provide the stabilizing movements as omnidirectional movements.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the motion system comprises a floor system providing omnidirectional movement of the object and wherein the floor system includes:
+<claim-text>a plurality of disk assemblies, wherein each of the disk assemblies includes a contact disk with an upper contact surface supported at a tilt angle relative to horizontal whereby the contact disk has a raised portion for supporting the object;</claim-text>
+<claim-text>a drive system comprising a disk orienting mechanism and a disk rotation mechanism for each of the disk assemblies; and</claim-text>
+<claim-text>during each operating period, a floor system controller first operating the disk orienting mechanism for each of the disk assemblies to orient the contact disk to set a location of the raised portion and second operating the disk rotation mechanism for each of the disk assemblies to rotate the contact disk about a rotation axis at a rotation rate, whereby the floor system provides the stabilizing movements.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the tilt angle is in the range of 5 to 60 degrees, wherein each of the disk orienting mechanisms comprises a swashplate with an angled upper surface supporting the contact disk, and wherein the swashplate is rotatable about a vertical axis to define the location of the raised portion.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein each of the disk rotation mechanisms comprises a drive shaft pivotally coupled at a first end to a lower surface of the contact disk and driven at a second end to rotate at the rotation rate, wherein the drive shaft extends through a center portion of the swashplate, whereby the swashplate is rotatable independent from the drive shaft, and wherein the drive system comprises a first drive assembly for concurrently rotating a plurality of the swashplates to define the location of the raised portion for an array of the disk assemblies and a second drive assembly for concurrently rotating a plurality of the drive shafts to rotate at the rotation rate in each of the disk assemblies in the array of the disk assemblies.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the floor system is modular and comprises a plurality of active tiles and wherein the array of the disk assemblies is provided in one of the active tiles.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The system of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the disk rotation mechanism for each of the disk assemblies comprises a motor and a drive shaft coupled to the contact disk and rotatable by the motor and wherein the disk orienting mechanism comprises a motor linkage pivotally coupled to a plurality of the motors that is operable to set an angle of the drive shafts driven by the plurality of the motors to define the tilt angle and the locations of the raised portions of the contact disks coupled to the drive shafts.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein at least a second object is position in a vertical state on the upper support surface and wherein the controller runs the stabilizing module to process the sensor data to independently balance and translate the object and the second object on the upper support surface.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the object is a robot and the second object is a person.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the stabilizing module uses a first algorithm to balance the object and a second algorithm, differing from the first algorithm, to balance the second object.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein at least a non-balanced object is position in a vertical state on the upper support surface and wherein the controller runs the stabilizing module to process the sensor data to independently balance the object and to translate the object and the non-balanced object on the upper support surface.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. A system for stabilizing objects to control tipping from an upright state, comprising:
+<claim-text>a motion system with an upper support surface for receiving an object;</claim-text>
+<claim-text>a sensor assembly with at least one sensor; and</claim-text>
+<claim-text>a controller processing data from the at least one sensor to determine a state of tilt relative to vertical for the object, wherein the processor generates control signals based on the state of tilt to cause the motion system to move at least a portion of the upper support surface in contact with a lower contact surface of the object, whereby the object remains vertically balanced.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the controller determines a direction the object is moving from vertical, wherein the control signals are generated so that the stabilizing movements of the portion of the upper support surface move the lower contact surface in a direction matching the direction the object is moving, and wherein the stabilizing movements are selected to move the lower contact surface of the object toward a location that is vertically below a center of gravity of the object.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the sensor comprises at least one of an inertial measurement unit (IMU) mounted on the object, an optical tracker mounted on the object combined with an optical sensor for generating the sensor data, and a magnetic tracker mounted on the object combined with a magnetic sensor for generating the sensor data, wherein the controller processes the sensor data to determine the state of tile based on an angular rate for the object, and wherein the processor generates the control signals when the angular rate exceeds a predefined maximum value for angular rate.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the motion system is operable to provide the stabilizing movements as omnidirectional movements and wherein the motion system comprises a floor system providing omnidirectional movement of the object and wherein the floor system includes:
+<claim-text>a plurality of disk assemblies, wherein each of the disk assemblies includes a contact disk with an upper contact surface supported at a tilt angle relative to horizontal whereby the contact disk has a raised portion for supporting the object;</claim-text>
+<claim-text>a drive system comprising a disk orienting mechanism and a disk rotation mechanism for each of the disk assemblies; and</claim-text>
+<claim-text>during each operating period, a floor system controller first operating the disk orienting mechanism for each of the disk assemblies to orient the contact disk to set a location of the raised portion and second operating the disk rotation mechanism for each of the disk assemblies to rotate the contact disk about a rotation axis at a rotation rate, whereby the floor system provides the stabilizing movements.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A system for vertically stabilizing objects, comprising:
+<claim-text>a bipedal robot positioned on a support surface in an upright state;</claim-text>
+<claim-text>a motion system for moving the bipedal robot on the support surface with omnidirectional movements;</claim-text>
+<claim-text>a sensor assembly monitoring the bipedal robot; and</claim-text>
+<claim-text>a controller with a processor running a stabilizing module to process data from the sensor assembly to determine when the bipedal robot is tipping away from the upright state and, in response, to generate control signals to operate the motion system to move at least one lower contact surface of the bipedal robot contacting the support surface to counter the tipping away.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The system of <claim-ref idref="CLM-00020">claim 20</claim-ref>, wherein the stabilizing module further determines a direction the bipedal robot is moving during the tipping away from the upright state, wherein the control signals are generated so that movements of the at least one lower contact surface move the lower contact surface in a direction matching the direction the bipedal robot is moving, and wherein the movements are selected to move the lower contact surface of the bipedal robot toward a location that is vertically below a center of gravity of the bipedal robot.</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The system of <claim-ref idref="CLM-00020">claim 20</claim-ref>, wherein the motion system comprises devices provided on the bipedal robot or provided as part of a holotile floor system that includes the support surface.</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The system of <claim-ref idref="CLM-00022">claim 22</claim-ref>, wherein the bipedal robot is operable concurrently with the motion system to provide side-to-side motion.</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. The system of <claim-ref idref="CLM-00020">claim 20</claim-ref>, wherein the sensor assembly comprises at least one of an inertial measurement unit (IMU) mounted on the bipedal robot, an optical tracker mounted on the bipedal robot combined with an optical sensor for generating the sensor data, and a magnetic tracker mounted on the bipedal robot combined with a magnetic sensor for generating the sensor data, wherein the controller processes the sensor data to determine an angular rate for the bipedal robot, and wherein the controller generates the control signals when the angular rate is greater than zero.</claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text><b>25</b>. The system of <claim-ref idref="CLM-00020">claim 20</claim-ref>, wherein the motion system comprises a floor system providing omnidirectional movement of the bipedal robot and wherein the floor system includes:
+<claim-text>a plurality of disk assemblies, wherein each of the disk assemblies includes a contact disk with an upper contact surface supported at a tilt angle relative to horizontal whereby the contact disk has a raised portion for supporting the bipedal robot;</claim-text>
+<claim-text>a drive system comprising a disk orienting mechanism and a disk rotation mechanism for each of the disk assemblies; and</claim-text>
+<claim-text>during each operating period, a floor system controller first operating the disk orienting mechanism for each of the disk assemblies to orient the contact disk to set a location of the raised portion and second operating the disk rotation mechanism for each of the disk assemblies to rotate the contact disk about a rotation axis at a rotation rate, whereby the floor system provides the stabilizing movements.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00026" num="00026">
+<claim-text><b>26</b>. The system of <claim-ref idref="CLM-00020">claim 20</claim-ref>, wherein the motion system comprises a floor system comprising:
+<claim-text>a plurality of active tiles each comprising a plurality of disk assemblies, wherein each of the disk assemblies includes a contact disk supported at a tilt angle whereby the contact disk has a raised portion for contacting the bipedal robot; and</claim-text>
+<claim-text>a drive system for each of the active tiles, wherein the drive system of at least one of the active tiles first operates to orient the contact disks of the plurality of disk assemblies in the at least one of the active tiles to set a location of the raised portion and second operates to rotate each of the contact disks of the plurality of disk assemblies at a rotation rate about a rotation axis, wherein the rotation axes of the disk assemblies in the at least one of the active tiles are parallel.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00027" num="00027">
+<claim-text><b>27</b>. The system of <claim-ref idref="CLM-00025">claim 25</claim-ref>, wherein each of the disk orienting mechanisms comprises a swashplate with an angled upper surface supporting the contact disk, wherein the swashplate is rotatable about a vertical axis to define the location of the raised portion, wherein each of the disk rotation mechanisms comprises a drive shaft coupled to a lower surface of the contact disk and driven to rotate at the rotation rate, wherein the drive shaft extends through a center portion of the swashplate, whereby the swashplate is independently rotated relative to the drive shaft, and wherein the drive system of each of the active tiles comprises a first drive assembly for concurrently rotating the swashplates of all the drive assemblies of the active tile to define the location of the raised portion and a second drive assembly for concurrently rotating the drive shafts of all the drive assemblies of the active tile to rotate at the rotation rate.</claim-text>
+</claim>
+</claims>

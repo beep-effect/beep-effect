@@ -1,0 +1,127 @@
+{
+  "familyId": "11341804-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for producing an electromagnetic shielding gasket by means of a shielding substance that contains a silicone plastic mass, electrically-conducting components, and components that are expandable under the influence of heat, in which method the gasket substance is dispensed onto a foil, and after and/or during the dispensing is treated with heat, thereby obtaining its desired, predetermined expansion and/or shape.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1, wherein the foil and the shielding gasket which is attached to the foil are disposed onto a housing and/or printed circuit board and/or housing parts.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method of claim 1, wherein the shielding gasket is separated from the foil and wherein the shielding gasket is disposed onto a housing and/or printed circuit board and/or housing parts.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method of claim 1, wherein the expandable particles, in the non-expanded state, have a diameter that is substantially in the range of 2 to 50 μm, and in the expanded state a diameter that is substantially in the range of approximately 30 to 200 μm.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method of claim 1 wherein the expandable components are micro spheres or micro hollow spheres consisting of a polymer or another plastic, which spheres are electrically nonconductive and, through heat treatment, are enlargeable in size by a factor of approximately 5 to 70 in volume.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method of claim 1, wherein during the heat treatment the temperature of the shielding substance lies approximately in the range of 50° C. to 140° C.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method of claim 1, wherein after the dispensing and after the heat treatment the shielding substance is essentially circular in cross section (bead, double bead).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The method of claim 1, wherein means are provided whereby the expansion is guided into a direction and/or shape that is associated with the purpose and/or is appropriate.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method of claim 1, wherein the expanded shielding substance undergoes locally a different (partial) heat treatment, in order to achieve targeted, different heights and/or widths of the expanded shielding substance and to lower the possible physical deformation forces.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A method for producing an electromagnetic shielding gasket by means of a shielding substance that contains a silicone plastic mass, electrically-conducting components, and components that are expandable under the influence of heat, in which method the gasket substance is dispensed onto a housing and/or printed circuit board and/or housing parts, and the silicone plastic mass is hardened after dispensing, and the shielding substance is treated with heat after hardening of the silicone plastic mass, thereby expanding the expandable components.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The method of claim 10, wherein the expandable particles, in the non-expanded state, have a diameter that is substantially in the range of 2 to 50 μm, and in the expanded state a diameter that is substantially in the range of approximately 30 to 200 μm.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The method of claim 10 wherein the expandable components are micro spheres or micro hollow spheres consisting of a polymer or another plastic, which spheres are electrically nonconductive and, through heat treatment, are enlargeable in size by a factor of approximately 5 to 70 in volume.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The method of claim 10, wherein during the heat treatment the temperature of the shielding substance lies approximately in the range of 50° C. to 140° C.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The method of claim 10, wherein after the dispensing and after the heat treatment the shielding substance is essentially circular in cross section (bead, double bead).",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The method of claim 10, wherein means are provided whereby the expansion is guided into a direction and/or shape that is associated with the purpose and/or is appropriate.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The method of claims 10, wherein the expanded shielding substance undergoes locally a different (partial) heat treatment, in order to achieve targeted, different heights and/or widths of the expanded shielding substance and to lower the possible physical deformation forces.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "A method for producing an electromagnetically shielded housing, wherein the housing comprises at least two housing parts forming a gap between adjacent portions of the housing parts, comprising the steps of: a) dispensing an electromagnetic shielding substance that contains a silicone plastic mass, electrically-conducting components, and components that are expandable under the influence of heat onto adjacent portions of at least one of the housing parts; b) disposing the housing parts in a final position relative to each other; and c) treating the shielding substance with heat, thereby expanding the shielding substance.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The method of claim 17, wherein the gap is of irregular diameter.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The method of claim 17, wherein the expandable particles, in the non-expanded state, have a diameter that is substantially in the range of 2 to 50 μm, and in the expanded state a diameter that is substantially in the range of approximately 30 to 200 μm.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The method of claim 17, wherein the expandable components are micro spheres or micro hollow spheres consisting of a polymer or another plastic, which spheres are electrically nonconductive and, through heat treatment, are enlargeable in size by a factor of approximately 5 to 70 in volume.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The method of claim 17, wherein during the heat treatment the temperature of the shielding substance lies approximately in the range of 50° C. to 140° C.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The method of claim 17, wherein after the dispensing and after the heat treatment the shielding substance is essentially circular in cross section (bead, double bead).",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The method of claims 17, wherein means are provided whereby the expansion is guided into a direction and/or shape that is associated with the purpose and/or is appropriate.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The method of claims 17, wherein the expanded shielding substance undergoes locally a different (partial) heat treatment, in order to achieve targeted, different heights and/or widths of the expanded shielding substance and to lower the possible physical deformation forces.",
+      "sourceXmlParentClaimNumbers": []
+    }
+  ]
+}

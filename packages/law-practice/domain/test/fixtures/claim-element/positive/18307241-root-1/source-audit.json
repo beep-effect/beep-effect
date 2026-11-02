@@ -1,0 +1,227 @@
+{
+  "familyId": "18307241-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the lateral faces",
+      "nativeQuote": "the lateral faces",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the lateral faces",
+      "nativeQuote": "the lateral faces",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the lateral faces",
+      "nativeQuote": "the lateral faces",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the principal tangential axis",
+      "nativeQuote": "the principal tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the secondary tangential axis",
+      "nativeQuote": "the secondary tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the normal axis",
+      "nativeQuote": "the normal axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the secondary tangential axis",
+      "nativeQuote": "the secondary tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the normal axis",
+      "nativeQuote": "the normal axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the first lateral face",
+      "nativeQuote": "the first lateral face",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the tangential axis",
+      "nativeQuote": "the tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the second continuous electrically conductive coating",
+      "nativeQuote": "the second continuous electrically conductive coating",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the secondary tangential axis",
+      "nativeQuote": "the secondary tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the principal tangential axis",
+      "nativeQuote": "the principal tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the secondary tangential axis",
+      "nativeQuote": "the secondary tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the normal axis",
+      "nativeQuote": "the normal axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the principal tangential axis",
+      "nativeQuote": "the principal tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the secondary tangential axis",
+      "nativeQuote": "the secondary tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the normal axis",
+      "nativeQuote": "the normal axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the principal tangential axis",
+      "nativeQuote": "the principal tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the principal tangential axis",
+      "nativeQuote": "The acceleration transducer according to claim 15, wherein the fourth lateral surface is disposed normal to the secondary tangential axis of the first piezoelectric element and includes a fourth electrically conductive lateral surface coating; and wherein the second and fourth electrically conductive lateral surface coatings are part of the first continuous electrically conductive coating or part of the second continuous electrically conductive coating.",
+      "literalMatch": false,
+      "explanation": "Absent from numbered native claim; examiner attribution discrepancy retained explicitly."
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the secondary tangential axis",
+      "nativeQuote": "the secondary tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the principal tangential axis",
+      "nativeQuote": "the principal tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the secondary tangential axis",
+      "nativeQuote": "the secondary tangential axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    }
+  ],
+  "concerns": [
+    "Original18 full claims exact including all selected. Examiner erroneously also assigns principal tangential axis to16 where only secondary tangential axis appears;15/17 contain principal. Record isolated examiner numbering error without rewriting source; full exact original and all remaining correspondence rule out substantive native version conflict."
+  ],
+  "rationale": "Actual112(b)/second-paragraph ground read; selected natural dependencies manually checked. Native identity and retained inventory evidence supplement, never replace, numbered examiner correspondence and conflicting-version investigation. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "18307241",
+    "nativePublicationNumber": "US20230288444A1",
+    "nativePublicationDate": "20230914",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "e8344b0796c78e70a4e1980bb9872a8776c142d6d4f90db741877c6975b6cdf4",
+    "sourceClaimsXmlSha256": "e8319938f7fb7d4881925209229d8626162091ff54dc3b1e27faeee9aee14a37"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 62,
+    "retainedInventoryCount": 62,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "LGXZCYZJXBLUEX0",
+        "officialDate": "2023-04-26T13:36:29.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2024-01-24",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "LGXZCYZJXBLUEX0",
+      "officialDate": "2023-04-26T13:36:29.000-0400",
+      "sha256": "07011b039f6e4df8b8d4e480860a5b620cf88c7e8671411bf69cf8f5a3c10ff4",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+      ],
+      "sourceClaimCount": 18
+    }
+  ],
+  "nativeContextClaimCount": 18,
+  "selectedClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+  ],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "LGXZCYZJXBLUEX0",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 18
+    }
+  ]
+}

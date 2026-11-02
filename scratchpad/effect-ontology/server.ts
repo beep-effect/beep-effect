@@ -17,6 +17,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { BunHttpServer, BunRuntime, BunServices } from "@effect/platform-bun";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -94,7 +95,7 @@ const ServerConfig = Config.all({
 );
 
 // Base platform layer (provides FileSystem, Path, etc.)
-const PlatformLayer = BunServices.layer;
+const PlatformLayer = Layer.merge(BunServices.layer, BunCrypto.layer);
 
 // Durable WorkflowEngine backed by PostgreSQL via @effect/cluster
 // SingleRunner with SQL storage enables durable execution with crash recovery

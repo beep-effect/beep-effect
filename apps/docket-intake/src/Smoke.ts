@@ -22,7 +22,7 @@ import {
 import { addDays } from "@beep/schema/LocalDate";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -86,9 +86,9 @@ const readSteps = Effect.fnUntraced(function* (m365: M365Shape, config: DocketIn
 });
 
 const writeSteps = Effect.fnUntraced(function* (m365: M365Shape, config: DocketIntakeAppConfig) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const userId = O.some(config.mailbox);
-  const key = `smoke:${Hex.encode(yield* Effect.orDie(crypto.randomBytes(SMOKE_KEY_BYTES)))}`;
+  const key = `smoke:${Hex.encode(yield* crypto.randomBytes(SMOKE_KEY_BYTES))}`;
   const tomorrow = addDays(docketDayInZone(yield* DateTime.now, config.timeZone), 1);
 
   const created = yield* step(

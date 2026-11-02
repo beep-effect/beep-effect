@@ -1,6 +1,8 @@
 /**
  * USPTO MCP tool declarations.
  *
+ * **Details**
+ *
  * Two tools prove the kit's core deliverables against `@beep/uspto`:
  * {@link UsptoSearchApplicationsTool} proves the `api_key_required` envelope
  * (Q6) and {@link UsptoGetDocumentsTool} proves progressive field-tier

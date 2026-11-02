@@ -57,7 +57,7 @@ import {
   FleetSnapshot,
   parseWorktreePorcelain,
 } from "./Worktree.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { FleetLiveness, FleetLivenessProbe, FleetProbeReading, WorktreeListEntry } from "./Worktree.schemas.ts";
@@ -423,7 +423,7 @@ export interface FleetMirrorServiceShape {
 type FleetMirrorServiceRequirements =
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner;
 
 /**
@@ -484,7 +484,11 @@ const runGitProbe = Effect.fn("Fleet.runGitProbe")(function* (
   cwd: string,
   args: ReadonlyArray<string>,
   env?: Record<string, string>
-): Effect.fn.Return<O.Option<GitProbeResult>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  O.Option<GitProbeResult>,
+  never,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const captured = yield* runCapturedStreams({
     command: "git",
     args,
@@ -896,7 +900,7 @@ const materializeTarget = Effect.fn("Fleet.materializeTarget")(function* (
   const hasObject = Effect.fnUntraced(function* (): Effect.fn.Return<
     boolean,
     never,
-    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   > {
     const probe = yield* runGitProbe(scanner.scannerDir, ["cat-file", "-e", `${sha.value}^{commit}`], scanner.env);
     return O.match(probe, { onNone: () => false, onSome: (result) => result.exitCode === 0 });

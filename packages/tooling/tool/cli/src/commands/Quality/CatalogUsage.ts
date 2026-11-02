@@ -36,7 +36,7 @@ import {
 import { CatalogUsageSource } from "./CatalogUsage.service.ts";
 import { collectWorkspacePackageJsonFiles } from "./ChangesetGraph.ts";
 import { CatalogUsageError } from "./Quality.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 /**
@@ -72,7 +72,11 @@ export const CATALOG_USAGE_TEMPLATE_SOURCES = [
   "packages/tooling/tool/cli/src/commands/Architecture/internal/PackageShell.ts",
 ] as const;
 
-type SourceEnvironment = FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner;
+type SourceEnvironment =
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner;
 
 const defaultCatalogName = "default";
 const catalogProtocol = "catalog:";

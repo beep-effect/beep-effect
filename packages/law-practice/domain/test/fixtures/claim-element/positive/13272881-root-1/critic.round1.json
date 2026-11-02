@@ -1,0 +1,493 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "13272881-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "findings": [
+    {
+      "id": "C1",
+      "category": "withheld-clear-early-insulator-references",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 13,
+          "path": "13.a",
+          "anchor": {
+            "startChar": 114,
+            "endChar": 127,
+            "quote": "the insulator"
+          },
+          "head": "insulator",
+          "suggestedIntroducing": {
+            "claimNumber": 13,
+            "path": "13",
+            "anchor": {
+              "startChar": 22,
+              "endChar": 34,
+              "quote": "an insulator"
+            },
+            "head": "insulator"
+          }
+        },
+        {
+          "claimNumber": 14,
+          "path": "14.a",
+          "anchor": {
+            "startChar": 114,
+            "endChar": 127,
+            "quote": "the insulator"
+          },
+          "head": "insulator",
+          "suggestedIntroducing": {
+            "claimNumber": 14,
+            "path": "14",
+            "anchor": {
+              "startChar": 22,
+              "endChar": 34,
+              "quote": "an insulator"
+            },
+            "head": "insulator"
+          }
+        },
+        {
+          "claimNumber": 15,
+          "path": "15.a",
+          "anchor": {
+            "startChar": 114,
+            "endChar": 127,
+            "quote": "the insulator"
+          },
+          "head": "insulator",
+          "suggestedIntroducing": {
+            "claimNumber": 15,
+            "path": "15",
+            "anchor": {
+              "startChar": 22,
+              "endChar": 34,
+              "quote": "an insulator"
+            },
+            "head": "insulator"
+          }
+        },
+        {
+          "claimNumber": 16,
+          "path": "16.a",
+          "anchor": {
+            "startChar": 114,
+            "endChar": 127,
+            "quote": "the insulator"
+          },
+          "head": "insulator",
+          "suggestedIntroducing": {
+            "claimNumber": 16,
+            "path": "16",
+            "anchor": {
+              "startChar": 22,
+              "endChar": 34,
+              "quote": "an insulator"
+            },
+            "head": "insulator"
+          }
+        },
+        {
+          "claimNumber": 17,
+          "path": "17.a",
+          "anchor": {
+            "startChar": 114,
+            "endChar": 127,
+            "quote": "the insulator"
+          },
+          "head": "insulator",
+          "suggestedIntroducing": {
+            "claimNumber": 17,
+            "path": "17",
+            "anchor": {
+              "startChar": 22,
+              "endChar": 34,
+              "quote": "an insulator"
+            },
+            "head": "insulator"
+          }
+        }
+      ],
+      "reason": "Each method first introduces its own an insulator in the root and refers to the insulator in the placing step before its later repeated indefinite insulator mentions. Later identity uncertainty cannot make this earlier local reference ambiguous retroactively.",
+      "correction": "Add each first placing-step the insulator [114,127) antecedent to that method root an insulator [22,34). Preserve later repeated-indefinite ambiguity separately; do not merge all insulator mentions."
+    },
+    {
+      "id": "C2",
+      "category": "withheld-clear-support-drilled-hole-references",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 13,
+          "path": "13.i",
+          "anchor": {
+            "startChar": 679,
+            "endChar": 696,
+            "quote": "the drilled holes"
+          },
+          "head": "drilled holes",
+          "suggestedIntroducing": {
+            "claimNumber": 13,
+            "path": "13.f",
+            "anchor": {
+              "startChar": 511,
+              "endChar": 516,
+              "quote": "holes"
+            },
+            "head": "holes"
+          }
+        },
+        {
+          "claimNumber": 14,
+          "path": "14.j",
+          "anchor": {
+            "startChar": 813,
+            "endChar": 830,
+            "quote": "the drilled holes"
+          },
+          "head": "drilled holes",
+          "suggestedIntroducing": {
+            "claimNumber": 14,
+            "path": "14.g",
+            "anchor": {
+              "startChar": 645,
+              "endChar": 650,
+              "quote": "holes"
+            },
+            "head": "holes"
+          }
+        },
+        {
+          "claimNumber": 15,
+          "path": "15.j",
+          "anchor": {
+            "startChar": 813,
+            "endChar": 830,
+            "quote": "the drilled holes"
+          },
+          "head": "drilled holes",
+          "suggestedIntroducing": {
+            "claimNumber": 15,
+            "path": "15.g",
+            "anchor": {
+              "startChar": 645,
+              "endChar": 650,
+              "quote": "holes"
+            },
+            "head": "holes"
+          }
+        },
+        {
+          "claimNumber": 16,
+          "path": "16.j",
+          "anchor": {
+            "startChar": 813,
+            "endChar": 830,
+            "quote": "the drilled holes"
+          },
+          "head": "drilled holes",
+          "suggestedIntroducing": {
+            "claimNumber": 16,
+            "path": "16.g",
+            "anchor": {
+              "startChar": 645,
+              "endChar": 650,
+              "quote": "holes"
+            },
+            "head": "holes"
+          }
+        },
+        {
+          "claimNumber": 17,
+          "path": "17.j",
+          "anchor": {
+            "startChar": 813,
+            "endChar": 830,
+            "quote": "the drilled holes"
+          },
+          "head": "drilled holes",
+          "suggestedIntroducing": {
+            "claimNumber": 17,
+            "path": "17.g",
+            "anchor": {
+              "startChar": 645,
+              "endChar": 650,
+              "quote": "holes"
+            },
+            "head": "holes"
+          }
+        }
+      ],
+      "reason": "The drilling step explicitly drills holes in the support at selected positions. Later aligning and connecting steps refer to the drilled holes in that support; the holes in an insulator are a separately qualified group. Source qualification uniquely distinguishes these groups without borrowing jig holes or an insulator member.",
+      "correction": "Add both the drilled holes references per method to the local support-drilling holes introduction: claim13 13.i [679,696) and 13.j [795,812) →13.f [511,516); claims14–17 .j [813,830) and .k [929,946) →.g [645,650). Keep insulator holes separate."
+    },
+    {
+      "id": "C3",
+      "category": "forced-top-surface-identity",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 14,
+          "path": "14.d",
+          "anchor": {
+            "startChar": 391,
+            "endChar": 406,
+            "quote": "the top surface"
+          },
+          "head": "top surface",
+          "currentIntroducing": {
+            "claimNumber": 14,
+            "path": "14.b",
+            "anchor": {
+              "startChar": 187,
+              "endChar": 200,
+              "quote": "a top surface"
+            },
+            "head": "top surface"
+          },
+          "alternativeAncestor": {
+            "claimNumber": 1,
+            "path": "1.a.i",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 131,
+              "quote": "a top surface"
+            },
+            "head": "top surface"
+          }
+        },
+        {
+          "claimNumber": 15,
+          "path": "15.d",
+          "anchor": {
+            "startChar": 391,
+            "endChar": 406,
+            "quote": "the top surface"
+          },
+          "head": "top surface",
+          "currentIntroducing": {
+            "claimNumber": 15,
+            "path": "15.b",
+            "anchor": {
+              "startChar": 187,
+              "endChar": 200,
+              "quote": "a top surface"
+            },
+            "head": "top surface"
+          },
+          "alternativeAncestor": {
+            "claimNumber": 1,
+            "path": "1.a.i",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 131,
+              "quote": "a top surface"
+            },
+            "head": "top surface"
+          }
+        },
+        {
+          "claimNumber": 16,
+          "path": "16.d",
+          "anchor": {
+            "startChar": 391,
+            "endChar": 406,
+            "quote": "the top surface"
+          },
+          "head": "top surface",
+          "currentIntroducing": {
+            "claimNumber": 16,
+            "path": "16.b",
+            "anchor": {
+              "startChar": 187,
+              "endChar": 200,
+              "quote": "a top surface"
+            },
+            "head": "top surface"
+          },
+          "alternativeAncestor": {
+            "claimNumber": 1,
+            "path": "1.a.i",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 131,
+              "quote": "a top surface"
+            },
+            "head": "top surface"
+          }
+        },
+        {
+          "claimNumber": 17,
+          "path": "17.d",
+          "anchor": {
+            "startChar": 391,
+            "endChar": 406,
+            "quote": "the top surface"
+          },
+          "head": "top surface",
+          "currentIntroducing": {
+            "claimNumber": 17,
+            "path": "17.b",
+            "anchor": {
+              "startChar": 187,
+              "endChar": 200,
+              "quote": "a top surface"
+            },
+            "head": "top surface"
+          },
+          "alternativeAncestor": {
+            "claimNumber": 1,
+            "path": "1.a.i",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 131,
+              "quote": "a top surface"
+            },
+            "head": "top surface"
+          }
+        }
+      ],
+      "reason": "The text adjusting the insulator so that the top surface is parallel to the a nearest surface of the support does not uniquely identify the support top surface. Actual ancestry also introduces the jig top surface; adjustment context can additionally concern an unintroduced insulator surface. Current edges choose the local support surface solely despite this unresolved ownership.",
+      "correction": "Remove or independently justify these four forced .d [391,406)→.b [187,200) edges. Retain exact malformed nearest-surface wording and all clear structure; record top-surface ownership ambiguity for attorney review rather than selecting by proximity."
+    },
+    {
+      "id": "C4",
+      "category": "lost-possessive-head",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 4,
+          "path": "4.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 68,
+            "quote": "its circumference"
+          },
+          "head": "circumference"
+        }
+      ],
+      "reason": "The term quote retains its circumference but head circumference deletes the explicit possessive. Rule2 says normalized heads preserve meaningful possessives and rule3/clarification retain bare possessive phrases. No supported determiner is being removed from this bare term.",
+      "correction": "Keep the exact quote/anchor [51,68) and bare determiner, and preserve its in the normalized lexical phrase, e.g. head its circumference. This does not add an antecedent to an unintroduced circumference or make it identical to the owning hole."
+    },
+    {
+      "id": "C5",
+      "category": "swallowed-nested-determiner-phrase",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 1,
+          "path": "1.c",
+          "anchor": {
+            "startChar": 239,
+            "endChar": 268,
+            "quote": "at least one of the two sides"
+          },
+          "head": "sides"
+        }
+      ],
+      "reason": "The at-least-one term spans a nested explicit the two sides and reduces its head to sides, losing the meaningful two qualifier and the nested reference. Protocol2 requires nested determiner phrases as nonoverlapping terms; a schema-valid outer partitive alone does not meet that annotation convention.",
+      "correction": "Represent the actual selected-side partitive and its nested the two sides [255,268) in a nonoverlapping, schema-valid manner, preserving the count and exact selection text in anchored function parts. Resolve the nested side-group reference to the explicit two sides [137,146) in1.a.ii. Do not invent which particular side is selected. If proform representation needs adjudication, record that narrow annotation point rather than silently swallowing the nested reference."
+    },
+    {
+      "id": "C6",
+      "category": "withheld-clear-distributed-guide-pipe-reference",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 3,
+          "path": "3.a",
+          "anchor": {
+            "startChar": 99,
+            "endChar": 118,
+            "quote": "the two guide pipes"
+          },
+          "head": "two guide pipes"
+        },
+        {
+          "claimNumber": 5,
+          "path": "5.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 46,
+            "quote": "the two guide pipes"
+          },
+          "head": "two guide pipes"
+        },
+        {
+          "claimNumber": 6,
+          "path": "6.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 46,
+            "quote": "the two guide pipes"
+          },
+          "head": "two guide pipes"
+        },
+        {
+          "claimNumber": 7,
+          "path": "7.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 46,
+            "quote": "the two guide pipes"
+          },
+          "head": "two guide pipes"
+        },
+        {
+          "claimNumber": 1,
+          "path": "1.e",
+          "anchor": {
+            "startChar": 418,
+            "endChar": 437,
+            "quote": "a hollow guide pipe"
+          },
+          "head": "hollow guide pipe"
+        }
+      ],
+      "reason": "Root1 explicitly has two holes and within each of the holes a hollow guide pipe. The later two guide pipes are exactly that distributed pair; no other pipes are introduced on these ancestries. The introducing phrase is scoped by each hole, so linking to its introduction does not arbitrarily choose a physical member.",
+      "correction": "Resolve these four two-guide-pipe references to the distributed a hollow guide pipe introduction in1.e, preserving plural surface heads and the quantification in source functional text. Guide tubes/wires aliases and singular hole/opening identity remain separate source-specific questions; do not repair or equate them automatically."
+    }
+  ],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 17,
+    "resolvedTreesReviewed": 17,
+    "unresolvedClaimNumbers": [],
+    "elementCount": 94,
+    "termCount": 302,
+    "functionalRelationCount": 75
+  },
+  "reviewNotes": [
+    "Reviewed actual1-root jig ancestry and methods13→1,14→2,15→4,16→7,17→9. Contact portions in siblings10–12 are not borrowed. Literal source guide tube/pipe/wire aliases, repeated late insulator introductions, singular hole versus side opening, and malformed the a nearest surface remain explicit. No examiner misquotation of contact positions replaces native contact portions.",
+    "Independently checked every submitted element/term anchor, ordering, nonoverlap, ownership, actual local/foreign term endpoints and complete contiguous functional-part reconstruction. All submitted trees decode through ClaimElementTree. These mechanical passes do not replace semantic review.",
+    "Native source claims normalize exactly to full canonical/context text; source XML hash matches provenance. Read retained source critic and rejection provenance. Source eligibility remains separately accepted; no fresh original-PDF/inventory authentication claimed.",
+    "No universal extra relative/reciprocal-pronoun term requirement imposed; anchored connecting text is reviewed under entity-mentions/v1. Agent confidence is not attorney agreement."
+  ],
+  "independence": "Independent semantic critic; did not author these references. Read full canonical/native source/context, provenance, source critic, extractor, schema contracts and semantic-reference/v2 plus entity-mentions/v1. No production rules, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation. Only assigned critic.json receipts written.",
+  "attorneyAdjudication": "pending; confidence is not attorney agreement"
+}

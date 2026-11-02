@@ -6,7 +6,8 @@ import { $PracticeM365ContactsId } from "@beep/identity/packages";
 import { GraphContactProperty, M365_CONTACT_SEED_PROPERTY_ID, M365ContactDraft } from "@beep/m365";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
@@ -128,8 +129,9 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
       const mailbox = yield* Effect.serviceOption(ContactsMailbox);
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const crypto = yield* Crypto.Crypto;
-      const runId = () => crypto.randomUUIDv4().pipe(Effect.map((uuid) => `seed-${uuid}`));
+      const random = yield* SecureRandom.SecureRandom;
+      const digest = yield* Digest.Digest;
+      const runId = () => random.uuidV4().pipe(Effect.map((uuid) => `seed-${uuid}`));
       const online = () =>
         Effect.fromOption(mailbox).pipe(Effect.mapError(() => ContactsError.make({ reason: "input" })));
       const plan = Effect.fn("ContactSeeding.plan")(function* (
@@ -140,7 +142,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
         if (census && !offline) return yield* ContactsError.make({ reason: "input" });
         const source = yield* loadContacts(inputs, census).pipe(
           Effect.provideService(FileSystem.FileSystem, fs),
-          Effect.provideService(Crypto.Crypto, crypto)
+          Effect.provideService(Digest.Digest, digest)
         );
         const inventory = offline ? emptyInventory : yield* (yield* online()).inventory;
         const journals = offline ? [] : yield* state.journals;
@@ -393,7 +395,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
           yield* fs.writeFileString(target, text, { flag: "wx", mode: 0o600 });
           return {
             count: A.length(contacts),
-            sha256: yield* checksum(yield* fs.readFile(target)).pipe(Effect.provideService(Crypto.Crypto, crypto)),
+            sha256: yield* checksum(yield* fs.readFile(target)).pipe(Effect.provideService(Digest.Digest, digest)),
           };
         }),
       });

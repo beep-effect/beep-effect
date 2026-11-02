@@ -7,7 +7,7 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -77,7 +77,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("falls back to unsupported when the busctl probe exits non-zero", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -90,7 +90,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("reports active when the busctl probe succeeds", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -103,7 +103,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("starts a safe transient scope that adopts the current pid", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -129,7 +129,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("retains a failed support record when StartTransientUnit fails", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -146,7 +146,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("records a failed scope when the accepted start job does not adopt this process", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -163,7 +163,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("records a failed scope when busctl disappears after the support probe", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -183,7 +183,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("parses systemctl telemetry values", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -200,7 +200,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("keeps telemetry names aligned when a property is omitted", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -214,7 +214,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("treats unset systemctl telemetry as absent", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -231,7 +231,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("treats a failing systemctl show as absent telemetry", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -245,7 +245,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("reads the owning admission root from the scope description", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -261,7 +261,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("treats scopes without an ownership description as unowned", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -274,7 +274,7 @@ describe("run scope", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
     it.effect("treats a failing systemctl show as an unknown owner", () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {

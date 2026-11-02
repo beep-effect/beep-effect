@@ -607,7 +607,7 @@ describe("ClosingList schema-derived round trip", () => {
           list.keyword +
           " " +
           A.join(
-            A.map(list.issueNumbers, (issue) => "#" + issue),
+            A.map(list.issueNumbers, (issue) => `#${issue}`),
             ", "
           );
         assertSome(

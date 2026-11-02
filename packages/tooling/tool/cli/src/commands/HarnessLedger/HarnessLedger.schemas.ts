@@ -221,8 +221,7 @@ export const parseHarnessEditSpec = Effect.fn("HarnessLedger.parseHarnessEditSpe
   }
   const [prefix, ref] = yield* Effect.fromOption(splitPrefixed(spec)).pipe(Effect.mapError(() => invalid));
   const kind = yield* decodeEditSpecPrefix(prefix).pipe(
-    Effect.map(editKindForPrefix),
-    Effect.mapError(() => invalid)
+    Effect.mapBoth({ onFailure: () => invalid, onSuccess: editKindForPrefix })
   );
   return yield* decodeEditRef({ kind, ref }).pipe(Effect.mapError(() => invalid));
 });

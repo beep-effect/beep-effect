@@ -1,0 +1,40 @@
+{
+  "applicationNumber": "13272881",
+  "publicationNumber": "US20130094916A1",
+  "publicationDate": "2013-04-18",
+  "nativeXmlSha256": "20f2ff520e876a56d47fedf0d69b43a5bf4011c2db4dab5e5a43609cdb10edfa",
+  "claimsXmlSha256": "04987cc18c70c2ae42e809ee05178c8acd42174a6a7cd22ad36ef3ff7fd8e37a",
+  "officeActionDocumentIdentifiers": [
+    "HQ6R9XW9PXXIFW4"
+  ],
+  "officeActionMailDate": "2014-01-08",
+  "officeActionSection112Text": [
+    "claims 1-17 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1, line 1, “the orientation” lacks antecedent basis.\r\nclaim 4, line 1, “the hole” should be -- the opening --.\r\nclaim 7, line 3, “the hole” should be -- the opening --.\r\nclaim 12, line 2, “the flat extension portion” lacks antecedent basis.\r\nclaim 13, line 3, “the two contact positions’ lacks antecedent basis.\r\nclaim 13, line 4, “the guide tube’ lacks antecedent basis.\r\nclaim 13, line 10, “the guide wires’ lacks antecedent basis.\r\nclaim 14, line 3, “the two contact positions’ lacks antecedent basis.\r\nclaim 14, line 4, “the guide tube’ lacks antecedent basis.\r\nclaim 14, line 12, “the guide wires’ lacks antecedent basis.\r\nclaim 15, line 3, “the two contact positions’ lacks antecedent basis.\r\nclaim 15, line 4, “the guide tube’ lacks antecedent basis.\r\nclaim 15, line 12, “the guide wires’ lacks antecedent basis.\r\nclaim 16, line 3, “the two contact positions’ lacks antecedent basis.\r\nclaim 16, line 4, “the guide tube’ lacks antecedent basis.\r\nclaim 16, line 12, “the guide wires’ lacks antecedent basis.\r\nclaim 17, line 3, “the two contact positions’ lacks antecedent basis.\r\nclaim 17, line 4, “the guide tube’ lacks antecedent basis.\r\nclaim 17, line12, “the guide wires’ lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "GTQ89WH1PPOPPY2",
+      "officialDate": "2011-10-13T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "GTQ89WH1PPOPPY2",
+      "officialDate": "2011-10-13T00:00:00.000-0400",
+      "sha256": "34d6239634fc15367d4e0da8e842111d92e504c0eec146c1c95600c5d564dd30",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 39,
+  "documentInventoryRows": 39,
+  "primaryCpc": "B23B  47/281",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/13272881",
+    "https://api.uspto.gov/api/v1/patent/applications/13272881/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

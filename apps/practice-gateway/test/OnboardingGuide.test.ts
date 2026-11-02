@@ -76,7 +76,10 @@ describe("onboarding guide", () => {
   });
 
   it.layer(
-    Layer.merge(McpServer.McpServer.layer, OnboardingPromptLayer).pipe(Layer.provide(OnboardingGuide.layerText(guide))),
+    OnboardingPromptLayer.pipe(
+      Layer.provideMerge(McpServer.McpServer.layer),
+      Layer.provide(OnboardingGuide.layerText(guide))
+    ),
     { timeout: "30 seconds" }
   )("as a prompt", (it) => {
     it.effect("registers onboard_practice on the shared server", () =>

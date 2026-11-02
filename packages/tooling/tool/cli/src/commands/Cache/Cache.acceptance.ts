@@ -29,14 +29,17 @@ import {
   CacheSignedPilotReceipt,
   CacheSignedPilotShadow,
 } from "./Cache.pilot.signed.schemas.ts";
-import { CacheProducerEvidenceFragment } from "./Cache.producer.schemas.ts";
+import { CacheProducerBinding, CacheProducerEvidenceFragment } from "./Cache.producer.schemas.ts";
 import {
   openCacheProducerVerifier,
+  readCacheProducerHostedApproval,
   validateCacheProducerApproval,
   validateCacheProducerBinding,
 } from "./Cache.producer.ts";
 import { CacheProtocolExecution } from "./Cache.protocol.runner.schemas.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
+import { CacheHostedProducerApproval } from "./Cache.workflow.github.schemas.ts";
+import * as HostedProducer from "./Cache.workflow.github.ts";
 import type { CacheProducerTrustLocations } from "./Cache.acceptance.schemas.ts";
 import type { CacheProducerApproval, CacheProducerBundle } from "./Cache.producer.schemas.ts";
 
@@ -225,6 +228,52 @@ export const deriveCacheProducerEvidence = Effect.fn("Producer.deriveEvidence")(
   return fragments;
 });
 
+const sameHostedApproval = S.toEquivalence(CacheHostedProducerApproval);
+const sameProducerBinding = S.toEquivalence(CacheProducerBinding);
+const verifyImportPublications = Effect.fn("Producer.verifyImportPublications")(
+  (
+    request: CacheProducerImportRequest,
+    trust: CacheProducerTrustLocations,
+    approvals: Readonly<Record<CacheClientChannel, CacheProducerApproval>>
+  ) =>
+    O.match(request.publications, {
+      onNone: () =>
+        Effect.succeed(A.map(CacheClientChannel.literals, (channel) => `${channel}:missing-hosted-publication`)),
+      onSome: Effect.fn("Producer.verifyPublishedImport")(function* (publications) {
+        const verifier = yield* Effect.serviceOption(HostedProducer.CacheHostedProducerVerifier).pipe(
+          Effect.flatMap(
+            Effect.fromOption(() => CacheCommandError.new("Hosted producer metadata verifier is not configured."))
+          )
+        );
+        const hostedApprovals = {
+          stable: yield* readCacheProducerHostedApproval(trust.stable),
+          canary: yield* readCacheProducerHostedApproval(trust.canary),
+        };
+        for (const channel of CacheClientChannel.literals) {
+          const approved = hostedApprovals[channel];
+          if (!sameProducerBinding(approved.binding, approvals[channel].binding))
+            return yield* CacheCommandError.new(
+              "Hosted approval differs from the independently authenticated channel binding."
+            );
+          const publication = publications[channel];
+          yield* verifier.verify(
+            trust[channel],
+            approved,
+            publication.reference,
+            publication.archive,
+            request.observations[channel]
+          );
+        }
+        for (const channel of CacheClientChannel.literals) {
+          const approved = hostedApprovals[channel];
+          if (!sameHostedApproval(approved, yield* readCacheProducerHostedApproval(trust[channel])))
+            return yield* CacheCommandError.new("Hosted producer approval changed during acceptance verification.");
+        }
+        return A.empty<string>();
+      }),
+    })
+);
+
 const encodeImport = S.encodeEffect(CacheProducerImportRequest);
 const decodeImport = S.decodeUnknownEffect(CacheProducerImportRequest);
 
@@ -235,12 +284,27 @@ const decodeImport = S.decodeUnknownEffect(CacheProducerImportRequest);
  * Submitted reports cannot choose a policy or issuer path. Both private approvals
  * must contain the same reviewed contract. Reverification after derivation
  * detects approval changes, revocation and expiry before returning the preview.
+ * Qualification also requires exact protected publication for both complete
+ * observations. Missing publication remains a failed preview; supplied archives
+ * must pass current GitHub metadata and independently provisioned approval.
  * This function writes no evidence, ledger, configuration or issuer material.
  *
- * **Example** (Reference authenticated import preparation)
+ * **Example** (Decode an external request and report unmet obligations)
  * ```ts
- * import { previewCacheProducerImport } from "@beep/repo-cli/test/Cache"
- * console.assert(typeof previewCacheProducerImport === "function")
+ * import {
+ *   CacheProducerImportRequest,
+ *   CacheProducerTrustLocations,
+ *   previewCacheProducerImport
+ * } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ *
+ * const unmetObligations = (input: unknown, trust: CacheProducerTrustLocations) =>
+ *   S.decodeUnknownEffect(CacheProducerImportRequest)(input).pipe(
+ *     Effect.flatMap((request) => previewCacheProducerImport(request, trust)),
+ *     Effect.map((preview) => preview.failures)
+ *   )
+ * // Returns an Effect of policy/publication failures; decoding and trust errors stay typed.
  * ```
  *
  * @category projections
@@ -268,6 +332,7 @@ export const previewCacheProducerImport = Effect.fn("Producer.previewImport")(fu
       return yield* CacheCommandError.new("Import channel does not match its authenticated report.");
     fragments.push(...(yield* deriveCacheProducerEvidence(report.observation, approvals[channel])));
   }
+  const publicationFailures = yield* verifyImportPublications(request, trust, approvals);
   for (const channel of CacheClientChannel.literals) {
     const report = request.observations[channel];
     yield* verifiers[channel].verify(report.envelope, report.observation);
@@ -275,10 +340,13 @@ export const previewCacheProducerImport = Effect.fn("Producer.previewImport")(fu
   return CacheProducerImportPreview.make({
     contract,
     fragments,
-    failures: cachePromotionFailures(
-      contract,
-      A.map(fragments, (fragment) => fragment.observation)
-    ),
+    failures: [
+      ...cachePromotionFailures(
+        contract,
+        A.map(fragments, (fragment) => fragment.observation)
+      ),
+      ...publicationFailures,
+    ],
   });
 });
 

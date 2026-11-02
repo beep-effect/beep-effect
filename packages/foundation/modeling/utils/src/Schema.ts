@@ -82,7 +82,10 @@ export const compileAssertion = <Sch extends S.Constraint>(schema: Sch): Compile
  * **Details**
  *
  * Data-first `(target, options?)` and data-last `(options?)(target)` both
- * yield a codec that decodes source text straight into the target's type.
+ * yield a codec that decodes source text straight into the target's type. The
+ * composer is generic over the target schema itself, not over a `Codec<T, E>`
+ * view of it, so an `S.Opaque` class keeps its branded `Type` through the
+ * composition (a `Codec` view would widen it to the underlying struct).
  *
  * **Example** (Type a text-format composer)
  *
@@ -102,8 +105,15 @@ export const compileAssertion = <Sch extends S.Constraint>(schema: Sch): Compile
  * @since 0.0.0
  */
 export type TextDecodeTo<Options> = {
-  <T, E, RD = never, RE = never>(target: S.Codec<T, E, RD, RE>, options?: Options): S.Codec<T, string, RD, RE>;
-  (options?: Options): <T, E, RD = never, RE = never>(target: S.Codec<T, E, RD, RE>) => S.Codec<T, string, RD, RE>;
+  <Target extends S.Top>(
+    target: Target,
+    options?: Options
+  ): S.Codec<Target["Type"], string, Target["DecodingServices"], Target["EncodingServices"]>;
+  (
+    options?: Options
+  ): <Target extends S.Top>(
+    target: Target
+  ) => S.Codec<Target["Type"], string, Target["DecodingServices"], Target["EncodingServices"]>;
 };
 
 /**
@@ -145,6 +155,9 @@ export const makeTextDecodeTo = <Options>(
 ): TextDecodeTo<Options> =>
   dual(
     (args) => S.isSchema(args[0]),
-    <T, E, RD = never, RE = never>(target: S.Codec<T, E, RD, RE>, options?: Options): S.Codec<T, string, RD, RE> =>
+    <Target extends S.Top>(
+      target: Target,
+      options?: Options
+    ): S.Codec<Target["Type"], string, Target["DecodingServices"], Target["EncodingServices"]> =>
       fromString(options).pipe(S.decodeTo(target))
   );

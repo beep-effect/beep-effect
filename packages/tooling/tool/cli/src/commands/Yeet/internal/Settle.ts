@@ -57,7 +57,7 @@ import {
 } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
@@ -351,7 +351,7 @@ export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRe
 ): Effect.fn.Return<
   O.Option<YeetRulesetRequiredContexts>,
   never,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const base = baseBranchName(context.base);
   const readAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
@@ -425,7 +425,7 @@ export const captureRepoCommandStrict = Effect.fn("Yeet.captureRepoCommandStrict
   readonly args: ReadonlyArray<string>;
   readonly onSpawnFailure: string;
   readonly capture: typeof runRepoCommandCapture;
-}): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+}): Effect.fn.Return<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
   const { args, capture, command, onSpawnFailure, repoRoot } = options;
   const commandText = A.join([command, ...args], " ");
   const result = yield* capture(command, args, repoRoot).pipe(Effect.mapError(YeetCommandError.new(onSpawnFailure)));
@@ -501,7 +501,11 @@ export const captureRepoCommandStrict = Effect.fn("Yeet.captureRepoCommandStrict
 export const readYeetChangedPathsStrict = Effect.fn("Yeet.readYeetChangedPathsStrict")(function* (
   context: RepoRunContext,
   capture: typeof runRepoCommandCapture = runRepoCommandCaptureRaw
-): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
   const range = `${context.base}...HEAD`;
   const output = yield* captureRepoCommandStrict({
     repoRoot: context.repoRoot,
@@ -562,7 +566,7 @@ export const readYeetChangedPathsStrict = Effect.fn("Yeet.readYeetChangedPathsSt
 export const readYeetChangedPaths = Effect.fn("Yeet.readYeetChangedPaths")(function* (
   context: RepoRunContext,
   capture: typeof runRepoCommandCapture = runRepoCommandCaptureRaw
-): Effect.fn.Return<ReadonlyArray<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
   return yield* readYeetChangedPathsStrict(context, capture).pipe(Effect.orElseSucceed(A.empty<string>));
 });
 

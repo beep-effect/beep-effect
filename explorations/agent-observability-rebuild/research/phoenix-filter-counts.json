@@ -1,0 +1,73 @@
+{
+  "query": "{ projects { edges { node { name codex: recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"name == \\\"handle_responses\\\"\") claude: recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"\\\"claude_code.\\\" in name\") forwarder: recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"\\\"ai_metrics.\\\" in name\") with_session: recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"attributes[\\\"session.id\\\"] is not None\") with_tokens: recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"attributes[\\\"llm.token_count.total\\\"] is not None\") with_model: recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"attributes[\\\"llm.model_name\\\"] is not None\") with_beep_repo: recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"attributes[\\\"beep.repo\\\"] is not None\") with_genai_input: recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"attributes[\\\"gen_ai.usage.input_tokens\\\"] is not None\") errors: recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"status_code == \\\"ERROR\\\"\") orphans: recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"parent_id is not None and parent_span is None\") llm_kind: recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"},filterCondition:\"span_kind == \\\"LLM\\\"\") } } } }",
+  "filters": {
+    "codex": "name == \"handle_responses\"",
+    "claude": "\"claude_code.\" in name",
+    "forwarder": "\"ai_metrics.\" in name",
+    "with_session": "attributes[\"session.id\"] is not None",
+    "with_tokens": "attributes[\"llm.token_count.total\"] is not None",
+    "with_model": "attributes[\"llm.model_name\"] is not None",
+    "with_beep_repo": "attributes[\"beep.repo\"] is not None",
+    "with_genai_input": "attributes[\"gen_ai.usage.input_tokens\"] is not None",
+    "errors": "status_code == \"ERROR\"",
+    "orphans": "parent_id is not None and parent_span is None",
+    "llm_kind": "span_kind == \"LLM\""
+  },
+  "response": {
+    "data": {
+      "projects": {
+        "edges": [
+          {
+            "node": {
+              "name": "default",
+              "codex": 0,
+              "claude": 0,
+              "forwarder": 0,
+              "with_session": 0,
+              "with_tokens": 0,
+              "with_model": 0,
+              "with_beep_repo": 0,
+              "with_genai_input": 0,
+              "errors": 0,
+              "orphans": 0,
+              "llm_kind": 0
+            }
+          },
+          {
+            "node": {
+              "name": "harness-otel",
+              "codex": 0,
+              "claude": 359131,
+              "forwarder": 0,
+              "with_session": 0,
+              "with_tokens": 0,
+              "with_model": 0,
+              "with_beep_repo": 0,
+              "with_genai_input": 0,
+              "errors": 1617,
+              "orphans": 1562,
+              "llm_kind": 91803
+            }
+          },
+          {
+            "node": {
+              "name": "beep-agent-effectiveness",
+              "codex": 0,
+              "claude": 0,
+              "forwarder": 0,
+              "with_session": 0,
+              "with_tokens": 0,
+              "with_model": 0,
+              "with_beep_repo": 0,
+              "with_genai_input": 0,
+              "errors": 0,
+              "orphans": 0,
+              "llm_kind": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "interpretationWarning": "Dotted strings inside attributes[...] were false-zero probes for nested JSON on this deployment. Do not use with_session/with_model/with_beep_repo/with_genai_input as coverage evidence. Use phoenix-semantic-coverage.json nested/dotted-field queries; span name/status/parent predicates remain valid. Queries are separate observations and not snapshot-isolated."
+}

@@ -1,4 +1,5 @@
 import { $RepoConfigsId } from "@beep/identity";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { NativePathToPosixPath } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A } from "@beep/utils";
@@ -10,9 +11,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import { parse, printParseErrorCode } from "jsonc-parser";
 import { PosixPath } from "../../laws/Shared.ts";
-import type { ParseError } from "jsonc-parser";
 
 const $I = $RepoConfigsId.create("internal/laws/EffectLawsAllowlistSchemas");
 
@@ -114,28 +113,23 @@ const encodeUnsupported = (transformationName: string) => (): Effect.Effect<stri
     })
   );
 
-const parseAllowlistJsonc = (content: string): Effect.Effect<unknown, SchemaIssue.Issue> => {
-  const parseErrors = A.empty<ParseError>();
-  const parsed = parse(content, parseErrors, {
-    allowTrailingComma: true,
-    disallowComments: false,
-  });
-
-  return A.match(parseErrors, {
-    onEmpty: () => Effect.succeed(parsed),
-    onNonEmpty: (errors) =>
-      Effect.fail(
+// The allowlist's own error text names each recovered parse error as
+// `<code>@<offset>:<length>`, the shape the jsonc-parser reading printed.
+const parseAllowlistJsonc = (content: string): Effect.Effect<unknown, SchemaIssue.Issue> =>
+  Jsonc.parseResult(content).pipe(
+    Result.mapError(
+      (error) =>
         new SchemaIssue.InvalidValue({
           message: pipe(
-            errors,
-            A.map((error) => `${printParseErrorCode(error.error)}@${error.offset}:${error.length}`),
+            error.errors,
+            A.map((detail) => `${detail.code}@${detail.offset}:${detail.length}`),
             A.join(", "),
             (details) => `Allowlist JSONC parse error (${details}).`
           ),
         })
-      ),
-  });
-};
+    ),
+    Effect.fromResult
+  );
 
 export const AllowlistJsoncTextToUnknown = S.String.pipe(
   S.decodeTo(

@@ -1,0 +1,58 @@
+{
+  "recordedAt": "2026-10-29T20:17:22.589054+00:00",
+  "head": "470ddf6594762203e4181c06eb621d62cdaa2ed4",
+  "sourceHashes": {
+    "ansible/group_vars/all.yml": "55eb82dd108f7c12f32dd275db0a6e2b757a8fa3531b3b5dbc4c66b7f155c2c5",
+    "ansible/roles/monitoring/files/observation-health-snapshot.py": "0d00370d3e510cd9a18e8ad2b80422c5b2d82e30f8cc941f785dd9a66044ff6b",
+    "ansible/roles/monitoring/tasks/main.yml": "30854b31b126f6d9627c544da7ec99b2c75fe6e709c8a4ac14569c0b3e57d780",
+    "ansible/roles/monitoring/tasks/observation-health.yml": "22e6452a155c5ccba394c71397dcb8ec71a85e4a2c0773be5f6404f71f410a09",
+    "ansible/roles/monitoring/templates/compose.yaml.j2": "a251dd71ecf0d77650eff8a56e4c121f7fdbd43596e72b9f91997d0c3f9d5b3c",
+    "ansible/roles/monitoring/templates/observation-health.service.j2": "c28c4f917e72ea45d384a8a939c5c9f5114fd8ed3154dc5f95da7fd257bf1ce8",
+    "ansible/roles/monitoring/templates/observation-health.timer.j2": "153891a1f5f758986e1723879c4e2b4b590c853f26068244e96a9a28104a29a1",
+    "ansible/roles/monitoring/templates/otel-config.yaml.j2": "20bce80b8a5dd72030facdb46e60822720fd1bff57f94c1bb38bbff708658526",
+    "ansible/roles/monitoring/templates/prometheus-alerts.yml.j2": "adc0e9b1113c4a0ae3798b504fefa30d283324f0d21f9f107e94111c1a6952ab",
+    "ansible/roles/monitoring/templates/prometheus.yml.j2": "e682d61eab92559e0dc73aef6c36811ca7d7e7dfcb91dbb633effd3d3a37d177",
+    "ansible/roles/monitoring/tests/README.md": "096d9f31082d028e0e11de63c47a79ce6c80e4237f672f07860dd8910d91cc3b",
+    "ansible/roles/monitoring/tests/test_observation_health.py": "6b59d29dfec307a408d4e84be777676e804b6b518b52e92a29137eadc17c98f2",
+    "ansible/roles/monitoring/tests/test_otel_alerts.py": "71b42436363eaa48596ae0acad6121ed04b1cc275fcf0c3b8c225786e11d6d3a",
+    "ansible/roles/monitoring/tests/test_otel_config.py": "4e456f5977240e3b19d5bc0afe39d0d43ac113f5884a53bbe51222d96ee8e935",
+    "ansible/roles/monitoring/tests/test_otel_migration.py": "35179da4db37df67b2754fd25112f0450821d94311b52384d7c1907146c3eaf7",
+    "ansible/roles/monitoring/tests/test_otel_queue.py": "ec0538f64d41491c921ef02e805d6ffdc2be3cda960bb2b58d4aa11801fb019b",
+    "ansible/roles/phoenix/files/reconcile-retention.py": "8706b97d17fbb22efcf7e861cc1621e446371ab28d3cd9c683f6db69e66b7d38",
+    "ansible/roles/phoenix/tasks/main.yml": "60046e4667d0b40e6b765f50b143650a9bea3aa2021d7760ba1de00bbd6e1878",
+    "ansible/roles/phoenix/tasks/project-descriptions.yml": "01364e72fc9cb6af8f1172afb157f2a9cb0e1119846357c203acb919b19dd23c",
+    "ansible/roles/phoenix/tests/README.md": "a1033863f7b1b2e1894fd7a625dbc1570ed9377afe325946dbfb6a17865b1561",
+    "ansible/roles/phoenix/tests/test_retention.py": "d342a9e78a02d9609e948fce5fc71a797501e246c3bfa02294cbf75eed059152",
+    "ansible/roles/phoenix/tests/verify_retention_backend.py": "20d465b280575bbc3bd88fc4378c5f50a13e5844052bb2cf2f5c56a3a5d121c4",
+    "ansible/roles/phoenix_backup/templates/dankserver-phoenix-backup.sh.j2": "f1e919af72414c6be0a49c0101d71dad429333262633a60b4858cf0436381435",
+    "ansible/roles/phoenix_backup/tests/README.md": "c85ee411d56cfda0c6f9368a18705f09cf9450215374db864b80fd184414a378",
+    "ansible/roles/phoenix_backup/tests/test_backup_metrics.py": "09963eeb6f6c3f0391323bbf0b3fa87c3290e72d6bc602f81fe6947dac222358"
+  },
+  "archive": "~/.local/state/beep/observation-proof-archive/dank-current-verification-5o7oayl7",
+  "verification": {
+    "pauseAlerts": "4 tests passed; 14 Prometheus scenarios",
+    "retention": "10 tests passed",
+    "backupMetrics": "5 tests passed",
+    "collectorAlerts": "1 test passed",
+    "ansibleSyntax": "monitoring-host, phoenix-host and phoenix-backup-host passed with repository ANSIBLE_CONFIG",
+    "firstSyntaxAttempt": "environment-only role lookup failure without repository ANSIBLE_CONFIG"
+  },
+  "artifactHashes": {
+    "foundation-dank-pause-alert-current.log": "e594802d61e3938b7554f9d155908c3bbb4738724220158917ec7dce628c7b33",
+    "foundation-dank-retention-current.log": "2e54889541b1e0562f08f0feefcf81a10ac7fe2f4803f518818f022404efeec3",
+    "foundation-dank-backup-current.log": "7adf9449d9daa16cafa3ee09f10edb527b2cc48bdd6562cc125fac649ae38c38",
+    "foundation-dank-collector-alert-current.log": "42f11d1ea0f85b12697e23c867dbcb586d811ae4b72f3238d1a261b75b7288f6",
+    "foundation-dank-monitoring-host-syntax-current.log": "2f7581d7ed5e9043971c47333264c67861c62eacd65a1987e3d46ffcdd793b21",
+    "foundation-dank-monitoring-host-syntax-configured.log": "3b234cb35a4094c98721cc1d496e5ccaf81aecb670d788a543b82c65acd7ee83",
+    "foundation-dank-phoenix-host-syntax-configured.log": "ca51c22b2ef66cc71e9763e4953fee76f71137ffe8bec03756b6670bb1efa7e6",
+    "foundation-dank-phoenix-backup-host-syntax-configured.log": "cc3b671da96149ff2537cd59a504dd08ea92df74563fecd3b260fa2ee9bb309c",
+    "foundation-dank-current-source-hashes.json": "8095f5b02d1ffe4f51f0206ee9293903517043987412fd05784b6b74d0b84865"
+  },
+  "limits": [
+    "No deployment performed",
+    "No hosted test checks on Dankserver PR3",
+    "Earlier collector container integration proof remains separate and source-bound",
+    "These tests do not establish real harness coverage"
+  ],
+  "recoveryHold": "preserved"
+}

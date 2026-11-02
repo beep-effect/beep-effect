@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "cache-receipt-media-type-checkpoint/v1",
+  "authority": "component-source-verification-only",
+  "recordedAt": "2026-10-29T00:26:50.806427+00:00",
+  "sourceBaseRevision": "0fc178d8e96c6bb403fecb27ccc09092611649fd",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts": "6530c1b335bd957d8fe802c9924ec88419e1fbcebb5e7ac81ec3883b404ce189",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "c580ac407efe8114426e197d6b4b7921f45eb86e8dc59a1b8394d3317f40e71e",
+    "packages/tooling/tool/cli/src/commands/Cache/index.ts": "dc474313adc4cd3376aeac959b7510f609196872ba11956b9f31548e2292e5d0",
+    "packages/tooling/tool/cli/test/cache-conformance.test.ts": "f82894ec318ca4136afbcd3585d166a2a28b96c061bf8c51c102f9cfbef9bc56",
+    "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "d8bc35e3cb0ebe6d02c1b54666f241fcc5dfe6d9213ca908686be11528b59f4b",
+    "packages/tooling/tool/cli/test/cache-conformance-server.ts": "5b8b0f3622ce2f9541f547feb3e8e4abb132aa545c1a0123dec0c23903ff467f"
+  },
+  "regressions": {
+    "directWire": "Actual server copied synthetic credential/path/artifact text before repair; final receipt omits it.",
+    "faultProxy": "Actual proxied response copied the same synthetic classes before repair; final receipt omits them.",
+    "projection": "Registered parameter-free media type retained; casing/whitespace normalized; absent and unregistered values omitted."
+  },
+  "verification": {
+    "focusedTests": {
+      "files": 3,
+      "passed": 29,
+      "seconds": 16.63
+    },
+    "packageQuick": {
+      "lintSeconds": 5.3,
+      "checkSeconds": 11.9,
+      "status": "passed"
+    },
+    "fullPackage": {
+      "status": "passed",
+      "auditSeconds": 1114.6,
+      "docgenSeconds": 38.5,
+      "conditions": "Default enrolled-root launch, test-worker cache environment isolation from PR2346. All package audit/docgen gates ran. Source and HEAD held stable through the audit."
+    },
+    "schemaCatalog": "Current:9327entries across173shards"
+  },
+  "productionChanges": false,
+  "qualificationAuthority": false,
+  "wholeGoalAcceptance": false
+}

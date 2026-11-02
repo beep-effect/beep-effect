@@ -46,12 +46,12 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] `@effect/tsgo` is at 0.55 or later and `preferEffectString` is `error`
+- [x] `@effect/tsgo` is at 0.55 or later and `preferEffectString` is `error`
       in the compiler profiles consumed by Check.
-- [ ] Repo-wide Check completes with zero `preferEffectString` findings across
+- [x] Repo-wide Check completes with zero `preferEffectString` findings across
       every Check compiler program, and `bun run beep quality tsgo-rules` passes.
-- [ ] The declared-off ledger is unchanged (5 rules).
-- [ ] No unrelated refactors or formatting churn.
+- [x] The declared-off ledger is unchanged (5 rules).
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -85,6 +85,8 @@ them and record each in the Decision Log.
 | 2026-10-22 | Hold `@beep/glob` (6d), `@beep/schema`, `@beep/utils`, `@beep/repo-utils` and ten repo-cli files (4c) until effected-promotion wave 2c merges; that owner lands waves 2d onward string-clean under the temporary 0.55 install. | 2c edits those files; parallel edits would conflict, and new packages would otherwise reopen the census. | Release the hold early if 2c is abandoned. |
 | 2026-10-22 | `@beep/yaml` stringify `indent` (public `YamlStringifyOptions`, internal `StringifyOptionsInput` and the context) decodes through `IndentWidth`, a non-negative integer, instead of `S.Finite`. | `effect/String` `repeat` returns `""` for a negative count where native `repeat` threw `RangeError`; rejecting negatives and fractions at decode keeps a bad indent loud. `0` stays valid because a test pins its quote fallback. The package is private and new, so no published consumer breaks. | Widen the three fields back to `S.Finite` and restore native `repeat` at the seven indent sites. |
 | 2026-10-22 | In-bounds character reads that relied on `charAt`'s empty-string result use a one-character `Str.slice(i, i + 1)`, never `x[i] ?? ""`. | The `??` fallback is a branch no test can reach, so it lowers per-file branch coverage and trips the ratchet (waves 6a, 6b, 6c and 6e); `Str.slice` keeps `charAt`'s semantics with no branch and no `Option`. | Any branch-free equivalent may replace it. |
+| 2026-10-28 | Requalify closeout in a fresh PR with a new head-bound Yeet verdict; preserve #2027 as the implementation PR and retain its failed historical completion receipt. | Completion refresh observes required checks pending at the original merge and a failed merge-push required-status evaluation. Later green checks cannot establish readiness before that merge. The repository autonomy charter authorizes a new qualifying PR without an operator waiver. | Restore the original proposal and evidence reference; the packet then remains active with its historical gate unsatisfied. |
+| 2026-10-28 | Use canonical publication and a new terminal readiness monitor after synchronizing main. | The direct-push fallback lacks the publish-mode receipt required by completion recovery; the earlier ready head was subsequently merged as #2318 while publication was running. Its declared local evidence does not establish a valid publication receipt for that accepted head. Full Check and root configuration qualification passed on the synchronized source. | Revert this packet update; completion remains active and unverified until valid publication and merge evidence exists. |
 
 ## Exception Ledger
 

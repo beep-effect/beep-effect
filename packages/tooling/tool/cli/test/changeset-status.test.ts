@@ -26,6 +26,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const REPO_ROOT = "/repo";
 const fixtureWorkspaceDirs: ReadonlyArray<string> = ["packages/demo", "apps/labs/cognee"];
@@ -60,7 +61,7 @@ const gitFixtureLayer = (
         if (command._tag !== "StandardCommand") {
           return makeHandle("");
         }
-        const args = command.args;
+        const args = commandArgs(command);
         spawned.push(A.join([command.command, ...args], " "));
         const output = A.contains(args, "--diff-filter=ACMRTUXBD")
           ? A.join(changedFiles, "\u0000")

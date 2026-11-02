@@ -1,0 +1,74 @@
+{
+  "familyId": "16068637-root-11",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "confidenceScope": "Structural labels and unsupported-source classifications only; positive-source eligibility is provisional.",
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "resolvedClaimNumbers": [
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "resolvedLabelSetVerdict": "changes-required",
+  "familyCoverage": "unresolved-with-label-correction-required",
+  "findings": [
+    {
+      "claimNumber": 15,
+      "evidence": {
+        "path": "15.a",
+        "anchor": {
+          "startChar": 161,
+          "endChar": 175,
+          "quote": "a through hole"
+        },
+        "determiner": "a",
+        "head": "through hole",
+        "contract": "Head stops at any boundary-set word; through is in the boundary set; an empty head emits no term."
+      },
+      "requiredCorrection": "Remove this term from 15.a. Through is the first post-determiner token, so the head is empty. The first-token exemption applies to participle-boundary only, not to the explicit boundary set. No existing edge references this term, so no edge change is needed. Preserve all source wording and element anchors."
+    }
+  ],
+  "unresolved": [
+    {
+      "claimNumber": 16,
+      "reason": "Intended transition includes: is not a PatentClaimTransition literal. Later wherein is an incidental body constituent; do not move preceding steps into preamble.",
+      "sourceQuote": "for joining workpieces, includes:"
+    }
+  ],
+  "sourceEligibility": "provisional-pending-per-claim-quote-version-audit",
+  "audit": {
+    "resolvedTrees": 5,
+    "elements": 22,
+    "terms": 70,
+    "typedEdges": 26,
+    "allProposedElementAndTermUtf16SlicesVerified": true,
+    "allSelectedClaimsMatchNativeXml": true,
+    "claimsXmlSha256Matches": true,
+    "headsDeterminersEdgesAndMembershipManuallyReviewed": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending",
+    "positiveSourceCertification": "not-claimed"
+  },
+  "rationale": [
+    "All92 proposed anchors are exact source slices, but claim15 includes one term prohibited by the boundary set; see the concrete finding. Remaining terms follow the declared rules, including friction before self-piercing, wedge before shaped, rotary before driving, positioning before protruding, and preserved literal circle-around text.",
+    "Root11 has two limitations, the second a colon-ended parent absorbing five children. Claim12 has one colon-ended parent and six children. Its second colon ends the existing sub-limitation with And: and adds no nesting level. Claims13-15 have one limitation each. All existing26 typed edges are correct; the erroneous term has no edge reference.",
+    "Natural-language membership verified:12/13/14->11,15->14,16->11. Claim16 intended includes: is not a supported transition literal; later wherein belongs within its method steps and cannot substitute. It remains correctly unresolved.",
+    "Retained office action K2XMF4F4RXEAPX2 discusses selected11,12,14,16;13 and15 are family context. Root11/12 lack exact original comparison, and retained OA/native spellings vary. Association and in-force qualification remain provisional pending stronger per-claim quote/version audit; publication date alone proves neither."
+  ],
+  "sourceQualification": "This is structural-only review. Native XML supplies the exact label text; retained original comparisons are corroboration only. Dates and no-intervening-CLM assertions do not establish per-claim in-force correspondence or eliminate renumbering/version contradictions. Separate stronger source audit is pending; no source-certified positive acceptance is claimed.",
+  "independence": "No decomposer/policy implementation, rule fixtures, predictions or live reports read/run; no network. Helpers checked source normalization, hashes, existing selected UTF16 slices and opening inventories only.",
+  "acceptanceScope": "All unresolved claims remain visible in frozen coverage denominators. Structural acceptance of a resolved subset is not complete-family coverage, positive-source certification, attorney adjudication or corpus completion. Root schema/span checks remain separate."
+}

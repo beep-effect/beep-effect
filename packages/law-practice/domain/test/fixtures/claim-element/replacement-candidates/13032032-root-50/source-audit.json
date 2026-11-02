@@ -1,0 +1,263 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13032032-root-50",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.99,
+  "verdict": "ineligible",
+  "reviewedClaimNumbers": [
+    50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68,
+    69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
+    88, 89, 90, 91, 92
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "13032032",
+    "publicationNumber": "US20110203791A1",
+    "publicationDate": "20110825"
+  },
+  "digestEvidence": [
+    {
+      "file": "13032032.publication.xml",
+      "sha256": "c94f554c02bdcdf778eff105d3c516618637dd7aa6ca912edb6837093e3f59ec",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "a406b097ec38535309ec661e002242e38c73e448288975293b4a13e7af53f19a",
+      "matchesProvenance": true
+    },
+    {
+      "file": "13032032.GKH9GCWSPPOPPY2.original.xml",
+      "sha256": "15be1a5ea88d95e58f32fb7451af772c2077ef25589a418672c08d72b09831fa",
+      "matchesProvenance": true
+    }
+  ],
+  "quotedEvidence": [
+    {
+      "claimNumber": 50,
+      "examinerPhrase": "the outer surface",
+      "nativeQuote": "the outer surface",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 52,
+      "examinerPhrase": "the interfaces",
+      "nativeQuote": "the interfaces",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 58,
+      "examinerPhrase": "the exposed outer surface",
+      "nativeQuote": "the exposed outer surface",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 59,
+      "examinerPhrase": "the coefficient of friction",
+      "nativeQuote": "the coefficient of friction",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 61,
+      "examinerPhrase": "the water contact angle",
+      "nativeQuote": "the water contact angle",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 62,
+      "examinerPhrase": "the thickness",
+      "nativeQuote": "the thickness",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 63,
+      "examinerPhrase": "the thickness",
+      "nativeQuote": "the thickness",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 64,
+      "examinerPhrase": "the thickness",
+      "nativeQuote": "the thickness",
+      "literalMatchIgnoringCase": true
+    }
+  ],
+  "groundEvidence": {
+    "fullCacheFile": "full-oa-expanded.json",
+    "fullCacheSha256": "115c5af3c1f05bfc978b5b0ba07c3fe7e077848170f5dd25880d5713e74bbf56",
+    "documentIdentifier": "HEIH22TUPXXIFW4",
+    "minimalStatutoryQuote": "The following is a quotation of 35 U.S.C. 112(b):",
+    "actualNumberedGroundScope": "Claims1–188 are rejected under112(b)/secondparagraph; individually discussed selected claims are50,52,58,59,61–64. Other selected50–92 members are within blanket scope; no individualized grounds invented.",
+    "scopeEvidence": "Claims1–188 are rejected under112(b)/secondparagraph; individually discussed selected claims are50,52,58,59,61–64. Other selected50–92 members are within blanket scope; no individualized grounds invented.",
+    "individuallyDiscussedSelectedClaimNumbers": [
+      50, 52, 58, 59, 61, 62, 63, 64
+    ],
+    "selectedFamilyContextWithoutIndividualQuotedGround": [
+      51, 53, 54, 55, 56, 57, 60, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75,
+      76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92
+    ]
+  },
+  "inventoryEvidence": {
+    "sha256": "0718485bbfc44da6342c4fbcbe7a6f601c8dbac23d3874a3e67976faed77ed7e",
+    "declaredCount": 78,
+    "actualRows": 78,
+    "preOrOnActionClaimAndAmendmentRows": [
+      {
+        "documentIdentifier": "GKH9GCWSPPOPPY2",
+        "documentCode": "CLM",
+        "officialDate": "2011-02-22T00:00:00.000-0500"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "HEIH22TUPXXIFW4",
+        "documentCode": "CTNF",
+        "officialDate": "2013-03-22T00:00:00.000-0400"
+      }
+    ]
+  },
+  "concerns": [
+    "DECLARED CHEMICAL/MARKUSH SCOPE EXCLUSION: selected53 enumerates amorphous alloy, MoS2, WS2, boride cermet etc.;56 enumerates doped DLC chemistry;65 lists elemental coatings and compounds;67/72/92 further composition alternatives. Mechanical E classification does not remove selected chemical/Markush scope.",
+    "Actual112b1–188 and selected numbered phrases exist; this is scope ineligibility, not a claim that native/provenance identity failed. No attempt to annotate out-of-scope chemical semantics or simplify family.",
+    "Original legacy lowercase XML explains parser count0, but exhaustive operative-version acceptance is unnecessary after explicit scope exclusion. Source-only alternative membership includes52→50or51;62/63→50or51;79–82→75or76;87→85or86;88/90→50or75or76, allroot50."
+  ],
+  "pdfNeeds": [],
+  "rationale": "Source-only selection audit distinguishes actual numbered statutoryground, native membership, conflicting versions and unreadable original formula. Chronology supports but does not replace exact source evidence. Candidate only; no active slot changed; independent critic and attorney adjudication pending.",
+  "independence": "No structuralexpected/production/rules/predictions, network/secrets/git/delegation. Only this candidate source-audit written.",
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "13032032-root-50",
+      "role": "source-eligibility-extractor",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.99,
+      "verdict": "ineligible",
+      "reviewedClaimNumbers": [
+        50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67,
+        68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
+        86, 87, 88, 89, 90, 91, 92
+      ],
+      "sourceIdentity": {
+        "applicationNumber": "13032032",
+        "publicationNumber": "US20110203791A1",
+        "publicationDate": "20110825"
+      },
+      "digestEvidence": [
+        {
+          "file": "13032032.publication.xml",
+          "sha256": "c94f554c02bdcdf778eff105d3c516618637dd7aa6ca912edb6837093e3f59ec",
+          "matchesProvenance": true
+        },
+        {
+          "file": "source.claims.xml",
+          "sha256": "a406b097ec38535309ec661e002242e38c73e448288975293b4a13e7af53f19a",
+          "matchesProvenance": true
+        },
+        {
+          "file": "13032032.GKH9GCWSPPOPPY2.original.xml",
+          "sha256": "15be1a5ea88d95e58f32fb7451af772c2077ef25589a418672c08d72b09831fa",
+          "matchesProvenance": true
+        }
+      ],
+      "quotedEvidence": [
+        {
+          "claimNumber": 50,
+          "examinerPhrase": "the outer surface",
+          "nativeQuote": "the outer surface",
+          "literalMatchIgnoringCase": true
+        },
+        {
+          "claimNumber": 52,
+          "examinerPhrase": "the interfaces",
+          "nativeQuote": "the interfaces",
+          "literalMatchIgnoringCase": true
+        },
+        {
+          "claimNumber": 58,
+          "examinerPhrase": "the exposed outer surface",
+          "nativeQuote": "the exposed outer surface",
+          "literalMatchIgnoringCase": true
+        },
+        {
+          "claimNumber": 59,
+          "examinerPhrase": "the coefficient of friction",
+          "nativeQuote": "the coefficient of friction",
+          "literalMatchIgnoringCase": true
+        },
+        {
+          "claimNumber": 61,
+          "examinerPhrase": "the water contact angle",
+          "nativeQuote": "the water contact angle",
+          "literalMatchIgnoringCase": true
+        },
+        {
+          "claimNumber": 62,
+          "examinerPhrase": "the thickness",
+          "nativeQuote": "the thickness",
+          "literalMatchIgnoringCase": true
+        },
+        {
+          "claimNumber": 63,
+          "examinerPhrase": "the thickness",
+          "nativeQuote": "the thickness",
+          "literalMatchIgnoringCase": true
+        },
+        {
+          "claimNumber": 64,
+          "examinerPhrase": "the thickness",
+          "nativeQuote": "the thickness",
+          "literalMatchIgnoringCase": true
+        }
+      ],
+      "groundEvidence": {
+        "fullCacheFile": "full-oa-expanded.json",
+        "fullCacheSha256": "115c5af3c1f05bfc978b5b0ba07c3fe7e077848170f5dd25880d5713e74bbf56",
+        "documentIdentifier": "HEIH22TUPXXIFW4",
+        "minimalStatutoryQuote": "The following is a quotation of 35 U.S.C. 112(b):",
+        "actualNumberedGroundScope": "Numbered antecedent-basis rejections immediately follow112(b)/second-paragraph quotations; selected numbered phrases verified.",
+        "scopeEvidence": "Selected1–9 individually discussed in112(b) section;112(a) discussion occurs separately above."
+      },
+      "inventoryEvidence": {
+        "sha256": "0718485bbfc44da6342c4fbcbe7a6f601c8dbac23d3874a3e67976faed77ed7e",
+        "declaredCount": 78,
+        "actualRows": 78,
+        "preOrOnActionClaimAndAmendmentRows": [
+          {
+            "documentIdentifier": "GKH9GCWSPPOPPY2",
+            "documentCode": "CLM",
+            "officialDate": "2011-02-22T00:00:00.000-0500"
+          }
+        ],
+        "citedOfficeActionRows": [
+          {
+            "documentIdentifier": "HEIH22TUPXXIFW4",
+            "documentCode": "CTNF",
+            "officialDate": "2013-03-22T00:00:00.000-0400"
+          }
+        ]
+      },
+      "concerns": [
+        "DECLARED CHEMICAL/MARKUSH SCOPE EXCLUSION: selected53 enumerates amorphous alloy, MoS2, WS2, boride cermet etc.;56 enumerates doped DLC chemistry;65 lists elemental coatings and compounds;67/72/92 further composition alternatives. Mechanical E classification does not remove selected chemical/Markush scope.",
+        "Actual112b1–188 and selected numbered phrases exist; this is scope ineligibility, not a claim that native/provenance identity failed. No attempt to annotate out-of-scope chemical semantics or simplify family.",
+        "Original legacy lowercase XML explains parser count0, but exhaustive operative-version acceptance is unnecessary after explicit scope exclusion. Source-only alternative membership includes52→50or51;62/63→50or51;79–82→75or76;87→85or86;88/90→50or75or76, allroot50."
+      ],
+      "pdfNeeds": [],
+      "rationale": "Source-only selection audit distinguishes actual numbered statutoryground, native membership, conflicting versions and unreadable original formula. Chronology supports but does not replace exact source evidence. Candidate only; no active slot changed; independent critic and attorney adjudication pending.",
+      "independence": "No structuralexpected/production/rules/predictions, network/secrets/git/delegation. Only this candidate source-audit written."
+    }
+  ],
+  "receiptCorrections": [
+    {
+      "reason": "Independent source critic identified copied generic scope wording. Corrected only ground attribution; source eligibility verdict unchanged.",
+      "fields": [
+        "groundEvidence.scopeEvidence",
+        "groundEvidence.actualNumberedGroundScope"
+      ],
+      "previousRoundPreserved": true
+    }
+  ]
+}

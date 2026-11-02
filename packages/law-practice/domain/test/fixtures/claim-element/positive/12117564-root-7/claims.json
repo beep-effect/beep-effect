@@ -1,0 +1,57 @@
+{
+  "familyId": "12117564-root-7",
+  "rootClaimNumber": 7,
+  "labelClaimNumbers": [7, 8],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A detection apparatus, comprising: a cantilever vibration gyro including a piezoelectric element which has a first side and a second side, the first side provided with a drive electrode and a pair of detection electrodes, the drive electrode disposed between the pair of detection electrodes with predetermined gaps, the second side opposed to the first side and provided with a common electrode, the cantilever vibration gyro vibrating by a drive signal input between the drive electrode and the common electrode and generating a pair of detected signals corresponding to Coriolis force from the pair of detection electrodes; bias applying means for applying a bias voltage to the pair of detection electrodes; adding means for adding the pair of detected signals; first phase delaying means for delaying a phase of the detected signal added by the adding means by a range larger than 45° and smaller than 90°; and amplitude controlling means for controlling the detected signal delayed by the first phase delaying means to a predetermined voltage amplitude and outputting the detected signal as the drive signal.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The detection apparatus according to claim 1, wherein the vibration gyro is caused to self-oscillate at a frequency higher than a resonance frequency of the vibration gyro.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "A detection apparatus, comprising: a cantilever vibration gyro including a piezoelectric element which has a first side and a second side, the first side provided with a drive electrode and a pair of detection electrodes, the drive electrode disposed between the pair of detection electrodes with predetermined gaps, the second side opposed to the first side and provided with a common electrode, the cantilever vibration gyro vibrating by a drive signal input between the drive electrode and the common electrode and generating a pair of detected signals corresponding to Coriolis force from the pair of detection electrodes; bias applying means for applying a bias voltage to the pair of detection electrodes; adding means for adding the pair of detected signals; a first phase delaying means for delaying a phase of the detected signal added by the adding means by a first phase amount; amplitude controlling means for controlling the detected signal delayed by the first phase delaying means to a predetermined voltage amplitude and outputting the detected signal as the drive signal; differential amplifier means for differential-amplifying the pair of detected signals; a second phase delaying means for delaying the phase of the detected signal added by the adding means by a second phase amount different from the first phase amount; and synchronous detecting means for synchronously detecting the signal differential-amplified by the differential amplifier means based on the detected signal delayed by the second phase delaying means.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The detection apparatus according to claim 3, wherein the vibration gyro is caused to self-oscillate at a frequency higher than a resonance frequency of the vibration gyro.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "A method of detecting an angular velocity using a cantilever vibration gyro including a piezoelectric element which has a first side and a second side, the first side provided with a drive electrode and a pair of detection electrodes, the drive electrode disposed between the pair of detection electrodes with predetermined gaps, the second side opposed to the first side and provided with a common electrode, the cantilever vibration gyro vibrating by a drive signal input between the drive electrode and the common electrode and generating a pair of detected signals corresponding to Coriolis force from the pair of detection electrodes, the method comprising: applying a bias voltage to the pair of detection electrodes; adding the pair of detected signals; delaying a phase of the detected signal obtained through the addition by a range larger than 45° and smaller than 90°; and controlling the delayed detected signal to a predetermined voltage amplitude and outputting the detected signal as the drive signal.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The detection method according to claim 5, wherein the vibration gyro is caused to self-oscillate at a frequency higher than a resonance frequency of the vibration gyro.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "A method of detecting an angular velocity using a cantilever vibration gyro including a piezoelectric element which has a first side and a second side, the first side provided with a drive electrode and a pair of detection electrodes, the drive electrode disposed between the pair of detection electrodes with predetermined gaps, the second side opposed to the first side and provided with a common electrode, the cantilever vibration gyro vibrating by a drive signal input between the drive electrode and the common electrode and generating a pair of detected signals corresponding to Coriolis force from the pair of detection electrodes, the method comprising: applying a bias voltage to the pair of detection electrodes; adding the pair of detected signals; delaying a phase of the detected signal obtained through the addition by a first phase amount; controlling the detected signal delayed by the first phase amount to a predetermined voltage amplitude and outputting the detected signal as the drive signal; differential-amplifying the pair of detected signals; delaying the phase of the detected signal obtained through the addition by a second phase amount different from the first phase amount; and synchronously detecting the differential-amplified signal based on the detected signal delayed by the second phase amount.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The detection method according to claim 7, wherein the vibration gyro is caused to self-oscillate at a frequency higher than a resonance frequency of the vibration gyro.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "An electronic apparatus, comprising: a detection apparatus including a cantilever vibration gyro including a piezoelectric element which has a first side and a second side, the first side provided with a drive electrode and a pair of detection electrodes, the drive electrode disposed between the pair of detection electrodes with predetermined gaps, the second side opposed to the first side and provided with a common electrode, the cantilever vibration gyro vibrating by a drive signal input between the drive electrode and the common electrode and generating a pair of detected signals corresponding to Coriolis force from the pair of detection electrodes, bias applying means for applying a bias voltage to the pair of detection electrodes, adding means for adding the pair of detected signals, a first phase delaying means for delaying a phase of the detected signal added by the adding means by a first phase amount, amplitude controlling means for controlling the detected signal delayed by the first phase delaying means to a predetermined voltage amplitude and outputting the detected signal as the drive signal, differential amplifier means for differential-amplifying the pair of detected signals, a second phase delaying means for delaying the phase of the detected signal added by the adding means by a second phase amount different from the first phase amount, and synchronous detecting means for synchronously detecting the signal differential-amplified by the differential amplifier means based on the detected signal delayed by the second phase delaying means; and controlling means for performing predetermined control based on an output of the synchronous detecting means.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The electronic apparatus according to claim 9, wherein the electronic apparatus is a digital camera equipped with a shake correction mechanism, and wherein the controlling means controls a correction amount of the shake correction mechanism.",
+      "sourceXmlParentClaimNumbers": [9]
+    }
+  ]
+}

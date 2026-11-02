@@ -1,0 +1,68 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "18547866-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.97,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "claimCount": 20,
+    "elementCount": 52,
+    "termCount": 263,
+    "edgeCount": 236,
+    "functionalRelationCount": 31,
+    "round2Scope": "Independent source-specific verification of all six corrected references against exact full canonical source, prior full semantic critic, current annotation delta, actual dependencies and schemas. Every element/term/functional part is unchanged from round1; only six antecedents added."
+  },
+  "resolvedFindings": [
+    {
+      "id": "repeated-first-direction-reference",
+      "verdict": "resolved",
+      "reason": "Claims15/16 first explicitly name the first direction for reformer placement, and the later relative intersecting-direction clause reuses that direction locally. Claim17 actually depends15 and refers to that same reformer-direction setting. Claim18 initially names first direction in the width comparison, then reuses it for opposite-side qualification; claim19 actually depends18 and repeats that same qualified direction. All five corrected edges use the exact earlier nominal direction term on the true branch. None equates direction with root first-direction side or borrows sibling16/15 directions."
+    },
+    {
+      "id": "repeated-other-role",
+      "verdict": "resolved",
+      "reason": "Exact12.a source rising from the one to the other and contacting the other establishes an immediate repeated target role. Final other [282,291)\u2192earlier other [257,266) preserves that local identity while leaving which first/second plate supplies the role unresolved."
+    }
+  ],
+  "reviewNotes": [
+    "Independently read all selected canonical claims, retained source-critic/rejection provenance, prior full critic1 and extractor2. Verified exact delta is six requested edges, zero removed edges and zero element/term/functional-part changes. Existing source-specific first-introduction, group-member, width ownership and sibling-branch uncertainty is preserved.",
+    "Actual17\u219215 and19\u219218 dependencies and local15/16/18 direction ownership verified directly against source. Claim12 role-repeat correction is independent of selecting its physical plate. No source wording, owner identity or broad semantic shortcut is inferred.",
+    "All current trees decode through ClaimElementTree. Independently verified exact UTF-16 spans, source ordering, nonoverlapping term ownership, antecedent endpoints, complete contiguous functional reconstruction, native/canonical equivalence and source claims XML SHA256. Mechanical validation supplements source-specific criticism.",
+    "Retained source critic accepts the operative marked original/native source with actual numbered rejection1\u201320. No fresh original-PDF/full-inventory authentication or attorney agreement is claimed."
+  ],
+  "referenceSha256": "01fce7ac8de820f011ff76f44a3c821f99e62a957bbbc1b18c8a053956648aa5",
+  "extractorSha256": "918cd7c9eb177abcd424681c918a6a62930f6d403478dd5aeb17caa7c1529873",
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Exact source, prior critic, current extractor/reference delta and model schemas only. No production implementation/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation. Only assigned critic receipts written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "roundLimit": "Round2 of maximum3; no remaining actionable findings identified.",
+  "corpusStatus": "Incremental semantic-reference review only; no sample admission, goal completion, human agreement or accuracy claim."
+}

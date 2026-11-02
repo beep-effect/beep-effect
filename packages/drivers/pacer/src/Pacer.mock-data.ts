@@ -1,6 +1,8 @@
 /**
  * Schema-derived data for the PACER mock + tests.
  *
+ * **Details**
+ *
  * Instead of hardcoded JSON fixtures, PCL response rows are GENERATED from the
  * effect/Schema definitions via `Arbitrary.schema` + `Arbitrary.sampleEffect`, then
  * re-encoded through the envelope schema. This keeps the mock honest: any drift

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "claim-v19-type-cleanup-replay/v1",
+  "measuredRefactorCommit": "e6896ad778",
+  "implementationDigest": "12c49d54d2734330e1dbe580e15a8c8f598696b952c13958dbe142fdc82a5263",
+  "change": "Use the actual edge endpoint schema type, preserve unary encoder invocation, and inline the unnecessary nested allowed-result generator. No runtime rules or score logic changed.",
+  "allowedFullResultsIdentical": true,
+  "allowedPredictionsByteIdentical": 196,
+  "positiveResultsRemainV19": true,
+  "strictMatches": 37,
+  "all34ProtectedPassesRetained": true,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "files": [
+    {
+      "path": "packages/law-practice/server/test/ClaimElement.reference.test.ts",
+      "sha256": "c8b71333340b03a5484d6181e5271accd4d699aa7728859a8fe7d4681f0140b5"
+    },
+    {
+      "path": "packages/law-practice/server/test/evaluation/allowed.main.ts",
+      "sha256": "ac59d2f727904daffe12fdd857585b814921ccb961255df6f3848bb5aedf15c4"
+    }
+  ]
+}

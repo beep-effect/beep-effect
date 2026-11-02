@@ -1,0 +1,20 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A swimming pool cleaning device of an underwater robot, comprising:
+<claim-text>a cleaning device body (<b>1</b>);</claim-text>
+<claim-text>a water inlet component (<b>2</b>) disposed at a bottom of the cleaning device body (<b>1</b>);</claim-text>
+<claim-text>a water outlet component (<b>3</b>) disposed at a top of the cleaning device body (<b>1</b>);</claim-text>
+<claim-text>a filter screen (<b>11</b>) disposed in the cleaning device body (<b>1</b>) and between the water inlet component (<b>2</b>) and the water outlet component (<b>3</b>); and</claim-text>
+<claim-text>a plurality of guide wheels (<b>12</b>) disposed on the bottom of the cleaning device body (<b>1</b>);</claim-text>
+<claim-text>wherein the water inlet component (<b>2</b>) includes a water inlet (<b>21</b>) disposed on the bottom of the cleaning device body (<b>1</b>), a soft rubber scraper (<b>22</b>) disposed on one side of the water inlet (<b>21</b>), two water inlet fixing members (<b>23</b>) disposed in a lower cover (<b>102</b>) and on two sides of the water inlet (<b>21</b>), respectively, a three-hole plug (<b>24</b>) hinged to a bottom of the lower cover (<b>102</b>) and disposed on one side of the water inlet (<b>21</b>); and</claim-text>
+<claim-text>wherein the soft rubber scraper (<b>22</b>) is detachably mounted on the three-hole plug (<b>24</b>).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The swimming pool cleaning device of the underwater robot of <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>wherein the water outlet component (<b>3</b>) includes a flow channel baffle (<b>31</b>) disposed on a top of an upper cover (<b>101</b>), a drainage cover (<b>32</b>) disposed on a top of the flow channel baffle (<b>31</b>), two impellers (<b>33</b>) rotatably disposed in the flow channel baffle (<b>31</b>), two drainage enclosures (<b>34</b>) disposed in the drainage cover (<b>32</b>), two drainage ports (<b>35</b>) connected to the two drainage enclosures (<b>34</b>), respectively and disposed on two sides of the drainage cover (<b>32</b>), respectively, and a water outlet flap (<b>36</b>) movably disposed in each drainage port (<b>35</b>);</claim-text>
+<claim-text>wherein interiors of the two impellers (<b>33</b>) are fixedly sleeved with output shafts of two motors (<b>163</b>), respectively; and</claim-text>
+<claim-text>wherein tops of the two impellers (<b>33</b>) extend into the drainage cover (<b>32</b>) and are arranged concentrically with centers of the two drainage enclosures (<b>34</b>), respectively.</claim-text>
+</claim-text>
+</claim>
+</claims>

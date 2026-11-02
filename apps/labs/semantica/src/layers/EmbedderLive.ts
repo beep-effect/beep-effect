@@ -1,7 +1,7 @@
 import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as EmbeddingModel from "effect/ai/EmbeddingModel";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Layer from "effect/Layer";
@@ -120,7 +120,7 @@ const storeVector = Effect.fn("Embedder.storeVector")(function* (
   key: ProviderCacheKey,
   vector: EmbeddingVector,
   cache: ProviderCache["Service"]
-): Effect.fn.Return<Result.Result<EmbeddingVector, DegradedEmbedding>, never, Crypto.Crypto> {
+): Effect.fn.Return<Result.Result<EmbeddingVector, DegradedEmbedding>, never, Digest.Digest> {
   const response = yield* S.encodeEffect(EmbeddingVectorJson)(vector).pipe(Effect.orDie);
   const cacheKey = yield* contentDigest(ProviderCacheKey)(key).pipe(Effect.orDie);
   return yield* cache
@@ -149,7 +149,7 @@ const providerBatch = Effect.fn("Embedder.providerBatch")(function* (
   model: ModelIdentity,
   provider: EmbeddingModel.EmbeddingModel,
   cache: ProviderCache["Service"]
-): Effect.fn.Return<ReadonlyArray<Result.Result<EmbeddingVector, DegradedEmbedding>>, never, Crypto.Crypto> {
+): Effect.fn.Return<ReadonlyArray<Result.Result<EmbeddingVector, DegradedEmbedding>>, never, Digest.Digest> {
   const response = yield* provider.embedMany(A.map(inputs, (input) => input.text)).pipe(
     Effect.match({
       onFailure: () =>
@@ -209,7 +209,7 @@ const providerBatch = Effect.fn("Embedder.providerBatch")(function* (
 
 const makeEmbedder = Effect.fn("Embedder.make")(function* (provider: O.Option<EmbeddingModel.EmbeddingModel>) {
   const cache = yield* ProviderCache;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const model = yield* ActiveEmbeddingIdentity;
   const mode = (yield* LabConfig).mode;
 
@@ -263,7 +263,7 @@ const makeEmbedder = Effect.fn("Embedder.make")(function* (provider: O.Option<Em
                       model,
                       live,
                       cache
-                    ).pipe(Effect.provideService(Crypto.Crypto, crypto)),
+                    ).pipe(Effect.provideService(Digest.Digest, crypto)),
                   { concurrency: 1 }
                 ).pipe(Effect.map(A.flatten)),
             })

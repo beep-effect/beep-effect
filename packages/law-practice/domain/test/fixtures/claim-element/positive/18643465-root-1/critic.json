@@ -1,0 +1,150 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "entityMentionConvention": "entity-mentions/v1",
+  "familyId": "18643465-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "findings": [],
+  "priorRounds": [
+    {
+      "round": 1,
+      "verdict": "changes-required",
+      "receipt": "critic.round1.json",
+      "extractorReceipt": "extractor.round1.json",
+      "referenceTrees": "expected.round1.json",
+      "findingDispositions": [
+        {
+          "id": "C1",
+          "status": "addressed",
+          "evidence": "Claim 10 now has preamble [0,487), functional relation 10.a [511,781) and 10.b [795,988), actual claim-1 dependency and 35 anchored terms. The two an electric motor mentions [391,408) and [584,601) remain separate, with no antecedent asserting motor identity. Extractor records their unresolved identity separately rather than abstaining from the whole tree."
+        },
+        {
+          "id": "C2",
+          "status": "addressed",
+          "evidence": "Root 1 preamble is [0,1142), including the resumptive the method [1132,1142), head method/determiner the, with local antecedent to A method [0,8). The embedded workpiece/compressor comprising clauses have not displaced the actual method transition."
+        },
+        {
+          "id": "C3",
+          "status": "addressed",
+          "evidence": "Four portion links and four bearing links are present at precisely the eight round-1 anchors. Independent source reading identifies first/second portions by the shaft-end ordering and explicit machining of 1.c/1.d; front/rear bearings retain their distinct positions and radial-bearing function. These identities follow the text even without reference numerals or examiner assertions."
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "claimNumbers": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "reason": "The shortened first/second machined portion references are uniquely grounded in a first workpiece portion [1942,1967) in 1.c and a second workpiece portion [2337,2363) in 1.d. Claim 2 restricts the workpiece to the shaft and describes machining both ordered portions; claims 3/4 further specify the matching first/second shaft-end machining. Front radial bearing references in claim 3 [450,474), [652,676) identify the unique front air or gas radial bearing [747,780) in claim 1; rear radial bearing references in claim 4 [459,482), [665,688) identify its unique rear counterpart [831,863). These are semantic identities, not conclusions about sufficiency of legal antecedent basis."
+    },
+    {
+      "claimNumbers": [
+        9,
+        10
+      ],
+      "reason": "Source assembly wording, actual direct claim-1 dependency, and all literal electric-motor mentions remain preserved. Claim 10 does not borrow disc/face introductions from sibling claims 5 or 6. Its disc has its own a disc [248,254) introduction. Its separate first/second portion references point to 1.c/1.d while coordinated first and second portions [441,470), [634,663) are not forced to a single member."
+    },
+    {
+      "claimNumbers": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        13,
+        14
+      ],
+      "reason": "First/second face introductions, collective two faces references, and flange/shoulder alternatives remain literal. No collective face mention is forced onto a single face introduction and claim 14 the flanges [59,70) is not resolved by choosing one of claim 13 alternative flange branches. The retained extractor reference concerns describe these limits separately."
+    },
+    {
+      "claimNumbers": [
+        1,
+        2,
+        5,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "reason": "Term ownership, complete lexical heads, main-transition grammar, local containment, actual dependency ancestry, and all 23 ordered functional relations were reviewed. Clauses and alternatives remain in exact anchored functional connecting text. Relative pronouns that link represented participants do not require duplicate terms under entity-mentions/v1. Claim 5 thereof [193,200) connects the already explicit ribs or grooves and arrangement participants; retaining that exact connection as functional text does not omit its substantive relation or require an arbitrary extra pronoun entity. No blanket pronoun-token rule is imposed."
+    },
+    {
+      "claimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "reason": "All 15 native XML claim bodies match canonical claim text apart from permitted whitespace/printed-number removal. Cached source.claims.xml SHA-256 is 8d7b2ee3bafd2dab852f470928256c778987b250d50ed7af1ea7ce7021545c86, matching provenance. Accepted source-eligibility critic and provenance were reviewed; their original-document/inventory authentication was not independently rerun. The actual numbered 112(b) ground covers claims 1-10; 11-15 remain selected family context."
+    }
+  ],
+  "reviewScope": {
+    "selectedClaimCount": 15,
+    "resolvedTreesReviewed": 15,
+    "unresolvedClaimNumbers": [],
+    "elementCount": 38,
+    "termCount": 328,
+    "edgeCount": 257,
+    "functionalRelationCount": 23,
+    "extractorConfidence": 0.96
+  },
+  "verification": {
+    "allCanonicalNativeClaimBodiesMatchIgnoringPermittedWhitespace": true,
+    "exactUtf16ElementAndTermAnchors": true,
+    "termOwnershipOrderAndNonoverlap": true,
+    "localAndForeignAntecedentTermsExist": true,
+    "antecedentTargetsOnActualAncestry": true,
+    "functionalPartsExactlyPartitionOwnedElementSpans": true,
+    "reviewMethod": "Independent manual semantic review plus bounded span/reference geometry checks. No decomposer or production logic invoked; schema contracts read directly. Exact round-1/current tree comparison shows only claim-1 extension and term/edge, eight portion/bearing edges in claims 2-4, and the new claim-10 tree."
+  },
+  "sourceConcerns": [],
+  "referenceConcernsRetained": [
+    "Repeated indefinite electric-motor mentions in claim 10 retain uncertain identity; their separate nodes assert neither same nor different motors.",
+    "Collective two-face and coordinated first-and-second-portion references have no invented single-member antecedent.",
+    "The flanges in claim 14 retains the claim-13 branch ambiguity."
+  ],
+  "independence": "Independent bounded semantic critic round 2. Read only assigned protocol/schema contracts and this family source/provenance/audit/reference/extractor/prior-review artifacts. No P2-DESIGN, production implementation, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Only current critic.json written; prior round receipts preserved.",
+  "attorneyAdjudication": "pending; agent confidence and acceptance are not attorney agreement",
+  "corpusStatus": "This receipt accepts this family agent-proposed semantic reference only; no full-goal completion, active-sample admission, system accuracy or human agreement claimed."
+}

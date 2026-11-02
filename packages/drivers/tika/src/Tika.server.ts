@@ -1,6 +1,8 @@
 /**
  * Tika Server HTTP text and metadata extraction engine.
  *
+ * **Details**
+ *
  * This is the default V1 runner: extraction happens over
  * `PUT {baseUrl}/rmeta/text` against a Tika Server sidecar, and the runtime
  * engine version is captured once from `GET {baseUrl}/version` at construction.
@@ -152,6 +154,8 @@ const configFromEnvironment: Effect.Effect<TikaServerEngineConfig, TikaError> = 
 
 /**
  * Create the Tika Server HTTP file-processing engine.
+ *
+ * **Details**
  *
  * Captures the HTTP client and filesystem at construction so the returned
  * engine satisfies the requirement-free {@link FileProcessingEngineShape}
@@ -310,6 +314,8 @@ export const makeTikaServerFileProcessingEngine = Effect.fn("Tika.makeTikaServer
 
 /**
  * Create the Tika Server engine from the `BEEP_TIKA_*` environment.
+ *
+ * **Details**
  *
  * Reads `BEEP_TIKA_BASE_URL`, `BEEP_TIKA_TIMEOUT_MILLIS`, and
  * `BEEP_TIKA_MAX_OUTPUT_BYTES` through Effect `Config`, falling back to the

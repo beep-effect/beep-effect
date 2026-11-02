@@ -26,7 +26,7 @@ import * as BI from "effect/BigInt";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -57,7 +57,7 @@ import {
 import { isRegisteredWorktree, removeGitWorktree } from "./GitWorktree.ts";
 import { publishJournalTextAtomically } from "./JournalFile.ts";
 import { invokerAncestryPids, ProcessHandleKind, scanProcessAttachments } from "./ProcessAttachment.ts";
-import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "./RepoRun.executor.ts";
+import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import {
   QualificationViewReceipt,
   ResidueArchiveError,
@@ -174,7 +174,7 @@ type ReapPolicy = {
 type DiscoveryRequirements =
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner;
 
 type Discovered = {
@@ -566,7 +566,11 @@ const canonicalDirectoryShape = Effect.fnUntraced(function* (
 
 const gitCleanSkip = Effect.fnUntraced(function* (
   gitMarkers: ReadonlyArray<string>
-): Effect.fn.Return<O.Option<ResidueReapSkipReason>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  O.Option<ResidueReapSkipReason>,
+  never,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const readings = yield* Effect.forEach(
     gitMarkers,
     (marker) =>
@@ -607,7 +611,7 @@ const directoryCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ResidueReapCandidate,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const shape = yield* canonicalDirectoryShape(root, candidatePath);
@@ -678,7 +682,7 @@ const topLevelDirectoryCandidates = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<ResidueReapCandidate>,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -715,7 +719,7 @@ const turboCandidates = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<ResidueReapCandidate>,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1199,7 +1203,7 @@ const reassessTurboEntry = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ResidueReapCandidate,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1693,13 +1697,13 @@ class ResidueArchive extends Context.Service<
 const makeResidueArchive = Effect.fnUntraced(function* () {
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   return ResidueArchive.of({
     publish: Effect.fn("ResidueArchive.publish")((target: string, content: string, label: string) =>
       publishArchiveText(target, content, label).pipe(
         Effect.provideService(Path.Path, path),
         Effect.provideService(FileSystem.FileSystem, fs),
-        Effect.provideService(Crypto.Crypto, crypto)
+        Effect.provideService(SecureRandom.SecureRandom, crypto)
       )
     ),
     move: Effect.fn("ResidueArchive.move")((source: string, destination: string, expected: DirectoryIdentity) =>
@@ -1818,8 +1822,45 @@ const resolveCheckoutRuling = Effect.fnUntraced(function* (entry: ResidueReapCan
   } satisfies CheckoutRuling;
 });
 
-// Index relative citations across all authored evidence roots. A failed listing or
-// read fails the assessment closed, rather than treating an unreadable index as empty.
+// Tracked evidence roots whose documents can cite a checkout residue path.
+const CitationRoots: ReadonlyArray<string> = [
+  "goals",
+  "explorations",
+  "research",
+  "harness-ledger",
+  "standards",
+  "docs",
+  ".patterns",
+  "AGENTS.md",
+];
+// A `.beep/...` reference token runs up to whitespace or a quote, bracket or angle
+// character, and sheds trailing punctuation; both are spelled for git's PCRE engine.
+const CITATION_TOKEN_END = "(?=[\\s\"'`<>\\[\\]()]|$)";
+const CITATION_TRAILING_PUNCTUATION = "[.,;:)/\\-]*";
+const pcreLiteral = Str.replace(/[^A-Za-z0-9_]/gu, "\\$&");
+
+// A document cites a residue path when it names the path itself, which also covers a
+// reference equal to it or beneath it, or names an ancestor below `.beep` as a whole
+// token. One alternation carries every case.
+const citationPattern = (relative: string): string => {
+  const segments = Str.split(relative, "/");
+  const ancestors = A.makeBy(N.max(0, A.length(segments) - 2), (index) => A.join(A.take(segments, index + 2), "/"));
+  return A.join(
+    [
+      pcreLiteral(relative),
+      ...A.map(
+        ancestors,
+        (ancestor) => `${pcreLiteral(ancestor)}${CITATION_TRAILING_PUNCTUATION}${CITATION_TOKEN_END}`
+      ),
+    ],
+    "|"
+  );
+};
+
+// Ask git to search the authored evidence roots for a citation and answer by exit
+// status alone. The tracked listing of this repository's evidence roots runs to
+// megabytes, past the bounded repo-run capture, so an index that read the listing or
+// the documents failed closed on every real checkout. A search error still fails closed.
 const citationSkip = Effect.fnUntraced(function* (checkout: string, candidatePath: string, authority: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1827,53 +1868,31 @@ const citationSkip = Effect.fnUntraced(function* (checkout: string, candidatePat
   const realTarget = yield* fs.realPath(candidatePath).pipe(Effect.option);
   if (O.isNone(realRoot) || O.isNone(realTarget)) return O.some<ResidueReapSkipReason>("path-changed");
   const relative = path.relative(realRoot.value, realTarget.value);
-  const listing = yield* runRepoCommandCaptureRaw(
+  const excluded = Str.isEmpty(authority) ? A.empty<string>() : [`:(exclude,literal)${authority}`];
+  const search = yield* runRepoCommandCapture(
     "git",
     [
-      "ls-files",
-      "-s",
-      "-z",
+      "--no-optional-locks",
+      "grep",
+      "--quiet",
+      "--perl-regexp",
+      "-e",
+      citationPattern(relative),
       "--",
-      "goals",
-      "explorations",
-      "research",
-      "harness-ledger",
-      "standards",
-      "docs",
-      ".patterns",
-      "AGENTS.md",
+      ...CitationRoots,
+      ...excluded,
     ],
     checkout
   ).pipe(Effect.option);
-  if (O.isNone(listing) || !N.Equivalence(listing.value.exitCode, 0) || listing.value.truncated)
-    return O.some<ResidueReapSkipReason>("census-failed");
-  const names = A.filter(
-    A.getSomes(
-      A.map(Str.split("\0")(listing.value.output), (record) =>
-        O.flatMap(Str.match(/^100(?:644|755) [a-f0-9]+ [0-3]\t([\s\S]+)$/u)(record), (match) => A.get(match, 1))
-      )
-    ),
-    (name) => !Str.Equivalence(name, authority)
-  );
-  const documents = yield* Effect.forEach(
-    names,
-    (name) => fs.readFileString(path.join(checkout, name)).pipe(Effect.option),
-    { concurrency: 8 }
-  );
-  if (A.some(documents, O.isNone)) return O.some<ResidueReapSkipReason>("census-failed");
-  // A citation to a parent protects descendants, and a descendant citation protects
-  // the container. Match .beep-relative tails even when a receipt names another clone.
-  const cited = A.some(A.getSomes(documents), (text) => {
-    if (Str.includes(relative)(text)) return true;
-    const references = O.getOrElse(Str.match(/\.beep\/[^\s"\x27`<>[\]()]+/gu)(text), A.empty<string>);
-    return A.some(references, (reference) => {
-      const ref = Str.replace(/[.,;:)/-]+$/u, "")(reference);
-      return (
-        Str.Equivalence(ref, relative) || Str.startsWith(`${ref}/`)(relative) || Str.startsWith(`${relative}/`)(ref)
-      );
-    });
+  return O.match(search, {
+    onNone: () => O.some<ResidueReapSkipReason>("census-failed"),
+    onSome: (result) =>
+      Match.value(result.exitCode).pipe(
+        Match.when(0, () => O.some<ResidueReapSkipReason>("evidence-referenced")),
+        Match.when(1, () => O.none<ResidueReapSkipReason>()),
+        Match.orElse(() => O.some<ResidueReapSkipReason>("census-failed"))
+      ),
   });
-  return cited ? O.some<ResidueReapSkipReason>("evidence-referenced") : O.none<ResidueReapSkipReason>();
 });
 
 // Traversal state is internal and never serialized; each entry is charged before probing.
@@ -2400,7 +2419,7 @@ const resolveSettings = Effect.fnUntraced(function* (options: ResidueReapOptions
     ),
   };
   return {
-    runId: yield* (yield* Crypto.Crypto).randomUUIDv4(),
+    runId: yield* (yield* SecureRandom.SecureRandom).uuidV4(),
     beepCacheRoot,
     checkoutRoots,
     checkoutBoundaries,
@@ -2785,8 +2804,8 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
   );
   const warnings = A.flatMap(rows, (row) => row.warnings);
   const refusalWarnings = A.flatMap(rows, (row) => (row.refused ? row.warnings : []));
-  const crypto = yield* Crypto.Crypto;
-  const recoveryPath = path.join(root, `recovery-${yield* crypto.randomUUIDv4()}.json`);
+  const crypto = yield* SecureRandom.SecureRandom;
+  const recoveryPath = path.join(root, `recovery-${yield* crypto.uuidV4()}.json`);
   const result = ResidueReapReport.make({
     ...report,
     reportPath: recoveryPath,

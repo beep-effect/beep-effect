@@ -2,6 +2,8 @@
  * Declarative `effect/http-api` contract for the PACER Case Locator
  * (PCL) synchronous search endpoints.
  *
+ * **Details**
+ *
  * PCL uses real HTTP status codes for errors (401/406/429/500), which maps
  * cleanly onto HttpApi — so the surface is defined declaratively here and a
  * typed client is derived from it in `PclClient.service.ts`. Non-2xx

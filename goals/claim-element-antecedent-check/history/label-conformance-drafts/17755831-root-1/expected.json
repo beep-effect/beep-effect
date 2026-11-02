@@ -1,0 +1,2598 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "1",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 144,
+          "quote": "An offset selector for determining an offset between an anchoring section and a joint section of a joint implant component, said offset selector"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 18,
+              "quote": "An offset selector"
+            },
+            "determiner": "an",
+            "head": "offset selector"
+          },
+          {
+            "anchor": {
+              "startChar": 35,
+              "endChar": 44,
+              "quote": "an offset"
+            },
+            "determiner": "an",
+            "head": "offset"
+          },
+          {
+            "anchor": {
+              "startChar": 53,
+              "endChar": 73,
+              "quote": "an anchoring section"
+            },
+            "determiner": "an",
+            "head": "anchoring section"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 93,
+              "quote": "a joint section"
+            },
+            "determiner": "a",
+            "head": "joint section"
+          },
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 122,
+              "quote": "a joint implant component"
+            },
+            "determiner": "a",
+            "head": "joint implant component"
+          },
+          {
+            "anchor": {
+              "startChar": 124,
+              "endChar": 144,
+              "quote": "said offset selector"
+            },
+            "determiner": "said",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 157,
+          "endChar": 915,
+          "quote": "a reference portion for determining the offset, a first adjustment device to adjust the distance to the reference portion, and a second adjustment device to adjust the orientation about an offset rotary axis (VA) relative to the reference portion, wherein the first adjustment device and the second adjustment device are coupled to each other, one of the first adjustment device and the second adjustment device are connected to the reference portion and the other one of the first adjustment device and the second adjustment device is connected to an adjustment portion, the adjustment portion being movable relative to the reference portion by a distance adjustable via the first adjustment device or by an angle adjustable via the second adjustment device"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 157,
+              "endChar": 176,
+              "quote": "a reference portion"
+            },
+            "determiner": "a",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 193,
+              "endChar": 203,
+              "quote": "the offset"
+            },
+            "determiner": "the",
+            "head": "offset"
+          },
+          {
+            "anchor": {
+              "startChar": 205,
+              "endChar": 230,
+              "quote": "a first adjustment device"
+            },
+            "determiner": "a",
+            "head": "first adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 241,
+              "endChar": 253,
+              "quote": "the distance"
+            },
+            "determiner": "the",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 257,
+              "endChar": 278,
+              "quote": "the reference portion"
+            },
+            "determiner": "the",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 284,
+              "endChar": 310,
+              "quote": "a second adjustment device"
+            },
+            "determiner": "a",
+            "head": "second adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 321,
+              "endChar": 336,
+              "quote": "the orientation"
+            },
+            "determiner": "the",
+            "head": "orientation"
+          },
+          {
+            "anchor": {
+              "startChar": 343,
+              "endChar": 364,
+              "quote": "an offset rotary axis"
+            },
+            "determiner": "an",
+            "head": "offset rotary axis"
+          },
+          {
+            "anchor": {
+              "startChar": 382,
+              "endChar": 403,
+              "quote": "the reference portion"
+            },
+            "determiner": "the",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 413,
+              "endChar": 440,
+              "quote": "the first adjustment device"
+            },
+            "determiner": "the",
+            "head": "first adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 445,
+              "endChar": 473,
+              "quote": "the second adjustment device"
+            },
+            "determiner": "the",
+            "head": "second adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 508,
+              "endChar": 535,
+              "quote": "the first adjustment device"
+            },
+            "determiner": "the",
+            "head": "first adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 540,
+              "endChar": 568,
+              "quote": "the second adjustment device"
+            },
+            "determiner": "the",
+            "head": "second adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 586,
+              "endChar": 607,
+              "quote": "the reference portion"
+            },
+            "determiner": "the",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 612,
+              "endChar": 625,
+              "quote": "the other one"
+            },
+            "determiner": "the",
+            "head": "other one"
+          },
+          {
+            "anchor": {
+              "startChar": 629,
+              "endChar": 656,
+              "quote": "the first adjustment device"
+            },
+            "determiner": "the",
+            "head": "first adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 661,
+              "endChar": 689,
+              "quote": "the second adjustment device"
+            },
+            "determiner": "the",
+            "head": "second adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 706,
+              "endChar": 727,
+              "quote": "an adjustment portion"
+            },
+            "determiner": "an",
+            "head": "adjustment portion"
+          },
+          {
+            "anchor": {
+              "startChar": 729,
+              "endChar": 751,
+              "quote": "the adjustment portion"
+            },
+            "determiner": "the",
+            "head": "adjustment portion"
+          },
+          {
+            "anchor": {
+              "startChar": 778,
+              "endChar": 799,
+              "quote": "the reference portion"
+            },
+            "determiner": "the",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 803,
+              "endChar": 824,
+              "quote": "a distance adjustable"
+            },
+            "determiner": "a",
+            "head": "distance adjustable"
+          },
+          {
+            "anchor": {
+              "startChar": 829,
+              "endChar": 856,
+              "quote": "the first adjustment device"
+            },
+            "determiner": "the",
+            "head": "first adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 863,
+              "endChar": 882,
+              "quote": "an angle adjustable"
+            },
+            "determiner": "an",
+            "head": "angle adjustable"
+          },
+          {
+            "anchor": {
+              "startChar": 887,
+              "endChar": 915,
+              "quote": "the second adjustment device"
+            },
+            "determiner": "the",
+            "head": "second adjustment device"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 124,
+            "endChar": 144,
+            "quote": "said offset selector"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "An offset selector"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 193,
+            "endChar": 203,
+            "quote": "the offset"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 35,
+            "endChar": 44,
+            "quote": "an offset"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 257,
+            "endChar": 278,
+            "quote": "the reference portion"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 157,
+            "endChar": 176,
+            "quote": "a reference portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 382,
+            "endChar": 403,
+            "quote": "the reference portion"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 157,
+            "endChar": 176,
+            "quote": "a reference portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 413,
+            "endChar": 440,
+            "quote": "the first adjustment device"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 205,
+            "endChar": 230,
+            "quote": "a first adjustment device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 445,
+            "endChar": 473,
+            "quote": "the second adjustment device"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 284,
+            "endChar": 310,
+            "quote": "a second adjustment device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 508,
+            "endChar": 535,
+            "quote": "the first adjustment device"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 205,
+            "endChar": 230,
+            "quote": "a first adjustment device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 540,
+            "endChar": 568,
+            "quote": "the second adjustment device"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 284,
+            "endChar": 310,
+            "quote": "a second adjustment device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 586,
+            "endChar": 607,
+            "quote": "the reference portion"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 157,
+            "endChar": 176,
+            "quote": "a reference portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 629,
+            "endChar": 656,
+            "quote": "the first adjustment device"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 205,
+            "endChar": 230,
+            "quote": "a first adjustment device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 661,
+            "endChar": 689,
+            "quote": "the second adjustment device"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 284,
+            "endChar": 310,
+            "quote": "a second adjustment device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 729,
+            "endChar": 751,
+            "quote": "the adjustment portion"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 706,
+            "endChar": 727,
+            "quote": "an adjustment portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 778,
+            "endChar": 799,
+            "quote": "the reference portion"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 157,
+            "endChar": 176,
+            "quote": "a reference portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 829,
+            "endChar": 856,
+            "quote": "the first adjustment device"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 205,
+            "endChar": 230,
+            "quote": "a first adjustment device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 887,
+            "endChar": 915,
+            "quote": "the second adjustment device"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 284,
+            "endChar": 310,
+            "quote": "a second adjustment device"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "2",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 40,
+          "quote": "The offset selector according to claim 1"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 50,
+          "endChar": 191,
+          "quote": "the first adjustment device is connected to the reference portion (2) and the second adjustment device is connected to the adjustment portion"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 50,
+              "endChar": 77,
+              "quote": "the first adjustment device"
+            },
+            "determiner": "the",
+            "head": "first adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 94,
+              "endChar": 115,
+              "quote": "the reference portion"
+            },
+            "determiner": "the",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 124,
+              "endChar": 152,
+              "quote": "the second adjustment device"
+            },
+            "determiner": "the",
+            "head": "second adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 191,
+              "quote": "the adjustment portion"
+            },
+            "determiner": "the",
+            "head": "adjustment portion"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "3",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 30,
+          "quote": "The offset selector of claim 1"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 118,
+          "quote": "the reference portion is provided as a tool interface adapted to engage a tool"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 61,
+              "quote": "the reference portion"
+            },
+            "determiner": "the",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 77,
+              "endChar": 93,
+              "quote": "a tool interface"
+            },
+            "determiner": "a",
+            "head": "tool interface"
+          },
+          {
+            "anchor": {
+              "startChar": 112,
+              "endChar": 118,
+              "quote": "a tool"
+            },
+            "determiner": "a",
+            "head": "tool"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "4",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 30,
+          "quote": "The offset selector of claim 1"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 150,
+          "quote": "the reference portion is formed as a recess, having a length which is at least the maximum width of the recess"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 61,
+              "quote": "the reference portion"
+            },
+            "determiner": "the",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 75,
+              "endChar": 83,
+              "quote": "a recess"
+            },
+            "determiner": "a",
+            "head": "recess"
+          },
+          {
+            "anchor": {
+              "startChar": 92,
+              "endChar": 100,
+              "quote": "a length"
+            },
+            "determiner": "a",
+            "head": "length"
+          },
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 136,
+              "quote": "the maximum width"
+            },
+            "determiner": "the",
+            "head": "maximum width"
+          },
+          {
+            "anchor": {
+              "startChar": 140,
+              "endChar": 150,
+              "quote": "the recess"
+            },
+            "determiner": "the",
+            "head": "recess"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 140,
+            "endChar": 150,
+            "quote": "the recess"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 75,
+            "endChar": 83,
+            "quote": "a recess"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "5",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 30,
+          "quote": "The offset selector of claim 1"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 163,
+          "quote": "the adjustment portion comprises a coupling interface for being coupled to a tool in at least two positions or orientations"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 62,
+              "quote": "the adjustment portion"
+            },
+            "determiner": "the",
+            "head": "adjustment portion"
+          },
+          {
+            "anchor": {
+              "startChar": 73,
+              "endChar": 93,
+              "quote": "a coupling interface"
+            },
+            "determiner": "a",
+            "head": "coupling interface"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 121,
+              "quote": "a tool"
+            },
+            "determiner": "a",
+            "head": "tool"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "6",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 30,
+          "quote": "The offset selector of claim 1"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 192,
+          "quote": "the first adjustment device the second adjustment device comprises a latch mechanism which is adapted to adjust the distance or the orientation in steps"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 67,
+              "quote": "the first adjustment device"
+            },
+            "determiner": "the",
+            "head": "first adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 68,
+              "endChar": 96,
+              "quote": "the second adjustment device"
+            },
+            "determiner": "the",
+            "head": "second adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 107,
+              "endChar": 124,
+              "quote": "a latch mechanism"
+            },
+            "determiner": "a",
+            "head": "latch mechanism"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 164,
+              "quote": "the distance"
+            },
+            "determiner": "the",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 168,
+              "endChar": 183,
+              "quote": "the orientation"
+            },
+            "determiner": "the",
+            "head": "orientation"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "7",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 30,
+          "quote": "The offset selector of claim 6"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 446,
+          "quote": "the latch mechanism is a snap body latch mechanism comprising at least two snap bodies, each of the snap bodies acting between an outer body and an inner body and being biased in a radial direction, wherein the inner body is rotatably arranged in the outer body and one of the inner and outer bodies comprises a plurality of snap recesses, the snap bodies being reversibly engageable with the snap recesses"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 59,
+              "quote": "the latch mechanism"
+            },
+            "determiner": "the",
+            "head": "latch mechanism"
+          },
+          {
+            "anchor": {
+              "startChar": 63,
+              "endChar": 90,
+              "quote": "a snap body latch mechanism"
+            },
+            "determiner": "a",
+            "head": "snap body latch mechanism"
+          },
+          {
+            "anchor": {
+              "startChar": 136,
+              "endChar": 151,
+              "quote": "the snap bodies"
+            },
+            "determiner": "the",
+            "head": "snap bodies"
+          },
+          {
+            "anchor": {
+              "startChar": 167,
+              "endChar": 180,
+              "quote": "an outer body"
+            },
+            "determiner": "an",
+            "head": "outer body"
+          },
+          {
+            "anchor": {
+              "startChar": 185,
+              "endChar": 198,
+              "quote": "an inner body"
+            },
+            "determiner": "an",
+            "head": "inner body"
+          },
+          {
+            "anchor": {
+              "startChar": 219,
+              "endChar": 237,
+              "quote": "a radial direction"
+            },
+            "determiner": "a",
+            "head": "radial direction"
+          },
+          {
+            "anchor": {
+              "startChar": 247,
+              "endChar": 261,
+              "quote": "the inner body"
+            },
+            "determiner": "the",
+            "head": "inner body"
+          },
+          {
+            "anchor": {
+              "startChar": 287,
+              "endChar": 301,
+              "quote": "the outer body"
+            },
+            "determiner": "the",
+            "head": "outer body"
+          },
+          {
+            "anchor": {
+              "startChar": 313,
+              "endChar": 322,
+              "quote": "the inner"
+            },
+            "determiner": "the",
+            "head": "inner"
+          },
+          {
+            "anchor": {
+              "startChar": 350,
+              "endChar": 378,
+              "quote": "a plurality of snap recesses"
+            },
+            "determiner": "plurality-of",
+            "head": "snap recesses"
+          },
+          {
+            "anchor": {
+              "startChar": 380,
+              "endChar": 395,
+              "quote": "the snap bodies"
+            },
+            "determiner": "the",
+            "head": "snap bodies"
+          },
+          {
+            "anchor": {
+              "startChar": 429,
+              "endChar": 446,
+              "quote": "the snap recesses"
+            },
+            "determiner": "the",
+            "head": "snap recesses"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "6"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 247,
+            "endChar": 261,
+            "quote": "the inner body"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 185,
+            "endChar": 198,
+            "quote": "an inner body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 287,
+            "endChar": 301,
+            "quote": "the outer body"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 167,
+            "endChar": 180,
+            "quote": "an outer body"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 429,
+            "endChar": 446,
+            "quote": "the snap recesses"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 350,
+            "endChar": 378,
+            "quote": "a plurality of snap recesses"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "8",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 30,
+          "quote": "The offset selector of claim 7"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 204,
+          "quote": "the snap bodies are biased by an elastic insert, the elastic insert arranged at the inner body of the rotatable bodies, in recess in an inner side of the inner body"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 55,
+              "quote": "the snap bodies"
+            },
+            "determiner": "the",
+            "head": "snap bodies"
+          },
+          {
+            "anchor": {
+              "startChar": 70,
+              "endChar": 87,
+              "quote": "an elastic insert"
+            },
+            "determiner": "an",
+            "head": "elastic insert"
+          },
+          {
+            "anchor": {
+              "startChar": 89,
+              "endChar": 107,
+              "quote": "the elastic insert"
+            },
+            "determiner": "the",
+            "head": "elastic insert"
+          },
+          {
+            "anchor": {
+              "startChar": 120,
+              "endChar": 134,
+              "quote": "the inner body"
+            },
+            "determiner": "the",
+            "head": "inner body"
+          },
+          {
+            "anchor": {
+              "startChar": 138,
+              "endChar": 158,
+              "quote": "the rotatable bodies"
+            },
+            "determiner": "the",
+            "head": "rotatable bodies"
+          },
+          {
+            "anchor": {
+              "startChar": 173,
+              "endChar": 186,
+              "quote": "an inner side"
+            },
+            "determiner": "an",
+            "head": "inner side"
+          },
+          {
+            "anchor": {
+              "startChar": 190,
+              "endChar": 204,
+              "quote": "the inner body"
+            },
+            "determiner": "the",
+            "head": "inner body"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "7"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 89,
+            "endChar": 107,
+            "quote": "the elastic insert"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 70,
+            "endChar": 87,
+            "quote": "an elastic insert"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "9",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 30,
+          "quote": "The offset selector of claim 8"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 205,
+          "quote": "the elastic insert has, in at least one of its end regions in the longitudinal direction, a snap body receiving recess for partially receiving one of the snap bodies"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 58,
+              "quote": "the elastic insert"
+            },
+            "determiner": "the",
+            "head": "elastic insert"
+          },
+          {
+            "anchor": {
+              "startChar": 83,
+              "endChar": 98,
+              "quote": "its end regions"
+            },
+            "determiner": "bare",
+            "head": "end regions"
+          },
+          {
+            "anchor": {
+              "startChar": 102,
+              "endChar": 128,
+              "quote": "the longitudinal direction"
+            },
+            "determiner": "the",
+            "head": "longitudinal direction"
+          },
+          {
+            "anchor": {
+              "startChar": 130,
+              "endChar": 141,
+              "quote": "a snap body"
+            },
+            "determiner": "a",
+            "head": "snap body"
+          },
+          {
+            "anchor": {
+              "startChar": 190,
+              "endChar": 205,
+              "quote": "the snap bodies"
+            },
+            "determiner": "the",
+            "head": "snap bodies"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "8"
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "10",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 30,
+          "quote": "The offset selector of claim 6"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 378,
+          "quote": "the latch mechanism comprises an elastic latch mechanism including an elastic arm, the elastic arm being connected to a first of two bodies and comprising a latching member engageable with an engagement member, wherein the two bodies are movable in relation to each other and the second body comprises a plurality of said engaging members"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 59,
+              "quote": "the latch mechanism"
+            },
+            "determiner": "the",
+            "head": "latch mechanism"
+          },
+          {
+            "anchor": {
+              "startChar": 70,
+              "endChar": 96,
+              "quote": "an elastic latch mechanism"
+            },
+            "determiner": "an",
+            "head": "elastic latch mechanism"
+          },
+          {
+            "anchor": {
+              "startChar": 107,
+              "endChar": 121,
+              "quote": "an elastic arm"
+            },
+            "determiner": "an",
+            "head": "elastic arm"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 138,
+              "quote": "the elastic arm"
+            },
+            "determiner": "the",
+            "head": "elastic arm"
+          },
+          {
+            "anchor": {
+              "startChar": 158,
+              "endChar": 165,
+              "quote": "a first"
+            },
+            "determiner": "a",
+            "head": "first"
+          },
+          {
+            "anchor": {
+              "startChar": 195,
+              "endChar": 223,
+              "quote": "a latching member engageable"
+            },
+            "determiner": "a",
+            "head": "latching member engageable"
+          },
+          {
+            "anchor": {
+              "startChar": 229,
+              "endChar": 249,
+              "quote": "an engagement member"
+            },
+            "determiner": "an",
+            "head": "engagement member"
+          },
+          {
+            "anchor": {
+              "startChar": 259,
+              "endChar": 273,
+              "quote": "the two bodies"
+            },
+            "determiner": "the",
+            "head": "two bodies"
+          },
+          {
+            "anchor": {
+              "startChar": 316,
+              "endChar": 331,
+              "quote": "the second body"
+            },
+            "determiner": "the",
+            "head": "second body"
+          },
+          {
+            "anchor": {
+              "startChar": 357,
+              "endChar": 378,
+              "quote": "said engaging members"
+            },
+            "determiner": "said",
+            "head": "engaging members"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "6"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 138,
+            "quote": "the elastic arm"
+          }
+        },
+        "introducing": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 107,
+            "endChar": 121,
+            "quote": "an elastic arm"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 11,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "11",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The offset selector of claim 10"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 130,
+          "quote": "the first body is mounted to a pivot axis for being pivotable relative to the second body"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 55,
+              "quote": "the first body"
+            },
+            "determiner": "the",
+            "head": "first body"
+          },
+          {
+            "anchor": {
+              "startChar": 70,
+              "endChar": 82,
+              "quote": "a pivot axis"
+            },
+            "determiner": "a",
+            "head": "pivot axis"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 130,
+              "quote": "the second body"
+            },
+            "determiner": "the",
+            "head": "second body"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "11",
+        "ancestor": "10"
+      }
+    ]
+  },
+  {
+    "claimNumber": 12,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "12",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The offset selector of claim 11"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 175,
+          "quote": "the distance between the pivot axis and the engagement location between the latching member and the engagement member is at least 5 mm"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 53,
+              "quote": "the distance"
+            },
+            "determiner": "the",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 76,
+              "quote": "the pivot axis"
+            },
+            "determiner": "the",
+            "head": "pivot axis"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 104,
+              "quote": "the engagement location"
+            },
+            "determiner": "the",
+            "head": "engagement location"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 132,
+              "quote": "the latching member"
+            },
+            "determiner": "the",
+            "head": "latching member"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 158,
+              "quote": "the engagement member"
+            },
+            "determiner": "the",
+            "head": "engagement member"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "12",
+        "ancestor": "11"
+      }
+    ]
+  },
+  {
+    "claimNumber": 13,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "13",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 30,
+          "quote": "The offset selector of claim 9"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "13.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 135,
+          "quote": "the elastic arm has an actuation portion for disengaging the latching member of the elastic arm"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 55,
+              "quote": "the elastic arm"
+            },
+            "determiner": "the",
+            "head": "elastic arm"
+          },
+          {
+            "anchor": {
+              "startChar": 60,
+              "endChar": 80,
+              "quote": "an actuation portion"
+            },
+            "determiner": "an",
+            "head": "actuation portion"
+          },
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 116,
+              "quote": "the latching member"
+            },
+            "determiner": "the",
+            "head": "latching member"
+          },
+          {
+            "anchor": {
+              "startChar": 120,
+              "endChar": 135,
+              "quote": "the elastic arm"
+            },
+            "determiner": "the",
+            "head": "elastic arm"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "13.a",
+        "parent": "13"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "13",
+        "ancestor": "9"
+      }
+    ]
+  },
+  {
+    "claimNumber": 14,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "14",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 30,
+          "quote": "The offset selector of claim 1"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "14.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 183,
+          "quote": "the first adjustment device or the second adjustment device comprises an indicator for indicating the distance or the orientation of the offset"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 67,
+              "quote": "the first adjustment device"
+            },
+            "determiner": "the",
+            "head": "first adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 71,
+              "endChar": 99,
+              "quote": "the second adjustment device"
+            },
+            "determiner": "the",
+            "head": "second adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 110,
+              "endChar": 122,
+              "quote": "an indicator"
+            },
+            "determiner": "an",
+            "head": "indicator"
+          },
+          {
+            "anchor": {
+              "startChar": 138,
+              "endChar": 150,
+              "quote": "the distance"
+            },
+            "determiner": "the",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 154,
+              "endChar": 169,
+              "quote": "the orientation"
+            },
+            "determiner": "the",
+            "head": "orientation"
+          },
+          {
+            "anchor": {
+              "startChar": 173,
+              "endChar": 183,
+              "quote": "the offset"
+            },
+            "determiner": "the",
+            "head": "offset"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "14.a",
+        "parent": "14"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "14",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 15,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "15",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 190,
+          "quote": "A method for adjusting an offset between an anchoring section and a joint section of a joint implant component using an offset selector, in particular an offset selector according to claim 1"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 23,
+              "endChar": 32,
+              "quote": "an offset"
+            },
+            "determiner": "an",
+            "head": "offset"
+          },
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 61,
+              "quote": "an anchoring section"
+            },
+            "determiner": "an",
+            "head": "anchoring section"
+          },
+          {
+            "anchor": {
+              "startChar": 66,
+              "endChar": 81,
+              "quote": "a joint section"
+            },
+            "determiner": "a",
+            "head": "joint section"
+          },
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 110,
+              "quote": "a joint implant component"
+            },
+            "determiner": "a",
+            "head": "joint implant component"
+          },
+          {
+            "anchor": {
+              "startChar": 117,
+              "endChar": 135,
+              "quote": "an offset selector"
+            },
+            "determiner": "an",
+            "head": "offset selector"
+          },
+          {
+            "anchor": {
+              "startChar": 151,
+              "endChar": 169,
+              "quote": "an offset selector"
+            },
+            "determiner": "an",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "15.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 200,
+          "endChar": 298,
+          "quote": "the offset is defined by a distance and an orientation and wherein the method comprises the steps:"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 200,
+              "endChar": 210,
+              "quote": "the offset"
+            },
+            "determiner": "the",
+            "head": "offset"
+          },
+          {
+            "anchor": {
+              "startChar": 225,
+              "endChar": 235,
+              "quote": "a distance"
+            },
+            "determiner": "a",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 240,
+              "endChar": 254,
+              "quote": "an orientation"
+            },
+            "determiner": "an",
+            "head": "orientation"
+          },
+          {
+            "anchor": {
+              "startChar": 267,
+              "endChar": 277,
+              "quote": "the method"
+            },
+            "determiner": "the",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 288,
+              "endChar": 297,
+              "quote": "the steps"
+            },
+            "determiner": "the",
+            "head": "steps"
+          }
+        ]
+      },
+      {
+        "path": "15.a.i",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 299,
+          "endChar": 445,
+          "quote": "bringing a reference portion of the offset selector in contact with a first tool for preparing an anchoring recess in the bone tissue of a patient"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 308,
+              "endChar": 327,
+              "quote": "a reference portion"
+            },
+            "determiner": "a",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 331,
+              "endChar": 350,
+              "quote": "the offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          },
+          {
+            "anchor": {
+              "startChar": 367,
+              "endChar": 379,
+              "quote": "a first tool"
+            },
+            "determiner": "a",
+            "head": "first tool"
+          },
+          {
+            "anchor": {
+              "startChar": 394,
+              "endChar": 413,
+              "quote": "an anchoring recess"
+            },
+            "determiner": "an",
+            "head": "anchoring recess"
+          },
+          {
+            "anchor": {
+              "startChar": 417,
+              "endChar": 432,
+              "quote": "the bone tissue"
+            },
+            "determiner": "the",
+            "head": "bone tissue"
+          },
+          {
+            "anchor": {
+              "startChar": 436,
+              "endChar": 445,
+              "quote": "a patient"
+            },
+            "determiner": "a",
+            "head": "patient"
+          }
+        ]
+      },
+      {
+        "path": "15.a.ii",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 447,
+          "endChar": 535,
+          "quote": "bringing a second tool into engagement with an adjustment portion of the offset selector"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 456,
+              "endChar": 469,
+              "quote": "a second tool"
+            },
+            "determiner": "a",
+            "head": "second tool"
+          },
+          {
+            "anchor": {
+              "startChar": 491,
+              "endChar": 512,
+              "quote": "an adjustment portion"
+            },
+            "determiner": "an",
+            "head": "adjustment portion"
+          },
+          {
+            "anchor": {
+              "startChar": 516,
+              "endChar": 535,
+              "quote": "the offset selector"
+            },
+            "determiner": "the",
+            "head": "offset selector"
+          }
+        ]
+      },
+      {
+        "path": "15.a.iii",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 537,
+          "endChar": 652,
+          "quote": "adjusting a distance between the reference portion and the adjustment portion by means of a first adjustment device"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 547,
+              "endChar": 557,
+              "quote": "a distance"
+            },
+            "determiner": "a",
+            "head": "distance"
+          },
+          {
+            "anchor": {
+              "startChar": 566,
+              "endChar": 587,
+              "quote": "the reference portion"
+            },
+            "determiner": "the",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 592,
+              "endChar": 614,
+              "quote": "the adjustment portion"
+            },
+            "determiner": "the",
+            "head": "adjustment portion"
+          },
+          {
+            "anchor": {
+              "startChar": 627,
+              "endChar": 652,
+              "quote": "a first adjustment device"
+            },
+            "determiner": "a",
+            "head": "first adjustment device"
+          }
+        ]
+      },
+      {
+        "path": "15.a.iv",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 654,
+          "endChar": 774,
+          "quote": "adjusting an orientation between the reference portion and the adjustment portion by means of a second adjustment device"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 664,
+              "endChar": 678,
+              "quote": "an orientation"
+            },
+            "determiner": "an",
+            "head": "orientation"
+          },
+          {
+            "anchor": {
+              "startChar": 687,
+              "endChar": 708,
+              "quote": "the reference portion"
+            },
+            "determiner": "the",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 713,
+              "endChar": 735,
+              "quote": "the adjustment portion"
+            },
+            "determiner": "the",
+            "head": "adjustment portion"
+          },
+          {
+            "anchor": {
+              "startChar": 748,
+              "endChar": 774,
+              "quote": "a second adjustment device"
+            },
+            "determiner": "a",
+            "head": "second adjustment device"
+          }
+        ]
+      },
+      {
+        "path": "15.a.v",
+        "kind": "sub-limitation",
+        "anchor": {
+          "startChar": 776,
+          "endChar": 919,
+          "quote": "wherein the reference portion and the adjustment portion are coupled in series via the first adjustment device and the second adjustment device"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 784,
+              "endChar": 805,
+              "quote": "the reference portion"
+            },
+            "determiner": "the",
+            "head": "reference portion"
+          },
+          {
+            "anchor": {
+              "startChar": 810,
+              "endChar": 832,
+              "quote": "the adjustment portion"
+            },
+            "determiner": "the",
+            "head": "adjustment portion"
+          },
+          {
+            "anchor": {
+              "startChar": 859,
+              "endChar": 886,
+              "quote": "the first adjustment device"
+            },
+            "determiner": "the",
+            "head": "first adjustment device"
+          },
+          {
+            "anchor": {
+              "startChar": 891,
+              "endChar": 919,
+              "quote": "the second adjustment device"
+            },
+            "determiner": "the",
+            "head": "second adjustment device"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "15.a",
+        "parent": "15"
+      },
+      {
+        "kind": "part-of",
+        "child": "15.a.i",
+        "parent": "15.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "15.a.ii",
+        "parent": "15.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "15.a.iii",
+        "parent": "15.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "15.a.iv",
+        "parent": "15.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "15.a.v",
+        "parent": "15.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "15",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 210,
+            "quote": "the offset"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 23,
+            "endChar": 32,
+            "quote": "an offset"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 267,
+            "endChar": 277,
+            "quote": "the method"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a.iii",
+          "anchor": {
+            "startChar": 566,
+            "endChar": 587,
+            "quote": "the reference portion"
+          }
+        },
+        "introducing": {
+          "path": "15.a.i",
+          "anchor": {
+            "startChar": 308,
+            "endChar": 327,
+            "quote": "a reference portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a.iii",
+          "anchor": {
+            "startChar": 592,
+            "endChar": 614,
+            "quote": "the adjustment portion"
+          }
+        },
+        "introducing": {
+          "path": "15.a.ii",
+          "anchor": {
+            "startChar": 491,
+            "endChar": 512,
+            "quote": "an adjustment portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a.iv",
+          "anchor": {
+            "startChar": 687,
+            "endChar": 708,
+            "quote": "the reference portion"
+          }
+        },
+        "introducing": {
+          "path": "15.a.i",
+          "anchor": {
+            "startChar": 308,
+            "endChar": 327,
+            "quote": "a reference portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a.iv",
+          "anchor": {
+            "startChar": 713,
+            "endChar": 735,
+            "quote": "the adjustment portion"
+          }
+        },
+        "introducing": {
+          "path": "15.a.ii",
+          "anchor": {
+            "startChar": 491,
+            "endChar": 512,
+            "quote": "an adjustment portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a.v",
+          "anchor": {
+            "startChar": 784,
+            "endChar": 805,
+            "quote": "the reference portion"
+          }
+        },
+        "introducing": {
+          "path": "15.a.i",
+          "anchor": {
+            "startChar": 308,
+            "endChar": 327,
+            "quote": "a reference portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a.v",
+          "anchor": {
+            "startChar": 810,
+            "endChar": 832,
+            "quote": "the adjustment portion"
+          }
+        },
+        "introducing": {
+          "path": "15.a.ii",
+          "anchor": {
+            "startChar": 491,
+            "endChar": 512,
+            "quote": "an adjustment portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a.v",
+          "anchor": {
+            "startChar": 859,
+            "endChar": 886,
+            "quote": "the first adjustment device"
+          }
+        },
+        "introducing": {
+          "path": "15.a.iii",
+          "anchor": {
+            "startChar": 627,
+            "endChar": 652,
+            "quote": "a first adjustment device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a.v",
+          "anchor": {
+            "startChar": 891,
+            "endChar": 919,
+            "quote": "the second adjustment device"
+          }
+        },
+        "introducing": {
+          "path": "15.a.iv",
+          "anchor": {
+            "startChar": 748,
+            "endChar": 774,
+            "quote": "a second adjustment device"
+          }
+        }
+      }
+    ]
+  }
+]

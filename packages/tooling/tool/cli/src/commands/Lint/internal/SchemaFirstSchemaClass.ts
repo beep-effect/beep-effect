@@ -24,7 +24,6 @@ const GENERATED_HEADER_PATTERN =
 const LEADING_COMMENT_BLOCK_PATTERN = /^(\s*(\/\/[^\n]*\n|\/\*[\s\S]*?\*\/))+/;
 const IDENTITY_ANNOTATION_PATTERN = /\$I\.annote(?:Schema)?\(/;
 const SCHEMA_MODULE_SPECIFIER_PATTERN = /\/Schema(?:\.ts)?$/;
-const PLAIN_DATA_EXCLUDED_PREFIXES = ["scratchpad/effected/"] as const;
 const DECLARATION_HOOK_KEY_PATTERN = /^to[A-Z]/;
 
 /**
@@ -423,30 +422,6 @@ const isGeneratedSourceText = (text: string): boolean =>
     O.exists((leading) => GENERATED_HEADER_PATTERN.test(leading))
   );
 
-/**
- * True when a repo-relative path is eligible for the plain-data class kind.
- *
- * **Details**
- *
- * `scratchpad/effected/**` is the verbatim upstream port, which takes brands
- * only (D6); generated files are excluded separately by their header.
- *
- * **Example** (Exclude the effected port)
- *
- * ```ts
- * import { SchemaFirstSchemaClass } from "@beep/repo-cli/test/Lint"
- *
- * console.log(SchemaFirstSchemaClass.isPlainDataEligibleFilePath("scratchpad/effected/src/Foo.ts")) // false
- * ```
- *
- * @param filePath - Repo-relative POSIX path.
- * @returns `false` for paths whose class shapes are fixed by decision.
- * @category predicates
- * @since 0.0.0
- */
-const isPlainDataEligibleFilePath = (filePath: string): boolean =>
-  !A.some(PLAIN_DATA_EXCLUDED_PREFIXES, (prefix) => Str.startsWith(prefix)(filePath));
-
 // Every S.Class / S.TaggedClass / S.Error / S.TaggedError / S.Opaque declaration carries a nominal brand such as
 // `{ readonly brand: unique symbol }` (D4). A missing brand argument or an explicit structural `{}` brand is a
 // candidate until the inventory records a schema-first exception for it.
@@ -478,7 +453,7 @@ const unbrandedEntry = (
 // base class, `instanceof` / `new` target or `S.instanceOf` argument. The name index is conservative: a same-named
 // class anywhere suppresses the finding. Classes that stay classes for reasons the scan cannot see (the codemod's
 // keep-class allowlist, cross-file fields expressions, non-literal `_tag` fields) are inventory exceptions. Callers
-// skip generated files and `isPlainDataEligibleFilePath` exclusions.
+// skip generated files.
 const plainDataEntry = (
   declaration: SchemaClassDeclaration,
   file: string,
@@ -560,7 +535,6 @@ export const SchemaFirstSchemaClass = {
   SchemaClassKind,
   SchemaClassSourceScan,
   isGeneratedSourceText,
-  isPlainDataEligibleFilePath,
   missingIdentityAnnotationOffsets,
   plainDataEntry,
   scanSourceFile,

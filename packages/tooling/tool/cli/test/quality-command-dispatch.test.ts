@@ -4,7 +4,7 @@ import { MemoryStats, provideRuntimeRootForTesting, RuntimeRootChoice } from "@b
 import { FsUtilsLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Console from "effect/Console";
@@ -20,6 +20,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const FixedMemoryStatsLayer = Layer.succeed(
   MemoryStats,
@@ -27,7 +28,8 @@ const FixedMemoryStatsLayer = Layer.succeed(
 );
 const CommandTestLayer = Layer.mergeAll(
   NodeServices.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
   FixedMemoryStatsLayer
 );
 const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
@@ -52,7 +54,7 @@ const recordingSpawner = (spawned: Array<string>, handle = successfulHandle) =>
     if (!ChildProcess.isStandardCommand(command)) {
       return Effect.die("quality command dispatch does not spawn piped commands");
     }
-    A.appendInPlace(spawned, A.join([command.command, ...command.args], " "));
+    A.appendInPlace(spawned, A.join([command.command, ...commandArgs(command)], " "));
     return Effect.succeed(handle);
   });
 
@@ -109,12 +111,10 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     Effect.gen(function* () {
       yield* runQualityCommand(["profile"]);
       yield* runQualityCommand(["scheduler"]);
-      yield* runQualityCommand(["jsdoc-migrate"]);
 
       const output = yield* consoleText();
       expect(output).toContain("Quality profile commands:");
       expect(output).toContain("Quality scheduler commands:");
-      expect(output).toContain("JSDoc carrier-migration commands:");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -218,7 +218,7 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
           ["github-checks", "not-a-mode"],
           ["profile", "config", "not-a-profile"],
           ["turbo-config-proof", "--selector", "not-a-selector"],
-          ["jsdoc-migrate", "titles", "--limit-files", "not-an-integer"],
+          ["residue-reap", "--qualification-views-keep", "not-an-integer"],
         ],
         (argv) => Effect.exit(runQualityCommand(argv))
       );

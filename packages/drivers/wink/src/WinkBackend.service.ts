@@ -1,6 +1,8 @@
 /**
  * WinkBackend - an {@link NLPBackend} implementation backed by wink-nlp.
  *
+ * **Details**
+ *
  * Implements the pluggable {@link NLPBackend} contract on top of the existing
  * {@link WinkEngine} service (the single wink-nlp wrapper in this package), so the
  * model lifecycle is owned in one place. Provides tokenization, sentence

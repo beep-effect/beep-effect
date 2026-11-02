@@ -1,0 +1,60 @@
+{
+  "recordedAt": "2026-10-29T04:08:42.617770+00:00",
+  "operation": "read-only project aggregates; no explicit time filter",
+  "endpoint": "https://dankserver.tailc7c348.ts.net:8447/graphql",
+  "projects": [
+    {
+      "id": "UHJvamVjdDox",
+      "name": "default",
+      "recordCount": 1,
+      "traceCount": 1,
+      "sessionCount": 0
+    },
+    {
+      "id": "UHJvamVjdDoy",
+      "name": "harness-otel",
+      "recordCount": 594060,
+      "traceCount": 11845,
+      "sessionCount": 464
+    },
+    {
+      "id": "UHJvamVjdDoz",
+      "name": "beep-agent-effectiveness",
+      "recordCount": 0,
+      "traceCount": 0,
+      "sessionCount": 0
+    }
+  ],
+  "paginationComplete": true,
+  "spanContentRead": false,
+  "mutationPerformed": false,
+  "coverageDenominator": "unknown",
+  "sevenDayWindow": {
+    "start": "2026-10-22T04:09:44.006880+00:00",
+    "end": "2026-10-29T04:09:44.006880+00:00"
+  },
+  "sevenDayProjects": [
+    {
+      "id": "UHJvamVjdDox",
+      "name": "default",
+      "recordCount": 0,
+      "traceCount": 0,
+      "sessionCount": 0
+    },
+    {
+      "id": "UHJvamVjdDoy",
+      "name": "harness-otel",
+      "recordCount": 237045,
+      "traceCount": 5899,
+      "sessionCount": 312
+    },
+    {
+      "id": "UHJvamVjdDoz",
+      "name": "beep-agent-effectiveness",
+      "recordCount": 0,
+      "traceCount": 0,
+      "sessionCount": 0
+    }
+  ],
+  "sevenDayRecordedAt": "2026-10-29T04:09:44.006880+00:00"
+}

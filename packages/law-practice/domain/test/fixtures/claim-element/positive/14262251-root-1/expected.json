@@ -1,0 +1,2707 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 110,
+          "quote": "An object discrimination method using an ultra-low magnetic field nuclear magnetic resonance (NMR), the method"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 31,
+              "quote": "An object discrimination method"
+            },
+            "determiner": "an",
+            "head": "object discrimination method"
+          },
+          {
+            "anchor": {
+              "startChar": 38,
+              "endChar": 92,
+              "quote": "an ultra-low magnetic field nuclear magnetic resonance"
+            },
+            "determiner": "an",
+            "head": "ultra-low magnetic field nuclear magnetic resonance"
+          },
+          {
+            "anchor": {
+              "startChar": 100,
+              "endChar": 110,
+              "quote": "the method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 123,
+          "endChar": 280,
+          "quote": "measuring the respective spin-lattice relaxation times T1 at a plurality of strengths of prepolarization magnetic fields with respect to a measurement target"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 133,
+              "endChar": 180,
+              "quote": "the respective spin-lattice relaxation times T1"
+            },
+            "determiner": "the",
+            "head": "respective spin-lattice relaxation times t1"
+          },
+          {
+            "anchor": {
+              "startChar": 184,
+              "endChar": 208,
+              "quote": "a plurality of strengths"
+            },
+            "determiner": "plurality-of",
+            "head": "strengths"
+          },
+          {
+            "anchor": {
+              "startChar": 212,
+              "endChar": 243,
+              "quote": "prepolarization magnetic fields"
+            },
+            "determiner": "bare",
+            "head": "prepolarization magnetic fields"
+          },
+          {
+            "anchor": {
+              "startChar": 260,
+              "endChar": 280,
+              "quote": "a measurement target"
+            },
+            "determiner": "a",
+            "head": "measurement target"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 286,
+          "endChar": 360,
+          "quote": "classifying the measurement target using the spin-lattice relaxation times"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 298,
+              "endChar": 320,
+              "quote": "the measurement target"
+            },
+            "determiner": "the",
+            "head": "measurement target"
+          },
+          {
+            "anchor": {
+              "startChar": 327,
+              "endChar": 360,
+              "quote": "the spin-lattice relaxation times"
+            },
+            "determiner": "the",
+            "head": "spin-lattice relaxation times"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 123,
+              "endChar": 133,
+              "quote": "measuring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 133,
+                "endChar": 180,
+                "quote": "the respective spin-lattice relaxation times T1"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 180,
+              "endChar": 184,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 184,
+                "endChar": 208,
+                "quote": "a plurality of strengths"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 208,
+              "endChar": 212,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 212,
+                "endChar": 243,
+                "quote": "prepolarization magnetic fields"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 243,
+              "endChar": 260,
+              "quote": " with respect to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 260,
+                "endChar": 280,
+                "quote": "a measurement target"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 286,
+              "endChar": 298,
+              "quote": "classifying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 298,
+                "endChar": 320,
+                "quote": "the measurement target"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 320,
+              "endChar": 327,
+              "quote": " using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 327,
+                "endChar": 360,
+                "quote": "the spin-lattice relaxation times"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 100,
+            "endChar": 110,
+            "quote": "the method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 31,
+            "quote": "An object discrimination method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 298,
+            "endChar": 320,
+            "quote": "the measurement target"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 260,
+            "endChar": 280,
+            "quote": "a measurement target"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 327,
+            "endChar": 360,
+            "quote": "the spin-lattice relaxation times"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 133,
+            "endChar": 180,
+            "quote": "the respective spin-lattice relaxation times T1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The method as set forth in claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 1015,
+          "quote": "measuring the respective spin-lattice relaxation times comprises: setting a pulse sequence suitable for individual relaxation time characteristics of the measurement target; applying a prepolarization magnetic field and a readout magnetic field; measuring a free induction decay (FID) signal; measuring the signal intensity or line width of the resonance frequency of a nucleus by Fourier-transform of the FID signal; changing the time interval of applying the prepolarization magnetic field; obtaining the spin-lattice relaxation time by fitting the signal intensity variation depending on the time interval of applying the prepolarization magnetic field; and constructing the first parameter vector with obtaining the respective spin-lattice relaxation times by repeatedly performing the above operations on a plurality of changed strengths of prepolarization magnetic fields, wherein the variety of the measurement target is identified using the first parameter vector"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 54,
+              "endChar": 98,
+              "quote": "the respective spin-lattice relaxation times"
+            },
+            "determiner": "the",
+            "head": "respective spin-lattice relaxation times"
+          }
+        ]
+      },
+      {
+        "path": "2.a.i",
+        "anchor": {
+          "startChar": 110,
+          "endChar": 216,
+          "quote": "setting a pulse sequence suitable for individual relaxation time characteristics of the measurement target"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 118,
+              "endChar": 134,
+              "quote": "a pulse sequence"
+            },
+            "determiner": "a",
+            "head": "pulse sequence"
+          },
+          {
+            "anchor": {
+              "startChar": 148,
+              "endChar": 190,
+              "quote": "individual relaxation time characteristics"
+            },
+            "determiner": "bare",
+            "head": "individual relaxation time characteristics"
+          },
+          {
+            "anchor": {
+              "startChar": 194,
+              "endChar": 216,
+              "quote": "the measurement target"
+            },
+            "determiner": "the",
+            "head": "measurement target"
+          }
+        ]
+      },
+      {
+        "path": "2.a.ii",
+        "anchor": {
+          "startChar": 218,
+          "endChar": 288,
+          "quote": "applying a prepolarization magnetic field and a readout magnetic field"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 227,
+              "endChar": 259,
+              "quote": "a prepolarization magnetic field"
+            },
+            "determiner": "a",
+            "head": "prepolarization magnetic field"
+          },
+          {
+            "anchor": {
+              "startChar": 264,
+              "endChar": 288,
+              "quote": "a readout magnetic field"
+            },
+            "determiner": "a",
+            "head": "readout magnetic field"
+          }
+        ]
+      },
+      {
+        "path": "2.a.iii",
+        "anchor": {
+          "startChar": 290,
+          "endChar": 335,
+          "quote": "measuring a free induction decay (FID) signal"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 300,
+              "endChar": 335,
+              "quote": "a free induction decay (FID) signal"
+            },
+            "determiner": "a",
+            "head": "free induction decay (fid) signal"
+          }
+        ]
+      },
+      {
+        "path": "2.a.iv",
+        "anchor": {
+          "startChar": 337,
+          "endChar": 460,
+          "quote": "measuring the signal intensity or line width of the resonance frequency of a nucleus by Fourier-transform of the FID signal"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 347,
+              "endChar": 381,
+              "quote": "the signal intensity or line width"
+            },
+            "determiner": "the",
+            "head": "signal intensity or line width"
+          },
+          {
+            "anchor": {
+              "startChar": 385,
+              "endChar": 408,
+              "quote": "the resonance frequency"
+            },
+            "determiner": "the",
+            "head": "resonance frequency"
+          },
+          {
+            "anchor": {
+              "startChar": 412,
+              "endChar": 421,
+              "quote": "a nucleus"
+            },
+            "determiner": "a",
+            "head": "nucleus"
+          },
+          {
+            "anchor": {
+              "startChar": 425,
+              "endChar": 442,
+              "quote": "Fourier-transform"
+            },
+            "determiner": "bare",
+            "head": "fourier-transform"
+          },
+          {
+            "anchor": {
+              "startChar": 446,
+              "endChar": 460,
+              "quote": "the FID signal"
+            },
+            "determiner": "the",
+            "head": "fid signal"
+          }
+        ]
+      },
+      {
+        "path": "2.a.v",
+        "anchor": {
+          "startChar": 462,
+          "endChar": 535,
+          "quote": "changing the time interval of applying the prepolarization magnetic field"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 471,
+              "endChar": 488,
+              "quote": "the time interval"
+            },
+            "determiner": "the",
+            "head": "time interval"
+          },
+          {
+            "anchor": {
+              "startChar": 501,
+              "endChar": 535,
+              "quote": "the prepolarization magnetic field"
+            },
+            "determiner": "the",
+            "head": "prepolarization magnetic field"
+          }
+        ]
+      },
+      {
+        "path": "2.a.vi",
+        "anchor": {
+          "startChar": 537,
+          "endChar": 699,
+          "quote": "obtaining the spin-lattice relaxation time by fitting the signal intensity variation depending on the time interval of applying the prepolarization magnetic field"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 547,
+              "endChar": 579,
+              "quote": "the spin-lattice relaxation time"
+            },
+            "determiner": "the",
+            "head": "spin-lattice relaxation time"
+          },
+          {
+            "anchor": {
+              "startChar": 591,
+              "endChar": 621,
+              "quote": "the signal intensity variation"
+            },
+            "determiner": "the",
+            "head": "signal intensity variation"
+          },
+          {
+            "anchor": {
+              "startChar": 635,
+              "endChar": 652,
+              "quote": "the time interval"
+            },
+            "determiner": "the",
+            "head": "time interval"
+          },
+          {
+            "anchor": {
+              "startChar": 665,
+              "endChar": 699,
+              "quote": "the prepolarization magnetic field"
+            },
+            "determiner": "the",
+            "head": "prepolarization magnetic field"
+          }
+        ]
+      },
+      {
+        "path": "2.a.vii",
+        "anchor": {
+          "startChar": 705,
+          "endChar": 921,
+          "quote": "constructing the first parameter vector with obtaining the respective spin-lattice relaxation times by repeatedly performing the above operations on a plurality of changed strengths of prepolarization magnetic fields"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 718,
+              "endChar": 744,
+              "quote": "the first parameter vector"
+            },
+            "determiner": "the",
+            "head": "first parameter vector"
+          },
+          {
+            "anchor": {
+              "startChar": 760,
+              "endChar": 804,
+              "quote": "the respective spin-lattice relaxation times"
+            },
+            "determiner": "the",
+            "head": "respective spin-lattice relaxation times"
+          },
+          {
+            "anchor": {
+              "startChar": 830,
+              "endChar": 850,
+              "quote": "the above operations"
+            },
+            "determiner": "the",
+            "head": "above operations"
+          },
+          {
+            "anchor": {
+              "startChar": 854,
+              "endChar": 886,
+              "quote": "a plurality of changed strengths"
+            },
+            "determiner": "plurality-of",
+            "head": "changed strengths"
+          },
+          {
+            "anchor": {
+              "startChar": 890,
+              "endChar": 921,
+              "quote": "prepolarization magnetic fields"
+            },
+            "determiner": "bare",
+            "head": "prepolarization magnetic fields"
+          }
+        ]
+      },
+      {
+        "path": "2.a.viii",
+        "anchor": {
+          "startChar": 931,
+          "endChar": 1015,
+          "quote": "the variety of the measurement target is identified using the first parameter vector"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 931,
+              "endChar": 942,
+              "quote": "the variety"
+            },
+            "determiner": "the",
+            "head": "variety"
+          },
+          {
+            "anchor": {
+              "startChar": 946,
+              "endChar": 968,
+              "quote": "the measurement target"
+            },
+            "determiner": "the",
+            "head": "measurement target"
+          },
+          {
+            "anchor": {
+              "startChar": 989,
+              "endChar": 1015,
+              "quote": "the first parameter vector"
+            },
+            "determiner": "the",
+            "head": "first parameter vector"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 31,
+            "quote": "An object discrimination method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.i",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 110,
+              "endChar": 118,
+              "quote": "setting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.i",
+              "anchor": {
+                "startChar": 118,
+                "endChar": 134,
+                "quote": "a pulse sequence"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 134,
+              "endChar": 148,
+              "quote": " suitable for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.i",
+              "anchor": {
+                "startChar": 148,
+                "endChar": 190,
+                "quote": "individual relaxation time characteristics"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 190,
+              "endChar": 194,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.i",
+              "anchor": {
+                "startChar": 194,
+                "endChar": 216,
+                "quote": "the measurement target"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.ii",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.ii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 218,
+              "endChar": 227,
+              "quote": "applying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.ii",
+              "anchor": {
+                "startChar": 227,
+                "endChar": 259,
+                "quote": "a prepolarization magnetic field"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 259,
+              "endChar": 264,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.ii",
+              "anchor": {
+                "startChar": 264,
+                "endChar": 288,
+                "quote": "a readout magnetic field"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.iii",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.iii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 290,
+              "endChar": 300,
+              "quote": "measuring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iii",
+              "anchor": {
+                "startChar": 300,
+                "endChar": 335,
+                "quote": "a free induction decay (FID) signal"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.iv",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.iv",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 337,
+              "endChar": 347,
+              "quote": "measuring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iv",
+              "anchor": {
+                "startChar": 347,
+                "endChar": 381,
+                "quote": "the signal intensity or line width"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 381,
+              "endChar": 385,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iv",
+              "anchor": {
+                "startChar": 385,
+                "endChar": 408,
+                "quote": "the resonance frequency"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 408,
+              "endChar": 412,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iv",
+              "anchor": {
+                "startChar": 412,
+                "endChar": 421,
+                "quote": "a nucleus"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 421,
+              "endChar": 425,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iv",
+              "anchor": {
+                "startChar": 425,
+                "endChar": 442,
+                "quote": "Fourier-transform"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 442,
+              "endChar": 446,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.iv",
+              "anchor": {
+                "startChar": 446,
+                "endChar": 460,
+                "quote": "the FID signal"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.v",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.v",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 462,
+              "endChar": 471,
+              "quote": "changing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.v",
+              "anchor": {
+                "startChar": 471,
+                "endChar": 488,
+                "quote": "the time interval"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 488,
+              "endChar": 501,
+              "quote": " of applying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.v",
+              "anchor": {
+                "startChar": 501,
+                "endChar": 535,
+                "quote": "the prepolarization magnetic field"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.vi",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.vi",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 537,
+              "endChar": 547,
+              "quote": "obtaining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.vi",
+              "anchor": {
+                "startChar": 547,
+                "endChar": 579,
+                "quote": "the spin-lattice relaxation time"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 579,
+              "endChar": 591,
+              "quote": " by fitting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.vi",
+              "anchor": {
+                "startChar": 591,
+                "endChar": 621,
+                "quote": "the signal intensity variation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 621,
+              "endChar": 635,
+              "quote": " depending on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.vi",
+              "anchor": {
+                "startChar": 635,
+                "endChar": 652,
+                "quote": "the time interval"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 652,
+              "endChar": 665,
+              "quote": " of applying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.vi",
+              "anchor": {
+                "startChar": 665,
+                "endChar": 699,
+                "quote": "the prepolarization magnetic field"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.vii",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.vii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 705,
+              "endChar": 718,
+              "quote": "constructing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.vii",
+              "anchor": {
+                "startChar": 718,
+                "endChar": 744,
+                "quote": "the first parameter vector"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 744,
+              "endChar": 760,
+              "quote": " with obtaining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.vii",
+              "anchor": {
+                "startChar": 760,
+                "endChar": 804,
+                "quote": "the respective spin-lattice relaxation times"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 804,
+              "endChar": 830,
+              "quote": " by repeatedly performing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.vii",
+              "anchor": {
+                "startChar": 830,
+                "endChar": 850,
+                "quote": "the above operations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 850,
+              "endChar": 854,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.vii",
+              "anchor": {
+                "startChar": 854,
+                "endChar": 886,
+                "quote": "a plurality of changed strengths"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 886,
+              "endChar": 890,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.vii",
+              "anchor": {
+                "startChar": 890,
+                "endChar": 921,
+                "quote": "prepolarization magnetic fields"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a.viii",
+        "parent": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a.viii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.viii",
+              "anchor": {
+                "startChar": 931,
+                "endChar": 942,
+                "quote": "the variety"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 942,
+              "endChar": 946,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.viii",
+              "anchor": {
+                "startChar": 946,
+                "endChar": 968,
+                "quote": "the measurement target"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 968,
+              "endChar": 989,
+              "quote": " is identified using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a.viii",
+              "anchor": {
+                "startChar": 989,
+                "endChar": 1015,
+                "quote": "the first parameter vector"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.i",
+          "anchor": {
+            "startChar": 194,
+            "endChar": 216,
+            "quote": "the measurement target"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 260,
+            "endChar": 280,
+            "quote": "a measurement target"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.viii",
+          "anchor": {
+            "startChar": 946,
+            "endChar": 968,
+            "quote": "the measurement target"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 260,
+            "endChar": 280,
+            "quote": "a measurement target"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.v",
+          "anchor": {
+            "startChar": 501,
+            "endChar": 535,
+            "quote": "the prepolarization magnetic field"
+          }
+        },
+        "introducing": {
+          "path": "2.a.ii",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 259,
+            "quote": "a prepolarization magnetic field"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.vi",
+          "anchor": {
+            "startChar": 665,
+            "endChar": 699,
+            "quote": "the prepolarization magnetic field"
+          }
+        },
+        "introducing": {
+          "path": "2.a.ii",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 259,
+            "quote": "a prepolarization magnetic field"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.iv",
+          "anchor": {
+            "startChar": 446,
+            "endChar": 460,
+            "quote": "the FID signal"
+          }
+        },
+        "introducing": {
+          "path": "2.a.iii",
+          "anchor": {
+            "startChar": 300,
+            "endChar": 335,
+            "quote": "a free induction decay (FID) signal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.vi",
+          "anchor": {
+            "startChar": 635,
+            "endChar": 652,
+            "quote": "the time interval"
+          }
+        },
+        "introducing": {
+          "path": "2.a.v",
+          "anchor": {
+            "startChar": 471,
+            "endChar": 488,
+            "quote": "the time interval"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.viii",
+          "anchor": {
+            "startChar": 989,
+            "endChar": 1015,
+            "quote": "the first parameter vector"
+          }
+        },
+        "introducing": {
+          "path": "2.a.vii",
+          "anchor": {
+            "startChar": 718,
+            "endChar": 744,
+            "quote": "the first parameter vector"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 54,
+            "endChar": 98,
+            "quote": "the respective spin-lattice relaxation times"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 133,
+            "endChar": 180,
+            "quote": "the respective spin-lattice relaxation times T1"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a.vii",
+          "anchor": {
+            "startChar": 760,
+            "endChar": 804,
+            "quote": "the respective spin-lattice relaxation times"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 133,
+            "endChar": 180,
+            "quote": "the respective spin-lattice relaxation times T1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The method as set forth in claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 56,
+          "endChar": 153,
+          "quote": "measuring the spin-spin relaxation time T2 of the measurement target using a gradient echo signal"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 66,
+              "endChar": 98,
+              "quote": "the spin-spin relaxation time T2"
+            },
+            "determiner": "the",
+            "head": "spin-spin relaxation time t2"
+          },
+          {
+            "anchor": {
+              "startChar": 102,
+              "endChar": 124,
+              "quote": "the measurement target"
+            },
+            "determiner": "the",
+            "head": "measurement target"
+          },
+          {
+            "anchor": {
+              "startChar": 131,
+              "endChar": 153,
+              "quote": "a gradient echo signal"
+            },
+            "determiner": "a",
+            "head": "gradient echo signal"
+          }
+        ]
+      },
+      {
+        "path": "3.b",
+        "anchor": {
+          "startChar": 159,
+          "endChar": 229,
+          "quote": "classifying the measurement target using the spin-spin relaxation time"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 193,
+              "quote": "the measurement target"
+            },
+            "determiner": "the",
+            "head": "measurement target"
+          },
+          {
+            "anchor": {
+              "startChar": 200,
+              "endChar": 229,
+              "quote": "the spin-spin relaxation time"
+            },
+            "determiner": "the",
+            "head": "spin-spin relaxation time"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 31,
+            "quote": "An object discrimination method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 56,
+              "endChar": 66,
+              "quote": "measuring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 66,
+                "endChar": 98,
+                "quote": "the spin-spin relaxation time T2"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 98,
+              "endChar": 102,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 102,
+                "endChar": 124,
+                "quote": "the measurement target"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 124,
+              "endChar": 131,
+              "quote": " using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 131,
+                "endChar": 153,
+                "quote": "a gradient echo signal"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "3.b",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 159,
+              "endChar": 171,
+              "quote": "classifying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 171,
+                "endChar": 193,
+                "quote": "the measurement target"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 193,
+              "endChar": 200,
+              "quote": " using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 200,
+                "endChar": 229,
+                "quote": "the spin-spin relaxation time"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 102,
+            "endChar": 124,
+            "quote": "the measurement target"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 260,
+            "endChar": 280,
+            "quote": "a measurement target"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 171,
+            "endChar": 193,
+            "quote": "the measurement target"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 260,
+            "endChar": 280,
+            "quote": "a measurement target"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 229,
+            "quote": "the spin-spin relaxation time"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 66,
+            "endChar": 98,
+            "quote": "the spin-spin relaxation time T2"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The method as set forth in claim 3"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 808,
+          "quote": "measuring the spin-spin relaxation time of the measurement target comprises: setting a pulse sequence suitable for individual relaxation time characteristics of the measurement target; applying a prepolarization magnetic field and a readout magnetic field; successively applying a positive gradient magnetic field and a negative gradient magnetic field; measuring a gradient echo signal; measuring the signal intensity or line width of the resonance frequency of a nucleus by Fourier-transform of the gradient echo signal; and constructing the second parameter vector with a line width or a reciprocal of the line width depending on the resonance frequency of a nucleus, wherein the variety of the measurement target is identified using the second parameter vector"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 54,
+              "endChar": 83,
+              "quote": "the spin-spin relaxation time"
+            },
+            "determiner": "the",
+            "head": "spin-spin relaxation time"
+          },
+          {
+            "anchor": {
+              "startChar": 87,
+              "endChar": 109,
+              "quote": "the measurement target"
+            },
+            "determiner": "the",
+            "head": "measurement target"
+          }
+        ]
+      },
+      {
+        "path": "4.a.i",
+        "anchor": {
+          "startChar": 121,
+          "endChar": 227,
+          "quote": "setting a pulse sequence suitable for individual relaxation time characteristics of the measurement target"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 129,
+              "endChar": 145,
+              "quote": "a pulse sequence"
+            },
+            "determiner": "a",
+            "head": "pulse sequence"
+          },
+          {
+            "anchor": {
+              "startChar": 159,
+              "endChar": 201,
+              "quote": "individual relaxation time characteristics"
+            },
+            "determiner": "bare",
+            "head": "individual relaxation time characteristics"
+          },
+          {
+            "anchor": {
+              "startChar": 205,
+              "endChar": 227,
+              "quote": "the measurement target"
+            },
+            "determiner": "the",
+            "head": "measurement target"
+          }
+        ]
+      },
+      {
+        "path": "4.a.ii",
+        "anchor": {
+          "startChar": 229,
+          "endChar": 299,
+          "quote": "applying a prepolarization magnetic field and a readout magnetic field"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 238,
+              "endChar": 270,
+              "quote": "a prepolarization magnetic field"
+            },
+            "determiner": "a",
+            "head": "prepolarization magnetic field"
+          },
+          {
+            "anchor": {
+              "startChar": 275,
+              "endChar": 299,
+              "quote": "a readout magnetic field"
+            },
+            "determiner": "a",
+            "head": "readout magnetic field"
+          }
+        ]
+      },
+      {
+        "path": "4.a.iii",
+        "anchor": {
+          "startChar": 301,
+          "endChar": 396,
+          "quote": "successively applying a positive gradient magnetic field and a negative gradient magnetic field"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 323,
+              "endChar": 357,
+              "quote": "a positive gradient magnetic field"
+            },
+            "determiner": "a",
+            "head": "positive gradient magnetic field"
+          },
+          {
+            "anchor": {
+              "startChar": 362,
+              "endChar": 396,
+              "quote": "a negative gradient magnetic field"
+            },
+            "determiner": "a",
+            "head": "negative gradient magnetic field"
+          }
+        ]
+      },
+      {
+        "path": "4.a.iv",
+        "anchor": {
+          "startChar": 398,
+          "endChar": 430,
+          "quote": "measuring a gradient echo signal"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 408,
+              "endChar": 430,
+              "quote": "a gradient echo signal"
+            },
+            "determiner": "a",
+            "head": "gradient echo signal"
+          }
+        ]
+      },
+      {
+        "path": "4.a.v",
+        "anchor": {
+          "startChar": 432,
+          "endChar": 565,
+          "quote": "measuring the signal intensity or line width of the resonance frequency of a nucleus by Fourier-transform of the gradient echo signal"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 442,
+              "endChar": 476,
+              "quote": "the signal intensity or line width"
+            },
+            "determiner": "the",
+            "head": "signal intensity or line width"
+          },
+          {
+            "anchor": {
+              "startChar": 480,
+              "endChar": 503,
+              "quote": "the resonance frequency"
+            },
+            "determiner": "the",
+            "head": "resonance frequency"
+          },
+          {
+            "anchor": {
+              "startChar": 507,
+              "endChar": 516,
+              "quote": "a nucleus"
+            },
+            "determiner": "a",
+            "head": "nucleus"
+          },
+          {
+            "anchor": {
+              "startChar": 520,
+              "endChar": 537,
+              "quote": "Fourier-transform"
+            },
+            "determiner": "bare",
+            "head": "fourier-transform"
+          },
+          {
+            "anchor": {
+              "startChar": 541,
+              "endChar": 565,
+              "quote": "the gradient echo signal"
+            },
+            "determiner": "the",
+            "head": "gradient echo signal"
+          }
+        ]
+      },
+      {
+        "path": "4.a.vi",
+        "anchor": {
+          "startChar": 571,
+          "endChar": 713,
+          "quote": "constructing the second parameter vector with a line width or a reciprocal of the line width depending on the resonance frequency of a nucleus"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 584,
+              "endChar": 611,
+              "quote": "the second parameter vector"
+            },
+            "determiner": "the",
+            "head": "second parameter vector"
+          },
+          {
+            "anchor": {
+              "startChar": 617,
+              "endChar": 629,
+              "quote": "a line width"
+            },
+            "determiner": "a",
+            "head": "line width"
+          },
+          {
+            "anchor": {
+              "startChar": 633,
+              "endChar": 645,
+              "quote": "a reciprocal"
+            },
+            "determiner": "a",
+            "head": "reciprocal"
+          },
+          {
+            "anchor": {
+              "startChar": 649,
+              "endChar": 663,
+              "quote": "the line width"
+            },
+            "determiner": "the",
+            "head": "line width"
+          },
+          {
+            "anchor": {
+              "startChar": 677,
+              "endChar": 700,
+              "quote": "the resonance frequency"
+            },
+            "determiner": "the",
+            "head": "resonance frequency"
+          },
+          {
+            "anchor": {
+              "startChar": 704,
+              "endChar": 713,
+              "quote": "a nucleus"
+            },
+            "determiner": "a",
+            "head": "nucleus"
+          }
+        ]
+      },
+      {
+        "path": "4.a.vii",
+        "anchor": {
+          "startChar": 723,
+          "endChar": 808,
+          "quote": "the variety of the measurement target is identified using the second parameter vector"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 723,
+              "endChar": 734,
+              "quote": "the variety"
+            },
+            "determiner": "the",
+            "head": "variety"
+          },
+          {
+            "anchor": {
+              "startChar": 738,
+              "endChar": 760,
+              "quote": "the measurement target"
+            },
+            "determiner": "the",
+            "head": "measurement target"
+          },
+          {
+            "anchor": {
+              "startChar": 781,
+              "endChar": 808,
+              "quote": "the second parameter vector"
+            },
+            "determiner": "the",
+            "head": "second parameter vector"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "3"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 31,
+            "quote": "An object discrimination method"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a.i",
+        "parent": "4.a"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 121,
+              "endChar": 129,
+              "quote": "setting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.i",
+              "anchor": {
+                "startChar": 129,
+                "endChar": 145,
+                "quote": "a pulse sequence"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 145,
+              "endChar": 159,
+              "quote": " suitable for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.i",
+              "anchor": {
+                "startChar": 159,
+                "endChar": 201,
+                "quote": "individual relaxation time characteristics"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 201,
+              "endChar": 205,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.i",
+              "anchor": {
+                "startChar": 205,
+                "endChar": 227,
+                "quote": "the measurement target"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a.ii",
+        "parent": "4.a"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a.ii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 229,
+              "endChar": 238,
+              "quote": "applying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.ii",
+              "anchor": {
+                "startChar": 238,
+                "endChar": 270,
+                "quote": "a prepolarization magnetic field"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 270,
+              "endChar": 275,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.ii",
+              "anchor": {
+                "startChar": 275,
+                "endChar": 299,
+                "quote": "a readout magnetic field"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a.iii",
+        "parent": "4.a"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a.iii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 301,
+              "endChar": 323,
+              "quote": "successively applying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.iii",
+              "anchor": {
+                "startChar": 323,
+                "endChar": 357,
+                "quote": "a positive gradient magnetic field"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 357,
+              "endChar": 362,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.iii",
+              "anchor": {
+                "startChar": 362,
+                "endChar": 396,
+                "quote": "a negative gradient magnetic field"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a.iv",
+        "parent": "4.a"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a.iv",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 398,
+              "endChar": 408,
+              "quote": "measuring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.iv",
+              "anchor": {
+                "startChar": 408,
+                "endChar": 430,
+                "quote": "a gradient echo signal"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a.v",
+        "parent": "4.a"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a.v",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 432,
+              "endChar": 442,
+              "quote": "measuring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.v",
+              "anchor": {
+                "startChar": 442,
+                "endChar": 476,
+                "quote": "the signal intensity or line width"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 476,
+              "endChar": 480,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.v",
+              "anchor": {
+                "startChar": 480,
+                "endChar": 503,
+                "quote": "the resonance frequency"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 503,
+              "endChar": 507,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.v",
+              "anchor": {
+                "startChar": 507,
+                "endChar": 516,
+                "quote": "a nucleus"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 516,
+              "endChar": 520,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.v",
+              "anchor": {
+                "startChar": 520,
+                "endChar": 537,
+                "quote": "Fourier-transform"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 537,
+              "endChar": 541,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.v",
+              "anchor": {
+                "startChar": 541,
+                "endChar": 565,
+                "quote": "the gradient echo signal"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a.vi",
+        "parent": "4.a"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a.vi",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 571,
+              "endChar": 584,
+              "quote": "constructing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.vi",
+              "anchor": {
+                "startChar": 584,
+                "endChar": 611,
+                "quote": "the second parameter vector"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 611,
+              "endChar": 617,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.vi",
+              "anchor": {
+                "startChar": 617,
+                "endChar": 629,
+                "quote": "a line width"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 629,
+              "endChar": 633,
+              "quote": " or "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.vi",
+              "anchor": {
+                "startChar": 633,
+                "endChar": 645,
+                "quote": "a reciprocal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 645,
+              "endChar": 649,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.vi",
+              "anchor": {
+                "startChar": 649,
+                "endChar": 663,
+                "quote": "the line width"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 663,
+              "endChar": 677,
+              "quote": " depending on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.vi",
+              "anchor": {
+                "startChar": 677,
+                "endChar": 700,
+                "quote": "the resonance frequency"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 700,
+              "endChar": 704,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.vi",
+              "anchor": {
+                "startChar": 704,
+                "endChar": 713,
+                "quote": "a nucleus"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a.vii",
+        "parent": "4.a"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a.vii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.vii",
+              "anchor": {
+                "startChar": 723,
+                "endChar": 734,
+                "quote": "the variety"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 734,
+              "endChar": 738,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.vii",
+              "anchor": {
+                "startChar": 738,
+                "endChar": 760,
+                "quote": "the measurement target"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 760,
+              "endChar": 781,
+              "quote": " is identified using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a.vii",
+              "anchor": {
+                "startChar": 781,
+                "endChar": 808,
+                "quote": "the second parameter vector"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 109,
+            "quote": "the measurement target"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 260,
+            "endChar": 280,
+            "quote": "a measurement target"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a.i",
+          "anchor": {
+            "startChar": 205,
+            "endChar": 227,
+            "quote": "the measurement target"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 260,
+            "endChar": 280,
+            "quote": "a measurement target"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a.vii",
+          "anchor": {
+            "startChar": 738,
+            "endChar": 760,
+            "quote": "the measurement target"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 260,
+            "endChar": 280,
+            "quote": "a measurement target"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 54,
+            "endChar": 83,
+            "quote": "the spin-spin relaxation time"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 66,
+            "endChar": 98,
+            "quote": "the spin-spin relaxation time T2"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a.v",
+          "anchor": {
+            "startChar": 541,
+            "endChar": 565,
+            "quote": "the gradient echo signal"
+          }
+        },
+        "introducing": {
+          "path": "4.a.iv",
+          "anchor": {
+            "startChar": 408,
+            "endChar": 430,
+            "quote": "a gradient echo signal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a.vi",
+          "anchor": {
+            "startChar": 649,
+            "endChar": 663,
+            "quote": "the line width"
+          }
+        },
+        "introducing": {
+          "path": "4.a.vi",
+          "anchor": {
+            "startChar": 617,
+            "endChar": 629,
+            "quote": "a line width"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a.vii",
+          "anchor": {
+            "startChar": 781,
+            "endChar": 808,
+            "quote": "the second parameter vector"
+          }
+        },
+        "introducing": {
+          "path": "4.a.vi",
+          "anchor": {
+            "startChar": 584,
+            "endChar": 611,
+            "quote": "the second parameter vector"
+          }
+        }
+      }
+    ]
+  }
+]

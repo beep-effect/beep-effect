@@ -11,6 +11,7 @@
  */
 
 import { BunRuntime, BunServices } from "@effect/platform-bun";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -117,7 +118,10 @@ const CliLive = Layer.mergeAll(
   WikidataClient.Default,
   JinaReaderClient.Default,
   LinkIngestionLayer
-).pipe(Layer.provideMerge(ConfigServiceDefault), Layer.provideMerge(BunServices.layer));
+).pipe(
+  Layer.provideMerge(ConfigServiceDefault),
+  Layer.provideMerge(Layer.merge(BunServices.layer, BunCrypto.layer))
+);
 
 // =============================================================================
 // Entry Point

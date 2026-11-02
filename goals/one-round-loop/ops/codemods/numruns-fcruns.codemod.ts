@@ -30,7 +30,7 @@
  * @since 0.0.0
  */
 import { TSMorphService, TSMorphServiceLive } from "@beep/repo-utils";
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -39,7 +39,7 @@ import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { Node, SyntaxKind } from "ts-morph";
 import type { TSMorphServiceError } from "@beep/repo-utils";
-import type { CallExpression, ObjectLiteralExpression, SourceFile } from "ts-morph";
+import type { CallExpression, ImportDeclaration, ImportSpecifier, ObjectLiteralExpression, SourceFile } from "ts-morph";
 
 const FAST_CHECK_MODULE = "effect/testing";
 const TEST_UTILS_MODULE = "@beep/test-utils";
@@ -99,9 +99,9 @@ const resolveFastCheckAlias = (sourceFile: SourceFile): O.Option<string> =>
         sourceFile.getImportDeclarations(),
         (declaration) => declaration.getModuleSpecifierValue() === FAST_CHECK_MODULE
       ),
-      (declaration) => declaration.getNamedImports()
+      (declaration: ImportDeclaration) => declaration.getNamedImports()
     ),
-    (named) => named.getName() === "FastCheck"
+    (named: ImportSpecifier) => named.getName() === "FastCheck"
   ).pipe(O.map((named) => named.getAliasNode()?.getText() ?? named.getName()));
 
 const isFcAssertCall = (call: CallExpression, fcAlias: string): boolean => {
@@ -228,7 +228,7 @@ export const runNumRunsFcRunsCodemod = (
 
 if (import.meta.main) {
   const filePaths = process.argv.slice(2);
-  const MainLayer = TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer));
+  const MainLayer = TSMorphServiceLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
   NodeRuntime.runMain(
     runNumRunsFcRunsCodemod(filePaths).pipe(
       Effect.flatMap((results) =>

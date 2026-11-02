@@ -25,7 +25,7 @@ import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { runGitRawOutput } from "../../../internal/repo-run/GitExec.ts";
 import type { Err } from "@beep/utils";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 
@@ -215,7 +215,7 @@ export const scanTrackedTextFiles = Effect.fn("TrackedTextFiles.scanTrackedTextF
     readonly findings: ReadonlyArray<Finding>;
   },
   E,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

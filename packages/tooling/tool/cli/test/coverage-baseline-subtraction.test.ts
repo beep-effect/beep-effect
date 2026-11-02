@@ -1,3 +1,4 @@
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   coverageRegressionBaselinePath,
   subtractPackageFromCoverageRegressionBaseline,
@@ -14,7 +15,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { parse } from "jsonc-parser";
 
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
@@ -91,7 +91,7 @@ describe("coverage baseline subtraction", () => {
         expect(Str.startsWith("// Coverage regression baseline. Do not edit by hand.")(text)).toBe(true);
         expect(Str.includes("@beep/courtlistener")(text)).toBe(false);
 
-        const decoded = yield* decodeUnknownBaselineProjection(parse(text));
+        const decoded = yield* decodeUnknownBaselineProjection(yield* Jsonc.parse(text));
         expect(R.keys(decoded.packages)).toStrictEqual(["@beep/alpha"]);
         expect(R.keys(decoded.exemptions)).toStrictEqual([]);
         expect(R.keys(decoded.follow_ups)).toStrictEqual(["@beep/alpha"]);

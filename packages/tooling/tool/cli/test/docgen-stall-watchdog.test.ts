@@ -4,7 +4,7 @@ import { DomainError } from "@beep/repo-utils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -16,7 +16,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 
-const ProcessDiagnosticTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const ProcessDiagnosticTestLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer);
 
 // The hosted Docgen lane runs turbo to completion and then never sees it exit:
 // 2m8s of real work followed by 56 minutes of silence until the job timed out
@@ -205,43 +205,45 @@ await Effect.runPromise(runDocgenStepWithStallWatchdogForTesting("cache fixture"
 });
 
 describe("internal/process runToExit force-kill escalation", () => {
-  it.layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
-    // Abandoning a step closes the child scope, which signals the process group
-    // and then waits on the exit event. Without this escalation that wait is
-    // unbounded against a child ignoring SIGTERM, so the watchdog above could not
-    // actually reclaim anything.
-    it.effect(
-      "accepts a force-kill window without disturbing a normal exit",
-      Effect.fnUntraced(function* () {
-        const repoRoot = yield* findRepoRoot();
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestServices: true, timeout: "30 seconds" })(
+    (it) => {
+      // Abandoning a step closes the child scope, which signals the process group
+      // and then waits on the exit event. Without this escalation that wait is
+      // unbounded against a child ignoring SIGTERM, so the watchdog above could not
+      // actually reclaim anything.
+      it.effect(
+        "accepts a force-kill window without disturbing a normal exit",
+        Effect.fnUntraced(function* () {
+          const repoRoot = yield* findRepoRoot();
 
-        const exitCode = yield* runToExit({
-          command: "true",
-          args: [],
-          cwd: repoRoot,
-          stdio: "ignore",
-          forceKillAfter: Duration.seconds(5),
-        });
+          const exitCode = yield* runToExit({
+            command: "true",
+            args: [],
+            cwd: repoRoot,
+            stdio: "ignore",
+            forceKillAfter: Duration.seconds(5),
+          });
 
-        expect(exitCode).toBe(0);
-      })
-    );
+          expect(exitCode).toBe(0);
+        })
+      );
 
-    it.effect(
-      "still reports a nonzero exit when a force-kill window is set",
-      Effect.fnUntraced(function* () {
-        const repoRoot = yield* findRepoRoot();
+      it.effect(
+        "still reports a nonzero exit when a force-kill window is set",
+        Effect.fnUntraced(function* () {
+          const repoRoot = yield* findRepoRoot();
 
-        const exitCode = yield* runToExit({
-          command: "false",
-          args: [],
-          cwd: repoRoot,
-          stdio: "ignore",
-          forceKillAfter: Duration.seconds(5),
-        });
+          const exitCode = yield* runToExit({
+            command: "false",
+            args: [],
+            cwd: repoRoot,
+            stdio: "ignore",
+            forceKillAfter: Duration.seconds(5),
+          });
 
-        expect(exitCode).not.toBe(0);
-      })
-    );
-  });
+          expect(exitCode).not.toBe(0);
+        })
+      );
+    }
+  );
 });

@@ -16,7 +16,6 @@ const LINT_POLICY_SUBCOMMANDS = subcommands(
   "effect-schema-inventory",
   "effect-vitest",
   "opaque-roundtrips",
-  "goal-packets",
   "identity-registry",
   "judge-rubric",
   "jsdoc",

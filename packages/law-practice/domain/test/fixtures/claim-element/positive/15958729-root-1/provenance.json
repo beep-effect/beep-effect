@@ -1,0 +1,50 @@
+{
+  "applicationNumber": "15958729",
+  "publicationNumber": "US20180238379A1",
+  "publicationDate": "2018-08-23",
+  "nativeXmlSha256": "fdc26fc14026064d65ec3c8cfae65ee5939af72acd5ce7280c081a1f00dbf26c",
+  "claimsXmlSha256": "742cec6506f580056ddf47b067b3d7e421747abef13394d22bb3aec611a3ef10",
+  "officeActionDocumentIdentifiers": [
+    "K226AAC7RXEAPX3"
+  ],
+  "officeActionMailDate": "2019-10-24",
+  "officeActionSection112Text": [
+    "claims 1-10 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1, line 1, “the attachment” lacks antecedent basis.\r\nclaim 1, line 2, “the piercing body” lacks antecedent basis.\r\nclaim 1, line 2, “the fore’ lacks antecedent basis.\r\nclaim 1, line 4, “the hole’ lacks antecedent basis.\r\nclaim 1, line 5, “the cross-sectional shape” lacks antecedent basis.\r\nclaim 1, line 6, “the material” lacks antecedent basis.\r\nclaim 1, line 6, “the sheet metal part” lacks antecedent basis.\r\nclaim 1, line 7, “optionally” renders indefiniteness.\r\nclaim 1, line 8, “the latter” lacks antecedent basis.\r\nclaim 4, line 2, “optionally” renders indefiniteness.\r\nclaim 8, line 1, “the piercing head” lacks antecedent basis.\r\nclaim 8, line 2, “the separating” lacks antecedent basis.\r\nclaim 8, line 7, “the coiling up” lacks antecedent basis.\r\nclaim 9, line 3, “the progressive tool” lacks antecedent basis.\r\nclaim 9, line 4, “the press’ lacks antecedent basis.\r\nclaim 9, line 4, the piercing head’ lacks antecedent basis.\r\nclaim 10, line 2, “the same stroke” lacks antecedent basis.\r\nclaim 10, line 2, “the piercing head” lacks antecedent basis.\r\nclaim 10, line 3, “i.e.” renders indefiniteness."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "JG8F0NEARXEAPX5",
+      "officialDate": "2018-04-20T16:36:27.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "JG8F0NEARXEAPX5",
+      "officialDate": "2018-04-20T16:36:27.000-0400",
+      "sha256": "7239b1a00f71abdbda2d6f08cbc1fae480b1c489df77639f563a9437a3679629",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "sourceClaimCount": 10
+    }
+  ],
+  "documentInventoryCount": 37,
+  "documentInventoryRows": 37,
+  "primaryCpc": "F16B  39/282",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/15958729",
+    "https://api.uspto.gov/api/v1/patent/applications/15958729/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

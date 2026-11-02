@@ -109,6 +109,14 @@ describe("retired Effect module path law", () => {
       })
     );
 
+    it.effect("consumes repeated unterminated openers without rescanning their suffixes", () =>
+      Effect.sync(() => {
+        expect(scanOne(`unstable\n${Str.repeat(262_144)("](")}`)).toEqual([]);
+        expect(scanOne(`unstable\n${Str.repeat(262_144)("]: ")}`)).toEqual([]);
+        expect(suggestionsOf("[rpc](http://[::1]/#effectunstablerpc)")).toEqual(["effectrpc"]);
+      })
+    );
+
     it.effect("reports positions inside multi-link lines and scans long #-dense lines in linear time", () =>
       Effect.sync(() => {
         const findings = scanOne("[a](#x) and [b](#y-effectunstablerpc) then ](#z#effectunstablesql)");

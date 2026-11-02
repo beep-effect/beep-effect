@@ -162,7 +162,8 @@ const createTableStatements = [
     source_kind VARCHAR NOT NULL,
     source_path_hash VARCHAR NOT NULL,
     source_role VARCHAR NOT NULL,
-    repo_root_hash VARCHAR NOT NULL,
+    repo_root_hash VARCHAR,
+    collector_root_hash VARCHAR,
     config_snapshot_id VARCHAR NOT NULL,
     created_at_epoch_ms DOUBLE NOT NULL,
     first_seen_at VARCHAR,
@@ -263,6 +264,11 @@ const createTableStatements = [
 ] as const;
 
 const migrationColumns = [
+  {
+    columnDefinition: "collector_root_hash VARCHAR",
+    columnName: "collector_root_hash",
+    tableName: "ai_metrics_agent_tasks",
+  },
   {
     columnDefinition: "session_stamp_collection_complete BOOLEAN DEFAULT FALSE",
     columnName: "session_stamp_collection_complete",
@@ -771,6 +777,22 @@ const derivedStorageMigrations = [
       { columnName: "ingest_run_id", tableName: "ai_metrics_raw_archive_objects" },
     ],
     statements: rawArchiveObjectIdMigrationStatements,
+  },
+  {
+    migrationId: "ai-metrics-source-root-evidence-v1",
+    requiredColumns: [
+      { columnName: "repo_root_hash", tableName: "ai_metrics_agent_tasks" },
+      { columnName: "collector_root_hash", tableName: "ai_metrics_agent_tasks" },
+    ],
+    transactional: true,
+    statements: [
+      "ALTER TABLE ai_metrics_agent_tasks ALTER COLUMN repo_root_hash DROP NOT NULL",
+      // The old writer always populated this from its own checkout, never from
+      // source evidence. Preserve that context without promoting it to origin.
+      `UPDATE ai_metrics_agent_tasks
+       SET collector_root_hash = COALESCE(collector_root_hash, repo_root_hash),
+           repo_root_hash = NULL`,
+    ],
   },
 ] as const satisfies ReadonlyArray<DerivedStorageMigration>;
 
@@ -1530,6 +1552,7 @@ const upsertAgentTask = Effect.fn("AiMetrics.derivedStorage.upsertAgentTask")(fu
       source_path_hash,
       source_role,
       repo_root_hash,
+      collector_root_hash,
       config_snapshot_id,
       created_at_epoch_ms,
       first_seen_at,
@@ -1540,7 +1563,8 @@ const upsertAgentTask = Effect.fn("AiMetrics.derivedStorage.upsertAgentTask")(fu
       $sourceKind,
       $sourcePathHash,
       $sourceRole,
-      $repoRootHash,
+      (SELECT repo_root_hash FROM ai_metrics_agent_tasks WHERE agent_task_id = $agentTaskId),
+      $collectorRootHash,
       $configSnapshotId,
       $createdAtEpochMillis,
       $firstSeenAt,
@@ -1552,7 +1576,7 @@ const upsertAgentTask = Effect.fn("AiMetrics.derivedStorage.upsertAgentTask")(fu
       createdAtEpochMillis: epochMillisParam(input.startedAtEpochMillis),
       firstSeenAt: O.getOrNull(sanitized.firstTimestamp),
       lastSeenAt: O.getOrNull(sanitized.lastTimestamp),
-      repoRootHash: input.repoRootHash,
+      collectorRootHash: input.repoRootHash,
       sourceKind: sanitized.sourceKind,
       sourcePathHash: sanitized.sourcePathHash,
       sourceRole: sanitized.sourceRole,

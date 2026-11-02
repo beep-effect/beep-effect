@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 
 /**
  * Service: Extraction Run Service
@@ -310,7 +310,7 @@ export class ExtractionRunService extends Context.Service<ExtractionRunService, 
 
 const makeExtractionRunService = Effect.gen(function* () {
   const storage = yield* StorageService;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
 
   const KeyIndex = S.Record(S.String, DocumentId);
   const KeyIndexJson = S.fromJsonString(KeyIndex, { space: 2 });
@@ -373,7 +373,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     runConfig: RunConfig,
     options?: { idempotencyKey?: IdempotencyKey; ontologyVersion?: string }
   ) {
-    const runId = yield* generateDocumentId(text).pipe(Effect.provideService(Crypto.Crypto, crypto));
+    const runId = yield* generateDocumentId(text).pipe(Effect.provideService(Digest.Digest, crypto));
     const existing = yield* storage.getOption(metadataKey(runId));
     if (O.isSome(existing)) {
       const existingText = yield* storage.getOption(documentKey(runId));
@@ -437,7 +437,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     const metadata = OutputMetadata.make({
       type: outputType,
       path: `outputs/${filename}`,
-      hash: Sha256Hex.make(yield* hashContent(content).pipe(Effect.provideService(Crypto.Crypto, crypto))),
+      hash: Sha256Hex.make(yield* hashContent(content).pipe(Effect.provideService(Digest.Digest, crypto))),
       size: S.Natural.make(Buffer.byteLength(content, "utf8")),
       savedAt: now,
     });

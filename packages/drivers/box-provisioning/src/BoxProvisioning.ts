@@ -9,12 +9,10 @@ import { $BoxProvisioningId } from "@beep/identity";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
-import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -34,8 +32,6 @@ import { BoxProvisioningPlanner } from "./BoxProvisioningPlanner.ts";
 import { BoxActionApplied, BoxReviewedApplyResult } from "./BoxProvisioningReceipt.ts";
 import { digestText, hasValidBoxProvisioningPlanDigest } from "./internal/canonical.ts";
 import type * as B from "@beep/box";
-import type * as PlatformError from "effect/PlatformError";
-import type * as SchemaIssue from "effect/SchemaIssue";
 import type { BoxProvisioningApplyJournal } from "./BoxProvisioningApplier.ts";
 import type {
   BoxProvisioningApplyJournalError,
@@ -53,8 +49,7 @@ type ReadError =
   | BoxProvisioningInvariantError
   | BoxProvisioningSchemaError
   | BoxProvisioningSubjectMismatchError
-  | BoxProvisioningTenantMismatchError
-  | PlatformError.PlatformError;
+  | BoxProvisioningTenantMismatchError;
 
 type ApplyError =
   | ReadError
@@ -64,11 +59,8 @@ type ApplyError =
 
 const isAppliedOutcome = S.is(BoxActionApplied);
 
-/** Keeps platform digest failures intact and reports every schema issue as a plan-stage failure. */
-const toPlanStageFailure = Match.type<PlatformError.PlatformError | SchemaIssue.Issue>().pipe(
-  Match.tag("PlatformError", identity<PlatformError.PlatformError>),
-  Match.orElse(() => BoxProvisioningSchemaError.make({ stage: "plan" }))
-);
+/** Reports every schema issue raised while digesting a plan as a plan-stage failure. */
+const toPlanStageFailure = (): BoxProvisioningSchemaError => BoxProvisioningSchemaError.make({ stage: "plan" });
 
 const postApplyAdoptions = Effect.fn("BoxProvisioning.postApplyAdoptions")(function* (
   desired: BoxDesiredState,
@@ -114,7 +106,7 @@ const makeService = (
   inventory: BoxProvisioningInventory["Service"],
   planner: BoxProvisioningPlanner["Service"],
   applier: BoxProvisioningApplier["Service"],
-  crypto: Crypto.Crypto
+  digest: Digest.Digest["Service"]
 ): BoxProvisioningShape => {
   const dryRun = Effect.fn("BoxProvisioning.dryRun")(
     function* (desiredInput: unknown) {
@@ -122,7 +114,7 @@ const makeService = (
       const observed = yield* inventory.observe(desired);
       return yield* planner.plan(desired, observed);
     },
-    (effect) => effect.pipe(Effect.provideService(Crypto.Crypto, crypto))
+    (effect) => effect.pipe(Effect.provideService(Digest.Digest, digest))
   );
 
   const applyReviewedPlan = Effect.fn("BoxProvisioning.applyReviewedPlan")(
@@ -155,7 +147,7 @@ const makeService = (
       const verdict = yield* validateBoxProvisioningPostApplyPlan(adoptedDesired, reviewedPlan, postApplyPlan);
       return BoxReviewedApplyResult.make({ adoptions, postApplyPlan, receipt, verdict });
     },
-    (effect) => effect.pipe(Effect.provideService(Crypto.Crypto, crypto))
+    (effect) => effect.pipe(Effect.provideService(Digest.Digest, digest))
   );
 
   return { applyReviewedPlan, dryRun, reconcile: dryRun };
@@ -205,12 +197,12 @@ export interface BoxProvisioningShape {
  */
 export class BoxProvisioning extends Context.Service<BoxProvisioning, BoxProvisioningShape>()($I`BoxProvisioning`) {
   static readonly layer = Layer.unwrap(
-    Effect.all([BoxProvisioningInventory, BoxProvisioningPlanner, BoxProvisioningApplier, Crypto.Crypto]).pipe(
-      Effect.map(([inventory, planner, applier, crypto]) =>
-        Layer.succeed(BoxProvisioning, BoxProvisioning.of(makeService(inventory, planner, applier, crypto)))
+    Effect.all([BoxProvisioningInventory, BoxProvisioningPlanner, BoxProvisioningApplier, Digest.Digest]).pipe(
+      Effect.map(([inventory, planner, applier, digest]) =>
+        Layer.succeed(BoxProvisioning, BoxProvisioning.of(makeService(inventory, planner, applier, digest)))
       )
     )
-  ).pipe(Layer.provide(NodeCrypto.layer));
+  ).pipe(Layer.provide(NodeCrypto.layerDigest));
 
   /**
    * Orchestration plus live inventory and apply layers, requiring one Box layer.

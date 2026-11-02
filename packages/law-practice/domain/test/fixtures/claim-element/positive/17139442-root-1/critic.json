@@ -1,0 +1,61 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "17139442-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "verification": [
+    "Read all selected canonical source claims, native claims XML, extractor, expected trees, provenance and independent source critic. Read only the ClaimElement model/tree/edge schema files; no behavior, policy, decomposition implementation or predictions. Source qualification remains separately accepted in source-critic.json; no fresh original-PDF or full-inventory authentication claimed.",
+    "Independent mechanical checks passed every UTF-16 source anchor, ordered/nonoverlapping term ownership, normalized head shape, functional full-source reconstruction and exact participating-term ownership, edge endpoint membership, cross-claim ancestor membership, path uniqueness and absence of duplicate typed edges. Native XML digest matches provenance; all native/canonical claims agree after permitted printed-number removal and whitespace normalization. Geometry supplements manual semantic review; no decomposer was called."
+  ],
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json files written. No production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation. Source grammar and protocol determine semantic findings.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic references only; no active sample admission, goal completion, human agreement or accuracy result claimed.",
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "findings": [],
+  "priorFindingDispositions": [
+    {
+      "id": "component-identity-ambiguity",
+      "disposition": "resolved",
+      "evidence": "Exactly seven outside-clause forced component antecedent edges removed. Both indefinite component introductions, all referring terms and local1.c governing reference remain. Extractor now records candidate ambiguity rather than imposing proximity."
+    },
+    {
+      "id": "embedded-said-not-lexical-head",
+      "disposition": "resolved",
+      "evidence": "The former [864,909) compound is split into a plurality [864,875), head plurality, determiner a; connecting of [875,879); and said predefined time intervals [879,909), head predefined time intervals, determiner said. The latter has the source-supported earlier2.b interval reference; full functional wording is unchanged."
+    }
+  ],
+  "reviewScope": {
+    "claimCount": 7,
+    "elementCount": 23,
+    "termCount": 131,
+    "edgeCount": 91,
+    "functionalRelationCount": 16
+  },
+  "reviewNotes": [
+    "Independently re-read the exact two component introductions and every formerly forced referring context. The ambiguous outside-clause phrases now remain explicit but unlinked; no whole-claim abstention or fabricated identity is needed.",
+    "The nested plurality/said construction follows the protocol nonoverlapping-term convention. Each source word remains covered by ordered functional parts; quantity is explicitly represented by a plurality rather than discarded. Said is a determiner on the inner intervals term, not a lexical modifier.",
+    "Compared the entire round2 reference against preserved round1. Only the seven component antecedents and the reviewed2.c term/ref/function representation changed. Unchanged dialysis, helper, camera/authentication, signal, failure and dependency structures retain the full initial independent review. Current exact source anchors and full functional reconstruction pass."
+  ],
+  "referenceSha256": "c7cafa6540e2b2235a1fcfa5e4cdd0aacb4dac57c7ae06e62fa0c23c95240d79",
+  "extractorSha256": "e4498913d70ea7f23bfa8db5e5a1d7dc5f2422feab1dbdb4dc86ed89c974e264",
+  "preservedPriorCritic": {
+    "file": "critic.round1.json",
+    "sha256": "0da4698ef7942a98880f0366ef0095c7e722296f67dc5a7b9ec6d4ca6d9da97d",
+    "alsoPreservedIn": "extractor.json previousRounds[0].critic"
+  },
+  "referenceConcernsDisposition": "Remaining source-local component identity, first definite Internet, and event-nominalization concerns are explicitly retained without invented antecedents. No actionable critic finding remains."
+}

@@ -37,7 +37,7 @@ import {
   NormalizeSkippedEntry,
 } from "../Files.schemas.ts";
 import { cropImageBordersToTemp, normalizeImageToTemp, stripMetadataToTemp } from "./MediaExec.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Terminal from "effect/Terminal";
 import type {
@@ -345,7 +345,7 @@ export const applyCreateCaptionFilesPlan = Effect.fn("Files.applyCreateCaptionFi
 
 const hashFileSha256 = Effect.fn("Files.hashFileSha256")(function* (
   filePath: string
-): Effect.fn.Return<FileSha256Hash, FilesCommandError, FileSystem.FileSystem | Crypto.Crypto> {
+): Effect.fn.Return<FileSha256Hash, FilesCommandError, FileSystem.FileSystem> {
   const hex = yield* hashFileSha256Hex(filePath, (cause, failedPath) =>
     formatPlatformError("Failed to read file for hashing", failedPath, PlatformErrorOptions.make({ cause }))
   );
@@ -492,7 +492,7 @@ export const applyNormalizePlan = Effect.fn("Files.applyNormalizePlan")(function
 ): Effect.fn.Return<
   NormalizeApplyResult,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Terminal.Terminal | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -696,7 +696,7 @@ export const applyArchivePoorCandidatesPlan = Effect.fn("Files.applyArchivePoorC
 ): Effect.fn.Return<
   void,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Terminal.Terminal | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -861,7 +861,11 @@ export const applyStripMetadataPlan = Effect.fn("Files.applyStripMetadataPlan")(
 ): Effect.fn.Return<
   void,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | Terminal.Terminal
+  | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

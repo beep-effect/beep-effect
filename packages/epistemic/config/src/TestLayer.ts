@@ -1,6 +1,8 @@
 /**
  * Execution-authority configuration test layers and grant fixtures.
  *
+ * **Details**
+ *
  * The fixture grant set is a deliverable, not a convenience: the acceptance
  * test asserts a chained ledger, so the grant-set digest it is evaluated
  * against has to be byte-stable across runs. Everything here is therefore

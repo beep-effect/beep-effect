@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-28",
+  "convention": "lexical-head/v1",
+  "familyId": "17617663-root-1",
+  "status": "requires-attorney-after-agent-round-limit",
+  "reason": "Three extractor/critic rounds completed before lexical-head/v1 clarification. Preserve the current reference and ask the attorney to decide each head; no fourth agent round.",
+  "annotationSha256": "6077b7c4c31dcdb2ac1f867cea149174e35f555f82742805c27f2e467b98df11",
+  "items": [
+    {
+      "familyId": "17617663-root-1",
+      "claimNumber": 3,
+      "path": "3.b.iv",
+      "anchor": {
+        "startChar": 505,
+        "endChar": 512,
+        "quote": "one end"
+      },
+      "head": "end",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required",
+      "proposedHead": "one end"
+    },
+    {
+      "familyId": "17617663-root-1",
+      "claimNumber": 7,
+      "path": "7.b",
+      "anchor": {
+        "startChar": 357,
+        "endChar": 378,
+        "quote": "two segmented rollers"
+      },
+      "head": "segmented rollers",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required",
+      "proposedHead": "two segmented rollers"
+    }
+  ]
+}

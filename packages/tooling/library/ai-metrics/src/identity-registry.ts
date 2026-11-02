@@ -21,6 +21,7 @@ import * as Path from "effect/Path";
 import * as Random from "effect/Random";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import { AiMetricsGitRootEvidence, observeAiMetricsGitRoot } from "./git-root-evidence.ts";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import {
   AiMetricsHashSaltStatus,
@@ -121,6 +122,10 @@ export type AiMetricsRootKind = typeof AiMetricsRootKind.Type;
 export class AiMetricsCanonicalRoot extends S.Opaque<AiMetricsCanonicalRoot, { readonly brand: unique symbol }>()(
   S.Struct({
     cloneIdHash: S.String,
+    gitEvidence: AiMetricsGitRootEvidence.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(AiMetricsGitRootEvidence.cases.Unknown.make({ reason: "not-observed" }))),
+      S.withConstructorDefault(Effect.succeed(AiMetricsGitRootEvidence.cases.Unknown.make({ reason: "not-observed" })))
+    ),
     excludedFromParentSnapshot: S.Boolean,
     firstSeenAtEpochMillis: S.Finite,
     kind: AiMetricsRootKind,
@@ -569,22 +574,24 @@ export const isNestedGitRoot: (args: {
 );
 
 /**
- * Derive one canonical root's identity from the filesystem alone.
+ * Derive compatible legacy IDs and a separate versioned Git observation.
  *
  * **Details**
  *
  * Reads `.git` (directory for a primary clone, pointer file for a linked
  * worktree), the common git directory's `config` for the `origin` URL, and
- * `HEAD` plus loose refs and `packed-refs` for the revision. No subprocess is
- * spawned, so the package keeps its zero-subprocess surface.
+ * `HEAD` plus loose refs and `packed-refs` for the legacy revision. The separate
+ * `gitEvidence` field uses a bounded read-only Git probe when a process service
+ * and hash salt are available. Legacy IDs retain their original derivation.
  *
  * **Gotchas**
  *
  * `repositoryIdHash` falls back to a salted digest of the common git directory
  * when the clone has no `origin` remote, which makes that clone's repository
  * identity local rather than global. A rewritten remote URL likewise re-keys the
- * repository. Exact identity would require shelling out to `git`; that is a
- * deliberate non-goal. `revision` is omitted rather than faked when `HEAD`
+ * repository. The legacy `cloneIdHash` identifies a checkout path, not its
+ * owning clone; use observed `gitEvidence` for that distinction. `revision` is
+ * omitted rather than faked when `HEAD`
  * cannot be resolved, and dirty-tree state is never recorded.
  *
  * **Example** (Identifying the clone a run is writing from)
@@ -622,6 +629,7 @@ export const makeAiMetricsCanonicalRoot: (
 
     return AiMetricsCanonicalRoot.make({
       cloneIdHash,
+      gitEvidence: yield* observeAiMetricsGitRoot(input),
       excludedFromParentSnapshot: isLinkedWorktree,
       firstSeenAtEpochMillis: nowEpochMillis,
       kind: probe.kind,

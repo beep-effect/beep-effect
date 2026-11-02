@@ -6,7 +6,7 @@
     "title": "Effected kit promotion",
     "status": "active",
     "created": "2026-10-21",
-    "updated": "2026-10-21",
+    "updated": "2026-11-01",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effected-promotion",
@@ -19,7 +19,18 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/chore_effected-promotion-closeout-bba3983f1dc1/verdict.json",
+        "gating": true
+      }
+    ]
+  },
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2476
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -51,6 +62,10 @@
       "purpose": "3-A5 parity: frozen copies of the legacy CheckCensus tsconfig readers compared with the adopted TsconfigLoader reads over every census package, plus a timing-stripped census report normalizer."
     },
     {
+      "path": "ops/cli-failure-render-differential.ts",
+      "purpose": "Wave 4-C-A differential: repo-cli bin stdout, stderr and exit code over a failure matrix (usage, reported exit, typed, defect, EPIPE, fast paths, log line, GITHUB_ACTIONS) before and after the CliRuntime.main switch."
+    },
+    {
       "path": "ops/cli-kit-bench.ts",
       "purpose": "Wave 4-C bench gate: @beep/cli-kit grapheme-segmenter and grapheme operation counts at doubling sizes, compared against a baseline."
     },
@@ -63,12 +78,40 @@
       "purpose": "Wave 3-3 differential: @beep/config-file JSONC, YAML and TOML codecs against the npm parser oracles over every tracked config file."
     },
     {
-      "path": "ops/github-reporting-gfm-differential.ts",
-      "purpose": "Wave 3-1 oracle: GitHubMarkdown writer output rendered through micromark GFM and checked for the promised table and inline structure."
+      "path": "ops/frontmatter-adoption-parity.ts",
+      "purpose": "R5a parity: reflection, SKILL.md, KnowledgeDoctor beep-historical and delete-package changeset-prune verdicts over the live corpus and git history, before and after the @beep/markdown switch, plus classified probe shifts."
+    },
+    {
+      "path": "ops/ecosystem-polarity-differential.ts",
+      "purpose": "4-A4 differential: runEcosystemPolarityCheck over the live repo and a synthetic ecosystem of import forms, recorded before the SourceBoundary.scan switch and compared at the head with every difference classified into an intended shift class."
+    },
+    {
+      "path": "ops/fence-extractor-parity.ts",
+      "purpose": "R6 parity: frozen copies of the docgen fencePattern, TypeScriptFences and EffectImports Markdown fence regexes beside their @beep/markdown MarkdownFence replacements over every tracked Markdown file and every JSDoc block, with each differing fence classified against the CommonMark reading (gate: 0 unclassified)."
     },
     {
       "path": "ops/git-adoption-differential.ts",
       "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
+    },
+    {
+      "path": "ops/github-reporting-gfm-differential.ts",
+      "purpose": "Wave 3-1 oracle: GitHubMarkdown writer output rendered through micromark GFM and checked for the promised table and inline structure."
+    },
+    {
+      "path": "ops/glob-shim-census.ts",
+      "purpose": "R2a parity: recomputes the Bun.Glob shim matcher census (every `new Bun.Glob` pattern, the vitest include globs and semantics probes over the tracked-path universe) with `@beep/glob` GlobPattern (dot: true) and compares it with the recorded `research/glob-shim-census-r2a.json`."
+    },
+    {
+      "path": "ops/glob-adoption-parity.ts",
+      "purpose": "R2b parity: the pre-R2b repo-cli glob compiler frozen and compared with @beep/glob GlobPattern over every live caller pattern and candidate, plus fingerprints of the three EffectImports discovery sets before and after the @beep/walker switch."
+    },
+    {
+      "path": "ops/jsonc-owner-switch-differential.ts",
+      "purpose": "R3a parity (W4-o): every tracked *.jsonc and facade-consumed JSON document decoded by the frozen @beep/schema/Jsonc facade and by @beep/jsonc with 0 unclassified differences, plus byte parity of every JSONC-reading repo-cli generator's check or dry mode against one fixed input tree before and after the owner switch."
+    },
+    {
+      "path": "ops/jsonc-parser-drop-differential.ts",
+      "purpose": "R3b parity (W4-o): renderPrettyCommandJson, the JSONC editing facade and the policy-fingerprint JSON writer byte-identical to frozen jsonc-parser copies over every tracked *.json and *.jsonc file, every parse profile and tree reading the retired sites used, and every changed generator's check or dry mode byte-identical before and after the drop."
     },
     {
       "path": "ops/lockfiles-adoption-parity.ts",
@@ -103,16 +146,24 @@
       "purpose": "Wave 3-A4 parity: every retired repo-cli and docgen package.json reader, as an oracle, against its @beep/package-json replacement over every tracked manifest."
     },
     {
+      "path": "ops/qas-discovery-adoption-parity.ts",
+      "purpose": "4-A1 parity: the QualityArtifactSupport discovery, CoverageScope and CoverageRegression surfaces before and after the move onto WorkspaceDiscovery, plus classified fixture probes."
+    },
+    {
       "path": "ops/repo-tsconfig-differential.ts",
       "purpose": "Wave 3-2 differential: TsconfigLoader.resolve against tsc --showConfig, optionally three-way with get-tsconfig."
     },
     {
-      "path": "ops/repo-workspaces-differential.ts",
-      "purpose": "Wave 4-W-a differential: @beep/repo-workspaces member set, edge set and topological order against bun.lock and raw package.json oracles."
-    },
-    {
       "path": "ops/repo-utils-package-json-parity.ts",
       "purpose": "Wave 3-A3 parity: the repo-utils package.json model and workspace dependency helpers recorded before the @beep/package-json re-base and compared at the head, with a mutation corpus."
+    },
+    {
+      "path": "ops/repo-workspaces-adoption-parity.ts",
+      "purpose": "4-A3 parity: the retired repo-utils workspace set, dependency edges and topological order (frozen) against WorkspaceDiscovery and DependencyGraph over the live repo, strict manifests per member, plus byte-identical tsconfig-sync --check, package-scripts, fallow boundaries, labs list and docgen status outputs and the topo-sort shift."
+    },
+    {
+      "path": "ops/repo-workspaces-differential.ts",
+      "purpose": "Wave 4-W-a differential: @beep/repo-workspaces member set, edge set and topological order against bun.lock and raw package.json oracles."
     },
     {
       "path": "ops/sbom-corpus.ts",
@@ -123,8 +174,28 @@
       "purpose": "R1 differential: the deleted @beep/schema/Semver and hand-rolled VersionSync and CacheClientPin version code compared with @beep/semver over bun.lock and every tracked package.json."
     },
     {
+      "path": "ops/tsconfig-sync-parity.ts",
+      "purpose": "3-A7 parity: tsconfig-sync dry-run and write outputs (stdout, exit codes, sha256 of every file) over fixed mutations, before and after the @beep/tsconfig schema switch, plus a TsconfigJson decode of every tracked tsconfig."
+    },
+    {
+      "path": "ops/tsconfig-validator-parity.ts",
+      "purpose": "3-A6 parity: records the strict tsconfig verdict over every tracked tsconfig*.json and docgen's resolved compiler options for every docgen.json, and compares a before/after pair against the intended TsconfigValidator verdict shifts."
+    },
+    {
+      "path": "ops/workspace-patterns-adoption-parity.ts",
+      "purpose": "4-A2 parity: the five repo-cli pattern readers before and after the move onto @beep/repo-workspaces WorkspacePatterns (pattern lists, derived pathspecs, matched directories, syncpack sources, CreatePackage coverage) plus byte-identical tsconfig-sync --check, changeset-graph and create-package dry-run outputs."
+    },
+    {
       "path": "ops/xdg-systemd-differential.ts",
       "purpose": "Wave 4-X differential: @beep/xdg base and search directories against systemd-path over an environment matrix."
+    },
+    {
+      "path": "ops/markdown-toc-differential.ts",
+      "purpose": "Roadmap R5b differential: @beep/markdown MarkdownToc against a disposable @effect/markdown-toc 0.1.0 install over every tracked Markdown file and every generated docgen page, with the page's embedded TOC compared to the oracle."
+    },
+    {
+      "path": "ops/yaml-drop-parity.ts",
+      "purpose": "R4 parity: frozen copies of every retired npm yaml call (compose and models-manifest writers, Research renderCard, the Runners/ChangesetGraph/FallowQuality/workflow-test reads, the VersionSync YamlFileUpdater edits, the Models yaml-path locator) against the sites' current code over the live inputs and fixtures, plus a changeset-graph fingerprint."
     }
   ],
   "provides": [],
@@ -138,22 +209,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [

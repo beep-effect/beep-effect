@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "doc-hub-spokes",
+    "title": "Doc Hub and Spokes",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md", "research/capture-2026-10-28.md"],
+    "links": {
+      "goals": ["goals/oracle-loop-poc", "goals/doc-hub-spokes-inversion"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-28",
+    "updated": "2026-10-28"
+  }
+}

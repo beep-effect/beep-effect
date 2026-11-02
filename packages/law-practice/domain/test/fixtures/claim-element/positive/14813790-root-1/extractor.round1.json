@@ -1,0 +1,84 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "14813790-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "A gas turbine engine having the low pressure shaft of claim 1",
+      "reason": "Claim 8 changes the claimed subject to an engine while expressly incorporating shaft 1. Root 8 and 8.a carry the actual dependency to 1; no fabricated PatentClaim transition or whole-tree abstention."
+    },
+    {
+      "quote": "correct / change",
+      "reason": "Examiner replacement suggestions are retained provenance, not source words. Shortened shaft/engine/joint/formation identities are independently supported by their unique local roles, not by the examiner recommendation."
+    }
+  ],
+  "referenceConcerns": [
+    {
+      "claimNumber": 3,
+      "quotes": [
+        "the rearward sub-section",
+        "the forward sub-section"
+      ],
+      "reason": "The source orders members of each adjacent pair. Full relational comparison remains explicit; individual member phrases are not forced onto the whole two-or-more sub-section collection or an arbitrary member."
+    },
+    {
+      "claimNumber": 6,
+      "quote": "its rear end",
+      "reason": "Explicit possessive rear-end phrase retained in full. Potential possessive scope between the aft section and stiffening formation is not decided from the examiner suggested interpretation; no antecedent edge to a component or fabricated rear-end introduction."
+    },
+    {
+      "claimNumbers": [
+        6,
+        7
+      ],
+      "quote": "an annular stiffening formation",
+      "reason": "Separate sibling introductions are local to their respective claims; each shortened the stiffening formation links only to its own local introduction."
+    },
+    {
+      "claimNumber": 8,
+      "quotes": [
+        "a fan or low pressure compressor",
+        "a low pressure turbine"
+      ],
+      "reason": "Repeated indefinite engine-component phrases remain literal without asserting identity with the independently introduced claim-1 components."
+    }
+  ],
+  "annotationRationale": "Fresh manual source grammar. Root preamble extends through the explicit resumptive the shaft before having; separate aft-section and joint-portion limitations and the final expansion-rate restriction follow. Complete noun heads and source counts are retained, including two or more frustoconical sub-sections and each pair of adjacent frustoconical sub-sections. Claim 8 engine subject and literal indefinite fan/turbine phrases are preserved. Relative whose/which language connects already explicit participants. Later the diameter links to the explicit bare diameter property in 1.a. Neither generic direction nor rear-end/thickness properties are manufactured as component introductions.",
+  "counts": {
+    "trees": 8,
+    "elements": 18,
+    "terms": 68,
+    "edges": 61
+  },
+  "sourceValidation": {
+    "nativeClaimsMatchCanonicalIgnoringPermittedWhitespace": true,
+    "claimsXmlSha256": "1473a5396d2f959c80eec99ffbf6e83071064aa556a515b759d9e79ab7a70192",
+    "sourceEligibility": "Accepted retained source critic reviewed, including original-text/PDF reconciliation. No new original-document or inventory authentication claimed."
+  },
+  "independence": "Fresh source-semantic extraction. No prior structural labels, production rules, P2-DESIGN, predictions, synthetic fixtures, conformance, network, secrets, git or delegation. Helpers locate manually specified source quotations, serialize chosen trees and validate spans; no decomposer used. Only this family expected.json and extractor.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "validation": {
+    "schema": "Every tree decoded successfully through the declared ClaimElementTree schema; no production decomposer invoked.",
+    "anchors": "Exact canonical UTF-16 element/term spans and ordered nonoverlapping terms checked. Native claims bodies match canonical ignoring permitted printed-number removal/whitespace; source XML digest matches provenance.",
+    "functionalParts": "Each functional edge reconstructs its complete source element span from ordered contiguous term/text parts.",
+    "references": "All local/foreign antecedent endpoints name labeled terms; targets stay on independently read actual natural ancestry. No context/sibling donors.",
+    "scope": "Every selected claim exactly once as resolved. Local reference uncertainty retained separately; no whole-claim abstentions.",
+    "independentSemanticCritic": "Pending. These checks are extractor validation, not independent criticism or human acceptance."
+  }
+}

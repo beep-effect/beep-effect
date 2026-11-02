@@ -25,7 +25,8 @@ import * as Bool from "effect/Boolean";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -121,7 +122,11 @@ export interface AdmissionAttemptTerminationJournalShape {
     owner: YeetAdmissionLease | YeetAdmissionTicket,
     reason: "lease-eviction" | "queued-submitter-death",
     attemptId: UUID
-  ) => Effect.Effect<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path>;
+  ) => Effect.Effect<
+    void,
+    QualitySchedulerError,
+    Digest.Digest | SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
+  >;
 }
 
 /**
@@ -167,7 +172,11 @@ export interface AdmissionEvictionJournalShape {
       | AdmissionJournalTicketEvicted
       | AdmissionJournalLeaseEvictedV3
       | AdmissionJournalTicketEvictedV3
-  ) => Effect.Effect<boolean, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path>;
+  ) => Effect.Effect<
+    boolean,
+    QualitySchedulerError,
+    Digest.Digest | SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
+  >;
 }
 
 /**
@@ -306,10 +315,8 @@ const makeMemoryStats = Effect.fnUntraced(function* (): Effect.fn.Return<
  * @category services
  * @since 0.0.0
  */
-export const MemoryStatsLive: Layer.Layer<MemoryStats, never, Crypto.Crypto | FileSystem.FileSystem> = Layer.effect(
-  MemoryStats,
-  Effect.map(makeMemoryStats(), MemoryStats.of)
-);
+export const MemoryStatsLive: Layer.Layer<MemoryStats, never, SecureRandom.SecureRandom | FileSystem.FileSystem> =
+  Layer.effect(MemoryStats, Effect.map(makeMemoryStats(), MemoryStats.of));
 
 /**
  * Compute the admission capacity in tokens for one memory reading.
@@ -420,7 +427,7 @@ export interface PrivateCoordinationDirectoryOptions<DirectoryError> {
 export const validatePrivateCoordinationDirectory = Effect.fnUntraced(function* <DirectoryError>(
   directory: string,
   options: PrivateCoordinationDirectoryOptions<DirectoryError>
-): Effect.fn.Return<void, DirectoryError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, DirectoryError, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const require = (satisfied: boolean, message: string) =>
     satisfied ? Effect.void : Effect.fail(options.onViolation(message));
@@ -456,7 +463,7 @@ const validateAdmissionDirectory = (directory: string) =>
 const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Return<
   AdmissionDirectories,
   QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -531,10 +538,8 @@ export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmis
 // identity contains spaces) so the repair scan classifies an orphan with the
 // same pid-reuse fence leases use, instead of trusting a bare pid.
 const stagingTemporaryPath = Effect.fnUntraced(function* (filePath: string, procStart: O.Option<string>) {
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto
-    .randomUUIDv4()
-    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create scheduler staging identity.")));
+  const crypto = yield* SecureRandom.SecureRandom;
+  const token = yield* crypto.uuidV4();
   return `${filePath}.tmp-${process.pid}${O.match(procStart, {
     onNone: () => "",
     onSome: (identity) => `-${Hex.encode(identity)}`,
@@ -574,7 +579,7 @@ const stagingFileOwner = (name: string): O.Option<StagingFileOwner> =>
 // leaves an orphan behind, so it is reported rather than swallowed.
 const removeStagingFile = Effect.fnUntraced(function* (
   temporary: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, never, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.remove(temporary, { force: true }).pipe(
     Effect.tapError((error) =>
@@ -590,7 +595,7 @@ const removeStagingFile = Effect.fnUntraced(function* (
 const stageTemporaryFile = Effect.fnUntraced(function* (
   temporary: string,
   content: string
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   yield* Effect.scoped(
     Effect.gen(function* () {
@@ -610,8 +615,10 @@ const stageTemporaryFile = Effect.fnUntraced(function* (
 const withStagedTemporaryFile = Effect.fnUntraced(function* <A>(
   filePath: string,
   content: string,
-  publish: (temporary: string) => Effect.Effect<A, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem>
-): Effect.fn.Return<A, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+  publish: (
+    temporary: string
+  ) => Effect.Effect<A, QualitySchedulerError, Digest.Digest | SecureRandom.SecureRandom | FileSystem.FileSystem>
+): Effect.fn.Return<A, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem | Digest.Digest> {
   const procStart = yield* processStartIdentityForPid(process.pid);
   const temporary = yield* stagingTemporaryPath(filePath, O.filter(procStart, Str.isNonEmpty));
   return yield* stageTemporaryFile(temporary, content).pipe(
@@ -623,7 +630,7 @@ const withStagedTemporaryFile = Effect.fnUntraced(function* <A>(
 const writeFileAtomic = Effect.fnUntraced(function* (
   filePath: string,
   content: string
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   yield* withStagedTemporaryFile(filePath, content, (temporary) =>
     fs
@@ -635,7 +642,7 @@ const writeFileAtomic = Effect.fnUntraced(function* (
 const tryCreateExclusive = Effect.fnUntraced(function* (
   filePath: string,
   content: string
-): Effect.fn.Return<boolean, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   return yield* withStagedTemporaryFile(filePath, content, (temporary) =>
     fs.link(temporary, filePath).pipe(
@@ -696,7 +703,11 @@ export const tryCreateExclusiveForTesting = tryCreateExclusive;
 // writer is an in-flight publication and is never listed.
 const collectStaleStagingFiles = Effect.fnUntraced(function* (
   directories: AdmissionDirectories
-): Effect.fn.Return<ReadonlyArray<string>, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   return A.flatten(
@@ -733,7 +744,7 @@ const quarantineEntry = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   entryPath: string,
   reason: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const nowMillis = yield* Clock.currentTimeMillis;
@@ -756,7 +767,7 @@ type AdmissionEntryClass<Entry> =
 const classifyAdmissionEntry = Effect.fnUntraced(function* <Entry, DecodeError>(
   entryPath: string,
   codec: AdmissionEntryCodec<Entry, DecodeError>
-): Effect.fn.Return<AdmissionEntryClass<Entry>, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<AdmissionEntryClass<Entry>, never, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(entryPath).pipe(Effect.orElseSucceed(() => ""));
   if (Str.isEmpty(text)) {
@@ -782,7 +793,7 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
     readonly quarantined: ReadonlyArray<string>;
   },
   QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -825,7 +836,7 @@ const readReapClaims = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<{ readonly claimPath: string; readonly claim: AdmissionReapClaim }>,
   QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -868,10 +879,11 @@ const reapClaimPath = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   claim: AdmissionReapClaim
 ) {
-  const crypto = yield* Crypto.Crypto;
-  const bytes = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(`${claim._tag}:${claim.nonce}:${claim.sourcePath}`))
-    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to hash scheduler reap claim identity.")));
+  const crypto = yield* Digest.Digest;
+  const bytes = yield* crypto.digest(
+    Digest.sha256,
+    new TextEncoder().encode(`${claim._tag}:${claim.nonce}:${claim.sourcePath}`)
+  );
   const digest = Hex.encode(bytes);
   const suffix = AdmissionClaimSinkState.is["pending-protocol-off"](claim.admissionJournal)
     ? PROTOCOL_DEFERRED_REAP_CLAIM_SUFFIX
@@ -935,7 +947,7 @@ const admissionEventForReapClaim = (claim: AdmissionReapClaim) =>
 const persistReapClaim = Effect.fnUntraced(function* (
   claimPath: string,
   claim: AdmissionReapClaim
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem | Digest.Digest> {
   yield* writeFileAtomic(
     claimPath,
     `${yield* encodeReapClaim(claim).pipe(
@@ -946,7 +958,7 @@ const persistReapClaim = Effect.fnUntraced(function* (
 
 const moveReapClaimBehindProtocolFence = Effect.fnUntraced(function* (
   claimPath: string
-): Effect.fn.Return<string, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<string, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const deferredPath = protocolDeferredReapClaimPath(claimPath);
   if (Str.Equivalence(claimPath, deferredPath)) {
@@ -964,7 +976,7 @@ const markReapClaimProtocolDeferred = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   readonly [string, AdmissionReapClaim],
   QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Digest.Digest
 > {
   const deferredPath = yield* moveReapClaimBehindProtocolFence(claimPath);
   const deferred = updateReapClaim(claim, { admissionJournal: "pending-protocol-off" });
@@ -979,7 +991,7 @@ const shieldReapClaimFromLegacyReaders = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   readonly [string, AdmissionReapClaim],
   QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   if (
     AdmissionClaimSinkState.is.complete(claim.admissionJournal) ||
@@ -998,7 +1010,7 @@ const reapClaimSinksComplete = (claim: AdmissionReapClaim): boolean =>
 
 const recoveryRecordRemainsAfterSettlement = Effect.fnUntraced(function* (
   recoveryPath: string
-): Effect.fn.Return<boolean, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, never, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   // A healthy owner may need several seconds to finish its sinks on a loaded runner.
   return yield* Effect.repeat(fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true))), {
@@ -1011,7 +1023,11 @@ const processAttemptJournalSink = Effect.fnUntraced(function* (
   claimPath: string,
   claim: AdmissionReapClaim,
   journal: AdmissionAttemptTerminationJournalShape
-): Effect.fn.Return<AdmissionReapClaim, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  AdmissionReapClaim,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   if (AdmissionClaimSinkState.is.complete(claim.attemptJournal)) {
     return claim;
   }
@@ -1029,7 +1045,7 @@ const processAdmissionJournalSink = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   O.Option<AdmissionReapClaim>,
   QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   if (AdmissionClaimSinkState.is.complete(claim.admissionJournal)) {
     return O.some(claim);
@@ -1045,10 +1061,8 @@ const processAdmissionJournalSink = Effect.fnUntraced(function* (
 });
 
 const schedulerLockToken = Effect.fnUntraced(function* () {
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto
-    .randomUUIDv4()
-    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create scheduler lock identity.")));
+  const crypto = yield* SecureRandom.SecureRandom;
+  const token = yield* crypto.uuidV4();
   return `${process.pid}:${token}`;
 });
 
@@ -1071,7 +1085,11 @@ const processReapClaim = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   claimPath: string,
   observedClaim: AdmissionReapClaim
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const fs = yield* FileSystem.FileSystem;
   const lockPath = reapClaimLockPath(claimPath);
   const acquired = yield* acquireSchedulerSettlementLock(
@@ -1140,7 +1158,11 @@ const processReapClaim = Effect.fnUntraced(function* (
 const createReapClaim = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   claim: AdmissionReapClaim
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const path = yield* Path.Path;
   const pending = AdmissionEvictionEmission.is.off((yield* readAdmissionProtocol(directories.root)).eviction)
     ? updateReapClaim(claim, { admissionJournal: "pending-protocol-off" })
@@ -1158,7 +1180,11 @@ const claimDeadLease = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   sourcePath: string,
   lease: YeetAdmissionLease
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   yield* createReapClaim(
     directories,
     AdmissionLeaseReapClaim.make({
@@ -1178,7 +1204,11 @@ const claimDeadTicket = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   sourcePath: string,
   ticket: YeetAdmissionTicket
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   yield* createReapClaim(
     directories,
     AdmissionTicketReapClaim.make({
@@ -1196,7 +1226,7 @@ const claimDeadTicket = Effect.fnUntraced(function* (
 
 const coalesceOverlappingAdmissionState = Effect.fnUntraced(function* (
   state: LiveAdmissionState
-): Effect.fn.Return<LiveAdmissionState, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<LiveAdmissionState, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const leasedNonces = pipe(
     A.appendAll(state.leases, state.deadLeases),
@@ -1236,7 +1266,11 @@ const repairDeadAdmissionState = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   state: LiveAdmissionState,
   retainedDeadLeasePaths: ReadonlyArray<string>
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const coalesced = yield* coalesceOverlappingAdmissionState(state);
   yield* Effect.forEach(
     A.filter(coalesced.deadLeases, ({ path }) => !A.contains(retainedDeadLeasePaths, path)),
@@ -1261,7 +1295,7 @@ const promotionTransitionPath = (path: Path.Path, directories: AdmissionDirector
 const persistPromotionTransition = Effect.fnUntraced(function* (
   transitionPath: string,
   transition: AdmissionPromotionTransition
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem | Digest.Digest> {
   const text = yield* encodePromotionTransition(transition).pipe(
     Effect.mapError(QualitySchedulerError.new(`Failed to encode admission promotion ${transitionPath}.`))
   );
@@ -1286,7 +1320,7 @@ const promotionAdmissionEvent = (transition: AdmissionPromotionTransition): Admi
 
 const readPromotionLease = Effect.fnUntraced(function* (
   transition: AdmissionPromotionTransition
-): Effect.fn.Return<O.Option<YeetAdmissionLease>, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<O.Option<YeetAdmissionLease>, never, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(transition.leasePath).pipe(Effect.option);
   if (O.isNone(text)) {
@@ -1300,7 +1334,7 @@ const readPromotionLease = Effect.fnUntraced(function* (
 
 const discardLeaseLessPreparedPromotion = Effect.fnUntraced(function* (
   transitionPath: string
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   yield* fs
     .remove(transitionPath, { force: true })
@@ -1312,7 +1346,11 @@ const completePublishedPromotion = Effect.fnUntraced(function* (
   transitionPath: string,
   initial: AdmissionPromotionTransition,
   lease: YeetAdmissionLease
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const fs = yield* FileSystem.FileSystem;
   let transition = AdmissionPromotionTransition.make({ ...initial, lease });
   yield* fs
@@ -1348,7 +1386,11 @@ const processPromotionTransition = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   transitionPath: string,
   observedNonce: string
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const fs = yield* FileSystem.FileSystem;
   const lockPath = `${transitionPath}.lock`;
   const acquired = yield* acquireSchedulerSettlementLock(
@@ -1403,7 +1445,11 @@ const processPromotionTransition = Effect.fnUntraced(function* (
 
 const recoverPromotionTransitions = Effect.fnUntraced(function* (
   directories: AdmissionDirectories
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const names = yield* fs
@@ -1432,7 +1478,11 @@ const scanAdmissionState = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   repair: boolean,
   retainedDeadLeasePaths: ReadonlyArray<string> = A.empty()
-): Effect.fn.Return<LiveAdmissionState, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  LiveAdmissionState,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   yield* repair ? recoverPromotionTransitions(directories) : Effect.void;
   const staleStaging = yield* collectStaleStagingFiles(directories);
   yield* repair ? Effect.forEach(staleStaging, removeStagingFile, { discard: true }) : Effect.void;
@@ -1704,7 +1754,7 @@ export const qualitySchedulerForTesting = {
 const refreshHeartbeat = Effect.fnUntraced(function* (
   entryPath: string,
   encoded: string
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem | Digest.Digest> {
   yield* writeFileAtomic(entryPath, `${encoded}\n`);
 });
 
@@ -1788,12 +1838,13 @@ const tryAdmitSelf = Effect.fnUntraced(function* <OriginLease, GateError, GateRe
 ): Effect.fn.Return<
   AdmissionAttempt<OriginLease>,
   QualitySchedulerError | GateError,
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | MemoryStats
   | ChildProcessSpawner.ChildProcessSpawner
   | GateRequirements
+  | Digest.Digest
 > {
   const originLease = yield* gate.tryAcquire;
   if (O.isNone(originLease)) {
@@ -1829,7 +1880,12 @@ const stageSelfLease = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   O.Option<{ readonly lease: YeetAdmissionLease; readonly leasePath: string; readonly promotionPath: string }>,
   QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | MemoryStats
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const path = yield* Path.Path;
   const nowMillis = yield* Clock.currentTimeMillis;
@@ -1911,7 +1967,7 @@ const heartbeatLoop = Effect.fnUntraced(function* (
   leasePath: string,
   lease: YeetAdmissionLease,
   config: AdmissionConfig
-): Effect.fn.Return<never, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<never, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem | Digest.Digest> {
   let current = lease;
   while (true) {
     yield* Effect.sleep(Duration.millis(config.heartbeatSeconds * 1000));
@@ -1945,12 +2001,13 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
 ): Effect.fn.Return<
   PromotionTick<OriginLease>,
   QualitySchedulerError | GateError,
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | MemoryStats
   | ChildProcessSpawner.ChildProcessSpawner
   | GateRequirements
+  | Digest.Digest
 > {
   // Rank contenders at the start of the attempt. Recovery may perform durable
   // journal I/O, but that housekeeping must not age a ticket across a priority
@@ -2055,12 +2112,13 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
 ): Effect.fn.Return<
   AdmittedState<OriginLease>,
   QualitySchedulerError | GateError,
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | MemoryStats
   | ChildProcessSpawner.ChildProcessSpawner
   | GateRequirements
+  | Digest.Digest
 > {
   const startMillis = yield* Clock.currentTimeMillis;
   let ticket = initialTicket;
@@ -2101,7 +2159,7 @@ const matchActiveRunScope = <Success, Requirements>(
 
 const readLeaseRunScopeTelemetry = (
   lease: YeetAdmissionLease
-): Effect.Effect<RunScopeTelemetry, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<RunScopeTelemetry, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
   matchActiveRunScope(lease, {
     onNone: () => Effect.succeed(RunScopeTelemetry.make({})),
     onSome: (scope) => readRunScopeTelemetry(scope.unitName),
@@ -2120,11 +2178,12 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
   Success,
   UseError | QualitySchedulerError,
   | UseRequirements
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | GateRequirements
+  | Digest.Digest
 > {
   return yield* Effect.acquireUseRelease(
     Effect.forkChild(heartbeatLoop(admitted.leasePath, admitted.lease, config)),
@@ -2163,7 +2222,7 @@ const finalizeAdmissionTicket = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   ticketPath: string,
   ticket: YeetAdmissionTicket
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   // A promotion may have published its lease before failing to remove the
@@ -2231,12 +2290,13 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
   UseError | GateError | QualitySchedulerError,
   | UseRequirements
   | GateRequirements
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | MemoryStats
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const resolved = config ?? AdmissionConfig.make({});
   const path = yield* Path.Path;
@@ -2280,9 +2340,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     coordinationProtocol: AdmissionCoordinationProtocol.Enum["scheduler-origin-concurrency/v1"],
     enqueuedAtMillis: nowMillis,
     heartbeatAtMillis: nowMillis,
-    nonce: yield* Crypto.Crypto.use((crypto) => crypto.randomUUIDv4()).pipe(
-      Effect.mapError(QualitySchedulerError.new("Failed to create admission ticket identity."))
-    ),
+    nonce: yield* SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4()),
     attemptId: admittedRequest.attemptId,
     resolvedHeadSha: admittedRequest.resolvedHeadSha,
     diffFingerprint: admittedRequest.diffFingerprint,
@@ -2378,7 +2436,12 @@ export const admissionStatus = Effect.fn("QualityScheduler.admissionStatus")(fun
 ): Effect.fn.Return<
   AdmissionSnapshot,
   QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | MemoryStats
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const resolved = config ?? AdmissionConfig.make({});
   const directories = yield* ensureAdmissionDirectories();
@@ -2387,7 +2450,7 @@ export const admissionStatus = Effect.fn("QualityScheduler.admissionStatus")(fun
 
 const enrichLeaseRunScopeTelemetry = (
   lease: YeetAdmissionLease
-): Effect.Effect<YeetAdmissionLease, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<YeetAdmissionLease, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
   matchActiveRunScope(lease, {
     onNone: () => Effect.succeed(lease),
     onSome: (scope) =>
@@ -2415,7 +2478,12 @@ const snapshotAdmissionState = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   AdmissionSnapshot,
   QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | MemoryStats
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -2487,7 +2555,7 @@ const deadLeaseScopePlan = (
 
 const stopLeakedRunScopes = Effect.fnUntraced(function* (
   state: LiveAdmissionState
-): Effect.fn.Return<ReadonlyArray<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   // Only a dead lease is coordinated proof that its scope is no longer live.
   // A loaded unit absent from this scan may belong to an admission racing with
   // the reaper, so absence is never authority to stop it.
@@ -2551,7 +2619,12 @@ export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState
 }): Effect.fn.Return<
   AdmissionSnapshot,
   QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | MemoryStats | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | MemoryStats
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const directories = yield* ensureAdmissionDirectories();
   const retainedDeadLeasePaths = options.apply

@@ -20,6 +20,7 @@ import {
   CachePilotTask,
 } from "./Cache.pilot.schemas.ts";
 import { CacheFixtureEvent } from "./Cache.protocol.fixture.schemas.ts";
+import { CacheProtocolNativeSummary } from "./Cache.protocol.runner.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot.signed.schemas");
 
@@ -68,9 +69,16 @@ const SignedOutcome = S.TaggedUnion({
  * @since 0.0.0
  */
 export class CacheSignedPilotRun extends S.Opaque<CacheSignedPilotRun, { readonly brand: unique symbol }>()(
-  S.Struct({ ...CachePilotRun.fields, outcome: SignedOutcome }).pipe(
+  S.Struct({
+    ...CachePilotRun.fields,
+    outcome: SignedOutcome,
+    nativeSummary: S.OptionFromOptionalKey(CacheProtocolNativeSummary).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+  }).pipe(
     $I.annoteSchema("CacheSignedPilotRun", {
-      description: "Signed selected-task execution; local hits and blocked selected tasks are not representable.",
+      description:
+        "Signed selected-task execution with an optional complete minimal native summary; historical absence grants no upload-join evidence. Local hits and blocked selected tasks are not representable.",
     })
   )
 ) {}

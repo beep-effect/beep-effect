@@ -1,0 +1,614 @@
+{
+  "schemaVersion": "claim-antecedent-next-closest-comparison/v1",
+  "date": "2026-10-28",
+  "baselineCommit": "c057a15cd2",
+  "checkpointCommit": "007427078c",
+  "referenceLabelsChanged": false,
+  "scorerChanged": false,
+  "developmentSetRerun": true,
+  "actualAttorneyAgreementRecorded": false,
+  "files": [
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-positive-evaluation.json",
+      "sha256": "a33627b77740d7a368131b98f7646ed2507ca8a8246afc4710992b2b0fbcfaac"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-positive-evaluation-summary.json",
+      "sha256": "e5ebe913a7f54ce35eebdaeab1f2fc4e034263ab3e6ddd29d93a4f284e44a1db"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-positive-evaluation.md",
+      "sha256": "eaf637d6eac2e795480b5f7105afc41a5ee865ef30fda413c09897aad2b27951"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-positive-run-receipt.json",
+      "sha256": "71a0a46d2bb995ed0c50a6c26250157ae9a14967ec67aa64191404051abd1655"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-comparison.md",
+      "sha256": "c039dfacda1d4ae3e0dff6befda51d286d734c725b1d8a5063f7180403b657fb"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-comparison-receipt.json",
+      "sha256": "d7483a81fab7d02226af9f5c55a4f999a769f01eb74848316bee70d2549f688d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-closest-comparison.md",
+      "sha256": "ddbc25079d955ee9a3b284ef67a91f17009672d148e2e77a6e92b040c6946f0f"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-closest-comparison-receipt.json",
+      "sha256": "a40488c57fe4e829b573f6987b38d065d94d8e2d621261646a38eda96987c2fc"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-closest-remaining.json",
+      "sha256": "1a864b1949eb067b7e805c6cd952235f84676b3b176fcbb07858238e3e9bb4bd"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-next-closest-comparison.md",
+      "sha256": "b216bf35d8d8a578c93f9a27e4b378dadacc4bb03eaec40f35a1d6041ccf3cc2"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-next-closest-remaining.json",
+      "sha256": "f073c1d10622a3dca6d0924e657f02701d7d158b9f7f0ace6bd90daaebaae3ea"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/reference-freeze.json",
+      "sha256": "9c1ba8d210af9b27f3ac02cdea643e6437ae7068d23b449038a51a6de5e0932c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/positive-source-freeze.json",
+      "sha256": "59fe84a8963fdb7265f464afc2ee1ff081c325fa6bb1acd66bf6bf10ff232028"
+    },
+    {
+      "path": "packages/law-practice/server/test/evaluation/Structural.ts",
+      "sha256": "2505d74a14e57454aa422c9f021b8e98348f50c6d552e0fdc4d10599e10d999f"
+    },
+    {
+      "path": "packages/law-practice/server/test/evaluation/positive.main.ts",
+      "sha256": "aef0f7614e8dc84f59eb5fd2c108d5d1d440766624ebe158f142409645d859e2"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v2-evaluation.json",
+      "sha256": "b1fff833d0002de30d3b8c52661cd50aacb17480ff688d6a57d807b0c7ffe1a7"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v2-summary.json",
+      "sha256": "f0192428ebbe871e1d051804bd1e2751f249da9cfead684321203886986bfc9a"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v3-evaluation.json",
+      "sha256": "dbb51ec62e951e722ce4589bdc350704110ede0977993413afd9314bf0a808a5"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v3-summary.json",
+      "sha256": "13a8b296a024df50417e14f2e64d7b7b3ed47291b45e90c12494089020fa76ae"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v4-evaluation.json",
+      "sha256": "d6b8e777d71b240fd243598b7b49ad850946bdb3342e485c4ab7775baff88d29"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v4-summary.json",
+      "sha256": "13a8b296a024df50417e14f2e64d7b7b3ed47291b45e90c12494089020fa76ae"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v5-evaluation.json",
+      "sha256": "740aa727d5a650eb1df9f378c76732561f5771c004ed02b67c2785c10c4a8321"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v5-summary.json",
+      "sha256": "3774881c6b80da2d02ecd08a4f8cafe65f0d6fdeda6101ebe66ab7967d95336d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v6-evaluation.json",
+      "sha256": "a54cf9f6e90be8b817ba26fa0b2b71b4b15fcbf2d0efebe138ed5fd59e587838"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v6-summary.json",
+      "sha256": "681a4caee6095a388bb5c7dd975ee04f303e4ecebfb09adedeebb0a1282d2043"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v7-evaluation.json",
+      "sha256": "46a1112a9fb16d3b4f90c4be2ca54988bfa0a3f52d80aee689f8ba924a19248f"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v7-summary.json",
+      "sha256": "594c779ffe4d7e822d8093ff2570f131e9e6eef57d626fd7ddb4243f477fdeb8"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v8-evaluation.json",
+      "sha256": "08f105c3fa25404368a0777ca86768bf1d36a1ea5ce3db6a582b715fe74013a1"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-repair-v8-summary.json",
+      "sha256": "d740e3600b0ce0ed9c6812e44070a418cc6fae2e8071cf59d599337e2b2827c6"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v2-freeze.json",
+      "sha256": "4a691d725e49dd09391196e344b112c9c1c1915ac7f8f65e55c067a957c9246e"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v3-freeze.json",
+      "sha256": "863a652fec6e3d59d8feab70122c4ed2d2d370af86dec55ab57ff52cc72e5267"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v4-freeze.json",
+      "sha256": "f41f20a5aa1b2cb171c911c2296925df61f704d8849171c3fcea7f89a7213a84"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v5-freeze.json",
+      "sha256": "14d6410df6413b319ac2dd1755d46829b5f4de102459ebb73d44552859d40b1d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v6-freeze.json",
+      "sha256": "672e42e28e67af9675a36b2d0c506b24b67e72729b083e730c342f3f461ba8ea"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v7-freeze.json",
+      "sha256": "aa0319576f2db6ac3c5e663051b903f25ede522d8bb15166d4c67cd5a62c536d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-repair-v8-freeze.json",
+      "sha256": "0280cf6abb31bab5177d62d85e0f0f367271d8b999e9ae9b99c0bc495ebe3690"
+    }
+  ],
+  "runs": [
+    {
+      "version": "v7",
+      "implementationDigest": "05e6ce4d314011a30dc4af31e10a53c865937af8a3b1e7154b24b614f1f133c5",
+      "referenceSelectionDigest": "ffcffd914a33dbabbe6f878e375bf6d9d41f9f30487e835d7061760b1593b8ff",
+      "positiveBenchmarkPredictionsRun": true,
+      "predictions": [
+        {
+          "familyId": "11246782-root-28",
+          "sha256": "c3e6f66b273dff157ef25e536cd76db8c7703417f808ec067d508edc790492c3"
+        },
+        {
+          "familyId": "11279554-root-25",
+          "sha256": "1d8186c5dd32705fd21b6cc31b9947c9f2fd98c887b0059ae20b915951c3cffc"
+        },
+        {
+          "familyId": "11299450-root-1",
+          "sha256": "9c19110c16ce0dbda8c88f114ca47fedeec6a758fddb426d7463c1a076aa7769"
+        },
+        {
+          "familyId": "11341804-root-1",
+          "sha256": "7902e34b06332e98c4bda6b9a40bf8bb9a2381beb0d08e9ee5599f338a053ce2"
+        },
+        {
+          "familyId": "11457178-root-1",
+          "sha256": "20e3620dd69322b62f198d4af8c57a352f4ccf406c160d7b041d5d325025c18d"
+        },
+        {
+          "familyId": "11502512-root-11",
+          "sha256": "36ce219a28f64de556eae81a7773f37e0f9fa1530e256be0d8cba0d3cb716c84"
+        },
+        {
+          "familyId": "11575704-root-1",
+          "sha256": "909e67023a0bcde79eb05240c2ee125e02c7afa5d5697e224f23857ac898da7d"
+        },
+        {
+          "familyId": "11910514-root-1",
+          "sha256": "ac23db64800bf01728a221d032ace9cf9a92a9272764d6e0a043a6bb98e7b634"
+        },
+        {
+          "familyId": "11973401-root-12",
+          "sha256": "965a63ab2267a5c0df2ef7ff4a8bbf591659a09a1851a2046193e117531027d8"
+        },
+        {
+          "familyId": "12117564-root-7",
+          "sha256": "053959638038ed22676145085c53616bef072fddfc3a3d7a5c993ff85315d9a3"
+        },
+        {
+          "familyId": "12268372-root-10",
+          "sha256": "a0bbaf5c2524b011d11403276940b0d6d064390ada783887a15b0ce642f8f4d8"
+        },
+        {
+          "familyId": "12360911-root-1",
+          "sha256": "b576126eef3cf8566d2015e4f520b7b262f88aa128cc728a9d375f2a967bc83a"
+        },
+        {
+          "familyId": "12447956-root-7",
+          "sha256": "094feb44005609f3d2243cafee04d61e186f738814eea1d82c14ef7db19ae563"
+        },
+        {
+          "familyId": "12525441-root-1",
+          "sha256": "0a28eab4a07490b7d492ed6e8ac00f1d9f421c0641f28bd37ebdaa67189dba23"
+        },
+        {
+          "familyId": "12536794-root-19",
+          "sha256": "818141bf78d3a4917538882448d4c289216fc8bd3ff43585153e994bb28b4a41"
+        },
+        {
+          "familyId": "12656234-root-1",
+          "sha256": "234695e8ab57982f6f13cb3606e5f2b7354ae2277676c643410db79373cf5e09"
+        },
+        {
+          "familyId": "12748625-root-1",
+          "sha256": "3f7d8d98a9daa765e0715a1fecdeb5e2ab162f5dbe849a5dce95d94e965507ed"
+        },
+        {
+          "familyId": "12749812-root-1",
+          "sha256": "ec3f6b06275f0dfbd0cb5c7ce2de63854de1f995bcffb59984cd16d6d7c5f6a8"
+        },
+        {
+          "familyId": "12838228-root-1",
+          "sha256": "8abdec57866a3c04664308a6f1918b5b6c83432fd16948c0097b891c1b60daee"
+        },
+        {
+          "familyId": "13062032-root-1",
+          "sha256": "5a4f7f2f519789245fdf0138e98845f41ca25efd014de96030abc859735b609f"
+        },
+        {
+          "familyId": "13070851-root-1",
+          "sha256": "c2e266e5b88c6f9ed324d5ae20e8326e7417d1d4c8555cc159ac2d9a631178f0"
+        },
+        {
+          "familyId": "13272881-root-1",
+          "sha256": "69e1eaf1a693a21ec52388fedcc3f5cc465fcf8294f86b6074169495cb77554e"
+        },
+        {
+          "familyId": "13275397-root-1",
+          "sha256": "09d5ec7156929dccab2edf13e39c36a7ae181ed9b197168fcb73cfed16f157d6"
+        },
+        {
+          "familyId": "13468456-root-1",
+          "sha256": "9d3e3142fe2fcf71597249f52362767cd33b55649765552280faaf16388c4fa3"
+        },
+        {
+          "familyId": "13484431-root-19",
+          "sha256": "5089acd5bd59f8d92da33d4690ccba45d9c2329f612762a5e88bde62491102f8"
+        },
+        {
+          "familyId": "13575735-root-1",
+          "sha256": "051beb731a80d19170cdeba5a7c58b4ef7ffaff5e893c178a614d2cfd4364b56"
+        },
+        {
+          "familyId": "13687596-root-1",
+          "sha256": "abc9e92ada0ebdc901f987c91c3172907a51ba5b08fa8dab110b9287bed96cd5"
+        },
+        {
+          "familyId": "13822885-root-1",
+          "sha256": "6a2b19b5de4c31ee1758974174e1e63ae9ef54f441f7cb5231df037e35318778"
+        },
+        {
+          "familyId": "14260199-root-1",
+          "sha256": "77366624b2fe8e5a7b8c341629924d3a2432a2233b068720cc24362e7849c529"
+        },
+        {
+          "familyId": "14262251-root-1",
+          "sha256": "b8512d2131bc522c2cecbe0d265e17b89cf4ae4347f25a16c3dda600f49d1730"
+        },
+        {
+          "familyId": "14432872-root-5",
+          "sha256": "7648ffdcfb08cedbe222ddb5d65fddeefd56f3cdf2f56384474bca4c66912378"
+        },
+        {
+          "familyId": "14657939-root-1",
+          "sha256": "5e9e99585e718f7f92f6473e52db6fcff80cdd3a2d91ec432a926c7d2a5e1ae4"
+        },
+        {
+          "familyId": "14813790-root-1",
+          "sha256": "154e025672b364e34b6ba694a09774d2c2e17555b86b5b1769220309dd9ffc88"
+        },
+        {
+          "familyId": "14970678-root-17",
+          "sha256": "11630f8c68ce2a8291c9509bec38356ab813f59f25ca5c06dd9f80a801b7c370"
+        },
+        {
+          "familyId": "14971439-root-17",
+          "sha256": "f0f4fcd0e8ef0e5787b8251cd13de27ccb1d4de211633db1eba25c534dd71e77"
+        },
+        {
+          "familyId": "15276859-root-19",
+          "sha256": "3b34139f0a8470b2cfeb385d7532d962432343afc1c1514d42c29ba468433270"
+        },
+        {
+          "familyId": "15752303-root-1",
+          "sha256": "82070a194a78049e775005388d93b3e04afc58441414fd78e6c09e419ba09455"
+        },
+        {
+          "familyId": "15803808-root-15",
+          "sha256": "79ff3bc5545e9502ad32d7170224f293fa65c74506ebbee4c79462daac4c37ff"
+        },
+        {
+          "familyId": "15927789-root-6",
+          "sha256": "a1bec237b7026a34cdc04df735956fda87550f67bb735de70c2b84530d2e6956"
+        },
+        {
+          "familyId": "15958729-root-1",
+          "sha256": "52a3fb2f6b76af62a52e3fd17418f2fe2b8bbdf133dd5e116cb5b45caedd6091"
+        },
+        {
+          "familyId": "16052309-root-1",
+          "sha256": "5676446df57858bac0351fa495066be18f6f44db3b2644c7388452fc6abe3075"
+        },
+        {
+          "familyId": "16068637-root-11",
+          "sha256": "f1fa3a79e09e15c979ad0c2f89bc7f5f3b750d0d00506ff196fc94f80b3b025a"
+        },
+        {
+          "familyId": "16135952-root-20",
+          "sha256": "81a0085ee067c611c93b4e763a389d393acf2633fffe078ca4138455a9f01bfb"
+        },
+        {
+          "familyId": "16628033-root-1",
+          "sha256": "265249a5aceb6fb1d2e5a1edae11dff6e03aa7b2257f484f5a89672ffee96a3b"
+        },
+        {
+          "familyId": "16778182-root-1",
+          "sha256": "5cb40a0033c9da4bbea016bee9e67dfd3092adf038cf8b6ef227f48b197b84d8"
+        },
+        {
+          "familyId": "16819424-root-10",
+          "sha256": "36eae68506ceaca143ef97b28d6f25349049ffedfb59438f28149965e460aae2"
+        },
+        {
+          "familyId": "16963517-root-1",
+          "sha256": "4c964e4e6dfa8bf278906c79befbd50b906dbb0f393d805a338cd9597a5aee12"
+        },
+        {
+          "familyId": "17139442-root-1",
+          "sha256": "1a2e01b0160523caf7d485d8e68adc065ccb19dfce75c50ceaf7e15f7d581e76"
+        },
+        {
+          "familyId": "17617663-root-1",
+          "sha256": "41ed5ddeb8afe4bb5ea2c86bb7347811a667976d935e54eb245d5fdac5146d2b"
+        },
+        {
+          "familyId": "18018354-root-6",
+          "sha256": "5b58a6f0730096274a8e7c7b946c67ad1f5193e59a0e1db52b93067356f1dba0"
+        },
+        {
+          "familyId": "18087856-root-11",
+          "sha256": "3d32cfa92fbbecaa6c30ae0611747c0fb76650a0cc2d0e91a83bf6053e807669"
+        },
+        {
+          "familyId": "18307241-root-1",
+          "sha256": "e56bd45a55117e538d5d7f678c9f5ac225e51d008f101dc79241c8b24929880f"
+        },
+        {
+          "familyId": "18409554-root-16",
+          "sha256": "afb801e10bc15cff6481b2cd194d7530173e9dbd13847e9f6dee731bc6d811dd"
+        },
+        {
+          "familyId": "18547866-root-1",
+          "sha256": "fdf2e1688b65df0b7ff66eae5a5295a7971313574385673edea7fd8217a91d4e"
+        },
+        {
+          "familyId": "18734099-root-1",
+          "sha256": "d58ea87ff945693c983ac70c5cc425c75e34ea142b1607bb85918179a1cce79b"
+        }
+      ]
+    },
+    {
+      "version": "v8",
+      "implementationDigest": "bd757c244606a544cd1cb7d32fa4bc3b6e65584fba12e97137943846255b8dd3",
+      "referenceSelectionDigest": "ffcffd914a33dbabbe6f878e375bf6d9d41f9f30487e835d7061760b1593b8ff",
+      "positiveBenchmarkPredictionsRun": true,
+      "predictions": [
+        {
+          "familyId": "11246782-root-28",
+          "sha256": "c3e6f66b273dff157ef25e536cd76db8c7703417f808ec067d508edc790492c3"
+        },
+        {
+          "familyId": "11279554-root-25",
+          "sha256": "1d8186c5dd32705fd21b6cc31b9947c9f2fd98c887b0059ae20b915951c3cffc"
+        },
+        {
+          "familyId": "11299450-root-1",
+          "sha256": "9c19110c16ce0dbda8c88f114ca47fedeec6a758fddb426d7463c1a076aa7769"
+        },
+        {
+          "familyId": "11341804-root-1",
+          "sha256": "7902e34b06332e98c4bda6b9a40bf8bb9a2381beb0d08e9ee5599f338a053ce2"
+        },
+        {
+          "familyId": "11457178-root-1",
+          "sha256": "20e3620dd69322b62f198d4af8c57a352f4ccf406c160d7b041d5d325025c18d"
+        },
+        {
+          "familyId": "11502512-root-11",
+          "sha256": "36ce219a28f64de556eae81a7773f37e0f9fa1530e256be0d8cba0d3cb716c84"
+        },
+        {
+          "familyId": "11575704-root-1",
+          "sha256": "99ea90c16814c05b22f3fc5aa8e548f5bb9b3b7f55b6b03fd78c189e7a90ea27"
+        },
+        {
+          "familyId": "11910514-root-1",
+          "sha256": "ac23db64800bf01728a221d032ace9cf9a92a9272764d6e0a043a6bb98e7b634"
+        },
+        {
+          "familyId": "11973401-root-12",
+          "sha256": "965a63ab2267a5c0df2ef7ff4a8bbf591659a09a1851a2046193e117531027d8"
+        },
+        {
+          "familyId": "12117564-root-7",
+          "sha256": "053959638038ed22676145085c53616bef072fddfc3a3d7a5c993ff85315d9a3"
+        },
+        {
+          "familyId": "12268372-root-10",
+          "sha256": "a0bbaf5c2524b011d11403276940b0d6d064390ada783887a15b0ce642f8f4d8"
+        },
+        {
+          "familyId": "12360911-root-1",
+          "sha256": "064af0923cd62570259d5d544ab467dd10b687ac621518f0e2e70b45ab347447"
+        },
+        {
+          "familyId": "12447956-root-7",
+          "sha256": "094feb44005609f3d2243cafee04d61e186f738814eea1d82c14ef7db19ae563"
+        },
+        {
+          "familyId": "12525441-root-1",
+          "sha256": "0a28eab4a07490b7d492ed6e8ac00f1d9f421c0641f28bd37ebdaa67189dba23"
+        },
+        {
+          "familyId": "12536794-root-19",
+          "sha256": "818141bf78d3a4917538882448d4c289216fc8bd3ff43585153e994bb28b4a41"
+        },
+        {
+          "familyId": "12656234-root-1",
+          "sha256": "234695e8ab57982f6f13cb3606e5f2b7354ae2277676c643410db79373cf5e09"
+        },
+        {
+          "familyId": "12748625-root-1",
+          "sha256": "3f7d8d98a9daa765e0715a1fecdeb5e2ab162f5dbe849a5dce95d94e965507ed"
+        },
+        {
+          "familyId": "12749812-root-1",
+          "sha256": "9427975093bcbf181c1fe89d75780f68a8e38fcfc2b94c92e918ede035db15fd"
+        },
+        {
+          "familyId": "12838228-root-1",
+          "sha256": "8abdec57866a3c04664308a6f1918b5b6c83432fd16948c0097b891c1b60daee"
+        },
+        {
+          "familyId": "13062032-root-1",
+          "sha256": "c411c25787d99285fc0cad6118a1d4a2bd5915f29e8b3f9bfce23b5b3860b047"
+        },
+        {
+          "familyId": "13070851-root-1",
+          "sha256": "8974434b7aafac4fe5516ed998c47cce2498be3818c36a00fdec186a78845991"
+        },
+        {
+          "familyId": "13272881-root-1",
+          "sha256": "69e1eaf1a693a21ec52388fedcc3f5cc465fcf8294f86b6074169495cb77554e"
+        },
+        {
+          "familyId": "13275397-root-1",
+          "sha256": "09d5ec7156929dccab2edf13e39c36a7ae181ed9b197168fcb73cfed16f157d6"
+        },
+        {
+          "familyId": "13468456-root-1",
+          "sha256": "9d3e3142fe2fcf71597249f52362767cd33b55649765552280faaf16388c4fa3"
+        },
+        {
+          "familyId": "13484431-root-19",
+          "sha256": "5089acd5bd59f8d92da33d4690ccba45d9c2329f612762a5e88bde62491102f8"
+        },
+        {
+          "familyId": "13575735-root-1",
+          "sha256": "051beb731a80d19170cdeba5a7c58b4ef7ffaff5e893c178a614d2cfd4364b56"
+        },
+        {
+          "familyId": "13687596-root-1",
+          "sha256": "abc9e92ada0ebdc901f987c91c3172907a51ba5b08fa8dab110b9287bed96cd5"
+        },
+        {
+          "familyId": "13822885-root-1",
+          "sha256": "6a2b19b5de4c31ee1758974174e1e63ae9ef54f441f7cb5231df037e35318778"
+        },
+        {
+          "familyId": "14260199-root-1",
+          "sha256": "77366624b2fe8e5a7b8c341629924d3a2432a2233b068720cc24362e7849c529"
+        },
+        {
+          "familyId": "14262251-root-1",
+          "sha256": "b8512d2131bc522c2cecbe0d265e17b89cf4ae4347f25a16c3dda600f49d1730"
+        },
+        {
+          "familyId": "14432872-root-5",
+          "sha256": "7648ffdcfb08cedbe222ddb5d65fddeefd56f3cdf2f56384474bca4c66912378"
+        },
+        {
+          "familyId": "14657939-root-1",
+          "sha256": "5e9e99585e718f7f92f6473e52db6fcff80cdd3a2d91ec432a926c7d2a5e1ae4"
+        },
+        {
+          "familyId": "14813790-root-1",
+          "sha256": "154e025672b364e34b6ba694a09774d2c2e17555b86b5b1769220309dd9ffc88"
+        },
+        {
+          "familyId": "14970678-root-17",
+          "sha256": "11630f8c68ce2a8291c9509bec38356ab813f59f25ca5c06dd9f80a801b7c370"
+        },
+        {
+          "familyId": "14971439-root-17",
+          "sha256": "f0f4fcd0e8ef0e5787b8251cd13de27ccb1d4de211633db1eba25c534dd71e77"
+        },
+        {
+          "familyId": "15276859-root-19",
+          "sha256": "3b34139f0a8470b2cfeb385d7532d962432343afc1c1514d42c29ba468433270"
+        },
+        {
+          "familyId": "15752303-root-1",
+          "sha256": "82070a194a78049e775005388d93b3e04afc58441414fd78e6c09e419ba09455"
+        },
+        {
+          "familyId": "15803808-root-15",
+          "sha256": "e0d4e5cec6bdb5922e14f2f87f52c2a853da23cd450d385f4020502ae8b8009d"
+        },
+        {
+          "familyId": "15927789-root-6",
+          "sha256": "a1bec237b7026a34cdc04df735956fda87550f67bb735de70c2b84530d2e6956"
+        },
+        {
+          "familyId": "15958729-root-1",
+          "sha256": "1cf6ff15e1a5148caeff56896c314ab656170bf0d0b48f43bda8578e625e48c4"
+        },
+        {
+          "familyId": "16052309-root-1",
+          "sha256": "5676446df57858bac0351fa495066be18f6f44db3b2644c7388452fc6abe3075"
+        },
+        {
+          "familyId": "16068637-root-11",
+          "sha256": "f1fa3a79e09e15c979ad0c2f89bc7f5f3b750d0d00506ff196fc94f80b3b025a"
+        },
+        {
+          "familyId": "16135952-root-20",
+          "sha256": "81a0085ee067c611c93b4e763a389d393acf2633fffe078ca4138455a9f01bfb"
+        },
+        {
+          "familyId": "16628033-root-1",
+          "sha256": "265249a5aceb6fb1d2e5a1edae11dff6e03aa7b2257f484f5a89672ffee96a3b"
+        },
+        {
+          "familyId": "16778182-root-1",
+          "sha256": "5cb40a0033c9da4bbea016bee9e67dfd3092adf038cf8b6ef227f48b197b84d8"
+        },
+        {
+          "familyId": "16819424-root-10",
+          "sha256": "36eae68506ceaca143ef97b28d6f25349049ffedfb59438f28149965e460aae2"
+        },
+        {
+          "familyId": "16963517-root-1",
+          "sha256": "4c964e4e6dfa8bf278906c79befbd50b906dbb0f393d805a338cd9597a5aee12"
+        },
+        {
+          "familyId": "17139442-root-1",
+          "sha256": "b2465ce966cbd1a0e24ef4196c95e688a751ec607daae2a828082830094ae59e"
+        },
+        {
+          "familyId": "17617663-root-1",
+          "sha256": "41ed5ddeb8afe4bb5ea2c86bb7347811a667976d935e54eb245d5fdac5146d2b"
+        },
+        {
+          "familyId": "18018354-root-6",
+          "sha256": "5b58a6f0730096274a8e7c7b946c67ad1f5193e59a0e1db52b93067356f1dba0"
+        },
+        {
+          "familyId": "18087856-root-11",
+          "sha256": "3d32cfa92fbbecaa6c30ae0611747c0fb76650a0cc2d0e91a83bf6053e807669"
+        },
+        {
+          "familyId": "18307241-root-1",
+          "sha256": "5d2c7dac0c030211c47d2743c0e43127a551c361841a13f0a3699bca73ca93e8"
+        },
+        {
+          "familyId": "18409554-root-16",
+          "sha256": "4b8138f61eef091d249496ffb6ba395f419d8aa79046d3587a99b36b085b9965"
+        },
+        {
+          "familyId": "18547866-root-1",
+          "sha256": "fdf2e1688b65df0b7ff66eae5a5295a7971313574385673edea7fd8217a91d4e"
+        },
+        {
+          "familyId": "18734099-root-1",
+          "sha256": "d58ea87ff945693c983ac70c5cc425c75e34ea142b1607bb85918179a1cce79b"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,324 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13575735-root-1",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "candidateStatus": "Source-only replacement candidate; no active slot changed; independent source critic and semantic references pending.",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "13575735",
+    "publicationNumber": "US20120294970A1",
+    "publicationReference": [
+      "US",
+      "20120294970",
+      "A1",
+      "20121122"
+    ],
+    "applicationReference": [
+      "US",
+      "13575735",
+      "20100816"
+    ],
+    "officeActionDocumentIdentifiers": [
+      "I8A52WO0PXXIFW4"
+    ],
+    "officeActionMailDate": "2015-04-13"
+  },
+  "digestEvidence": [
+    {
+      "file": "13575735.publication.xml",
+      "sha256": "5e3be35db5b293afee7a714c92ec44cf92e90830787632f2fdf814ef02c193d3",
+      "matchesProvenance": true
+    },
+    {
+      "file": "13575735.claims.xml",
+      "sha256": "3699396cd783225323ecb7840391bd127d8765c12ca741961e701c6e047974d7",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "3699396cd783225323ecb7840391bd127d8765c12ca741961e701c6e047974d7",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "H55LI68PPXXIFW3",
+      "officialDate": "2012-07-27T00:00:00.000-0400",
+      "xmlAvailable": true,
+      "sha256": "6cdba1c869a96682a11a916e421685e1f2542e287eabfbad452b7c935cdacec9",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "H5AXG8LHPXXIFW1",
+      "officialDate": "2012-07-27T00:00:00.000-0400",
+      "xmlAvailable": true,
+      "sha256": "27eb3b2215d859e017ef2b1db6e687b6058a25188f678f5fe704ad6e142b3aff",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 43,
+    "actualRows": 43,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2012-07-27T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "H55LI68PPXXIFW3"
+      },
+      {
+        "officialDate": "2012-07-27T00:00:00.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "H55LI69TPXXIFW3"
+      },
+      {
+        "officialDate": "2012-07-27T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "H5AXG8LHPXXIFW1"
+      },
+      {
+        "officialDate": "2012-07-27T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "H5AXHBUIPXXIFW1"
+      },
+      {
+        "officialDate": "2012-07-27T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "H5AXI1VWPXXIFW1"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "I8A52WO0PXXIFW4",
+        "documentCode": "CTNF",
+        "officialDate": "2015-04-13T00:00:00.000-0400"
+      }
+    ]
+  },
+  "officeActionGroundQuote": "claims 1-8 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the top surface",
+      "nativeQuote": "the top surface",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the connection frame",
+      "nativeQuote": "the connection frame",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the lateral direction",
+      "nativeQuote": "the lateral direction",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the rear side",
+      "nativeQuote": "the rear side",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the rear end",
+      "nativeQuote": "the rear end",
+      "literalMatch": true
+    }
+  ],
+  "rationale": "Marked original PDF1-3 corroborates all selected1-5. PDF3 claim5 visibly inserts underlined claim1 and strikes any one of claims1to3; this directly resolves the clean-original alternative-dependency conflict. Accepted body text and natural references2/3/5->1,4->3 match native. PDF1 identifies a complete amendment listing with original/currently-amended status; no adoption is inferred solely from dates. Actual112(b)/second-paragraph rejection1-8 and selected numbered phrases remain verified.",
+  "concerns": [],
+  "pdfNeeds": [],
+  "attorneyAdjudication": "pending",
+  "independence": "Source-extractor only for these candidates. No source/provenance/expected/active sample changes, predictions, production/rules, network, secrets, git or delegation.",
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "13575735-root-1",
+      "role": "extractor-source-audit",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.98,
+      "verdict": "unresolved",
+      "candidateStatus": "Source-only replacement candidate; no active slot changed; independent source critic and semantic references pending.",
+      "reviewedClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "sourceIdentity": {
+        "applicationNumber": "13575735",
+        "publicationNumber": "US20120294970A1",
+        "publicationReference": [
+          "US",
+          "20120294970",
+          "A1",
+          "20121122"
+        ],
+        "applicationReference": [
+          "US",
+          "13575735",
+          "20100816"
+        ],
+        "officeActionDocumentIdentifiers": [
+          "I8A52WO0PXXIFW4"
+        ],
+        "officeActionMailDate": "2015-04-13"
+      },
+      "digestEvidence": [
+        {
+          "file": "13575735.publication.xml",
+          "sha256": "5e3be35db5b293afee7a714c92ec44cf92e90830787632f2fdf814ef02c193d3",
+          "matchesProvenance": true
+        },
+        {
+          "file": "13575735.claims.xml",
+          "sha256": "3699396cd783225323ecb7840391bd127d8765c12ca741961e701c6e047974d7",
+          "matchesProvenance": true
+        },
+        {
+          "file": "source.claims.xml",
+          "sha256": "3699396cd783225323ecb7840391bd127d8765c12ca741961e701c6e047974d7",
+          "matchesProvenance": true
+        }
+      ],
+      "originalEvidence": [
+        {
+          "documentIdentifier": "H55LI68PPXXIFW3",
+          "officialDate": "2012-07-27T00:00:00.000-0400",
+          "xmlAvailable": true,
+          "sha256": "6cdba1c869a96682a11a916e421685e1f2542e287eabfbad452b7c935cdacec9",
+          "matchesProvenance": true
+        },
+        {
+          "documentIdentifier": "H5AXG8LHPXXIFW1",
+          "officialDate": "2012-07-27T00:00:00.000-0400",
+          "xmlAvailable": true,
+          "sha256": "27eb3b2215d859e017ef2b1db6e687b6058a25188f678f5fe704ad6e142b3aff",
+          "matchesProvenance": true
+        }
+      ],
+      "inventoryEvidence": {
+        "declaredCount": 43,
+        "actualRows": 43,
+        "preOrOnActionClaimOrAmendmentRows": [
+          {
+            "officialDate": "2012-07-27T00:00:00.000-0400",
+            "documentCode": "CLM",
+            "documentIdentifier": "H55LI68PPXXIFW3"
+          },
+          {
+            "officialDate": "2012-07-27T00:00:00.000-0400",
+            "documentCode": "A.PE",
+            "documentIdentifier": "H55LI69TPXXIFW3"
+          },
+          {
+            "officialDate": "2012-07-27T00:00:00.000-0400",
+            "documentCode": "CLM",
+            "documentIdentifier": "H5AXG8LHPXXIFW1"
+          },
+          {
+            "officialDate": "2012-07-27T00:00:00.000-0400",
+            "documentCode": "REM",
+            "documentIdentifier": "H5AXHBUIPXXIFW1"
+          },
+          {
+            "officialDate": "2012-07-27T00:00:00.000-0400",
+            "documentCode": "REM",
+            "documentIdentifier": "H5AXI1VWPXXIFW1"
+          }
+        ],
+        "citedOfficeActionRows": [
+          {
+            "documentIdentifier": "I8A52WO0PXXIFW4",
+            "documentCode": "CTNF",
+            "officialDate": "2015-04-13T00:00:00.000-0400"
+          }
+        ]
+      },
+      "officeActionGroundQuote": "claims 1-8 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.",
+      "quotedEvidence": [
+        {
+          "claimNumber": 1,
+          "examinerPhrase": "the top surface",
+          "nativeQuote": "the top surface",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 1,
+          "examinerPhrase": "the connection frame",
+          "nativeQuote": "the connection frame",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 1,
+          "examinerPhrase": "the lateral direction",
+          "nativeQuote": "the lateral direction",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 3,
+          "examinerPhrase": "the rear side",
+          "nativeQuote": "the rear side",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 4,
+          "examinerPhrase": "the rear end",
+          "nativeQuote": "the rear end",
+          "literalMatch": true
+        }
+      ],
+      "rationale": "The actual 112(b)/second-paragraph ground rejects claims 1-8 and specifically discusses selected claims 1/3/4. Natural dependencies 2/3/5 -> 1 and 4 -> 3 give a meaningful root-1 family. Both legacy originals parse 8 numbered claims despite the prior count of zero. Marked H5AXG8LHPXXIFW1 claim 5 serializes stray text lanyoneofclaims...to3 against native claim 1; clean H55LI68PPXXIFW3 explicitly uses any of claims 1 to 3. The preliminary-amendment row locates the version difference, but missing reliable deletion markup cannot prove accepted claim 5 dependence. Selected claims 1-4 substantive bodies otherwise corroborate with page/line-number artifacts.",
+      "concerns": [
+        "Inspect marked H5AXG8LHPXXIFW1 claim 5 PDF for explicit deletion of alternatives 1-3 and insertion of claim 1; corroborate complete selected claims 1-5 bodies."
+      ],
+      "pdfNeeds": [
+        "Inspect marked H5AXG8LHPXXIFW1 claim 5 PDF for explicit deletion of alternatives 1-3 and insertion of claim 1; corroborate complete selected claims 1-5 bodies."
+      ],
+      "attorneyAdjudication": "pending",
+      "independence": "Source-extractor only for these candidates. No source/provenance/expected/active sample changes, predictions, production/rules, network, secrets, git or delegation."
+    }
+  ],
+  "pdfCorroboration": [
+    {
+      "documentIdentifier": "H5AXG8LHPXXIFW1",
+      "sha256": "65af4fde5c79391141170689cf08063a6f9207a1581a0a881f771409bfef2387",
+      "pdfPagesInspected": [
+        1,
+        2,
+        3
+      ],
+      "printedPages": [
+        2,
+        3,
+        4
+      ],
+      "purpose": "Visual original corroboration only; native source unchanged."
+    }
+  ],
+  "pdfQuotedEvidence": [
+    {
+      "claimNumber": 5,
+      "nativeQuote": "according to claim 1",
+      "originalQuote": "according to claim 1 any one of claims 1 to 3",
+      "originalRendering": "claim1 inserted/underlined; any one of claims1to3 visibly struck.",
+      "pdfPage": 3
+    }
+  ]
+}

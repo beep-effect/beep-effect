@@ -1,0 +1,50 @@
+{
+  "applicationNumber": "17755831",
+  "publicationNumber": "US20220387188A1",
+  "publicationDate": "2022-12-08",
+  "nativeXmlSha256": "a3350521514fecb53fefdeb95e94383db2c5f8929e651055488a26d46dbc4450",
+  "claimsXmlSha256": "5799ce00768b6bf3ec8bfca714e141ce9773618fb451ec0fd1df78c03e7dc556",
+  "officeActionDocumentIdentifiers": ["MKEEAXEVX137X95"],
+  "officeActionMailDate": "2026-01-15",
+  "officeActionSection112Text": [
+    "claims 1-15 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention.\r\nclaim 1, line 6, “the distance” lacks antecedent basis.\r\nclaim 1, line 8, “the orientation” lacks antecedent basis.\r\nclaim 4, lines 3-4, “the maximum width” lacks antecedent basis.\r\nclaim 6, lines 3-4, “the distance” lacks antecedent basis.\r\nclaim 6, line 4, “the orientation” lacks antecedent basis.\r\nclaim 9, line 2, “its end regions” lacks antecedent basis.\r\nclaim 9, line 2, “the longitudinal direction” lacks antecedent basis.\r\nclaim 10, line 6, “said engaging members” lacks antecedent basis.\r\nclaim 12, line 2, “the distance” lacks antecedent basis.\r\nclaim 12, line 2, “the engagement location” lacks antecedent basis.\r\nclaim 13, line 2, “the elastic arm” lacks antecedent basis.\r\nclaim 13, line 3, “the latching member” lacks antecedent basis.\r\nclaim 13, line 3, “the elastic arm” lacks antecedent basis.\r\nit is noted that claim 13, as best understood and for examination purposes, will be treated as depending from claim 10, which provides antecedent basis for the limitations of claim 13.\r\nclaim 14, line 3, “the distance” lacks antecedent basis.\r\nclaim 14, line 4, “the orientation” lacks antecedent basis.\r\nclaim 15, line 7, “the bone tissue” lacks antecedent basis.\r\nclaim 15, line 10, “an” should be changed to --the-- for proper antecedent basis.\r\nclaim 15, line 11, “a” should be changed to --the-- for proper antecedent basis.\r\nclaim 15, line 12, “a” should be changed to --the-- for proper antecedent basis.\r\nclaim 15, line 14, “a” should be changed to --the-- for proper antecedent basis.\r\nin addition, dependent claims are rejected because they depend from and include the limitations of their respective parent claim(s).\r\nappropriate correction is required."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "L2ZY7EC7XBLUEX1",
+      "officialDate": "2022-05-10T05:26:17.000-0400"
+    },
+    {
+      "documentIdentifier": "L314HJTZXBLUEX5",
+      "officialDate": "2022-05-10T01:09:55.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "L2ZY7EC7XBLUEX1",
+      "officialDate": "2022-05-10T05:26:17.000-0400",
+      "sha256": "94651f18e674486339eb764f8ed55fb6fefa15de1389d429946383b09210b05f",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 15
+    },
+    {
+      "documentIdentifier": "L314HJTZXBLUEX5",
+      "officialDate": "2022-05-10T01:09:55.000-0400",
+      "sha256": "a916e138ab2bad8a0adf0719186fd0888d19171c19be32ea6401a3a91265ec91",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 15
+    }
+  ],
+  "documentInventoryCount": 53,
+  "documentInventoryRows": 53,
+  "primaryCpc": "A61B  17/157",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/17755831",
+    "https://api.uspto.gov/api/v1/patent/applications/17755831/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "extractor-pending; critic-and-attorney-pending"
+}

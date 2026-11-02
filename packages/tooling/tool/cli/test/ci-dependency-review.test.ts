@@ -348,7 +348,7 @@ describe("dependency review fixture policy", () => {
 
   it("matches whole path segments only", () => {
     const isFixture = isFixtureManifest(dependencyReviewFixturePolicy);
-    expect(isFixture("scratchpad/test/workspaces/fixtures/peers/npm/package-lock.json")).toBe(true);
+    expect(isFixture("packages/tooling/library/repo-workspaces/test/fixtures/peers/npm/package-lock.json")).toBe(true);
     expect(isFixture("packages/tooling/library/repo-utils/test/fixtures/mock-monorepo/package.json")).toBe(true);
     expect(isFixture("test/fixtures/package.json")).toBe(true);
     expect(isFixture("scratchpad/tests/fixtures/npm/package-lock.json")).toBe(false);

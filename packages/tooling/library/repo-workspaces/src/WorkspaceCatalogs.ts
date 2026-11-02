@@ -1008,7 +1008,7 @@ export declare namespace WorkspaceCatalogsOptions {
  * **Details**
  *
  * The inline source is picked by **file presence**, the same rule
- * `internal/patterns.ts` uses for globs: a `pnpm-workspace.yaml` selects the pnpm
+ * `WorkspacePatterns.read` uses for globs: a `pnpm-workspace.yaml` selects the pnpm
  * path (its `catalog:` / `catalogs:` blocks); its absence selects the root
  * `package.json` `workspaces.catalog` / `workspaces.catalogs` (bun's analogue).
  * The lockfile source is PM-aware too — whichever extension the parsed lockfile

@@ -1,9 +1,10 @@
+import { MemoryFileSystem } from "@beep/memfs";
 import * as Configuration from "@beep/repo-docgen/Configuration";
 import * as Domain from "@beep/repo-docgen/Domain";
 import { it } from "@beep/test-runner";
-import { Str } from "@beep/utils";
+import { A, HostProcessPlatform, Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertInclude, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
@@ -110,6 +111,36 @@ const makePackageJsonFailureLayer = (reason: "NotFound" | "PermissionDenied") =>
 
 const expectConfig = (actual: Configuration.ConfigurationShape, expected: Configuration.ConfigurationShape) =>
   Effect.sync(() => expect(actual).toEqual(expected));
+
+// A real virtual filesystem for the tsconfig-path cases: `TsconfigValidator.compilerOptions`
+// walks the named file's `extends` chain, which a method stub cannot answer faithfully.
+const PKG = "/pkg";
+const makeTsconfigLayer = (
+  files: Readonly<Record<string, string>>,
+  docgen: unknown = { parseCompilerOptions: "tsconfig.json" }
+) =>
+  Layer.mergeAll(
+    Path.layer,
+    Layer.succeed(
+      Domain.Process,
+      Domain.Process.of({ cwd: Effect.succeed(PKG), platform: HostProcessPlatform, argv: Effect.succeed([]) })
+    ),
+    MemoryFileSystem.layerWith({
+      [`${PKG}/package.json`]: defaultPackageJson,
+      [`${PKG}/docgen.json`]: encodeJson(docgen),
+      ...files,
+    })
+  );
+
+const expectReadTsconfigError = Effect.fn("expectReadTsconfigError")(function* (
+  step: string,
+  ...fragments: ReadonlyArray<string>
+) {
+  const error = yield* Configuration.load(makeLoadArgs()).pipe(Effect.flip);
+  expect(isDomainDocgenError(error)).toBe(true);
+  assertInclude(error.message, `[Configuration.readTSConfig] Failed to ${step} TSConfig file '${PKG}/tsconfig.json'`);
+  for (const fragment of fragments) assertInclude(error.message, fragment);
+});
 
 describe("Configuration", () => {
   it.layer(makeTestLayer())((it) =>
@@ -349,4 +380,171 @@ describe("Configuration", () => {
       );
     }
   );
+
+  // A string `parseCompilerOptions` / `examplesCompilerOptions` names a tsconfig file. docgen read
+  // the single file through the repo-utils strict model; since 3-A6 it reads the file through
+  // `TsconfigValidator.compilerOptions`: the named file passes the strict closed check, its whole
+  // `extends` chain is merged with tsc semantics, and the merged options pass the check too.
+  describe("tsconfig file input", () => {
+    it.layer(
+      makeTsconfigLayer({
+        [`${PKG}/tsconfig.json`]:
+          '{ "extends": "./base.json", "compilerOptions": { "strict": true, "outDir": "out" } }',
+        [`${PKG}/base.json`]: '{ "compilerOptions": { "target": "ES2022", "lib": ["DOM", "ES2022"], "noEmit": true } }',
+      }),
+      { timeout: "30 seconds" }
+    )((it) =>
+      it.effect("merges the extends chain with tsc semantics and encodes canonical spellings", () =>
+        Effect.gen(function* () {
+          const config = yield* Configuration.load(makeLoadArgs());
+          // Inherited options are kept (not replaced by the defaults); path options are absolute.
+          expect(config.parseCompilerOptions).toEqual({
+            target: "es2022",
+            lib: ["dom", "es2022"],
+            noEmit: true,
+            strict: true,
+            outDir: `${PKG}/out`,
+          });
+          // The examples options came from the defaults, not the file.
+          expect(config.examplesCompilerOptions.target).toBe("es2022");
+        })
+      )
+    );
+
+    it.layer(
+      makeTsconfigLayer({
+        [`${PKG}/tsconfig.json`]: '{ "extends": "../base.json" }',
+        "/base.json": '{ "compilerOptions": { "paths": { "@shared/*": ["./packages/*/src", "/external/*"] } } }',
+      }),
+      { timeout: "30 seconds" }
+    )((it) =>
+      it.effect("resolves inherited paths against the declaring config directory without baseUrl", () =>
+        Effect.gen(function* () {
+          const config = yield* Configuration.load(makeLoadArgs());
+          expect(config.parseCompilerOptions.paths).toEqual({ "@shared/*": ["/packages/*/src", "/external/*"] });
+        })
+      )
+    );
+
+    it.layer(
+      makeTsconfigLayer({
+        [`${PKG}/tsconfig.json`]: '{ "extends": "../base.json" }',
+        "/base.json":
+          '{ "compilerOptions": { "baseUrl": "./workspace", "paths": { "@shared/*": ["./packages/*/src"] } } }',
+      }),
+      { timeout: "30 seconds" }
+    )((it) =>
+      it.effect("keeps paths relative to an explicit inherited baseUrl", () =>
+        Effect.gen(function* () {
+          const config = yield* Configuration.load(makeLoadArgs());
+          expect(config.parseCompilerOptions.baseUrl).toBe("/workspace");
+          expect(config.parseCompilerOptions.paths).toEqual({ "@shared/*": ["./packages/*/src"] });
+        })
+      )
+    );
+
+    it.layer(
+      makeTsconfigLayer({
+        [`${PKG}/tsconfig.json`]: '{ "extends": "../broken-base.json" }',
+        "/broken-base.json": '{ "compilerOptions": ',
+      }),
+      { timeout: "30 seconds" }
+    )((it) =>
+      it.effect("names the malformed base config in a parse failure", () =>
+        expectReadTsconfigError("decode", "/broken-base.json", "JSONC parse failed")
+      )
+    );
+
+    it.layer(makeTsconfigLayer({ [`${PKG}/tsconfig.json`]: "{}" }), { timeout: "30 seconds" })((it) =>
+      it.effect("falls back to the default compiler options when the chain declares none", () =>
+        Effect.gen(function* () {
+          const config = yield* Configuration.load(makeLoadArgs());
+          expect(config.parseCompilerOptions).toEqual(Configuration.defaultCompilerOptions);
+        })
+      )
+    );
+
+    it.layer(
+      makeTsconfigLayer(
+        { [`${PKG}/tsconfig.json`]: '{ "compilerOptions": { "stirct": true } }' },
+        {
+          examplesCompilerOptions: "tsconfig.json",
+        }
+      ),
+      { timeout: "30 seconds" }
+    )((it) =>
+      it.effect("fails typed on an unknown compiler option in the named file", () =>
+        expectReadTsconfigError("decode", "Unexpected key", '["compilerOptions"]["stirct"]')
+      )
+    );
+
+    it.layer(
+      makeTsconfigLayer({
+        [`${PKG}/tsconfig.json`]: '{ "extends": "./base.json" }',
+        [`${PKG}/base.json`]: '{ "compilerOptions": { "futureOption": true } }',
+      }),
+      { timeout: "30 seconds" }
+    )((it) =>
+      it.effect("fails typed on an unknown compiler option inherited from a base config", () =>
+        expectReadTsconfigError("decode", '["futureOption"]')
+      )
+    );
+
+    it.layer(makeTsconfigLayer({ [`${PKG}/tsconfig.json`]: '{ "compilerOptions": ' }), { timeout: "30 seconds" })(
+      (it) => it.effect("fails typed on malformed JSONC", () => expectReadTsconfigError("decode", "JSONC parse failed"))
+    );
+
+    it.layer(makeTsconfigLayer({ [`${PKG}/tsconfig.json`]: '{ "extends": "./missing.json" }' }), {
+      timeout: "30 seconds",
+    })((it) =>
+      it.effect("fails typed on a broken extends chain", () =>
+        expectReadTsconfigError("resolve", 'cannot resolve extends target "./missing.json"')
+      )
+    );
+
+    it.layer(makeTsconfigLayer({}), { timeout: "30 seconds" })((it) =>
+      it.effect("fails typed when the named file is missing", () => expectReadTsconfigError("read", "tsconfig.json"))
+    );
+  });
+
+  describe("encodeExamplesTsconfig", () => {
+    it.effect("renders the validated document with canonical enum spellings", () =>
+      Effect.gen(function* () {
+        const text = yield* Configuration.encodeExamplesTsconfig({
+          noEmit: true,
+          target: "ES2022",
+          lib: ["DOM", "ES2022"],
+          moduleResolution: "Bundler",
+        });
+        // Schema field order and the canonical lower-case spelling, pretty-printed by the repo renderer.
+        expect(text).toBe(
+          A.join(
+            [
+              "{",
+              '  "compilerOptions": {',
+              '    "target": "es2022",',
+              '    "moduleResolution": "bundler",',
+              '    "lib": [',
+              '      "dom",',
+              '      "es2022"',
+              "    ],",
+              '    "noEmit": true',
+              "  }",
+              "}",
+            ],
+            "\n"
+          )
+        );
+      })
+    );
+
+    it.effect("fails typed on an option the strict rules reject", () =>
+      Effect.gen(function* () {
+        const error = yield* Configuration.encodeExamplesTsconfig({ maxNodeModuleJsDepth: 2 }).pipe(Effect.flip);
+        expect(isDomainDocgenError(error)).toBe(true);
+        assertInclude(error.message, "[Configuration.encodeExamplesTsconfig] Failed to encode examples tsconfig");
+        assertInclude(error.message, "maxNodeModuleJsDepth");
+      })
+    );
+  });
 });

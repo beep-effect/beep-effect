@@ -1,0 +1,82 @@
+{
+  "familyId": "12447956-root-7",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "confidenceScope": "Unsupported intended transition classification; no resolved contract trees.",
+  "resolvedClaimNumbers": [],
+  "unresolved": [
+    {
+      "claimNumber": 7,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 11,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 12,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 13,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 14,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 15,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 16,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 17,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 18,
+      "reason": "Intended source boundary characterized in that is unsupported by PatentClaimTransition. Earlier having in root7 is within background end-cap description; do not replace the intended source boundary with an incidental constituent.",
+      "sourceQuote": "characterized in that"
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "Office action GSU9LW9JPPOPPY5 dated 2011-09-23 rejects claims 1-18 and explicitly cites selected 7 and 11-18; source US20100071148A1 publication 2010-03-25 predates rejection. Positive family association verified from retained OA text.",
+    "Natural-language dependencies match XML: 11->7, 12->11, 13->7, 14->7, 15->7, 16->12, 17->16, 18->17.",
+    "OCR original sourceClaimCount 17 versus native 18 and missing root 7 exact corroboration are provenance limits; selected 11-18 are exact non-whitespace corroboration matches. In-force evidence also relies on no-intervening-CLM inventory assertion.",
+    "All 9 unresolved claims stay in source-coverage denominators; empty expected array is not a clean-family verdict. Attorney spot-check pending."
+  ],
+  "rationale": "All selected claims use unsupported intended characterized in that boundary. Source wording preserved; no invented wherein replacement.",
+  "independence": "No decomposer/policy, rule fixtures or predictions read/run; no network.",
+  "familyStatus": "unresolved",
+  "sourceChecks": {
+    "selectedClaimsMatchNativeXml": [
+      7,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18
+    ],
+    "allElementAndTermUtf16SlicesVerified": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16778182-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20200250554", "A1", "20200806"],
+    "applicationReference": ["US", "16778182", "20200131"],
+    "officeActionDocumentIdentifiers": ["L47DNZ32GREENX1"],
+    "officeActionMailDate": "2022-06-13"
+  },
+  "digestEvidence": [
+    {
+      "file": "16778182.publication.xml",
+      "sha256": "2e50c23d511a9b8689fcf2d20572c7af94f616bca09574fe86c13cad8819c8ba",
+      "matchesProvenance": true
+    },
+    {
+      "file": "16778182.claims.xml",
+      "sha256": "71568d42f9f2666720d7e05ac2217639d15527f90dd3d1c86ed51d71763e2b7d",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "71568d42f9f2666720d7e05ac2217639d15527f90dd3d1c86ed51d71763e2b7d",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "K62G095NRXEAPX3",
+      "xmlAvailable": true,
+      "sha256": "8b2eb7487419667710be5ae0bd44b4585b130c366064600629a009dcc642ea8f",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 50,
+    "actualRows": 50,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2020-01-31T12:29:51.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "K62G095NRXEAPX3"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-8 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the dosage",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the dosage"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the feature extraction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the feature extraction"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the optimal sub-tree",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the optimal sub-tree"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the required dosage",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the required dosage"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the established decision tree",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the established decision tree"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the output",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the gini index",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the Gini index"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the optimal feature",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the optimal feature"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the optimal splitting point",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the optimal splitting point"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the feature",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the feature"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the sub-trees",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the sub-trees"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the complete tree form",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the complete tree form"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the sequence of the sub-trees",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the sequence of the sub-trees"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the independent verification data set",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the independent verification data set"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the cross-validation method",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the cross-validation method"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the time axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the time axis"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the output data",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output data"
+    }
+  ],
+  "assessment": "Original full8-claim text agrees exactly including selected1-7; selected7 versus full8 is bounded scope, not a count conflict. Ground covers1-8 and selected phrases correspond.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

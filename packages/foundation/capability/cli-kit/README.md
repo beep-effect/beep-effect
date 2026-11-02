@@ -172,7 +172,7 @@ Tests live in `test/` and import package source through `@beep/cli-kit/<Module>`
 
 ### Deviations
 
-One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's row of the lab ledger (`bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/effected/PORT_LEDGER.json`). Citations under `scratchpad/test/cli/` are lab-era paths; they resolve at `b6e739944591010fd3bbc62b12088ac2b51623b8`.
 
 - **native-runtime** — The lab uses Effect collections, Record/Clock/FileSystem helpers, explicit delegates and readonly unfrozen data where upstream used native runtime operations, frozen data and a Promise-based filesystem helper. (test/Doc.test.ts:277; Doc.counter.plural.test.ts:84; Glyphs.test.ts:38; Token.test.ts:27; Status.test.ts:91; scratchpad/test/cli/ui/MultiSelect.test.ts; CliHelpRouting.test.ts; scratchpad/test/cli/ui/inkChalk.test.ts:17; scratchpad/test/cli/ui/CliUiTest.ergonomics.test.ts:182)
 - **identity-keys** — The lab replaces identity Sets with ancestor scans or owned symbol-keyed maps and uses composed Context keys instead of upstream string keys. (test/CliFailure.test.ts:288; scratchpad/test/cli/ui/CliUi.live.lazy.test.ts:34; module suite test/**)
@@ -227,7 +227,7 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 
 ### Promotion shifts (wave 4-C)
 
-- `./ui`, `./ui/testing` and `./ui/testing/serializer` are not part of this package: the Ink half stays in the lab until the packet's close (W4-m), importing this package's leaves.
+- `./ui`, `./ui/testing` and `./ui/testing/serializer` are not part of this package: the Ink half is deferred as `@beep/ink` (W4-m), deleted from the lab when the packet closed; it imported this package's leaves (last held at `bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/effected/cli`).
 - `CliMessage.status` dispatches on a `Status` vocabulary in first position; it was `dual(4, …)` with an optional fourth parameter, so a three-argument data-first call ran as data-last (#1928 remedy, W4-j).
 - Optional schema fields are exact optional keys (`S.optionalKey`, EF-40 from #2145), so a present key holding `undefined` is rejected where upstream's `S.optional` accepted it; the explicit-undefined tests pin that rejection (W4-j, EF-40 branch).
 - A `file:` stack frame becomes a path by `fileURLToPath`'s rules without importing `node:url` (#2152): an encoded `/` or `\`, or a host other than `localhost`, leaves the frame as written.

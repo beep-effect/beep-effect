@@ -1,0 +1,1681 @@
+{
+  "data": {
+    "__type": {
+      "fields": [
+        {
+          "name": "id",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "ID"
+            }
+          }
+        },
+        {
+          "name": "name",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "String"
+            }
+          }
+        },
+        {
+          "name": "description",
+          "args": [],
+          "type": {
+            "kind": "SCALAR",
+            "name": "String",
+            "ofType": null
+          }
+        },
+        {
+          "name": "gradientStartColor",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "String"
+            }
+          }
+        },
+        {
+          "name": "gradientEndColor",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "String"
+            }
+          }
+        },
+        {
+          "name": "startTime",
+          "args": [],
+          "type": {
+            "kind": "SCALAR",
+            "name": "DateTime",
+            "ofType": null
+          }
+        },
+        {
+          "name": "endTime",
+          "args": [],
+          "type": {
+            "kind": "SCALAR",
+            "name": "DateTime",
+            "ofType": null
+          }
+        },
+        {
+          "name": "hasTraces",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Boolean"
+            }
+          }
+        },
+        {
+          "name": "recordCount",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "traceCount",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "tokenCountTotal",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Float"
+            }
+          }
+        },
+        {
+          "name": "tokenCountPrompt",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Float"
+            }
+          }
+        },
+        {
+          "name": "tokenCountCompletion",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Float"
+            }
+          }
+        },
+        {
+          "name": "costSummary",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "SpanCostSummary"
+            }
+          }
+        },
+        {
+          "name": "latencyMsQuantile",
+          "args": [
+            {
+              "name": "probability",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Float"
+                }
+              }
+            },
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        },
+        {
+          "name": "spanLatencyMsQuantile",
+          "args": [
+            {
+              "name": "probability",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Float"
+                }
+              }
+            },
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        },
+        {
+          "name": "trace",
+          "args": [
+            {
+              "name": "traceId",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "ID"
+                }
+              }
+            }
+          ],
+          "type": {
+            "kind": "OBJECT",
+            "name": "Trace",
+            "ofType": null
+          }
+        },
+        {
+          "name": "spans",
+          "args": [
+            {
+              "name": "first",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int"
+                }
+              }
+            },
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "last",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            {
+              "name": "after",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "before",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sort",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "SpanSort",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "traceFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "SpanConnection"
+            }
+          }
+        },
+        {
+          "name": "sessions",
+          "args": [
+            {
+              "name": "first",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Int"
+                }
+              }
+            },
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "after",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sort",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "ProjectSessionSort",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ProjectSessionConnection"
+            }
+          }
+        },
+        {
+          "name": "sessionCount",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "Int"
+            }
+          }
+        },
+        {
+          "name": "averageSessionDurationMs",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        },
+        {
+          "name": "averageTracesPerSession",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        },
+        {
+          "name": "sessionDurationMsQuantile",
+          "args": [
+            {
+              "name": "probability",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Float"
+                }
+              }
+            },
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "SCALAR",
+            "name": "Float",
+            "ofType": null
+          }
+        },
+        {
+          "name": "traceAnnotationNames",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "spanAnnotationNames",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "sessionAnnotationNames",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "spanAnnotationMetricNames",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "traceAnnotationMetricNames",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "sessionAnnotationMetricNames",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "spanAnnotationNameCounts",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "traceAnnotationNameCounts",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "sessionAnnotationNameCounts",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "documentEvaluationNames",
+          "args": [
+            {
+              "name": "spanId",
+              "type": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "traceAnnotationSummary",
+          "args": [
+            {
+              "name": "annotationName",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String"
+                }
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "OBJECT",
+            "name": "AnnotationSummary",
+            "ofType": null
+          }
+        },
+        {
+          "name": "spanAnnotationSummary",
+          "args": [
+            {
+              "name": "annotationName",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String"
+                }
+              }
+            },
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "OBJECT",
+            "name": "AnnotationSummary",
+            "ofType": null
+          }
+        },
+        {
+          "name": "sessionAnnotationSummary",
+          "args": [
+            {
+              "name": "annotationName",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String"
+                }
+              }
+            },
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "sessionFilterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "OBJECT",
+            "name": "AnnotationSummary",
+            "ofType": null
+          }
+        },
+        {
+          "name": "documentEvaluationSummary",
+          "args": [
+            {
+              "name": "evaluationName",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String"
+                }
+              }
+            },
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "OBJECT",
+            "name": "DocumentEvaluationSummary",
+            "ofType": null
+          }
+        },
+        {
+          "name": "streamingLastUpdatedAt",
+          "args": [],
+          "type": {
+            "kind": "SCALAR",
+            "name": "DateTime",
+            "ofType": null
+          }
+        },
+        {
+          "name": "validateSpanFilterCondition",
+          "args": [
+            {
+              "name": "condition",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String"
+                }
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ValidationResult"
+            }
+          }
+        },
+        {
+          "name": "analyzeSpanFilterCondition",
+          "args": [
+            {
+              "name": "condition",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String"
+                }
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "SpanFilterConditionAnalysis"
+            }
+          }
+        },
+        {
+          "name": "validateSessionFilterCondition",
+          "args": [
+            {
+              "name": "condition",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String"
+                }
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ValidationResult"
+            }
+          }
+        },
+        {
+          "name": "validateTraceFilterCondition",
+          "args": [
+            {
+              "name": "condition",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String"
+                }
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ValidationResult"
+            }
+          }
+        },
+        {
+          "name": "sessionFilterVocabulary",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "traceFilterVocabulary",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeRange",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "annotationConfigs",
+          "args": [
+            {
+              "name": "first",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            {
+              "name": "last",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            {
+              "name": "after",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "before",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "name": "names",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null
+                }
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AnnotationConfigConnection"
+            }
+          }
+        },
+        {
+          "name": "traceRetentionPolicy",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "ProjectTraceRetentionPolicy"
+            }
+          }
+        },
+        {
+          "name": "createdAt",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "DateTime"
+            }
+          }
+        },
+        {
+          "name": "updatedAt",
+          "args": [],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "SCALAR",
+              "name": "DateTime"
+            }
+          }
+        },
+        {
+          "name": "spanCountTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            },
+            {
+              "name": "filterCondition",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "SpanCountTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "traceCountTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "TraceCountTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "traceCountByStatusTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "TraceCountByStatusTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "traceLatencyMsPercentileTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "TraceLatencyPercentileTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "traceTokenCountTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "TraceTokenCountTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "traceTokenCostTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "TraceTokenCostTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "spanAnnotationScoreTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AnnotationScoreTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "traceAnnotationScoreTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AnnotationScoreTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "sessionAnnotationScoreTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AnnotationScoreTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "spanAnnotationMetricsTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            },
+            {
+              "name": "annotationName",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AnnotationMetricsTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "traceAnnotationMetricsTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            },
+            {
+              "name": "annotationName",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AnnotationMetricsTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "sessionAnnotationMetricsTimeSeries",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            },
+            {
+              "name": "timeBinConfig",
+              "type": {
+                "kind": "INPUT_OBJECT",
+                "name": "TimeBinConfig",
+                "ofType": null
+              }
+            },
+            {
+              "name": "annotationName",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "OBJECT",
+              "name": "AnnotationMetricsTimeSeries"
+            }
+          }
+        },
+        {
+          "name": "topModelsByCost",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        },
+        {
+          "name": "topModelsByTokenCount",
+          "args": [
+            {
+              "name": "timeRange",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "TimeRange"
+                }
+              }
+            }
+          ],
+          "type": {
+            "kind": "NON_NULL",
+            "name": null,
+            "ofType": {
+              "kind": "LIST",
+              "name": null
+            }
+          }
+        }
+      ]
+    }
+  }
+}

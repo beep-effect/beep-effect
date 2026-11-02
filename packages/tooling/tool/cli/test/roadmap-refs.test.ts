@@ -5,7 +5,7 @@ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Command from "effect/cli/Command";
@@ -27,9 +27,10 @@ const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
+  NodeCrypto.layer,
   TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 
 /** Writes the fixture checkout under `root`, marked as a repository root by its `bun.lock`. */

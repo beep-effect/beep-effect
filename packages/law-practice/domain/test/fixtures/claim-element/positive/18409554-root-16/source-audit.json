@@ -1,0 +1,139 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18409554-root-16",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "candidateStatus": "Source-only replacement candidate; no active slot changed; independent source critic and semantic references pending.",
+  "reviewedClaimNumbers": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "18409554",
+    "publicationNumber": "US20240307121A1",
+    "publicationReference": [
+      "US",
+      "20240307121",
+      "A1",
+      "20240919"
+    ],
+    "applicationReference": [
+      "US",
+      "18409554",
+      "20240110"
+    ],
+    "officeActionDocumentIdentifiers": [
+      "MKH1CRU6X118X94"
+    ],
+    "officeActionMailDate": "2026-01-20"
+  },
+  "digestEvidence": [
+    {
+      "file": "18409554.publication.xml",
+      "sha256": "6ef5f2c9a13c3763b5a114bebb9fcaf06d62e76ea39dab3a22dfa3c9aeeb096c",
+      "matchesProvenance": true
+    },
+    {
+      "file": "18409554.claims.xml",
+      "sha256": "6398f1ee38e1c8976bbca72046bfb39463451aaf1769c71bc441bada5f43911f",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "6398f1ee38e1c8976bbca72046bfb39463451aaf1769c71bc441bada5f43911f",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "LR8EJ94KGREENX9",
+      "officialDate": "2024-01-10T18:14:59.000-0500",
+      "xmlAvailable": true,
+      "sha256": "ce718a0f03660d52e54a58149ff4abf1deaba22c0b5c7d7e9f0784aff200dbd3",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "LR8EJ94QGREENX9",
+      "officialDate": "2024-01-10T18:14:59.000-0500",
+      "xmlAvailable": true,
+      "sha256": "119c734636887ce77fc03169c02dbf9f0a9c34fd9f06a5e3315afac7f5b511ed",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 81,
+    "actualRows": 81,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2024-01-10T18:14:59.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "LR8EJ94KGREENX9"
+      },
+      {
+        "officialDate": "2024-01-10T18:14:59.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "LR8EJ94QGREENX9"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "MKH1CRU6X118X94",
+        "documentCode": "CTNF",
+        "officialDate": "2026-01-20T00:00:00.000-0500"
+      }
+    ]
+  },
+  "officeActionGroundQuote": "claims 1-22 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention.",
+  "quotedEvidence": [
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the controller",
+      "nativeQuote": "the controller",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the determined one or more ablation zones",
+      "nativeQuote": "the determined one or more ablation zones",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the processor",
+      "nativeQuote": "the processor",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the zone of electroporation",
+      "nativeQuote": "the zone of electroporation",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 21,
+      "examinerPhrase": "the size of the visual",
+      "nativeQuote": "the size of the visual",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "the performed regression",
+      "nativeQuote": "the performed regression",
+      "literalMatch": true
+    }
+  ],
+  "rationale": "Both inventoried originals LR8EJ94KGREENX9 and LR8EJ94QGREENX9 contain 22 numbered claims. Selected claims 16-22 exactly match native body text after whitespace and printed-number removal. The actual 112(b)/second-paragraph ground expressly rejects claims 1-22 and discusses every selected number. Natural dependencies 17/18/19/22 -> 16 and 20/21 -> 19 form a meaningful independent-16 family. The complete 81-row inventory shows no later CLM before the cited action, supporting independently exact original/native correspondence.",
+  "concerns": [],
+  "pdfNeeds": [],
+  "attorneyAdjudication": "pending",
+  "independence": "Source-extractor only for these candidates. No source/provenance/expected/active sample changes, predictions, production/rules, network, secrets, git or delegation."
+}

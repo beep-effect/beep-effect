@@ -1,0 +1,3264 @@
+[
+  {
+    "claimNumber": 6,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "6",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "A scalp and hair management system"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "A scalp"
+            },
+            "determiner": "a",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 1672,
+          "quote": "a mobile terminal, a hair diagnoser group constituted by a plurality of hair diagnosers, a network, and a scalp and hair management server, wherein the scalp and hair management server includes a transtheoretical model providing module, and a related factor analysis module which provides approval item information extracted through extraction to the mobile terminal through the network jointly with the user ID with respect to response to the positive aspect in the approval item during moving to the higher step in information on five steps of pre-plan, plan, preparation, behavior, and maintenance as the change steps presented in the theoretical model by the transtheoretical model providing module to know that a positive mind of the user progresses the movement to the higher step, when aggregating numerical values computed through a multiplication for a predetermined weight corresponding to a quantitative numerical value set for each step from the positive aspect to the negative aspect for each of the approval and non-approval items according to multiple selection for the positive aspect (very so, sometimes so, and so) and the negative aspect (not almost so and so not at all) like very so, sometimes so, so, not almost so, and so not at all like not YES or NO for each of the approval and non-approval items for the decisional balance information to provide the decisional balance information in order to determine first to fifth range steps of five steps of pre-plan, plan, preparation, behavior, and maintenance as the change steps presented in the transtheoretical model according to user information analysis"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 62,
+              "quote": "a mobile terminal"
+            },
+            "determiner": "a",
+            "head": "mobile terminal"
+          },
+          {
+            "anchor": {
+              "startChar": 64,
+              "endChar": 86,
+              "quote": "a hair diagnoser group"
+            },
+            "determiner": "a",
+            "head": "hair diagnoser group"
+          },
+          {
+            "anchor": {
+              "startChar": 102,
+              "endChar": 132,
+              "quote": "a plurality of hair diagnosers"
+            },
+            "determiner": "plurality-of",
+            "head": "hair diagnosers"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 143,
+              "quote": "a network"
+            },
+            "determiner": "a",
+            "head": "network"
+          },
+          {
+            "anchor": {
+              "startChar": 149,
+              "endChar": 156,
+              "quote": "a scalp"
+            },
+            "determiner": "a",
+            "head": "scalp"
+          },
+          {
+            "anchor": {
+              "startChar": 193,
+              "endChar": 202,
+              "quote": "the scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          },
+          {
+            "anchor": {
+              "startChar": 239,
+              "endChar": 263,
+              "quote": "a transtheoretical model"
+            },
+            "determiner": "a",
+            "head": "transtheoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 286,
+              "endChar": 318,
+              "quote": "a related factor analysis module"
+            },
+            "determiner": "a",
+            "head": "related factor analysis module"
+          },
+          {
+            "anchor": {
+              "startChar": 392,
+              "endChar": 411,
+              "quote": "the mobile terminal"
+            },
+            "determiner": "the",
+            "head": "mobile terminal"
+          },
+          {
+            "anchor": {
+              "startChar": 420,
+              "endChar": 439,
+              "quote": "the network jointly"
+            },
+            "determiner": "the",
+            "head": "network jointly"
+          },
+          {
+            "anchor": {
+              "startChar": 445,
+              "endChar": 456,
+              "quote": "the user ID"
+            },
+            "determiner": "the",
+            "head": "user id"
+          },
+          {
+            "anchor": {
+              "startChar": 485,
+              "endChar": 504,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 508,
+              "endChar": 525,
+              "quote": "the approval item"
+            },
+            "determiner": "the",
+            "head": "approval item"
+          },
+          {
+            "anchor": {
+              "startChar": 543,
+              "endChar": 558,
+              "quote": "the higher step"
+            },
+            "determiner": "the",
+            "head": "higher step"
+          },
+          {
+            "anchor": {
+              "startChar": 649,
+              "endChar": 665,
+              "quote": "the change steps"
+            },
+            "determiner": "the",
+            "head": "change steps"
+          },
+          {
+            "anchor": {
+              "startChar": 679,
+              "endChar": 700,
+              "quote": "the theoretical model"
+            },
+            "determiner": "the",
+            "head": "theoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 704,
+              "endChar": 730,
+              "quote": "the transtheoretical model"
+            },
+            "determiner": "the",
+            "head": "transtheoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 761,
+              "endChar": 776,
+              "quote": "a positive mind"
+            },
+            "determiner": "a",
+            "head": "positive mind"
+          },
+          {
+            "anchor": {
+              "startChar": 780,
+              "endChar": 799,
+              "quote": "the user progresses"
+            },
+            "determiner": "the",
+            "head": "user progresses"
+          },
+          {
+            "anchor": {
+              "startChar": 800,
+              "endChar": 812,
+              "quote": "the movement"
+            },
+            "determiner": "the",
+            "head": "movement"
+          },
+          {
+            "anchor": {
+              "startChar": 816,
+              "endChar": 831,
+              "quote": "the higher step"
+            },
+            "determiner": "the",
+            "head": "higher step"
+          },
+          {
+            "anchor": {
+              "startChar": 884,
+              "endChar": 900,
+              "quote": "a multiplication"
+            },
+            "determiner": "a",
+            "head": "multiplication"
+          },
+          {
+            "anchor": {
+              "startChar": 905,
+              "endChar": 927,
+              "quote": "a predetermined weight"
+            },
+            "determiner": "a",
+            "head": "predetermined weight"
+          },
+          {
+            "anchor": {
+              "startChar": 945,
+              "endChar": 979,
+              "quote": "a quantitative numerical value set"
+            },
+            "determiner": "a",
+            "head": "quantitative numerical value set"
+          },
+          {
+            "anchor": {
+              "startChar": 999,
+              "endChar": 1018,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 1022,
+              "endChar": 1041,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 1054,
+              "endChar": 1066,
+              "quote": "the approval"
+            },
+            "determiner": "the",
+            "head": "approval"
+          },
+          {
+            "anchor": {
+              "startChar": 1126,
+              "endChar": 1145,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 1182,
+              "endChar": 1201,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 1332,
+              "endChar": 1344,
+              "quote": "the approval"
+            },
+            "determiner": "the",
+            "head": "approval"
+          },
+          {
+            "anchor": {
+              "startChar": 1372,
+              "endChar": 1406,
+              "quote": "the decisional balance information"
+            },
+            "determiner": "the",
+            "head": "decisional balance information"
+          },
+          {
+            "anchor": {
+              "startChar": 1418,
+              "endChar": 1452,
+              "quote": "the decisional balance information"
+            },
+            "determiner": "the",
+            "head": "decisional balance information"
+          },
+          {
+            "anchor": {
+              "startChar": 1577,
+              "endChar": 1593,
+              "quote": "the change steps"
+            },
+            "determiner": "the",
+            "head": "change steps"
+          },
+          {
+            "anchor": {
+              "startChar": 1607,
+              "endChar": 1633,
+              "quote": "the transtheoretical model"
+            },
+            "determiner": "the",
+            "head": "transtheoretical model"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 392,
+            "endChar": 411,
+            "quote": "the mobile terminal"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 62,
+            "quote": "a mobile terminal"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 704,
+            "endChar": 730,
+            "quote": "the transtheoretical model"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 239,
+            "endChar": 263,
+            "quote": "a transtheoretical model"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 1607,
+            "endChar": 1633,
+            "quote": "the transtheoretical model"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 239,
+            "endChar": 263,
+            "quote": "a transtheoretical model"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "7",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 47,
+          "quote": "The scalp and hair management system of claim 6"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "The scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 57,
+          "endChar": 1197,
+          "quote": "when the related factor analysis module aggregates numerical values computed through a multiplication for a predetermined weight corresponding to a quantitative numerical value set for each step from the positive aspect to the negative aspect for each of the approval and non-approval items according to multiple selection for the positive aspect (very so, sometimes so, and so) and the negative aspect (not almost so and so not at all) like very so, sometimes so, so, not almost so, and so not at all for the decisional balance in order to determine the first to fifth range steps to provide the decisional balance information, approval item information extracted through extraction is provided to the mobile terminal through the network jointly with the user ID with respect to response to the positive aspect in the non-approval item during moving to the lower step in information on five steps of pre-plan, plan, preparation, behavior, and maintenance as the change steps presented in the theoretical model by the transtheoretical model providing module to know that a negative mind of the user progresses the movement to the lower step"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 107,
+              "quote": "the related factor analysis module aggregates"
+            },
+            "determiner": "the",
+            "head": "related factor analysis module aggregates"
+          },
+          {
+            "anchor": {
+              "startChar": 142,
+              "endChar": 158,
+              "quote": "a multiplication"
+            },
+            "determiner": "a",
+            "head": "multiplication"
+          },
+          {
+            "anchor": {
+              "startChar": 163,
+              "endChar": 185,
+              "quote": "a predetermined weight"
+            },
+            "determiner": "a",
+            "head": "predetermined weight"
+          },
+          {
+            "anchor": {
+              "startChar": 203,
+              "endChar": 237,
+              "quote": "a quantitative numerical value set"
+            },
+            "determiner": "a",
+            "head": "quantitative numerical value set"
+          },
+          {
+            "anchor": {
+              "startChar": 257,
+              "endChar": 276,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 280,
+              "endChar": 299,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 312,
+              "endChar": 324,
+              "quote": "the approval"
+            },
+            "determiner": "the",
+            "head": "approval"
+          },
+          {
+            "anchor": {
+              "startChar": 384,
+              "endChar": 403,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 440,
+              "endChar": 459,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 563,
+              "endChar": 585,
+              "quote": "the decisional balance"
+            },
+            "determiner": "the",
+            "head": "decisional balance"
+          },
+          {
+            "anchor": {
+              "startChar": 608,
+              "endChar": 617,
+              "quote": "the first"
+            },
+            "determiner": "the",
+            "head": "first"
+          },
+          {
+            "anchor": {
+              "startChar": 650,
+              "endChar": 684,
+              "quote": "the decisional balance information"
+            },
+            "determiner": "the",
+            "head": "decisional balance information"
+          },
+          {
+            "anchor": {
+              "startChar": 756,
+              "endChar": 775,
+              "quote": "the mobile terminal"
+            },
+            "determiner": "the",
+            "head": "mobile terminal"
+          },
+          {
+            "anchor": {
+              "startChar": 784,
+              "endChar": 803,
+              "quote": "the network jointly"
+            },
+            "determiner": "the",
+            "head": "network jointly"
+          },
+          {
+            "anchor": {
+              "startChar": 809,
+              "endChar": 820,
+              "quote": "the user ID"
+            },
+            "determiner": "the",
+            "head": "user id"
+          },
+          {
+            "anchor": {
+              "startChar": 849,
+              "endChar": 868,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 872,
+              "endChar": 893,
+              "quote": "the non-approval item"
+            },
+            "determiner": "the",
+            "head": "non-approval item"
+          },
+          {
+            "anchor": {
+              "startChar": 911,
+              "endChar": 925,
+              "quote": "the lower step"
+            },
+            "determiner": "the",
+            "head": "lower step"
+          },
+          {
+            "anchor": {
+              "startChar": 1016,
+              "endChar": 1032,
+              "quote": "the change steps"
+            },
+            "determiner": "the",
+            "head": "change steps"
+          },
+          {
+            "anchor": {
+              "startChar": 1046,
+              "endChar": 1067,
+              "quote": "the theoretical model"
+            },
+            "determiner": "the",
+            "head": "theoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 1071,
+              "endChar": 1097,
+              "quote": "the transtheoretical model"
+            },
+            "determiner": "the",
+            "head": "transtheoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 1128,
+              "endChar": 1143,
+              "quote": "a negative mind"
+            },
+            "determiner": "a",
+            "head": "negative mind"
+          },
+          {
+            "anchor": {
+              "startChar": 1147,
+              "endChar": 1166,
+              "quote": "the user progresses"
+            },
+            "determiner": "the",
+            "head": "user progresses"
+          },
+          {
+            "anchor": {
+              "startChar": 1167,
+              "endChar": 1179,
+              "quote": "the movement"
+            },
+            "determiner": "the",
+            "head": "movement"
+          },
+          {
+            "anchor": {
+              "startChar": 1183,
+              "endChar": 1197,
+              "quote": "the lower step"
+            },
+            "determiner": "the",
+            "head": "lower step"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "6"
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "8",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 47,
+          "quote": "The scalp and hair management system of claim 7"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "The scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 57,
+          "endChar": 1140,
+          "quote": "when the related factor analysis module aggregates numerical values computed through a multiplication for a predetermined weight corresponding to a quantitative numerical value set for each step from the positive aspect to the negative aspect for each of the approval and non-approval items according to multiple selection for the positive aspect (very so, sometimes so, and so) and the negative aspect (not almost so and so not at all) like very so, sometimes so, so, not almost so, and so not at all for the self efficacy information to provide the self efficacy information, approval item information extracted through extraction is provided to the mobile terminal through the network jointly with the user ID with respect to response to the positive aspect in the approval item during moving to the higher step in information on five steps of pre-plan, plan, preparation, behavior, and maintenance as the change steps presented in the theoretical model by the transtheoretical model providing module to know that a positive mind of the user causes the movement to the higher step"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 107,
+              "quote": "the related factor analysis module aggregates"
+            },
+            "determiner": "the",
+            "head": "related factor analysis module aggregates"
+          },
+          {
+            "anchor": {
+              "startChar": 142,
+              "endChar": 158,
+              "quote": "a multiplication"
+            },
+            "determiner": "a",
+            "head": "multiplication"
+          },
+          {
+            "anchor": {
+              "startChar": 163,
+              "endChar": 185,
+              "quote": "a predetermined weight"
+            },
+            "determiner": "a",
+            "head": "predetermined weight"
+          },
+          {
+            "anchor": {
+              "startChar": 203,
+              "endChar": 237,
+              "quote": "a quantitative numerical value set"
+            },
+            "determiner": "a",
+            "head": "quantitative numerical value set"
+          },
+          {
+            "anchor": {
+              "startChar": 257,
+              "endChar": 276,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 280,
+              "endChar": 299,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 312,
+              "endChar": 324,
+              "quote": "the approval"
+            },
+            "determiner": "the",
+            "head": "approval"
+          },
+          {
+            "anchor": {
+              "startChar": 384,
+              "endChar": 403,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 440,
+              "endChar": 459,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 563,
+              "endChar": 592,
+              "quote": "the self efficacy information"
+            },
+            "determiner": "the",
+            "head": "self efficacy information"
+          },
+          {
+            "anchor": {
+              "startChar": 604,
+              "endChar": 633,
+              "quote": "the self efficacy information"
+            },
+            "determiner": "the",
+            "head": "self efficacy information"
+          },
+          {
+            "anchor": {
+              "startChar": 705,
+              "endChar": 724,
+              "quote": "the mobile terminal"
+            },
+            "determiner": "the",
+            "head": "mobile terminal"
+          },
+          {
+            "anchor": {
+              "startChar": 733,
+              "endChar": 752,
+              "quote": "the network jointly"
+            },
+            "determiner": "the",
+            "head": "network jointly"
+          },
+          {
+            "anchor": {
+              "startChar": 758,
+              "endChar": 769,
+              "quote": "the user ID"
+            },
+            "determiner": "the",
+            "head": "user id"
+          },
+          {
+            "anchor": {
+              "startChar": 798,
+              "endChar": 817,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 821,
+              "endChar": 838,
+              "quote": "the approval item"
+            },
+            "determiner": "the",
+            "head": "approval item"
+          },
+          {
+            "anchor": {
+              "startChar": 856,
+              "endChar": 871,
+              "quote": "the higher step"
+            },
+            "determiner": "the",
+            "head": "higher step"
+          },
+          {
+            "anchor": {
+              "startChar": 962,
+              "endChar": 978,
+              "quote": "the change steps"
+            },
+            "determiner": "the",
+            "head": "change steps"
+          },
+          {
+            "anchor": {
+              "startChar": 992,
+              "endChar": 1013,
+              "quote": "the theoretical model"
+            },
+            "determiner": "the",
+            "head": "theoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 1017,
+              "endChar": 1043,
+              "quote": "the transtheoretical model"
+            },
+            "determiner": "the",
+            "head": "transtheoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 1074,
+              "endChar": 1089,
+              "quote": "a positive mind"
+            },
+            "determiner": "a",
+            "head": "positive mind"
+          },
+          {
+            "anchor": {
+              "startChar": 1093,
+              "endChar": 1108,
+              "quote": "the user causes"
+            },
+            "determiner": "the",
+            "head": "user causes"
+          },
+          {
+            "anchor": {
+              "startChar": 1109,
+              "endChar": 1121,
+              "quote": "the movement"
+            },
+            "determiner": "the",
+            "head": "movement"
+          },
+          {
+            "anchor": {
+              "startChar": 1125,
+              "endChar": 1140,
+              "quote": "the higher step"
+            },
+            "determiner": "the",
+            "head": "higher step"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "7"
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "9",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 47,
+          "quote": "The scalp and hair management system of claim 8"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "The scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 57,
+          "endChar": 1146,
+          "quote": "when the related factor analysis module aggregates numerical values computed through a multiplication for a predetermined weight corresponding to a quantitative numerical value set for each step from the positive aspect to the negative aspect for each of the approval and non-approval items according to multiple selection for the positive aspect (very so, sometimes so, and so) and the negative aspect (not almost so and so not at all) like very so, sometimes so, so, not almost so, and so not at all for the self efficacy information to provide the self efficacy information, non-approval item information extracted through extraction is provided to the mobile terminal through the network jointly with the user ID with respect to response to the positive aspect in the non-approval item during moving to the lower step in information on five steps of pre-plan, plan, preparation, behavior, and maintenance as the change steps presented in the theoretical model by the transtheoretical model providing module to know that a negative mind of the user causes the movement to the lower step"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 107,
+              "quote": "the related factor analysis module aggregates"
+            },
+            "determiner": "the",
+            "head": "related factor analysis module aggregates"
+          },
+          {
+            "anchor": {
+              "startChar": 142,
+              "endChar": 158,
+              "quote": "a multiplication"
+            },
+            "determiner": "a",
+            "head": "multiplication"
+          },
+          {
+            "anchor": {
+              "startChar": 163,
+              "endChar": 185,
+              "quote": "a predetermined weight"
+            },
+            "determiner": "a",
+            "head": "predetermined weight"
+          },
+          {
+            "anchor": {
+              "startChar": 203,
+              "endChar": 237,
+              "quote": "a quantitative numerical value set"
+            },
+            "determiner": "a",
+            "head": "quantitative numerical value set"
+          },
+          {
+            "anchor": {
+              "startChar": 257,
+              "endChar": 276,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 280,
+              "endChar": 299,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 312,
+              "endChar": 324,
+              "quote": "the approval"
+            },
+            "determiner": "the",
+            "head": "approval"
+          },
+          {
+            "anchor": {
+              "startChar": 384,
+              "endChar": 403,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 440,
+              "endChar": 459,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 563,
+              "endChar": 592,
+              "quote": "the self efficacy information"
+            },
+            "determiner": "the",
+            "head": "self efficacy information"
+          },
+          {
+            "anchor": {
+              "startChar": 604,
+              "endChar": 633,
+              "quote": "the self efficacy information"
+            },
+            "determiner": "the",
+            "head": "self efficacy information"
+          },
+          {
+            "anchor": {
+              "startChar": 709,
+              "endChar": 728,
+              "quote": "the mobile terminal"
+            },
+            "determiner": "the",
+            "head": "mobile terminal"
+          },
+          {
+            "anchor": {
+              "startChar": 737,
+              "endChar": 756,
+              "quote": "the network jointly"
+            },
+            "determiner": "the",
+            "head": "network jointly"
+          },
+          {
+            "anchor": {
+              "startChar": 762,
+              "endChar": 773,
+              "quote": "the user ID"
+            },
+            "determiner": "the",
+            "head": "user id"
+          },
+          {
+            "anchor": {
+              "startChar": 802,
+              "endChar": 821,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 825,
+              "endChar": 846,
+              "quote": "the non-approval item"
+            },
+            "determiner": "the",
+            "head": "non-approval item"
+          },
+          {
+            "anchor": {
+              "startChar": 864,
+              "endChar": 878,
+              "quote": "the lower step"
+            },
+            "determiner": "the",
+            "head": "lower step"
+          },
+          {
+            "anchor": {
+              "startChar": 969,
+              "endChar": 985,
+              "quote": "the change steps"
+            },
+            "determiner": "the",
+            "head": "change steps"
+          },
+          {
+            "anchor": {
+              "startChar": 999,
+              "endChar": 1020,
+              "quote": "the theoretical model"
+            },
+            "determiner": "the",
+            "head": "theoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 1024,
+              "endChar": 1050,
+              "quote": "the transtheoretical model"
+            },
+            "determiner": "the",
+            "head": "transtheoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 1081,
+              "endChar": 1096,
+              "quote": "a negative mind"
+            },
+            "determiner": "a",
+            "head": "negative mind"
+          },
+          {
+            "anchor": {
+              "startChar": 1100,
+              "endChar": 1115,
+              "quote": "the user causes"
+            },
+            "determiner": "the",
+            "head": "user causes"
+          },
+          {
+            "anchor": {
+              "startChar": 1116,
+              "endChar": 1128,
+              "quote": "the movement"
+            },
+            "determiner": "the",
+            "head": "movement"
+          },
+          {
+            "anchor": {
+              "startChar": 1132,
+              "endChar": 1146,
+              "quote": "the lower step"
+            },
+            "determiner": "the",
+            "head": "lower step"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "8"
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "10",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 47,
+          "quote": "The scalp and hair management system of claim 9"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "The scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 57,
+          "endChar": 754,
+          "quote": "the scalp and hair management server further includes a management conduction module which extracts, as first information, positive component information (when the decision making of the positive aspect is each parameter information of the decisional information which influences maintaining the normal state and changing to the normal state) of the hair and scalp management behavior information and negative component information (when the decision making of the negative aspect is each parameter information of the decisional information which influences maintaining the normal state and changing to the normal state) analyzed as the “positive relevance” stored in the database for each user ID"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 57,
+              "endChar": 66,
+              "quote": "the scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 141,
+              "quote": "a management conduction module"
+            },
+            "determiner": "a",
+            "head": "management conduction module"
+          },
+          {
+            "anchor": {
+              "startChar": 217,
+              "endChar": 229,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 240,
+              "endChar": 259,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 293,
+              "endChar": 319,
+              "quote": "the decisional information"
+            },
+            "determiner": "the",
+            "head": "decisional information"
+          },
+          {
+            "anchor": {
+              "startChar": 349,
+              "endChar": 365,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 382,
+              "endChar": 398,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 403,
+              "endChar": 411,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 495,
+              "endChar": 507,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 518,
+              "endChar": 537,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 571,
+              "endChar": 597,
+              "quote": "the decisional information"
+            },
+            "determiner": "the",
+            "head": "decisional information"
+          },
+          {
+            "anchor": {
+              "startChar": 627,
+              "endChar": 643,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 660,
+              "endChar": 676,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 690,
+              "endChar": 713,
+              "quote": "the “positive relevance"
+            },
+            "determiner": "the",
+            "head": "positive relevance"
+          },
+          {
+            "anchor": {
+              "startChar": 725,
+              "endChar": 737,
+              "quote": "the database"
+            },
+            "determiner": "the",
+            "head": "database"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "9"
+      }
+    ]
+  },
+  {
+    "claimNumber": 11,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "11",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 48,
+          "quote": "The scalp and hair management system of claim 10"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "The scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 58,
+          "endChar": 707,
+          "quote": "the management conduction module extracts, as second information, positive component information (when the decision making of the negative aspect is each parameter information of the decisional information which influences not maintaining the normal state and not changing to the normal state) of the hair and scalp management behavior information and negative component information (when the decision making of the positive aspect is each parameter information of the decisional information which inversely influences not maintaining the normal state and not changing to the normal state) analyzed as the “negative relevance” stored in the database"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 99,
+              "quote": "the management conduction module extracts"
+            },
+            "determiner": "the",
+            "head": "management conduction module extracts"
+          },
+          {
+            "anchor": {
+              "startChar": 161,
+              "endChar": 173,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 184,
+              "endChar": 203,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 237,
+              "endChar": 263,
+              "quote": "the decisional information"
+            },
+            "determiner": "the",
+            "head": "decisional information"
+          },
+          {
+            "anchor": {
+              "startChar": 297,
+              "endChar": 313,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 334,
+              "endChar": 350,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 355,
+              "endChar": 363,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 447,
+              "endChar": 459,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 470,
+              "endChar": 489,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 523,
+              "endChar": 549,
+              "quote": "the decisional information"
+            },
+            "determiner": "the",
+            "head": "decisional information"
+          },
+          {
+            "anchor": {
+              "startChar": 593,
+              "endChar": 609,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 630,
+              "endChar": 646,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 660,
+              "endChar": 683,
+              "quote": "the “negative relevance"
+            },
+            "determiner": "the",
+            "head": "negative relevance"
+          },
+          {
+            "anchor": {
+              "startChar": 695,
+              "endChar": 707,
+              "quote": "the database"
+            },
+            "determiner": "the",
+            "head": "database"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "11",
+        "ancestor": "10"
+      }
+    ]
+  },
+  {
+    "claimNumber": 12,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "12",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 48,
+          "quote": "The scalp and hair management system of claim 11"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "The scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 58,
+          "endChar": 828,
+          "quote": "the management conduction module generates graph information in which “positive element information” corresponding to positive component information of positive relevance which is first information and negative component information of negative relevance which is second information and “negative element information” corresponding to negative component information of positive relevance which is first information and positive component information of negative relevance which is second information during moving for each information for five steps of pre-plan, plan, preparation, behavior, and maintenance as the change steps presented in the theoretical model in the user unit information of each mobile terminal is represented as a timeline between neighboring steps"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 106,
+              "quote": "the management conduction module generates graph"
+            },
+            "determiner": "the",
+            "head": "management conduction module generates graph"
+          },
+          {
+            "anchor": {
+              "startChar": 669,
+              "endChar": 685,
+              "quote": "the change steps"
+            },
+            "determiner": "the",
+            "head": "change steps"
+          },
+          {
+            "anchor": {
+              "startChar": 699,
+              "endChar": 720,
+              "quote": "the theoretical model"
+            },
+            "determiner": "the",
+            "head": "theoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 724,
+              "endChar": 749,
+              "quote": "the user unit information"
+            },
+            "determiner": "the",
+            "head": "user unit information"
+          },
+          {
+            "anchor": {
+              "startChar": 792,
+              "endChar": 802,
+              "quote": "a timeline"
+            },
+            "determiner": "a",
+            "head": "timeline"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "12",
+        "ancestor": "11"
+      }
+    ]
+  },
+  {
+    "claimNumber": 13,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "13",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 48,
+          "quote": "The scalp and hair management system of claim 12"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "The scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "13.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 58,
+          "endChar": 1035,
+          "quote": "the management conduction module provides approval item information (first information) extracted through extraction with respect to response to the positive aspect in the decisional balance information and the approval item for forming the decisional balance information during moving to the higher step in information on five steps of pre-plan, plan, preparation, behavior, and maintenance as the change steps presented in the theoretical model presented by the related factor analysis module and approval item information (second information) extracted through extraction with respect to response to the negative aspect in the decisional balance information and the approval items for forming the decisional balance information during moving to the lower step in information on five steps of pre-plan, plan, preparation, behavior, and maintenance as the change steps presented in the theoretical model to the mobile terminal through the network for each user ID in real time"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 108,
+              "quote": "the management conduction module provides approval"
+            },
+            "determiner": "the",
+            "head": "management conduction module provides approval"
+          },
+          {
+            "anchor": {
+              "startChar": 203,
+              "endChar": 222,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 226,
+              "endChar": 260,
+              "quote": "the decisional balance information"
+            },
+            "determiner": "the",
+            "head": "decisional balance information"
+          },
+          {
+            "anchor": {
+              "startChar": 265,
+              "endChar": 282,
+              "quote": "the approval item"
+            },
+            "determiner": "the",
+            "head": "approval item"
+          },
+          {
+            "anchor": {
+              "startChar": 295,
+              "endChar": 329,
+              "quote": "the decisional balance information"
+            },
+            "determiner": "the",
+            "head": "decisional balance information"
+          },
+          {
+            "anchor": {
+              "startChar": 347,
+              "endChar": 362,
+              "quote": "the higher step"
+            },
+            "determiner": "the",
+            "head": "higher step"
+          },
+          {
+            "anchor": {
+              "startChar": 453,
+              "endChar": 469,
+              "quote": "the change steps"
+            },
+            "determiner": "the",
+            "head": "change steps"
+          },
+          {
+            "anchor": {
+              "startChar": 483,
+              "endChar": 504,
+              "quote": "the theoretical model"
+            },
+            "determiner": "the",
+            "head": "theoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 518,
+              "endChar": 552,
+              "quote": "the related factor analysis module"
+            },
+            "determiner": "the",
+            "head": "related factor analysis module"
+          },
+          {
+            "anchor": {
+              "startChar": 661,
+              "endChar": 680,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 684,
+              "endChar": 718,
+              "quote": "the decisional balance information"
+            },
+            "determiner": "the",
+            "head": "decisional balance information"
+          },
+          {
+            "anchor": {
+              "startChar": 723,
+              "endChar": 741,
+              "quote": "the approval items"
+            },
+            "determiner": "the",
+            "head": "approval items"
+          },
+          {
+            "anchor": {
+              "startChar": 754,
+              "endChar": 788,
+              "quote": "the decisional balance information"
+            },
+            "determiner": "the",
+            "head": "decisional balance information"
+          },
+          {
+            "anchor": {
+              "startChar": 806,
+              "endChar": 820,
+              "quote": "the lower step"
+            },
+            "determiner": "the",
+            "head": "lower step"
+          },
+          {
+            "anchor": {
+              "startChar": 911,
+              "endChar": 927,
+              "quote": "the change steps"
+            },
+            "determiner": "the",
+            "head": "change steps"
+          },
+          {
+            "anchor": {
+              "startChar": 941,
+              "endChar": 962,
+              "quote": "the theoretical model"
+            },
+            "determiner": "the",
+            "head": "theoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 966,
+              "endChar": 985,
+              "quote": "the mobile terminal"
+            },
+            "determiner": "the",
+            "head": "mobile terminal"
+          },
+          {
+            "anchor": {
+              "startChar": 994,
+              "endChar": 1005,
+              "quote": "the network"
+            },
+            "determiner": "the",
+            "head": "network"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "13.a",
+        "parent": "13"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "13",
+        "ancestor": "12"
+      }
+    ]
+  },
+  {
+    "claimNumber": 14,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "14",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 48,
+          "quote": "The scalp and hair management system of claim 13"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "The scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "14.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 58,
+          "endChar": 455,
+          "quote": "the transtheoretical model providing module receives the initial hair/scalp analysis information from the AI server through an initial hair/scalp analysis request for the AI server through the network for the high-magnification photographing image included in the hair and scalp state information (hereinafter, referred to hair/scalp state information) of the user provided from the hair diagnoser"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 84,
+              "quote": "the transtheoretical model"
+            },
+            "determiner": "the",
+            "head": "transtheoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 154,
+              "quote": "the initial hair/scalp analysis information"
+            },
+            "determiner": "the",
+            "head": "initial hair scalp analysis information"
+          },
+          {
+            "anchor": {
+              "startChar": 160,
+              "endChar": 173,
+              "quote": "the AI server"
+            },
+            "determiner": "the",
+            "head": "ai server"
+          },
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 220,
+              "quote": "an initial hair/scalp analysis request"
+            },
+            "determiner": "an",
+            "head": "initial hair scalp analysis request"
+          },
+          {
+            "anchor": {
+              "startChar": 225,
+              "endChar": 238,
+              "quote": "the AI server"
+            },
+            "determiner": "the",
+            "head": "ai server"
+          },
+          {
+            "anchor": {
+              "startChar": 247,
+              "endChar": 258,
+              "quote": "the network"
+            },
+            "determiner": "the",
+            "head": "network"
+          },
+          {
+            "anchor": {
+              "startChar": 263,
+              "endChar": 285,
+              "quote": "the high-magnification"
+            },
+            "determiner": "the",
+            "head": "high-magnification"
+          },
+          {
+            "anchor": {
+              "startChar": 318,
+              "endChar": 326,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 414,
+              "endChar": 422,
+              "quote": "the user"
+            },
+            "determiner": "the",
+            "head": "user"
+          },
+          {
+            "anchor": {
+              "startChar": 437,
+              "endChar": 455,
+              "quote": "the hair diagnoser"
+            },
+            "determiner": "the",
+            "head": "hair diagnoser"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "14.a",
+        "parent": "14"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "14",
+        "ancestor": "13"
+      }
+    ]
+  },
+  {
+    "claimNumber": 15,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "15",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 48,
+          "quote": "The scalp and hair management system of claim 14"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "The scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "15.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 58,
+          "endChar": 907,
+          "quote": "the transtheoretical model providing module extracts hair and scalp management behavior information according to the analyzed initial hair/scalp analysis information from the database, and then provide the hair and scalp management behavior information and the user ID to the mobile terminal through the network, and outputs the hair and scalp management behavior information onto the mobile terminal and provides the hair and scalp management behavior information including normal, dry, intelligence, sensitivity, dandruff scalp, hair loss, each recommended shampoo information {a shampoo for a normal state, a shampoo for a dry state, a shampoo for an oil state, a shampoo for a sensitive state, an anti-dandruff shampoo, and a hair loss shampoo}, scalp scaling information {the number of times and a cycle of scalp scaling according to each state"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 84,
+              "quote": "the transtheoretical model"
+            },
+            "determiner": "the",
+            "head": "transtheoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 211,
+              "quote": "the analyzed initial hair/scalp analysis"
+            },
+            "determiner": "the",
+            "head": "analyzed initial hair scalp analysis"
+          },
+          {
+            "anchor": {
+              "startChar": 229,
+              "endChar": 241,
+              "quote": "the database"
+            },
+            "determiner": "the",
+            "head": "database"
+          },
+          {
+            "anchor": {
+              "startChar": 260,
+              "endChar": 268,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 315,
+              "endChar": 326,
+              "quote": "the user ID"
+            },
+            "determiner": "the",
+            "head": "user id"
+          },
+          {
+            "anchor": {
+              "startChar": 330,
+              "endChar": 349,
+              "quote": "the mobile terminal"
+            },
+            "determiner": "the",
+            "head": "mobile terminal"
+          },
+          {
+            "anchor": {
+              "startChar": 358,
+              "endChar": 369,
+              "quote": "the network"
+            },
+            "determiner": "the",
+            "head": "network"
+          },
+          {
+            "anchor": {
+              "startChar": 383,
+              "endChar": 391,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 439,
+              "endChar": 458,
+              "quote": "the mobile terminal"
+            },
+            "determiner": "the",
+            "head": "mobile terminal"
+          },
+          {
+            "anchor": {
+              "startChar": 472,
+              "endChar": 480,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 638,
+              "endChar": 647,
+              "quote": "a shampoo"
+            },
+            "determiner": "a",
+            "head": "shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 652,
+              "endChar": 666,
+              "quote": "a normal state"
+            },
+            "determiner": "a",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 668,
+              "endChar": 677,
+              "quote": "a shampoo"
+            },
+            "determiner": "a",
+            "head": "shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 682,
+              "endChar": 693,
+              "quote": "a dry state"
+            },
+            "determiner": "a",
+            "head": "dry state"
+          },
+          {
+            "anchor": {
+              "startChar": 695,
+              "endChar": 704,
+              "quote": "a shampoo"
+            },
+            "determiner": "a",
+            "head": "shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 709,
+              "endChar": 721,
+              "quote": "an oil state"
+            },
+            "determiner": "an",
+            "head": "oil state"
+          },
+          {
+            "anchor": {
+              "startChar": 723,
+              "endChar": 732,
+              "quote": "a shampoo"
+            },
+            "determiner": "a",
+            "head": "shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 737,
+              "endChar": 754,
+              "quote": "a sensitive state"
+            },
+            "determiner": "a",
+            "head": "sensitive state"
+          },
+          {
+            "anchor": {
+              "startChar": 756,
+              "endChar": 780,
+              "quote": "an anti-dandruff shampoo"
+            },
+            "determiner": "an",
+            "head": "anti-dandruff shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 786,
+              "endChar": 805,
+              "quote": "a hair loss shampoo"
+            },
+            "determiner": "a",
+            "head": "hair loss shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 835,
+              "endChar": 845,
+              "quote": "the number"
+            },
+            "determiner": "the",
+            "head": "number"
+          },
+          {
+            "anchor": {
+              "startChar": 859,
+              "endChar": 866,
+              "quote": "a cycle"
+            },
+            "determiner": "a",
+            "head": "cycle"
+          }
+        ]
+      },
+      {
+        "path": "15.b",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 909,
+          "endChar": 1541,
+          "quote": "option information of a first step of removal of keratin, sebum, and wastes accumulated in the scalp and the hair according to each state, a second step of ampoule input (product selection by dividing the oily and dry scalp scaling according to the state), a third step of activation (cleaning) of a capillary vessel, etc.}, scalp massage information (including the number of times of massage and the cycle of the message according to the state, etc.) for each analyzed initial hair/scalp analysis information corresponding to the normal state, the dry state, the oily state, the sensitive state, dandruff scalp, and hair loss state"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 931,
+              "endChar": 943,
+              "quote": "a first step"
+            },
+            "determiner": "a",
+            "head": "first step"
+          },
+          {
+            "anchor": {
+              "startChar": 1000,
+              "endChar": 1009,
+              "quote": "the scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          },
+          {
+            "anchor": {
+              "startChar": 1014,
+              "endChar": 1022,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 1048,
+              "endChar": 1061,
+              "quote": "a second step"
+            },
+            "determiner": "a",
+            "head": "second step"
+          },
+          {
+            "anchor": {
+              "startChar": 1110,
+              "endChar": 1118,
+              "quote": "the oily"
+            },
+            "determiner": "the",
+            "head": "oily"
+          },
+          {
+            "anchor": {
+              "startChar": 1154,
+              "endChar": 1163,
+              "quote": "the state"
+            },
+            "determiner": "the",
+            "head": "state"
+          },
+          {
+            "anchor": {
+              "startChar": 1166,
+              "endChar": 1178,
+              "quote": "a third step"
+            },
+            "determiner": "a",
+            "head": "third step"
+          },
+          {
+            "anchor": {
+              "startChar": 1207,
+              "endChar": 1225,
+              "quote": "a capillary vessel"
+            },
+            "determiner": "a",
+            "head": "capillary vessel"
+          },
+          {
+            "anchor": {
+              "startChar": 1271,
+              "endChar": 1281,
+              "quote": "the number"
+            },
+            "determiner": "the",
+            "head": "number"
+          },
+          {
+            "anchor": {
+              "startChar": 1306,
+              "endChar": 1315,
+              "quote": "the cycle"
+            },
+            "determiner": "the",
+            "head": "cycle"
+          },
+          {
+            "anchor": {
+              "startChar": 1319,
+              "endChar": 1330,
+              "quote": "the message"
+            },
+            "determiner": "the",
+            "head": "message"
+          },
+          {
+            "anchor": {
+              "startChar": 1344,
+              "endChar": 1353,
+              "quote": "the state"
+            },
+            "determiner": "the",
+            "head": "state"
+          },
+          {
+            "anchor": {
+              "startChar": 1436,
+              "endChar": 1452,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 1454,
+              "endChar": 1467,
+              "quote": "the dry state"
+            },
+            "determiner": "the",
+            "head": "dry state"
+          },
+          {
+            "anchor": {
+              "startChar": 1469,
+              "endChar": 1483,
+              "quote": "the oily state"
+            },
+            "determiner": "the",
+            "head": "oily state"
+          },
+          {
+            "anchor": {
+              "startChar": 1485,
+              "endChar": 1504,
+              "quote": "the sensitive state"
+            },
+            "determiner": "the",
+            "head": "sensitive state"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "15.a",
+        "parent": "15"
+      },
+      {
+        "kind": "part-of",
+        "child": "15.b",
+        "parent": "15"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "15",
+        "ancestor": "14"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 1306,
+            "endChar": 1315,
+            "quote": "the cycle"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 859,
+            "endChar": 866,
+            "quote": "a cycle"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 1436,
+            "endChar": 1452,
+            "quote": "the normal state"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 652,
+            "endChar": 666,
+            "quote": "a normal state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 1454,
+            "endChar": 1467,
+            "quote": "the dry state"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 682,
+            "endChar": 693,
+            "quote": "a dry state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 1485,
+            "endChar": 1504,
+            "quote": "the sensitive state"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 737,
+            "endChar": 754,
+            "quote": "a sensitive state"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 16,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "16",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 48,
+          "quote": "The scalp and hair management system of claim 15"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "The scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "16.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 58,
+          "endChar": 730,
+          "quote": "the transtheoretical model providing module controls the transceiving unit to receive decision making information of the user from the hair diagnoser through the network for each predetermined cycle (e.g., 3 days, 1 week, etc.) within a predetermined period when conducting the behavior change analysis during a predetermined period (e.g., 6 months to 5 years) in order to determine a behavior change process depending on a change step depending on hair and scalp management behavior information conduction depending on initial hair/scalp analysis information, and then stores the decision making information in user unit information jointly by using a user ID as metadata"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 84,
+              "quote": "the transtheoretical model"
+            },
+            "determiner": "the",
+            "head": "transtheoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 132,
+              "quote": "the transceiving unit"
+            },
+            "determiner": "the",
+            "head": "transceiving unit"
+          },
+          {
+            "anchor": {
+              "startChar": 175,
+              "endChar": 183,
+              "quote": "the user"
+            },
+            "determiner": "the",
+            "head": "user"
+          },
+          {
+            "anchor": {
+              "startChar": 189,
+              "endChar": 207,
+              "quote": "the hair diagnoser"
+            },
+            "determiner": "the",
+            "head": "hair diagnoser"
+          },
+          {
+            "anchor": {
+              "startChar": 216,
+              "endChar": 227,
+              "quote": "the network"
+            },
+            "determiner": "the",
+            "head": "network"
+          },
+          {
+            "anchor": {
+              "startChar": 293,
+              "endChar": 315,
+              "quote": "a predetermined period"
+            },
+            "determiner": "a",
+            "head": "predetermined period"
+          },
+          {
+            "anchor": {
+              "startChar": 332,
+              "endChar": 360,
+              "quote": "the behavior change analysis"
+            },
+            "determiner": "the",
+            "head": "behavior change analysis"
+          },
+          {
+            "anchor": {
+              "startChar": 368,
+              "endChar": 390,
+              "quote": "a predetermined period"
+            },
+            "determiner": "a",
+            "head": "predetermined period"
+          },
+          {
+            "anchor": {
+              "startChar": 441,
+              "endChar": 466,
+              "quote": "a behavior change process"
+            },
+            "determiner": "a",
+            "head": "behavior change process"
+          },
+          {
+            "anchor": {
+              "startChar": 480,
+              "endChar": 493,
+              "quote": "a change step"
+            },
+            "determiner": "a",
+            "head": "change step"
+          },
+          {
+            "anchor": {
+              "startChar": 635,
+              "endChar": 647,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 709,
+              "endChar": 718,
+              "quote": "a user ID"
+            },
+            "determiner": "a",
+            "head": "user id"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "16.a",
+        "parent": "16"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "16",
+        "ancestor": "15"
+      }
+    ]
+  },
+  {
+    "claimNumber": 17,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "17",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 48,
+          "quote": "The scalp and hair management system of claim 16"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "The scalp"
+            },
+            "determiner": "the",
+            "head": "scalp"
+          }
+        ]
+      },
+      {
+        "path": "17.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 58,
+          "endChar": 2727,
+          "quote": "the transtheoretical model providing module collects the decision making information as first parameter information which is decision making of a positive aspect (pros) depending on the use of each recommended shampoo information (the shampoo for the normal state, the shampoo for the dry state, the shampoo for the oily state, the shampoo for the sensitive state, the anti-dandruff shampoo, and the hair loss shampoo)/a negative aspect (cons) opposite thereto, second parameter information which is decision making of a positive aspect (pros) depending on the user of scalp scaling information/decision making of the negative aspect opposite thereto, and third parameter information which is decision making of a positive aspect (pros) depending on the use of scalp massage information/decision making of a negative aspect (cons) opposite thereto which are parameter information for the effect depending on the hair and scalp management behavior information, analyzes relevance between the hair and scalp management behavior information which is the hair and scalp management behavior of the user, and each parameter information of the decision making information for the hair and scalp management behavior information which is a behavior change process characteristic though a request for the AI server, in a case where one of whether to maintain the normal state and whether each state is changed to the normal state received from the AI server is positive and the decision making of the positive aspect (pros) and the decision making of the negative aspect (cons) opposite thereto are matched with each other in each parameter information of the decision making information for the hair and scalp management behavior information, analyzes the case as positive relevance to store component information of the hair and scalp management behavior information jointly with the user unit information as the positive relevance information, in a case where both whether to maintain the normal state and whether each state is changed to the normal state is negative and the decision making of the positive aspect (pros) and the decision making of the negative aspect (cons) opposite thereto are matched with each other in each parameter information of the decision making information for the hair and scalp management behavior information, analyzes the case as negative relevance to store component information of the hair and scalp management behavior information jointly with the user unit information as the negative relevance information, and analyzes relevance with hair and scalp management characteristics of the user and a transtheoretical model configuration factor"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 84,
+              "quote": "the transtheoretical model"
+            },
+            "determiner": "the",
+            "head": "transtheoretical model"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 123,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 202,
+              "endChar": 219,
+              "quote": "a positive aspect"
+            },
+            "determiner": "a",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 240,
+              "endChar": 247,
+              "quote": "the use"
+            },
+            "determiner": "the",
+            "head": "use"
+          },
+          {
+            "anchor": {
+              "startChar": 289,
+              "endChar": 300,
+              "quote": "the shampoo"
+            },
+            "determiner": "the",
+            "head": "shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 305,
+              "endChar": 321,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 323,
+              "endChar": 334,
+              "quote": "the shampoo"
+            },
+            "determiner": "the",
+            "head": "shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 339,
+              "endChar": 352,
+              "quote": "the dry state"
+            },
+            "determiner": "the",
+            "head": "dry state"
+          },
+          {
+            "anchor": {
+              "startChar": 354,
+              "endChar": 365,
+              "quote": "the shampoo"
+            },
+            "determiner": "the",
+            "head": "shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 370,
+              "endChar": 384,
+              "quote": "the oily state"
+            },
+            "determiner": "the",
+            "head": "oily state"
+          },
+          {
+            "anchor": {
+              "startChar": 386,
+              "endChar": 397,
+              "quote": "the shampoo"
+            },
+            "determiner": "the",
+            "head": "shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 402,
+              "endChar": 421,
+              "quote": "the sensitive state"
+            },
+            "determiner": "the",
+            "head": "sensitive state"
+          },
+          {
+            "anchor": {
+              "startChar": 423,
+              "endChar": 448,
+              "quote": "the anti-dandruff shampoo"
+            },
+            "determiner": "the",
+            "head": "anti-dandruff shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 454,
+              "endChar": 475,
+              "quote": "the hair loss shampoo"
+            },
+            "determiner": "the",
+            "head": "hair loss shampoo"
+          },
+          {
+            "anchor": {
+              "startChar": 477,
+              "endChar": 494,
+              "quote": "a negative aspect"
+            },
+            "determiner": "a",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 577,
+              "endChar": 594,
+              "quote": "a positive aspect"
+            },
+            "determiner": "a",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 615,
+              "endChar": 623,
+              "quote": "the user"
+            },
+            "determiner": "the",
+            "head": "user"
+          },
+          {
+            "anchor": {
+              "startChar": 672,
+              "endChar": 708,
+              "quote": "the negative aspect opposite thereto"
+            },
+            "determiner": "the",
+            "head": "negative aspect opposite thereto"
+          },
+          {
+            "anchor": {
+              "startChar": 770,
+              "endChar": 787,
+              "quote": "a positive aspect"
+            },
+            "determiner": "a",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 808,
+              "endChar": 815,
+              "quote": "the use"
+            },
+            "determiner": "the",
+            "head": "use"
+          },
+          {
+            "anchor": {
+              "startChar": 864,
+              "endChar": 881,
+              "quote": "a negative aspect"
+            },
+            "determiner": "a",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 942,
+              "endChar": 952,
+              "quote": "the effect"
+            },
+            "determiner": "the",
+            "head": "effect"
+          },
+          {
+            "anchor": {
+              "startChar": 966,
+              "endChar": 974,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 1045,
+              "endChar": 1053,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 1105,
+              "endChar": 1113,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 1147,
+              "endChar": 1155,
+              "quote": "the user"
+            },
+            "determiner": "the",
+            "head": "user"
+          },
+          {
+            "anchor": {
+              "startChar": 1191,
+              "endChar": 1203,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 1227,
+              "endChar": 1235,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 1287,
+              "endChar": 1334,
+              "quote": "a behavior change process characteristic though"
+            },
+            "determiner": "a",
+            "head": "behavior change process characteristic though"
+          },
+          {
+            "anchor": {
+              "startChar": 1335,
+              "endChar": 1344,
+              "quote": "a request"
+            },
+            "determiner": "a",
+            "head": "request"
+          },
+          {
+            "anchor": {
+              "startChar": 1349,
+              "endChar": 1362,
+              "quote": "the AI server"
+            },
+            "determiner": "the",
+            "head": "ai server"
+          },
+          {
+            "anchor": {
+              "startChar": 1367,
+              "endChar": 1373,
+              "quote": "a case"
+            },
+            "determiner": "a",
+            "head": "case"
+          },
+          {
+            "anchor": {
+              "startChar": 1407,
+              "endChar": 1423,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 1461,
+              "endChar": 1477,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 1492,
+              "endChar": 1505,
+              "quote": "the AI server"
+            },
+            "determiner": "the",
+            "head": "ai server"
+          },
+          {
+            "anchor": {
+              "startChar": 1522,
+              "endChar": 1534,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 1545,
+              "endChar": 1564,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 1576,
+              "endChar": 1588,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 1599,
+              "endChar": 1618,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 1704,
+              "endChar": 1716,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 1740,
+              "endChar": 1748,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 1801,
+              "endChar": 1809,
+              "quote": "the case"
+            },
+            "determiner": "the",
+            "head": "case"
+          },
+          {
+            "anchor": {
+              "startChar": 1866,
+              "endChar": 1874,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 1930,
+              "endChar": 1955,
+              "quote": "the user unit information"
+            },
+            "determiner": "the",
+            "head": "user unit information"
+          },
+          {
+            "anchor": {
+              "startChar": 1959,
+              "endChar": 1993,
+              "quote": "the positive relevance information"
+            },
+            "determiner": "the",
+            "head": "positive relevance information"
+          },
+          {
+            "anchor": {
+              "startChar": 1998,
+              "endChar": 2004,
+              "quote": "a case"
+            },
+            "determiner": "a",
+            "head": "case"
+          },
+          {
+            "anchor": {
+              "startChar": 2036,
+              "endChar": 2052,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 2090,
+              "endChar": 2106,
+              "quote": "the normal state"
+            },
+            "determiner": "the",
+            "head": "normal state"
+          },
+          {
+            "anchor": {
+              "startChar": 2123,
+              "endChar": 2135,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 2146,
+              "endChar": 2165,
+              "quote": "the positive aspect"
+            },
+            "determiner": "the",
+            "head": "positive aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 2177,
+              "endChar": 2189,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 2200,
+              "endChar": 2219,
+              "quote": "the negative aspect"
+            },
+            "determiner": "the",
+            "head": "negative aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 2305,
+              "endChar": 2317,
+              "quote": "the decision"
+            },
+            "determiner": "the",
+            "head": "decision"
+          },
+          {
+            "anchor": {
+              "startChar": 2341,
+              "endChar": 2349,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 2402,
+              "endChar": 2410,
+              "quote": "the case"
+            },
+            "determiner": "the",
+            "head": "case"
+          },
+          {
+            "anchor": {
+              "startChar": 2467,
+              "endChar": 2475,
+              "quote": "the hair"
+            },
+            "determiner": "the",
+            "head": "hair"
+          },
+          {
+            "anchor": {
+              "startChar": 2531,
+              "endChar": 2556,
+              "quote": "the user unit information"
+            },
+            "determiner": "the",
+            "head": "user unit information"
+          },
+          {
+            "anchor": {
+              "startChar": 2560,
+              "endChar": 2594,
+              "quote": "the negative relevance information"
+            },
+            "determiner": "the",
+            "head": "negative relevance information"
+          },
+          {
+            "anchor": {
+              "startChar": 2669,
+              "endChar": 2677,
+              "quote": "the user"
+            },
+            "determiner": "the",
+            "head": "user"
+          },
+          {
+            "anchor": {
+              "startChar": 2682,
+              "endChar": 2727,
+              "quote": "a transtheoretical model configuration factor"
+            },
+            "determiner": "a",
+            "head": "transtheoretical model configuration factor"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "17.a",
+        "parent": "17"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "17",
+        "ancestor": "16"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 1801,
+            "endChar": 1809,
+            "quote": "the case"
+          }
+        },
+        "introducing": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 1367,
+            "endChar": 1373,
+            "quote": "a case"
+          }
+        }
+      }
+    ]
+  }
+]

@@ -389,7 +389,7 @@ it.effect("growth after the seed read remains pending for the first catchup", ()
     let inject = true;
     const decorated: FileSystem.FileSystem = {
       ...fs,
-      watch: () => Stream.never,
+      watch: (_target, options) => Stream.never.pipe(Stream.onStart(Effect.sync(() => options?.onReady?.()))),
       open: (target, options) =>
         fs.open(target, options).pipe(
           Effect.map(
@@ -526,10 +526,15 @@ it.effect("replacement during the seed read retains the old identity for resync 
     let gated = false;
     const decorated: FileSystem.FileSystem = {
       ...fs,
-      watch: () => {
-        watching = true;
-        return Stream.never;
-      },
+      watch: (_target, options) =>
+        Stream.never.pipe(
+          Stream.onStart(
+            Effect.sync(() => {
+              watching = true;
+              options?.onReady?.();
+            })
+          )
+        ),
       stat: Effect.fn("JsonlTest.gateReplacementStat")(function* (target) {
         if (watching && !gated) {
           gated = true;

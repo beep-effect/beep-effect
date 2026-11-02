@@ -1,0 +1,50 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "15958729-root-1",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "previousRound": 1,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 1,
+      "path": "1.a",
+      "anchor": {
+        "startChar": 216,
+        "endChar": 244,
+        "quote": "its oppositely disposed side"
+      },
+      "determiner": "bare",
+      "beforeHead": "its oppositely disposed side",
+      "afterHead": "oppositely disposed side",
+      "action": "changed",
+      "reason": "Its is the outer pronominal determiner of the quoted noun phrase. Remove only its from the head; keep substantive direction, disposition, desired/predetermined modifiers and complete anchor.",
+      "sourceContext": "nst a first side of the workpiece while the workpiece is supported at its oppositely disposed side by a piercing die, the hole of which is selected to suit the cross-se",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round1.json",
+      "sha256": "0953d41a2a9635dd6eed9af759b56d239af07fbafa9bd6c939f35a6670e6855c"
+    },
+    {
+      "file": "extractor.round1.json",
+      "sha256": "7ebaa6e0fc1079d75cfde933de8073a5c79377fcc97d395e598d774f985c0272"
+    },
+    {
+      "file": "critic.round1.json",
+      "sha256": "ee8d443f0dd3bff7853a0765500d63ef0b10e87c016eb80faac77053c4a7535f"
+    }
+  ],
+  "missingPriorCritic": null,
+  "structureInvariant": "Expected trees are byte-for-byte semantically equal after replacing only audited head fields with their prior values. No anchors, determiners, edges, element structure, source or claim scope changed.",
+  "independence": "Targeted extractor correction from manually reviewed exact canonical/native source context and lexical-head/v1 only. Literal audit flags were checked individually; no generic parser/decomposer, production rules, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "unchanged; pending human review where already required"
+}

@@ -28,7 +28,6 @@ import * as Str from "effect/String";
  * @since 0.0.0
  */
 export const NO_NATIVE_RUNTIME_ERROR_FILES = [
-  "packages/tooling/tool/cli/src/commands/DocsAggregate.ts",
   "packages/tooling/tool/cli/src/commands/Lint/index.ts",
   "packages/tooling/tool/cli/src/commands/Laws/index.ts",
   "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
@@ -54,7 +53,6 @@ export const NO_NATIVE_RUNTIME_EXTRA_CHECK_PATTERNS = [
   /^packages\/ai\/sdk\/src\/core\/SessionConfig\.ts$/,
   /^packages\/ai\/sdk\/src\/core\/Diagnose\.ts$/,
   /^packages\/ai\/sdk\/src\/core\/Storage\/SessionIndexStore\.ts$/,
-  /^tooling\/cli\/src\/commands\/DocsAggregate\.ts$/,
   /^tooling\/cli\/src\/commands\/Lint\/index\.ts$/,
   /^tooling\/cli\/src\/commands\/Laws\/index\.ts$/,
   /^tooling\/cli\/src\/commands\/Laws\/EffectImports\.ts$/,

@@ -1,0 +1,80 @@
+{
+  "tool": "goals/effected-promotion/ops/glob-adoption-parity.ts",
+  "patternParity": {
+    "docgenExcludes": {
+      "patterns": 37,
+      "candidates": 7658,
+      "comparisons": 283346,
+      "matches": 1363,
+      "disagreements": []
+    },
+    "coverageFixtureOwners": {
+      "patterns": 16,
+      "candidates": 43436,
+      "comparisons": 694976,
+      "matches": 320,
+      "disagreements": []
+    },
+    "coverageSelectors": {
+      "patterns": 1137,
+      "candidates": 379,
+      "comparisons": 430923,
+      "matches": 1137,
+      "disagreements": []
+    },
+    "turboEnv": {
+      "patterns": 35,
+      "candidates": 23,
+      "comparisons": 805,
+      "matches": 23,
+      "disagreements": []
+    }
+  },
+  "effectImports": {
+    "codeSources": {
+      "count": 8657,
+      "sha256": "78f29128141f158a83f61beb6600d384e8e9b877c8dccb35dfaa1d940628d387",
+      "byTopLevel": {
+        ".": 6,
+        ".claude": 8,
+        "apps": 560,
+        "explorations": 25,
+        "goals": 127,
+        "infra": 53,
+        "packages": 7180,
+        "scratchpad": 692,
+        "scripts": 5,
+        "tools": 1
+      }
+    },
+    "markdownModeSources": {
+      "count": 1272,
+      "sha256": "82b2f019de1e2a658e1a13eedd0989ba3b3c89beb7dbd26c593a688ef21296a4",
+      "byTopLevel": {
+        "packages": 1272
+      }
+    },
+    "markdownDocuments": {
+      "count": 8538,
+      "sha256": "2f2ec7b25f86fc6ef045f93f0fda852bfd7eb7a542db8eb2134da53db37b1c3a",
+      "byTopLevel": {
+        ".": 9,
+        ".changeset": 1,
+        ".claude": 120,
+        ".github": 1,
+        ".junie": 3,
+        ".patterns": 7,
+        "apps": 52,
+        "docs": 91,
+        "explorations": 1581,
+        "goals": 5920,
+        "harness-ledger": 1,
+        "infra": 8,
+        "packages": 445,
+        "research": 89,
+        "scratchpad": 172,
+        "standards": 38
+      }
+    }
+  }
+}

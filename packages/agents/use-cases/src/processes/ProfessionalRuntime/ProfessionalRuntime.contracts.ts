@@ -390,7 +390,7 @@ export class RuntimeCandidateTask extends S.Opaque<RuntimeCandidateTask, { reado
  *
  * ```ts
  * import { RuntimeDraftRecipient } from "@beep/agents-use-cases/public"
- * import { EmailString } from "@beep/schema"
+ * import { EmailString } from "@beep/schema/Email"
  * import * as S from "effect/Schema"
  *
  * const recipient = RuntimeDraftRecipient.make({
@@ -426,7 +426,7 @@ export class RuntimeDraftRecipient extends S.Opaque<RuntimeDraftRecipient, { rea
  *   RuntimeDraftRecipient,
  *   RuntimeEvidenceRef
  * } from "@beep/agents-use-cases/public"
- * import { EmailString } from "@beep/schema"
+ * import { EmailString } from "@beep/schema/Email"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *

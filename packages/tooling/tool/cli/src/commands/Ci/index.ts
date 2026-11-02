@@ -110,6 +110,55 @@ export * from "./HeavyAdmission.ts";
  */
 export * from "./LaneTimings.ts";
 /**
+ * Public verification-route command (`beep ci route`).
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Route.command.ts";
+/**
+ * Public verification-route schemas: change atoms, footprints, plans, corpus and reports.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Route.schemas.ts";
+/**
+ * Public verification-route service contracts.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Route.service.ts";
+/**
+ * Public verification-route plan, census and replay services.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./RouteCensus.ts";
+/**
+ * Public verification-route change classifier.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./RouteClassify.ts";
+/**
+ * Public verification-route corpus service.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./RouteCorpus.ts";
+/**
+ * Public total footprint record and its pure selection queries.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./RouteFootprints.ts";
+/**
  * Public runner-loss rerun decision export.
  *
  * @category cli-commands

@@ -1,0 +1,169 @@
+{
+  "familyId": "12360911-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    "Office action GMZ2D8MJPPOPPY5 dated 2011-04-28 rejects claims 1-28 and explicitly identifies antecedent concerns in selected claims 1-9; publication 2009-08-13 precedes rejection.",
+    "Natural-language dependencies agree: 2->1, 3->2, 4->1, 5->4, 6->4, 7->1, 8->1, 9->1. Context roots 10/15/24 and their children are excluded from label scope.",
+    "No originalComparisons corroboration rows are retained for this family. In-force link relies on the provenance inventory assertion of no intervening CLM amendment; attorney spot-check is pending.",
+    "P2 intentionally truncates detecting/scanning heads after the first token and admits non-boundary verbs/during into heads. These are contract labels rather than semantic noun-phrase corrections.",
+    "Examiner also identifies ambiguity among indefinite introductions and unmarked scanning conditions, which P2 does not fully represent; successful structural labels do not establish complete examiner-issue recall."
+  ],
+  "rationale": "Claim 1 has four semicolon-delimited limitations; claims 2-9 each have one. Manually retained contract quirks include the apparatus according, an index-value, a switch-timing, a first, a second, and the imaging unit during. Only explicitly listed exact-head, uniquely introduced same-claim terms receive antecedent edges. Source wording an region is preserved. Round 2: source-verified preamble terms corrected under participle-boundary; according is excluded from head and quote. Element anchors unchanged; all affected edge references checked coherently.",
+  "independence": "Manually selected element boundaries, phrases, heads and edges against P2. No decomposer/policy, rule fixtures or predictions read or executed. Helpers locate selected quotes and verify JavaScript UTF-16 slices only. Critic and attorney review pending.",
+  "confidenceScope": "Resolved contract labels and explicit unsupported-source classification; does not assert legal correctness or attorney agreement.",
+  "familyStatus": "extractor-proposed; critic-and-attorney-pending",
+  "sourceChecks": {
+    "selectedClaimNumbersVerifiedAgainstNativeClaimXml": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "allElementAndTermUtf16SlicesVerified": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  },
+  "roundHistory": [
+    {
+      "round": 1,
+      "confidence": 0.98,
+      "rationale": "Claim 1 has four semicolon-delimited limitations; claims 2-9 each have one. Manually retained contract quirks include the apparatus according, an index-value, a switch-timing, a first, a second, and the imaging unit during. Only explicitly listed exact-head, uniquely introduced same-claim terms receive antecedent edges. Source wording an region is preserved.",
+      "criticCorrection": "According ends in ing after the first head token; apply participle-boundary to the preamble referring term."
+    }
+  ],
+  "round2Corrections": [
+    {
+      "claimNumber": 2,
+      "previousAnchor": {
+        "startChar": 0,
+        "endChar": 23,
+        "quote": "The apparatus according"
+      },
+      "correctedAnchor": {
+        "startChar": 0,
+        "endChar": 13,
+        "quote": "The apparatus"
+      },
+      "correctedHead": "apparatus"
+    },
+    {
+      "claimNumber": 3,
+      "previousAnchor": {
+        "startChar": 0,
+        "endChar": 23,
+        "quote": "The apparatus according"
+      },
+      "correctedAnchor": {
+        "startChar": 0,
+        "endChar": 13,
+        "quote": "The apparatus"
+      },
+      "correctedHead": "apparatus"
+    },
+    {
+      "claimNumber": 4,
+      "previousAnchor": {
+        "startChar": 0,
+        "endChar": 23,
+        "quote": "The apparatus according"
+      },
+      "correctedAnchor": {
+        "startChar": 0,
+        "endChar": 13,
+        "quote": "The apparatus"
+      },
+      "correctedHead": "apparatus"
+    },
+    {
+      "claimNumber": 5,
+      "previousAnchor": {
+        "startChar": 0,
+        "endChar": 23,
+        "quote": "The apparatus according"
+      },
+      "correctedAnchor": {
+        "startChar": 0,
+        "endChar": 13,
+        "quote": "The apparatus"
+      },
+      "correctedHead": "apparatus"
+    },
+    {
+      "claimNumber": 6,
+      "previousAnchor": {
+        "startChar": 0,
+        "endChar": 23,
+        "quote": "The apparatus according"
+      },
+      "correctedAnchor": {
+        "startChar": 0,
+        "endChar": 13,
+        "quote": "The apparatus"
+      },
+      "correctedHead": "apparatus"
+    },
+    {
+      "claimNumber": 7,
+      "previousAnchor": {
+        "startChar": 0,
+        "endChar": 23,
+        "quote": "The apparatus according"
+      },
+      "correctedAnchor": {
+        "startChar": 0,
+        "endChar": 13,
+        "quote": "The apparatus"
+      },
+      "correctedHead": "apparatus"
+    },
+    {
+      "claimNumber": 8,
+      "previousAnchor": {
+        "startChar": 0,
+        "endChar": 23,
+        "quote": "The apparatus according"
+      },
+      "correctedAnchor": {
+        "startChar": 0,
+        "endChar": 13,
+        "quote": "The apparatus"
+      },
+      "correctedHead": "apparatus"
+    },
+    {
+      "claimNumber": 9,
+      "previousAnchor": {
+        "startChar": 0,
+        "endChar": 23,
+        "quote": "The apparatus according"
+      },
+      "correctedAnchor": {
+        "startChar": 0,
+        "endChar": 13,
+        "quote": "The apparatus"
+      },
+      "correctedHead": "apparatus"
+    }
+  ]
+}

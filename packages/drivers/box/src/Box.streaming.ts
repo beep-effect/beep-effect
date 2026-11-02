@@ -475,7 +475,7 @@ export class BoxUploadWithPreflightCheckPayload extends S.Opaque<
  * **Example** (Upload part by URL)
  *
  * ```ts
- * import { HttpsUrl } from "@beep/schema"
+ * import { HttpsUrl } from "@beep/schema/URL"
  * import { BoxUploadFilePartByUrlPayload, UploadFilePartByUrlHeadersInput } from "@beep/box"
  *
  * const payload = BoxUploadFilePartByUrlPayload.make({
@@ -649,7 +649,7 @@ export class BoxGetEventStreamPayload extends S.Opaque<BoxGetEventStreamPayload,
  * **Example** (Zip download content payload)
  *
  * ```ts
- * import { HttpsUrl } from "@beep/schema"
+ * import { HttpsUrl } from "@beep/schema/URL"
  * import { BoxGetZipDownloadContentPayload } from "@beep/box"
  *
  * const payload = BoxGetZipDownloadContentPayload.make({ downloadUrl: HttpsUrl.make("https://example.com/content") })

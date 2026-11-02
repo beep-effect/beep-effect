@@ -1,0 +1,49 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "11575704-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "referenceConcernsDisposition": "Source-specific reference concerns independently reviewed. Unintroduced, collective and ambiguous member/result references remain explicit without forced identity; those local concerns do not preclude the clear whole-claim trees. No actionable correction remains in this bounded review.",
+  "reviewScope": {
+    "claimCount": 11,
+    "elementCount": 23,
+    "termCount": 114,
+    "edgeCount": 90,
+    "functionalRelationCount": 12
+  },
+  "reviewNotes": [
+    "The apparatus root and two coordinated claim-1 components follow native grammar; the first array and converging lens retain complete lexical heads and their full geometry/projection relationships. First/second optical aliases refer to uniquely qualified components on the actual ancestry, rather than relying on an exact-head shortcut.",
+    "Claim 6 farther comprise and claim 8 wherein one wherein remain literal connecting language. Their clear substantive functions are represented without rewriting wording or abstaining because of the malformed transition. Independent claim 12 stays context only.",
+    "Actual dependencies are 2->1, 3->2, 4/6->3, 5/7/8->2, 9->8 and 10/11->9. First/second arrays and lenses are not collapsed into a fabricated collective introduction, and member-level LEDs/fibers are not assigned an arbitrary individual identity from a plurality.",
+    "The claim-7 the each respective one end reference has the actual inherited one-end variable from claim 2, with malformed surface retained exactly. The remaining respective/member references stay explicit and unforced. The different beam-pattern collection introduced in 8 supports 9-11; spread-pattern, received-light, optical-coupling and superimposition nominal gaps remain documented."
+  ],
+  "verification": [
+    "Read canonical full family context, native selected-claim XML, provenance, independent source critic and extractor rationale under v2/entity-mentions/v1 and the declared ClaimElement schemas. Source eligibility remains separately qualified; no fresh original-PDF/full-inventory authentication is claimed.",
+    "Audited every expected element, term and typed edge for source grammar, complete lexical heads, explicit list nesting, actual local/ancestor references and functional participants. Relative/reciprocal connectors remain source-anchored relation text when their participants are explicit; no blanket extra-node rule was applied.",
+    "Independent geometry/schema helpers verified exact canonical UTF-16 anchors for elements, terms, functional parts and antecedents; normalized heads; unique paths; ordered nonoverlapping owned terms; complete contiguous functional partitions; local functional term ownership; actual ancestor membership of foreign references; coherent typed endpoints; and absence of duplicate edges. Native claims XML SHA256 matches provenance. These bounded checks supplement semantic review and do not invoke a production decomposer."
+  ],
+  "referenceSha256": "09b6c30d503ba24ace9d97393dc59880ccad66803799ba3c3636718bbf51ddb3",
+  "independence": "Independent source-semantic critic, separate from extractor. Only this family critic.json written. No expected/source/code edits, production rules/P2-DESIGN, predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers only check manually reviewed source spans/schema geometry and serialize the receipt.",
+  "attorneyAdjudication": "pending; confidence is not attorney agreement",
+  "corpusStatus": "Incremental reference review only; no goal completion, active sample admission, or human agreement claimed."
+}

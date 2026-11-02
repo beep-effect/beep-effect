@@ -1,0 +1,68 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13032032-root-50",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.99,
+  "verdict": "ineligible",
+  "reviewedClaimNumbers": [
+    50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68,
+    69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
+    88, 89, 90, 91, 92
+  ],
+  "extractorVerdictReviewed": "ineligible",
+  "extractorConclusionStands": true,
+  "sourceEligibilityConclusion": "ineligible",
+  "findings": [
+    {
+      "severity": "scope-exclusion",
+      "blocking": true,
+      "finding": "Chemical/material alternatives are actual selected claim limitations, not merely a CPC or title inference."
+    },
+    {
+      "severity": "receipt-correction",
+      "blocking": false,
+      "field": "groundEvidence.scopeEvidence",
+      "finding": "Copied Selected1–9 statement is false for selected50–92; corrected numbered scope is1–188 with specific selected grounds50/52/58/59/61–64."
+    }
+  ],
+  "evidence": [
+    "Matching OA HEIH22TUPXXIFW4 (2013-03-22) expressly rejects1–188 under112(b)/second paragraph and individually discusses selected50 outer surface,52 interfaces,58 exposed outer surface,59 coefficient of friction,61 water contact angle and62–64 thickness. Ground is real but does not override declared scope exclusions.",
+    "Selected53 explicitly chooses ultra-low friction layers among amorphous alloy, electroless nickel-phosphorous composite, graphite, MoS2, WS2, fullerene composite, boride cermet, diamond materials, boron nitride, nanotubes and graphene. Selected56 lists DLC chemical alternatives;65/67/72/92 add material/composition alternatives. This is explicit chemical/material Markush selection within selected family, declared out of scope. Native identities/hashes/inventory verified; exhaustive PDF adoption certification is unnecessary after this independent exclusion and is not claimed."
+  ],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "nativePublicationSha256": "c94f554c02bdcdf778eff105d3c516618637dd7aa6ca912edb6837093e3f59ec",
+    "sourceClaimsXmlSha256": "a406b097ec38535309ec661e002242e38c73e448288975293b4a13e7af53f19a",
+    "fullInventorySha256": "0718485bbfc44da6342c4fbcbe7a6f601c8dbac23d3874a3e67976faed77ed7e",
+    "inventoryReportedCount": 78,
+    "inventoryActualRows": 78,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "GKH9GCWSPPOPPY2",
+        "documentCode": "CLM",
+        "officialDate": "2011-02-22T00:00:00.000-0500"
+      }
+    ],
+    "originalCachedHashes": [
+      {
+        "documentIdentifier": "GKH9GCWSPPOPPY2",
+        "sha256": "15be1a5ea88d95e58f32fb7451af772c2077ef25589a418672c08d72b09831fa",
+        "sha256Matches": true
+      }
+    ],
+    "nativePublicationHashMatches": true,
+    "sourceClaimsHashMatches": true
+  },
+  "fullOfficeActionEvidence": {
+    "documentIdentifier": "HEIH22TUPXXIFW4",
+    "submissionDate": "2013-03-22",
+    "matchingRecords": 1,
+    "fullCacheSha256": "115c5af3c1f05bfc978b5b0ba07c3fe7e077848170f5dd25880d5713e74bbf56",
+    "minimalGroundQuote": "The following is a quotation of 35 U.S.C. 112(b):"
+  },
+  "originalPdfEvidence": [],
+  "independence": "Independent critic; did not extract this candidate source-audit. Read source and public provenance, original/native text and complete inventory; no expected labels, production predictions, network, secrets, git or delegation. Only this source-critic receipt written."
+}

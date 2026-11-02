@@ -1,10 +1,16 @@
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Redacted from "effect/Redacted";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+
+/** The plain argv a real spawner hands `git`, with any `Redacted` word unwrapped. */
+export const commandArgs = (command: ChildProcess.StandardCommand): ReadonlyArray<string> =>
+  A.map(command.args, (word) => (Redacted.isRedacted(word) ? Redacted.value(word) : word));
 /**
  * One scripted outcome for a spawned `git` invocation: a completed run
  * (stdout/stderr/exit, or `hang: true` to never resolve `exitCode` — used to
@@ -16,18 +22,20 @@ export type ScriptResult =
   | PlatformError.PlatformError;
 
 /**
- * A scripted mock `ChildProcessSpawner`. `byArgs` receives the argv of the
- * spawned command and returns either a completed-run script (stdout/stderr/
- * exit, optionally hanging) or a `PlatformError` to fail the spawn with.
+ * A scripted mock `ChildProcessSpawner`. `byArgs` receives the argv and
+ * options of the spawned command and returns either a completed-run script
+ * (stdout/stderr/exit, optionally hanging) or a `PlatformError` to fail the spawn with.
  */
-export const scripted = (byArgs: (args: ReadonlyArray<string>) => ScriptResult) =>
+export const scripted = (
+  byArgs: (args: ReadonlyArray<string>, options: ChildProcess.StandardCommand["options"]) => ScriptResult
+) =>
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) {
         return Effect.die("piped commands not scripted");
       }
-      const result = byArgs(command.args);
+      const result = byArgs(commandArgs(command), command.options);
       if (result instanceof PlatformError.PlatformError) {
         return Effect.fail(result);
       }

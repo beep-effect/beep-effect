@@ -105,8 +105,10 @@ export const loadCapabilityProjection = Effect.fn("Goals.loadCapabilityProjectio
 
 const renderJson = <A, I>(schema: S.ConstraintCodec<A, I>, report: A) =>
   S.encodeUnknownEffect(schema)(report).pipe(
-    Effect.map(canonicalJsonTextPretty),
-    Effect.mapError(GoalGraphOperationalError.new("Failed to encode the capability-graph report."))
+    Effect.mapBoth({
+      onFailure: GoalGraphOperationalError.new("Failed to encode the capability-graph report."),
+      onSuccess: canonicalJsonTextPretty,
+    })
   );
 
 const printReport = Effect.fn("Goals.printGraphReport")(function* <A, I>(

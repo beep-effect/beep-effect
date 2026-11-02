@@ -6,7 +6,7 @@
  */
 
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -39,8 +39,8 @@ const codec = S.fromJsonString(LibraryCatalog);
  * @since 0.0.0
  */
 export const hashBytes = Effect.fn("ResearchLibrary.hashBytes")(function* (bytes: Uint8Array) {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(yield* crypto.digest("SHA-256", bytes).pipe(mapFailure("Cannot hash library artifact.")));
+  const crypto = yield* Digest.Digest;
+  return Hex.encode(yield* crypto.digest(Digest.sha256, bytes).pipe(mapFailure("Cannot hash library artifact.")));
 });
 
 /**
@@ -192,7 +192,7 @@ export const saveImmutable = Effect.fn("ResearchLibrary.saveImmutable")(function
   root: string,
   relativePath: string,
   bytes: Uint8Array
-): Effect.fn.Return<LibraryArtifact, LibraryError, FileSystem.FileSystem | Path.Path | Crypto.Crypto> {
+): Effect.fn.Return<LibraryArtifact, LibraryError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const target = path.resolve(root, relativePath);

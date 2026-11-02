@@ -1,9 +1,10 @@
 import { isRegisteredWorktree, removeGitWorktree, runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -47,7 +48,7 @@ const failingSpawner = ChildProcessSpawner.make(() =>
   )
 );
 
-it.layer(NodeServices.layer)("GitWorktree", (it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("GitWorktree", (it) => {
   it.effect("recognizes a registered linked worktree, including through a symlinked path", () =>
     withRepository((root, repoRoot) =>
       Effect.gen(function* () {

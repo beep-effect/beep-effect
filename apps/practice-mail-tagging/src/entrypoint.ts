@@ -4,11 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
+import type * as Digest from "effect/crypto/Digest";
 /**
  * Runs a finished program as the process main: the platform runner.
  *
@@ -22,7 +24,7 @@ export type RunMain = <A, E>(effect: Effect.Effect<A, E>) => void;
  *
  * **Details**
  *
- * The program gets the Bun platform services, and the built-in logger is sent
+ * The program gets the Bun platform and crypto services, and the built-in logger is sent
  * to standard error so standard output carries reports only. Nothing runs
  * unless the module is the process entrypoint. The runner owns the exit code:
  * a `PracticeMailTaggingError` ends the process with its own code.
@@ -47,11 +49,14 @@ export type RunMain = <A, E>(effect: Effect.Effect<A, E>) => void;
  */
 export const makeRunEntrypoint =
   (run: RunMain) =>
-  <A, E>(input: { readonly isMain: boolean; readonly program: Effect.Effect<A, E, BunServices.BunServices> }): void => {
+  <A, E>(input: {
+    readonly isMain: boolean;
+    readonly program: Effect.Effect<A, E, BunServices.BunServices | Digest.Digest>;
+  }): void => {
     if (input.isMain) {
       run(
         Layer.effectDiscard(input.program).pipe(
-          Layer.provide(BunServices.layer),
+          Layer.provide(Layer.merge(BunServices.layer, BunCrypto.layer)),
           Layer.provide(Layer.succeed(Logger.LogToStderr, true)),
           Layer.build,
           Effect.scoped

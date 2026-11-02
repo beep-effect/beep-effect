@@ -11,7 +11,7 @@ import { AgentConventionComparison } from "@beep/repo-cli/test/AgentEffectivenes
 import { it } from "@beep/test-runner";
 import { fcRuns, privacySafeSystemTempRoot } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
@@ -55,7 +55,7 @@ const CommandTestLayer = Layer.effectDiscard(
       yield* fs.writeFileString(target, yield* encodeFixture(receipt));
     }
   })
-).pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, MemoryFileSystem.layer)));
+).pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, MemoryFileSystem.layer)));
 const decodeDoctorReport = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessDoctorReport));
 const decodeAnnotationCheckReport = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationCheckReport));
 const decodeDatasetBundle = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessDatasetBundle));

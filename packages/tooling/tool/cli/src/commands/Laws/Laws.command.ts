@@ -627,6 +627,7 @@ const lawsMarkdownFencesCommand = Command.make(
       `opt_out=${summary.optOutFences}`,
       `generated=${summary.generatedFences}`,
       `failed=${summary.failures.length}`,
+      `unreadable=${summary.unreadable.length}`,
     ];
 
     yield* json
@@ -634,6 +635,11 @@ const lawsMarkdownFencesCommand = Command.make(
       : printLines([
           ...A.map(counters, (counter) => `[effect-governance-markdown-fences] ${counter}`),
           ...A.flatMap(summary.failures, formatMarkdownFenceFailure),
+          ...A.map(
+            summary.unreadable,
+            (diagnostic) =>
+              `${diagnostic.path}:${diagnostic.line}:${diagnostic.column}  ${diagnostic.code} ${diagnostic.message}`
+          ),
         ]);
 
     if (summary.strictFailure) {

@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
@@ -24,7 +25,6 @@ import * as FileSystem from "effect/FileSystem";
 import { constant, dual, flow, pipe } from "effect/Function";
 import * as HM from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
-import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -32,9 +32,9 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { XMLParser } from "fast-xml-parser";
-import { parse } from "jsonc-parser";
 import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -57,7 +57,9 @@ import {
   setAdmissionEvictionProtocol,
   TmpfsReapReport,
 } from "../../internal/repo-run/index.ts";
-import { CacheQualificationLive, runCachePolicyAudit } from "../Cache/index.ts";
+import { runCachePolicyAudit } from "../Cache/Cache.command.ts";
+import { CacheQualificationLive } from "../Cache/Cache.service.ts";
+import { CacheHostedProducerVerifierLive } from "../Cache/Cache.workflow.github.ts";
 import { FleetMirrorService, FleetMirrorServiceLive } from "../Worktree/Fleet.service.ts";
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { CatalogUsageSourceLive, runCatalogUsageCheck } from "./CatalogUsage.ts";
@@ -85,14 +87,6 @@ import {
   JSDocDocumentationInventoryOptions,
   writeJSDocDocumentationInventory,
 } from "./internal/JSDocDocumentationInventory.ts";
-import {
-  RunJSDocMigrateApplyOptions,
-  RunJSDocMigrateVerifyOptions,
-  runJSDocMigrateApply,
-  runJSDocMigrateVerify,
-} from "./internal/JSDocMigrateApply.ts";
-import { RunJSDocMigrateExtractOptions, runJSDocMigrateExtract } from "./internal/JSDocMigrateExtract.ts";
-import { RunJSDocMigrateTitlesOptions, runJSDocMigrateTitles } from "./internal/JSDocMigrateTitles.ts";
 import {
   defaultJSDocInventoryPath,
   defaultJSDocTotalsBaselinePath,
@@ -130,9 +124,10 @@ import {
   QualityHardwareProfile,
 } from "./Quality.schemas.ts";
 import { runQualityTaskGithubCheckLaneWaves, runQualityTaskStreamingStepGroup } from "./Tasks.ts";
-import type * as Crypto from "effect/Crypto";
+import type { JsoncParseError } from "@beep/jsonc/Jsonc";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { ParseError } from "jsonc-parser";
 import type { AdmissionSnapshot } from "../../internal/repo-run/index.ts";
 import type {
   GithubCheckFailurePolicy as GithubCheckFailurePolicyType,
@@ -141,6 +136,16 @@ import type {
   QualityProfileDetectionInput as QualityProfileDetectionInputType,
 } from "./Quality.schemas.ts";
 import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Tasks.ts";
+
+// Strict JSON for the generated Vitest aliases: no comments, no trailing commas.
+const strictJsonWithoutComments = JsoncParseOptions.make({ disallowComments: true, allowTrailingComma: false });
+
+// One `parse error <code> at offset <n>` line per recovered parse error.
+const parseErrorLines = (error: JsoncParseError): string =>
+  A.join(
+    A.map(error.errors, (detail) => `parse error ${detail.code} at offset ${detail.offset}`),
+    "\n"
+  );
 
 const encodeUnknownResidueReapReport = S.encodeUnknownEffect(ResidueReapReport);
 
@@ -358,8 +363,6 @@ const effectDiagnosticsDirectivePattern = new RegExp(
   "u"
 );
 const effectTsgoDiagnosticPattern = /\b(?:error|warning) TS\d+: .* effect\([^)]+\)/u;
-const EcosystemEffectDiagnosticOffRule = LiteralKit(["missedPipeableOpportunity"]);
-const isEcosystemEffectDiagnosticOffRule = S.is(EcosystemEffectDiagnosticOffRule);
 const TsconfigFileName = S.String.check(S.isPattern(/^tsconfig(?:\..+)?\.json$/u));
 const isTsconfigFileName = S.is(TsconfigFileName);
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
@@ -448,9 +451,7 @@ export class EffectDiagnosticsDirectiveExemption extends S.Opaque<
  * Exactly two entries exist and the tuple type keeps it that way: the root Bun-compat shim,
  * which implements `Bun.*` over node builtins before any Effect runtime exists, and the root
  * Vitest shared config, whose include list is scanned synchronously before any Effect runtime
- * exists. Five dated catalog payload
- * next-line directives are separately admitted until the split public rename PR;
- * they do not admit file-wide disables. Every other `@effect-diagnostics`
+ * exists. No `-next-line` form is admitted anywhere. Every other `@effect-diagnostics`
  * directive in a scanned root (`apps`, `packages`, `tooling`, `infra`, and the
  * repo-root TypeScript files) fails `beep quality tsgo-rules`; a lane that wants a third entry
  * has found a rule-card gap, not a reason to grow this list.
@@ -540,8 +541,12 @@ export class TsgoDisabledRule extends S.Opaque<TsgoDisabledRule, { readonly bran
  * expose one. This repository builds on Effect's `@stability unstable` modules (`effect/http`,
  * `effect/http-api`, `effect/cli`, and friends) on purpose.
  *
- * The import-style rules stay off: named helper imports are deliberate, and
- * barrel imports contradict the dedicated Effect module-path law.
+ * The import-style rules stay off. `preferBarrelImport` contradicts the dedicated Effect
+ * module-path law. `preferNamespaceImport` has no named-import allowlist, so with `effect` in
+ * `namespaceImportPackages` it reports every `pipe`, `flow`, `identity`, `dual` and `constant`
+ * named import from `effect/Function` that the code law requires (2026-10-31 census: 6422
+ * reports in 1998 files, 5125 of them from `effect/Function`); enabling it needs either an
+ * upstream allowlist option or a change to that law.
  *
  * **Example** (Read the disabled rule names)
  *
@@ -579,7 +584,7 @@ export const tsgoDisabledRules: readonly [
   TsgoDisabledRule.make({
     rule: "preferNamespaceImport",
     reason:
-      "Namespace auto-import preferences do not prohibit deliberate named @beep helper and identity imports; enforcing this needs a separate import migration.",
+      "The rule has no named-import allowlist, so it reports the named pipe, flow, identity, dual and constant imports from effect/Function that the code law requires; enabling it needs an upstream allowlist option or a law change.",
   }),
   TsgoDisabledRule.make({
     rule: "preferBarrelImport",
@@ -719,10 +724,10 @@ const decodeEffectTsgoRuleRowOption = S.decodeUnknownOption(EffectTsgoRuleRow);
 const decodeEffectTsgoDiagnosticsTableOption = S.decodeUnknownOption(EffectTsgoDiagnosticsTable);
 
 type QualityScriptEnvironment =
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner;
 type GithubCheckError =
   | QualityScriptCommandError
@@ -813,7 +818,11 @@ const qualityFileContext = Effect.fn("QualityScriptCommands.qualityFileContext")
 
 const runStep = Effect.fn("QualityScriptCommands.runStep")(function* (
   step: QualityTaskStep
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`);
   const exitCode = yield* runToExit({
     command: step.command,
@@ -896,8 +905,11 @@ const runGithubCheckLaneGroup = (
   lanes: ReadonlyArray<GithubCheckLaneSpec>,
   failurePolicy: GithubCheckFailurePolicyType,
   concurrency = githubCheckTierConcurrency("pre-push")
-): Effect.Effect<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> =>
-  runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy, concurrency);
+): Effect.Effect<
+  void,
+  QualityTaskConfigurationError | QualityTaskGroupFailed,
+  QualityScriptEnvironment | Digest.Digest
+> => runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy, concurrency);
 
 const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
   "QualityScriptCommands.runEvidenceOrderedGithubCheckLaneGroup"
@@ -908,7 +920,7 @@ const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
 ): Effect.fn.Return<
   void,
   QualityTaskConfigurationError | QualityTaskGroupFailed,
-  QualityScriptEnvironment | WaveOrder
+  QualityScriptEnvironment | WaveOrder | Digest.Digest
 > {
   const waveOrder = yield* WaveOrder;
   yield* runQualityTaskGithubCheckLaneWaves(label, githubCheckOrderedLaneWaves(waveOrder.order(lanes)), failurePolicy);
@@ -922,7 +934,7 @@ const collectOutput = Effect.fn("QualityScriptCommands.collectOutput")(function*
     readonly exitCode: number;
   },
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const result = yield* runCaptured({
     command: step.command,
@@ -946,7 +958,11 @@ const collectOutput = Effect.fn("QualityScriptCommands.collectOutput")(function*
 
 const collectSuccessfulOutput = Effect.fn("QualityScriptCommands.collectSuccessfulOutput")(function* (
   step: QualityTaskStep
-): Effect.fn.Return<string, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  string,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* collectOutput(step);
 
   if (result.exitCode !== 0) {
@@ -965,7 +981,11 @@ const isTruthyMainPush = Effect.fn("QualityScriptCommands.isTruthyMainPush")(fun
 
 const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function* (
   repoRoot: string
-): Effect.fn.Return<string, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  string,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   return yield* collectSuccessfulOutput(
     QualityTaskStep.make({
       label: "git:branch",
@@ -978,7 +998,11 @@ const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function*
 
 const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* Console.log("[github-checks] refreshing origin/main");
   const shallow = yield* collectSuccessfulOutput(
     QualityTaskStep.make({
@@ -1010,7 +1034,7 @@ const githubCheckChangesetStatusLanes = Effect.fn("QualityScriptCommands.githubC
 ): Effect.fn.Return<
   ReadonlyArray<GithubCheckLaneSpec>,
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (yield* isTruthyMainPush()) {
     yield* Console.log("[github-checks] quality: skipped changeset status on main push");
@@ -1054,7 +1078,7 @@ export const runBunAudit = Effect.fn("QualityScriptCommands.runBunAudit")(functi
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1086,7 +1110,11 @@ export const runBunAudit = Effect.fn("QualityScriptCommands.runBunAudit")(functi
 const runRepoSanity = Effect.fn("QualityScriptCommands.runRepoSanity")(function* (
   repoRoot: string,
   failurePolicy: GithubCheckFailurePolicyType
-): Effect.fn.Return<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> {
+): Effect.fn.Return<
+  void,
+  QualityTaskConfigurationError | QualityTaskGroupFailed,
+  QualityScriptEnvironment | Digest.Digest
+> {
   yield* runGithubCheckLaneGroup("github-checks:repo-sanity", githubCheckRepoSanityLanes(repoRoot), failurePolicy);
 });
 
@@ -1096,7 +1124,7 @@ const runQuality = Effect.fn("QualityScriptCommands.runQuality")(function* (
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
-  QualityScriptEnvironment
+  QualityScriptEnvironment | Digest.Digest
 > {
   const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
   yield* runGithubCheckLaneGroup(
@@ -1112,7 +1140,7 @@ const runPrePushChecks = Effect.fn("QualityScriptCommands.runPrePushChecks")(fun
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
-  QualityScriptEnvironment
+  QualityScriptEnvironment | Digest.Digest
 > {
   const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
   yield* runEvidenceOrderedGithubCheckLaneGroup(
@@ -1133,7 +1161,7 @@ const runCheapGates = Effect.fn("QualityScriptCommands.runCheapGates")(function*
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
-  QualityScriptEnvironment
+  QualityScriptEnvironment | Digest.Digest
 > {
   const changesetStatusLanes = A.map(
     yield* githubCheckChangesetStatusLanes(repoRoot),
@@ -1230,7 +1258,11 @@ export const devQualityStepsForTesting: {
 const runDevQuality = Effect.fn("QualityScriptCommands.runDevQuality")(function* (
   repoRoot: string,
   options: { readonly base: string; readonly head: string; readonly surface: boolean }
-): Effect.fn.Return<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> {
+): Effect.fn.Return<
+  void,
+  QualityTaskConfigurationError | QualityTaskGroupFailed,
+  QualityScriptEnvironment | Digest.Digest
+> {
   yield* runQualityTaskStreamingStepGroup("quality:dev", devQualityStepsForTesting(repoRoot, options));
 });
 
@@ -1288,7 +1320,11 @@ const runReviewFix = Effect.fn("QualityScriptCommands.runReviewFix")(function* (
 
 const runSecretScan = Effect.fn("QualityScriptCommands.runSecretScan")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const mergeBase = yield* collectSuccessfulOutput(
     QualityTaskStep.make({
       label: "secrets:merge-base",
@@ -1315,7 +1351,11 @@ const runSecretScan = Effect.fn("QualityScriptCommands.runSecretScan")(function*
 
 const runSecurityScan = Effect.fn("QualityScriptCommands.runSecurityScan")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* Console.log("[github-checks] security: osv scan");
   yield* runFixedStep(repoRoot, "security:osv-scan", "docker", [
     "run",
@@ -1330,15 +1370,42 @@ const runSecurityScan = Effect.fn("QualityScriptCommands.runSecurityScan")(funct
   ]);
 });
 
+// Paired `ruleid:`/`ok:` cases for every rule in .semgrep/first-party.yml.
+const firstPartySemgrepFixturePath =
+  "goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts";
+
 const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
   repoRoot: string
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  // Rule tests run on every invocation, before the changed-file filter: they
+  // prove the first-party rules still match their `ruleid:` cases and skip
+  // their `ok:` cases under the current (unpinned) Semgrep image. Explicit
+  // targets bypass .semgrepignore, which keeps the fixture out of the scan.
+  yield* Console.log("[github-checks] sast: semgrep rule tests");
+  yield* runFixedStep(repoRoot, "sast:semgrep-rule-tests", "docker", [
+    "run",
+    "--rm",
+    "-e",
+    "SEMGREP_SEND_METRICS=off",
+    "-v",
+    `${repoRoot}:/src`,
+    "-w",
+    "/src",
+    "semgrep/semgrep",
+    "semgrep",
+    "--test",
+    "--disable-version-check",
+    "--config",
+    "/src/.semgrep/first-party.yml",
+    `/src/${firstPartySemgrepFixturePath}`,
+  ]);
+
   const trackedFilesOutput = yield* collectSuccessfulOutput(
     QualityTaskStep.make({
       label: "sast:changed-files",
@@ -1440,7 +1507,11 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
 
 const runNixChecks = Effect.fn("QualityScriptCommands.runNixChecks")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* Console.log("[github-checks] nix: flake check");
   yield* runFixedStep(repoRoot, "nix:flake-check", "nix", [
     "--option",
@@ -1481,7 +1552,7 @@ const runNixChecks = Effect.fn("QualityScriptCommands.runNixChecks")(function* (
 export const runGithubChecks = Effect.fn("QualityScriptCommands.runGithubChecks")(function* (
   mode: GithubCheckMode,
   options: GithubCheckRunOptions = {}
-): Effect.fn.Return<void, GithubCheckError, QualityScriptEnvironment> {
+): Effect.fn.Return<void, GithubCheckError, QualityScriptEnvironment | Digest.Digest> {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const failurePolicy = options.failurePolicy ?? GithubCheckFailurePolicy.Enum["fail-fast"];
 
@@ -1509,25 +1580,17 @@ const readGithubChecksFallowFeatureMatrix = Effect.fn("QualityScriptCommands.rea
     const text = yield* fs
       .readFileString(absolutePath)
       .pipe(QualityScriptCommandError.mapError(`Failed to read ${featureMatrixPath}.`));
-    const parseErrors: Array<ParseError> = [];
-    const parsed = parse(text, parseErrors, {
-      allowTrailingComma: true,
-      disallowComments: false,
-    });
+    const parseResult = Jsonc.parseResult(text);
 
-    if (A.isReadonlyArrayNonEmpty(parseErrors)) {
+    if (Result.isFailure(parseResult)) {
       yield* Console.error(`[github-checks] failed to parse ${featureMatrixPath}`);
-      yield* Console.error(
-        A.join(
-          A.map(parseErrors, (error) => `parse error ${error.error} at offset ${error.offset}`),
-          "\n"
-        )
-      );
+      yield* parseResult.failure.pipe(parseErrorLines, Console.error);
       return yield* QualityScriptCommandError.make({
         message: `${featureMatrixPath} is not valid JSONC.`,
         exitCode: 1,
       });
     }
+    const parsed = parseResult.success;
 
     return yield* decodeGithubChecksFallowFeatureMatrix(parsed).pipe(
       QualityScriptCommandError.mapError(`Failed to decode ${featureMatrixPath}.`)
@@ -1626,7 +1689,7 @@ const runTestTsgoPackageGroup = Effect.fn("QualityScriptCommands.runTestTsgoPack
 ): Effect.fn.Return<
   TestTsgoPackageResult,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1983,11 +2046,7 @@ const extractEffectTsgoReadmeRuleNames = flow(
 
 // A README whose example config no longer parses cleanly must read as "no catalog", not as
 // whatever partial record the tolerant parser recovered before the first error.
-const parseEffectTsgoExampleConfig = (jsonc: string): O.Option<unknown> => {
-  const errors: Array<ParseError> = [];
-  const config: unknown = parse(jsonc, errors, { allowTrailingComma: true, disallowComments: false });
-  return A.isReadonlyArrayEmpty(errors) ? O.some(config) : O.none();
-};
+const parseEffectTsgoExampleConfig = (jsonc: string): O.Option<unknown> => Result.getSuccess(Jsonc.parseResult(jsonc));
 
 const extractEffectTsgoExampleConfigFragment = (readme: string): O.Option<string> => {
   const start = O.getOrElse(Str.indexOf(effectTsgoExampleConfigStartMarker)(readme), constant(-1));
@@ -2271,16 +2330,12 @@ const collectEffectDrizzleSeverityDiffDiagnostics = (
   const mismatched = pipe(
     baseRuleNames,
     A.filter((ruleName) => {
-      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
-        ? "off"
-        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
+      const expectedSeverity = pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
       const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
       return actualSeverity !== undefined && actualSeverity !== expectedSeverity;
     }),
     A.map((ruleName) => {
-      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
-        ? "off"
-        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
+      const expectedSeverity = pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
       const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
       return `${file}: Effect Drizzle diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`;
     })
@@ -2351,16 +2406,7 @@ const collectPluginMismatchDiagnostics = (
   basePlugin: Readonly<Record<string, unknown>>,
   baseSeverity: Readonly<Record<string, unknown>>
 ): ReadonlyArray<string> => {
-  const expectedPlugin = isDirectEffectDrizzleTsconfig(file)
-    ? {
-        ...basePlugin,
-        diagnosticSeverity: {
-          ...baseSeverity,
-          missedPipeableOpportunity: "off",
-        },
-      }
-    : basePlugin;
-  if (Equal.equals(plugin, expectedPlugin)) {
+  if (Equal.equals(plugin, basePlugin)) {
     return A.empty();
   }
   if (!isDirectEffectDrizzleTsconfig(file)) {
@@ -2374,7 +2420,7 @@ const collectPluginMismatchDiagnostics = (
   return A.isReadonlyArrayNonEmpty(severityDiagnostics)
     ? severityDiagnostics
     : A.of(
-        `${file}: Effect Drizzle @effect/language-service profile differs from tsconfig.base.json beyond missedPipeableOpportunity`
+        `${file}: Effect Drizzle @effect/language-service profile differs from tsconfig.base.json beyond diagnosticSeverity`
       );
 };
 
@@ -2580,7 +2626,7 @@ const collectGitVisiblePaths = Effect.fn("QualityScriptCommands.collectGitVisibl
 ): Effect.fn.Return<
   HashSet.HashSet<string>,
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const visiblePaths = HashSet.fromIterable(
     gitPathListFromNulOutput(
@@ -2643,14 +2689,14 @@ const collectWorkspaceTsconfigProfileDiagnostics = Effect.fn(
       const text = yield* fs
         .readFileString(filePath)
         .pipe(QualityScriptCommandError.mapError(`Failed to read ${filePath}.`));
-      const errors: Array<ParseError> = [];
-      const parsed = parse(text, errors, { allowTrailingComma: true, disallowComments: false });
-      if (A.isReadonlyArrayNonEmpty(errors)) {
-        return yield* QualityScriptCommandError.make({
-          message: `${normalizePath(path.relative(repoRoot, filePath))} is not valid JSONC.`,
-          exitCode: 1,
-        });
-      }
+      const parsed = yield* Jsonc.parse(text).pipe(
+        Effect.mapError(() =>
+          QualityScriptCommandError.make({
+            message: `${normalizePath(path.relative(repoRoot, filePath))} is not valid JSONC.`,
+            exitCode: 1,
+          })
+        )
+      );
       return [normalizePath(path.relative(repoRoot, filePath)), parsed] as const;
     }),
     { concurrency: 8 }
@@ -2675,13 +2721,8 @@ const collectDisabledEffectDiagnosticDirectives = Effect.fn(
   const scannedFiles = yield* Effect.forEach(
     effectDiagnosticsDirectiveScannedRoots,
     (root) =>
-      collectFiles(
-        path.join(repoRoot, root),
-        isScannedExtension,
-        (normalized, name) =>
-          A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name) ||
-          name === ".storybook" ||
-          Str.includes("/apps/storybook/")(normalized)
+      collectFiles(path.join(repoRoot, root), isScannedExtension, (_normalized, name) =>
+        A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name)
       ),
     { concurrency: 1 }
   ).pipe(
@@ -2835,52 +2876,35 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   const configText = yield* fs
     .readFileString(tsconfigPath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${tsconfigPath}.`));
-  const parseErrors: Array<ParseError> = [];
-  const config = parse(configText, parseErrors, {
-    allowTrailingComma: true,
-    disallowComments: false,
-  });
+  const configResult = Jsonc.parseResult(configText);
 
   const rootTsconfigText = yield* fs
     .readFileString(rootTsconfigPath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${rootTsconfigPath}.`));
-  const rootTsconfigParseErrors: Array<ParseError> = [];
-  const rootTsconfig = parse(rootTsconfigText, rootTsconfigParseErrors, {
-    allowTrailingComma: true,
-    disallowComments: false,
-  });
+  const rootTsconfigResult = Jsonc.parseResult(rootTsconfigText);
   const generatedVitestAliasesText = yield* fs
     .readFileString(generatedVitestAliasesPath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${generatedVitestAliasesPath}.`));
-  const generatedVitestAliasesParseErrors: Array<ParseError> = [];
-  const generatedVitestAliases = parse(generatedVitestAliasesText, generatedVitestAliasesParseErrors, {
-    allowTrailingComma: false,
-    disallowComments: true,
-  });
+  const generatedVitestAliasesResult = Jsonc.parseResult(generatedVitestAliasesText, strictJsonWithoutComments);
 
-  if (A.isReadonlyArrayNonEmpty(parseErrors)) {
+  if (Result.isFailure(configResult)) {
     yield* Console.error("[lint:tsgo-rules] failed to parse tsconfig.base.json");
-    yield* Console.error(
-      A.join(
-        A.map(parseErrors, (error) => `parse error ${error.error} at offset ${error.offset}`),
-        "\n"
-      )
-    );
+    yield* configResult.failure.pipe(parseErrorLines, Console.error);
     return yield* QualityScriptCommandError.make({
       message: "tsconfig.base.json is not valid JSONC.",
       exitCode: 1,
     });
   }
 
-  if (
-    A.isReadonlyArrayNonEmpty(rootTsconfigParseErrors) ||
-    A.isReadonlyArrayNonEmpty(generatedVitestAliasesParseErrors)
-  ) {
+  if (Result.isFailure(rootTsconfigResult) || Result.isFailure(generatedVitestAliasesResult)) {
     return yield* QualityScriptCommandError.make({
       message: "Root tsconfig or generated Vitest aliases are not valid JSONC.",
       exitCode: 1,
     });
   }
+  const config = configResult.success;
+  const rootTsconfig = rootTsconfigResult.success;
+  const generatedVitestAliases = generatedVitestAliasesResult.success;
 
   const rootEffectPlugins = findEffectLanguageServicePlugins(config);
   if (A.length(rootEffectPlugins) !== 1) {
@@ -3321,7 +3345,7 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
@@ -3386,7 +3410,7 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 export const runJSDocQuality = Effect.fn("QualityScriptCommands.runJSDocQuality")(function* (): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
 > {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
 
@@ -3599,124 +3623,11 @@ const jsdocRatchetCommand = Command.make(
     )
 ).pipe(Command.withDescription("Run JSDoc inventory totals as a fail-on-growth regression-baseline gate"));
 
-const jsdocMigrateExtractCommand = Command.make(
-  "extract",
-  {
-    output: Flag.String("output").pipe(
-      Flag.withDescription("extract.jsonl output path; defaults to the goal packet data directory"),
-      Flag.optional
-    ),
-  },
-  ({ output }) =>
-    runQualityProgram(
-      runJSDocMigrateExtract(RunJSDocMigrateExtractOptions.make({ ...OptionUtils.getSomesStruct({ output }) }))
-    )
-).pipe(Command.withDescription("Scan the corpus and emit one extract.jsonl record per legacy doc block"));
-
-const jsdocMigrateTitlesCommand = Command.make(
-  "titles",
-  {
-    extract: Flag.String("extract").pipe(Flag.withDescription("extract.jsonl input path"), Flag.optional),
-    titles: Flag.String("titles").pipe(Flag.withDescription("titles.jsonl append path"), Flag.optional),
-    proxyUrl: Flag.String("proxy-url").pipe(
-      Flag.withDescription("Local CLIProxyAPI base URL; never the xAI API"),
-      Flag.optional
-    ),
-    model: Flag.String("model").pipe(Flag.withDescription("Proxy model id"), Flag.optional),
-    limitFiles: Flag.Int("limit-files").pipe(
-      Flag.withDescription("Process at most this many pending files this run"),
-      Flag.optional
-    ),
-    concurrency: Flag.Int("concurrency").pipe(
-      Flag.withDescription("Concurrent proxy requests (one per file); default 12"),
-      Flag.optional
-    ),
-  },
-  ({ concurrency, extract, limitFiles, model, proxyUrl, titles }) =>
-    FetchHttpClient.layer.pipe(
-      Layer.build,
-      Effect.flatMap((context) =>
-        Effect.provideContext(
-          runJSDocMigrateTitles(
-            RunJSDocMigrateTitlesOptions.make({
-              ...OptionUtils.getSomesStruct({ extract, titles, proxyUrl, model, limitFiles, concurrency }),
-            })
-          ),
-          context
-        )
-      ),
-      Effect.scoped,
-      runQualityProgram
-    )
-).pipe(Command.withDescription("Append per-anchor title records from the local model proxy (data only)"));
-
-const jsdocMigrateApplyCommand = Command.make(
-  "apply",
-  {
-    titles: Flag.String("titles").pipe(Flag.withDescription("titles.jsonl input path"), Flag.optional),
-    overrides: Flag.String("overrides").pipe(Flag.withDescription("overrides.jsonl input path"), Flag.optional),
-    manifest: Flag.String("manifest").pipe(Flag.withDescription("Proof manifest output path"), Flag.optional),
-    dryRun: Flag.Boolean("dry-run").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Report outcomes without writing any file")
-    ),
-    syntheticTitles: Flag.Boolean("synthetic-titles").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Generate in-memory placeholder titles for the residue measurement")
-    ),
-  },
-  ({ dryRun, manifest, overrides, syntheticTitles, titles }) =>
-    runQualityProgram(
-      runJSDocMigrateApply(
-        RunJSDocMigrateApplyOptions.make({
-          dryRun,
-          syntheticTitles,
-          ...OptionUtils.getSomesStruct({ titles, overrides, manifest }),
-        })
-      )
-    )
-).pipe(Command.withDescription("Rewrite affected blocks text-surgically; fail closed on binding doubt"));
-
-const jsdocMigrateVerifyCommand = Command.make(
-  "verify",
-  {
-    extract: Flag.String("extract").pipe(Flag.withDescription("Frozen extract.jsonl input path"), Flag.optional),
-    titles: Flag.String("titles").pipe(Flag.withDescription("titles.jsonl input path"), Flag.optional),
-    overrides: Flag.String("overrides").pipe(Flag.withDescription("overrides.jsonl input path"), Flag.optional),
-    manifest: Flag.String("manifest").pipe(Flag.withDescription("Proof manifest output path"), Flag.optional),
-  },
-  ({ extract, manifest, overrides, titles }) =>
-    runQualityProgram(
-      runJSDocMigrateVerify(
-        RunJSDocMigrateVerifyOptions.make({ ...OptionUtils.getSomesStruct({ extract, titles, overrides, manifest }) })
-      )
-    )
-).pipe(Command.withDescription("Prove conservation between frozen originals and the current tree"));
-
-const jsdocMigrateCommand = Command.make("jsdoc-migrate", {}, () =>
-  printLines([
-    "JSDoc carrier-migration commands:",
-    "- bun run beep quality jsdoc-migrate extract",
-    "- bun run beep quality jsdoc-migrate titles --limit-files 5",
-    "- bun run beep quality jsdoc-migrate apply --dry-run --synthetic-titles",
-    "- bun run beep quality jsdoc-migrate apply",
-    "- bun run beep quality jsdoc-migrate verify",
-  ])
-).pipe(
-  Command.withDescription("JSDoc legacy-carrier migration pipeline (extract, titles, apply, verify)"),
-  Command.withSubcommands([
-    jsdocMigrateExtractCommand,
-    jsdocMigrateTitlesCommand,
-    jsdocMigrateApplyCommand,
-    jsdocMigrateVerifyCommand,
-  ])
-);
-
 const cachePolicyCommand = Command.make("cache-policy", {}, () =>
   findRepoRoot().pipe(Effect.flatMap((root) => runCachePolicyAudit(root, false)))
 ).pipe(
   Command.withDescription("Enforce Cache's reviewed qualification policy without writing qualification state"),
-  Command.provide(CacheQualificationLive)
+  Command.provide(CacheQualificationLive.pipe(Layer.provideMerge(CacheHostedProducerVerifierLive)))
 );
 
 const turboConfigProofCommand = Command.make(
@@ -4405,8 +4316,6 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality jsdoc-quality",
     "- bun run beep quality jsdoc-ratchet",
     "- bun run beep quality jsdoc-ratchet --write-baseline",
-    "- bun run beep quality jsdoc-migrate extract",
-    "- bun run beep quality jsdoc-migrate apply --dry-run --synthetic-titles",
     "- bun run beep quality turbo-config-proof --base origin/main --head HEAD",
     "- bun run beep quality profile detect",
     "- bun run beep quality tmpfs-reap [--apply] [--json]",
@@ -4431,7 +4340,6 @@ export const qualityCommand = Command.make("quality", {}, () =>
     jsdocInventoryCommand,
     jsdocQualityCommand,
     jsdocRatchetCommand,
-    jsdocMigrateCommand,
     turboConfigProofCommand,
     cachePolicyCommand,
     qualityProfileCommand,

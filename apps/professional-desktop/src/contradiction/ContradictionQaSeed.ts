@@ -85,7 +85,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { PosInt } from "../internal/PosInt.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const decodeLogicalEdgeIdentity = S.decodeEffect(LogicalEdgeIdentity);
 
@@ -1136,7 +1136,7 @@ export const ContradictionQaSeedLive: Layer.Layer<
   never,
   never,
   | ContradictionTriageRepository
-  | Crypto.Crypto
+  | Digest.Digest
   | EdgeAuthorityRepository
   | FileSystem.FileSystem
   | Path.Path

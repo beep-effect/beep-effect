@@ -20,6 +20,7 @@ import * as Rdf from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import { BunServices } from "@effect/platform-bun";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -298,7 +299,7 @@ export const TestLayers = Layer.mergeAll(
   Grounder.Test,
   LlmControlTestLayers
 ).pipe(
-  Layer.provideMerge(BunServices.layer),
+  Layer.provideMerge(Layer.merge(BunServices.layer, BunCrypto.layer)),
   Layer.provideMerge(ConfigServiceDefault),
   Layer.provideMerge(ConfigProvider.layer(TestConfigProvider))
 );

@@ -1,0 +1,20 @@
+{
+  "previous": "988ed33bad5e93aade662229c2fdb56fad30059183afce7f1495a7966532e6d6",
+  "review": {
+    "reviewer": "Codex (PR #2386, source-bound producer quality-closure review)",
+    "reason": "Acknowledge exactly four added inputs in the generated quality policy seal and its turbo.json source after introducing the protected-producer verifier layer; preserve all other settings, reviews, scope, historical profile/epoch and qualification state.",
+    "basis": {
+      "path": "goals/turborepo-cache-trust-observability/research/producer-quality-closure-baseline-review-2026-10-31.md",
+      "sha256": "18137f5baea027e6e34f34ea0450d770732c363e8cfa779089397fd3f20139f3"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

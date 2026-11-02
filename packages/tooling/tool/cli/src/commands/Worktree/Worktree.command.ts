@@ -53,7 +53,7 @@ import {
   WorktreeRemovalService,
   WorktreeRemovalServiceLive,
 } from "./Worktree.service.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import type { WorktreeInotifyWatcher, WorktreeRemovalReceipt, WorktreeUnpushedInspection } from "./Worktree.schemas.ts";
@@ -418,7 +418,7 @@ const runStreamingStep = Effect.fn("Worktree.runStreamingStep")(function* (
   args: ReadonlyArray<string>,
   cwd: string,
   failMessage: string
-): Effect.fn.Return<void, WorktreeCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, WorktreeCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const commandText = A.join([command, ...args], " ");
   const result = yield* runRepoCommandStreamingCapture(command, args, cwd).pipe(
     Effect.mapError(WorktreeCommandError.new(failMessage, { command: commandText }))
@@ -452,7 +452,7 @@ export const resolveWorktreeContext = Effect.fn("Worktree.resolveWorktreeContext
 ): Effect.fn.Return<
   WorktreeContext,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const currentRoot = yield* findRepoRoot(startFrom).pipe(
@@ -514,7 +514,7 @@ export const addWorktree = Effect.fn("Worktree.addWorktree")(function* (
 ): Effect.fn.Return<
   string,
   WorktreeCommandError | WorktreeExistsError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -624,7 +624,11 @@ const inspectWorktreeEntry = Effect.fn("Worktree.inspectWorktreeEntry")(function
 ): Effect.fn.Return<
   WorktreeDoctorEntry,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | WorktreeRemovalService
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -685,7 +689,11 @@ export const worktreeDoctorReportForContext = Effect.fn("Worktree.worktreeDoctor
 ): Effect.fn.Return<
   WorktreeDoctorReport,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | WorktreeRemovalService
 > {
   const path = yield* Path.Path;
   const pruneOutput = yield* runWorktreeGitCapture(
@@ -878,7 +886,7 @@ const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: 
 }): Effect.fn.Return<
   void,
   WorktreeCommandError | WorktreeExistsError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const context = yield* resolveWorktreeContext();
   const branch = O.getOrElse(options.branch, () => defaultWorktreeBranch(options.name));
@@ -914,7 +922,7 @@ const renderUnpushedInspection = Effect.fn("Worktree.renderUnpushedInspection")(
   yield* O.match(inspection, {
     onNone: () => Effect.void,
     onSome: ({ baseRange, upstream }) =>
-      WorktreeUpstreamState.match<Effect.Effect<void>>(upstream, {
+      WorktreeUpstreamState.match(upstream, {
         unset: () => Effect.void,
         live: () => Effect.void,
         pruned: ({ ref, verdict }) =>
@@ -1054,7 +1062,11 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
 }): Effect.fn.Return<
   void,
   WorktreeCommandError | WorktreeDirtyError | WorktreePreservationError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | WorktreeRemovalService
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1119,7 +1131,11 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
 const runWorktreeDoctor = Effect.fn("Worktree.runWorktreeDoctor")(function* (): Effect.fn.Return<
   void,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | WorktreeRemovalService
 > {
   const context = yield* resolveWorktreeContext();
   const report = yield* worktreeDoctorReportForContext(context);

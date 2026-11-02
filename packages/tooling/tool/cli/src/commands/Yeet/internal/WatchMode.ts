@@ -112,7 +112,8 @@ import {
   yeetWatchCommentEvent,
   yeetWatchEndReason,
 } from "./WatchStream.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -251,7 +252,7 @@ const checksRead = Effect.fn("Yeet.checksRead")(function* (
 ): Effect.fn.Return<
   ReadonlyArray<WatchCheckRow>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const result = yield* runRepoCommandCapture(
     "gh",
@@ -352,8 +353,10 @@ const reviewThreadsRead = Effect.fn("Yeet.reviewThreadsRead")(function* (
       });
     }
     const node = yield* decodeThreadsDocument(result.output).pipe(
-      Effect.map((document) => document.data.node),
-      Effect.mapError(YeetCommandError.new("Failed to decode PR review threads JSON for yeet watch."))
+      Effect.mapBoth({
+        onFailure: YeetCommandError.new("Failed to decode PR review threads JSON for yeet watch."),
+        onSuccess: (document) => document.data.node,
+      })
     );
     if (node === null) return { pullRequestAuthor, nodes };
     pullRequestAuthor = O.orElse(pullRequestAuthor, () => pullRequestAuthorLogin(node.author));
@@ -416,7 +419,11 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
 ): Effect.fn.Return<
   YeetWatchSnapshot,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | Digest.Digest
 > {
   const viewResult = yield* runRepoCommandCapture(
     "gh",
@@ -664,7 +671,7 @@ const convergeYeetWatchSnapshot = (
   context: RepoRunContext,
   snapshot: YeetWatchSnapshot,
   at: string
-): Effect.Effect<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =>
+): Effect.Effect<void, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest> =>
   convergeYeetInbox(
     context,
     YeetConvergeObservation.make({
@@ -723,7 +730,11 @@ interface WatchCommentSession {
 const openWatchCommentSession = Effect.fn("Yeet.openWatchCommentSession")(function* (
   context: RepoRunContext,
   pullRequestNumber: number
-): Effect.fn.Return<WatchCommentSession, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  WatchCommentSession,
+  never,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   return {
     failuresRef: yield* Ref.make(0),
     stoppedRef: yield* Ref.make(false),
@@ -744,7 +755,11 @@ const emitWatchCommentRows = Effect.fn("Yeet.emitWatchCommentRows")(function* (
 ): Effect.fn.Return<
   number,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | Digest.Digest
 > {
   if (yield* Ref.get(session.stoppedRef)) {
     return 0;
@@ -823,7 +838,11 @@ const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
   emptyPolls: number,
   settle: (
     snapshot: YeetWatchSnapshot
-  ) => Effect.Effect<YeetWatchSnapshot, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>
+  ) => Effect.Effect<
+    YeetWatchSnapshot,
+    never,
+    Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  >
 ) {
   const polled = yield* collectYeetWatchSnapshot(context).pipe(
     Effect.asSome,
@@ -982,7 +1001,11 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
 ): Effect.fn.Return<
   YeetWatchEnded,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | Digest.Digest
 > {
   const untilEvent = config.untilEvent === true;
   let head = O.none<WatchSettleState>();

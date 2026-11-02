@@ -2,7 +2,7 @@ import { lawsCommand } from "@beep/repo-cli/commands/Laws";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -14,7 +14,7 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
-const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const write = Effect.fn("NativeRuntimePrefixTest.write")(function* (root: string, name: string, source: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

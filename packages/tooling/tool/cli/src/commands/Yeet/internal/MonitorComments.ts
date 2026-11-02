@@ -44,7 +44,10 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import { parseYeetReviewBodySignal, YeetReviewBodySignal, YeetReviewBodySignalInput } from "./ReviewBodySignal.ts";
-import type * as Crypto from "effect/Crypto";
+import { ReviewLaneReviewRow, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
+import { recordYeetReviewLaneRows, yeetReviewerIdentity } from "./ReviewLane.ts";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -194,6 +197,8 @@ export class YeetMonitorIssueComment extends S.Opaque<YeetMonitorIssueComment, {
  * rather than `createdAt` because that is the field GitHub advances when the
  * review leaves the pending state, and a review drafted hours earlier must not
  * appear to predate the watermark that was written while it was still pending.
+ * `commitId` is the head the review was submitted against, when GitHub still
+ * pins it to one: the review lane counts a round per reviewed head (ruling 81).
  *
  * **Example** (Describe a submitted review)
  *
@@ -225,6 +230,7 @@ export class YeetMonitorReviewBody extends S.Opaque<YeetMonitorReviewBody, { rea
     submittedAt: S.String,
     url: S.String,
     authorType: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    commitId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("YeetMonitorReviewBody", {
       description: "Normalized GitHub pull request review body streamed during Yeet monitoring.",
@@ -416,6 +422,7 @@ export class GhRestIssueComment extends S.Opaque<GhRestIssueComment, { readonly 
 export class GhRestReview extends S.Opaque<GhRestReview, { readonly brand: unique symbol }>()(
   S.Struct({
     body: S.NullOr(S.String),
+    commit_id: S.NullOr(S.String).pipe(S.optionalKey),
     html_url: S.String,
     id: S.Finite,
     state: S.String,
@@ -671,7 +678,7 @@ export const yeetMonitorCommentStateFileName = (consumer: YeetMonitorCommentCons
 export const yeetMonitorCommentStatePath = Effect.fn("YeetMonitor.commentStatePath")(function* (
   context: RepoRunContext,
   consumer: YeetMonitorCommentConsumer = YeetMonitorCommentConsumer.Enum.shared
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | Path.Path> {
+): Effect.fn.Return<string, YeetCommandError, Path.Path | Digest.Digest> {
   return yield* runArtifactPathForContext(context, yeetMonitorCommentStateFileName(consumer));
 });
 
@@ -799,6 +806,7 @@ const normalizeReviewBody = (review: GhRestReview): O.Option<YeetMonitorReviewBo
             author: authorLogin(review.user),
             authorType: authorType(review.user),
             body,
+            commitId: O.fromNullishOr(review.commit_id),
             id: review.id,
             signal: parseYeetReviewBodySignal(
               YeetReviewBodySignalInput.make({ authorLogin: authorLogin(review.user), body })
@@ -811,6 +819,45 @@ const normalizeReviewBody = (review: GhRestReview): O.Option<YeetMonitorReviewBo
       )
     )
   );
+
+// Every submitted review is a review lane fact (ruling 81), body or not: the
+// stream prints nothing for a body-less approval, but the ledger must count
+// it as a review of that head. A pending review has no submission instant and
+// is not an event yet.
+const reviewLaneReviewRow =
+  (context: RepoRunContext, prNumber: number, recordedAt: string) =>
+  (review: GhRestReview): O.Option<ReviewLaneReviewRow> =>
+    O.map(O.fromNullishOr(review.submitted_at), (submittedAt) =>
+      ReviewLaneReviewRow.make({
+        schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
+        prNumber,
+        branch: context.branch,
+        recordedAt,
+        reviewId: review.id,
+        reviewer: yeetReviewerIdentity(authorLogin(review.user), authorType(review.user)),
+        commitSha: O.fromNullishOr(review.commit_id),
+        state: review.state,
+        submittedAt,
+      })
+    );
+
+// The reviews collection returns every review on each poll, so the ledger is
+// kept by union: rows the ledger already holds are dropped by the recorder,
+// and the fold deduplicates by review id whatever reaches the file.
+const recordReviewLaneReviews = Effect.fn("YeetMonitor.recordReviewLaneReviews")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  reviews: ReadonlyArray<GhRestReview>
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+  if (A.isReadonlyArrayEmpty(reviews)) {
+    return;
+  }
+  const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  yield* recordYeetReviewLaneRows(
+    context.repoRoot,
+    A.getSomes(A.map(reviews, reviewLaneReviewRow(context, prNumber, recordedAt)))
+  );
+});
 
 /**
  * Review-body normalizer exposed through the source-only Yeet test kit.
@@ -1090,7 +1137,7 @@ export const salvageYeetMonitorClippedJson = salvageClippedJsonArray;
 export const readYeetMonitorActingLogin = Effect.fn("YeetMonitor.readActingLogin")(function* (
   context: Pick<RepoRunContext, "repoRoot">,
   capture: typeof runRepoCommandCapture = runRepoCommandCapture
-): Effect.fn.Return<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
   return yield* capture("gh", ["api", "user", "--jq", ".login"], context.repoRoot).pipe(
     Effect.map((result) =>
       result.exitCode === 0 && !result.truncated
@@ -1109,7 +1156,11 @@ const fetchComments = Effect.fn("YeetMonitor.fetchComments")(function* <Comment>
   endpoint: string,
   since: O.Option<string>,
   decode: (text: string) => Effect.Effect<ReadonlyArray<Comment>, S.SchemaError>
-): Effect.fn.Return<ReadonlyArray<Comment>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<Comment>,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
   const result = yield* runRepoCommandCapture(
     "gh",
     [
@@ -1184,7 +1235,7 @@ export const loadYeetMonitorCommentWatermark = Effect.fn("YeetMonitor.loadCommen
   context: RepoRunContext,
   pullRequestNumber: number,
   consumer: YeetMonitorCommentConsumer = YeetMonitorCommentConsumer.Enum.shared
-): Effect.fn.Return<O.Option<YeetMonitorCommentWatermark>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<O.Option<YeetMonitorCommentWatermark>, never, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   const statePath = yield* yeetMonitorCommentStatePath(context, consumer).pipe(Effect.option);
   if (O.isNone(statePath)) return O.none();
@@ -1220,7 +1271,7 @@ const writeCommentState = Effect.fn("YeetMonitor.writeCommentState")(function* (
   pullRequestNumber: number,
   watermark: YeetMonitorCommentWatermark,
   consumer: YeetMonitorCommentConsumer
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const statePath = yield* yeetMonitorCommentStatePath(context, consumer);
   const updatedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber, consumer);
@@ -1262,7 +1313,7 @@ const persistCommentState = (
   pullRequestNumber: number,
   watermark: YeetMonitorCommentWatermark,
   consumer: YeetMonitorCommentConsumer
-): Effect.Effect<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =>
+): Effect.Effect<void, never, FileSystem.FileSystem | Path.Path | Digest.Digest> =>
   writeCommentState(context, pullRequestNumber, watermark, consumer).pipe(
     Effect.catch((error) => Console.warn(renderYeetMonitorCommentStateWarning(error.message)))
   );
@@ -1279,6 +1330,13 @@ const persistCommentState = (
  * {@link acknowledgeYeetMonitorComments}; keeping that order prevents a
  * cancellation or encoding failure from persisting past a comment that was
  * never actually surfaced.
+ *
+ * The reviews the poll read are also recorded in the checkout's review lane
+ * ledger (ruling 81), every one of them, body or not: the ledger is the
+ * measurement's source, the stream is the operator's, and a body-less
+ * approval belongs in the first and not the second. Recording is best effort
+ * and keyed by review id, so a poll that reads the same reviews again writes
+ * nothing new.
  *
  * **Example** (Build the collector effect)
  *
@@ -1302,7 +1360,7 @@ export const collectNewYeetMonitorComments = Effect.fn("YeetMonitor.collectNewCo
 ): Effect.fn.Return<
   ReadonlyArray<YeetMonitorComment>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
 > {
   const watermark = yield* Ref.get(watermarkRef);
   const [reviewPayload, issuePayload, reviewBodyPayload] = yield* Effect.all(
@@ -1331,6 +1389,7 @@ export const collectNewYeetMonitorComments = Effect.fn("YeetMonitor.collectNewCo
     ],
     { concurrency: 3 }
   );
+  yield* recordReviewLaneReviews(context, pullRequestNumber, reviewBodyPayload);
   const reviewComments = pipe(reviewPayload, A.map(normalizeReviewComment));
   const issueComments = pipe(issuePayload, A.map(normalizeIssueComment));
   const reviewBodies = pipe(reviewBodyPayload, A.map(normalizeReviewBody), A.getSomes);
@@ -1373,7 +1432,7 @@ export const acknowledgeYeetMonitorComments = Effect.fn("YeetMonitor.acknowledge
   watermarkRef: Ref.Ref<YeetMonitorCommentWatermark>,
   comments: ReadonlyArray<YeetMonitorComment>,
   consumer: YeetMonitorCommentConsumer = YeetMonitorCommentConsumer.Enum.shared
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   if (A.isReadonlyArrayEmpty(comments)) {
     return;
   }
@@ -1397,7 +1456,11 @@ const pollComments = Effect.fn("YeetMonitor.pollComments")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const newComments = yield* collectNewYeetMonitorComments(context, pullRequestNumber, watermarkRef);
   yield* Effect.forEach(newComments, (comment) => Console.log(renderYeetMonitorComment(comment)), {
@@ -1465,7 +1528,11 @@ const pollTick = Effect.fn("YeetMonitor.pollTick")(function* (
 ): Effect.fn.Return<
   void,
   never,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const polled = yield* Effect.result(pollComments(context, pullRequestNumber, watermarkRef));
   if (Result.isSuccess(polled)) {
@@ -1517,7 +1584,7 @@ const seedCommentWatermark = Effect.fnUntraced(function* (
   pullRequestNumber: number,
   consumer: YeetMonitorCommentConsumer,
   windowStart: string
-): Effect.fn.Return<YeetMonitorCommentWatermark, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<YeetMonitorCommentWatermark, never, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const cursor = YeetMonitorCommentCursor.make({ createdAt: windowStart, id: 0 });
   const start = YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor, reviewBody: cursor });
   if (YeetMonitorCommentConsumer.is.shared(consumer)) return start;
@@ -1565,7 +1632,7 @@ export const openYeetMonitorCommentStream = Effect.fn("YeetMonitor.openCommentSt
   pullRequestNumber: number,
   consumer: YeetMonitorCommentConsumer = YeetMonitorCommentConsumer.Enum.shared,
   windowStart: O.Option<string> = O.none()
-): Effect.fn.Return<Ref.Ref<YeetMonitorCommentWatermark>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<Ref.Ref<YeetMonitorCommentWatermark>, never, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber, consumer);
   const watermark = O.isSome(persisted)
@@ -1639,7 +1706,11 @@ export const runYeetPullRequestCommentMonitor = Effect.fn("Yeet.runPullRequestCo
 ): Effect.fn.Return<
   never,
   never,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   // The earlier of the two persisted cursors is where the stream genuinely
   // resumes: the collections advance independently, so quoting one of them
@@ -1779,7 +1850,11 @@ export const replayYeetMonitorComments = Effect.fn("Yeet.replayMonitorComments")
 ): Effect.fn.Return<
   void,
   never,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber, consumer);
   const watermarkRef = yield* openYeetMonitorCommentStream(context, pullRequestNumber, consumer);

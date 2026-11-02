@@ -1,0 +1,50 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A light string, comprising a power supply cord for connecting a power connector, a plurality of circuit boards, and a plurality of housings;
+<claim-text>wherein the power supply cord has a plurality of welding portions, and each of the plurality of circuit boards is welded to a corresponding set of the plurality of welding portions to electrically connect each of the plurality of circuit boards to the power supply cord;</claim-text>
+<claim-text>the power supply cord comprises a first wire, a second wire, and a third wire, and the first wire, the second wire, and the third wire are arranged in parallel and extend continuously; the first wire, the second wire, and the third wire each has a corresponding welding portion that are welded to the plurality of circuit boards;</claim-text>
+<claim-text>each of the plurality of circuit boards is arranged with a light-emitting assembly, which comprises a first light-emitting element, a second light-emitting element, and a third light-emitting element; a positive electrode of the first light-emitting element is connected to the first wire, and a negative electrode of the first light-emitting element is connected in parallel to the second wire and the third wire;</claim-text>
+<claim-text>a positive electrode of the second light-emitting element is connected to the second wire, and a negative electrode of the second light-emitting element is connected in parallel to the first wire and the third wire;</claim-text>
+<claim-text>a positive electrode of the third light-emitting element is connected to the third wire, and a negative electrode of the third light-emitting element is connected in parallel to the first wire and the second wire;</claim-text>
+<claim-text>each of the plurality of circuit boards is arranged in an installation cavity of a corresponding one of the plurality of housings; a plane where a corresponding one of the plurality of circuit boards is located is defined as a reference plane;</claim-text>
+<claim-text>each of the plurality of housings comprises a base and a light-transmitting cover;</claim-text>
+<claim-text>one of the base or the light-transmitting cover has a joining surface, and the other of the base or the light-transmitting cover has a mating surface matching with the joining surface; the joining surface and the mating surface enclose to define a line-crossing passage, and an extension direction of the line-crossing passage is at an angle to the reference plane; the first wire, the second wire, and the third wire are guided and limited through the line-crossing passage in respective extension directions of the first wire, the second wire, and the third wire;</claim-text>
+<claim-text>each of the plurality of circuit boards has a first surface and a second surface facing away from each other, with the light-emitting assembly arranged at a center of the first surface;</claim-text>
+<claim-text>each of the plurality of circuit boards is arranged with at least three conductive terminals that pass through the circuit board and are spaced apart, with the at least three conductive terminals electrically connected to the light-emitting assembly and facing the light-emitting assembly; and</claim-text>
+<claim-text>on the second surface, each of the at least three conductive terminals faces a corresponding solder joint, and each of the first wire, the second wire, and the third wire is welded to a corresponding solder joint.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The light string according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a current-limiting resistor is arranged on a connection path of each of the first light-emitting element, the second light-emitting element, and the third light-emitting element.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The light string according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein each of the first wire, the second wire, and the third wire comprises a metal wire core and an insulation layer surrounding the metal wire core; a portion where the corresponding welding portion is located on the metal wire core is free from the insulation layer.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The light string according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein a diameter of the metal wire core is greater than or equal to 0.7 mm and less than or equal to 1 mm.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The light string according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least three conductive terminals are arranged in parallel along a parallel direction of the first wire, the second wire, and the third wire.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The light string according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the light-transmitting cover covers the base, and the base and the light-transmitting cover enclosing to define the installation cavity.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The light string according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein a current-limiting resistor is arranged on a connection path of each of the first light-emitting element, the second light-emitting element, and the third light-emitting element.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The light string according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein each of the first wire, the second wire, and the third wire comprises a metal wire core and an insulation layer surrounding the metal wire core; a portion where the corresponding welding portion is located on the metal wire core is free from the insulation layer.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The light string according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein a diameter of the metal wire core is greater than or equal to 0.7 mm and less than or equal to 1 mm.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The light string according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the joining surface is arranged with a protrusion, and the mating surface defines a recess matching with the protrusion; the line-crossing passage is defined between the protrusion and the recess, causing the line-crossing passage to form an arch shape.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The light string according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the base is arranged with a plurality of limiting columns protruding from a wall surface near the light-transmitting cover; the plurality of limiting columns are distributed in a ring around the corresponding one of the plurality of circuit boards at intervals, and a peripheral side of the corresponding one of the plurality of circuit boards abuts against the plurality of limiting columns.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The light string according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein each of the plurality of limiting columns is arranged with a raising column protruding from a wall surface near the corresponding one of the plurality of circuit boards; the corresponding one of the plurality of circuit boards rests on the raising column, for defining an installation space between the corresponding one of the plurality of circuit boards and the base; the corresponding welding portion is disposed within the installation space.</claim-text>
+</claim>
+</claims>

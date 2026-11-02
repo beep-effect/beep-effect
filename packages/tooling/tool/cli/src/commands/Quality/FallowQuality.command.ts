@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { Fn } from "@beep/schema";
 import * as A from "effect/Array";
@@ -15,17 +16,18 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Yaml from "effect/encoding/Yaml";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { parse as parseJsonc } from "jsonc-parser";
 import { ts } from "ts-morph";
-import { parseDocument } from "yaml";
+import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 import { runCapturedStreams } from "../../internal/process/index.ts";
 import {
   ensureFallowAuditCacheRoot,
@@ -56,10 +58,12 @@ import {
   sameFeatureFamily,
 } from "./internal/FallowEnvelope.schema.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { ParseError } from "jsonc-parser";
 import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnvelope.schema.ts";
+
+// jsonc-parser's default reading: comments allowed, trailing commas rejected.
+const strictJson = JsoncParseOptions.make({ allowTrailingComma: false });
 
 const $I = $RepoCliId.create("commands/Quality/FallowQuality");
 
@@ -401,7 +405,7 @@ type FallowFinding = FallowReportFinding;
 type FallowQualityEnvironment =
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner;
 type FallowCommandOptions = {
   readonly advisory: boolean;
@@ -484,36 +488,42 @@ const yamlDocumentValue = Effect.fn("FallowQuality.yamlDocumentValue")(function*
   filePath: string,
   text: string
 ): Effect.fn.Return<unknown, QualityScriptCommandError> {
-  const document = yield* Effect.try({
-    try: () => parseDocument(text),
-    catch: (cause) =>
-      QualityScriptCommandError.make({
-        message: `Failed to parse workflow YAML ${filePath}.`,
-        cause,
-      }),
-  });
-
-  if (!A.isReadonlyArrayEmpty(document.errors)) {
-    const message = pipe(
-      A.head(document.errors),
-      O.map((error) => error.message),
-      O.getOrElse(() => "YAML parser reported an unknown error.")
-    );
-    return yield* QualityScriptCommandError.make({
-      message: `Invalid workflow YAML ${filePath}: ${message}`,
-      exitCode: 1,
-    });
-  }
-
   return yield* Effect.try({
-    try: () => document.toJSON(),
+    try: (): unknown => Yaml.parse(text),
     catch: (cause) =>
       QualityScriptCommandError.make({
-        message: `Failed to read workflow YAML ${filePath}.`,
+        message: messageWithCause(`Invalid workflow YAML ${filePath}`, cause),
+        exitCode: 1,
         cause,
       }),
   });
 });
+
+/**
+ * Reads a workflow file's YAML text into a plain value, the step the Fallow CI
+ * contract check runs before it inspects the workflow.
+ *
+ * **Details**
+ *
+ * The test seam exposes the parse failure: malformed YAML fails with a
+ * `QualityScriptCommandError` whose message is
+ * `Invalid workflow YAML <file>: <cause>` and whose `exitCode` is 1.
+ *
+ * **Example** (Read a workflow value)
+ *
+ * ```ts
+ * import { workflowYamlValueForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
+ * import * as Effect from "effect/Effect"
+ *
+ * const value = Effect.runSync(workflowYamlValueForTesting(".github/workflows/check.yml", "name: Check\n"))
+ * console.log(value) // { name: "Check" }
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const workflowYamlValueForTesting = yamlDocumentValue;
 
 const countFor = (findings: ReadonlyArray<FallowFinding>, attribution: typeof FindingAttributionKind.Type): number =>
   pipe(
@@ -776,7 +786,7 @@ export const inheritedCodemodDuplicationCountForTesting: {
           (site) => A.contains(report.rules, site.ruleId) && A.contains(report.filesChanged, site.filePath)
         )
       ),
-      O.getOrElse(() => A.empty<(typeof SchemaParityCodemodReport.Type.sites)[number]>())
+      O.getOrElse(A.empty<(typeof SchemaParityCodemodReport.Type.sites)[number]>)
     )
   );
   const hunks = codemodDiffHunks(diff);
@@ -1010,7 +1020,11 @@ const collectProcessOutput = Effect.fn("FallowQuality.collectProcessOutput")(fun
   command: string,
   args: ReadonlyArray<string>,
   env: ProcessEnv = {}
-): Effect.fn.Return<ProcessResult, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ProcessResult,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runCapturedStreams({
     command,
     args,
@@ -1035,7 +1049,7 @@ const collectOptionalOutput = Effect.fn("FallowQuality.collectOptionalOutput")(f
   command: string,
   args: ReadonlyArray<string>,
   fallback: string
-): Effect.fn.Return<string, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* collectProcessOutput(repoRoot, command, args).pipe(Effect.option);
   if (O.isNone(result) || result.value.exitCode !== 0) {
     return fallback;
@@ -1427,7 +1441,7 @@ const writeEnvelope = Effect.fn("FallowQuality.writeEnvelope")(function* (
 
 const dirtyWorktree = Effect.fn("FallowQuality.dirtyWorktree")(function* (
   repoRoot: string
-): Effect.fn.Return<boolean, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* collectProcessOutput(repoRoot, "git", ["status", "--porcelain"]).pipe(Effect.option);
   return O.isSome(result) && Str.trim(result.value.output).length > 0;
 });
@@ -1435,7 +1449,7 @@ const dirtyWorktree = Effect.fn("FallowQuality.dirtyWorktree")(function* (
 const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
   repoRoot: string,
   base: string
-): Effect.fn.Return<ProcessResult, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ProcessResult, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* collectProcessOutput(repoRoot, "git", ["rev-parse", "--verify", base]).pipe(
     Effect.orElseSucceed(() => ({
       stdout: "",
@@ -1475,7 +1489,11 @@ export const collectAuditDiffInputForTesting = Effect.fn("FallowQuality.collectA
   base: string,
   context = 3,
   noRenames?: boolean
-): Effect.fn.Return<ProcessResult, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ProcessResult,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const trackedDiff = yield* collectProcessOutput(repoRoot, "git", [
     "diff",
     "--binary",
@@ -1606,11 +1624,7 @@ const collectCodemodInheritance = Effect.fn("FallowQuality.collectCodemodInherit
   if (files.exitCode !== 0 || diff.exitCode !== 0) return 0;
   const reports = yield* Effect.forEach(A.filter(Str.split(files.stdout, "\n"), Str.isNonEmpty), (file) =>
     fs.readFileString(path.join(repoRoot, file)).pipe(
-      Effect.map((text) => {
-        const errors: Array<ParseError> = [];
-        const report: unknown = parseJsonc(text, errors);
-        return A.isReadonlyArrayEmpty(errors) ? report : undefined;
-      }),
+      Effect.map((text) => Result.getOrUndefined(Jsonc.parseResult(text, strictJson))),
       Effect.orElseSucceed(() => undefined)
     )
   );

@@ -1,10 +1,10 @@
 import * as NodeURL from "node:url";
 import { TSMorphServiceLive } from "@beep/repo-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as Layer from "effect/Layer";
 import * as Str from "effect/String";
 
-const PlatformLayer = Layer.mergeAll(NodeServices.layer);
+const PlatformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layerDigest);
 
 export const TestLayer = TSMorphServiceLive.pipe(Layer.provideMerge(PlatformLayer));
 

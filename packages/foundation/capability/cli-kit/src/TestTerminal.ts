@@ -224,9 +224,17 @@ export class TestTerminal {
         offered += inputs.length - unaccepted.length;
       });
 
+    const columns = options?.columns ?? 80;
+    const rows = options?.rows ?? 24;
+
     const terminal = Terminal.make({
-      columns: Effect.succeed(options?.columns ?? 80),
-      rows: Effect.succeed(options?.rows ?? 24),
+      columns: Effect.succeed(columns),
+      rows: Effect.succeed(rows),
+      // The size never changes: each subscription starts with it and ends with its scope.
+      size: Effect.acquireRelease(
+        Effect.tap(Queue.sliding<Terminal.Size, Cause.Done>(1), (sizes) => Queue.offer(sizes, { columns, rows })),
+        Queue.end
+      ),
       readInput: Effect.sync(() => {
         subscriptions++;
         return queue;

@@ -1,0 +1,516 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A boundary proximity determining system for wirelessly defining a boundary having a programmable shape and for indicating the location of a rover unit with respect to the boundary, said boundary proximity determining system comprising:
+<claim-text>a base station unit, said base station unit generates at least one pair of magnetic fields, each magnetic field being separately identifiable and having a principal axis, the principal axes being mutually directionally diverse and lying substantially within a common two-dimensional plane of operation; and</claim-text>
+<claim-text>a rover unit being mobile and including an auxiliary communications module, said rover unit measures magnetic field properties of each respective magnetic field at the current location of said rover unit, the magnetic field properties measured at the current location of said rover unit indicating the current location of said rover unit with respect to said base station unit, said rover unit operates in a first mode of operation and a second mode of operation, when said rover unit operates in the first mode of operation, said rover unit defines the boundary by measuring the magnetic field properties of each respective magnetic field at a multiplicity of sample locations along the contour of the boundary and by storing the magnetic field properties measured at the sample locations, the magnetic field properties measured at each sample location indicating the location of the respective sample location with respect to said base station unit, when said rover unit operates in the second mode of operation, said rover unit determines the current location of said rover unit with respect to the boundary by comparing the magnetic field properties measured at the current location of said rover unit to the magnetic field properties measured at the sample locations, the auxiliary communications module transmitting an indicator signal indicating the location of said rover unit with respect to the boundary.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein said rover unit measures the magnetic field properties by way of at least one magnetic field sensor, the magnetic field properties including the intensity and the polarity of each respective magnetic field as measured by each respective magnetic field sensor.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The boundary proximity determining system of <claim-ref idref="CLM-00002">claim 2</claim-ref> wherein said rover unit calculates variables indicative of the current location of said rover unit based on the magnetic field properties measured at the current location of said rover unit, said rover unit calculates variables indicative of the respective location of each sample location of the multiplicity of sample locations based on the magnetic field properties measured at each respective sample location.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The boundary proximity determining system of <claim-ref idref="CLM-00003">claim 3</claim-ref> wherein said rover unit determines the current location of said rover unit with respect to the boundary by comparing the variables indicative of the current location of said rover unit to the variables indicative of the location of each sample location of the multiplicity of sample locations.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The boundary proximity determining system of <claim-ref idref="CLM-00004">claim 4</claim-ref> wherein the at least one pair of magnetic fields includes at least one pair of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The boundary proximity determining system of <claim-ref idref="CLM-00005">claim 5</claim-ref> wherein said rover unit virtually rotates said base station unit about an axis at the center of said base station unit and perpendicular to the plane of operation by calculating the magnetic field properties of the at least one pair of orthogonal magnetic fields at a particular location as they would be measured at the particular location if said base station unit were actually rotated, said rover unit's calculations being based on the magnetic field properties of the least one pair of orthogonal magnetic fields measured at the particular location.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The boundary proximity determining system of <claim-ref idref="CLM-00006">claim 6</claim-ref> wherein said rover unit virtually rotates said base station unit to an angle of rotation that minimizes the impact of localized magnetic field distortion.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The boundary proximity determining system of <claim-ref idref="CLM-00005">claim 5</claim-ref> wherein said base station unit generates at least two pairs of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The boundary proximity determining system of <claim-ref idref="CLM-00008">claim 8</claim-ref> wherein the variables indicative of the current location of said rover unit and the variables indicative of the location of each sample location of the multiplicity of sample locations include a sector variable, at least one angle-dependent variable, and a range-dependent variable.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The boundary proximity determining system of <claim-ref idref="CLM-00009">claim 9</claim-ref> wherein the value of the at least one angle-dependent variable and the value of the range-dependent variable are mutually independent.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The boundary proximity determining system of <claim-ref idref="CLM-00009">claim 9</claim-ref> wherein the at least one angle-dependent variable includes a variable a, a variable b, and a (a+b) variable.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The boundary proximity determining system of <claim-ref idref="CLM-00009">claim 9</claim-ref> wherein the plane of operation is divided into two sectors, each sector encompassing a separate and identifiable portion of the plane of operation, whereby the sector variable indicates the sector within which said rover unit is located when said rover unit measures the magnetic field properties of the at least two pairs of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The boundary proximity determining system of <claim-ref idref="CLM-00009">claim 9</claim-ref> wherein the plane of operation is divided into four sectors, each sector encompassing a separate and identifiable portion of the plane of operation, whereby the sector variable indicates the sector within which said rover unit is located when said rover unit measures the magnetic field properties of the at least two pairs of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The boundary proximity determining system of <claim-ref idref="CLM-00009">claim 9</claim-ref> wherein the plane of operation is divided into eight sectors, each sector encompassing a separate and identifiable portion of the plane of operation, whereby the sector variable indicates the sector within which said rover unit is located when said rover unit measures the magnetic field properties of the at least two pairs of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The boundary proximity determining system of <claim-ref idref="CLM-00009">claim 9</claim-ref> wherein the at least one angle-dependent variable includes a (variable a)<sup>2</sup>, a (variable b)<sup>2</sup>, and a (a<sup>2</sup>+b<sup>2</sup>) variable.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The boundary proximity determining system of <claim-ref idref="CLM-00009">claim 9</claim-ref> wherein the range-dependent variable corresponding to the current location of said rover unit indicates the distance of the current location of said rover unit from the boundary.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The boundary proximity determining system of <claim-ref idref="CLM-00009">claim 9</claim-ref> wherein the range-dependent variable corresponding to the current location of said rover unit indicates the distance of the current location of said rover unit from the said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The boundary proximity determining system of <claim-ref idref="CLM-00017">claim 17</claim-ref> wherein the distance between the current location of said rover unit and said base station unit is calculated from the range-dependent variable corresponding to the current location of said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The boundary proximity determining system of <claim-ref idref="CLM-00018">claim 18</claim-ref> wherein the value of the range-dependent variable corresponding to the current location of said rover unit is the distance between the current location of said rover unit and said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The boundary proximity determining system of <claim-ref idref="CLM-00005">claim 5</claim-ref> wherein said rover unit calculates the magnetic field properties of at least one pair of calculated magnetic fields at the current location of said rover unit based on the measured magnetic field properties of the at least one pair of magnetic fields generated by said base station unit, the magnetic field properties measured and calculated at the current location of said rover unit indicating the current location of said rover unit with respect to said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The boundary proximity determining system of <claim-ref idref="CLM-00005">claim 5</claim-ref> wherein said base station unit generates a first pair of orthogonal magnetic fields and a second pair of orthogonal magnetic fields</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The boundary proximity determining system of <claim-ref idref="CLM-00021">claim 21</claim-ref> wherein the principle axes of the first pair of orthogonal magnetic fields are situated 45 degrees (45°) from the principle axes of the second pair of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the boundary does not enclose said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. The boundary proximity determining system of <claim-ref idref="CLM-00023">claim 23</claim-ref> wherein two sample locations of the multiplicity of sample locations are endpoints such that when particular magnetic field properties of the magnetic field properties indicating the current location of said rover unit most closely match particular magnetic field properties of the magnetic field properties indicating the location of one of the endpoints, the rover unit determines that said rover unit is within the boundary.</claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text><b>25</b>. The boundary proximity determining system of <claim-ref idref="CLM-00023">claim 23</claim-ref> wherein said rover unit defines a sector of the plane of operation that does not include a sample location as an empty sector.</claim-text>
+</claim>
+<claim id="CLM-00026" num="00026">
+<claim-text><b>26</b>. The boundary proximity determining system of <claim-ref idref="CLM-00025">claim 25</claim-ref> wherein said rover unit determines that said rover unit is within the boundary when the magnetic field properties indicating the current location of said rover unit indicate that said rover unit is within the empty sector.</claim-text>
+</claim>
+<claim id="CLM-00027" num="00027">
+<claim-text><b>27</b>. The boundary proximity determining system of <claim-ref idref="CLM-00023">claim 23</claim-ref> wherein the boundary is a wireless gate.</claim-text>
+</claim>
+<claim id="CLM-00028" num="00028">
+<claim-text><b>28</b>. The boundary proximity determining system of <claim-ref idref="CLM-00023">claim 23</claim-ref> wherein the boundary complements a physical containment structure such that the boundary together with the physical containment structure enclose said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00029" num="00029">
+<claim-text><b>29</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the boundary encloses said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00030" num="00030">
+<claim-text><b>30</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein said base station unit generates a perpendicular magnetic field, the perpendicular magnetic field being orthogonal to the plane of operation.</claim-text>
+</claim>
+<claim id="CLM-00031" num="00031">
+<claim-text><b>31</b>. The boundary proximity determining system of <claim-ref idref="CLM-00030">claim 30</claim-ref> wherein said rover unit calculates a variable indicative of the angle between the perpendicular magnetic field and a magnetic field of the at least one pair of magnetic fields to detect localized magnetic field distortion.</claim-text>
+</claim>
+<claim id="CLM-00032" num="00032">
+<claim-text><b>32</b>. The boundary proximity determining system of <claim-ref idref="CLM-00030">claim 30</claim-ref> wherein the perpendicular magnetic field provides a reference signal utilized in measuring the magnetic field properties of the at least one pair of magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00033" num="00033">
+<claim-text><b>33</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein said rover unit increases the precision of the boundary by increasing the effective number of sample locations of the multiplicity of sample locations defining the boundary by way of interpolation.</claim-text>
+</claim>
+<claim id="CLM-00034" num="00034">
+<claim-text><b>34</b>. The boundary proximity determining system of <claim-ref idref="CLM-00033">claim 33</claim-ref> wherein said rover unit increases the precision of the boundary by doubling the effective number of sample locations of the multiplicity of sample locations defining the boundary by way of mid-point interpolation.</claim-text>
+</claim>
+<claim id="CLM-00035" num="00035">
+<claim-text><b>35</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> further comprising a user interface device in communication with said rover unit, said user interface device facilitating communication between a user of said boundary proximity determining system and said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00036" num="00036">
+<claim-text><b>36</b>. The boundary proximity determining system of <claim-ref idref="CLM-00035">claim 35</claim-ref> wherein said user interface device is in wired communication with said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00037" num="00037">
+<claim-text><b>37</b>. The boundary proximity determining system of <claim-ref idref="CLM-00035">claim 35</claim-ref> wherein said user interface device is in wireless communication with said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00038" num="00038">
+<claim-text><b>38</b>. The boundary proximity determining system of <claim-ref idref="CLM-00035">claim 35</claim-ref> wherein a user of said boundary proximity determining system induces said rover unit to measure the magnetic field properties of the at least one pair of magnetic fields at each sample location of the multiplicity of sample locations by way of the user interface device.</claim-text>
+</claim>
+<claim id="CLM-00039" num="00039">
+<claim-text><b>39</b>. The boundary proximity determining system of <claim-ref idref="CLM-00038">claim 38</claim-ref> wherein the user notifies said rover unit when the magnetic field properties of the at least one pair of magnetic fields at each sample location of the multiplicity of sample locations have been measured.</claim-text>
+</claim>
+<claim id="CLM-00040" num="00040">
+<claim-text><b>40</b>. The boundary proximity determining system of <claim-ref idref="CLM-00035">claim 35</claim-ref> wherein operating parameters of said boundary proximity determining system are adjusted by way of said user interface device.</claim-text>
+</claim>
+<claim id="CLM-00041" num="00041">
+<claim-text><b>41</b>. The boundary proximity determining system of <claim-ref idref="CLM-00040">claim 40</claim-ref> wherein the operating parameters include the mode of operation of said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00042" num="00042">
+<claim-text><b>42</b>. The boundary proximity determining system of <claim-ref idref="CLM-00040">claim 40</claim-ref> wherein the operating parameters include the intensity of a stimulus delivered by said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00043" num="00043">
+<claim-text><b>43</b>. The boundary proximity determining system of <claim-ref idref="CLM-00040">claim 40</claim-ref> wherein the operating parameters include the type of a stimulus delivered by said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00044" num="00044">
+<claim-text><b>44</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the auxiliary communications module of said rover unit transmits the indicator signal when said rover unit determines that the current location of said rover unit is within the boundary.</claim-text>
+</claim>
+<claim id="CLM-00045" num="00045">
+<claim-text><b>45</b>. The boundary proximity determining system of <claim-ref idref="CLM-00044">claim 44</claim-ref> wherein said rover unit is within the boundary when said rover unit is on the same side of the boundary as said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00046" num="00046">
+<claim-text><b>46</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the auxiliary communications module of said rover unit transmits the indicator signal when said rover unit determines that the current location of said rover unit is outside the boundary.</claim-text>
+</claim>
+<claim id="CLM-00047" num="00047">
+<claim-text><b>47</b>. The boundary proximity determining system of <claim-ref idref="CLM-00046">claim 46</claim-ref> wherein said rover unit is outside the boundary when the boundary lies between said rover unit and said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00048" num="00048">
+<claim-text><b>48</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein said rover unit is carried by an animal.</claim-text>
+</claim>
+<claim id="CLM-00049" num="00049">
+<claim-text><b>49</b>. The boundary proximity determining system of <claim-ref idref="CLM-00048">claim 48</claim-ref> wherein said rover unit includes a stimulus delivery device in electrical communication with the auxiliary communications module such that when the indicator signal is transmitted, the stimulus delivery device delivers a stimulus to the animal.</claim-text>
+</claim>
+<claim id="CLM-00050" num="00050">
+<claim-text><b>50</b>. The boundary proximity determining system of <claim-ref idref="CLM-00048">claim 48</claim-ref> wherein said rover unit determines the animal's direction of motion by comparing the magnetic field properties of the at least one pair of magnetic fields at the current location of said rover unit to previously measured magnetic field properties of the at least one pair of magnetic fields at a previous location of said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00051" num="00051">
+<claim-text><b>51</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein said rover unit periodically measures the magnetic field properties of each respective magnetic field at the current location of said rover unit at a current location update rate.</claim-text>
+</claim>
+<claim id="CLM-00052" num="00052">
+<claim-text><b>52</b>. The boundary proximity determining system of <claim-ref idref="CLM-00051">claim 51</claim-ref> wherein said rover unit includes a rover unit rest feature.</claim-text>
+</claim>
+<claim id="CLM-00053" num="00053">
+<claim-text><b>53</b>. The boundary proximity determining system of <claim-ref idref="CLM-00052">claim 52</claim-ref> wherein said rover unit decreases the current location update rate when the speed at which said rover unit is traveling is substantially low.</claim-text>
+</claim>
+<claim id="CLM-00054" num="00054">
+<claim-text><b>54</b>. The boundary proximity determining system of <claim-ref idref="CLM-00052">claim 52</claim-ref> wherein said rover unit decreases the current location update rate when the distance between said rover unit and the boundary is substantial.</claim-text>
+</claim>
+<claim id="CLM-00055" num="00055">
+<claim-text><b>55</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein said rover unit is in communication with a remote processing device.</claim-text>
+</claim>
+<claim id="CLM-00056" num="00056">
+<claim-text><b>56</b>. The boundary proximity determining system of <claim-ref idref="CLM-00055">claim 55</claim-ref> wherein the remote processing device is said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00057" num="00057">
+<claim-text><b>57</b>. The boundary proximity determining system of <claim-ref idref="CLM-00055">claim 55</claim-ref> wherein the remote processing device is a computer.</claim-text>
+</claim>
+<claim id="CLM-00058" num="00058">
+<claim-text><b>58</b>. The boundary proximity determining system of <claim-ref idref="CLM-00057">claim 57</claim-ref> wherein said rover unit communicates with the computer by way of a network.</claim-text>
+</claim>
+<claim id="CLM-00059" num="00059">
+<claim-text><b>59</b>. The boundary proximity determining system of <claim-ref idref="CLM-00057">claim 57</claim-ref> wherein said rover unit communicates with the computer utilizing a modem.</claim-text>
+</claim>
+<claim id="CLM-00060" num="00060">
+<claim-text><b>60</b>. The boundary proximity determining system of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein said rover unit is carried by a human.</claim-text>
+</claim>
+<claim id="CLM-00061" num="00061">
+<claim-text><b>61</b>. A boundary proximity determining system for wirelessly defining a boundary having a programmable shape and for indicating the location of a rover unit with respect to the boundary, said boundary proximity determining system comprising:
+<claim-text>a base station unit, said base station unit generates at least one pair of orthogonal magnetic fields, each magnetic field being separately identifiable and having a principal axis, the principal axes being mutually directionally diverse and lying substantially within a common two-dimensional plane of operation; and</claim-text>
+<claim-text>a rover unit being mobile and including an auxiliary communications module, said rover unit measures magnetic field properties of each respective magnetic field generated by said base station unit at the current location of said rover unit, said rover unit calculates the magnetic field properties of at least one pair of calculated magnetic fields at the current location of said rover unit based on the measured magnetic field properties of the magnetic fields generated by said base station unit, the magnetic field properties measured and calculated at the current location of said rover unit indicating the current location of said rover unit with respect to said base station unit, said rover unit operates in a first mode of operation and a second mode of operation, when said rover unit operates in the first mode of operation, said rover unit defines the boundary by measuring and calculating the magnetic field properties of each respective magnetic field at a multiplicity of sample locations along the contour of the boundary and by storing the magnetic field properties measured and calculated at the sample locations, the magnetic field properties measured and calculated at each sample location indicating the location of the respective sample location with respect to said base station unit, when said rover unit operates in the second mode of operation, said rover unit determines the current location of said rover unit with respect to the boundary by comparing the magnetic field properties measured and calculated at the current location of said rover unit to the magnetic field properties measured and calculated at the sample locations, the auxiliary communications module transmitting an indicator signal indicating the location of said rover unit with respect to the boundary.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00062" num="00062">
+<claim-text><b>62</b>. The boundary proximity determining system of <claim-ref idref="CLM-00061">claim 61</claim-ref> wherein said rover unit measures the magnetic field properties by way of at least one magnetic field sensor, the magnetic field properties including the intensity and the polarity of each respective magnetic field as measured by each respective magnetic field sensor.</claim-text>
+</claim>
+<claim id="CLM-00063" num="00063">
+<claim-text><b>63</b>. The boundary proximity determining system of <claim-ref idref="CLM-00062">claim 62</claim-ref> wherein said rover unit calculates variables indicative of the current location of said rover unit based on the magnetic field properties measured and calculated at the current location of said rover unit, said rover unit calculates variables indicative of the respective location of each sample location of the multiplicity of sample locations based on the magnetic field properties measured and calculated at each respective sample location.</claim-text>
+</claim>
+<claim id="CLM-00064" num="00064">
+<claim-text><b>64</b>. The boundary proximity determining system of <claim-ref idref="CLM-00063">claim 63</claim-ref> wherein said rover unit determines the current location of said rover unit with respect to the boundary by comparing the variables indicative of the current location of said rover unit to the variables indicative of the location of each sample location of the multiplicity of sample locations.</claim-text>
+</claim>
+<claim id="CLM-00065" num="00065">
+<claim-text><b>65</b>. The boundary proximity determining system of <claim-ref idref="CLM-00064">claim 64</claim-ref> wherein said base station unit generates at least two pairs of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00066" num="00066">
+<claim-text><b>66</b>. The boundary proximity determining system of <claim-ref idref="CLM-00066">claim 66</claim-ref> wherein the variables indicative of the current location of said rover unit and the variables indicative of the location of each sample location of the multiplicity of sample locations include a sector variable, at least one angle-dependent variable, and a range-dependent variable.</claim-text>
+</claim>
+<claim id="CLM-00067" num="00067">
+<claim-text><b>67</b>. The boundary proximity determining system of <claim-ref idref="CLM-00061">claim 61</claim-ref> wherein said rover unit virtually rotates said base station unit by calculating the magnetic field properties of the at least one pair of orthogonal magnetic fields and the at least one pair of calculated magnetic fields at a particular location as the magnetic field properties would be at the particular location if said base station unit were actually rotated, said rover unit's virtual rotation calculations being based on the magnetic field properties of the least one pair of orthogonal magnetic fields measured at the particular location and the magnetic field properties of the at least one pair of calculated magnetic fields calculated at the particular location.</claim-text>
+</claim>
+<claim id="CLM-00068" num="00068">
+<claim-text><b>68</b>. A boundary proximity determining system for wirelessly defining a boundary having a programmable shape and for indicating the location of a rover unit with respect to the boundary, said boundary proximity determining system comprising:
+<claim-text>a base station unit including at least one pair of solenoidal coils and a coil driver, the coil driver being in electrical communication with the solenoidal coils, the coil driver drives the solenoidal coils such that the solenoidal coils generate at least one pair of magnetic fields, each magnetic field being separately identifiable and having a directionally diverse principal axis lying substantially within a common two-dimensional plane of operation;</claim-text>
+<claim-text>a rover unit including a first processor in electrical communication with a magnetic field sensor and a memory module, the magnetic field sensor including at least one coil sensor, said rover unit being mobile within the plane of operation, said rover unit operates in a boundary capture mode and a boundary proximity detection mode; and</claim-text>
+<claim-text>a user interface device in communication with said rover unit, said user interface device including a user interface in electrical communication with a second processor, the second processor being in communication with the magnetic field sensor and the memory module of said rover unit, a user of said boundary proximity determining system governs whether said rover unit operates in the boundary capture mode or the boundary proximity detection mode by way of the user interface, when said rover unit operates in the boundary capture mode, the magnetic field sensor of said rover unit detects magnetic field properties of each respective magnetic field at a plurality of sample locations along the contour of the boundary, the magnetic field properties include the intensity and the polarity of each respective magnetic field as measured by each respective coil sensor of the at least one coil sensor of the magnetic field sensor, the second processor receives and processes the magnetic field properties detected at the plurality of sample locations to generate variables indicative of the respective location of each of the plurality of sample locations, whereby the plurality of sample locations define the boundary, the memory module of said rover unit receives and stores the variables generated by the second processor;</claim-text>
+<claim-text>whereby, when said rover unit operates in the boundary proximity detection mode, the magnetic field sensor detects the magnetic field properties of each respective magnetic field at the current location of said rover unit, the first processor receives and processes the magnetic field properties detected at the current location of said rover unit to generate variables indicative of the current location of said rover unit, the first processor compares the variables indicative of the current location of said rover unit and the variables indicative of the respective location of each of the plurality of sample locations and determines the current location of said rover unit with respect to the boundary.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00069" num="00069">
+<claim-text><b>69</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein said base station unit includes a first solenoidal coil and a second solenoidal coil, whereby the first solenoidal coil is orthogonal to the second solenoidal coil.</claim-text>
+</claim>
+<claim id="CLM-00070" num="00070">
+<claim-text><b>70</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein the at least one pair of solenoidal coils of said base station unit generates at least one pair of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00071" num="00071">
+<claim-text><b>71</b>. The boundary proximity determining system of <claim-ref idref="CLM-00070">claim 70</claim-ref> wherein the first processor virtually rotates said base station unit by calculating the magnetic field properties of the at least one pair of orthogonal magnetic fields at a particular location as they would be measured at the particular location if said base station unit were actually rotated, the first processor's calculations being based on the magnetic field properties of the at least one pair of orthogonal magnetic fields measured at the particular location.</claim-text>
+</claim>
+<claim id="CLM-00072" num="00072">
+<claim-text><b>72</b>. The boundary proximity determining system of <claim-ref idref="CLM-00071">claim 71</claim-ref> wherein the first processor virtually rotates said base station unit to an angle of rotation that minimizes the impact of localized magnetic field distortion.</claim-text>
+</claim>
+<claim id="CLM-00073" num="00073">
+<claim-text><b>73</b>. The boundary proximity determining system of <claim-ref idref="CLM-00070">claim 70</claim-ref> wherein the at least one pair of solenoidal coils of said base station unit generates a first pair of orthogonal magnetic fields and a second pair of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00074" num="00074">
+<claim-text><b>74</b>. The boundary proximity determining system of <claim-ref idref="CLM-00073">claim 73</claim-ref> wherein the principle axes of the first pair of orthogonal magnetic fields are situated 45 degrees (45°) from the principle axes of the second pair of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00075" num="00075">
+<claim-text><b>75</b>. The boundary proximity determining system of <claim-ref idref="CLM-00073">claim 73</claim-ref> wherein the at least one pair of solenoidal coils of said base station unit generates at least two pairs of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00076" num="00076">
+<claim-text><b>76</b>. The boundary proximity determining system of <claim-ref idref="CLM-00075">claim 75</claim-ref> wherein the variables indicative of the current location of said rover unit and the variables indicative of the respective location of each of the plurality of sample locations include a sector variable, at least one angle-dependent variable, and a range-dependent variable.</claim-text>
+</claim>
+<claim id="CLM-00077" num="00077">
+<claim-text><b>77</b>. The boundary proximity determining system of <claim-ref idref="CLM-00076">claim 76</claim-ref> wherein the value of the at least one angle-dependent variable and the value of the range-dependent variable are mutually independent.</claim-text>
+</claim>
+<claim id="CLM-00078" num="00078">
+<claim-text><b>78</b>. The boundary proximity determining system of <claim-ref idref="CLM-00076">claim 76</claim-ref> wherein the at least one angle-dependent variable includes a variable a, a variable b, and a (a+b) variable.</claim-text>
+</claim>
+<claim id="CLM-00079" num="00079">
+<claim-text><b>79</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein said base station unit includes a first solenoidal coil, a second solenoidal coil, a third solenoidal coil, and a fourth solenoidal coil, whereby the principal axes of the solenoidal coils lie substantially within the plane of operation, the first solenoidal coil and the fourth solenoidal coil being a first pair of solenoidal coils, the second solenoidal coil and the third solenoidal coil being a second pair of solenoidal coils, the first solenoidal coil being orthogonal to the fourth solenoidal coil, the second solenoidal coil being orthogonal to the third solenoidal coil, the first pair of solenoidal coils being shifted 45 degrees (45°) from the second pair of solenoidal coils.</claim-text>
+</claim>
+<claim id="CLM-00080" num="00080">
+<claim-text><b>80</b>. The boundary proximity determining system of <claim-ref idref="CLM-00079">claim 79</claim-ref> wherein the first solenoidal coil, the second solenoidal coil, the third solenoidal coil, and the fourth solenoidal coil generate a first pair of orthogonal magnetic fields and a second pair of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00081" num="00081">
+<claim-text><b>81</b>. The boundary proximity determining system of <claim-ref idref="CLM-00080">claim 80</claim-ref> wherein the principle axes of the first pair of orthogonal magnetic fields are situated 45 degrees (45°) from principle axes of the second pair of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00082" num="00082">
+<claim-text><b>82</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein said base station unit includes a perpendicular solenoidal coil having a principal axis perpendicular to the plane of operation, the perpendicular solenoidal coil being in electrical communication with the coil driver, which drives the perpendicular solenoidal coil such that the perpendicular solenoidal coil generates a perpendicular magnetic field that is perpendicular to the at least one pair of magnetic fields generated by the at least one pair of solenoidal coils of said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00083" num="00083">
+<claim-text><b>83</b>. The boundary proximity determining system of <claim-ref idref="CLM-00082">claim 82</claim-ref> wherein the first processor calculates a variable indicative of the angle between the perpendicular magnetic field and a magnetic field of the at least one pair of magnetic fields to detect localized magnetic distortion.</claim-text>
+</claim>
+<claim id="CLM-00084" num="00084">
+<claim-text><b>84</b>. The boundary proximity determining system of <claim-ref idref="CLM-00082">claim 82</claim-ref> wherein the perpendicular magnetic field provides a reference signal utilized in measuring the magnetic field properties of the at least one pair of magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00085" num="00085">
+<claim-text><b>85</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein the magnetic field sensor of said rover unit includes three mutually orthogonal sensor coils.</claim-text>
+</claim>
+<claim id="CLM-00086" num="00086">
+<claim-text><b>86</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein the boundary does not enclose said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00087" num="00087">
+<claim-text><b>87</b>. The boundary proximity determining system of <claim-ref idref="CLM-00086">claim 86</claim-ref> wherein two sample locations of the plurality of sample locations are endpoints such that when particular variables of the variables indicative of the current location of said rover unit most closely match particular variables of the variables indicative of the location of an endpoint, the first processor determines that said rover unit is within the boundary.</claim-text>
+</claim>
+<claim id="CLM-00088" num="00088">
+<claim-text><b>88</b>. The boundary proximity determining system of <claim-ref idref="CLM-00086">claim 86</claim-ref> wherein the first processor defines a sector of the plane of operation that does not include a sample location of the plurality of sample locations as an empty sector.</claim-text>
+</claim>
+<claim id="CLM-00089" num="00089">
+<claim-text><b>89</b>. The boundary proximity determining system of <claim-ref idref="CLM-00088">claim 88</claim-ref> wherein the first processor determines that said rover unit is within the boundary when the variables indicative of the current location of said rover unit indicate that said rover unit is within the empty sector.</claim-text>
+</claim>
+<claim id="CLM-00090" num="00090">
+<claim-text><b>90</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein the boundary encloses said base station unit.</claim-text>
+</claim>
+<claim id="CLM-00091" num="00091">
+<claim-text><b>91</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein the first processor increases the preciseness of the boundary by effectively interpolating a sample location between each adjacent sample location of the plurality of sample locations, increasing the effective number of sample locations defining the boundary.</claim-text>
+</claim>
+<claim id="CLM-00092" num="00092">
+<claim-text><b>92</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein said rover unit includes an auxiliary communications module in electrical communication with the first processor, the auxiliary communications module transmits an indicator signal.</claim-text>
+</claim>
+<claim id="CLM-00093" num="00093">
+<claim-text><b>93</b>. The boundary proximity determining system of <claim-ref idref="CLM-00092">claim 92</claim-ref> wherein said rover unit is carried by an animal.</claim-text>
+</claim>
+<claim id="CLM-00094" num="00094">
+<claim-text><b>94</b>. The boundary proximity determining system of <claim-ref idref="CLM-00093">claim 93</claim-ref> wherein the first processor determines the animal's direction of motion by comparing the variables indicative of the current location of said rover unit to variables previously processed by the first processor indicating a previous location of said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00095" num="00095">
+<claim-text><b>95</b>. The boundary proximity determining system of <claim-ref idref="CLM-00093">claim 93</claim-ref> wherein said rover unit includes a rover unit rest feature.</claim-text>
+</claim>
+<claim id="CLM-00096" num="00096">
+<claim-text><b>96</b>. The boundary proximity determining system of <claim-ref idref="CLM-00095">claim 95</claim-ref> wherein the magnetic field sensor periodically detects the magnetic field properties of each respective magnetic field at the current location of said rover unit at a current location update rate.</claim-text>
+</claim>
+<claim id="CLM-00097" num="00097">
+<claim-text><b>97</b>. The boundary proximity determining system of <claim-ref idref="CLM-00096">claim 96</claim-ref> wherein the first processor decreases the current location update rate when said rover unit is traveling at a substantially low speed.</claim-text>
+</claim>
+<claim id="CLM-00098" num="00098">
+<claim-text><b>98</b>. The boundary proximity determining system of <claim-ref idref="CLM-00097">claim 97</claim-ref> wherein the first processor decreases the current location update rate when said rover unit is not substantially close to the boundary.</claim-text>
+</claim>
+<claim id="CLM-00099" num="00099">
+<claim-text><b>99</b>. The boundary proximity determining system of <claim-ref idref="CLM-00093">claim 93</claim-ref> wherein the auxiliary communications module is in electrical communication with a stimulus delivery device such that when the indicator signal is transmitted, the stimulus delivery device delivers a stimulus to the animal.</claim-text>
+</claim>
+<claim id="CLM-00100" num="00100">
+<claim-text><b>100</b>. The boundary proximity determining system of <claim-ref idref="CLM-00092">claim 92</claim-ref> wherein the auxiliary communications module of said rover unit transmits the indicator signal when the first processor determines that the current location of said rover unit is not within the boundary.</claim-text>
+</claim>
+<claim id="CLM-00101" num="00101">
+<claim-text><b>101</b>. The boundary proximity determining system of <claim-ref idref="CLM-00092">claim 92</claim-ref> wherein the auxiliary communications module of said rover unit transmits the indicator signal when the first processor determines that the current location of said rover unit is within the boundary.</claim-text>
+</claim>
+<claim id="CLM-00102" num="00102">
+<claim-text><b>102</b>. The boundary proximity determining system of <claim-ref idref="CLM-00092">claim 92</claim-ref> wherein the auxiliary communications module of said rover unit transmits the indicator signal when the first processor determines that said rover unit traversed the boundary.</claim-text>
+</claim>
+<claim id="CLM-00103" num="00103">
+<claim-text><b>103</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein said user interface device is mechanically coupled to said rover unit such that said user interface device is detachable from said rover unit, said user interface device being in electrical communication with said rover unit when said user interface device is mechanically coupled to said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00104" num="00104">
+<claim-text><b>104</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein said user interface device is in wired communication with said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00105" num="00105">
+<claim-text><b>105</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein said user interface device is in wireless communication with said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00106" num="00106">
+<claim-text><b>106</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein said user interface device includes a boundary storage module in electrical communication with the second processor, the boundary storage module receives and stores the variables indicative of the respective location of each of the plurality of sample locations generated by the second processor.</claim-text>
+</claim>
+<claim id="CLM-00107" num="00107">
+<claim-text><b>107</b>. The boundary proximity determining system of <claim-ref idref="CLM-00106">claim 106</claim-ref> wherein the memory module of an additional rover unit receives from the boundary storage module of said user interface device the variables indicative of the respective location of each of the plurality of sample locations generated by the second processor, the additional rover unit being distinguishable from said rover unit.</claim-text>
+</claim>
+<claim id="CLM-00108" num="00108">
+<claim-text><b>108</b>. The boundary proximity determining system of <claim-ref idref="CLM-00107">claim 107</claim-ref> wherein the additional rover unit is calibrated by said user interface device.</claim-text>
+</claim>
+<claim id="CLM-00109" num="00109">
+<claim-text><b>109</b>. The boundary proximity determining system of <claim-ref idref="CLM-00106">claim 106</claim-ref> wherein the memory module of said rover unit receives from the boundary storage module of said user interface device the variables indicative of the respective location of each of the plurality of sample locations generated by the second processor.</claim-text>
+</claim>
+<claim id="CLM-00110" num="00110">
+<claim-text><b>110</b>. The boundary proximity determining system of <claim-ref idref="CLM-00109">claim 109</claim-ref> wherein said rover unit is calibrated by said user interface device.</claim-text>
+</claim>
+<claim id="CLM-00111" num="00111">
+<claim-text><b>111</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein the user induces the magnetic field sensor of said rover unit to detect the magnetic field properties of the at least one pair of magnetic fields at each sample location of the plurality of sample locations by way of the user interface of said user interface device.</claim-text>
+</claim>
+<claim id="CLM-00112" num="00112">
+<claim-text><b>112</b>. The boundary proximity determining system of <claim-ref idref="CLM-00111">claim 111</claim-ref> wherein the user notifies the second processor of said user interface device when the magnetic field properties of the at least one pair of magnetic fields at each sample location of the plurality of sample locations have been detected.</claim-text>
+</claim>
+<claim id="CLM-00113" num="00113">
+<claim-text><b>113</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein said user interface device indicates the distance between said user interface device and the boundary.</claim-text>
+</claim>
+<claim id="CLM-00114" num="00114">
+<claim-text><b>114</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein said user interface device generates a plot of the boundary based on the plurality of sample locations.</claim-text>
+</claim>
+<claim id="CLM-00115" num="00115">
+<claim-text><b>115</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein the first processor of said rover unit determines whether a detection taken by the magnetic field sensor includes acceptable information.</claim-text>
+</claim>
+<claim id="CLM-00116" num="00116">
+<claim-text><b>116</b>. The boundary proximity determining system of <claim-ref idref="CLM-00115">claim 115</claim-ref> wherein the first processor of said rover unit determines whether a detection taken by the magnetic field sensor satisfies a designated signal-to-noise ratio.</claim-text>
+</claim>
+<claim id="CLM-00117" num="00117">
+<claim-text><b>117</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein the second processor of said user interface device determines whether a detection taken by the magnetic field sensor of said rover unit includes acceptable information.</claim-text>
+</claim>
+<claim id="CLM-00118" num="00118">
+<claim-text><b>118</b>. The boundary proximity determining system of <claim-ref idref="CLM-00117">claim 117</claim-ref> wherein the second processor of said user interface device determines whether the distance between adjacent sample locations of the plurality of sample locations exceeds a designated distance.</claim-text>
+</claim>
+<claim id="CLM-00119" num="00119">
+<claim-text><b>119</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein the second processor of said user interface device determines whether a detection taken by the magnetic field sensor satisfies a designated signal-to-noise ratio.</claim-text>
+</claim>
+<claim id="CLM-00120" num="00120">
+<claim-text><b>120</b>. The boundary proximity determining system of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein said rover unit is carried by a human.</claim-text>
+</claim>
+<claim id="CLM-00121" num="00121">
+<claim-text><b>121</b>. A boundary proximity determining method for wirelessly defining a boundary having a programmable shape and for indicating the location of a rover unit with respect to the boundary, said method comprising the steps of:
+<claim-text>generating at least one pair of magnetic fields by way of a base station unit, each magnetic field being separately identifiable and having a principal axis lying substantially within a common two-dimensional plane of operation, the principal axes being mutually directionally diverse;</claim-text>
+<claim-text>defining the respective locations of a plurality of sample locations along the contour of the boundary in terms of a plurality of variables, the plurality of variables corresponding to the respective locations of the plurality of sample locations being based on magnetic field properties of the at least one pair of magnetic fields at each respective sample location of the plurality of sample locations, the plurality of sample locations defining the boundary, the boundary being of a programmable shape;</claim-text>
+<claim-text>storing the plurality of sample locations in terms of the plurality of variables at a rover unit;</claim-text>
+<claim-text>defining the current location of the rover unit in terms of the plurality of variables, the plurality of variables corresponding to the current location of the rover unit being based on the magnetic field properties of the at least one pair of magnetic fields at the current location of the rover unit;</claim-text>
+<claim-text>determining the location of the rover unit with respect to the boundary by comparing the plurality of variables defining the current location of the rover unit and the plurality of variables defining the respective locations of the plurality of sample locations; and</claim-text>
+<claim-text>activating an auxiliary communications module to indicate the location of the rover unit with respect to the boundary.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00122" num="00122">
+<claim-text><b>122</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> wherein the magnetic field properties include particular components of the intensities and polarities of the at least one pair of magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00123" num="00123">
+<claim-text><b>123</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> wherein said step of generating at least one pair of magnetic fields includes generating at least one pair of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00124" num="00124">
+<claim-text><b>124</b>. The method of <claim-ref idref="CLM-00123">claim 123</claim-ref> further comprising the step of calculating the magnetic field properties of a pair of orthogonal magnetic fields, the calculations being based on the magnetic fields generated at said step of generating at least one pair of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00125" num="00125">
+<claim-text><b>125</b>. The method of <claim-ref idref="CLM-00123">claim 123</claim-ref> further comprising the step of virtually rotating the base station unit to an angle of rotation by calculating the plurality of variables corresponding to a particular location as they would be at the particular location if the base station unit were actually rotated to the angle of rotation.</claim-text>
+</claim>
+<claim id="CLM-00126" num="00126">
+<claim-text><b>126</b>. The method of <claim-ref idref="CLM-00125">claim 125</claim-ref> wherein said step of virtually rotating the base station unit to an angle of rotation includes virtually rotating the base station unit to an optimal angle of rotation, rotating the base station unit to the optimal angle of rotation minimizing coupling between the at least one pair of orthogonal magnetic fields and a parasitic current.</claim-text>
+</claim>
+<claim id="CLM-00127" num="00127">
+<claim-text><b>127</b>. The method of <claim-ref idref="CLM-00126">claim 126</claim-ref> wherein said step of virtually rotating the base station unit includes virtually rotating the base station unit to various angles of rotation at increments across a range.</claim-text>
+</claim>
+<claim id="CLM-00128" num="00128">
+<claim-text><b>128</b>. The method of <claim-ref idref="CLM-00127">claim 127</claim-ref> wherein said step of virtually rotating the base station unit includes virtually rotating the base station unit to various angles of rotation at one degree (1°) increments across a range of one hundred and eighty degrees (180°).</claim-text>
+</claim>
+<claim id="CLM-00129" num="00129">
+<claim-text><b>129</b>. The method of <claim-ref idref="CLM-00127">claim 127</claim-ref> wherein said step of virtually rotating the base station unit includes identifying the calculated plurality of variables corresponding to the particular location at angles of rotation where a variable of the calculated plurality of variables has a particular value exactly four (4) times.</claim-text>
+</claim>
+<claim id="CLM-00130" num="00130">
+<claim-text><b>130</b>. The method of <claim-ref idref="CLM-00129">claim 129</claim-ref> wherein said step of virtually rotating the base station unit includes calculating a goodness measurement based on the calculated plurality of variables corresponding to the particular location at angles of rotation where a variable of the calculated plurality of variables has a particular value exactly four (4) times.</claim-text>
+</claim>
+<claim id="CLM-00131" num="00131">
+<claim-text><b>131</b>. The method of <claim-ref idref="CLM-00130">claim 130</claim-ref> wherein said step of virtually rotating the base station unit includes identifying the calculated plurality of variables rendering the most desirable goodness measurement as corresponding to the optimal angle of rotation.</claim-text>
+</claim>
+<claim id="CLM-00132" num="00132">
+<claim-text><b>132</b>. The method of <claim-ref idref="CLM-00123">claim 123</claim-ref> wherein said step of generating at least one pair of magnetic fields includes generating at least two pairs of orthogonal magnetic fields.</claim-text>
+</claim>
+<claim id="CLM-00133" num="00133">
+<claim-text><b>133</b>. The method of <claim-ref idref="CLM-00132">claim 132</claim-ref> wherein the plurality of variables includes a sector variable, at least one angle-dependent variable, and a range-dependent variable.</claim-text>
+</claim>
+<claim id="CLM-00134" num="00134">
+<claim-text><b>134</b>. The method of <claim-ref idref="CLM-00133">claim 133</claim-ref> wherein said step of determining the location of the rover unit with respect to the boundary includes comparing the at least one angle-dependent variable defining the respective locations of the sample locations of the plurality of sample locations having the sector variable that matches the sector variable defining the current location of the rover unit and the at least one angle-dependent variable defining the current location of the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00135" num="00135">
+<claim-text><b>135</b>. The method of <claim-ref idref="CLM-00134">claim 134</claim-ref> wherein said step of determining the location of the rover unit with respect to the boundary includes comparing the range-dependent variable defining the location of the sample location of the plurality of sample locations having the at least one angle-dependent variable that most closely matches the at least one angle-dependent variable defining the current location of the rover unit and the range-dependent variable defining the location of the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00136" num="00136">
+<claim-text><b>136</b>. The method of <claim-ref idref="CLM-00133">claim 133</claim-ref> further comprising the step of dividing the plane of operation into a multiplicity of sectors, each sector of the multiplicity of sectors encompassing a separate and identifiable portion of the plane of operation, whereby the sector variable corresponding to a particular location indicates the sector of the multiplicity of sectors within which the particular location is located.</claim-text>
+</claim>
+<claim id="CLM-00137" num="00137">
+<claim-text><b>137</b>. The method of <claim-ref idref="CLM-00136">claim 136</claim-ref> further comprising the step of determining the direction of the radial components of each magnetic field of the at least one pair of magnetic fields with respect to the base station unit.</claim-text>
+</claim>
+<claim id="CLM-00138" num="00138">
+<claim-text><b>138</b>. The method of <claim-ref idref="CLM-00137">claim 137</claim-ref> further comprising the step of determining the orientation of the rover unit with respect to the base station unit.</claim-text>
+</claim>
+<claim id="CLM-00139" num="00139">
+<claim-text><b>139</b>. The method of <claim-ref idref="CLM-00138">claim 138</claim-ref> wherein the orientation of the rover unit is determined by orienting the rover unit on an animal such that the determination of the orientation of the rover unit is based on the direction of motion of the animal and by determining the animal's direction of motion by comparing the plurality of variables corresponding to the current location of the rover unit to the plurality of variables corresponding to a previous location of the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00140" num="00140">
+<claim-text><b>140</b>. The method of <claim-ref idref="CLM-00138">claim 138</claim-ref> wherein said step of defining the respective locations of a plurality of sample locations includes defining the sector variable corresponding to a sample location of the plurality of sample locations by identifying the magnetic field of the at least one pair of magnetic fields that has radial components that most dominate its tangential components at the sample location and by determining the relative polarity of the radial components with respect to the orientation of the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00141" num="00141">
+<claim-text><b>141</b>. The method of <claim-ref idref="CLM-00138">claim 138</claim-ref> wherein said step of defining the current location of the rover unit includes defining the sector variable corresponding to the current location of the rover unit by identifying the magnetic field of the at least one pair of magnetic fields that has radial components that most dominate its tangential components at the current location of the rover unit and by determining the relative polarity of the radial components with respect to the orientation of the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00142" num="00142">
+<claim-text><b>142</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> further comprising the step of generating a perpendicular magnetic field orthogonal to the plane of operation.</claim-text>
+</claim>
+<claim id="CLM-00143" num="00143">
+<claim-text><b>143</b>. The method of <claim-ref idref="CLM-00142">claim 142</claim-ref> wherein said step of defining the location of the rover unit includes calculating a localized magnetic field distortion detecting variable indicative of the angle between the perpendicular magnetic field and a magnetic field of the at least one pair of magnetic fields, the localized magnetic field distortion detecting variable indicating the presence of localized magnetic field distortion.</claim-text>
+</claim>
+<claim id="CLM-00144" num="00144">
+<claim-text><b>144</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> wherein said step of defining the respective locations of a plurality of sample locations includes measuring the magnetic field properties of the at least one pair of magnetic fields at each sample location of the plurality of sample locations.</claim-text>
+</claim>
+<claim id="CLM-00145" num="00145">
+<claim-text><b>145</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref> wherein said step of defining the respective locations of a plurality of sample locations includes sequentially measuring the magnetic field properties of the at least one pair of magnetic fields at the plurality of sample locations along the contour of the boundary.</claim-text>
+</claim>
+<claim id="CLM-00146" num="00146">
+<claim-text><b>146</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> wherein said step of defining the current location of the rover unit includes measuring the magnetic field properties of the at least one pair of magnetic fields at the current location of the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00147" num="00147">
+<claim-text><b>147</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> wherein said step of storing includes storing the variables as an indexed series of entries.</claim-text>
+</claim>
+<claim id="CLM-00148" num="00148">
+<claim-text><b>148</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> further comprising the step of calibrating an additional rover unit, the additional rover unit being distinguishable from the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00149" num="00149">
+<claim-text><b>149</b>. The method of <claim-ref idref="CLM-00148">claim 148</claim-ref> wherein said step of calibrating an additional rover unit includes defining a reference location in terms of a range-dependent variable of the plurality of variables utilizing the rover unit, the range-dependent variable being based on one or more of the magnetic field properties of the at least one pair of magnetic fields at the reference location, the reference location as defined by the rover unit being stored at a user interface device in communication with the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00150" num="00150">
+<claim-text><b>150</b>. The method of <claim-ref idref="CLM-00149">claim 149</claim-ref> wherein said step of calibrating an additional rover unit includes establishing communication between the user interface device and the additional rover unit, defining the reference location in terms of the range-dependent variable of the plurality of variables utilizing the additional rover unit, calculating a calibration coefficient based on the range-dependent variable corresponding to the reference location as defined by the rover unit and the range-dependent variable corresponding to the reference location as defined by the additional rover unit, and applying the calibration coefficient to the plurality of variables defining the current location of the additional rover unit.</claim-text>
+</claim>
+<claim id="CLM-00151" num="00151">
+<claim-text><b>151</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> further comprising the step of calibrating the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00152" num="00152">
+<claim-text><b>152</b>. The method of <claim-ref idref="CLM-00151">claim 151</claim-ref> wherein said step of calibrating the rover unit includes defining a reference location in terms of a range-dependent variable of the plurality of variables utilizing the rover unit, the range-dependent variable being based on one or more of the magnetic field properties of the at least one pair of magnetic fields at the reference location, the reference location being stored at a user interface device in communication with the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00153" num="00153">
+<claim-text><b>153</b>. The method of <claim-ref idref="CLM-00152">claim 152</claim-ref> wherein said step of calibrating the rover unit includes establishing communication between the user interface device and the rover unit, defining the reference location a second time in terms of the range-dependent variable of the plurality of variables utilizing the rover unit, calculating a calibration coefficient based on the range-dependent variable corresponding to the reference location as defined by the rover unit and the range-dependent variable corresponding to the reference location as defined by the rover unit the second time, and applying the calibration coefficient to the plurality of variables defining the current location of the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00154" num="00154">
+<claim-text><b>154</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> further comprising the step of decreasing a current location update rate when the rover unit is a substantial distance from the boundary and is traveling at a substantially low speed.</claim-text>
+</claim>
+<claim id="CLM-00155" num="00155">
+<claim-text><b>155</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> wherein the boundary encloses the base station unit.</claim-text>
+</claim>
+<claim id="CLM-00156" num="00156">
+<claim-text><b>156</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> wherein the boundary does not enclose the base station unit.</claim-text>
+</claim>
+<claim id="CLM-00157" num="00157">
+<claim-text><b>157</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> wherein said step of activating an auxiliary communications module includes activating the auxiliary communications module when the rover unit is within the boundary.</claim-text>
+</claim>
+<claim id="CLM-00158" num="00158">
+<claim-text><b>158</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> wherein said step of activating an auxiliary communications module includes activating the auxiliary communications module when the rover unit is not within the boundary.</claim-text>
+</claim>
+<claim id="CLM-00159" num="00159">
+<claim-text><b>159</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> wherein said step of activating an auxiliary communications module includes activating the auxiliary communications module when the rover unit traverses the boundary.</claim-text>
+</claim>
+<claim id="CLM-00160" num="00160">
+<claim-text><b>160</b>. The method of <claim-ref idref="CLM-00121">claim 121</claim-ref> wherein said step of activating an auxiliary communications module includes inducing the auxiliary communications module to transmit an indicator signal.</claim-text>
+</claim>
+<claim id="CLM-00161" num="00161">
+<claim-text><b>161</b>. The method of <claim-ref idref="CLM-00160">claim 160</claim-ref> wherein transmitting the indicator signal includes delivering a stimulus to an animal carrying the rover unit.</claim-text>
+</claim>
+<claim id="CLM-00162" num="00162">
+<claim-text><b>162</b>. A boundary proximity determining system for wirelessly defining a boundary having a programmable shape and for indicating the location of a rover unit with respect to the boundary, said boundary proximity determining system comprising:
+<claim-text>a base station unit, said base station unit generates at least one pair of magnetic fields, each magnetic field being separately identifiable and having a principal axis, the principal axes being mutually directionally diverse and lying substantially within a common two-dimensional plane of operation;</claim-text>
+<claim-text>a user interface device, said user interface device measures magnetic field properties of each respective magnetic field at the current location of said user interface device, the magnetic field properties measured at the current location of said user interface device indicating the current location of said user interface device with respect to said base station unit, said user interface device defines the boundary by measuring the magnetic field properties at sample locations along the contour of the boundary and by storing the magnetic field properties measured at the sample locations; and</claim-text>
+<claim-text>a rover unit including an auxiliary communications module and in temporary communication with said user interface device, said rover unit receives the magnetic field properties measured at the sample locations and stored by said user interface device, said rover unit measures the magnetic field properties of each respective magnetic field at the current location of said rover unit, the magnetic field properties measured at the current location of said rover unit indicating the current location of said rover unit with respect to said base station unit, said rover unit determines the current location of said rover unit with respect to the boundary by comparing the magnetic field properties measured at the current location of said rover unit to the magnetic field properties measured at the sample locations, the auxiliary communications module transmitting an indicator signal indicating the location of said rover unit with respect to the boundary.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00163" num="00163">
+<claim-text><b>163</b>. The boundary proximity determining system of <claim-ref idref="CLM-00162">claim 162</claim-ref> wherein said rover unit is in temporary wireless communication with said user interface device.</claim-text>
+</claim>
+<claim id="CLM-00164" num="00164">
+<claim-text><b>164</b>. The boundary proximity determining system of <claim-ref idref="CLM-00162">claim 162</claim-ref> wherein said rover unit is detachably and mechanically engaged with said user interface device, whereby said rover unit is in electrical communication with said user interface device when said rover is engaged with said user interface device.</claim-text>
+</claim>
+</claims>

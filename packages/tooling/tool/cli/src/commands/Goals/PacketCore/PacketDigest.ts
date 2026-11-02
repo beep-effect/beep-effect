@@ -15,7 +15,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
@@ -25,7 +25,6 @@ import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { isJsonRecord } from "../Inventory.ts";
 import { PacketEvent, PacketEventType } from "./PacketCore.schemas.ts";
-import type * as PlatformError from "effect/PlatformError";
 import type { PacketEventId } from "./PacketCore.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketDigest");
@@ -203,8 +202,8 @@ export const sha256Hex = Effect.fn("PacketDigest.sha256Hex")(function* (text: st
  * @since 0.0.0
  */
 export const sha256HexBytes = Effect.fn("PacketDigest.sha256HexBytes")(function* (bytes: Uint8Array) {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(yield* crypto.digest("SHA-256", bytes));
+  const crypto = yield* Digest.Digest;
+  return Hex.encode(yield* crypto.digest(Digest.sha256, bytes));
 });
 
 const encodePacketEvent = S.encodeUnknownEffect(PacketEvent);
@@ -235,14 +234,11 @@ const encodePacketEvent = S.encodeUnknownEffect(PacketEvent);
  * @category encoding
  * @since 0.0.0
  */
-export const packetEventDigest: (
-  event: PacketEvent
-) => Effect.Effect<PacketEventId, S.SchemaError | PlatformError.PlatformError, Crypto.Crypto> = Effect.fnUntraced(
-  function* (event: PacketEvent) {
+export const packetEventDigest: (event: PacketEvent) => Effect.Effect<PacketEventId, S.SchemaError, Digest.Digest> =
+  Effect.fnUntraced(function* (event: PacketEvent) {
     const encoded = yield* encodePacketEvent(event);
     return yield* sha256Hex(canonicalJsonText(encoded));
-  }
-);
+  });
 
 /**
  * Render the canonical stored file content for a packet event.

@@ -1,0 +1,103 @@
+{
+  "scope": "Durable immutable producer lifecycle outbox and exact acknowledgment reconciliation without process-launch authority",
+  "recordedAt": "2026-10-29T02:06:22.579440+00:00",
+  "result": "passed",
+  "syntheticOnly": true,
+  "actualProviderSessions": 0,
+  "productionRollout": false,
+  "recoveryHoldPreserved": true,
+  "goalComplete": false,
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts": "0282ab0c91c7e76b83dbfaa76ae5a24c35f1e8faaa27d5b16cf2d4465efcc7b4",
+    "packages/tooling/library/ai-metrics/src/index.ts": "763b454c8adec5bdf7d5f4697f95c28f71971998524f770166197be4b8d663f4",
+    "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts": "75e77626146501a836607d268fb8dd48409d2622e498281ec1f0f8a3bc9fbebc",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "2880936115a4bec896608ba90f0b33a6a0b3209948948e8fcdd24c01de492f29",
+    "packages/tooling/library/ai-metrics/test/observation-launch-claims.test.ts": "705a5c9e314f4c90cac4c13fda4fe5f2fdf76cf4c51eeb5d92a1cdca5d1ef4ac",
+    "packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts": "ca8658aa06d49e16e851656aff27f9394d42b024276552a424e236f1ffa23e32",
+    "packages/tooling/library/ai-metrics/test/observation-launch-claims-restore.test.ts": "c6845ea4e4092458af198b29626f571298e6194ca45942bff6f3c70ec574c3bc",
+    "packages/tooling/library/ai-metrics/test/fixtures/observation-claims.ts": "3a51357e493031b6b351eb6394d1fb9d063be5add095857e44a372a229934e62",
+    "packages/tooling/library/ai-metrics/test/fixtures/claim-file-fault.ts": "ee57a830acc5e46b5f2149fc05c5f77cca5d556553e0ef6fc22b8e1e70727c53",
+    "packages/tooling/library/ai-metrics/test/fixtures/observation-claim-process.ts": "1d870753863a4b172c7dba9a2d24019d42a315be8b7e958a5372e85e7b90a9cc",
+    "packages/tooling/library/ai-metrics/test/observation-launch-outbox.test.ts": "44e76a2359f55a7a4e4ce18496b83e01b7dba6bd27f7ad4d2df60964ee755592"
+  },
+  "focusedVerification": {
+    "files": 2,
+    "tests": 11,
+    "outboxScenarios": 6,
+    "actualProcessScenarios": 5,
+    "result": "passed",
+    "log": "/tmp/foundation-outbox-check-v2.log",
+    "runtimeSeconds": 8.727,
+    "memoryPeakGiB": 2.4,
+    "swapBytes": 0,
+    "note": "Focused execution preceded formatting and the equivalent Effect.filterOrFail test helper rewrite; final package verification covers current sources."
+  },
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 107.3,
+    "docgenSeconds": 10.6,
+    "runtimeSeconds": 119.761,
+    "memoryPeakGiB": 5.8,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-outbox-quality-v3.log",
+    "execution": "Serialized agent-runs.slice; MemoryHigh 7 GiB, MemoryMax 8 GiB, zero swap, CPUQuota 200%, TasksMax 256, RuntimeMaxSec 360; BIOME_THREADS=2 and RAYON_NUM_THREADS=2."
+  },
+  "priorFullTestExecution": {
+    "tests": 778,
+    "files": 72,
+    "testsResult": "passed",
+    "overallGateResult": "failed formatting only",
+    "log": "/tmp/foundation-outbox-quality-v2.log",
+    "remediation": "Formatted two test files; final full package gate passed."
+  },
+  "actualEntrypoint": {
+    "receipt": "goals/agent-observability-foundation/ops/launch-outbox-entrypoint-verification.json",
+    "managedPeer": {
+      "providerProtocol": "codex",
+      "syntheticOnly": true,
+      "actualProviderSessions": 0,
+      "actualChildLaunches": 1,
+      "childStoppedBeforeFinished": true,
+      "facts": 4,
+      "sourceSessionHash": "d68e4276439465dd100b078507b6c43ed0a253a55b97d928a79e37bf4c228982",
+      "nativeSourceSessionJoin": true,
+      "producerOutboxRecoveredLostAckAfterRestart": true,
+      "independentClaimRefusedRelaunchAfterRestart": true
+    },
+    "launchFacts": {
+      "cliMarkedFixtures": 1,
+      "desktopMarkedFixtures": 1,
+      "actualHarnessLaunches": 0,
+      "committedFacts": 12,
+      "exactReplayAfterRestart": true,
+      "privateFieldRefused": true,
+      "startsPaused": true,
+      "typedClientVerifiedReceipts": true,
+      "privateContextWhilePaused": true,
+      "newClientAfterRestart": true
+    },
+    "initialProducerRetainedReceipts": 3,
+    "recoveredProducerRetainedReceipts": 4,
+    "allEightOwnedProcessesStopped": true
+  },
+  "limits": {
+    "maxClaims": 256,
+    "maxFilesPerClaim": 8,
+    "maxFileBytes": 8192,
+    "logicalContentCeilingBytes": 16785408,
+    "maxReconcileFacts": 4,
+    "reconcileDeadlineSeconds": 10,
+    "automaticProcessRelaunch": false,
+    "automaticEpochReplacement": false,
+    "detectsWholeClaimStoreRollback": false
+  },
+  "remaining": [
+    "Wire the existing agent-message serve controller with explicit private enrollment and local durable callbacks",
+    "Conservative observed process outcome closure and independently reported expected populations",
+    "Claim-store loss or rollback requires recovery hold; aggregate capacity/lifecycle and backup policy remain unqualified",
+    "Real CLI/desktop canary and production rollback",
+    "External health publication, final panel, hosted repository delivery and full SPEC acceptance"
+  ]
+}

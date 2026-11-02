@@ -7,7 +7,7 @@ import {
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -24,7 +24,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { withAncestorsHidden } from "./support/CommandTest.ts";
 
-const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const TestLayer = MarkdownFenceTypechecker.layer.pipe(Layer.provideMerge(PlatformLayer));
 const runInProcess = Command.runWith(lawsCommand, { version: "0.0.0" });
 const withEmptyConfig = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));

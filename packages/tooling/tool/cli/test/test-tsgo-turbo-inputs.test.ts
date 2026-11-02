@@ -5,10 +5,10 @@ import {
   effectDiagnosticsProjects,
   testTsgoPrograms,
 } from "@beep/repo-cli/test/Quality";
+import { workspaceManifests } from "@beep/repo-cli/test/SharedInternals";
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { FsUtilsLive, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
-import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -350,7 +350,7 @@ it.layer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "6
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const root = yield* findRepoRoot();
-          const workspaces = yield* resolveWorkspacePackages(root);
+          const workspaces = yield* workspaceManifests(root);
           const manifest = yield* readPackageJsonFile(path.join(root, "package.json"));
           const actual = yield* effectDiagnosticsProjects(root);
           const tests = yield* testTsgoPrograms.uncovered(root);
@@ -388,7 +388,7 @@ it.layer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "6
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* findRepoRoot();
-        const workspaces = yield* resolveWorkspacePackages(root);
+        const workspaces = yield* workspaceManifests(root);
         const actual = yield* effectDiagnosticsProjects(root);
         for (const [name, workspace] of HashMap.toEntries(workspaces)) {
           const candidates = O.getOrElse(HashMap.get(actual, name), () => A.empty<string>());

@@ -1,0 +1,31 @@
+{
+  "applicationNumber": "11299450",
+  "publicationNumber": "US20070136415A1",
+  "publicationDate": "2007-06-14",
+  "nativeXmlSha256": "6bcd901818e722da6cb67a12cc0f001d249fc9d90d16b45ba1c0b13d213ac5a3",
+  "claimsXmlSha256": "c75b0bb7254a5cdad49ead95d97b4d04b8ff1d78e1b9be46f0724fc313f2a146",
+  "officeActionDocumentIdentifiers": [
+    "FMJAPNLLPPOPPY5"
+  ],
+  "officeActionMailDate": "2008-10-21",
+  "officeActionSection112Text": [
+    "claims 1-12 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\nfor claim 1, line 6, “the requested portal page” has no antecedent basis. on line 7, “the various page elements” has no antecedent basis. on lines 7-9 “said portal page” has no antecedent basis. on line 12, “said url” has no antecedent basis. on line 13, “said portal side” and “the latest navigational state” have no antecedent bases. on line 14, “the current view” has no antecedent basis. on line 15, “the result” has no antecedent basis. on line 16, “said at least latest navigational state” has no antecedent basis. on line 22, “the latest navigational state” has no antecedent basis. on line 27, “the state transition” has no antecedent basis. on line 28, “said specific url” has no antecedent basis.\r\nfor claim 4, line 4, “the modifications” and “the underlying hierarchical tree-like object representation” have no antecedent bases. on line 5, “said new latest base navigational state” has no antecedent basis.\r\nfor claim 5, line 1, said hierarchical tree-like object representation” has no antecedent basis.\r\nfor claim 6, line 2, said hierarchical tree-like object representation” has no antecedent basis.\r\nfor claim 7, “said serialization method” has no antecedent basis.\r\nfor claim 8, ‘said serialization result” has no antecedent basis.\r\nfor claim 10, “said compressed serialization result” has no antecedent basis.\r\nfor claim 11, line 6, “the requested portal page” and “the various page elements” have no antecedent bases. on lines 7-9 “said portal page” has no antecedent basis. on line 12, “said url” has no antecedent basis. on line 13, “said portal side” and “the latest navigational state” have no antecedent bases. on line 14, “the current view” has no antecedent basis. on line 15, “the result” has no antecedent basis. on line 16, “said at least latest navigational state” has no antecedent basis. on line 21, “the latest navigational state” has no antecedent basis. on lines 22 and 24, “said new portal page” has no antecedent basis. on line 27, “the state transition” and “said specific url” have no antecedent bases. on lines 31, 34, and 36, “said portal page” has no antecedent basis.\r\nclaims 2-3, 9, and 12 are rejected as being dependent on a rejected claim."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "EHB7QXK1PP1GUI4",
+      "officialDate": "2005-12-09T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [],
+  "documentInventoryCount": 60,
+  "documentInventoryRows": 60,
+  "primaryCpc": "G06F  16/954",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/11299450",
+    "https://api.uspto.gov/api/v1/patent/applications/11299450/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

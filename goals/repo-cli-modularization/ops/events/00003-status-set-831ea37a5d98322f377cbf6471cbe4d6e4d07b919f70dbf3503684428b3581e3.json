@@ -1,0 +1,15 @@
+{
+  "actor": "operator",
+  "at": "2026-10-28T23:14:14.874Z",
+  "body": {
+    "previous": "paused",
+    "status": "superseded",
+    "type": "status-set"
+  },
+  "expectedRevision": 2,
+  "packet": "repo-cli-modularization",
+  "parent": "11e8642b7aad8414688d2de66509f6a27b1a4f4e00875b6075068f59e268e601",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 3
+}

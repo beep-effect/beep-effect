@@ -16,6 +16,7 @@
 
 import { LiteralKit } from "@beep/schema";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -179,7 +180,7 @@ const ActivityRunnerLive = Layer.mergeAll(
   WorkflowEngine.layerMemory,
   Layer.succeed(WorkflowInstance, WorkflowInstance.initial(ActivityRunnerWorkflow, "activity-runner")),
   BunServices.layer
-);
+).pipe(Layer.provideMerge(BunCrypto.layer));
 
 // Build the layer inside a scope so every acquired service is released after
 // the one-shot activity program completes.

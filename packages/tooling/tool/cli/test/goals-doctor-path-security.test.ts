@@ -1,6 +1,6 @@
 import { goalsCommand, PacketEventStoreLive } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Command from "effect/cli/Command";
@@ -18,10 +18,13 @@ const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const absoluteExplorationPath = "/etc/passwd";
 
-const workingDirectoryLayer = Layer.effectDiscard(temporaryWorkingDirectory).pipe(Layer.provide(NodeServices.layer));
+const workingDirectoryLayer = Layer.effectDiscard(temporaryWorkingDirectory).pipe(
+  Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+);
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
-  PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
+  NodeCrypto.layer,
+  PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
   TestConsole.layer
 ).pipe(Layer.provideMerge(workingDirectoryLayer));
 

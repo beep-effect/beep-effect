@@ -436,7 +436,11 @@ helper through `cmd.exe`.
    only that Windows user. Send only once the last line is `listening`; a line
    that begins `error:` means stop. If another user created a pipe with that
    name first, the receiver fails with an `error:` line and never reports
-   `listening`. Then send the token from the workstation on SSH standard input:
+   `listening`. The sender also checks the owner SID of the actual connected
+   pipe before it reads or writes token bytes. Sender and receiver must run as
+   the same Windows user. Expiration or replacement by another user fails
+   closed; a readiness check alone does not authenticate the receiver.
+   Then send the token from the workstation on SSH standard input:
 
    ```bash
    op read -n 'op://<vault>/<item>/<field>' \

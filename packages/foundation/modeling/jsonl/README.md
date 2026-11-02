@@ -80,6 +80,16 @@ reached the file. Those records enter the same ordered publication stream as loc
 appends. Patches therefore inherit the current completed snapshot even when the
 filesystem watcher has not run yet.
 
+Live observation waits for `FileSystem.watch`'s `onReady` callback before its
+catch-up read. A completed external append made during delayed installation is
+therefore read after installation, even when no later write produces an event.
+This applies to both the file watch and the directory watch that activates a
+missing journal. Custom filesystem watchers must forward and honor `onReady`
+after they can buffer events. A watch that completes or fails before readiness
+still participates in the bounded re-arm loop; an acquisition that remains
+pending stays cancellable when the journal closes. Observation uses no polling
+fallback while acquisition is pending.
+
 An incomplete physical tail prevents a local append. The operation fails with
 `JournalUnterminated` and leaves the bytes unchanged, including when the tail is valid
 JSON that lacks its terminating newline. The original writer must complete its
@@ -270,7 +280,8 @@ API-shape changes that are not behaviour deviations:
 ### Deviations
 
 Each entry gives the lab test that pins it, upstream behaviour, lab behaviour
-and the reason, in the section 14 format of `scratchpad/EFFECTED_PORT_GOAL.md`.
+and the reason, in the section 14 format of the lab port goal
+(`bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/EFFECTED_PORT_GOAL.md`).
 A reason is `law:<id>` or `upstream-bug:<evidence>`. Numbered laws come from
 `standards/effect-laws-v1.md`, `EF-*` laws from
 `standards/effect-first-development.md`, and `D*` from the port goal's locked
@@ -808,7 +819,8 @@ runtime the port imports only `effect` and the workspace packages
 ## Provenance
 
 Ported from upstream `@effected/jsonl` (MIT, C. Spencer Beggs) through the
-effected port, then promoted from `scratchpad/effected/jsonl` into this package
-by `goals/effected-promotion`. [LICENSE](./LICENSE) carries both the beep-effect
+effected port, then promoted from `scratchpad/effected/jsonl` (last held at
+`3c931bbaefd4e860cbb7cbb5dae01064e0b3c8bb`) into this package by
+`goals/effected-promotion`. [LICENSE](./LICENSE) carries both the beep-effect
 and the upstream copyright notices. [KNOWLEDGE.md](./KNOWLEDGE.md) carries the
 upstream knowledge bundle verbatim; port decisions live in Port notes above.

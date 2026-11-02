@@ -45,14 +45,14 @@ is schema-validated data and cannot become active without calibration evidence.
 
 ## Acceptance Criteria
 
-- [ ] A standalone operator report shows tier and memory-pressure summaries.
-- [ ] Report rows can be queried as-of and filtered/grouped by disposition.
-- [ ] Policy data validates through schemas and cannot activate before the
+- [x] A standalone operator report shows tier and memory-pressure summaries.
+- [x] Report rows can be queried as-of and filtered/grouped by disposition.
+- [x] Policy data validates through schemas and cannot activate before the
       recorded calibration gate passes.
-- [ ] Deleting every projection artifact and rebuilding produces identical
+- [x] Deleting every projection artifact and rebuilding produces identical
       canonical output.
-- [ ] Authority rows are unchanged by report generation or rebuild.
-- [ ] Agentmemory is cited as reference-only and no donor code/constants land.
+- [x] Authority rows are unchanged by report generation or rebuild.
+- [x] Agentmemory is cited as reference-only and no donor code/constants land.
 
 ## First Vertical Slice
 
@@ -66,6 +66,8 @@ store/output, rebuild, and compare canonical bytes and query answers.
 | --- | --- |
 | 2026-08-13 | Spin the optional lane now: mechanism now, policy-as-data behind calibration evidence, repo-native algorithm, agentmemory cite-only. |
 | 2026-08-13 | First slice is the standalone operator report plus delete/rebuild drill; RRF weights are a later integration. |
+| 2026-10-28 | Freeze read-only scoped snapshot, deterministic report/store and trusted calibration registry contract in history/2026-10-28-p0-contract.md; no policy defaults or registered production receipts. Reverse by removing consumers and disposable artifacts. |
+| 2026-10-28 | Use the standing hosted-CI fallback after the local pre-push run exceeded ten minutes. Full audits/docgen for the three packages and targeted policy/resource checks passed; preserve and disclose the unfinished local health gate. No quality baseline is weakened. Reverse by rerunning the parked local gates. |
 | Program | Product Postgres authority is immutable from this projection; retrieval consumers do not own truth. |
 
 ## Stop Conditions

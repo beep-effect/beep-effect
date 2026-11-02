@@ -1,0 +1,136 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14657939-root-1",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "candidateStatus": "Unused replacement candidate only; independent critic and semantic reference pending; active manifest unchanged.",
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20150258604", "A1", "20150917"],
+    "applicationReference": ["US", "14657939", "20150313"],
+    "officeActionDocumentIdentifiers": ["IS1UW83PRXEAPX3"],
+    "officeActionMailDate": "2016-08-19"
+  },
+  "digestEvidence": [
+    {
+      "file": "14657939.publication.xml",
+      "sha256": "19d406c4308a3edac82e0e9d841cea7a9d051d5f83acffd17d3840c971f1e6fc",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14657939.claims.xml",
+      "sha256": "9a0763a20098b088f6180c12eaca2a1219e69dd9f59651e6000b5e7b2b5cec12",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "9a0763a20098b088f6180c12eaca2a1219e69dd9f59651e6000b5e7b2b5cec12",
+      "matchesProvenance": true
+    }
+  ],
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the wide face",
+      "nativeQuote": "the wide face",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the horizontal segment",
+      "nativeQuote": "the horizontal segment",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the total length",
+      "nativeQuote": "the total length",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the original chamfer angle",
+      "nativeQuote": "the original chamfer angle",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the plane parts",
+      "nativeQuote": "the plane parts",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the working positions",
+      "nativeQuote": "the working positions",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the last back-up roll",
+      "nativeQuote": "the last back-up roll",
+      "literalMatch": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "I788PISEPXXIFW3",
+      "officialDate": "2015-03-13T00:00:00.000-0400",
+      "sha256": "24fa25d7e8ac253313a4b36c1104cb99065785f0a7f8f7576696023ddc8a2091",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 11
+    },
+    {
+      "documentIdentifier": "I788PITYPXXIFW3",
+      "officialDate": "2015-03-13T00:00:00.000-0400",
+      "sha256": "f424d882e67c25b2d134efe80084f743026af938632d7356aa9394a97bd11813",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 11
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 59,
+    "actualRows": 59,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2015-03-13T00:00:00.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "I788PIRWPXXIFW3"
+      },
+      {
+        "officialDate": "2015-03-13T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "I788PISEPXXIFW3"
+      },
+      {
+        "officialDate": "2015-03-13T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "I788PITAPXXIFW3"
+      },
+      {
+        "officialDate": "2015-03-13T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "I788PITYPXXIFW3"
+      },
+      {
+        "officialDate": "2015-03-13T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "I788PIVFPXXIFW3"
+      }
+    ]
+  },
+  "concerns": [
+    "Original I788PISEPXXIFW3 Current Amended text uses DeletedText, not Del. Removing explicit deletions for corroboration resolves clean-original4/9 claim1or2 versus native1, deleted reference numerals, and other claimed text; original status metadata sometimes says original despite printed Currently Amended, so printed operative text/deletion markup governs.",
+    "Accepted selected1-9 bodies otherwise match apart from Greek a/alpha, p/beta, degree glyphs, I/1, and clipped of to f in1. Extra duplicate numbered2 node contains continued claim10/11 prose and a page heading; first correctly numbered2 body supplies actual2, while selected1-9 are all separately present.",
+    "Unamended I788PITYPXXIFW3 retains deleted reference numerals and old alternative dependencies; explicit preliminary amendment reconciles these substantive differences rather than calling them OCR."
+  ],
+  "rationale": "Actual112(b)/second-paragraph rejection expressly covers1-11, with numbered phrases in selected1/2/3/4/5/7/9. Selected root1 and children2-9 naturally depend1. Native/source XML digests and identities verified, complete59-row inventory shows same-date original/marked CLMs and no later CLM before action. Clear marked deletion evidence supplies operative-version corroboration beyond chronology.",
+  "independence": "Source-extractor role only for this unused candidate; no critic role, structural expected files, production rules, predictions, network, secrets, git or delegation.",
+  "attorneyAdjudication": "pending"
+}

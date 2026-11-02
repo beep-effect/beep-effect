@@ -27,7 +27,7 @@ const noPayload = fc.constant({});
 // In pure mode nothing runs the invoked actors, so the model is driven by the
 // events those actors would cause: the configuration feed's internal event and
 // the two events a batch actor relays.
-const surfaceEvents = {
+const publicSurfaceEvents = {
   CHOOSE_VAULT: noPayload,
   SUBMIT_MANUAL_PATH: fc.record({ rawPath: fc.constantFrom("", "/vault") }),
   CANCEL_MANUAL: noPayload,
@@ -35,7 +35,6 @@ const surfaceEvents = {
   DRAG_ENTER: noPayload,
   DRAG_LEAVE: fc.record({ leftSurface: fc.boolean() }),
   CLEAR_RESULTS: noPayload,
-  VAULT_CONFIG_RESOLVED: fc.record({ vaultRootPath: fc.constantFrom(O.none<string>(), O.some("/vault")) }),
   FILE_RESULT: fc.constant({
     entry: IntakeResultEntry.cases.failure.make({ fileName: "report.pdf", message: "Intake failed." }),
   }),
@@ -43,8 +42,17 @@ const surfaceEvents = {
     sequence: fc.constantFrom(1, 2, 3),
     output: fc.constant({ intakeBatchId: batchIdFor([], 1), entries: [] }),
   }),
+};
+
+// Events the machine declares internal. A hosted actor rejects them from
+// outside (`EventRejectedError` with reason `internalEvent`), so only the pure
+// model is driven with them.
+const internalEvents = {
+  VAULT_CONFIG_RESOLVED: fc.record({ vaultRootPath: fc.constantFrom(O.none<string>(), O.some("/vault")) }),
   BATCH_REQUESTED: fc.constant({ files: [] }),
 };
+
+const surfaceEvents = { ...publicSurfaceEvents, ...internalEvents };
 
 const fileEvents = {
   DROP: fc.record({ files: fc.constantFrom([], [intakeFile("dropped.txt")]) }),
@@ -133,9 +141,10 @@ describe("document intake statechart model", { concurrent: false }, () => {
         seed: 5,
         numRuns: 25,
         maxCommands: 10,
-        events: { ...surfaceEvents, ...fileEvents },
+        events: { ...publicSurfaceEvents, ...fileEvents },
         input,
-        // No RPC ever answers, so the hosted actor only moves when the model does.
+        // No RPC ever answers, so the hosted actor only moves when the model does,
+        // and only public events reach it.
         sut: effectActorSut(intakeModel, {
           layer: Layer.merge(
             Layer.succeed(

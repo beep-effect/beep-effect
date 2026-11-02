@@ -1,0 +1,74 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A generalized energy storage regulation method for a full accommodation of renewable energy in distribution networks, comprising:
+<claim-text>acquiring a pre-constructed energy storage regulation model, wherein the energy storage regulation model comprises a target dispatch expression and power constraint conditions corresponding to the target dispatch expression;</claim-text>
+<claim-text>determining regulation parameters of an energy storage aggregation system based on the power constraint conditions and the target dispatch expression;</claim-text>
+<claim-text>determining an aggregate output curve of the energy storage aggregation system based on the regulation parameters, wherein the aggregate output curve represents a fitted relationship between an output of the energy storage aggregation system and time;</claim-text>
+<claim-text>decomposing the aggregate output curve to determine a respective decomposed output curve for each individual energy storage system within the energy storage aggregation system; and controlling each energy storage system to output power according to its corresponding decomposed output curve;</claim-text>
+<claim-text>wherein a determination of the energy storage regulation model comprises:</claim-text>
+<claim-text>determining an initial dispatch expression based on an expected cost of power purchase and sale in the distribution network and an expected power regulation cost of the energy storage aggregation system; wherein the expected cost of power purchase and sale is determined by a power purchase price from a main grid, a power selling price, and an amount of electricity purchased; and the expected power regulation cost is determined by a regulation cost coefficient and the output power of the energy storage aggregation system;</claim-text>
+<claim-text>determining power constraint conditions corresponding to the initial dispatch expression based on safe operation constraints of the distribution network, operational constraints of the energy storage aggregation system, and reactive power output constraints of wind and photovoltaic energy;</claim-text>
+<claim-text>performing an equivalent transformation based on the initial dispatch expression and the corresponding power constraint conditions to establish the energy storage regulation model.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a step of determining the operational constraints of the energy storage aggregation system comprises:
+<claim-text>obtaining technical parameters of each energy storage system;</claim-text>
+<claim-text>for each energy storage system, constructing an energy storage expression based on its corresponding technical parameters;</claim-text>
+<claim-text>aggregating the energy storage expressions of all the energy storage systems to obtain an aggregated energy storage expression;</claim-text>
+<claim-text>determining the operational constraints of the energy storage aggregation system based on the aggregated energy storage expression.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the technical parameters comprise self-discharge efficiency, charging and discharging time intervals, output power, charging power, discharging power, ramp rate, and capacity boundaries;
+<claim-text>for each energy storage system, constructing the energy storage expression based on its technical parameters comprises: constructing a power constraint expression based on a maximum charging power and a maximum discharging power;</claim-text>
+<claim-text>constructing a ramp rate constraint expression based on the output power and the ramp rate;</claim-text>
+<claim-text>constructing a state of charge (SOC) expression based on the self-discharge efficiency, charging and discharging time intervals, output power, ambient temperature influence factor, and ambient temperature;</claim-text>
+<claim-text>constructing a SOC constraint expression based on the capacity boundaries;</claim-text>
+<claim-text>determining the energy storage expression of the energy storage system based on the power constraint expression, ramp rate constraint expression, SOC expression, and SOC constraint expression.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein aggregating the energy storage expressions to obtain the aggregated energy storage expression comprises:
+<claim-text>determining a base polyhedron, the base polyhedron being determined based on the technical parameters corresponding to each of the energy storage expressions;</claim-text>
+<claim-text>for each energy storage expression, determining a scaling factor and a translation factor;</claim-text>
+<claim-text>determining an approximate fitting expression of each energy storage expression based on the base polyhedron, the corresponding scaling factor, and the corresponding translation factor;</claim-text>
+<claim-text>obtaining the aggregated energy storage expression based on all the approximate fitting expressions.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the aggregated energy storage expression at least comprises an aggregated power constraint expression, an aggregated ramp rate constraint expression, and an aggregated SOC constraint expression;
+<claim-text>determining the operational constraints of the energy storage aggregation system based on the aggregated energy storage expression comprises:</claim-text>
+<claim-text>obtaining an aggregated scaling factor and an aggregated translation factor;</claim-text>
+<claim-text>determining aggregated technical parameters of the aggregated power constraint expression based on the aggregated scaling factor, the aggregated translation factor, average charging power of the energy storage aggregation system, and average discharging power of the energy storage aggregation system;</claim-text>
+<claim-text>determining the aggregated technical parameters of the aggregated ramp rate constraint expression based on the aggregated scaling factor, the aggregated translation factor, and average ramp rate of the energy storage aggregation system;</claim-text>
+<claim-text>determining the aggregated technical parameters of the aggregated SOC constraint expression based on the aggregated scaling factor, the aggregated translation factor, and average SOC boundary of the energy storage aggregation system;</claim-text>
+<claim-text>determining the operational constraints of the energy storage aggregation system based on the aggregated energy storage expression with determined aggregated technical parameters.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein decomposing an aggregated output curve to determine a respective decomposed output curve for each energy storage system in the energy storage aggregation system comprises:
+<claim-text>obtaining a scaling factor and a translation factor for each energy storage system;</claim-text>
+<claim-text>decomposing the aggregated output curve based on the respective scaling factor and translation factor of each energy storage system, to determine the decomposed output curve for each energy storage system in the energy storage aggregation system.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. A generalized energy storage regulation system for a full consumption of renewable energy in distribution networks, comprising: a processor with memory configure to:
+<claim-text>an acquisition module, to obtain a pre-constructed energy storage regulation model, wherein the energy storage regulation model comprises a target dispatch expression and power constraint conditions corresponding to the target dispatch expression, the target dispatch expression being a model configured to determine output parameters of an energy storage aggregation system;</claim-text>
+<claim-text>a processing module, to obtain regulation parameters of the energy storage aggregation system based on the power constraint conditions and the target dispatch expression;</claim-text>
+<claim-text>a curve determination module, to determine an aggregated output curve of the energy storage aggregation system based on the regulation parameters of the energy storage aggregation system, wherein the aggregated output curve is a curve representing a fitted relationship between an output of the energy storage aggregation system and time;</claim-text>
+<claim-text>a decomposition module, to decompose the aggregated output curve to determine a respective decomposed output curve for each energy storage system in the energy storage aggregation system, wherein each energy storage system outputs power according to its respective decomposed output curve;</claim-text>
+<claim-text>wherein the acquisition module is further determine an initial dispatch expression based on the expected cost of power purchase and sale in the distribution network and an expected power regulation cost of the energy storage aggregation system; wherein the expected cost of power purchase and sale is determined by a power purchase price from a main grid, a power selling price, and an amount of electricity purchased;</claim-text>
+<claim-text>the expected power regulation cost is determined by a regulation cost coefficient and an output power of the energy storage aggregation system;</claim-text>
+<claim-text>the power constraint conditions corresponding to the initial dispatch expression are determined based on safe operation constraints of the distribution network, operational constraints of the energy storage aggregation system, and reactive power output constraints of wind and photovoltaic generation;</claim-text>
+<claim-text>the energy storage regulation model is determined by performing an equivalent transformation based on the initial dispatch expression and the corresponding power constraint conditions.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the acquisition module is further configured to obtain technical parameters of each energy storage system;
+<claim-text>construct an energy storage expression for each energy storage system based on its technical parameters;</claim-text>
+<claim-text>aggregate all the energy storage expressions to obtain an aggregated energy storage expression;</claim-text>
+<claim-text>determine the operational constraints of the energy storage aggregation system based on the aggregated energy storage expression.</claim-text>
+</claim-text>
+</claim>
+</claims>

@@ -1,0 +1,27 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16052309-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [1, 2, 3, 4, 5, 6],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Eligibility is the existing extractor source-audit proposal, not independent source acceptance: original tracked amendments reportedly reconcile claims 3–6 dependencies to claim 1. Critic must verify that reconciliation.",
+    "Native claim 6 preserves duplicated “the the backside section”; the term uses the second “the backside section” without repairing canonical text.",
+    "Reference numerals do not establish missing antecedent introductions. Claim 1 first recites “the backside section”, “the lower and upper ends” and two “the bend” phrases without introductions; no introduction edge is invented.",
+    "Claim 4 “the upper section (1d)” conflicts lexically with claim 1 bend (1d); claim 4 side parts (2b) also uses a slot numeral. No identity is inferred merely from those numerals."
+  ],
+  "annotationRationale": [
+    "Root is the full actual system preamble before characterized in that; characterized transitions do not cause abstention.",
+    "Coordinate component lists remain within their governing limitation. Explicit fitting/positioning/locking clauses receive functional-relation elements and ordered term/text parts. All substantive clauses are children of their claim subject.",
+    "Natural claim dependency is claims 2–6 to claim 1 only; nothing imports sibling claims. Definite phrases with no introduced referent remain terms without antecedent edges. The bare “upper part”, “lower part” and “slots” in claim 1 supply clear later introductions, including singular slot (1c).",
+    "Head “bend” excludes the trailing predicate “angled in 180°”; L-shaped/U-shaped are lexical modifiers. Possessive and quantified surfaces use bare with the complete manually selected lexical head. Shared determiner coordinates remain a single nonoverlapping noun phrase.",
+    "No unresolved claim is created merely for a missing introduction; those are the source issues the reference preserves. Both angle bends in claim 1 lack introductions and distinct numerals do not license backreference edges. The ambiguous later “backside section” phrases likewise lack an introductory term in the ancestor."
+  ],
+  "independence": "Fresh source-grounded annotation from canonical claims, native claims XML, provenance, source-audit and ClaimElement schema shapes/coherence only. No P2 design, implementation, synthetic fixtures, conformance archives or prediction output inspected. All quoted boundaries, lexical phrases and referent assignments were manually selected; helper only located selected quotes and verified span/reference coherence.",
+  "sourceStatus": "Extractor source eligibility proposal retained; independent critic source review and attorney adjudication pending.",
+  "validation": "All selected claims accounted exactly once; element/term quote spans and cross-tree term references mechanically checked."
+}

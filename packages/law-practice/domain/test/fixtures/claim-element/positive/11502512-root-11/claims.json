@@ -1,0 +1,107 @@
+{
+  "familyId": "11502512-root-11",
+  "rootClaimNumber": 11,
+  "labelClaimNumbers": [11, 12, 13, 14, 15, 16, 17],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A system to retrieve camera motion parameter is essentially comprised of applying that the vector field divergence volume integral is equal to the total outgoing throughput passing through the surface area of the volume through the vector expressed in an equation as follows: ∫V·Adv=CωSA·ds The equation in conjunction with camera motion detection first solves those motion vectors (MVs) in the domain; an operation process followed to solve the camera motion parameter; the camera motion parameter respectively contains PAN parameter, TILT parameter, and ZOOM parameter; and the following equations being employed in the operation of solving each parameter: pan 1 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVx  ( 2  j , 2  i + 1 )   tilt 1 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVy  ( 2  j + 1 , i ) pan 2 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVx  ( 2  j , 2  i )   tilt 2 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVy  ( 2  j , i ) pan = pan 1 + pan 2   tilt = tilt 1 + tilt 2 zoom =  ∫ ∇ · MV   v =  ∑ j = 1 M / 2  ∑ i = 1 N / 2  ( ( MVx  ( 2  j , 2  i + 1 ) - MVx  ( 2  j , 2  i ) ) +  ( MVy  ( 2  j + 1 , 2  i ) - MVy  ( 2  j , 2  i ) ) ) =  ( pan 1 - pan 2 ) + ( tilt 1 - tilt 2 ) The value of the parameter represents that of the motion; those three parameters retrieved being given simple addition and subtraction to detect the moving direction of the camera motion of the current video.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The system to retrieve camera motion parameter as claimed in claim 1, wherein an operation process of the motion estimation method is applied to solve those motion vectors (MVs) in an uncompression domain.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The system to retrieve camera motion parameter as claimed in claim 2, wherein the uncompression domain is related to a video sequence.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The system to retrieve camera motion parameter as claimed in claim 1, wherein an operation process of the motion vector extraction method is applied to solve those motion vectors (MVs).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The system to retrieve camera motion parameter as claimed in claim 4, wherein the compression domain relates to a bitstream.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The system to retrieve camera motion parameter as claimed in claim 1, wherein data are stored in an address for solving the primary PAN1, PAN2, TILT1, and TILT2 by means of an MUX (Multiplexer).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The system to retrieve camera motion parameter as claimed in claim 1, wherein the accumulation circuit MUX solves the primary PAN1, PAN2, TILT1, and TILT2 before being further processed with an accumulation circuit DEMUX (Demultiplexer); the result is saved to the original memory unit; data are retrieved from the storage address to go through the MUX operation once again; MUX and DEMUX are employed to select the parameters PAN1, PAN2, TILT1, and TILT2 to be accumulated; and after repeating the cycle at a preset frequency the final PAN, TILT, and ZOOM values are solved.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "A system to retrieve camera motion parameter includes a camera motion detection to retrieve those motion vectors (MVs) in a domain; those motion vectors are put into an operation process to solve a camera motion parameter; the camera motion parameter respectively contains PAN parameter, TILT parameter, and ZOOM parameter; wherein, the operation method to solve each parameter includes the following equations: PAN(n+1)=a×MVx(n+1)+(1−a)PAN(n) TILT(n+1)=a×MVy(n+1)+(1−a) TILT(n) ZOOM(n+1)=a×MV(n+1)−(1−a)ZOOM(n) Wherein, a<1, the value of the parameter represents that of the motion; and the moving direction of the camera motion of the present video is detected by applying simple addition and subtraction operation of those three parameters.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The system to retrieve camera motion parameter as claimed in claim 8, wherein a value of 0.05 is usually assigned to a.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The system to retrieve camera motion parameter as claimed in claim 8, wherein a reorder circuit is applied to process the data retrieved before the operation for solving the ZOOM parameter.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "An operation process to retrieve camera motion parameter essentially includes the following steps: a. Motion vectors (MVs) are retrieved from a domain; b. The camera motion detection method is applied to those motion vectors to solve camera motion parameters; the camera motion detection method includes the following equations to respectively solve camera motion parameters of pan, tilt, and zoom: pan 1 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVx  ( 2  j , 2  i + 1 )   tilt 1 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVy  ( 2  j + 1 , i ) pan 2 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVx  ( 2  j , 2  i )   tilt 2 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVy  ( 2  j , i ) pan = pan 1 + pan 2   tilt = tilt 1 + tilt 2 zoom =  ∫ ∇ · MV   v =  ∑ j = 1 M / 2  ∑ i = 1 N / 2  ( ( MVx  ( 2  j , 2  i + 1 ) - MVx  ( 2  j , 2  i ) ) +  ( MVy  ( 2  j + 1 , 2  i ) - MVy  ( 2  j , 2  i ) ) ) =  ( pan 1 - pan 2 ) + ( tilt 1 - tilt 2 ) c. Camera motions are judged according to those camera motion parameters.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The system and operation process to retrieve camera motion parameter as claimed in claim 11, wherein an operation process of the motion estimation method is applied to solve those motion vectors (MVs) in an uncompression domain.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The system and operation process to retrieve camera motion parameter as claimed in claim 11, wherein the uncompression domain relates to a video sequence.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The system and operation process to retrieve camera motion parameter as claimed in claim 11, wherein an operation process of the motion vector extraction method is applied to solve those motion vectors (MVs).",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The system and operation process to retrieve camera motion parameter as claimed in claim 11, wherein the compression domain relates to a bitstream.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The system and operation process to retrieve camera motion parameter as claimed in claim 11, wherein data are stored in an address for solving the primary PAN1, PAN2, TILT1, and TILT2 by means of an MUX (Multiplexer).",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The system and operation process to retrieve camera motion parameter as claimed in claim 11, wherein the accumulation circuit MUX solves the primary PAN1, PAN2, TILT1, and TILT2 before being further processed with an accumulation circuit DEMUX (Demultiplexer); the result is saved to the original memory unit; data are retrieved from the storage address to go through the MUX operation once again; MUX and DEMUX are employed to select the parameters PAN1, PAN2, TILT1, and TILT2 to be accumulated; and after repeating the cycle at a preset frequency the final PAN, TILT, and ZOOM values are solved.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "An operation process to retrieve camera motion parameter includes the following steps: a. Motion vectors (MVs) are retrieved from a domain; b. The camera motion detection method is applied to those motion vectors to solve camera motion parameters; the camera motion detection method includes the following equations to respectively solve camera motion parameters of pan, tilt, and zoom: PAN(n+1)=a×MVx(n+1)+(1−a)PAN(n) TILT(n+1)=a×MVy(n+1)+(1−a) TILT(n) ZOOM(n+1)=a×MV(n+1)−(1−a)ZOOM(n) Wherein, a<1; and c. Camera motions are judged according to those camera motion parameters.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The operation process to retrieve camera motion parameter as claimed in claim 18, wherein a value of 0.05 is usually assigned to a.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The operation process to retrieve camera motion parameter as claimed in claim 18, wherein a reorder circuit is applied to process the data retrieved before the operation for solving the ZOOM parameter.",
+      "sourceXmlParentClaimNumbers": [18]
+    }
+  ]
+}

@@ -3,10 +3,53 @@
 
 import { MemoryFileSystem } from "@beep/memfs";
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
 import { collectWatch } from "./helpers.ts";
+
+describe("watch readiness", () => {
+  it.effect("signals after subscription and retains the first mutation without yielding", () =>
+    Effect.gen(function* () {
+      const fs = yield* MemoryFileSystem.makeWith({ "/file.txt": "original" });
+      const ready = yield* Deferred.make<void>();
+      let calls = 0;
+      const watch = fs.watch("/file.txt", {
+        onReady: () => {
+          calls++;
+          Deferred.doneUnsafe(ready, Exit.void);
+        },
+      });
+      assert.strictEqual(calls, 0);
+      const events = yield* watch.pipe(Stream.take(2), Stream.runCollect, Effect.forkChild);
+      yield* Deferred.await(ready);
+      yield* fs.writeFileString("/file.txt", "first");
+      yield* fs.writeFileString("/file.txt", "second");
+      assert.deepStrictEqual(yield* Fiber.join(events), [
+        { _tag: "Update", path: "/file.txt" },
+        { _tag: "Update", path: "/file.txt" },
+      ]);
+      assert.strictEqual(calls, 1);
+    })
+  );
+
+  it.effect("does not signal readiness when the watched path cannot be acquired", () =>
+    Effect.gen(function* () {
+      const fs = yield* MemoryFileSystem.make;
+      let calls = 0;
+      const result = yield* fs.watch("/missing", { onReady: () => calls++ }).pipe(Stream.runCollect, Effect.result);
+      assertFailure(
+        Result.mapError(result, (error) => error.reason._tag),
+        "NotFound"
+      );
+      assert.strictEqual(calls, 0);
+    })
+  );
+});
 
 describe("watch honors WatchOptions.recursive — the port adaptation", () => {
   it.effect("a non-recursive directory watch reports direct children only", () =>

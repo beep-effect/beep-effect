@@ -1,0 +1,82 @@
+{
+  "familyId": "18643465-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for machining ribs or grooves on a workpiece intended to be rotated about a longitudinal axis (A-A) of a centrifugal compressor (1), the workpiece comprising a shaft (7), on which or in which a rotor structure (16) with at least one permanent magnet (16a) of an electric motor is mounted or attached in order to drive the shaft such that it rotates, and/or an air or gas axial bearing (24) attached to one end of the shaft (7) or forming a part of the shaft (7), the centrifugal compressor (1) further comprising a casing (2) with a fluid inlet (5) and a compressed fluid outlet (6), a first compressor wheel (8) of the workpiece and a second compressor wheel (10) of the workpiece mounted at two ends of the shaft (7) in the casing (2), a front air or gas radial bearing (18) mounted on a first end of the shaft (7), and a rear air or gas radial bearing (22) mounted on a second end of the shaft (7), the machining method being carried out in a machining unit (100) adapted to receive the workpiece and comprising a tool holder (110) with a tool for machining the ribs or grooves on at least one portion of the workpiece, the method being characterised in that all of the ribs or grooves (24a; 32) are obtained at once by the machining tool on a workpiece portion of the shaft (7) rotatably driven, by moving the shaft (7) of the workpiece or the tool holder (110) in a longitudinal machining direction, said machining tool moving back and forth with a machining position in contact with the workpiece and a position wherein it is not in contact with the workpiece from the beginning to the end of the workpiece portion, in that the reciprocating motions of the machining tool are synchronised with the sinusoidal program set up in the machining unit, as well as with the desired, programmed arrangement of the ribs or grooves to be produced on the workpiece portion, in that all of the ribs or grooves (32) are obtained at once on a first workpiece portion of the first end of the shaft (7) from the beginning of the first portion to the end of the first portion, by the reciprocating motions of the machining tool and the displacement in a longitudinal machining direction of the rotating shaft (7) according to how the machining unit (100) was programmed, and in that all of the ribs or grooves (32) are obtained at once on a second workpiece portion of the second end of the shaft (7) from the beginning of the second portion to the end of the second portion, by the reciprocating motions of the machining tool and the displacement in a longitudinal machining direction of the rotating shaft (7) or tool holder (110).",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The machining method according to claim 1, wherein the workpiece is the shaft (7), which is made of tungsten carbide or ceramic, and wherein the head of the machining tool (120) is made of diamond for machining the ribs or grooves on the first machined portion and on the second machined portion of the rotating shaft (7).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The machining method according to claim 2, characterised in that during the machining of the ribs or grooves (32), a change of orientation of the ribs or grooves (32) occurs when passing the halfway point along the first workpiece portion of the first end of the shaft (7) according to how the machining unit was programmed so as to obtain V-shaped grooves over the length of the first machined portion in order to generate an air or gas pressure in the front radial bearing (18) disposed on the first portion during operation of the compressor with the rotation of the shaft (7) above a limit speed so as to no longer have any mechanical contact with the front radial bearing (18).",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The machining method according to claim 2, characterised in that during the machining of the ribs or grooves (32), a change of orientation of the ribs or grooves (32) occurs when passing the halfway point along the second workpiece portion of the second end of the shaft (7) according to how the machining unit (100) was programmed so as to obtain V-shaped grooves over the length of the second machined portion in order to generate an air or gas pressure in the rear radial bearing (22) disposed on the second portion during operation of the compressor (1) with the rotation of the shaft (7) above a limit speed so as to no longer have any mechanical contact with the rear radial bearing (22).",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The machining method according to claim 1, wherein the workpiece is the air or gas axial bearing (24) in the form of a disc, characterised in that the ribs or grooves (24a) and the arrangement thereof are programmed in the machining unit (100) to activate the machining tool (120) so as to produce all of the ribs or grooves at once on a first face of the disc by moving the machining tool, or the rotating disc in a single machining direction from the periphery of the disc to the bottom of the annular area of the ribs or grooves or conversely, and by the reciprocating motions of the machining tool (120) according to how the machining unit (100) was programmed.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The machining method according to claim 5, characterised in that all of the ribs or grooves (24a) are produced at once on a second face of the disc by moving the machining tool, or the rotating disc in a single machining direction from the periphery of the disc to the bottom of the annular area of the ribs or grooves (24a) or conversely, and by the reciprocating motions of the machining tool (120) according to how the machining unit (100) was programmed.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The machining method according to claim 6, characterised in that all of the ribs or grooves (24a) are produced in the form of spirals with the same orientation on the two faces or with two different orientations so as to generate films of air via the grooves when rotating the shaft to hold the axis in a position that is longitudinally well centred during operation of the centrifugal compressor (1).",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The machining method according to claim 7, characterised in that all of the ribs or grooves (24a) on one face or the two faces of the disc are machined before or after the machining of the ribs or grooves on the first portion and/or the second portion of the shaft (7).",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "A method for machining the ribs or grooves on a workpiece (7, 24) according to claim 1, and for assembling the components of the workpiece, said components being the shaft (7) on which is attached the air or gas axial bearing (24) in the form of a disc attached to one end of the shaft (7), and on which or in which the rotor structure (16), having at least one permanent magnet (16a), of an electric motor is disposed or attached between the first and second portions of the shaft (7), characterised in that all of the ribs or grooves (24a) on one face or the two faces of the disc are machined after the machining of the ribs or grooves on the first portion and/or the second portion of the shaft (7) and before the placing or attachment of the rotor structure (16) having at least one permanent magnet (16a) on or in the shaft between the first portion and the second portion, which are machined from the shaft (7).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method for machining the ribs or grooves on a workpiece (7, 24) according to claim 1, and for assembling the components of the workpiece, said components being the shaft (7) on which is attached the air or gas axial bearing (24) in the form of a disc attached to one end of the shaft (7), and on which or in which the rotor structure (16), having at least one permanent magnet (16a), of an electric motor is disposed or attached between the first and second portions of the shaft (7), characterised in that the rotor structure (16), having at least one permanent magnet (16a), of an electric motor is disposed or attached between the first and second portions of the shaft (7) before the ribs or grooves are machined on the first portion and the second portion of the shaft (7), and in that all of the ribs or grooves (24a) on one face or the two faces of the disc are machined after the machining of the ribs or grooves on the first portion and/or the second portion of the shaft (7).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "A workpiece intended to be rotated about a longitudinal axis (A-A) of a centrifugal compressor (1) and intended to have ribs or grooves machined according to the machining method according to claim 1, characterised in that the workpiece comprises at least one shaft (7), on which or in which a rotor structure (16), having at least one permanent magnet (16a), of an electric motor is mounted or attached in order to drive the shaft such that it rotates, and/or an air or gas axial bearing (24) attached to one end of the shaft (7) or forming a part of the shaft (7).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The workpiece according to claim 11, characterised in that the permanent magnet rotor structure (16) is disposed on an outer surface of the shaft between the first portion and the second portion, machined with ribs or grooves, of the shaft (7).",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The workpiece according to claim 12, characterised in that the rotor structure (16) comprises one or more permanent magnets (16a) secured to the shaft (7) and covered by a lining (16b), and in that two flanges (16c) or one flange (16c) and a shoulder on the shaft (7) are attached or placed at the lateral ends of the lining (16b) to allow the rotor (16) to withstand the centrifugal forces at high speeds.",
+      "sourceXmlParentClaimNumbers": [12]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The workpiece according to claim 13, characterised in that the flanges (16c) are bonded or shrunk between the shaft (7) and the lining (16b).",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The workpiece according to claim 11, characterised in that the permanent magnet rotor structure (16) is disposed inside the shaft (7) in tubular form, and in that the one or more permanent magnets (16a) are shrunk inside the shaft (7) and disposed on a rod (11) or attached to two end rods (11b, 11d).",
+      "sourceXmlParentClaimNumbers": [11]
+    }
+  ]
+}

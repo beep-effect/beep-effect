@@ -8,7 +8,8 @@
 
 import { decodeAgentSkillFrontmatterStrict } from "@beep/ai-sync";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
-import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
+import { Frontmatter } from "@beep/markdown/MarkdownNode";
+import { YamlFrontmatter } from "@beep/markdown/YamlFrontmatter";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -16,7 +17,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
-import { decodeYamlTextWith } from "../../../internal/schema/TextCodec.ts";
+import { errorMessage } from "../../../internal/cli/Timing.ts";
 import {
   SKILL_BODY_LINE_LIMIT,
   SkillBodyAdvisory,
@@ -26,26 +27,27 @@ import {
 import { SkillsCommandError } from "../Skills.errors.ts";
 import type { FrontmatterSourceBlock } from "@beep/markdown/FrontmatterSource";
 
-const decodeFrontmatter = decodeYamlTextWith(decodeAgentSkillFrontmatterStrict);
-
 const countLines = (text: string): number =>
   Str.isEmpty(text) ? 0 : A.length(Str.split(text, "\n")) - (Str.endsWith("\n")(text) ? 1 : 0);
 
-const frontmatterIssue = (skill: string, frontmatter: string): Effect.Effect<O.Option<string>> =>
-  decodeFrontmatter(frontmatter).pipe(
-    Effect.match({
-      onFailure: (error) => O.some(error.message),
-      onSuccess: (decoded) =>
-        decoded.name === skill
-          ? O.none()
-          : O.some(`frontmatter name "${decoded.name}" must match the skill directory name "${skill}".`),
+const blockIssue = (skill: string, block: FrontmatterSourceBlock): Effect.Effect<O.Option<string>> =>
+  YamlFrontmatter.decode(Frontmatter.make({ format: block.format, value: block.value })).pipe(
+    Effect.flatMap(decodeAgentSkillFrontmatterStrict),
+    Effect.map((decoded) =>
+      decoded.name === skill
+        ? O.none()
+        : O.some(`frontmatter name "${decoded.name}" must match the skill directory name "${skill}".`)
+    ),
+    Effect.catchTags({
+      FrontmatterFormatMismatchError: (error) =>
+        Effect.succeedSome(`SKILL.md frontmatter is ${error.actual}; the Agent Skills format requires a YAML block.`),
+      // The YAML engine's own failure (a `YamlParseError`, or a `FrontmatterKeyError` for a duplicate,
+      // complex or set key) carries the diagnostic text; the decode error's own message names only the format.
+      FrontmatterDecodeError: (error) =>
+        Effect.succeedSome(`Invalid YAML frontmatter (${errorMessage(error.cause, String(error.cause))}).`),
+      SchemaError: (error) => Effect.succeedSome(error.message),
     })
   );
-
-const blockIssue = (skill: string, block: FrontmatterSourceBlock): Effect.Effect<O.Option<string>> =>
-  FrontmatterFormat.is.yaml(block.format)
-    ? frontmatterIssue(skill, Str.trim(block.value))
-    : Effect.succeedSome(`SKILL.md frontmatter is ${block.format}; the Agent Skills format requires a YAML block.`);
 
 /**
  * Check every installed skill's `SKILL.md` against the Agent Skills format.

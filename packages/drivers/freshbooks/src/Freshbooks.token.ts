@@ -1,6 +1,8 @@
 /**
  * FreshBooks OAuth token helper with single-refresh-owner rotation.
  *
+ * **Details**
+ *
  * FreshBooks refresh tokens are single-use: every token exchange returns a new
  * access token **and a new refresh token**, and all prior refresh tokens are
  * immediately invalidated (see the P0 spike report). Rotation is therefore a

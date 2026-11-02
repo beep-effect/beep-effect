@@ -1,0 +1,297 @@
+{
+  "scope": "disposable synthetic worker only",
+  "productionRollout": false,
+  "fixtureSha256": "af5b2a126efc0af4b352ef6f6582866c095dd6d3e6803a4d41254bedd5c07de8",
+  "runs": [
+    {
+      "unit": "beep-observation-proof-54647feaf3d1.service",
+      "observedCgroupLimits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "kernelLockOwnerVerified": true,
+      "secondOwnerExit": 73,
+      "startsPaused": true,
+      "earlyRejectionStatuses": [
+        503, 415, 405, 404, 503, 415, 405, 404, 503, 415, 405, 404, 503, 415,
+        405, 404, 503, 415, 405, 404, 503, 415, 405, 404
+      ],
+      "oversizedBodyStatuses": [
+        413, 413, 413, 413, 413, 413, 413, 413, 413, 413, 413, 413, 413, 413,
+        413, 413, 413, 413, 413, 413, 413, 413, 413, 413
+      ],
+      "chunkedBodyStatuses": [
+        200, 413, 200, 413, 200, 413, 200, 413, 200, 413, 200, 413
+      ],
+      "bodyLimitBytes": 262144,
+      "oversizedBodyStatus": 413,
+      "configuredHeaderLimitBytes": 16384,
+      "oversizedHeaderProbeBytes": 25000,
+      "oversizedHeaderStatus": 431,
+      "incompleteHeaderClosedSeconds": 2.001,
+      "incompleteBodyRefusedSeconds": 1.003,
+      "incompleteBodyStatus": 503,
+      "streamingDiscovery": {
+        "entries": 12,
+        "completed": true,
+        "activeHelpersAfterCycle": 0,
+        "admittedFiles": 0
+      },
+      "fileDescriptorExhaustion": {
+        "opened": 245,
+        "exhausted": true
+      },
+      "cpuBurnDelta": {
+        "usage_usec": 1000879,
+        "nr_throttled": 21,
+        "throttled_usec": 1032884
+      },
+      "physicalSnapshotUnderResourceLimits": {
+        "manifest": {
+          "version": "observation-backup/v1",
+          "hostId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "namespaceId": "62a5719eccc8479fa41bdfc26cafee485b311df9766ecb3249859d3564c85fda",
+          "configDigest": "1b80b8e2a29264adba859a0b49f2fb81b15619027c6fea2f6abca0fbd64e9e94",
+          "snapshotDigest": "fb7deebc86985fa87809d50c027b802bda43587542e9e14b989a2b534741aff2",
+          "bytes": 151552,
+          "createdAt": 1793223123216
+        },
+        "manifestDigest": "e557b2cba7780a456b55071614fc848eebc4909a05431a67b1484a881f13110d"
+      },
+      "memoryLimitExercised": false
+    },
+    {
+      "unit": "beep-observation-proof-4dde278113ad.service",
+      "observedCgroupLimits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "kernelLockOwnerVerified": true,
+      "secondOwnerExit": 73,
+      "startsPaused": true,
+      "exactReceiptReplayAfterRestart": true,
+      "restartCause": "controlled-stop",
+      "priorJournalIntegrity": true,
+      "explicitResumeRequired": true
+    }
+  ],
+  "proxies": [
+    {
+      "unit": "beep-observation-proxy-proof-9a0c4692e666.service",
+      "observedCgroupLimits": {
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "25000 100000"
+      },
+      "observedFileDescriptorLimit": 128,
+      "coreDumpsDisabled": true,
+      "noNewPrivileges": true,
+      "loopbackListenerOwnerVerified": true,
+      "config": {
+        "admin": {
+          "disabled": true
+        },
+        "apps": {
+          "http": {
+            "servers": {
+              "proof": {
+                "listen": ["127.0.0.1:56039"],
+                "protocols": ["h1"],
+                "automatic_https": {
+                  "disable": true
+                },
+                "read_header_timeout": "2s",
+                "read_timeout": "4s",
+                "write_timeout": "8s",
+                "idle_timeout": "2s",
+                "max_header_bytes": 16384,
+                "routes": [
+                  {
+                    "match": [
+                      {
+                        "expression": "{http.request.header.Content-Length} != '' && int({http.request.header.Content-Length}) > 262144"
+                      }
+                    ],
+                    "handle": [
+                      {
+                        "handler": "static_response",
+                        "status_code": 413,
+                        "headers": {
+                          "Content-Type": ["application/json"],
+                          "Cache-Control": ["no-store"]
+                        },
+                        "body": "{\"code\":8,\"message\":\"Request exceeds local intake size limit\"}"
+                      }
+                    ]
+                  },
+                  {
+                    "handle": [
+                      {
+                        "handler": "request_body",
+                        "max_size": 262144
+                      },
+                      {
+                        "handler": "reverse_proxy",
+                        "upstreams": [
+                          {
+                            "dial": "unix/~/.cache/claude-tmp/foundation-worker-resources-p_u3odno/journal.sqlite.sock"
+                          }
+                        ],
+                        "transport": {
+                          "protocol": "http",
+                          "versions": ["1.1"],
+                          "dial_timeout": "1s",
+                          "response_header_timeout": "5s",
+                          "read_timeout": "5s",
+                          "write_timeout": "2s",
+                          "keep_alive": {
+                            "enabled": false
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "unit": "beep-observation-proxy-proof-3291657be1b5.service",
+      "observedCgroupLimits": {
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "25000 100000"
+      },
+      "observedFileDescriptorLimit": 128,
+      "coreDumpsDisabled": true,
+      "noNewPrivileges": true,
+      "loopbackListenerOwnerVerified": true,
+      "config": {
+        "admin": {
+          "disabled": true
+        },
+        "apps": {
+          "http": {
+            "servers": {
+              "proof": {
+                "listen": ["127.0.0.1:45997"],
+                "protocols": ["h1"],
+                "automatic_https": {
+                  "disable": true
+                },
+                "read_header_timeout": "2s",
+                "read_timeout": "4s",
+                "write_timeout": "8s",
+                "idle_timeout": "2s",
+                "max_header_bytes": 16384,
+                "routes": [
+                  {
+                    "match": [
+                      {
+                        "expression": "{http.request.header.Content-Length} != '' && int({http.request.header.Content-Length}) > 262144"
+                      }
+                    ],
+                    "handle": [
+                      {
+                        "handler": "static_response",
+                        "status_code": 413,
+                        "headers": {
+                          "Content-Type": ["application/json"],
+                          "Cache-Control": ["no-store"]
+                        },
+                        "body": "{\"code\":8,\"message\":\"Request exceeds local intake size limit\"}"
+                      }
+                    ]
+                  },
+                  {
+                    "handle": [
+                      {
+                        "handler": "request_body",
+                        "max_size": 262144
+                      },
+                      {
+                        "handler": "reverse_proxy",
+                        "upstreams": [
+                          {
+                            "dial": "unix/~/.cache/claude-tmp/foundation-worker-resources-p_u3odno/journal.sqlite.sock"
+                          }
+                        ],
+                        "transport": {
+                          "protocol": "http",
+                          "versions": ["1.1"],
+                          "dial_timeout": "1s",
+                          "response_header_timeout": "5s",
+                          "read_timeout": "5s",
+                          "write_timeout": "2s",
+                          "keep_alive": {
+                            "enabled": false
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "proxyBinary": {
+    "version": "2.11.7",
+    "sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+    "archiveSha256": "727b91701a392de6ebc5027509f548bf39979e5216340d0faed8fa5e69c84f8b"
+  },
+  "deliberateMemoryExhaustion": false,
+  "result": "passed",
+  "aggregateMemoryCeilingBytes": 671088640,
+  "aggregateCpuQuotaPercent": 75,
+  "aggregateTasksCeiling": 128,
+  "databaseCeilingBytes": 1048576,
+  "perFileCeilingBytes": 2097152,
+  "aggregateFilesystemQuotaQualified": false,
+  "backendDeliveryQualified": false,
+  "runtimeEntrypoint": "test fixture only; not production launcher",
+  "receiptSha256": "baf7181d7e265d9c7d72de940eec01470320007204308d3a6fefa0f1d0887f80",
+  "cleanup": [
+    {
+      "unit": "beep-observation-proof-54647feaf3d1.service",
+      "mainPID": "0",
+      "activeState": "inactive",
+      "result": "success",
+      "exitStatus": "0"
+    },
+    {
+      "unit": "beep-observation-proxy-proof-9a0c4692e666.service",
+      "mainPID": "0",
+      "activeState": "inactive",
+      "result": "success",
+      "exitStatus": "0"
+    },
+    {
+      "unit": "beep-observation-proof-4dde278113ad.service",
+      "mainPID": "0",
+      "activeState": "inactive",
+      "result": "success",
+      "exitStatus": "0"
+    },
+    {
+      "unit": "beep-observation-proxy-proof-3291657be1b5.service",
+      "mainPID": "0",
+      "activeState": "inactive",
+      "result": "success",
+      "exitStatus": "0"
+    }
+  ],
+  "ownedWorkersStopped": true
+}

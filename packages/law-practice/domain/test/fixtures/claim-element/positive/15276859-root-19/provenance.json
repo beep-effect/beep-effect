@@ -1,0 +1,44 @@
+{
+  "applicationNumber": "15276859",
+  "publicationNumber": "US20170101888A1",
+  "publicationDate": "2017-04-13",
+  "nativeXmlSha256": "b0a475ea95caa394ab52a26489dfaced4f5b4179e55bf7dff7fdae921bead6db",
+  "claimsXmlSha256": "4b5e64336038051be088ecd401fa19fa6c62d565afbfa19c1985c81840640e4a",
+  "officeActionDocumentIdentifiers": [
+    "JMQIZ4MERXEAPX3"
+  ],
+  "officeActionMailDate": "2018-10-01",
+  "officeActionSection112Text": [
+    "claim 1-20 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1\r\nl2, limitation “the surface” lacks antecedent basis\r\nclaim 2\r\nl2, limitation “each strip” lacks antecedent basis\r\nclaim 3\r\nl2, limitation “the at least one strip” lacks antecedent basis\r\nl3, limitation “the heated zone” lacks antecedent basis\r\nclaim 4\r\nl2, limitation “performs u-turns” renders the claim indefinite, as the metes and bounds of the claim are unknown, as it is unknown if the cited limitation is invoking a method step of using in an apparatus claim, as informed by mpep 2173.05(p).ii.\r\nfor the purpose of applying art, the office will read the cited limitation as “comprises u-turns”, as informed by fig6 in particular.\r\nclaim 5\r\nl3, limitation “the strips” lacks antecedent basis\r\nl4, limitation “the inside” lacks antecedent basis\r\nl4, limitation “the leading edge” lacks antecedent basis\r\nl5, limitation “the outside” lacks antecedent basis\r\nl5, limitation “the leading edge” lacks antecedent basis\r\nclaim 6\r\nl2, limitation “the de-icing device” lacks antecedent basis\r\nl2, limitation “a plurality of heating strips” renders the claim indefinite, as the metes and bounds of the claim are unknown, as it is unknown if the cited limitation is introducing a new antecedent basis for a new structure, or if it relies upon the antecedent basis of “at least one electric heating strip” from claim 1.\r\nfor the purpose of applying art, the office will read the cited limitation as “a plurality of the at least one electric heating strips”.\r\nl2, limitation “are parallel” renders the claim indefinite, as the metes and bounds of the claim are unknown, as it is unknown “to what” the cited structure is to be arranged parallel\r\nclaim 7\r\nl2, limitation “the heating element” lacks antecedent basis\r\nclaim 8\r\nclaim 9\r\nl2-3, limitation “each strip” lacks antecedent basis\r\nl3, limitation “the strata” lacks antecedent basis\r\nl2, limitation “the strata” lacks antecedent basis\r\nl3, limitation “each strip” lacks antecedent basis\r\nclaim 11\r\nl2, limitation “all strips” lacks antecedent basis\r\nl2, limitation “the circumference” lacks antecedent basis\r\nl2, limitation “the leading edge” lacks antecedent basis\r\nclaim 12\r\nl3, limitation “the annular flows” lacks antecedent basis\r\nclaim 13\r\nl2, limitation “the heating element” lacks antecedent basis\r\nl2, limitation “the cavity” lacks antecedent basis\r\nclaim 14\r\nl3, limitation “the body” lacks antecedent basis\r\nl3-4, limitation “the leading edge” lacks antecedent basis\r\nclaim 15\r\nl2-3, limitation “the heating element” lacks antecedent basis\r\nl3, limitation “the dielectric layer” lacks antecedent basis\r\nclaim 16\r\nl2, limitation “the partition” lacks antecedent basis\r\nl2-3, limitation “the surface” lacks antecedent basis\r\nl5, limitation “the compressor” lacks antecedent basis\r\nl8-9, limitation “the electric heating strip” lacks antecedent basis\r\nl9, limitation “the annular separation surface level” lacks antecedent basis\r\nclaim 18\r\nl3, limitation “the shroud” lacks antecedent basis\r\nclaim 19\r\nl1, limitation “said engine” lacks antecedent basis\r\nl4, limitation “the surface” lacks antecedent basis\r\nclaim 20"
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "ITLKKJUERXEAPX3",
+      "officialDate": "2016-09-27T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "ITLKKJUERXEAPX3",
+      "officialDate": "2016-09-27T00:00:00.000-0400",
+      "sha256": "862918fbfa0b2c68177a17f83c44796c5ef3e23553cf577d5a673fa643921ac1",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        17,
+        19
+      ],
+      "sourceClaimCount": 20
+    }
+  ],
+  "documentInventoryCount": 67,
+  "documentInventoryRows": 67,
+  "primaryCpc": "F01D  25/02",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/15276859",
+    "https://api.uspto.gov/api/v1/patent/applications/15276859/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

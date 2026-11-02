@@ -1,0 +1,128 @@
+{
+  "result": "passed",
+  "archive": "~/.local/state/beep/observation-proof-archive/obs-deploy-tyfel5ys",
+  "sameHostOnly": true,
+  "doNotRunRetainedBundles": true,
+  "files": [
+    {
+      "path": "artifacts space/caddy",
+      "bytes": 51953826,
+      "sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9"
+    },
+    {
+      "path": "artifacts space/intake.json",
+      "bytes": 1068,
+      "sha256": "855e62c30f7e2be1f4d7160f3ff65eb443dde78a1ea20b3fc0725477dc080ac4"
+    },
+    {
+      "path": "artifacts space/intake.sha256",
+      "bytes": 232,
+      "sha256": "f9abc46f6acc55b2a350dd5e14fb063c90543215549ce9d5cd262d1d1a5e9b40"
+    },
+    {
+      "path": "artifacts space/worker.mjs",
+      "bytes": 1334282,
+      "sha256": "4c2f7034886d750573615a5c20876e133e3400a85843365be2095c724b8e0f69"
+    },
+    {
+      "path": "artifacts space/worker.sha256",
+      "bytes": 379,
+      "sha256": "82dd33c123b7747219b9c6da7374bc7eb7b8508c93720e9ead3f403b84527693"
+    },
+    {
+      "path": "bundle-build.log",
+      "bytes": 68,
+      "sha256": "e1736f5d6e098517fe2cd48ed656aa8ec44cc784c36c8ac4242939d1e929f2d5"
+    },
+    {
+      "path": "collector.yaml",
+      "bytes": 3825,
+      "sha256": "b49814316b91999f148f2d0b73f835c36be70fa4e24cab2f1588b8d7fc05ea56"
+    },
+    {
+      "path": "deployment-request.json",
+      "bytes": 456,
+      "sha256": "a366c17d3efe72fca8eba3496f017432731d0eed1ae3eb4385974f5da9b17877"
+    },
+    {
+      "path": "evidence.json",
+      "bytes": 21102,
+      "sha256": "661dc3615d9e5f862b24c1b70bb56b0e878784610e4c1686b97d6217d7f18413"
+    },
+    {
+      "path": "health-tsdb/queries.active",
+      "bytes": 20001,
+      "sha256": "4d53b2cb8f39eaa2434c0c213d53ac997b1075226374d30a40504f33caf8d8f7"
+    },
+    {
+      "path": "health-tsdb/wal/00000000",
+      "bytes": 32768,
+      "sha256": "8e96665cb354045e40ee02bce8312b384cd2ce13ee8f597811e7b86f63485535"
+    },
+    {
+      "path": "queue/exporter_otlphttp_phoenix_traces",
+      "bytes": 32768,
+      "sha256": "3e7cfbf033a6954f9089cb83796774e76188b6bc467a4f2314082310fdd0208e"
+    },
+    {
+      "path": "state/backup-0/journal.sqlite",
+      "bytes": 167936,
+      "sha256": "7695fe48f2c7b404b14446f4a023d9f8df0e2941c6f572f72954c0eb70ea6a0a"
+    },
+    {
+      "path": "state/backup-0/manifest.json",
+      "bytes": 399,
+      "sha256": "e46e6588a2a669d9fcf7cc8e9163976daefc6fb6846da3414779fae72e7e763d"
+    },
+    {
+      "path": "state/frontend-data/caddy/instance.uuid",
+      "bytes": 36,
+      "sha256": "1a95886b5a0551b93ae6179cafca98f07f700e92d2d19ad49beafad1ef471dcd"
+    },
+    {
+      "path": "state/frontend-data/caddy/last_clean.json",
+      "bytes": 112,
+      "sha256": "2be6d6680e0589f4a4c8ffd12d4c9551e2b19ac4bfa580037daffd87e638cf89"
+    },
+    {
+      "path": "state/journal.sqlite",
+      "bytes": 167936,
+      "sha256": "025b086edbb3b1c635bc7e57acb97153559eb4554934398e3c677c16e0ff15cf"
+    },
+    {
+      "path": "state/worker.json",
+      "bytes": 1459,
+      "sha256": "1cf14dd2d11195c1d7a4658011f615cf8a2f2c53a06e96edeb4624131181992f"
+    },
+    {
+      "path": "state/worker.lock",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "synthetic-input.json",
+      "bytes": 1136,
+      "sha256": "dd4a0bf30503abb2313ca9bc35745f8c90a64d393a3611068183478de2816476"
+    },
+    {
+      "path": "synthetic-salt",
+      "bytes": 27,
+      "sha256": "befd250f1495be62bb8fec4e1f3e2801266253fb1849140ec0e9ebb9351c54d8"
+    },
+    {
+      "path": "worker-health-prometheus.yml",
+      "bytes": 291,
+      "sha256": "b36db41f0f70c1d55f400b0ceffdf0187759856fc0799fc8e29d58f85498461b"
+    },
+    {
+      "path": "worker-health-rules.yml",
+      "bytes": 4432,
+      "sha256": "faae46e301eb777d4c247f5293a22b6b36d66ccb3b35eef38351b305f0a89ffe"
+    },
+    {
+      "path": "worker-health.prom",
+      "bytes": 1426,
+      "sha256": "9875ef37d2157eb6e448787bf3012586693bf5912237da1c513d67ec75edee01"
+    }
+  ]
+}

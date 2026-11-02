@@ -1,6 +1,8 @@
 /**
  * Effect service for `systemctl --user` control of stack-owned OpenClaw units.
  *
+ * **Details**
+ *
  * Every operation runs `systemctl --user <verb> [unit]` and inherits the
  * calling environment (`extendEnv: true`) because systemctl needs
  * `XDG_RUNTIME_DIR`/`DBUS_SESSION_BUS_ADDRESS` from the invoking session; the

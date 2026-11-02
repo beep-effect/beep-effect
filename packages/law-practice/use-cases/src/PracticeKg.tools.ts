@@ -1,6 +1,8 @@
 /**
  * Read-only MCP declarations for the portable practice knowledge-graph bundle.
  *
+ * **Details**
+ *
  * This module owns protocol schemas only. Runtime queries and layers live in
  * `@beep/law-practice-server`.
  *
@@ -438,7 +440,7 @@ export class PracticeKgToolError extends S.Opaque<PracticeKgToolError, { readonl
  * ```ts
  * import * as S from "effect/Schema"
  * import { PracticeKgToolResult } from "@beep/law-practice-use-cases/server"
- * import { ColumnarEnvelope } from "@beep/mcp-kit"
+ * import { ColumnarEnvelope } from "@beep/mcp-kit/FieldTier"
  *
  * const result = PracticeKgToolResult.make({
  *   bundle_version: "2026-07-27-01",

@@ -22,7 +22,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runCaptured } from "../../../internal/process/StepExec.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Research/internal/RepoCards");
@@ -77,7 +77,7 @@ const runForOutput = Effect.fn("RepoCards.runForOutput")(function* (
   command: string,
   args: ReadonlyArray<string>,
   cwd: string
-): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto> {
+): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
   const result = yield* runCaptured({
     command,
     args,
@@ -215,7 +215,7 @@ export const inspectClone = Effect.fn("RepoCards.inspectClone")(function* (
 ): Effect.fn.Return<
   ClonedRepoInfo,
   ResearchCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -254,7 +254,7 @@ export const listStarredRepos = Effect.fn("RepoCards.listStarredRepos")(function
 ): Effect.fn.Return<
   ReadonlyArray<StarredRepo>,
   ResearchCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const output = yield* runForOutput(
     "gh",

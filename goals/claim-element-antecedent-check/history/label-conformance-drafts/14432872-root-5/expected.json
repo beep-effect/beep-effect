@@ -1,0 +1,248 @@
+[
+  {
+    "claimNumber": 6,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 99,
+          "quote": "The physio-chemical method for use with the device for treating varicose veins according to claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 26,
+              "quote": "The physio-chemical method"
+            },
+            "determiner": "the",
+            "head": "physio-chemical method"
+          },
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 50,
+              "quote": "the device"
+            },
+            "determiner": "the",
+            "head": "device"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 109,
+          "endChar": 284,
+          "quote": "step b) is characterized in that a mixture of 3 cc to 5 cc of sclerosant substance is prepared with 1.5 cc to 3 cc of air, in order to produce 8 cc to 10 cc of medication (51)"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 142,
+              "endChar": 151,
+              "quote": "a mixture"
+            },
+            "determiner": "a",
+            "head": "mixture"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "5"
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 99,
+          "quote": "The physio-chemical method for use with the device for treating varicose veins according to claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 26,
+              "quote": "The physio-chemical method"
+            },
+            "determiner": "the",
+            "head": "physio-chemical method"
+          },
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 50,
+              "quote": "the device"
+            },
+            "determiner": "the",
+            "head": "device"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 109,
+          "endChar": 310,
+          "quote": "step c) is characterized in that between 0.2 and 0.5 cc of medication (51) are injected and the laser (31) is fired continuously at between 1.5 and 5 Watts, for a time period of between 3 and 4 seconds"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 201,
+              "endChar": 210,
+              "quote": "the laser"
+            },
+            "determiner": "the",
+            "head": "laser"
+          },
+          {
+            "anchor": {
+              "startChar": 270,
+              "endChar": 283,
+              "quote": "a time period"
+            },
+            "determiner": "a",
+            "head": "time period"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "5"
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 99,
+          "quote": "The physio-chemical method for use with the device for treating varicose veins according to claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 26,
+              "quote": "The physio-chemical method"
+            },
+            "determiner": "the",
+            "head": "physio-chemical method"
+          },
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 50,
+              "quote": "the device"
+            },
+            "determiner": "the",
+            "head": "device"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 109,
+          "endChar": 373,
+          "quote": "step c) is characterized in that between 0.2 and 0.5 cc of medication (51) are injected and the laser (31) is fired in pulses at 60 ms to 100 ms for a time period of between 3 to 4 seconds at 4 Watts, the administration of the pulses depending on the type of laser"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 201,
+              "endChar": 210,
+              "quote": "the laser"
+            },
+            "determiner": "the",
+            "head": "laser"
+          },
+          {
+            "anchor": {
+              "startChar": 258,
+              "endChar": 271,
+              "quote": "a time period"
+            },
+            "determiner": "a",
+            "head": "time period"
+          },
+          {
+            "anchor": {
+              "startChar": 310,
+              "endChar": 328,
+              "quote": "the administration"
+            },
+            "determiner": "the",
+            "head": "administration"
+          },
+          {
+            "anchor": {
+              "startChar": 332,
+              "endChar": 342,
+              "quote": "the pulses"
+            },
+            "determiner": "the",
+            "head": "pulses"
+          },
+          {
+            "anchor": {
+              "startChar": 356,
+              "endChar": 364,
+              "quote": "the type"
+            },
+            "determiner": "the",
+            "head": "type"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "5"
+      }
+    ]
+  }
+]

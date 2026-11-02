@@ -2,7 +2,7 @@ import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research";
 import { discoverProfiles, historySiftImpl, VAULT_DIRS } from "@beep/repo-cli/test/Research";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -14,7 +14,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const TestLayer = Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer);
+const TestLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttpClient.layer);
 
 // Per-test configuration is a pure provider value, so HOME is provided as a
 // service instead of touching the real one: nothing here may read the

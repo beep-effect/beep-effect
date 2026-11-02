@@ -54,7 +54,8 @@ import {
   yeetInboxRowIsObserved,
 } from "./Inbox.ts";
 import { loadYeetInboxView, YeetInboxView, YeetInboxViewJson } from "./InboxView.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { YeetAckResolution, YeetAckState } from "./Ack.ts";
@@ -408,7 +409,11 @@ export const ackYeetInboxRow = Effect.fn("Yeet.ackYeetInboxRow")(function* (
   id: string,
   resolution: YeetAckResolution,
   ackedAt: string
-): Effect.fn.Return<YeetInboxAckReport, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  YeetInboxAckReport,
+  YeetCommandError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const view = yield* loadYeetInboxView(repoRoot);
   const entry = A.findFirst(view.entries, (candidate) => candidate.row.id === id);
   if (O.isNone(entry)) {
@@ -459,7 +464,11 @@ export const ackYeetInboxRow = Effect.fn("Yeet.ackYeetInboxRow")(function* (
 export const appendYeetInboxRowFromText = Effect.fn("Yeet.appendYeetInboxRowFromText")(function* (
   repoRoot: string,
   text: string
-): Effect.fn.Return<YeetInboxRow, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  YeetInboxRow,
+  YeetCommandError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const row = yield* YeetInboxRowJson.decode(Str.trim(text)).pipe(
     Effect.mapError(YeetCommandError.new("Failed to decode the inbox row document."))
   );
@@ -542,7 +551,11 @@ export const renderYeetInboxListOutput = Effect.fn("Yeet.renderYeetInboxListOutp
  */
 export const runYeetInboxList = Effect.fn("Yeet.runInboxListCommand")(function* (
   options: YeetInboxListOptions
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const repoRoot = yield* locateRepoRoot();
   const view = yield* loadYeetInboxView(repoRoot);
   yield* Console.log(yield* renderYeetInboxListOutput(view, options));
@@ -570,7 +583,11 @@ export const runYeetInboxList = Effect.fn("Yeet.runInboxListCommand")(function* 
  */
 export const runYeetInboxAck = Effect.fn("Yeet.runInboxAckCommand")(function* (
   options: YeetInboxAckOptions
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const resolution = yield* parseYeetAckResolution(options);
   const repoRoot = yield* locateRepoRoot();
   const ackedAt = yield* isoNow;
@@ -600,7 +617,11 @@ export const runYeetInboxAck = Effect.fn("Yeet.runInboxAckCommand")(function* (
  */
 export const runYeetInboxAppend = Effect.fn("Yeet.runInboxAppendCommand")(function* (
   options: YeetInboxAppendOptions
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const text = yield* readYeetInboxStdin(options.fromStdin);
   const repoRoot = yield* locateRepoRoot();
   const row = yield* appendYeetInboxRowFromText(repoRoot, text);

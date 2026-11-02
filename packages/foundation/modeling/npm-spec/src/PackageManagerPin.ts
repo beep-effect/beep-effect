@@ -1,6 +1,6 @@
 /**
  * The corepack pin triple `<name>@<version>[+<integrity>]` as a first-class
- * schema — e.g. `pnpm@11.17.0+sha512.abc…`. `@beep/scratchpad/effected/package-json`'s
+ * schema — e.g. `pnpm@11.17.0+sha512.abc…`. `@beep/package-json`'s
  * `PackageManager.FromString` binds the same grammar to the `packageManager`
  * field; this module gives the triple itself a reusable home beside the
  * dependency vocabulary that lives here (`IntegrityHash`, `DependencySpecifier`).
@@ -125,7 +125,7 @@ export class InvalidPackageManagerPinError extends S.TaggedError<
  * package at a downstream consumer and invert the dependency direction.
  *
  * **This four-literal set is narrower than the `packageManager` manifest field,
- * and the difference is deliberate.** `@beep/scratchpad/effected/package-json`'s
+ * and the difference is deliberate.** `@beep/package-json`'s
  * `PackageManager` parses the identical `<name>@<version>[+<integrity>]`
  * grammar with the same strict version and the same shared corepack integrity,
  * but accepts any `[a-z]+` name, because a field model reads manifests it did
@@ -362,7 +362,7 @@ export class PackageManagerPin extends S.Class<PackageManagerPin, { readonly bra
     const plus = O.getOrElse(Str.indexOf("+")(rest), () => -1);
     const candidate = plus === -1 ? rest : Str.slice(0, plus)(rest);
     // The string-level ruling is `SemVer.isPinnable` — the same export
-    // `@beep/scratchpad/effected/package-json`'s field model consumes — and it is stricter
+    // `@beep/package-json`'s field model consumes — and it is stricter
     // than the trimming parse: a padded version substring (`pnpm@ 11.17.0`)
     // fails typed here rather than being silently canonicalized.
     const version = SemVer.parseResult(candidate);

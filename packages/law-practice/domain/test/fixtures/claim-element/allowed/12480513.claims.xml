@@ -1,0 +1,25 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A hollow-structured cooling fan, comprising:
+<claim-text>a fan frame, wherein a cylindrical mounting tube is disposed in a central portion of the fan frame, and a first bearing is disposed within the mounting tube;</claim-text>
+<claim-text>a fan assembly, wherein a hollow sleeve shaft is disposed in a central portion of the fan assembly, the sleeve shaft is inserted into the mounting tube, an outer wall of the sleeve shaft is connected to an inner ring of the first bearing, and a second bearing is disposed within the sleeve shaft;</claim-text>
+<claim-text>a display module, wherein a hollow fixed shaft is disposed in a central portion of the display module, the fixed shaft is inserted into the sleeve shaft, and an outer wall of the fixed shaft is connected to an inner ring of the second bearing; and an end portion of an insertion end of the fixed shaft extends through a bottom of the mounting tube to form a limiting connection; and</claim-text>
+<claim-text>a drive module, wherein the drive module is disposed on an outer side of the mounting tube and cooperates with the fan assembly; and when the drive module drives the fan assembly to rotate, the display module is in a stationary state through the fixed shaft.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The hollow-structured cooling fan according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a first elastic member is disposed between an inner side of the mounting tube and an outer side of the sleeve shaft, and opposite ends of the first elastic member respectively abut against the fan assembly and the first bearing.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The hollow-structured cooling fan according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein a second elastic member is disposed between an inner side of the sleeve shaft and an outer side of the fixed shaft, and opposite ends of the second elastic member respectively abut against the display module and the second bearing.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The hollow-structured cooling fan according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a first flat surface is formed on the insertion end of the fixed shaft, and a second flat surface corresponding to the first flat surface is formed in a through hole at the bottom of the mounting tube.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The hollow-structured cooling fan according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a retaining slot is formed at the end portion of the insertion end of the display module; and after the insertion end of the fixed shaft extends through the bottom of the mounting tube, a retaining ring is snapped-fitted into the retaining slot to limit a connection between the fixed shaft and the mounting tube.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The hollow-structured cooling fan according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the display module is a display screen, the display module is electrically connected to the drive module through wires to display images or texts, and the wires are routed through an interior of the fixed shaft.</claim-text>
+</claim>
+</claims>

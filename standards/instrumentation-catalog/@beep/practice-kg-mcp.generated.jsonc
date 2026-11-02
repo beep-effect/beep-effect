@@ -5,7 +5,7 @@
   "package": "@beep/practice-kg-mcp",
   "attributes": [
     {"key":"beep.practice_kg.failure_reason","type":"string","signals":["span"],"cardinality":"static","minTier":"shape-only","values":["store-query-failed","row-decode-failed","invalid-input"],"owner":"@beep/practice-kg-mcp","description":"Literal reason a practice KG tool call failed; never the failure message."},
-    {"key":"beep.practice_kg.tool","type":"string","signals":["span","metric"],"cardinality":"static","minTier":"shape-only","values":["kg_clients","kg_docket_family","kg_application_lookup","kg_find","corpus_search_text","corpus_get_document","email_search","kg_candidate_claims","kg_matter_lookup","kg_correspondent_lookup","kg_provenance"],"owner":"@beep/practice-kg-mcp","description":"Practice KG tool a span or metric point belongs to."}
+    {"key":"beep.practice_kg.tool","type":"string","signals":["span","metric"],"cardinality":"static","minTier":"shape-only","values":["claim_self_check","kg_clients","kg_docket_family","kg_application_lookup","kg_find","corpus_search_text","corpus_get_document","email_search","kg_candidate_claims","kg_matter_lookup","kg_correspondent_lookup","kg_provenance"],"owner":"@beep/practice-kg-mcp","description":"Practice KG tool a span or metric point belongs to."}
   ],
   "instruments": [
     {"_tag":"MetricInstrument","name":"beep.practice_kg.process.cpu","owner":"@beep/practice-kg-mcp","attributes":[],"minTier":"shape-only","description":"Host CPU use over the last 5-minute window, percent of one core, floored to a 5% step.","kind":"gauge","unit":"%"},

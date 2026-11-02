@@ -94,7 +94,8 @@ this packet at `decompose` when their gates fire.
   240) and the counts were propagated. A 19-agent Workflow gate then verified
   every `MAP.md` cite (8/9 confirmed; the `TemplateRetarget.ts` range is
   L139-184 path pass + L186-262 body pass, not L146-171), refuted four of
-  five NET-NEW marks with existing bricks (`resolveWorkspaceDirs`,
+  five NET-NEW marks with existing bricks (the repo-utils workspace reader, now
+  repo-cli `internal/RepoWorkspaces.ts` `workspaceDirectories` after 4-A3,
   `internal/ratchet`, `CiLane.ts` registry, `@beep/schema/Fn` + the govinfo
   `contracts/Search` precedent), and failed point 4 on six uncited
   components — all six now cite or are marked NET-NEW in `MAP.md`. One new

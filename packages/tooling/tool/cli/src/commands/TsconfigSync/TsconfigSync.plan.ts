@@ -5,15 +5,8 @@
  * @since 0.0.0
  */
 
-import {
-  collectTsConfigPaths,
-  DomainError,
-  decodePackageJsonEffect,
-  resolveWorkspaceDirs,
-  topologicalSort,
-  workspaceDependencyNames,
-  workspaceGlobsFrom,
-} from "@beep/repo-utils";
+import { Jsonc } from "@beep/jsonc/Jsonc";
+import { collectTsConfigPaths, DomainError, decodePackageJsonEffect, topologicalSort } from "@beep/repo-utils";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import {
   CanonicalDocgenConfigInput,
@@ -28,7 +21,9 @@ import {
   resolveSubpathExportTarget,
   resolveWildcardExportTarget,
 } from "@beep/repo-utils/schemas/TsconfigAliasTargets";
+import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { normalizePath } from "@beep/schema";
+import { TsconfigJson } from "@beep/tsconfig/TsconfigJson";
 import { A, Str, thunkFalse, thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
@@ -41,12 +36,9 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import {
-  applyJsoncModification as applySharedJsoncModification,
-  decodeJsoncTextAs,
-  JsoncModification,
-} from "../../internal/cli/Jsonc.ts";
+import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
 import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
+import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { FALLOW_BOUNDARY_CONFIG_PATH, renderFallowBoundaryConfig } from "../Fallow/Fallow.command.ts";
 import { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
 import {
@@ -57,17 +49,13 @@ import {
   DOCGEN_CONFIG_FILENAME,
   isBeepScopedPackageName,
   isCanonicalAliasKey,
-  isRootDepIndexKey,
   JsonObject,
   PlannedFileChange,
   stringArrayEquivalence,
   TsconfigSyncChange,
   TsconfigSyncSchemaInternals,
-  TsconfigWithPaths,
-  TsconfigWithReferences,
   WorkspaceDescriptor,
 } from "./TsconfigSync.schemas.ts";
-import type { WorkspaceDeps } from "@beep/repo-utils";
 
 const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
@@ -88,9 +76,9 @@ const referenceEntries = (paths: ReadonlyArray<string>): ReadonlyArray<{ readonl
   A.map(paths, (entry) => ({ path: entry }));
 
 const parseJsonc = Effect.fn(function* <Schema extends S.Top>(content: string, filePath: string, schema: Schema) {
-  return yield* decodeJsoncTextAs(schema)(content).pipe(
-    Effect.mapError(DomainError.newCauseMessage(`Failed to parse JSONC in "${filePath}"`))
-  );
+  return yield* Jsonc.bind(schema)
+    .decode(content)
+    .pipe(Effect.mapError(DomainError.newCauseMessage(`Failed to parse JSONC in "${filePath}"`)));
 });
 
 const parseJsonObject = Effect.fn(function* (content: string, filePath: string) {
@@ -103,20 +91,15 @@ const renderDocgenJson = Effect.fn(function* (filePath: string, value: unknown) 
   return yield* renderBiomeJson(filePath, value);
 });
 
-const readRootPackageJson = Effect.fn(function* (rootDir: string) {
-  const path = yield* Path.Path;
-  const filePath = path.join(rootDir, "package.json");
-  const content = yield* readFileString(filePath);
-  const parsed = yield* parseJsonObject(content, filePath);
-  const packageJson = yield* decodePackageJsonEffect(parsed).pipe(
-    Effect.mapError(DomainError.newCause(`Failed to decode package.json at "${filePath}"`))
+/**
+ * The root's workspace patterns through `@beep/repo-workspaces` (4-A2): a
+ * non-empty `pnpm-workspace.yaml` `packages:` list first, else the root
+ * `package.json` `workspaces` field in either shape.
+ */
+const readWorkspacePatterns = Effect.fn(function* (rootDir: string) {
+  return yield* WorkspacePatterns.read(rootDir).pipe(
+    Effect.mapError(DomainError.newCause(`Failed to read workspace patterns under "${rootDir}"`))
   );
-
-  return {
-    filePath,
-    content,
-    packageJson,
-  } as const;
 });
 
 const readFileString = Effect.fn(function* (filePath: string) {
@@ -142,28 +125,12 @@ const readFileString = Effect.fn(function* (filePath: string) {
  * @category utilities
  * @since 0.0.0
  */
-// fallow-ignore-next-line code-duplication -- config-updater helper twin of the CreatePackage/TsconfigSync copy, converged after the tstyche removal and the JSDoc grammar migration. Owner: @beep/repo-cli. Exit: consolidate both onto `@beep/repo-utils` (workspaceGlobsFrom/readPackageJsonFile) and delete the twins.
 const writeFileString = Effect.fn(function* (filePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs
     .writeFileString(filePath, content)
     .pipe(Effect.mapError(DomainError.newCause(`Failed to write file "${filePath}"`)));
 });
-
-const applyJsoncModification = (
-  content: string,
-  path: ReadonlyArray<string | number>,
-  value: unknown,
-  options?: { readonly isArrayInsertion?: boolean }
-): string =>
-  applySharedJsoncModification(
-    JsoncModification.make({
-      content,
-      path,
-      value,
-      ...(options?.isArrayInsertion === true ? { isArrayInsertion: true } : {}),
-    })
-  );
 
 /**
  * Render a file path relative to the repository root.
@@ -267,8 +234,8 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
-  const workspaceDirs = yield* resolveWorkspaceDirs(rootDir);
-  const tsconfigPathsByPackage = yield* collectTsConfigPaths(rootDir);
+  const workspaceDirs = yield* workspaceDirectories(rootDir);
+  const tsconfigPathsByPackage = yield* collectTsConfigPaths(rootDir, workspaceDirs);
 
   const descriptors = A.empty<WorkspaceDescriptor>();
 
@@ -348,44 +315,6 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
   return A.sort(descriptors, byWorkspaceRelativeDirAscending);
 });
 
-/**
- * Build the workspace dependency adjacency map.
- *
- * **Example** (Plan tsconfig synchronization)
- *
- * ```ts
- * import { buildAdjacency } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import * as HashMap from "effect/HashMap";
- * // An empty dependency index yields an empty adjacency map.
- * console.log(HashMap.size(buildAdjacency(HashMap.empty()))) // 0
- * ```
- *
- * @param depIndex - Dependency index mapping each package to its workspace dependencies.
- * @returns An adjacency map from each package name to the set of packages it depends on.
- * @category utilities
- * @since 0.0.0
- */
-const buildAdjacency = (
-  depIndex: HashMap.HashMap<string, WorkspaceDeps>
-): HashMap.HashMap<string, HashSet.HashSet<string>> => {
-  let adjacency = HashMap.empty<string, HashSet.HashSet<string>>();
-
-  for (const [packageName, deps] of depIndex) {
-    if (isRootDepIndexKey(packageName)) {
-      continue;
-    }
-
-    let depSet = HashSet.empty<string>();
-    for (const depName of workspaceDependencyNames(deps)) {
-      depSet = HashSet.add(depSet, depName);
-    }
-
-    adjacency = HashMap.set(adjacency, packageName, depSet);
-  }
-
-  return adjacency;
-};
-
 const summaryCounts = (
   currentItems: ReadonlyArray<string>,
   expectedItems: ReadonlyArray<string>,
@@ -402,11 +331,8 @@ const summaryCounts = (
   return `${noun}: ${currentItems.length} -> ${expectedItems.length} (add ${added}, remove ${removed}${reordered ? ", reorder" : ""})`;
 };
 
-const compareReferencePathsInOrder = (parsed: TsconfigWithReferences): ReadonlyArray<string> =>
-  pipe(
-    parsed.references ?? A.empty(),
-    A.flatMap((entry) => (P.isString(entry.path) ? A.make(entry.path) : A.empty<string>()))
-  );
+const compareReferencePathsInOrder = (parsed: TsconfigJson): ReadonlyArray<string> =>
+  A.map(parsed.references ?? A.empty(), (reference) => reference.path);
 
 // Ratified lab-apps row 2 (zero-root-churn holdout A): labs workspaces never
 // enter the root solution reference set. Each lab's package-local check is its
@@ -437,7 +363,7 @@ const planRootReferenceSync = Effect.fn(function* (rootDir: string, workspaces: 
   const filePath = path.join(rootDir, "tsconfig.packages.json");
 
   const original = yield* readFileString(filePath);
-  const parsed = yield* parseJsonc(original, filePath, TsconfigWithReferences);
+  const parsed = yield* parseJsonc(original, filePath, TsconfigJson);
 
   const expected = uniqueSorted(
     pipe(
@@ -453,7 +379,9 @@ const planRootReferenceSync = Effect.fn(function* (rootDir: string, workspaces: 
     return O.none<PlannedFileChange>();
   }
 
-  const nextContent = applyJsoncModification(original, ["references"], referenceEntries(expected));
+  const nextContent = applyJsoncModification(
+    JsoncModification.make({ content: original, path: ["references"], value: referenceEntries(expected) })
+  );
 
   return O.some(
     PlannedFileChange.cases["root-references"].make({
@@ -597,7 +525,7 @@ const planRootAliasSync = Effect.fn(function* (rootDir: string, workspaces: Read
   const filePath = path.join(rootDir, "tsconfig.json");
 
   const original = yield* readFileString(filePath);
-  const parsed = yield* parseJsonc(original, filePath, TsconfigWithPaths);
+  const parsed = yield* parseJsonc(original, filePath, TsconfigJson);
 
   const currentPaths = parsed.compilerOptions?.paths ?? {};
 
@@ -626,14 +554,22 @@ const planRootAliasSync = Effect.fn(function* (rootDir: string, workspaces: Read
 
   let nextContent = original;
   for (const key of keysToRemove) {
-    nextContent = applyJsoncModification(nextContent, ["compilerOptions", "paths", key], undefined);
+    nextContent = applyJsoncModification(
+      JsoncModification.make({ content: nextContent, path: ["compilerOptions", "paths", key], value: undefined })
+    );
   }
   for (const key of keysToSet) {
     const expectedValue = HashMap.get(expectedAliases, key);
     if (O.isNone(expectedValue)) {
       continue;
     }
-    nextContent = applyJsoncModification(nextContent, ["compilerOptions", "paths", key], expectedValue.value);
+    nextContent = applyJsoncModification(
+      JsoncModification.make({
+        content: nextContent,
+        path: ["compilerOptions", "paths", key],
+        value: expectedValue.value,
+      })
+    );
   }
 
   const additions = A.length(
@@ -654,7 +590,7 @@ const VITEST_ALIASES_FILENAME = "vitest.aliases.generated.json";
 
 const aliasPathEntriesEqual = (
   current: Readonly<Record<string, unknown>>,
-  expected: Readonly<Record<string, unknown>>
+  expected: Readonly<Record<string, ReadonlyArray<string>>>
 ): boolean => {
   const expectedKeys = R.keys(expected);
 
@@ -663,12 +599,7 @@ const aliasPathEntriesEqual = (
   // mirror must pass both gates.
   return (
     arraysEqual(uniqueSorted(R.keys(current)), uniqueSorted(expectedKeys)) &&
-    A.every(expectedKeys, (key) => {
-      const expectedValue = expected[key];
-      return (
-        A.isArray(expectedValue) && A.every(expectedValue, P.isString) && pathValuesEqual(current[key], expectedValue)
-      );
-    })
+    A.every(R.toEntries(expected), ([key, expectedValue]) => pathValuesEqual(current[key], expectedValue))
   );
 };
 
@@ -714,8 +645,7 @@ const planRootVitestAliasSync = Effect.fn(function* (rootDir: string, plannedRoo
     onNone: () => readFileString(tsconfigPath),
     onSome: Effect.succeed,
   });
-  const expectedPaths =
-    (yield* parseJsonc(tsconfigContent, tsconfigPath, TsconfigWithPaths)).compilerOptions?.paths ?? {};
+  const expectedPaths = (yield* parseJsonc(tsconfigContent, tsconfigPath, TsconfigJson)).compilerOptions?.paths ?? {};
   const currentPaths = yield* parseJsonObject(yield* readFileString(filePath), filePath);
 
   if (aliasPathEntriesEqual(currentPaths, expectedPaths)) {
@@ -799,11 +729,10 @@ const planRootFallowBoundarySync = Effect.fn(function* (rootDir: string) {
  */
 const planRootSyncpackSync = Effect.fn(function* (rootDir: string) {
   const path = yield* Path.Path;
-  const { packageJson } = yield* readRootPackageJson(rootDir);
+  const workspacePatterns = yield* readWorkspacePatterns(rootDir);
   const syncpackFilePath = path.join(rootDir, "syncpack.config.ts");
   const original = yield* readFileString(syncpackFilePath);
   const current = yield* readSyncpackSources(original);
-  const workspacePatterns = workspaceGlobsFrom(packageJson.workspaces);
   const expected = buildCanonicalSyncpackSources(workspacePatterns);
 
   if (arraysEqual(current, expected)) {
@@ -918,15 +847,14 @@ const canonicalizeExistingRefTarget = Effect.fn(function* (
 const computedPackageReferenceTargets = Effect.fnUntraced(function* (
   workspace: WorkspaceDescriptor,
   workspaceByName: HashMap.HashMap<string, WorkspaceDescriptor>,
-  depIndex: HashMap.HashMap<string, WorkspaceDeps>,
   adjacency: HashMap.HashMap<string, HashSet.HashSet<string>>
 ) {
-  const workspaceDeps = HashMap.get(depIndex, workspace.packageName);
+  const workspaceDeps = HashMap.get(adjacency, workspace.packageName);
   if (O.isNone(workspaceDeps)) {
     return O.none<ReadonlyArray<string>>();
   }
 
-  const directDeps = A.filter(workspaceDependencyNames(workspaceDeps.value), (depName) => {
+  const directDeps = A.filter(A.sort(A.fromIterable(workspaceDeps.value), byStringAscending), (depName) => {
     const descriptor = HashMap.get(workspaceByName, depName);
     return O.isSome(descriptor) && descriptor.value.ownerTsconfigPath !== undefined;
   });
@@ -993,7 +921,6 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
   workspace: WorkspaceDescriptor,
   workspaces: ReadonlyArray<WorkspaceDescriptor>,
   workspaceByName: HashMap.HashMap<string, WorkspaceDescriptor>,
-  depIndex: HashMap.HashMap<string, WorkspaceDeps>,
   adjacency: HashMap.HashMap<string, HashSet.HashSet<string>>,
   verbose: boolean
 ) {
@@ -1003,14 +930,14 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
 
   const path = yield* Path.Path;
   const sourceOwnerTsconfigPath = workspace.ownerTsconfigPath;
-  const computedTargets = yield* computedPackageReferenceTargets(workspace, workspaceByName, depIndex, adjacency);
+  const computedTargets = yield* computedPackageReferenceTargets(workspace, workspaceByName, adjacency);
   if (O.isNone(computedTargets)) {
     return O.none<PlannedFileChange>();
   }
 
   const sourceDir = path.dirname(sourceOwnerTsconfigPath);
   const original = yield* readFileString(sourceOwnerTsconfigPath);
-  const parsed = yield* parseJsonc(original, sourceOwnerTsconfigPath, TsconfigWithReferences);
+  const parsed = yield* parseJsonc(original, sourceOwnerTsconfigPath, TsconfigJson);
   const existingResolvedTargets = yield* canonicalExistingReferenceTargets(
     workspace,
     sourceOwnerTsconfigPath,
@@ -1029,7 +956,9 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
     return O.none<PlannedFileChange>();
   }
 
-  const nextContent = applyJsoncModification(original, ["references"], referenceEntries(finalRefPaths));
+  const nextContent = applyJsoncModification(
+    JsoncModification.make({ content: original, path: ["references"], value: referenceEntries(finalRefPaths) })
+  );
   if (Str.equivalence(nextContent, original)) {
     return O.none<PlannedFileChange>();
   }
@@ -1055,10 +984,10 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
  * **Example** (Plan tsconfig synchronization)
  *
  * ```ts
- * import { planPackageReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import * as Effect from "effect/Effect";
  * import * as HashMap from "effect/HashMap";
- * const program = planPackageReferenceSync("/repo", [], HashMap.empty(), HashMap.empty())
+ * const program = TsconfigSyncPlan.planPackageReferenceSync("/repo", [], HashMap.empty(), undefined, false)
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -1068,7 +997,6 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
 const planPackageReferenceSync = Effect.fn(function* (
   rootDir: string,
   workspaces: ReadonlyArray<WorkspaceDescriptor>,
-  depIndex: HashMap.HashMap<string, WorkspaceDeps>,
   adjacency: HashMap.HashMap<string, HashSet.HashSet<string>>,
   filter: string | undefined,
   verbose: boolean
@@ -1086,7 +1014,6 @@ const planPackageReferenceSync = Effect.fn(function* (
       workspace,
       workspaces,
       workspaceByName,
-      depIndex,
       adjacency,
       verbose
     );
@@ -1123,17 +1050,19 @@ const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
     HashMap.get(plannedCanonicalContent, canonicalPath),
     O.match({ onNone: () => readFileString(canonicalPath), onSome: Effect.succeed })
   );
-  const canonical = yield* parseJsonc(canonicalContent, canonicalPath, TsconfigWithReferences);
+  const canonical = yield* parseJsonc(canonicalContent, canonicalPath, TsconfigJson);
   const expected = compareReferencePathsInOrder(canonical);
 
   const original = yield* readFileString(overlayPath);
-  const overlay = yield* parseJsonc(original, overlayPath, TsconfigWithReferences);
+  const overlay = yield* parseJsonc(original, overlayPath, TsconfigJson);
   const current = compareReferencePathsInOrder(overlay);
   if (arraysEqual(current, expected)) {
     return O.none<PlannedFileChange>();
   }
 
-  const nextContent = applyJsoncModification(original, ["references"], referenceEntries(expected));
+  const nextContent = applyJsoncModification(
+    JsoncModification.make({ content: original, path: ["references"], value: referenceEntries(expected) })
+  );
   if (Str.equivalence(nextContent, original)) {
     return O.none<PlannedFileChange>();
   }
@@ -1323,7 +1252,6 @@ const toReportedChange = (change: PlannedFileChange): TsconfigSyncChange =>
  * @since 0.0.0
  */
 export const TsconfigSyncPlan = {
-  buildAdjacency,
   buildWorkspaceDescriptors,
   planPackageCheckReferenceSync,
   planPackageDocgenSync,

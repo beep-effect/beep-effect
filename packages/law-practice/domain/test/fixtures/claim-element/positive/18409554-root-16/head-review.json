@@ -1,0 +1,50 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "18409554-root-16",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "previousRound": 2,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 16,
+      "path": "16.d",
+      "anchor": {
+        "startChar": 489,
+        "endChar": 512,
+        "quote": "at least two electrodes"
+      },
+      "determiner": "bare",
+      "beforeHead": "electrodes",
+      "afterHead": "at least two electrodes",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "storage to store information representing contact force as applied by at least two electrodes on biological tissues and the number of times energy were delivered; ",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round2.json",
+      "sha256": "95e847b121750f5876eea41d6acbcf300f80b5ff18c5ac89d39ae3af77ab9054"
+    },
+    {
+      "file": "extractor.round2.json",
+      "sha256": "5143c5b759024439fca368422cd2c5d7d807fb17e48ee6e0b85e0b7699775d84"
+    },
+    {
+      "file": "critic.round2.json",
+      "sha256": "40d48d419b2cd828034c00ed43c4aa8876b4fa3f18941c09a08089ed5b86198b"
+    }
+  ],
+  "missingPriorCritic": null,
+  "structureInvariant": "Expected trees are byte-for-byte semantically equal after replacing only audited head fields with their prior values. No anchors, determiners, edges, element structure, source or claim scope changed.",
+  "independence": "Targeted extractor correction from manually reviewed exact canonical/native source context and lexical-head/v1 only. Literal audit flags were checked individually; no generic parser/decomposer, production rules, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "unchanged; pending human review where already required"
+}

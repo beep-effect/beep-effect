@@ -114,6 +114,6 @@ export const available = (
   command: ChildProcess.Command
 ): Effect.Effect<boolean, never, ChildProcessSpawner.ChildProcessSpawner> =>
   runCollected(command).pipe(
-    Effect.map(() => true),
+    Effect.as(true),
     Effect.orElseSucceed(() => false)
   );

@@ -1,5 +1,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
-import { extractFencedCodeBlocks } from "@beep/repo-docgen/Core";
+import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
+import { MarkdownFence } from "@beep/markdown/MarkdownFence";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { getSomesStruct } from "@beep/utils/Option";
@@ -7,6 +8,7 @@ import { constant, dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Regex from "effect/RegExp";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import type { SourceFile } from "ts-morph";
@@ -349,18 +351,35 @@ const blankLinesLike = (value: string): string =>
     "\n"
   );
 
+// The line scanner's reading of the fences, for a text the CommonMark parser refuses: every line
+// between an opening fence and its closer (to the end for an unterminated fence) is blanked.
+const maskFencedLines = (lines: ReadonlyArray<string>): ReadonlyArray<string> => {
+  let openFence: string | undefined;
+  return A.map(lines, (line) => {
+    const openBefore = openFence;
+    [openFence] = fencedLineState(line, openFence);
+    return openBefore !== undefined && openFence !== undefined ? "" : line;
+  });
+};
+
+// Blank every fence body (any language) so section markers quoted inside code are not read as sections.
+// A text with no run of three backticks or tildes has no fence and is not parsed.
 const maskFencedContent = (lines: ReadonlyArray<string>): ReadonlyArray<string> => {
-  const normalized = A.join(
-    A.map(lines, (line) => Str.replace(/^(\s*)(```|~~~).*$/, "$1$2ts")(line)),
-    "\n"
-  );
-  const [blocks] = extractFencedCodeBlocks(normalized);
-  const masked = A.reduce(blocks, normalized, (text, block) =>
-    Str.isEmpty(block.code)
-      ? text
-      : Str.replace(new RegExp(Regex.escape(block.code), "g"), blankLinesLike(block.code))(text)
-  );
-  return Str.split(/\r?\n/)(masked);
+  const text = A.join(lines, "\n");
+  return !/`{3}|~{3}/u.test(text)
+    ? lines
+    : Result.match(MarkdownDocument.parseResult(text), {
+        onFailure: () => maskFencedLines(lines),
+        onSuccess: (document) =>
+          Str.split(/\r?\n/)(
+            A.reduce(
+              A.reverse(MarkdownFence.fences(document)),
+              text,
+              (current, fence) =>
+                `${Str.slice(0, fence.bodyStart)(current)}${blankLinesLike(fence.body)}${Str.slice(fence.bodyEnd)(current)}`
+            )
+          ),
+      });
 };
 
 const dropFramingBlankLines = (lines: ReadonlyArray<string>): ReadonlyArray<string> => {

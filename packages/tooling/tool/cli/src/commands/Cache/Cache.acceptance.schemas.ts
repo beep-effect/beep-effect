@@ -8,8 +8,10 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientChannel, CacheTaskContract } from "@beep/repo-configs/cache";
 import { Sha256Hex } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CacheProducerEvidenceFragment } from "./Cache.producer.schemas.ts";
+import { CacheHostedProducerReference } from "./Cache.workflow.github.schemas.ts";
 import { CacheProducerObservation } from "./Cache.workflow.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.acceptance.schemas");
@@ -38,6 +40,42 @@ export class CacheProducerTrustLocations extends S.Opaque<
 ) {}
 
 /**
+ * Exact hosted artifact identity and retained bounded ZIP bytes for one channel.
+ *
+ * **Details**
+ * These submitted bytes carry no approval. The independent issuer directory
+ * selects repository/workflow trust, and the verifier checks current GitHub
+ * metadata plus the complete canonical observation before acceptance.
+ *
+ * **Example** (Decode untrusted publication transport)
+ * ```ts
+ * import { CacheProducerPublication } from "@beep/repo-cli/test/Cache"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const transported = S.decodeUnknownOption(CacheProducerPublication)({
+ *   reference: { runId: 11, attempt: 1, artifactId: 111 },
+ *   archive: "UEs="
+ * })
+ * console.assert(O.isSome(transported))
+ * // Decoding transport grants no approval and does not validate ZIP contents.
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheProducerPublication extends S.Opaque<CacheProducerPublication, { readonly brand: unique symbol }>()(
+  S.Struct({
+    reference: CacheHostedProducerReference,
+    archive: S.Uint8ArrayFromBase64.check(S.isMinLength(1), S.isMaxLength(1024 * 1024)),
+  }).pipe(
+    $I.annoteSchema("CacheProducerPublication", {
+      description: "Untrusted immutable artifact selector and at most one MiB of transported ZIP bytes.",
+    })
+  )
+) {}
+
+/**
  * Both complete authenticated channel reports submitted for import preparation.
  *
  * **Example** (Require both channel reports)
@@ -53,9 +91,15 @@ export class CacheProducerImportRequest extends S.Opaque<
   CacheProducerImportRequest,
   { readonly brand: unique symbol }
 >()(
-  S.Struct({ observations: S.Record(CacheClientChannel, CacheProducerObservation) }).pipe(
+  S.Struct({
+    observations: S.Record(CacheClientChannel, CacheProducerObservation),
+    publications: S.OptionFromOptionalKey(S.Record(CacheClientChannel, CacheProducerPublication)).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+  }).pipe(
     $I.annoteSchema("CacheProducerImportRequest", {
-      description: "Stable and canary bundles and envelopes without caller-selected policy or trust roots.",
+      description:
+        "Stable/canary observations and optional retained publication transport. Missing publication is preview-only and cannot pass acceptance.",
     })
   )
 ) {}

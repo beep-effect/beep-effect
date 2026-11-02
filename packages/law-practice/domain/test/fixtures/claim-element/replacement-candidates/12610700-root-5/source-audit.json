@@ -1,0 +1,190 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12610700-root-5",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.9,
+  "verdict": "unresolved",
+  "reviewedClaimNumbers": [5, 6, 7, 8, 9, 10, 11, 12],
+  "sourceIdentity": {
+    "applicationNumber": "12610700",
+    "publicationNumber": "US20100306587A1",
+    "publicationDate": "20101202"
+  },
+  "digestEvidence": [
+    {
+      "file": "12610700.publication.xml",
+      "sha256": "e858bdd3e2cf12d367caeb864384cb13458ca9256b8498b3abe0e8ee2c089814",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "e9bc5dc85ac28abaea996d8462c65e93c553417415b969548c4a84e0678bc4c7",
+      "matchesProvenance": true
+    },
+    {
+      "file": "12610700.G1JPA2PEPPOPPY2.original.xml",
+      "sha256": "de7778736036c584a310c9b5d2f0c1299af0d4c8377cae6e588003c0b2685761",
+      "matchesProvenance": true
+    }
+  ],
+  "quotedEvidence": [
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the lowest available tier",
+      "nativeQuote": "the lowest available tier",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the observation data",
+      "nativeQuote": "the observation data",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the next incremental tier",
+      "nativeQuote": "the next incremental tier",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the tier",
+      "nativeQuote": "the tier",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the new set of subsystems",
+      "nativeQuote": "the new set of subsystems",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "single-fault algorithm",
+      "nativeQuote": "single-fault algorithm",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the determined set of hypotheses",
+      "nativeQuote": "the determined set of hypotheses",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the identified hypotheses",
+      "nativeQuote": "the identified hypotheses",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the invalidated single-fault diagnostic data",
+      "nativeQuote": "the invalidated single-fault diagnostic data",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the single-fault subsystem",
+      "nativeQuote": "the single-fault subsystem",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the collection of hypotheses",
+      "nativeQuote": "the collection of hypotheses",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the system",
+      "nativeQuote": "the system",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the current observation data",
+      "nativeQuote": "the current observation data",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the aggregate of all the observation data",
+      "nativeQuote": "the aggregate of all the observation data",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the current tier",
+      "nativeQuote": "the current tier",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the standard complexity notation",
+      "nativeQuote": "the standard complexity notation",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the computation complexity",
+      "nativeQuote": "the computation complexity",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the number of components",
+      "nativeQuote": "the number of components",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the hypothesis",
+      "nativeQuote": "the hypothesis",
+      "literalMatchIgnoringCase": true
+    }
+  ],
+  "groundEvidence": {
+    "fullCacheFile": "full-oa-expanded.json",
+    "fullCacheSha256": "115c5af3c1f05bfc978b5b0ba07c3fe7e077848170f5dd25880d5713e74bbf56",
+    "documentIdentifier": "H97520FCPXXIFW4",
+    "minimalStatutoryQuote": "The following is a quotation of 35 U.S.C. 112(b):",
+    "actualNumberedGroundScope": "Numbered antecedent-basis rejections immediately follow112(b)/second-paragraph quotations; selected numbered phrases verified.",
+    "scopeEvidence": "Claims1–24 are pending, of which Claims1–24 are rejected under112."
+  },
+  "inventoryEvidence": {
+    "sha256": "7ef5f271ccfb798c56da52659e5dab47f62ac6b3811e504d49298105bd7a421a",
+    "declaredCount": 39,
+    "actualRows": 39,
+    "preOrOnActionClaimAndAmendmentRows": [
+      {
+        "documentIdentifier": "G1JPA2PEPPOPPY2",
+        "documentCode": "CLM",
+        "officialDate": "2009-11-02T00:00:00.000-0500"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "H97520FCPXXIFW4",
+        "documentCode": "CTNF",
+        "officialDate": "2012-11-06T00:00:00.000-0500"
+      }
+    ]
+  },
+  "concerns": [
+    "Expanded full OA H97520FC status explicitly says Claims1–24 pending and rejectedunder112; Claim Rejections35USC112 section quotes112(b)/secondparagraph immediately before numbered antecedent rejections. Thus actual ground missing from snippet is established.",
+    "Original legacy lowercase XML contains numbered5–12 with matching body/references. Selected5independent and6–12→5. No pre-action amendment or competing original observed.",
+    "UNRESOLVED FORMULA SOURCE: original7 XML has each tier i and total of f aults, losing native χj symbol/fault-count parameter. This is substantive mathematical information and cannot be certified as typography from unreadable XML. Need PDF reading of original7."
+  ],
+  "pdfNeeds": [
+    {
+      "documentIdentifier": "G1JPA2PEPPOPPY2",
+      "claimNumbers": [7],
+      "purpose": "Verify exact tier-index/fault-count variable χj in total-of-faults clause, original page25; XML omits symbol."
+    }
+  ],
+  "rationale": "Source-only selection audit distinguishes actual numbered statutoryground, native membership, conflicting versions and unreadable original formula. Chronology supports but does not replace exact source evidence. Candidate only; no active slot changed; independent critic and attorney adjudication pending.",
+  "independence": "No structuralexpected/production/rules/predictions, network/secrets/git/delegation. Only this candidate source-audit written."
+}

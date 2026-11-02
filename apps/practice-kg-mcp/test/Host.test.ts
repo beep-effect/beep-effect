@@ -487,7 +487,47 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
 
   type ToolCall = readonly [string, Record<string, unknown>];
 
+  const canaryClaim = `A camera comprising a sensor and the ${canaries.query}.`;
+  const canaryClaimsContent = `1. ${canaryClaim}`;
+  const canaryClaimsSource = `CLAIMS\n${canaryClaimsContent}`;
+
   const healthyCalls: ReadonlyArray<ToolCall> = [
+    [
+      "claim_self_check",
+      {
+        input: {
+          digest: `sha256:${sha256Hex(canaryClaimsSource)}`,
+          docket: canaries.docket,
+          document: {
+            claims: [
+              {
+                claimType: "independent",
+                claimNumber: 1,
+                claimText: canaryClaim,
+                preamble: "A camera",
+                transition: "comprising",
+                body: `a sensor and the ${canaries.query}.`,
+              },
+            ],
+            sourceText: canaryClaimsSource,
+            sections: [
+              {
+                role: "claims",
+                heading: "CLAIMS",
+                content: canaryClaimsContent,
+                sourceStart: Str.length("CLAIMS\n"),
+                sourceEnd: Str.length(canaryClaimsSource),
+              },
+            ],
+          },
+          entitySeed: 7,
+          identityDigest: `sha256:${sha256Hex(canaries.docket)}`,
+          operationId: `operation:${sha256Hex(canaries.key)}`,
+          sourceFile: canaries.path,
+        },
+      },
+    ],
+    ["claim_self_check", { input: { docket: canaries.docket } }],
     ["kg_clients", {}],
     ["kg_docket_family", { family: canaries.family }],
     ["kg_application_lookup", { docket: canaries.docket }],
@@ -714,6 +754,10 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
 
           // Not vacuous: canaries reached the tools, which echo some of them back
           // to the client, and every tool exported spans.
+          const healthyResults = yield* Effect.fromOption(A.head(results));
+          const claimReview = yield* Effect.fromOption(A.head(healthyResults));
+          expect(claimReview).toContain("claim-finding");
+          expect(claimReview).toContain(canaries.query);
           expect(countCanaries(A.join(A.flatten(results), "\n"), forms)).toBeGreaterThan(0);
           const spans = yield* Effect.forEach(
             A.filter(records, (record) => record.signal === "traces"),

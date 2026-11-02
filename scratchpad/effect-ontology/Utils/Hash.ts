@@ -4,56 +4,26 @@
  * **Details**
  *
  * Content-addressable hashing for cache keys.
- * Uses the platform-provided Effect Crypto service.
+ * Uses the platform-provided Effect Digest service.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity";
 import * as Effect from "effect/Effect";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Hex from "effect/encoding/Hex";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { dual2, dual3 } from "./Dual.ts";
 
-const $I = $ScratchpadId.create("effect-ontology/Utils/Hash");
-
 /**
- * Describes a failed Effect Crypto digest operation.
- *
- * **Example** (Inspect the operation)
- *
- * ```ts
- * import { HashingError } from "@effect-ontology/Utils/Hash"
- *
- * const error = HashingError.make({ operation: "sha256", cause: "Crypto service unavailable" })
- * console.log(error.operation)
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export class HashingError extends S.TaggedError<HashingError, { readonly brand: unique symbol }>($I`HashingError`)(
-  "HashingError",
-  {
-    operation: S.Literals(["sha256", "sha256-bytes"]),
-    cause: S.Defect({ includeStack: true }),
-  },
-  $I.annote("HashingError", {
-    description: "Failure while computing a SHA-256 digest through the Effect Crypto service.",
-  })
-) {}
-
-/**
- * Computes a full SHA-256 hex digest of a string through the Effect Crypto service.
+ * Computes a full SHA-256 hex digest of a string through the Effect Digest service.
  *
  * **Details**
  *
- * Requires the platform Crypto service. The returned lowercase hex is 64 characters.
+ * Requires the platform Digest service. The returned lowercase hex is 64 characters.
  *
- * **Example** (Hash a string through the Effect Crypto service)
+ * **Example** (Hash a string through the Effect Digest service)
  *
  * ```ts
  * import { sha256, sha256SyncFull } from "@effect-ontology/Utils/Hash"
@@ -71,10 +41,9 @@ export class HashingError extends S.TaggedError<HashingError, { readonly brand: 
  * @since 0.0.0
  */
 export const sha256 = Effect.fn("Hash.sha256")(function* (input: string) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const digest = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(input))
-    .pipe(Effect.mapError((cause) => HashingError.make({ operation: "sha256", cause })));
+    .digest(Digest.sha256, new TextEncoder().encode(input));
   return Hex.encode(digest);
 });
 
@@ -110,11 +79,11 @@ export const hashEmbeddingKey = dual2(
 );
 
 /**
- * Computes a full SHA-256 hex digest of a string through the Effect Crypto service.
+ * Computes a full SHA-256 hex digest of a string through the Effect Digest service.
  *
  * **Gotchas**
  *
- * Returns an Effect requiring Crypto.Crypto; the legacy Sync suffix is retained for compatibility.
+ * Returns an Effect requiring Digest.Digest; the legacy Sync suffix is retained for compatibility.
  *
  * **Example** (Hash a string on the server)
  *
@@ -138,11 +107,11 @@ export const hashEmbeddingKey = dual2(
 export const sha256SyncFull = sha256;
 
 /**
- * Computes a truncated SHA-256 hex digest of a string through the Effect Crypto service.
+ * Computes a truncated SHA-256 hex digest of a string through the Effect Digest service.
  *
  * **Gotchas**
  *
- * Returns an Effect requiring Crypto.Crypto; the legacy Sync suffix is retained for compatibility.
+ * Returns an Effect requiring Digest.Digest; the legacy Sync suffix is retained for compatibility.
  * Truncation is the first 16 hex characters of {@link sha256SyncFull}.
  *
  * **Example** (Take the 16-character digest)
@@ -265,9 +234,9 @@ export const hashVersionedEmbeddingKey = dual3(
 export const hashVersionedEmbeddingKeySync = hashVersionedEmbeddingKey;
 
 /**
- * Computes a full SHA-256 hex digest of bytes through the Effect Crypto service.
+ * Computes a full SHA-256 hex digest of bytes through the Effect Digest service.
  *
- * **Example** (Hash bytes through the Effect Crypto service)
+ * **Example** (Hash bytes through the Effect Digest service)
  *
  * ```ts
  * import { sha256Bytes, sha256BytesSync } from "@effect-ontology/Utils/Hash"
@@ -286,22 +255,21 @@ export const hashVersionedEmbeddingKeySync = hashVersionedEmbeddingKey;
  * @since 0.0.0
  */
 export const sha256Bytes = Effect.fn("Hash.sha256Bytes")(function* (bytes: BufferSource) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const input = ArrayBuffer.isView(bytes)
     ? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
     : new Uint8Array(bytes);
   const digest = yield* crypto
-    .digest("SHA-256", input)
-    .pipe(Effect.mapError((cause) => HashingError.make({ operation: "sha256-bytes", cause })));
+    .digest(Digest.sha256, input);
   return Hex.encode(digest);
 });
 
 /**
- * Computes a full SHA-256 hex digest of bytes through the Effect Crypto service.
+ * Computes a full SHA-256 hex digest of bytes through the Effect Digest service.
  *
  * **Gotchas**
  *
- * Returns an Effect requiring Crypto.Crypto; the legacy Sync suffix is retained for compatibility.
+ * Returns an Effect requiring Digest.Digest; the legacy Sync suffix is retained for compatibility.
  *
  * **Example** (Hash bytes on the server)
  *

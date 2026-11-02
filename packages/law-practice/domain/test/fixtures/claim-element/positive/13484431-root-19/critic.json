@@ -1,0 +1,120 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "entityMentionConvention": "entity-mentions/v1",
+  "familyId": "13484431-root-19",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25
+  ],
+  "findings": [],
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "entityMentionConvention": "entity-mentions/v1",
+      "familyId": "13484431-root-19",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.96,
+      "verdict": "changes-required",
+      "reviewedClaimNumbers": [
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25
+      ],
+      "findings": [
+        {
+          "id": "C1",
+          "category": "lost-meaningful-numeral-in-selected-group-head",
+          "actionable": true,
+          "evidence": [
+            {
+              "claimNumber": 21,
+              "path": "21.a",
+              "anchor": {
+                "startChar": 43,
+                "endChar": 87,
+                "quote": "at least two of said Bernoulli suction ports"
+              }
+            },
+            {
+              "claimNumber": 21,
+              "path": "21.b",
+              "anchor": {
+                "startChar": 129,
+                "endChar": 170,
+                "quote": "said at least two Bernoulli suction ports"
+              }
+            }
+          ],
+          "reason": "The selected-group term in 21.a is deliberately represented as one bare NP with the complete source anchor, but its head is bernoulli suction ports, losing the meaningful minimum count two. The following said at least two group correctly retains that count in its head and refers back to the selected group. The protocol preserves meaningful numerals; the absence of an at-least-two schema determiner does not allow deleting this count from a bare head.",
+          "correction": "Retain the full selected-group anchor and clear group-level reference, but preserve the count in its lowercase head, for example at least two of said bernoulli suction ports under the current full-phrase representation. Do not map the selected group to an arbitrary individual port. If resegmenting the partitive instead, keep the complete selection relationship and explicit source count, and independently recheck ownership and the group reference."
+        }
+      ],
+      "priorRounds": [],
+      "sourceConcerns": [],
+      "reviewScope": {
+        "selectedClaimCount": 7,
+        "resolvedTreesReviewed": 7,
+        "unresolvedClaimNumbers": [],
+        "elementCount": 30,
+        "termCount": 95,
+        "edgeCount": 118,
+        "functionalRelationCount": 22
+      },
+      "reviewNotes": [
+        "Root 19 explicit b/c label terms, later exact said step b/c references, actual 24 refinements of 19.b/19.c, and 25->24 ancestry are source-supported. Label quotes do not invent implicit step words.",
+        "Claim 25 pressure/value links to the explicit introductions in 24.b are source-clear. Independent apparatus roots 1/10 and sibling embankment/region introductions are not borrowed. Reciprocal each other stays anchored connecting text with explicit arcuate-region participants under entity-mentions/v1.",
+        "Read full canonical family/context, native claims text, provenance/source audit, accepted source critic, extractor receipt, protocol and ClaimElement schema contracts. Source eligibility and the semantic verdict are separate. Every submitted tree decoded through the actual ClaimElementTree schema. Exact UTF-16 element/term anchors, nonoverlap, actual term-reference endpoints, actual natural ancestry and complete ordered functional partitions checked; these passing checks do not remove the listed semantic/boundary findings.",
+        "Frozen attorney-sample membership does not change the review bar. Preserve this receipt, correct findings through an independent extractor round and obtain the next critic review before representing these labels as stabilized. No attorney acceptance or overall corpus accuracy is claimed."
+      ],
+      "independence": "Independent semantic critic only. No production/P2-DESIGN/implementation rules, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helpers only locate/check manually reviewed source anchors and structure, decode schema contracts, and serialize this receipt. Only this family current critic.json written; source/expected/extractor/code unchanged.",
+      "attorneyAdjudication": "pending actual attorney review; agent confidence is not attorney agreement"
+    }
+  ],
+  "findingDispositions": [
+    {
+      "findingId": "C1",
+      "status": "addressed",
+      "reason": "Current 21.a full partitive at least two of said Bernoulli suction ports [43,87) has bare head at least two of said bernoulli suction ports. The minimum count remains explicit; 21.b retains its selected-group antecedent to this term without selecting any individual port."
+    }
+  ],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 7,
+    "resolvedTreesReviewed": 7,
+    "unresolvedClaimNumbers": [],
+    "elementCount": 30,
+    "termCount": 95,
+    "edgeCount": 118,
+    "functionalRelationCount": 22
+  },
+  "extractorConfidence": 0.96,
+  "reviewNotes": [
+    "Root 19 explicit b/c label terms, later exact said step b/c references, actual 24 refinements of 19.b/19.c, and 25->24 ancestry are source-supported. Label quotes do not invent implicit step words.",
+    "Claim 25 pressure/value links to the explicit introductions in 24.b are source-clear. Independent apparatus roots 1/10 and sibling embankment/region introductions are not borrowed. Reciprocal each other stays anchored connecting text with explicit arcuate-region participants under entity-mentions/v1.",
+    "Independent round-2 semantic reassessment of the exact current source, round-1 findings, retained prior trees/receipts and current changed structure. The only tree changes are the listed correction(s); no scope, source, sibling ancestry, extra member introduction or functional granularity change was introduced. Residual literal structure and local reference concerns were rechecked under unchanged semantic-reference/v2 and entity-mentions/v1.",
+    "Every current tree decoded through ClaimElementTree. Native/canonical bodies agree modulo permitted printed-number removal/whitespace; source XML digest matches provenance. Exact UTF-16 element/term/functional-text anchors, term ownership/order/nonoverlap, actual term endpoints, actual natural dependency ancestry and complete functional partitions pass. Passing geometry/schema checks are supporting evidence, separate from the semantic reading.",
+    "No remaining actionable critic finding. Explicit unresolved identities/missing introductions retained in extractor source-family concerns do not force whole-claim abstention or an invented edge. The frozen attorney sample and pending packet did not change the acceptance bar. Source qualification remains separately accepted; original-document/PDF authentication was not newly rerun."
+  ],
+  "priorReceiptPreservation": "Complete round-1 critic retained in this previousRounds; round-1 expected/extractor/critic also retained in extractor.previousRounds. No separate history files or source labels were mutated by this critic.",
+  "independence": "Independent round-2 semantic critic. No production/P2-DESIGN/implementation rules, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helpers only checked manually reviewed source anchors/reference geometry, decoded schema contracts and serialized this receipt. Only current critic.json written; expected/extractor/source/code unchanged.",
+  "attorneyAdjudication": "pending actual attorney review; agent acceptance/confidence is not attorney agreement",
+  "corpusStatus": "This family reference is accepted by agents under the stated protocol. No attorney agreement, system accuracy, full-corpus acceptance or full-goal completion claimed."
+}

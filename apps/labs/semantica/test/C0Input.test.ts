@@ -4,9 +4,10 @@ import { DOC_TEXT_ENGINE_VERSION } from "@beep/doc-text";
 import { isUtf16Boundary, SourceTextExtractor, TextAnchor } from "@beep/provenance";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -35,6 +36,8 @@ import { DocumentSource } from "@/services/DocumentSource";
 import { Parser } from "@/services/Parser";
 import type { F1Fixture } from "@/fixtures/F1";
 
+const BunPlatformLive = Layer.merge(BunServices.layer, BunCrypto.layer);
+
 const runtime = Layer.mergeAll(
   F1CatalogLive,
   CanonicalizerLive,
@@ -42,7 +45,7 @@ const runtime = Layer.mergeAll(
   DocumentSourceLive,
   ParserLive
 ).pipe(
-  Layer.provideMerge(Layer.mergeAll(BunServices.layer, LabConfigLive)),
+  Layer.provideMerge(Layer.mergeAll(BunPlatformLive, LabConfigLive)),
   Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: {} })))
 );
 const fixtureDocument = (fixture: F1Fixture): SourceDocument => {
@@ -167,7 +170,7 @@ describe("C0 F1 input services", () => {
           .pipe(Effect.flatMap((bytes) => retryParser.parse(truncatedDocument, bytes)));
         expect(truncatedOutcome.outcome).toBe("Degraded");
         if (truncatedOutcome.outcome === "Degraded") {
-          expect(O.some(truncatedOutcome.kind)).toEqual(truncated.degradedKind);
+          deepStrictEqual(O.some(truncatedOutcome.kind), truncated.degradedKind);
         }
       })
     );
@@ -192,7 +195,7 @@ describe("C0 F1 input services", () => {
             if (fixture.expectation === "degraded") {
               expect(outcome.outcome).toBe("Degraded");
               if (outcome.outcome === "Degraded") {
-                expect(O.some(outcome.kind)).toEqual(fixture.degradedKind);
+                deepStrictEqual(O.some(outcome.kind), fixture.degradedKind);
               }
               return { fixture: fixture.id, outcome: outcome.outcome };
             }

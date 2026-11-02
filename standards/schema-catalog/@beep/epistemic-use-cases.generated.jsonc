@@ -51,6 +51,7 @@
     {"file":"packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts","symbol":"ExecutionLedgerConstraintViolation","kind":"tagged-error","owner":"@beep/epistemic-use-cases","identity":"ExecutionLedgerConstraintViolation"},
     {"file":"packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts","symbol":"ExecutionLedgerError","kind":"union","owner":"@beep/epistemic-use-cases","identity":"ExecutionLedgerError","description":"Every failure an execution ledger write can produce."},
     {"file":"packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts","symbol":"ExecutionLedgerOperation","kind":"literal-kit","owner":"@beep/epistemic-use-cases","identity":"ExecutionLedgerOperation","description":"Closed domain of execution ledger port operations."},
-    {"file":"packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts","symbol":"ExecutionLedgerUnavailable","kind":"tagged-error","owner":"@beep/epistemic-use-cases","identity":"ExecutionLedgerUnavailable"}
+    {"file":"packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.errors.ts","symbol":"ExecutionLedgerUnavailable","kind":"tagged-error","owner":"@beep/epistemic-use-cases","identity":"ExecutionLedgerUnavailable"},
+    {"file":"packages/epistemic/use-cases/src/Retention/Retention.ports.ts","symbol":"RetentionUnavailable","kind":"tagged-error","owner":"@beep/epistemic-use-cases","identity":"RetentionUnavailable","description":"Sanitized retention boundary failure."}
   ]
 }

@@ -15,7 +15,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -152,7 +153,7 @@ const fetchUpstreamFrom = Effect.fnUntraced(function* (url: string) {
 });
 
 const makeCatalogSources = Effect.fnUntraced(function* () {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const httpClient = yield* HttpClient.HttpClient;
   const fs = yield* FileSystem.FileSystem;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -202,7 +203,7 @@ const makeCatalogSources = Effect.fnUntraced(function* () {
       trim: true,
     }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.provideService(SecureRandom.SecureRandom, crypto),
       Effect.option
     );
 
@@ -278,7 +279,7 @@ const makeCatalogSources = Effect.fnUntraced(function* () {
 export const ModelsCatalogSourcesLive: Layer.Layer<
   ModelsCatalogSources,
   never,
-  Crypto.Crypto | HttpClient.HttpClient | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | HttpClient.HttpClient | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
 > = Layer.effect(ModelsCatalogSources, makeCatalogSources());
 
 // ── Catalog ─────────────────────────────────────────────────────────────────
@@ -360,7 +361,7 @@ const sourcesAnswered = (answers: {
   );
 
 const makeCatalog = Effect.fnUntraced(function* () {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
 
   const snapshot: ModelsCatalogShape["snapshot"] = Effect.fnUntraced(function* (options: ModelsCatalogOptions) {
     const sources = yield* ModelsCatalogSources;
@@ -375,7 +376,7 @@ const makeCatalog = Effect.fnUntraced(function* () {
       ModelsCatalogError.mapError("Failed to encode the assembled catalog snapshot")
     );
     const digest = yield* crypto
-      .digest("SHA-256", textEncoder.encode(formatJsonValue(encoded)))
+      .digest(Digest.sha256, textEncoder.encode(formatJsonValue(encoded)))
       .pipe(ModelsCatalogError.mapError("Failed to digest the assembled catalog snapshot"));
     const now = yield* DateTime.now;
 
@@ -408,7 +409,7 @@ const makeCatalog = Effect.fnUntraced(function* () {
  * @category layers
  * @since 0.0.0
  */
-export const ModelsCatalogLive: Layer.Layer<ModelsCatalog, never, Crypto.Crypto> = Layer.effect(
+export const ModelsCatalogLive: Layer.Layer<ModelsCatalog, never, Digest.Digest> = Layer.effect(
   ModelsCatalog,
   makeCatalog()
 );

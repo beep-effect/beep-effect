@@ -32,7 +32,7 @@ import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -197,14 +197,14 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning orc
       const reviewedPlan = yield* planBoxProvisioning(desired, emptyObserved);
       const reviewedPlanJson = yield* encodeBoxProvisioningPlan(reviewedPlan);
       const desiredJson = yield* encodeBoxDesiredState(desired);
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       const planWithCrypto = Effect.fnUntraced(function* (
         desiredState: BoxDesiredState,
         observed: BoxObservedState,
         adoptions?: BoxDesiredState["adoptions"]["entries"]
       ) {
         return yield* planBoxProvisioning(desiredState, observed, adoptions).pipe(
-          Effect.provideService(Crypto.Crypto, crypto)
+          Effect.provideService(Digest.Digest, crypto)
         );
       });
       const observeCount = yield* Ref.make(0);

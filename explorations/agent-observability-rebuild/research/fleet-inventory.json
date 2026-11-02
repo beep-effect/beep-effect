@@ -1,0 +1,537 @@
+{
+  "capturedAtUtc": "2026-10-28T02:15:01.090672+00:00",
+  "scope": "local only; no transcript content read",
+  "clones": [
+    {
+      "root": "~/YeeBois/projects/beep-effect",
+      "exists": true,
+      "registeredWorktreeCount": 28,
+      "head": "e2e021ef75",
+      "claudeProject": {
+        "exists": true,
+        "files": 653,
+        "bytes": 923392738,
+        "over32MiB": 1,
+        "modifiedLast7Days": 206,
+        "latestMtimeUtc": "2026-10-28T02:14:59.614400+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect0",
+      "exists": true,
+      "registeredWorktreeCount": 35,
+      "head": "2c37e295c1",
+      "claudeProject": {
+        "exists": false,
+        "files": 0,
+        "bytes": 0,
+        "over32MiB": 0,
+        "modifiedLast7Days": 0,
+        "latestMtimeUtc": null
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect1",
+      "exists": false
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect2",
+      "exists": true,
+      "registeredWorktreeCount": 53,
+      "head": "3c7abe06b2",
+      "claudeProject": {
+        "exists": true,
+        "files": 590,
+        "bytes": 747702081,
+        "over32MiB": 1,
+        "modifiedLast7Days": 46,
+        "latestMtimeUtc": "2026-10-28T01:29:10.560000+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect3",
+      "exists": true,
+      "registeredWorktreeCount": 12,
+      "head": "3c7abe06b2",
+      "claudeProject": {
+        "exists": true,
+        "files": 919,
+        "bytes": 1080756500,
+        "over32MiB": 2,
+        "modifiedLast7Days": 52,
+        "latestMtimeUtc": "2026-10-28T01:30:27.731571+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect4",
+      "exists": true,
+      "registeredWorktreeCount": 5,
+      "head": "651f4b966b",
+      "claudeProject": {
+        "exists": true,
+        "files": 229,
+        "bytes": 433158727,
+        "over32MiB": 1,
+        "modifiedLast7Days": 227,
+        "latestMtimeUtc": "2026-10-28T02:15:00.775443+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect5",
+      "exists": true,
+      "registeredWorktreeCount": 7,
+      "head": "3c7abe06b2",
+      "claudeProject": {
+        "exists": true,
+        "files": 643,
+        "bytes": 794240583,
+        "over32MiB": 2,
+        "modifiedLast7Days": 143,
+        "latestMtimeUtc": "2026-10-28T02:10:54.912331+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect6",
+      "exists": true,
+      "registeredWorktreeCount": 4,
+      "head": "3c7abe06b2",
+      "claudeProject": {
+        "exists": true,
+        "files": 140,
+        "bytes": 202581626,
+        "over32MiB": 0,
+        "modifiedLast7Days": 22,
+        "latestMtimeUtc": "2026-10-23T20:50:46.837776+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect7",
+      "exists": true,
+      "registeredWorktreeCount": 6,
+      "head": "3c7abe06b2",
+      "claudeProject": {
+        "exists": true,
+        "files": 186,
+        "bytes": 219208233,
+        "over32MiB": 0,
+        "modifiedLast7Days": 101,
+        "latestMtimeUtc": "2026-10-28T01:29:14.786000+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect8",
+      "exists": true,
+      "registeredWorktreeCount": 6,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 278,
+        "bytes": 296318405,
+        "over32MiB": 0,
+        "modifiedLast7Days": 75,
+        "latestMtimeUtc": "2026-10-28T01:29:18.671000+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect9",
+      "exists": true,
+      "registeredWorktreeCount": 20,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 165,
+        "bytes": 279284611,
+        "over32MiB": 1,
+        "modifiedLast7Days": 54,
+        "latestMtimeUtc": "2026-10-28T02:13:19.749728+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect10",
+      "exists": true,
+      "registeredWorktreeCount": 5,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 548,
+        "bytes": 620869302,
+        "over32MiB": 1,
+        "modifiedLast7Days": 367,
+        "latestMtimeUtc": "2026-10-28T01:27:53.235000+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect11",
+      "exists": true,
+      "registeredWorktreeCount": 8,
+      "head": "651f4b966b",
+      "claudeProject": {
+        "exists": true,
+        "files": 90,
+        "bytes": 266577541,
+        "over32MiB": 2,
+        "modifiedLast7Days": 13,
+        "latestMtimeUtc": "2026-10-28T02:14:31.351365+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect12",
+      "exists": true,
+      "registeredWorktreeCount": 2,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 42,
+        "bytes": 75442299,
+        "over32MiB": 0,
+        "modifiedLast7Days": 29,
+        "latestMtimeUtc": "2026-10-28T01:29:43.465075+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect13",
+      "exists": true,
+      "registeredWorktreeCount": 6,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 42,
+        "bytes": 63826990,
+        "over32MiB": 0,
+        "modifiedLast7Days": 36,
+        "latestMtimeUtc": "2026-10-28T01:14:11.234000+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect14",
+      "exists": true,
+      "registeredWorktreeCount": 2,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": false,
+        "files": 0,
+        "bytes": 0,
+        "over32MiB": 0,
+        "modifiedLast7Days": 0,
+        "latestMtimeUtc": null
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect15",
+      "exists": true,
+      "registeredWorktreeCount": 2,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": false,
+        "files": 0,
+        "bytes": 0,
+        "over32MiB": 0,
+        "modifiedLast7Days": 0,
+        "latestMtimeUtc": null
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect16",
+      "exists": true,
+      "registeredWorktreeCount": 4,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 14,
+        "bytes": 17914152,
+        "over32MiB": 0,
+        "modifiedLast7Days": 1,
+        "latestMtimeUtc": "2026-10-28T01:29:04.619000+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect17",
+      "exists": true,
+      "registeredWorktreeCount": 2,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 16,
+        "bytes": 33254287,
+        "over32MiB": 0,
+        "modifiedLast7Days": 0,
+        "latestMtimeUtc": "2026-10-18T20:51:16.328000+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect18",
+      "exists": true,
+      "registeredWorktreeCount": 2,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 4,
+        "bytes": 5860637,
+        "over32MiB": 0,
+        "modifiedLast7Days": 0,
+        "latestMtimeUtc": "2026-10-18T20:51:16.328000+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect19",
+      "exists": true,
+      "registeredWorktreeCount": 4,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 653,
+        "bytes": 537074678,
+        "over32MiB": 0,
+        "modifiedLast7Days": 0,
+        "latestMtimeUtc": "2026-10-21T00:40:38.852000+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect20",
+      "exists": true,
+      "registeredWorktreeCount": 4,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 1,
+        "bytes": 19936132,
+        "over32MiB": 0,
+        "modifiedLast7Days": 0,
+        "latestMtimeUtc": "2026-10-18T20:51:16.328000+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect21",
+      "exists": true,
+      "registeredWorktreeCount": 2,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 85,
+        "bytes": 105397305,
+        "over32MiB": 1,
+        "modifiedLast7Days": 3,
+        "latestMtimeUtc": "2026-10-28T01:29:26.611278+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect22",
+      "exists": true,
+      "registeredWorktreeCount": 1,
+      "head": "e77156a80e",
+      "claudeProject": {
+        "exists": true,
+        "files": 15,
+        "bytes": 13716840,
+        "over32MiB": 0,
+        "modifiedLast7Days": 0,
+        "latestMtimeUtc": "2026-10-18T20:51:16.328000+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "same",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "same"
+      }
+    },
+    {
+      "root": "~/YeeBois/projects/beep-effect-private",
+      "exists": true,
+      "registeredWorktreeCount": 5,
+      "head": "04721878da",
+      "claudeProject": {
+        "exists": true,
+        "files": 38,
+        "bytes": 103217533,
+        "over32MiB": 0,
+        "modifiedLast7Days": 3,
+        "latestMtimeUtc": "2026-10-24T11:24:46.254698+00:00"
+      },
+      "cloneRelativeMetricsExists": false,
+      "collectorSourceDrift": {
+        "packages/tooling/library/ai-metrics/src/forwarder.ts": "different",
+        "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": "same",
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": "different"
+      }
+    }
+  ],
+  "distinctRegisteredWorktrees": 225,
+  "existingRegisteredWorktrees": 225,
+  "registrySummaries": [
+    {
+      "dataRoot": "~/.local/state/beep/ai-metrics",
+      "rootCount": 3,
+      "sourceInstanceCount": 9,
+      "rootKindCounts": {
+        "primary-clone": 2,
+        "linked-worktree": 1
+      },
+      "generatedAtEpochMillis": 1789448348727,
+      "version": "ai-metrics-identity-registry/v1"
+    }
+  ],
+  "homeCodexSessions": {
+    "exists": true,
+    "files": 313,
+    "bytes": 1222171967,
+    "over32MiB": 8,
+    "modifiedLast7Days": 312,
+    "latestMtimeUtc": "2026-10-28T02:15:00.688440+00:00"
+  },
+  "homeCodexArchivedSessions": {
+    "exists": true,
+    "files": 18,
+    "bytes": 139884423,
+    "over32MiB": 1,
+    "modifiedLast7Days": 18,
+    "latestMtimeUtc": "2026-10-26T23:32:26.934181+00:00"
+  },
+  "homeClaudeProjects": {
+    "exists": true,
+    "files": 6546,
+    "bytes": 8663188029,
+    "over32MiB": 18,
+    "modifiedLast7Days": 1951,
+    "latestMtimeUtc": "2026-10-28T02:15:00.775443+00:00"
+  },
+  "quarantineHoldExists": true,
+  "primaryCloneCount": 24,
+  "linkedWorktreeCount": 201,
+  "linkedWorktreeClaudeProjects": {
+    "worktreesWithProjectDirectory": 0,
+    "files": 0,
+    "modifiedLast7Days": 0
+  }
+}

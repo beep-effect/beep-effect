@@ -8,7 +8,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import { NoPeerDependencyRules, PeerDependencyRules } from "../ConfigDependencyHooks.ts";
-import { stringsOf } from "./patterns.ts";
+import { WorkspacePatterns } from "../WorkspacePatterns.ts";
 
 /**
  * Reads the `configDependencies` map (name → version+integrity) of a parsed pnpm-workspace document.
@@ -87,7 +87,7 @@ export const inlinePeerDependencyRules = (document: unknown): PeerDependencyRule
   const block = document.peerDependencyRules;
   return PeerDependencyRules.make({
     allowedVersions: stringEntriesOf(block.allowedVersions),
-    ignoreMissing: O.getOrElse(stringsOf(block.ignoreMissing), () => []),
-    allowAny: O.getOrElse(stringsOf(block.allowAny), () => []),
+    ignoreMissing: O.getOrElse(WorkspacePatterns.stringsOf(block.ignoreMissing), () => []),
+    allowAny: O.getOrElse(WorkspacePatterns.stringsOf(block.allowAny), () => []),
   });
 };

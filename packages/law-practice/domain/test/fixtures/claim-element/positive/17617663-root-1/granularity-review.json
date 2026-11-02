@@ -1,0 +1,116 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "17617663-root-1",
+  "role": "extractor-granularity-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.96,
+  "reviewedAnchors": [
+    {
+      "claimNumber": 1,
+      "path": "1.f",
+      "anchor": {
+        "startChar": 1337,
+        "endChar": 1342,
+        "quote": "which"
+      },
+      "action": "term-to-functional-text",
+      "reason": "Which introduces the modifying installation clause for the explicit cylinder. Preserve cylinder term and complete installation/piston-end function as source text.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "1.f",
+            "anchor": {
+              "startChar": 1337,
+              "endChar": 1342,
+              "quote": "which"
+            }
+          },
+          "introducing": {
+            "path": "1.c.i",
+            "anchor": {
+              "startChar": 520,
+              "endChar": 530,
+              "quote": "a cylinder"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claimNumber": 1,
+      "path": "1.g.ii",
+      "anchor": {
+        "startChar": 1804,
+        "endChar": 1814,
+        "quote": "each other"
+      },
+      "action": "term-to-functional-text",
+      "reason": "Each other is mutual spacing language for explicit multiple cooling water nozzles. Retain nozzle term and whole spacing/disposition function.",
+      "removedAntecedents": []
+    },
+    {
+      "claimNumber": 3,
+      "path": "3.b.iv",
+      "anchor": {
+        "startChar": 442,
+        "endChar": 447,
+        "quote": "which"
+      },
+      "action": "term-to-functional-text",
+      "reason": "Which introduces the shared modifying connection clause for the explicit first, second and third stirring-current inlet lines listed in 3.b.i-iii. The list participants remain explicit in the same cable limitation, and the entire common connection clause remains the unchanged functional element. No new line entity is supplied solely by which.",
+      "removedAntecedents": []
+    },
+    {
+      "claimNumber": 6,
+      "path": "6.a",
+      "anchor": {
+        "startChar": 209,
+        "endChar": 214,
+        "quote": "which"
+      },
+      "action": "term-to-functional-text",
+      "reason": "Through which introduces the modifying connection clause for the explicitly participating thermal relay FR. Preserve the relay, contactors, coil and complete through-connection language; no additional entity node.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "6.a",
+            "anchor": {
+              "startChar": 209,
+              "endChar": 214,
+              "quote": "which"
+            }
+          },
+          "introducing": {
+            "path": "6.a",
+            "anchor": {
+              "startChar": 182,
+              "endChar": 200,
+              "quote": "a thermal relay FR"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "before": {
+    "claims": 10,
+    "elements": 71,
+    "terms": 263,
+    "edges": 220
+  },
+  "after": {
+    "claims": 10,
+    "elements": 71,
+    "terms": 259,
+    "edges": 218
+  },
+  "remainingUncertainty": [],
+  "existingConcerns": "All prior source/referent concerns retained in extractor receipt. This is a bounded consistency correction, not source eligibility or attorney acceptance.",
+  "independence": "Read clarified v2/entity-mentions convention and decision entry, exact canonical source and reviewed annotations. No implementation/rules/predictions/synthetic/conformance artifacts/network/secrets/git/delegation. Helpers transform only the manually reviewed listed anchors, merge contiguous source text, and verify geometry.",
+  "validation": "Exact source spans; unchanged element anchors/kinds/paths; unrelated terms retained; ordered nonoverlapping terms; local/foreign reference coherence; full contiguous functional reconstruction; runtime ClaimElementTree decode all passed."
+}

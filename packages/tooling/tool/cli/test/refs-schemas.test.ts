@@ -3,10 +3,8 @@ import {
   MEMBER_REFRESH_DETAIL_MAX_CHARS,
   MemberRefreshOutcome,
   MemberRefreshReport,
-  PatchKitStatus,
   ReferenceMember,
   ReferenceWorkspaceManifest,
-  RefsRefreshPreflight,
   RefsRefreshStatus,
 } from "@beep/repo-cli/commands/Refs";
 import { describe, expect, it } from "@effect/vitest";
@@ -26,10 +24,6 @@ const encodeReport = S.encodeEffect(ReportJson);
 const decodeReport = S.decodeEffect(ReportJson);
 const decodeReportUnknown = S.decodeUnknownEffect(MemberRefreshReport);
 const reportEquivalent = S.toEquivalence(MemberRefreshReport);
-const PreflightJson = S.fromJsonString(RefsRefreshPreflight);
-const encodePreflight = S.encodeEffect(PreflightJson);
-const decodePreflight = S.decodeEffect(PreflightJson);
-const preflightEquivalent = S.toEquivalence(RefsRefreshPreflight);
 const decodeStatusUnknown = S.decodeUnknownEffect(RefsRefreshStatus);
 
 describe("reference manifest schemas", () => {
@@ -41,31 +35,30 @@ describe("reference manifest schemas", () => {
       const file = yield* path.fromFileUrl(new URL("../../../../../scripts/references.json", import.meta.url));
       const manifest = yield* ReferenceWorkspaceManifest.decodeJson(yield* fs.readFileString(file));
       expect(manifest.rootDefault).toBe("$HOME/YeeBois/references/effect");
-      expect(A.map(manifest.members, (member) => [member.name, member.tier])).toEqual([
-        ["effect", "deep"],
-        ["effect-tsgo", "deep"],
-        ["ai-plugin-marketplace-manager", "deep"],
-        ["okfit", "deep"],
-        ["tsdoctor", "deep"],
-        ["effected", "deep"],
-        ["pluginfinity", "deep"],
-        ["vitest-agent", "deep"],
-        ["t3code", "deep"],
-        ["opencode", "deep"],
-        ["alchemy", "deep"],
+      expect(A.map(manifest.members, (member) => member.name)).toEqual([
+        "effect",
+        "effect-tsgo",
+        "ai-plugin-marketplace-manager",
+        "okfit",
+        "tsdoctor",
+        "effected",
+        "pluginfinity",
+        "vitest-agent",
+        "t3code",
+        "opencode",
+        "alchemy",
       ]);
       assertSome(
         A.findFirst(manifest.members, (member) => member.name === "opencode").pipe(O.map((member) => member.branch)),
         "v2"
       );
       expect(manifest.members[0]?.branch).toBe("main");
-      assertNone(manifest.members[0]?.onlyDir ?? O.none());
     }, testPlatform)
   );
   it.effect(
     "defaults omitted branches to main and retains explicit branches",
     Effect.fnUntraced(function* () {
-      const member = { name: "opencode", url: "upstream", tier: "deep" };
+      const member = { name: "opencode", url: "upstream" };
       expect((yield* ReferenceMember.decode(member)).branch).toBe("main");
       expect((yield* ReferenceMember.decode({ ...member, branch: "v2" })).branch).toBe("v2");
       expect((yield* ReferenceMember.decode({ ...member, branch: "release/v2" })).branch).toBe("release/v2");
@@ -77,82 +70,67 @@ describe("reference manifest schemas", () => {
     ["branch traversal", { branch: "../v2" }],
     ["branch control", { branch: "v2\nmain" }],
     ["unknown key", { revision: "v2" }],
-    ["tier", { tier: "unknown" }],
+    ["retired tier", { tier: "deep" }],
+    ["retired onlyDir", { onlyDir: ["src"] }],
     ["name", { name: "../escape" }],
-    ["onlyDir", { onlyDir: ["../escape"] }],
   ];
   for (const [label, extra] of invalidMembers) {
     it.effect(
       `rejects invalid member ${label}`,
       Effect.fnUntraced(function* () {
-        const input: unknown = { name: "effect", url: "upstream", tier: "deep", ...extra };
+        const input: unknown = { name: "effect", url: "upstream", ...extra };
         const result = yield* ReferenceMember.decode(input).pipe(Effect.result);
         expect(result._tag).toBe("Failure");
       })
     );
   }
 
-  it("recognizes the cooldown and preflight outcomes", () => {
-    expect(MemberRefreshOutcome.is["skipped-cooldown"]("skipped-cooldown")).toBe(true);
-    expect(MemberRefreshOutcome.is["skipped-preflight"]("skipped-preflight")).toBe(true);
-    expect(PatchKitStatus.literals).toEqual(["ok", "missing", "unavailable"]);
+  it("keeps only the pull outcomes", () => {
+    expect(MemberRefreshOutcome.literals).toEqual([
+      "pulled",
+      "unchanged",
+      "skipped-dirty",
+      "skipped-off-branch",
+      "pull-failed",
+    ]);
   });
 
   it.effect(
-    "keeps the preflight an optional receipt key",
+    "decodes v2 receipts and rejects v1 receipts and retired fields",
     Effect.fnUntraced(function* () {
       const base = {
-        schemaVersion: "beep-refs-refresh/v1",
-        timestamp: "2026-09-28T08:30:00.000Z",
+        schemaVersion: "beep-refs-refresh/v2",
+        timestamp: "2026-10-28T08:30:00.000Z",
         root: "/refs",
-        members: [],
-        workspaceCheck: { buildExitCode: 0, exitCode: 0, output: "fresh" },
+        members: [{ name: "effect", outcome: "pulled" }],
       };
-      // Receipts written before the preflight existed still decode.
-      assertNone((yield* decodeStatusUnknown(base)).preflight);
-      const missing = yield* decodeStatusUnknown({
-        ...base,
-        preflight: { patchKit: "missing", detail: "missing  0002-summaries" },
-      });
-      assertSome(
-        missing.preflight,
-        RefsRefreshPreflight.make({ patchKit: "missing", detail: O.some("missing  0002-summaries") })
+      const decoded = yield* decodeStatusUnknown(base);
+      expect(A.map(decoded.members, (member) => member.outcome)).toEqual(["pulled"]);
+      const retired: ReadonlyArray<unknown> = [
+        { ...base, schemaVersion: "beep-refs-refresh/v1" },
+        { ...base, members: [{ name: "effect", outcome: "build-failed" }] },
+        { ...base, members: [{ name: "effect", outcome: "skipped-cooldown" }] },
+      ];
+      for (const input of retired) expect((yield* decodeStatusUnknown(input).pipe(Effect.result))._tag).toBe("Failure");
+      const status = RefsRefreshStatus.make({ ...base, schemaVersion: "beep-refs-refresh/v2", members: [] });
+      expect(yield* RefsRefreshStatus.encodeJson(status)).toBe(
+        '{"schemaVersion":"beep-refs-refresh/v2","timestamp":"2026-10-28T08:30:00.000Z","root":"/refs","members":[]}'
       );
-      const ok = yield* encodePreflight(RefsRefreshPreflight.make({ patchKit: "ok", detail: O.none() }));
-      expect(ok).toBe('{"patchKit":"ok"}');
-      const unknown = { ...base, preflight: { patchKit: "stale" } };
-      expect((yield* decodeStatusUnknown(unknown).pipe(Effect.result))._tag).toBe("Failure");
     })
-  );
-
-  it.effect.prop(
-    "round-trips preflight records through the JSON codec",
-    [Arbitrary.schema(RefsRefreshPreflight)],
-    Effect.fnUntraced(function* ([preflight]) {
-      const decoded = yield* decodePreflight(yield* encodePreflight(preflight));
-      expect(preflightEquivalent(decoded, preflight)).toBe(true);
-    }),
-    { arbitrary: fcRuns(100) }
   );
 
   it.effect(
     "round-trips failure detail and omits the key when absent",
     Effect.fnUntraced(function* () {
-      const detail = "model claude-opus-5 cooling down at http://127.0.0.1:8317/v1; retry-after 55516s";
-      const cooled = MemberRefreshReport.make({
-        name: "effect",
-        outcome: "skipped-cooldown",
-        coverage: O.none(),
-        detail: O.some(detail),
-      });
-      const decoded = yield* decodeReport(yield* encodeReport(cooled));
+      const detail = "git pull --ff-only origin main exited 1: fatal: not a git repository";
+      const failed = MemberRefreshReport.make({ name: "effect", outcome: "pull-failed", detail: O.some(detail) });
+      const decoded = yield* decodeReport(yield* encodeReport(failed));
       assertSome(decoded.detail, detail);
       const clean = yield* encodeReport(
-        MemberRefreshReport.make({ name: "effect", outcome: "unchanged", coverage: O.none(), detail: O.none() })
+        MemberRefreshReport.make({ name: "effect", outcome: "unchanged", detail: O.none() })
       );
       expect(clean).not.toContain("detail");
-      // Receipts written before the field existed still decode.
-      assertNone((yield* decodeReport('{"name":"effect","outcome":"build-failed"}')).detail);
+      assertNone((yield* decodeReport('{"name":"effect","outcome":"skipped-dirty"}')).detail);
     })
   );
 
@@ -161,7 +139,7 @@ describe("reference manifest schemas", () => {
     Effect.fnUntraced(function* () {
       const input = {
         name: "effect",
-        outcome: "build-failed",
+        outcome: "pull-failed",
         detail: Str.repeat(MEMBER_REFRESH_DETAIL_MAX_CHARS + 1)("x"),
       };
       expect((yield* decodeReportUnknown(input).pipe(Effect.result))._tag).toBe("Failure");

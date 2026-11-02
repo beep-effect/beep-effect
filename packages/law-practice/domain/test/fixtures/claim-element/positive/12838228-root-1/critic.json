@@ -1,0 +1,174 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12838228-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.97,
+  "confidenceScope": "Independent semantic structure only; source eligibility and attorney adjudication separate.",
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "findings": [],
+  "acceptanceBlockers": [],
+  "sourceEligibility": "provisional-pending-independent-source-critic",
+  "structuralStatus": "reviewed-no-structural-correction",
+  "rationale": [
+    "Extractor round2 independently resolves each round1 question with actual grammar and dependency ancestry, and explains why its initial0.94 was caution about alias/reference ownership rather than an unresolvable phrase. It now justifies0.97 on those concrete grounds; this is not a threshold-only numeric increase.",
+    "Direction alias: claim2 a recording medium conveyance direction and the recording medium conveying direction name the same single sensor-to-heater path. Thereof in5 grammatically refers to the movable plate. Missing plate/brush-roller introductions in6-10 follow actual chains excluding the relevant sibling; no branch is imported or dependency corrected.",
+    "No annotation change is required. Rechecked all124 element/term anchors and56 functional text anchors, full lexical heads, actual dependencies, all105 typed edges and21 ordered source-explicit functional relations. No remaining actionable semantic finding. Root schema checks, independent source eligibility and attorney adjudication stay separate."
+  ],
+  "audit": {
+    "resolvedTreesReviewed": 10,
+    "elementsReviewed": 34,
+    "termsReviewed": 90,
+    "typedEdgesReviewed": 105,
+    "functionalEdgesReviewed": 21,
+    "allElementAndTermUtf16SlicesVerified": true,
+    "allFunctionalTextSlicesVerified": true,
+    "functionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+    "selectedNativeClaimTextAndClaimsXmlDigestVerified": true,
+    "rootSchemaCheck": "pending-root",
+    "attorneyAdjudication": "pending"
+  },
+  "independence": "Independent reviewer of fresh semantic-reference/v2 proposals, not their producer. Did not reread P2 rules, implementation, predictions, synthetic fixtures or archived conformance drafts. Read fresh expected/extractor, canonical native claims, source audit proposal, v2 protocol and schema contracts. Helpers checked supplied span/reference coherence only; no decomposer run/copied/reimplemented.",
+  "ambiguityResolution": [
+    {
+      "claimNumber": 2,
+      "quote": "the recording medium conveying direction",
+      "span": [163, 203],
+      "resolution": "Same single medium path as a recording medium conveyance direction [87,126) in this clause; downstream/upstream describe the collecting-device location along that path. Conveying/conveyance is a source-clear nominal alias, so the existing edge is supported."
+    },
+    {
+      "claimNumber": 5,
+      "quote": "thereof",
+      "span": [89, 96],
+      "resolution": "In the movable plate has plural teeth on a side thereof, thereof grammatically refers to the movable plate introduced in ancestor3 at [281,296). The existing edge is supported."
+    },
+    {
+      "claimNumber": 6,
+      "quote": "the movable plate",
+      "span": [245, 262],
+      "resolution": "Actual chain6->2->1 contains no movable-plate introduction. The plate introduced in3 is a sibling-branch entity; absence of an edge is a determinate source coverage fact, not unresolved structural annotation."
+    },
+    {
+      "claimNumber": 7,
+      "quote": "the first brush roller",
+      "span": [123, 145],
+      "resolution": "Actual chain7->5->3->2->1 excludes6, where a first brush roller is introduced. Do not change dependency5 to6 or add an outside-chain edge."
+    },
+    {
+      "claimNumber": 8,
+      "quote": "the brush roller",
+      "span": [44, 60],
+      "resolution": "Chain8->5->3->2->1 has driving/driven rollers but no brush-roller introduction. Brush is a lexical qualification, not a reason to equate it with an arbitrary ancestor roller. No unambiguous antecedent edge is warranted."
+    },
+    {
+      "claimNumber": 9,
+      "quote": "the brush roller",
+      "span": [44, 60],
+      "resolution": "Same excluded claim6 branch as8; no unambiguous introduction exists in actual chain9->5->3->2->1."
+    },
+    {
+      "claimNumber": 10,
+      "quote": "the brush roller",
+      "span": [44, 60],
+      "resolution": "Same excluded claim6 branch as8; no unambiguous introduction exists in actual chain10->5->3->2->1."
+    }
+  ],
+  "priorRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "12838228-root-1",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.97,
+      "confidenceScope": "Independent semantic structure only; source eligibility and attorney adjudication separate.",
+      "verdict": "unresolved",
+      "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "findings": [],
+      "acceptanceBlockers": [
+        {
+          "kind": "extractor-confidence-below-threshold",
+          "actual": 0.94,
+          "required": 0.95,
+          "requiredAction": "Extractor must independently respond to the concrete dependency/alias resolutions in ambiguityResolution, identify any remaining annotation uncertainty with an exact quote, and either revise the annotation/confidence with reasons or leave the affected item unresolved for attorney review. Do not merely raise 0.94 to meet a gate. No structural tree change is requested by this critic."
+        }
+      ],
+      "sourceEligibility": "provisional-pending-independent-source-critic",
+      "structuralStatus": "reviewed-no-structural-correction",
+      "rationale": [
+        "All34 elements and90 terms were individually reviewed for complete lexical heads, source grammar and actual dependency scope. All124 element/term anchors plus56 functional connecting-text anchors are exact UTF16 source slices. All105 typed edges, including21 functional relationships, have coherent owned terms and ordered exact source coverage. No structural correction is required by this critic.",
+        "The complete heads paper feeding tray, recording-medium conveying device, roller lifting and lowering device and first/second brush roller are retained. Apparatus/image erasing apparatus and conveying/conveyance direction are contextually clear aliases. Thereof in5 explicitly refers to the movable plate, and its edge is correct. Source covey and hyphenation remain unchanged.",
+        "The extractor0.94 confidence prevents acceptance under v2 even though the critic finds the listed concerns semantically resolvable. The explicit ambiguityResolution records the reasoning to which the extractor must respond; no numeric threshold inflation is authorized.",
+        "Native XML/digest/source-span checks pass. The stronger independent source audit remains pending, including original lowercase-XML reconciliation. This structural review neither certifies a positive source version nor claims attorney agreement."
+      ],
+      "audit": {
+        "resolvedTreesReviewed": 10,
+        "elementsReviewed": 34,
+        "termsReviewed": 90,
+        "typedEdgesReviewed": 105,
+        "functionalEdgesReviewed": 21,
+        "allElementAndTermUtf16SlicesVerified": true,
+        "allFunctionalTextSlicesVerified": true,
+        "functionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+        "selectedNativeClaimTextAndClaimsXmlDigestVerified": true,
+        "rootSchemaCheck": "pending-root",
+        "attorneyAdjudication": "pending"
+      },
+      "independence": "Independent reviewer of fresh semantic-reference/v2 proposals, not their producer. Did not reread P2 rules, implementation, predictions, synthetic fixtures or archived conformance drafts. Read fresh expected/extractor, canonical native claims, source audit proposal, v2 protocol and schema contracts. Helpers checked supplied span/reference coherence only; no decomposer run/copied/reimplemented.",
+      "ambiguityResolution": [
+        {
+          "claimNumber": 2,
+          "quote": "the recording medium conveying direction",
+          "span": [163, 203],
+          "resolution": "Same single medium path as a recording medium conveyance direction [87,126) in this clause; downstream/upstream describe the collecting-device location along that path. Conveying/conveyance is a source-clear nominal alias, so the existing edge is supported."
+        },
+        {
+          "claimNumber": 5,
+          "quote": "thereof",
+          "span": [89, 96],
+          "resolution": "In the movable plate has plural teeth on a side thereof, thereof grammatically refers to the movable plate introduced in ancestor3 at [281,296). The existing edge is supported."
+        },
+        {
+          "claimNumber": 6,
+          "quote": "the movable plate",
+          "span": [245, 262],
+          "resolution": "Actual chain6->2->1 contains no movable-plate introduction. The plate introduced in3 is a sibling-branch entity; absence of an edge is a determinate source coverage fact, not unresolved structural annotation."
+        },
+        {
+          "claimNumber": 7,
+          "quote": "the first brush roller",
+          "span": [123, 145],
+          "resolution": "Actual chain7->5->3->2->1 excludes6, where a first brush roller is introduced. Do not change dependency5 to6 or add an outside-chain edge."
+        },
+        {
+          "claimNumber": 8,
+          "quote": "the brush roller",
+          "span": [44, 60],
+          "resolution": "Chain8->5->3->2->1 has driving/driven rollers but no brush-roller introduction. Brush is a lexical qualification, not a reason to equate it with an arbitrary ancestor roller. No unambiguous antecedent edge is warranted."
+        },
+        {
+          "claimNumber": 9,
+          "quote": "the brush roller",
+          "span": [44, 60],
+          "resolution": "Same excluded claim6 branch as8; no unambiguous introduction exists in actual chain9->5->3->2->1."
+        },
+        {
+          "claimNumber": 10,
+          "quote": "the brush roller",
+          "span": [44, 60],
+          "resolution": "Same excluded claim6 branch as8; no unambiguous introduction exists in actual chain10->5->3->2->1."
+        }
+      ]
+    }
+  ],
+  "roundReview": {
+    "previousRound": 1,
+    "findingDisposition": "confidence-blocker-resolved-with-reasoning",
+    "extractorConfidence": 0.97,
+    "treeChangeRequired": false
+  }
+}

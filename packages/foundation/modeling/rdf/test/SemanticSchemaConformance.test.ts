@@ -13,7 +13,7 @@ import { makeAnnotation } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { assertDefined, assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
+import { assertDefined, assertFailure, assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -188,9 +188,10 @@ describe("semantic schema conformance", () => {
       O.map(getSemanticSchemaMetadata(Root), ({ canonicalName }) => canonicalName),
       "RootIdentifier"
     );
-    expect(
-      pipe(getSemanticSchemaMetadataResult(Root), Result.map(O.map(({ canonicalName }) => canonicalName)))
-    ).toEqual(Result.succeed(O.some("RootIdentifier")));
+    deepStrictEqual(
+      pipe(getSemanticSchemaMetadataResult(Root), Result.map(O.map(({ canonicalName }) => canonicalName))),
+      Result.succeed(O.some("RootIdentifier"))
+    );
   });
 
   it("validates collected annotation payloads before exposing them", () => {
@@ -231,15 +232,15 @@ describe("semantic schema conformance", () => {
     const specifications = semanticSpecificationsFromConformance(makeAnnotation(conformanceAnnotation));
 
     expect(A.map(specifications, ({ name }) => name)).toEqual(["Primary Specification", "Best Practice Guide"]);
-    expect(A.map(specifications, ({ version }) => version)).toEqual([
-      O.some("release:1.0"),
-      O.some("datedSnapshot:2026-08-30"),
-    ]);
+    deepStrictEqual(
+      A.map(specifications, ({ version }) => version),
+      [O.some("release:1.0"), O.some("datedSnapshot:2026-08-30")]
+    );
     expect(A.map(specifications, ({ disposition }) => disposition)).toEqual(["normative", "informative"]);
-    expect(A.map(specifications, ({ sourceId }) => sourceId)).toEqual([
-      O.some("primary-spec"),
-      O.some("best-practice"),
-    ]);
+    deepStrictEqual(
+      A.map(specifications, ({ sourceId }) => sourceId),
+      [O.some("primary-spec"), O.some("best-practice")]
+    );
   });
 
   it("retains every provenance field and distinguishes all revision variants", () => {
@@ -293,6 +294,6 @@ describe("semantic schema conformance", () => {
       encodeSemanticSchemaSpecificationResult(specifications[0]!),
       Result.flatMap(decodeUnknownSemanticSchemaSpecificationResult)
     );
-    expect(roundTrip).toEqual(Result.succeed(specifications[0]!));
+    deepStrictEqual(roundTrip, Result.succeed(specifications[0]!));
   });
 });

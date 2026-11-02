@@ -10,7 +10,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -62,7 +62,7 @@ const RestorationWriterClaimJson = S.fromJsonString(RestorationWriterClaim);
 const decodeRestorationWriterClaim = S.decodeUnknownEffect(RestorationWriterClaimJson);
 const encodeRestorationWriterClaim = S.encodeEffect(RestorationWriterClaimJson);
 
-type RestorationRequirements = Crypto.Crypto | FileSystem.FileSystem | Path.Path;
+type RestorationRequirements = SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path;
 
 type ArchiveSourceObject = {
   readonly destinationRelativePath: string;
@@ -566,10 +566,8 @@ const tryWriteExclusiveCoordinationFile = Effect.fn("CorpusRestoration.tryWriteE
 });
 
 const reapedCoordinationPath = Effect.fnUntraced(function* (filePath: string) {
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto
-    .randomUUIDv4()
-    .pipe(CorpusCommandError.mapError("Failed creating preservation coordination identity."));
+  const crypto = yield* SecureRandom.SecureRandom;
+  const token = yield* crypto.uuidV4();
   return `${filePath}.reaped-${process.pid}-${token}`;
 });
 
@@ -722,10 +720,8 @@ const acquireRestorationWriterClaim = Effect.fn("CorpusRestoration.acquireWriter
   if (O.isNone(ownProcessStart)) {
     return yield* archiveError("Current preservation writer process identity is unavailable; ownership fails closed.");
   }
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto
-    .randomUUIDv4()
-    .pipe(CorpusCommandError.mapError("Failed creating preservation writer identity."));
+  const crypto = yield* SecureRandom.SecureRandom;
+  const token = yield* crypto.uuidV4();
   const encodedClaim = yield* encodeRestorationWriterClaim({
     bootId: yield* currentBootId(),
     pid: process.pid,

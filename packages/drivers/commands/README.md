@@ -93,7 +93,7 @@ Tests live in `test/` (unit, `*.property.test.ts`, `*.coverage.test.ts`, and `e2
 
 ## Provenance
 
-Ported from upstream `@effected/commands` 0.11.0 (MIT, C. Spencer Beggs) at commit `af7566a9da2eff169cb74955efcc5ede1e5de9f8` (reference checkout `~/YeeBois/references/effect/effected`) through the effected kit port, then promoted from `scratchpad/effected/commands` into this workspace package by `goals/effected-promotion`. The package [LICENSE](./LICENSE) carries both the beep-effect and the upstream copyright notices.
+Ported from upstream `@effected/commands` 0.11.0 (MIT, C. Spencer Beggs) at commit `af7566a9da2eff169cb74955efcc5ede1e5de9f8` (reference checkout `~/YeeBois/references/effect/effected`) through the effected kit port, then promoted from `scratchpad/effected/commands` (last held at `3c931bbaefd4e860cbb7cbb5dae01064e0b3c8bb`) into this workspace package by `goals/effected-promotion`. The package [LICENSE](./LICENSE) carries both the beep-effect and the upstream copyright notices.
 
 ## License
 

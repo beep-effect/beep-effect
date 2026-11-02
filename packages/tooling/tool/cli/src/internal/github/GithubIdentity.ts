@@ -33,7 +33,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { configStringOption } from "../cli/EnvConfig.ts";
 import { runRepoCommandCaptureRaw } from "../repo-run/RepoRun.executor.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("internal/github/GithubIdentity");
@@ -313,7 +313,7 @@ export const layerGithubClientFor = ({
 }: GithubClientRequest): Layer.Layer<
   GitHubClient,
   GithubIdentityError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > =>
   Layer.unwrap(
     Effect.gen(function* () {
@@ -396,7 +396,7 @@ export const repoSlugFromRemote = (remote: string): O.Option<string> =>
  */
 export const layerGithubRepoFor = (
   cwd: string
-): Layer.Layer<Repo, GithubIdentityError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+): Layer.Layer<Repo, GithubIdentityError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
   Layer.unwrap(
     Effect.gen(function* () {
       const override = yield* configStringOption("GH_REPO");

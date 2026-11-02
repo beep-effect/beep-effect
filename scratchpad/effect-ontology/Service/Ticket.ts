@@ -14,7 +14,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -92,7 +92,7 @@ const ticketStorageError = (operation: typeof TicketStorageOperation.Type) => (c
 
 const makeTicketService = Effect.gen(function* () {
   const storage = yield* StorageService;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
 
   const generateSecureToken = Effect.fn("TicketService.generateSecureToken")(function* () {
     return Base64Url.encode(yield* crypto.randomBytes(32));

@@ -1,0 +1,56 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A user equipment (UE), the UE comprising:
+<claim-text>a memory storing an instruction; and</claim-text>
+<claim-text>a processor configured to execute the instruction, for resource selection in a first sidelink communication, stored in the memory to:
+<claim-text>set at least one first threshold parameter for a resource exclusion at the UE;</claim-text>
+<claim-text>initialize one or more first candidate resources in the first sidelink communication;</claim-text>
+<claim-text>obtain, at least one of: at least one second threshold parameter used for a resource exclusion in second sidelink communication, sidelink sensing information in the second sidelink communication, or resource reservation information in the second sidelink communication;</claim-text>
+<claim-text>determine one or more second candidate resources from among the one or more first candidate resources using the at least one first threshold parameter and the obtained at least one information in the second sidelink communication; and</claim-text>
+<claim-text>report one or more third candidate resources to a higher layer for selection of one or more transmission resources in the first sidelink communication based on the one or more second candidate resources,</claim-text>
+<claim-text>wherein, the at least one first threshold parameter is determined based on information preconfigured by a network.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The UE of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one first threshold parameter is included in at least one of:
+<claim-text>a list of initial threshold parameters for resource exclusion of one or more resources in the first sidelink communication, or</claim-text>
+<claim-text>a list of initial threshold parameters for resource exclusion of one or more resources in the second sidelink communication.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The UE of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the processor is further configured to:
+<claim-text>increase the at least one first threshold parameter by an increment if the number of the one or more second candidate resources is smaller than total number of the one or more first candidate resources multiplied by X, where the X is indicated by the information preconfigured by the network.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The UE of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the processor is further configured to:
+<claim-text>initialize a candidate resource set including one or more resources in the first sidelink communication, if the number of the one or more second candidate resources is smaller than total number of the one or more first candidate resources multiplied by X, where the X is indicated by the information preconfigured by the network.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The UE of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the processor is further configured to:
+<claim-text>determine the one or more third candidate resources based on DRX active time.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The UE of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one first threshold parameter is determined based on at least one of: one or more priorities of one or more other UEs in a second sidelink communication, or one or more priorities associated with one or more transmissions in the first sidelink communication.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The UE of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the sidelink sensing information in the second sidelink communication comprises: one or more sidelink measurement in the second sidelink communication.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The UE of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein in determining the one or more third candidate resources, the processor is further configured to execute the instruction stored in the memory to:
+<claim-text>exclude, from the one or more first candidate resources, one or more resources having the one or more sidelink measurement greater than the at least one first threshold parameter.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The UE of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the sidelink measurement in the second sidelink communication comprises at least one of:
+<claim-text>SL-RSRP measurement in the second sidelink communication, and</claim-text>
+<claim-text>SL-RSSI measurement in the second sidelink communication.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The UE of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one first threshold parameter is determined based on the information preconfigured by the network and total number of the one or more first candidate resources.</claim-text>
+</claim>
+</claims>

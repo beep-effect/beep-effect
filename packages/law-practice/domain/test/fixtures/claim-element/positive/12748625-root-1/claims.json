@@ -1,0 +1,151 @@
+{
+  "familyId": "12748625-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for assessing channel performance in a home communication network, the home communication network operable over a plurality of channels, the home communication network comprising a network controller and a plurality of nodes, each of the network controller and the plurality of nodes in communication over a coax backbone, the method comprising; selecting a channel for assessment; allocating a first probe operation for use with the plurality of nodes; in response to the allocating, sending a first probe operation report message from each of the plurality of nodes to the network controller; in response to receiving the first probe operation report messages, using the network controller to select a node to be a channel assessment operation node; selecting at least a portion of the plurality of nodes to participate in a channel assessment operation signal exchange; and moving the selected nodes to a different channel to perform a channel assessment operation on the different channel.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1 further comprising using the network controller to replace the channel assessment node with a second channel assessment node from the plurality of nodes.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method of claim 2 further comprising using the second channel assessment node to allocate the second probe operation on each of the selected nodes.",
+      "sourceXmlParentClaimNumbers": [
+        2
+      ]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method of claim 3 further comprising providing using a second probe report, from the channel assessment node to the network controller, an estimation of the achievable capacity in the assessed channel.",
+      "sourceXmlParentClaimNumbers": [
+        3
+      ]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method of claim 3 further comprising providing using a second probe report, from the second channel assessment node to the network controller, an estimation of the achievable capacity in the assessed channel.",
+      "sourceXmlParentClaimNumbers": [
+        3
+      ]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method of claim 1 further comprising using the network controller to select a third channel for assessment.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method of claim 1 wherein said allocating a first probe operation comprises using the network controller to prevent the plurality of nodes from sending information on the network during the first probe operation.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The method of claim 1 further comprising using the channel assessment operation node to allocate a second probe operation on each of the selected nodes.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method of claim 1 further comprising identifying, in the Media Access Plan (“MAP”), the channel assessment operation as a link state.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A home communication network operable over a plurality of channels, the home communication network comprising: a network controller; a plurality of nodes; and a coax backbone, each of the network controller and the plurality of nodes in communication over the coax backbone, the network controller configured to: select a channel for assessment; allocate a first probe operation for use with the plurality of nodes; wherein each of the plurality of nodes is configured to, in response to the allocating, send a first probe operation report message to the network controller; wherein, in response to receiving the first probe operation report messages from the plurality of nodes, the network controller is further configured to: select a node to be a channel assessment operation node; select at least a portion of the plurality of nodes to participate in a channel assessment operation signal exchange; move the selected nodes to a different channel to perform a channel assessment operation on the different channel; and use the channel assessment operation node to allocate a second probe operation on each of the selected nodes.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The system of claim 10 wherein, the network controller is further configured to replace the channel assessment node with a second channel assessment node from the plurality of nodes.",
+      "sourceXmlParentClaimNumbers": [
+        10
+      ]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The system of claim 11 wherein, the second channel assessment node is configured to allocate the second probe operation on each of the selected nodes.",
+      "sourceXmlParentClaimNumbers": [
+        11
+      ]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The system of claim 12 wherein, the channel assessment node is configured to send a second probe report to the network controller, the second probe report comprising a calculated full mesh rate on the different channel.",
+      "sourceXmlParentClaimNumbers": [
+        12
+      ]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The system of claim 12 wherein, the second channel assessment node is configured to send a second probe report to the network controller, the second probe report comprising a calculated full mesh rate on the different channel.",
+      "sourceXmlParentClaimNumbers": [
+        12
+      ]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The system of claim 10 wherein the network controller is further configured to select a third channel for assessment.",
+      "sourceXmlParentClaimNumbers": [
+        10
+      ]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The system of claim 10 wherein the network controller is further configured to prevent the plurality of nodes from sending information on the network during the first probe operation.",
+      "sourceXmlParentClaimNumbers": [
+        10
+      ]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The system of claim 10 wherein the channel assessment operation node is further configured to allocate a second probe operation on each of the selected nodes.",
+      "sourceXmlParentClaimNumbers": [
+        10
+      ]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The system of claim 10 wherein the network controller is further configured to identify, in a Media Access Plan (“MAP”), the channel assessment operation as a link state.",
+      "sourceXmlParentClaimNumbers": [
+        10
+      ]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "A method for assessing channel performance in a home communication network, the home communication network operable over a plurality of channels, the home communication network comprising a network controller and a plurality of nodes, each of the network controller and the plurality of nodes in communication over a first channel over a coax backbone, the method comprising; selecting a second channel for assessment; allocating a first probe operation for use with at least one of the plurality of nodes; allocating a transition time for the at least one node to move to the second channel; maintaining the ability of the at least one node to continue to transmit on the first channel during the transmission time.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The method of claim 19 further comprising, in response to the allocating a first probe operation, sending a first probe operation report message from the at least one node to the network controller.",
+      "sourceXmlParentClaimNumbers": [
+        19
+      ]
+    }
+  ]
+}

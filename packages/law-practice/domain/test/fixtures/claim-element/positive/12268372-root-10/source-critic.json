@@ -1,0 +1,180 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12268372-root-10",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [10, 11, 12, 13],
+  "findings": [],
+  "evidence": [
+    "Actual second-paragraph1\u201320 ground present. Same-date Preliminary Amendment/CLM originals have partial13 versus fuller20 parsed set. Original13\u219211or12 versus native13\u219211 and characterized/wherein changes need authoritative rendering.",
+    "Marked original PDF4-5 resolves selected10-13:10/11 replace characterized in that with wherein,12 visibly deletes or11 retaining10,13 visibly deletes or12 retaining11. Reference numerals visibly struck. Accepted body/dependency text agrees with native apart from native11 fined versus original fitted, an isolated spelling defect in the identical bearings clause and retained original reference numeral25. No competing adopted dependency remains. Actual retained second-paragraph rejection1-20 and selected numbered phrases remain verified."
+  ],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "nativePublicationSha256": "83d501d55ff2d6dd906c28c7b7dee72238ae46c44a464745ec739a6dcb223ae9",
+    "nativePublicationHashMatches": true,
+    "sourceClaimsXmlSha256": "16c82072468044a1c67b1ae911d5170b42b5e30334f7b8e3e71fbfdc493f03e2",
+    "sourceClaimsHashMatches": true,
+    "fullInventorySha256": "974e8a663ad062da82e4e9c94ce9fe468db542384103f9553b93abfc4d774954",
+    "inventoryReportedCount": 64,
+    "inventoryActualRows": 64,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "FNDV8M1VPPOPPY4",
+        "documentCode": "CLM",
+        "officialDate": "2008-11-10T00:00:00.000-0500",
+        "description": "Claims"
+      },
+      {
+        "documentIdentifier": "FNDV8MUXPPOPPY4",
+        "documentCode": "A.PE",
+        "officialDate": "2008-11-10T00:00:00.000-0500",
+        "description": "Preliminary Amendment"
+      },
+      {
+        "documentIdentifier": "FNJ3VQARPPOPPY2",
+        "documentCode": "CLM",
+        "officialDate": "2008-11-10T00:00:00.000-0500",
+        "description": "Claims"
+      },
+      {
+        "documentIdentifier": "FNJ3VQGHPPOPPY2",
+        "documentCode": "REM",
+        "officialDate": "2008-11-10T00:00:00.000-0500",
+        "description": "Applicant Arguments/Remarks Made in an Amendment"
+      }
+    ],
+    "citedOfficeActionInventoryRows": [
+      {
+        "documentIdentifier": "GJOTJDQ8PPOPPY5",
+        "documentCode": "CTNF",
+        "officialDate": "2011-02-04T00:00:00.000-0500"
+      }
+    ],
+    "originalCachedHashes": [
+      {
+        "documentIdentifier": "FNDV8M1VPPOPPY4",
+        "exists": true,
+        "sha256": "a537759b2a7cb7f6f7bbc596a4510118b3d78e972e88f91f3eb1f233a9a61b15",
+        "sha256Matches": true
+      },
+      {
+        "documentIdentifier": "FNJ3VQARPPOPPY2",
+        "exists": true,
+        "sha256": "b20d6413227bef32dd3c2b0abd07593e5b4da2cdc7d09a23f26fec049e0a36cf",
+        "sha256Matches": true
+      }
+    ]
+  },
+  "extractorVerdictReviewed": "unresolved",
+  "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+  "rationale": "Marked original PDF4-5 resolves selected10-13:10/11 replace characterized in that with wherein,12 visibly deletes or11 retaining10,13 visibly deletes or12 retaining11. Reference numerals visibly struck. Accepted body/dependency text agrees with native apart from native11 fined versus original fitted, an isolated spelling defect in the identical bearings clause and retained original reference numeral25. No competing adopted dependency remains. Actual retained second-paragraph rejection1-20 and selected numbered phrases remain verified.",
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "12268372-root-10",
+      "role": "source-eligibility-critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.99,
+      "verdict": "unresolved",
+      "reviewedClaimNumbers": [10, 11, 12, 13],
+      "findings": [
+        {
+          "claimNumber": 12,
+          "evidence": {
+            "nativeQuote": "according to claim 10",
+            "originalQuote": "according to claim 10 or",
+            "markedOriginalQuote": "according to claim 10 er-14"
+          },
+          "requiredCorrection": "Keep unresolved until authoritative adopted reference12 and13 are verifiable. Do not infer deletions from OCR fragments."
+        }
+      ],
+      "evidence": [
+        "Actual second-paragraph1\u201320 ground present. Same-date Preliminary Amendment/CLM originals have partial13 versus fuller20 parsed set. Original13\u219211or12 versus native13\u219211 and characterized/wherein changes need authoritative rendering.",
+        "Marked original PDF4-5 resolves selected10-13:10/11 replace characterized in that with wherein,12 visibly deletes or11 retaining10,13 visibly deletes or12 retaining11. Reference numerals visibly struck. Accepted body/dependency text agrees with native apart from native11 fined versus original fitted, an isolated spelling defect in the identical bearings clause and retained original reference numeral25. No competing adopted dependency remains. Actual retained second-paragraph rejection1-20 and selected numbered phrases remain verified."
+      ],
+      "sourceChecks": {
+        "nativeApplicationPublicationDateMatch": true,
+        "nativePublicationSha256": "83d501d55ff2d6dd906c28c7b7dee72238ae46c44a464745ec739a6dcb223ae9",
+        "nativePublicationHashMatches": true,
+        "sourceClaimsXmlSha256": "16c82072468044a1c67b1ae911d5170b42b5e30334f7b8e3e71fbfdc493f03e2",
+        "sourceClaimsHashMatches": true,
+        "fullInventorySha256": "974e8a663ad062da82e4e9c94ce9fe468db542384103f9553b93abfc4d774954",
+        "inventoryReportedCount": 64,
+        "inventoryActualRows": 64,
+        "preOfficeActionClaimAndAmendmentDocuments": [
+          {
+            "documentIdentifier": "FNDV8M1VPPOPPY4",
+            "documentCode": "CLM",
+            "officialDate": "2008-11-10T00:00:00.000-0500",
+            "description": "Claims"
+          },
+          {
+            "documentIdentifier": "FNDV8MUXPPOPPY4",
+            "documentCode": "A.PE",
+            "officialDate": "2008-11-10T00:00:00.000-0500",
+            "description": "Preliminary Amendment"
+          },
+          {
+            "documentIdentifier": "FNJ3VQARPPOPPY2",
+            "documentCode": "CLM",
+            "officialDate": "2008-11-10T00:00:00.000-0500",
+            "description": "Claims"
+          },
+          {
+            "documentIdentifier": "FNJ3VQGHPPOPPY2",
+            "documentCode": "REM",
+            "officialDate": "2008-11-10T00:00:00.000-0500",
+            "description": "Applicant Arguments/Remarks Made in an Amendment"
+          }
+        ],
+        "citedOfficeActionInventoryRows": [
+          {
+            "documentIdentifier": "GJOTJDQ8PPOPPY5",
+            "documentCode": "CTNF",
+            "officialDate": "2011-02-04T00:00:00.000-0500"
+          }
+        ],
+        "originalCachedHashes": [
+          {
+            "documentIdentifier": "FNDV8M1VPPOPPY4",
+            "exists": true,
+            "sha256": "a537759b2a7cb7f6f7bbc596a4510118b3d78e972e88f91f3eb1f233a9a61b15",
+            "sha256Matches": true
+          },
+          {
+            "documentIdentifier": "FNJ3VQARPPOPPY2",
+            "exists": true,
+            "sha256": "b20d6413227bef32dd3c2b0abd07593e5b4da2cdc7d09a23f26fec049e0a36cf",
+            "sha256Matches": true
+          }
+        ]
+      },
+      "extractorVerdictReviewed": "unresolved",
+      "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+      "rationale": "Numbered ground, actual family membership and operative source versions assessed separately. Full inventory chronology is supporting evidence only; unreadable/missing/dependency-conflicting originals remain unresolved."
+    }
+  ],
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": false,
+  "pdfClarificationReviewer": {
+    "role": "independent-source-critic",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  },
+  "pdfCorroboration": [
+    {
+      "documentIdentifier": "FNJ3VQARPPOPPY2",
+      "sha256": "281cb1e169cf34f47380627307a700281d7d3c58602222fdc22f0276c72505d3",
+      "pdfPagesInspected": [4, 5],
+      "printedPages": [6, 7],
+      "purpose": "Independent visual corroboration only; exact native source unchanged."
+    }
+  ]
+}

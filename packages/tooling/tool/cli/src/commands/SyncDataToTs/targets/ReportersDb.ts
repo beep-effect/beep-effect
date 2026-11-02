@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -39,7 +39,7 @@ const vocabularyDataPath = `${outputRoot}/reporters-vocabulary.data.json` as con
 const refreshCommand = "bun run beep sync-data-to-ts --target reporters-db" as const;
 const textEncoder = new TextEncoder();
 
-type ReporterIdFactory = (semanticKey: string) => Effect.Effect<string, SyncDataToTsError, Crypto.Crypto>;
+type ReporterIdFactory = (semanticKey: string) => Effect.Effect<string, SyncDataToTsError, Digest.Digest>;
 
 /**
  * Pinned reporters-db release.
@@ -315,10 +315,8 @@ const recordArrayCount = <A>(record: Readonly<Record<string, ReadonlyArray<A>>>)
   );
 
 const makeReporterId = Effect.fn("SyncDataToTs.ReportersDb.makeReporterId")(function* (semanticKey: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto
-    .digest("SHA-256", textEncoder.encode(semanticKey))
-    .pipe(SyncDataToTsError.mapError("Failed to compute a stable reporters-db identifier", targetId, reportersPath));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, textEncoder.encode(semanticKey));
 
   return `reporter:${pipe(Hex.encode(digest), Str.slice(0, 24))}`;
 });

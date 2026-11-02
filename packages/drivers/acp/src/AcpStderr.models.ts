@@ -119,7 +119,7 @@ const REDACTIONS: ReadonlyArray<readonly [RegExp, string]> = [
   [/\bAuthorization:\s*Basic\s+\S+/gi, "Authorization: Basic [redacted]"],
   [/\bx-api-key:\s*\S+/gi, "x-api-key: [redacted]"],
   [
-    /\b(?:sk-[A-Za-z0-9][A-Za-z0-9-]{7,}|gh[pousr]_[A-Za-z0-9]+|github_pat_[A-Za-z0-9_]+|xox[a-zA-Z]-[A-Za-z0-9-]+|ops_[A-Za-z0-9+/=]{40,})\b/g,
+    /\b(?:sk-[A-Za-z0-9][A-Za-z0-9_-]{7,}|gh[pousr]_[A-Za-z0-9]+|github_pat_[A-Za-z0-9_]+|xox[a-zA-Z]-[A-Za-z0-9-]+|ops_[A-Za-z0-9+/=]{40,})\b/g,
     "[redacted]",
   ],
 ];

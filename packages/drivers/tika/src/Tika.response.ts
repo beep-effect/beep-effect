@@ -1,6 +1,8 @@
 /**
  * Shared Apache Tika response parsing and metadata stringification.
  *
+ * **Details**
+ *
  * The tika-app `-J -t` stdout payload and the Tika Server `PUT /rmeta/text`
  * response body share one wire shape — a JSON array of metadata records
  * carrying the extracted text under `X-TIKA:content` — so both engines decode
@@ -143,7 +145,7 @@ export const stringifyTikaMetadata = (record: Readonly<Record<string, unknown>>)
  *
  * ```ts
  * import { readTikaContentText } from "@beep/tika"
- * import { O } from "@beep/utils"
+ * import * as O from "effect/Option"
  *
  * const text = readTikaContentText({ "X-TIKA:content": "\n  hello corpus\n" })
  * console.log(O.getOrElse(text, () => "")) // "hello corpus"

@@ -637,14 +637,15 @@ const adoptionClass =
           onNone: () => Effect.succeed<AdoptionClass>("unknown"),
           onSome: (head) =>
             Effect.fromOption(HashMap.get(index, ancestryKey(event.id, head))).pipe(
-              Effect.map(verdictClass),
-              Effect.mapError(() =>
-                KpiInputDecodeError.make({
-                  role: "adoption-table",
-                  path: adoptionPath,
-                  message: `The adoption table has no row for ${event.id} at head ${head}.`,
-                })
-              )
+              Effect.mapBoth({
+                onFailure: () =>
+                  KpiInputDecodeError.make({
+                    role: "adoption-table",
+                    path: adoptionPath,
+                    message: `The adoption table has no row for ${event.id} at head ${head}.`,
+                  }),
+                onSuccess: verdictClass,
+              })
             ),
         });
 

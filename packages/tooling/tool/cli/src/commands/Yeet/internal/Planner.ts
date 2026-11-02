@@ -81,15 +81,7 @@ type YeetFeedbackTask = (typeof YEET_FEEDBACK_TASKS)[number];
  * @category models
  * @since 0.0.0
  */
-export const YeetRunMode = LiteralKit([
-  "repair",
-  "verify",
-  "publish",
-  "monitor",
-  "closeout",
-  "status",
-  "pre-push-hook",
-]).pipe(
+export const YeetRunMode = LiteralKit(["repair", "verify", "publish", "monitor", "closeout", "status"]).pipe(
   $I.annoteSchema("YeetRunMode", {
     description: "Execution mode selected for a yeet repository run.",
   })
@@ -947,7 +939,6 @@ const stepsForMode = (
     monitor: () => monitorSteps(context),
     closeout: () => closeoutSteps(context),
     status: () => statusSteps(context, options),
-    "pre-push-hook": () => [],
   });
 
 const withTurboForce = (steps: ReadonlyArray<RepoPlanStep>, forceTurbo: boolean): ReadonlyArray<RepoPlanStep> =>

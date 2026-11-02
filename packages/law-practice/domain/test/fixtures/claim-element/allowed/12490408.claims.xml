@@ -1,0 +1,39 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A liquid-cooling cooler, comprising a central housing, a water distribution plate, a mesh gasket and a copper skived fin; wherein:
+<claim-text>the central housing is provided with a first groove, the water distribution plate, the mesh gasket and the copper skived fin are sequentially stacked in the first groove, and the copper skived fin is fixedly connected with the central housing;</claim-text>
+<claim-text>a water outlet is formed at a middle position of a side of the water distribution plate facing the copper skived fin, a second groove is formed at a position of the water distribution plate corresponding to a mesh frame of the mesh gasket, and the mesh gasket is arranged in the second groove; and</claim-text>
+<claim-text>when flowing out of the water outlet, a coolant flows to the center of the copper skived fin through the water outlet, is dispersed around the copper skived fin by the copper skived fin, and then flows back to the central housing.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The liquid-cooling cooler according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the central housing comprises a housing body and a centrifugal pump, the housing body is provided with a water inlet hole and a water outlet hole, the water inlet hole corresponds to the center of an impeller of the centrifugal pump, and the water outlet hole corresponds to the water outlet.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The liquid-cooling cooler according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the water distribution plate comprises an upper water distribution plate and a lower water distribution plate;
+<claim-text>the upper water distribution plate is snap-fitted with the lower water distribution plate, and the lower water distribution plate is snap-fitted with the bottom of the first groove; and</claim-text>
+<claim-text>the upper water distribution plate is provided with a strip-shaped water outlet hole, and a water channel is formed at a position of the lower water distribution plate corresponding to the strip-shaped water outlet hole.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The liquid-cooling cooler according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein both ends of the water distribution plate are provided with water inlets, and the water inlets correspond to the water inlet holes.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The liquid-cooling cooler according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein a flow guide groove is formed in an inner wall of a pump housing of the centrifugal pump and extends spirally along a rotation direction of the impeller, and a depth of the flow guide groove gradually increases from a side close to the impeller to a side away from the impeller.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The liquid-cooling cooler according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the water outlet hole is provided with a flow control valve, and the flow control valve is electrically connected with the centrifugal pump.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The liquid-cooling cooler according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the copper skived fin comprises a sealing O-ring, copper fins and a connecting piece, the copper fins are arranged at the center of the connecting piece, a third groove is arranged between the copper fins and the connecting piece, and the sealing O-ring is arranged in the third groove.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The liquid-cooling cooler according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the surface of the copper skived fin is provided with a layer of graphene coating.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The liquid-cooling cooler according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the mesh gasket is made of rubber, and has rectangular meshes arranged in parallel.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The liquid-cooling cooler according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein an outer surface of the central housing is provided with a heat insulation layer, and the heat insulation layer is made of asbestos material.</claim-text>
+</claim>
+</claims>

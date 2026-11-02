@@ -1,0 +1,96 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18734099-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20240398123", "A1", "20241205"],
+    "applicationReference": ["US", "18734099", "20240605"],
+    "officeActionDocumentIdentifiers": ["MLTVF25AX117X14"],
+    "officeActionMailDate": "2026-02-20"
+  },
+  "digestEvidence": [
+    {
+      "file": "18734099.publication.xml",
+      "sha256": "b99ac190dc8f6baffe70cbe040f221aa100bcbaae0a2e23325f8969f85240025",
+      "matchesProvenance": true
+    },
+    {
+      "file": "18734099.claims.xml",
+      "sha256": "8dce6843c712af3cc6de9a4baf17b490781df175ee76718645b675405cc27cbc",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "8dce6843c712af3cc6de9a4baf17b490781df175ee76718645b675405cc27cbc",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "dc7a7667-3515-4642-87ca-f47ebbe2275a",
+      "available": false
+    },
+    {
+      "documentIdentifier": "LXCZ6P1NXBLUEX3",
+      "available": true,
+      "sha256": "2200493e924de653be5f433c63d733ed42ad5bed4fdb3eb22316d1984c90e41e",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 52,
+    "actualRows": 52,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2024-06-05T11:37:41.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "dc7a7667-3515-4642-87ca-f47ebbe2275a"
+      },
+      {
+        "officialDate": "2024-06-05T11:37:41.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "LXCZ6P1NXBLUEX3"
+      }
+    ]
+  },
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the lower end of the upper backrest",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the lower end of the upper backrest"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the lower end of the lower backrest",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the lower end of the lower backrest"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "base seat member",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "base seat member"
+    }
+  ],
+  "assessment": "Retained LXCZ6P1NXBLUEX3 matches all12 selected claim bodies after printed Claim n prefixes/whitespace. Natural references form root1 family; OA explicitly covers1-12. Missing second same-date UUID copy supplies no conflicting text against this complete exact original.",
+  "findings": [],
+  "limitations": [
+    "Cached public evidence only; original OCR corroboration only, never repaired into reference. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation inspected/performed.",
+  "officeActionGroundQuotes": [
+    "claims 1-12 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention."
+  ]
+}

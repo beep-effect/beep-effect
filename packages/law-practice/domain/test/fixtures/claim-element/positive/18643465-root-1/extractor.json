@@ -1,0 +1,125 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18643465-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "the workpiece comprising a shaft",
+      "reason": "Root 1 carries extensive embedded apparatus/workpiece context before the method main transition the method being characterised in that. That embedded comprising is not selected as the method transition. Four coordinated in-that machining functions are individual functional elements."
+    },
+    {
+      "quote": "claims 1-10 are rejected",
+      "reason": "Source-audit confirms actual rejection applies to 1-10; selected 11-15 are root-family context, not separately asserted rejected claims. All selected context remains labelled in frozen scope."
+    },
+    {
+      "quote": "the machining tool",
+      "reason": "Manual semantic link to a tool for machining, not an exact-head match. Tool holder is separately introduced; no conflation. Examiner allegation retained as source evidence, not imposed as the annotation answer."
+    },
+    {
+      "quote": "the flanges",
+      "reason": "Claim 13 explicitly permits two flanges OR one flange and a shoulder. The plural referring phrase in 14 has no single unambiguous branch-independent introducing term, so no antecedent edge."
+    },
+    {
+      "quote": "the reciprocating motions",
+      "reason": "Source presents this nominal phrase definitely without an explicit determiner-bearing introduction. Similar first definite recitations of beginning/end, sinusoidal program, desired programmed arrangement, displacement, head, halfway point, length, periphery, bottom, annular area, placing or attachment and centrifugal forces remain terms without invented introducing anchors."
+    },
+    {
+      "quote": "the first machined portion / the front radial bearing",
+      "reason": "Resolved by independent source semantics in round 2. Claim 1 explicitly machines a uniquely ordered first portion at its first shaft end and a second portion at its second end; claims 2–4 use the same ordered shaft/end machining context. Root 1 separately introduces the unique front bearing on the first end and rear bearing on the second end; claims 3/4 preserve these positions and roles. Eight shortened qualified-reference edges added from this combined wording, without using examiner allegations or numerals as identity authority. No legal rejection adjudication is claimed."
+    }
+  ],
+  "annotationRationale": "Round-2 independent extractor correction from exact canonical/native source, semantic-reference/v2 and entity-mentions/v1, schema contracts and critic round 1. Preserve the three complete prior receipts as .round1.json. Added literal claim-10 structure rather than whole-claim abstention; two indefinite motors remain separate mentions with identity concern. Extended claim-1 preamble through resumptive the method and added its local antecedent. Independently resolved eight ordinal portion and positioned bearing references; reference numbers only corroborate. Existing other trees and remaining uncertainty retained; no production rules, predictions or conformance inspected. Exact functional connecting text preserves relative clauses without mandatory duplicate relative-pronoun terms. Agent confidence is not attorney agreement; independent critic round 2 is pending.",
+  "referenceConcerns": [
+    {
+      "claimNumber": 10,
+      "anchors": [
+        {
+          "startChar": 391,
+          "endChar": 408,
+          "quote": "an electric motor"
+        },
+        {
+          "startChar": 584,
+          "endChar": 601,
+          "quote": "an electric motor"
+        }
+      ],
+      "reason": "Repeated indefinite electric-motor mentions may name one motor or two. Both anchored terms remain separately recorded without a coreference/antecedent edge; the tree makes no identity or distinctness determination. Attorney adjudication pending."
+    },
+    {
+      "claimNumbers": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "quotes": [
+        "the two faces"
+      ],
+      "reason": "Collective face reference cannot be assigned to a single introducing face term without selecting or inventing a collective introduction. In claim 10 the dependency is directly to claim 1, so sibling claims 5/6 cannot supply its disc-face antecedents. Surface terms and relationship text remain preserved without an invented edge."
+    },
+    {
+      "claimNumber": 14,
+      "quotes": [
+        "the flanges"
+      ],
+      "reason": "Claim 13 has alternatives two flanges OR one flange and a shoulder. No branch-independent unique introducing term is asserted for the plural reference."
+    },
+    {
+      "claimNumber": 10,
+      "anchors": [
+        {
+          "startChar": 441,
+          "endChar": 470,
+          "quote": "the first and second portions"
+        },
+        {
+          "startChar": 634,
+          "endChar": 663,
+          "quote": "the first and second portions"
+        }
+      ],
+      "reason": "The coordinated first-and-second-portions mention refers collectively to the separately introduced first/second portions. No single member is substituted as its antecedent; source surface is retained."
+    }
+  ],
+  "round2Corrections": {
+    "criticFindingIdsAddressed": [
+      "C1",
+      "C2",
+      "C3"
+    ],
+    "newClaimTrees": [
+      10
+    ],
+    "addedTermsToExistingTrees": 1,
+    "addedAntecedentEdgesToExistingTrees": 9,
+    "previousWholeClaimAbstentionsRemoved": [
+      10
+    ],
+    "remainingWholeClaimAbstentions": [],
+    "protocolClarification": "entity-mentions/v1",
+    "semanticCriticRound2": "pending"
+  }
+}

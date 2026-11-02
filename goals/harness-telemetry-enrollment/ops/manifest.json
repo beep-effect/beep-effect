@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "harness-telemetry-enrollment",
+    "title": "Qualify every agent harness and surface",
+    "status": "paused",
+    "created": "2026-10-27",
+    "updated": "2026-10-27",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/harness-telemetry-enrollment",
+  "lifecycle": "paused",
+  "mission": "Enroll declared CLI, desktop and proxy routes without overstating coverage, preserving identity across clones, worktrees and hosts.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-observability-rebuild",
+    "graduated": "2026-10-27"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/harness-telemetry-enrollment/README.md",
+    "goals/harness-telemetry-enrollment/SPEC.md",
+    "goals/harness-telemetry-enrollment/PLAN.md",
+    "goals/harness-telemetry-enrollment/GOAL.md",
+    "goals/harness-telemetry-enrollment/research/SOURCES.md",
+    "explorations/agent-observability-rebuild/BRIEF.md",
+    "explorations/agent-observability-rebuild/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/harness-telemetry-enrollment/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/harness-telemetry-enrollment/GOAL.md)\" -le 4000",
+    "jq . goals/harness-telemetry-enrollment/ops/manifest.json",
+    "rg -n \"harness-telemetry-enrollment|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/harness-telemetry-enrollment",
+    "git diff --check -- goals/harness-telemetry-enrollment",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Authored but not started; operator requested implementation-packet preparation, not execution.",
+  "resumeConditions": [
+    "Explicit launch of this packet after dependency proof; refresh live state before changes."
+  ],
+  "dependencies": ["goals/agent-observability-foundation"]
+}
