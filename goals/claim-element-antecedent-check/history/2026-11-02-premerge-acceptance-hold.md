@@ -22,11 +22,15 @@ relaxed/S11 merge until the owner has recorded normal readiness. This is a goal
 acceptance dependency, not a request for additional local verify/publish work.
 All ready work is pushed and the PR is opened promptly; hosted CI is the proof.
 
-Current main retains all 21 v24 implementation file hashes and the identical
-`bun.lock` from `cf602d2072`. No parser, scorer, source claim, reference label or
-measurement changed. The fixed result remains 37/538 with all 34 protected and
-all 37 prior matches retained. The v24 report, raw results, historical review
-identity, restored v11 bytes and dated reflection remain the current evidence.
+All 21 v24 algorithm file hashes remain unchanged. Main #2507 changed
+`bun.lock` after `cf602d2072`; the [v25 dependency-compatibility replay](2026-11-02-v25-dependency-compatibility.json)
+pins that lockfile, the root manifest and the Bun version alongside those 21
+files before prediction. Both cohort result values match v24 apart from the
+implementation digest, and all 251 prediction reports are byte-identical.
+No parser, scorer, source claim or reference label changed. The fixed result
+remains 37/538 with all 34 protected and all 37 prior matches retained. The v24
+report and raw results, v25 compatibility evidence, historical review identity,
+restored v11 bytes and dated reflection remain the acceptance evidence.
 
 The operative lifecycle stays active. A new prospective final-PR declaration
 will be bound to the follow-up and its own canonical readiness/merge receipt.
