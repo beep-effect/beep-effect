@@ -826,6 +826,80 @@ it.layer(
       (yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
+  it.effect("binds contained directory aliases, nested structure and independently inventoried bytes", () =>
+    Effect.gen(function* () {
+      const { root, fs, path, source } = yield* fixture();
+      const alias = path.join(root, "packages/fixture/alias");
+      yield* fs.makeDirectory(path.join(root, "packages/fixture/src/nested"));
+      yield* fs.writeFileString(path.join(root, "packages/fixture/src/nested/data.txt"), "nested fixture\n");
+      yield* fs.symlink("src", alias);
+      const original = yield* collectCacheProducerWorkflowFiles(root);
+      const directory = A.findFirst(original, (file) => file.path === "packages/fixture/alias");
+      directory.pipe(O.isSome, assertTrue);
+      if (O.isSome(directory)) {
+        expect(directory.value.mode & 0o170000).toBe(0o040000);
+        assertSome(directory.value.linkTarget, "src");
+      }
+      const regular = A.findFirst(original, (file) => file.path === "packages/fixture/src/main.ts");
+      regular.pipe(O.isSome, assertTrue);
+      if (O.isSome(regular)) expect(regular.value.mode & 0o170000).toBe(0o100000);
+      yield* fs.writeFileString(source, "export const value = 2;\n");
+      expect(yield* collectCacheProducerWorkflowFiles(root)).not.toEqual(original);
+      yield* fs.writeFileString(path.join(root, "packages/fixture/src/nested/new.txt"), "new member\n");
+      const changed = yield* collectCacheProducerWorkflowFiles(root);
+      expect(A.findFirst(changed, (file) => file.path === "packages/fixture/alias")).not.toEqual(directory);
+      const beforeMode = changed;
+      yield* fs.chmod(path.join(root, "packages/fixture/src/nested"), 0o700);
+      expect(yield* collectCacheProducerWorkflowFiles(root)).not.toEqual(beforeMode);
+    })
+  );
+  it.effect("records declared child aliases without following directory cycles", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+      yield* fs.symlink(".", path.join(root, "packages/fixture/src/self"));
+      yield* fs.symlink("main.ts", path.join(root, "packages/fixture/src/linked.ts"));
+      const files = yield* collectCacheProducerWorkflowFiles(root);
+      expect(files).toHaveLength(4);
+      assertTrue(A.some(files, (file) => file.path === "packages/fixture/src/self"));
+    })
+  );
+  it.effect("rejects a directory alias outside the checkout before scanning that directory", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      const outside = path.join(path.dirname(root), "outside-directory");
+      yield* fs.makeDirectory(outside);
+      yield* fs.writeFileString(path.join(outside, "private.txt"), "outside fixture bytes");
+      yield* fs.symlink("../../../outside-directory", path.join(root, "packages/fixture/alias"));
+      const readDirectory = vi.spyOn(fs, "readDirectory");
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toContain("must stay inside its canonical checkout");
+      expect(readDirectory).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("rejects ignored files and undeclared directories under directory aliases", () =>
+    Effect.gen(function* () {
+      for (const member of ["ignored.ts", "empty-directory"]) {
+        const { root, fs, path } = yield* fixture();
+        yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+        const hidden = path.join(root, "packages/fixture/src", member);
+        if (member === "ignored.ts") yield* fs.writeFileString(hidden, "ignored override\n");
+        else yield* fs.makeDirectory(hidden);
+        const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+        expect(error.message).toContain("undeclared");
+      }
+    })
+  );
+  it.effect("rejects an escaping child alias even when its directory alias is contained", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      yield* fs.writeFileString(path.join(path.dirname(root), "outside.ts"), "outside fixture bytes");
+      yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+      yield* fs.symlink("../../../../outside.ts", path.join(root, "packages/fixture/src/escape.ts"));
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toContain("must stay inside its canonical checkout");
+    })
+  );
   it.effect("rejects absolute source aliases even when the target stays inside the checkout", () =>
     Effect.gen(function* () {
       const { root, fs, path, source } = yield* fixture();

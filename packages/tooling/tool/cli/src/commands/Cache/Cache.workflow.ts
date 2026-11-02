@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
@@ -13,6 +14,8 @@ import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
@@ -66,6 +69,55 @@ const encodeWorkflow = S.encodeEffect(S.fromJsonString(CacheProducerWorkflow));
 const approvalCodec = JsonStringCodec(CacheProducerApproval);
 const executionProfileCodec = JsonStringCodec(CacheProducerExecutionProfile);
 const pathsEquivalent = S.toEquivalence(S.Array(S.String));
+const directoryEntry = S.Tuple([S.String, S.Natural]).pipe(
+  $I.annoteSchema("WorkflowDirectoryEntry", {
+    description: "Canonical checkout-relative entry and complete POSIX mode, including its filesystem type.",
+  })
+);
+const encodeDirectoryManifest = S.encodeEffect(
+  S.fromJsonString(S.Tuple([S.String, S.Array(directoryEntry).check(S.isMaxLength(20000))]))
+);
+
+const hashDirectoryAlias = Effect.fn("CacheWorkflow.directoryAlias")(function* (
+  root: string,
+  target: string,
+  declared: HashSet.HashSet<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let remaining: Array<string> = A.of(target);
+  let entries = A.empty<typeof directoryEntry.Type>();
+  while (A.isArrayNonEmpty(remaining)) {
+    const [directory, ...rest] = remaining;
+    remaining = rest;
+    if (
+      (yield* fs.realPath(directory)) !== directory ||
+      !isResolvedPathWithinRoot(path, { root, candidate: directory })
+    )
+      return yield* CacheCommandError.new("Workflow directory alias escaped its canonical checkout location.");
+    for (const name of A.sort(yield* fs.readDirectory(directory), Order.String)) {
+      const child = path.join(directory, name);
+      const relative = path.relative(root, child);
+      const info = yield* fs.lstat(child);
+      if (info.type === "Directory") {
+        if (!HashSet.some(declared, Str.startsWith(`${relative}/`)))
+          return yield* CacheCommandError.new("Workflow directory alias contains an undeclared directory.");
+        remaining = A.append(remaining, child);
+      } else if (info.type === "File" || info.type === "SymbolicLink") {
+        if (!HashSet.has(declared, relative))
+          return yield* CacheCommandError.new("Workflow directory alias contains an undeclared source entry.");
+      } else return yield* CacheCommandError.new("Workflow directory alias contains an unsupported filesystem entry.");
+      entries = A.append(entries, Tuple.make(relative, S.Natural.make(info.mode)));
+      if (entries.length > 20000)
+        return yield* CacheCommandError.new("Workflow directory alias exceeded its entry bound.");
+    }
+  }
+  const manifest = yield* encodeDirectoryManifest([
+    path.relative(root, target),
+    A.sort(entries, Tuple.makeOrder([Order.String, Order.Number])),
+  ]);
+  return yield* digest(new TextEncoder().encode(`beep/cache-producer-directory/v1\0${manifest}`));
+});
 const bound = OutputBound.make({ maxChars: 4 * 1024 * 1024, truncatedNotice: "workflow inventory exceeded bound" });
 const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args: ReadonlyArray<string>) {
   const captured = yield* runCapturedStreams({
@@ -184,7 +236,14 @@ export const assertCacheProducerWorkflowLocation = Effect.fn("CacheWorkflow.loca
 }, CacheCommandError.mapError("Cannot bind the loaded producer workflow."));
 
 /**
- * Inspect declared source bytes without following an alias outside the checkout.
+ * Inspect declared sources and contained directory aliases without leaving the checkout.
+ *
+ * **Details**
+ * Directory aliases bind their canonical target, complete entry modes and
+ * bounded tree structure. Every leaf must also occur in the declared source
+ * inventory, which independently binds its bytes or relative alias target.
+ * Child aliases are recorded without recursive traversal; their own inventory
+ * entries enforce containment. Complete modes distinguish files and directories.
  *
  * **Example** (Reference source inventory)
  * ```ts
@@ -199,21 +258,29 @@ export const assertCacheProducerWorkflowLocation = Effect.fn("CacheWorkflow.loca
 export const collectCacheProducerWorkflowFiles = Effect.fn("CacheWorkflow.files")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const canonicalRoot = yield* fs.realPath(root);
   const paths = yield* listSources(root);
+  const declared = HashSet.fromIterable(paths);
   const files = yield* Effect.forEach(
     paths,
     Effect.fn("CacheWorkflow.file")(function* (relative) {
-      const file = path.resolve(root, relative);
+      const file = path.resolve(canonicalRoot, relative);
       const linkTarget = yield* fs.readLink(file).pipe(Effect.option);
       if (O.exists(linkTarget, path.isAbsolute))
         return yield* CacheCommandError.new("Workflow source alias must be relative.");
       const target = O.isSome(linkTarget) ? yield* fs.realPath(file) : file;
-      const bytes = yield* readCacheExperimentBytes(root, target, 8 * 1024 * 1024);
+      if (!isResolvedPathWithinRoot(path, { root: canonicalRoot, candidate: target }))
+        return yield* CacheCommandError.new("Workflow source alias must stay inside its canonical checkout.");
       const info = yield* fs.stat(target);
+      if (info.type === "Directory" && O.isNone(linkTarget))
+        return yield* CacheCommandError.new("Workflow source directory requires a declared relative alias.");
       return CacheProducerWorkflowFile.make({
         path: relative,
-        sha256: yield* digest(bytes),
-        mode: S.Natural.make(info.mode & 0o777),
+        sha256:
+          info.type === "Directory"
+            ? yield* hashDirectoryAlias(canonicalRoot, target, declared)
+            : yield* readCacheExperimentBytes(root, target, 8 * 1024 * 1024).pipe(Effect.flatMap(digest)),
+        mode: S.Natural.make(info.mode),
         linkTarget,
       });
     }),

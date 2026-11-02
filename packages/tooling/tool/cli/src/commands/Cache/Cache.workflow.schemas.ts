@@ -15,7 +15,7 @@ import { CacheCensusSource, CacheLinkedFile, CacheToolchainSnapshot } from "./Ca
 
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow.schemas");
 /**
- * Source bytes, permission bits and an optional source alias target.
+ * Source identity, complete filesystem mode and an optional relative alias target.
  *
  * **Example** (Inspect source bindings)
  * ```ts
@@ -33,7 +33,8 @@ export class CacheProducerWorkflowFile extends S.Opaque<CacheProducerWorkflowFil
     linkTarget: S.OptionFromOptionalKey(S.NonEmptyString),
   }).pipe(
     $I.annoteSchema("CacheProducerWorkflowFile", {
-      description: "Exact bytes and resolution of one declared supervisor source file.",
+      description:
+        "Exact file bytes or contained directory manifest, complete POSIX mode and relative alias resolution for one declared supervisor source entry.",
     })
   )
 ) {}
