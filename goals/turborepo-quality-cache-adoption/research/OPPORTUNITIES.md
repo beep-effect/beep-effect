@@ -530,3 +530,10 @@ which tried to fetch CLI metadata and was denied by the empty network namespace.
 Use the already installed Bun runtime reported by `process.execPath`, check its
 version inside the sandbox, and retain the failed fixture receipt separately.
 No production setup flag, bootstrap owner or cache policy changed.
+
+The first portable replay stopped at its flag-refusal assertion: one multiline
+case assignment still targeted the old collector namespace, so it repeated
+fixture lock preparation instead of invoking Turbo setup. The intended negative
+control rejected that false success. Bind every invocation to the shared
+collector's command slot, commit the correction and replay the complete matrix;
+the failed attempt is not setup evidence.
