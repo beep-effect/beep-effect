@@ -1,11 +1,11 @@
 {
   "schemaVersion": "cache-producer-inspection-routing/v1",
-  "recordedAt": "2026-11-02T07:49:04.011464+00:00",
+  "recordedAt": "2026-11-02T08:01:18.851592+00:00",
   "authority": "Live runner-group access observation, unchanged-body source comparison and controlled route tests. No post-fix protected execution, issuer approval, cache qualification, signing or complete goal acceptance.",
   "sourceBaseRevision": "f2f3260b8a7e2dc8f038978ede985f2796559bf5",
   "sourceSha256": {
     ".github/workflows/cache-producer-inspect.yml": "a667dad42683b91845f4fde605872a66305eb18f4bde2b72a86c40cd01aad307",
-    ".github/workflows/heavy.yml": "370a528309885a2b2133614b1d4e29e15ee5da557acdf0c7772ea4f89db0fb05",
+    ".github/workflows/heavy.yml": "1415910025129316e8c27c0e2bbe60022201e6d26ba8eba15f60dfd17a301b59",
     "packages/tooling/tool/cli/test/ci-runner-security.test.ts": "e829657ea8ce77f6ee48d73a0c8263ae2e885e422f80b9cbf6a4a7d14565788c"
   },
   "routing": {
@@ -37,8 +37,14 @@
     "executionOccurred": false
   },
   "sourceParity": {
-    "ordinaryMatrixBodyByteIdentical": true,
-    "ordinaryMatrixBodySha256": "ceb2422fae35de7c8fe9ded1906b04ceb10c565e8c018934cb399824661c09ee",
+    "ordinaryMatrixBodyByteIdentical": false,
+    "ordinaryMatrixOnlyDifference": "Correction of obsolete runner-group allowlist comment; executable YAML unchanged",
+    "acceptedMatrixBodySha256": "ceb2422fae35de7c8fe9ded1906b04ceb10c565e8c018934cb399824661c09ee",
+    "currentMatrixBodySha256": "60a4ce8ff408576f43b6a2b5d2991bad52362d3146f3975d3ce5f5a695a6f66f",
+    "commentCorrection": {
+      "before": "          # rather than in check.yml because the beep-ec2-heavy runner group\n          # admits only heavy.yml@main and check.yml@main: check.yml calls\n          # this workflow at @main, so its jobs carry the main ref on pull\n          # requests, while a job declared in check.yml carries the PR ref\n          # and never receives a runner.\n",
+      "after": "          # rather than in check.yml because the runner group admits this\n          # reusable workflow at main. check.yml calls it at @main, so its\n          # jobs use the admitted definition on pull requests; a job defined\n          # directly in a pull-request workflow has no fleet access.\n"
+    },
     "inspectionBodyByteIdentical": true,
     "inspectionBodySha256": "f97c9d64c451790d4a7c4b8227bb4344e60a7da24645be0b0df7c730f5918ecc"
   },
@@ -47,19 +53,19 @@
       "passed": 41,
       "result": {
         "exit": 0,
-        "elapsedSeconds": 53.99,
-        "finishedAt": "2026-11-02T07:47:59.321914+00:00"
+        "elapsedSeconds": 66.207,
+        "finishedAt": "2026-11-02T07:59:26.911150+00:00"
       },
       "exactCurrentFormattedSourceBytesVerified": true
     },
     "legacyWorkflowNegative": {
-      "observedAt": "2026-11-02T07:44:07.193716+00:00",
+      "observedAt": "2026-11-02T08:00:28.065202+00:00",
       "legacyWorkflowControl": "failed intended admitted-reusable-route assertion",
       "exit": 1,
       "sourceRestoredByteIdentically": true,
       "currentSourceSha256": {
         ".github/workflows/cache-producer-inspect.yml": "a667dad42683b91845f4fde605872a66305eb18f4bde2b72a86c40cd01aad307",
-        ".github/workflows/heavy.yml": "370a528309885a2b2133614b1d4e29e15ee5da557acdf0c7772ea4f89db0fb05"
+        ".github/workflows/heavy.yml": "1415910025129316e8c27c0e2bbe60022201e6d26ba8eba15f60dfd17a301b59"
       },
       "legacySourceSha256": {
         ".github/workflows/cache-producer-inspect.yml": "60e819ca7c6c82120de8941208a9d43cf7fed8b84ffdb416e544547c162a4ec7",
@@ -72,8 +78,8 @@
       "skippedUnselected": 39,
       "result": {
         "exit": 0,
-        "elapsedSeconds": 3.76,
-        "finishedAt": "2026-11-02T07:44:50.628389+00:00"
+        "elapsedSeconds": 2.597,
+        "finishedAt": "2026-11-02T08:00:30.786970+00:00"
       },
       "exactCurrentSourceBytesVerified": true
     },

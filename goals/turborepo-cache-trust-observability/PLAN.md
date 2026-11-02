@@ -1049,8 +1049,9 @@ Accepted-main R5b integration uses the [root-scoped review](research/producer-ac
 The first dispatched inspection never ran: the live runner group permits only
 four named main workflows and excludes its standalone job. The repaired manual
 dispatcher selects a default-off inspection leaf in admitted `heavy.yml@main`,
-with exact caller/event/repository/ref guards. Inspection steps and the ordinary
-quality matrix body remain byte-identical. The runner-group policy is untouched.
+with exact caller/event/repository/ref guards. Inspection steps remain byte-identical. The ordinary
+quality matrix differs only in a corrected stale runner-access comment; its
+executable configuration is unchanged. The runner-group policy is untouched.
 
 The [routing checkpoint](research/inspection-routing-checkpoint-2026-11-02.json)
 retains the actual blocked run, source comparison, 41 passing security controls,

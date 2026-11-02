@@ -592,7 +592,7 @@ Accepted-main R5b integration uses the [root-scoped review](producer-accepted-r5
 
 - [Current routing checkpoint](inspection-routing-checkpoint-2026-11-02.json):
   actual organization runner-group access snapshot, never-assigned manual run,
-  unchanged source bodies and controlled current/old/restored route evidence.
+  preserved executable configuration and current/old/restored route evidence.
 - [GitHub selected-workflow runner-group access](https://docs.github.com/en/enterprise-cloud@latest/actions/how-tos/manage-runners/self-hosted-runners/manage-access):
   runner access follows the workflow that directly defines each job.
 - [GitHub reusable workflow caller context](https://docs.github.com/en/actions/reference/workflows-and-actions/reusing-workflow-configurations):

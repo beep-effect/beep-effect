@@ -77,11 +77,10 @@ jobs:
           # Quality-lane audit D12: pull requests prove the tsc emit + babel
           # build affected-scoped with remote-cache read; trusted main pushes
           # run unscoped and stay the only cache writer. The lane lives here
-          # rather than in check.yml because the beep-ec2-heavy runner group
-          # admits only heavy.yml@main and check.yml@main: check.yml calls
-          # this workflow at @main, so its jobs carry the main ref on pull
-          # requests, while a job declared in check.yml carries the PR ref
-          # and never receives a runner.
+          # rather than in check.yml because the runner group admits this
+          # reusable workflow at main. check.yml calls it at @main, so its
+          # jobs use the admitted definition on pull requests; a job defined
+          # directly in a pull-request workflow has no fleet access.
           - id: build
             name: Build
             timeout_minutes: 40
