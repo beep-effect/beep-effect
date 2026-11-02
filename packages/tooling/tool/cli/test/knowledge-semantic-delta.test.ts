@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   decodeKnowledgeUtf8,
@@ -81,6 +82,7 @@ const NO_GIT_REFS = HashSet.empty<string>();
 const policyLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
 
 const testLayer = KnowledgeServiceLive.pipe(
+  Layer.provideMerge(Git.layer),
   Layer.provideMerge(NodeServices.layer),
   Layer.provideMerge(NodeCrypto.layer)
 );
@@ -1977,6 +1979,17 @@ describe("knowledge clone-local attributes guard", () => {
           assert.strictEqual(failure.attributesPath, attributesPath);
           assert.include(failure.message, attributesPath);
         }
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("fails typed through the live refsTree service when the requested revision cannot resolve", () =>
+      Effect.gen(function* () {
+        const knowledge = yield* KnowledgeService;
+        const failure = yield* Effect.flip(knowledge.refsTree("refs/beep/definitely-missing-tree"));
+        assert.strictEqual(failure._tag, "KnowledgeOperationalError");
+        assert.include(failure.message, "fetch-depth: 0");
       })
     );
   });

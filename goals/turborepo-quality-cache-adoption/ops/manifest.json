@@ -40,7 +40,8 @@
     "goals/turborepo-quality-cache-adoption/research/base-ref-feature-review.json",
     "goals/turborepo-quality-cache-adoption/research/refresh-current-population.py",
     "goals/turborepo-quality-cache-adoption/research/population-refresh-checkpoint-2026-11-02.json",
-    "goals/turborepo-quality-cache-adoption/research/current-fresh-disposition-review-2026-11-02.json"
+    "goals/turborepo-quality-cache-adoption/research/current-fresh-disposition-review-2026-11-02.json",
+    "goals/turborepo-quality-cache-adoption/research/native-setup-controls.py"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -95,7 +96,9 @@
     "research/population-preservation-controls-2026-11-02.json",
     "research/population-refresh-checkpoint-2026-11-02.json",
     "research/current-fresh-disposition-review-2026-11-02.json",
-    "research/population-before-refresh-2026-11-02.json"
+    "research/population-before-refresh-2026-11-02.json",
+    "research/native-setup-controls.json",
+    "research/setup-feature-review.json"
   ],
   "agentLaunchers": [
     {

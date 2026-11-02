@@ -3,7 +3,7 @@
 // the spawner — `__test__/integration/GitSurface.int.test.ts` is where `log`
 // meets a real git binary, a real rename and a real merge.
 
-import { CommitLogEntry, Git, GitCommandError, NotARepositoryError } from "@beep/git/Git";
+import { CommitLogEntry, Git, GitCommandError, NameStatusEntry, NotARepositoryError } from "@beep/git/Git";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -33,32 +33,42 @@ const log = Effect.fn("log")(function* (options?: Parameters<GitStubs["log"]>[1]
   return yield* git.log(cwd, options);
 });
 
-/** Builds one record in git's probed `-z` shape: header, then `\n` and NUL-terminated paths. */
+/**
+ * Builds one record in git's probed `-z` shape: the six-field header (the
+ * subject defaults to `"subject"`), then `\n` and NUL-terminated body tokens —
+ * paths under `--name-only`, `<code>`/`<path>` tokens under `--name-status`.
+ */
 const record = (
   sha: string,
   authoredAt: string,
   committedAt: string,
   authorName: string,
   authorEmail: string,
-  paths: ReadonlyArray<string>
+  body: ReadonlyArray<string>,
+  subject = "subject"
 ): string => {
-  const header = `\0${A.join([sha, authoredAt, committedAt, authorName, authorEmail], "\0")}\0`;
-  return paths.length === 0 ? header : `${header}\n${A.join(paths, "\0")}\0`;
+  const header = `\0${A.join([sha, authoredAt, committedAt, authorName, authorEmail, subject], "\0")}\0`;
+  return body.length === 0 ? header : `${header}\n${A.join(body, "\0")}\0`;
 };
 
 const SHA_A = Str.repeat(40)("a");
 const SHA_B = Str.repeat(40)("b");
 
 describe("Git.log", () => {
-  it.effect("decodes a record's five header fields and its --name-only paths", () =>
+  it.effect("decodes a record's six header fields and its --name-only paths", () =>
     Effect.gen(function* () {
       const entries = yield* run(
         log(),
         (): ScriptResult => ({
-          stdout: record(SHA_A, "2026-09-07T20:25:41-04:00", "2026-09-08T09:00:00+02:00", "Ada", "ada@example.com", [
-            "src/Git.ts",
-            "README.md",
-          ]),
+          stdout: record(
+            SHA_A,
+            "2026-09-07T20:25:41-04:00",
+            "2026-09-08T09:00:00+02:00",
+            "Ada",
+            "ada@example.com",
+            ["src/Git.ts", "README.md"],
+            "feat(git): the subject line"
+          ),
         })
       );
       assert.strictEqual(entries.length, 1);
@@ -67,6 +77,9 @@ describe("Git.log", () => {
       assert.strictEqual(entry?.sha, SHA_A);
       assert.strictEqual(entry?.authorName, "Ada");
       assert.strictEqual(entry?.authorEmail, "ada@example.com");
+      assert.strictEqual(entry?.subject, "feat(git): the subject line");
+      // `changes` is the name-status mode's field; a --name-only read leaves it absent.
+      assert.isUndefined(entry?.changes);
       assert.deepStrictEqual(entry?.paths, ["src/Git.ts", "README.md"]);
       // The offset-bearing ISO decodes to the INSTANT, not the wall clock:
       // -04:00 at 20:25 is 00:25 the next day in UTC.
@@ -250,7 +263,7 @@ describe("Git.log", () => {
         "log",
         "--no-show-signature",
         "-z",
-        "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae",
+        "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
         "--name-only",
         "--follow",
         "--diff-merges=first-parent",
@@ -278,6 +291,7 @@ describe("Git.log", () => {
         committedAt: DateTime.makeUnsafe("2026-09-07T20:25:41-04:00"),
         authorName: "Ada",
         authorEmail: "ada@example.com",
+        subject: "subject",
         paths: ["f.txt"],
       });
       const encoded = yield* S.encodeEffect(CommitLogEntry)(entry);
@@ -287,4 +301,144 @@ describe("Git.log", () => {
       assert.strictEqual(encoded.committedAt, "2026-09-08T00:25:41.000Z");
     })
   );
+
+  it.effect("preserves an EMPTY subject as the empty string, not a missing field", () =>
+    Effect.gen(function* () {
+      const entries = yield* run(
+        log(),
+        (): ScriptResult => ({
+          stdout: record(
+            SHA_A,
+            "2026-01-01T00:00:00Z",
+            "2026-01-01T00:00:00Z",
+            "Ada",
+            "ada@example.com",
+            ["f.txt"],
+            ""
+          ),
+        })
+      );
+      assert.strictEqual(entries[0]?.subject, "");
+      assert.deepStrictEqual(entries[0]?.paths, ["f.txt"]);
+    })
+  );
+
+  describe("name-status mode (G8)", () => {
+    const neverSpawn = (): ScriptResult => {
+      throw new Error("Git.log spawned git despite an option guard");
+    };
+
+    it.effect("decodes each body record as a NameStatusEntry and derives paths from the NEW path", () =>
+      Effect.gen(function* () {
+        // The probed git 2.56 byte shape: `\nM\0README.md\0D\0docs/gone.md\0A\0src/added.ts\0R100\0src/old.ts\0src/new.ts\0`.
+        const entries = yield* run(log({ nameStatus: true }), (args): ScriptResult => {
+          assert.include(args, "--name-status");
+          assert.notInclude(args, "--name-only");
+          return {
+            stdout:
+              record(
+                SHA_A,
+                "2026-01-02T00:00:00Z",
+                "2026-01-02T00:00:00Z",
+                "Ada",
+                "ada@example.com",
+                ["M", "README.md", "D", "docs/gone.md", "A", "src/added.ts", "R100", "src/old.ts", "src/new.ts"],
+                "c2: rename, delete, modify, add"
+              ) +
+              record(SHA_B, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", "Ada", "ada@example.com", [
+                "A",
+                "README.md",
+              ]),
+          };
+        });
+        assert.strictEqual(entries.length, 2);
+        assert.strictEqual(entries[0]?.subject, "c2: rename, delete, modify, add");
+        assert.deepStrictEqual(entries[0]?.changes, [
+          NameStatusEntry.make({ status: "modified", path: "README.md" }),
+          NameStatusEntry.make({ status: "deleted", path: "docs/gone.md" }),
+          NameStatusEntry.make({ status: "added", path: "src/added.ts" }),
+          NameStatusEntry.make({ status: "renamed", oldPath: "src/old.ts", path: "src/new.ts", score: 100 }),
+        ]);
+        assert.deepStrictEqual(entries[0]?.paths, ["README.md", "docs/gone.md", "src/added.ts", "src/new.ts"]);
+        assert.deepStrictEqual(entries[1]?.changes, [NameStatusEntry.make({ status: "added", path: "README.md" })]);
+      })
+    );
+
+    it.effect("a commit with no body carries EMPTY changes and paths, and a path's leading newline survives", () =>
+      Effect.gen(function* () {
+        const entries = yield* run(
+          log({ nameStatus: true }),
+          (): ScriptResult => ({
+            stdout:
+              record(SHA_A, "2026-01-02T00:00:00Z", "2026-01-02T00:00:00Z", "Ada", "ada@example.com", []) +
+              record(SHA_B, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", "Ada", "ada@example.com", [
+                "A",
+                "\nleading.txt",
+              ]),
+          })
+        );
+        assert.deepStrictEqual(entries[0]?.changes, []);
+        assert.deepStrictEqual(entries[0]?.paths, []);
+        // Only the FIRST body token (the code) loses git's separator newline; the path keeps its own.
+        assert.deepStrictEqual(entries[1]?.paths, ["\nleading.txt"]);
+      })
+    );
+
+    it.effect("fails typed on a body record git does not emit, carrying the redacted argv", () =>
+      Effect.gen(function* () {
+        for (const body of [["Q", "file"], ["R100", "old"], ["M"]]) {
+          const error = yield* Effect.flip(
+            run(
+              log({ nameStatus: true }),
+              (): ScriptResult => ({
+                stdout: record(SHA_A, "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z", "Ada", "ada@example.com", body),
+              })
+            )
+          );
+          assert.isTrue(S.is(GitCommandError)(error));
+          if (S.is(GitCommandError)(error)) {
+            assert.strictEqual(error.kind, "failed");
+            assert.include(error.detail ?? "", "unparseable log output");
+            assert.include(error.args, "--name-status");
+          }
+        }
+      })
+    );
+
+    it.effect("passes nameStatus, diffFilter, findRenames and quotePath into the argv in git's order", () =>
+      Effect.gen(function* () {
+        let seen: ReadonlyArray<string> = [];
+        yield* run(
+          log({ nameStatus: true, diffFilter: "DR", findRenames: 50, quotePath: false, paths: ["docs"] }),
+          (args) => {
+            seen = args;
+            return { stdout: "" };
+          }
+        );
+        assert.deepStrictEqual(seen, [
+          "-c",
+          "core.quotePath=false",
+          "log",
+          "--no-show-signature",
+          "-z",
+          "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
+          "--name-status",
+          "--diff-filter=DR",
+          "--find-renames=50%",
+          "--",
+          "docs",
+        ]);
+      })
+    );
+
+    it.effect("refuses an out-of-domain diffFilter or findRenames through the shared guards, WITHOUT spawning", () =>
+      Effect.gen(function* () {
+        for (const options of [{ diffFilter: "Q" }, { diffFilter: "" }, { findRenames: 0 }, { findRenames: 50.5 }]) {
+          const error = yield* Effect.flip(run(log(options), neverSpawn));
+          assert.isTrue(S.is(GitCommandError)(error));
+          assert.strictEqual(S.is(GitCommandError)(error) ? error.kind : undefined, "refused");
+        }
+      })
+    );
+  });
 });

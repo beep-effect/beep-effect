@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { yeetCommand } from "@beep/repo-cli/commands/Yeet";
 import { acquireJournalFileLock, MemoryStats, releaseJournalFileLock } from "@beep/repo-cli/test/RepoRun";
@@ -45,6 +46,9 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
 import { waitTimesOut } from "./support/ProofJobWait.ts";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
 const $I = $RepoCliId.create("test/proof-job.test");
 const stamp = "2026-09-15T00:00:00.000Z";
@@ -138,7 +142,7 @@ const runFixture = Effect.fnUntraced(function* <Value, Error, Requirements>(
 const fixture = <Value, Error, Requirements>(
   use: (root: string) => Effect.Effect<Value, Error, Requirements>,
   exitCode = 0
-) => runFixture(use, exitCode).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
+) => runFixture(use, exitCode).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer)));
 const running = Effect.fnUntraced(function* (root: string, launcher: Job.ProofJobLauncherShape, id: UUID) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1023,142 +1027,139 @@ describe("proof job recovery boundaries", () => {
   );
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds", excludeTestServices: true })(
-  "review round 1 transitions",
-  (it) => {
-    for (const cancelFirst of [true, false]) {
-      for (const interleaving of [1, 2, 3]) {
-        // Real clock: lock contention retries use real time; the save waits for the competing lock acquisition.
-        it.effect(`serializes ${cancelFirst ? "cancel" : "finalize"} first with save barrier ${interleaving}`, () =>
-          fixture(
-            Effect.fnUntraced(function* (root) {
-              const fs = yield* FileSystem.FileSystem;
-              const original = yield* ProofJobLauncher.make(root);
-              const record = yield* original.submit(submission(root));
-              const saving = yield* Deferred.make<void>();
-              const releaseSave = yield* Deferred.make<void>();
-              const slowFs = FileSystem.FileSystem.of({
-                ...fs,
-                link: Effect.fnUntraced(function* (from, to) {
-                  if (to === `${root}/.beep/yeet/jobs/${record.jobId}.lock` && (yield* fs.exists(to)))
-                    yield* Deferred.succeed(releaseSave, undefined);
-                  return yield* fs.link(from, to);
-                }),
-                rename: Effect.fnUntraced(function* (from, to) {
-                  if (to === `${root}/.beep/yeet/jobs/${record.jobId}.json`) {
-                    yield* Deferred.succeed(saving, undefined);
-                    yield* Deferred.await(releaseSave);
-                  }
-                  return yield* fs.rename(from, to);
-                }),
-              });
-              const launcher = yield* ProofJobLauncher.make(root).pipe(
-                Effect.provideService(FileSystem.FileSystem, slowFs)
-              );
-              const finalize = launcher
-                .finalize(record.jobId, Job.ProofJobSystemdResult.make({ serviceResult: "signal", finalizedAt: stamp }))
-                .pipe(
-                  Effect.tap(() =>
-                    original.read(record.jobId).pipe(
-                      Effect.tap((found) =>
-                        Effect.sync(() => {
-                          expect(O.getOrThrow(found).phase).toBe("terminated");
-                          O.getOrThrow(found).systemd.pipe(O.isSome, assertTrue);
-                        })
-                      )
-                    )
-                  )
-                );
-              const cancel = launcher.cancel(record.jobId).pipe(Effect.asVoid);
-              yield* Effect.all(
-                [
-                  cancelFirst ? cancel : finalize,
-                  Deferred.await(saving).pipe(Effect.andThen(cancelFirst ? finalize.pipe(Effect.asVoid) : cancel)),
-                ],
-                { concurrency: "unbounded" }
-              );
-              const final = O.getOrThrow(yield* original.read(record.jobId));
-              expect(final.phase).toBe("terminated");
-              expect(O.getOrThrow(final.systemd).serviceResult).toBe("signal");
-              expect(O.getOrThrow(final.terminationReason)).toBe(cancelFirst ? "cancelled" : "signal");
-              expect(yield* fs.exists(`${root}/.beep/yeet/jobs/${record.jobId}.lock`)).toBe(false);
-              expect(yield* launcher.cancel(record.jobId)).toBe("already-terminal");
-              expect(
-                yield* launcher.markFinished(
-                  record.jobId,
-                  Job.ProofJobOutcome.make({ verdictOutcome: "success", endedAt: stamp })
-                )
-              ).toEqual(final);
-              expect(
-                yield* launcher.markRunning(
-                  record.jobId,
-                  Job.ProofJobRunner.make({ pid: process.pid, startedAt: stamp })
-                )
-              ).toEqual(final);
-              expect(yield* inbox(root)).toHaveLength(1);
-            })
-          )
-        );
-      }
-    }
-    // Real clock: stale-generation takeover uses bounded real-clock lock retries.
-    it.effect("takes over a dead lock and removes the lock after each transition", () =>
-      fixture(
-        Effect.fnUntraced(function* (root) {
-          const fs = yield* FileSystem.FileSystem;
-          const launcher = yield* ProofJobLauncher.make(root);
-          const record = yield* launcher.submit(submission(root));
-          const lock = `${root}/.beep/yeet/jobs/${record.jobId}.lock`;
-          yield* fs.writeFileString(lock, "2147483647:dead-holder");
-          yield* running(root, launcher, record.jobId);
-          expect(yield* fs.exists(lock)).toBe(false);
-          yield* launcher.cancel(record.jobId);
-          expect(yield* fs.exists(lock)).toBe(false);
-          yield* launcher.markFinished(
-            record.jobId,
-            Job.ProofJobOutcome.make({ verdictOutcome: "success", endedAt: stamp })
-          );
-          expect(yield* fs.exists(lock)).toBe(false);
-          yield* launcher.finalize(
-            record.jobId,
-            Job.ProofJobSystemdResult.make({ serviceResult: "success", finalizedAt: stamp })
-          );
-          expect(yield* fs.exists(lock)).toBe(false);
-          yield* launcher.read(record.jobId);
-          expect(yield* fs.exists(lock)).toBe(false);
-        })
-      )
-    );
-    for (const verdictOutcome of ["success", "failure"] as const) {
-      it.effect(`settles an orphaned finished ${verdictOutcome} verdict and wait acknowledges it`, () =>
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), {
+  timeout: "30 seconds",
+  excludeTestServices: true,
+})("review round 1 transitions", (it) => {
+  for (const cancelFirst of [true, false]) {
+    for (const interleaving of [1, 2, 3]) {
+      // Real clock: lock contention retries use real time; the save waits for the competing lock acquisition.
+      it.effect(`serializes ${cancelFirst ? "cancel" : "finalize"} first with save barrier ${interleaving}`, () =>
         fixture(
           Effect.fnUntraced(function* (root) {
             const fs = yield* FileSystem.FileSystem;
-            const launcher = yield* ProofJobLauncher.make(root);
-            const record = yield* launcher.submit(submission(root));
-            yield* running(root, launcher, record.jobId);
-            yield* launcher.markFinished(record.jobId, Job.ProofJobOutcome.make({ verdictOutcome, endedAt: stamp }));
-            yield* writeExecutable(`${root}/systemctl`, "#!/bin/sh\nprintf 'not-found\\n'\n");
-            const reconciled = O.getOrThrow(yield* launcher.read(record.jobId));
-            expect(reconciled.phase).toBe("finished");
-            expect(O.getOrThrow(reconciled.systemd).serviceResult).toBe("unknown");
-            expect(yield* launcher.wait(record.jobId, Job.ProofJobWaitOptions.make({}))).toEqual(
-              Job.ProofJobWaitSettled.make({ record: reconciled })
-            );
-            const rows = yield* inbox(root);
-            expect(rows).toHaveLength(1);
-            expect(rows[0]?.severity).toBe(verdictOutcome === "success" ? "P2" : "P1");
-            expect((yield* readYeetAckState(root, yeetProofJobRowId(record))).receipt?.resolution).toMatchObject({
-              kind: "observed",
-              via: "job-wait",
+            const original = yield* ProofJobLauncher.make(root);
+            const record = yield* original.submit(submission(root));
+            const saving = yield* Deferred.make<void>();
+            const releaseSave = yield* Deferred.make<void>();
+            const slowFs = FileSystem.FileSystem.of({
+              ...fs,
+              link: Effect.fnUntraced(function* (from, to) {
+                if (to === `${root}/.beep/yeet/jobs/${record.jobId}.lock` && (yield* fs.exists(to)))
+                  yield* Deferred.succeed(releaseSave, undefined);
+                return yield* fs.link(from, to);
+              }),
+              rename: Effect.fnUntraced(function* (from, to) {
+                if (to === `${root}/.beep/yeet/jobs/${record.jobId}.json`) {
+                  yield* Deferred.succeed(saving, undefined);
+                  yield* Deferred.await(releaseSave);
+                }
+                return yield* fs.rename(from, to);
+              }),
             });
+            const launcher = yield* ProofJobLauncher.make(root).pipe(
+              Effect.provideService(FileSystem.FileSystem, slowFs)
+            );
+            const finalize = launcher
+              .finalize(record.jobId, Job.ProofJobSystemdResult.make({ serviceResult: "signal", finalizedAt: stamp }))
+              .pipe(
+                Effect.tap(() =>
+                  original.read(record.jobId).pipe(
+                    Effect.tap((found) =>
+                      Effect.sync(() => {
+                        expect(O.getOrThrow(found).phase).toBe("terminated");
+                        O.getOrThrow(found).systemd.pipe(O.isSome, assertTrue);
+                      })
+                    )
+                  )
+                )
+              );
+            const cancel = launcher.cancel(record.jobId).pipe(Effect.asVoid);
+            yield* Effect.all(
+              [
+                cancelFirst ? cancel : finalize,
+                Deferred.await(saving).pipe(Effect.andThen(cancelFirst ? finalize.pipe(Effect.asVoid) : cancel)),
+              ],
+              { concurrency: "unbounded" }
+            );
+            const final = O.getOrThrow(yield* original.read(record.jobId));
+            expect(final.phase).toBe("terminated");
+            expect(O.getOrThrow(final.systemd).serviceResult).toBe("signal");
+            expect(O.getOrThrow(final.terminationReason)).toBe(cancelFirst ? "cancelled" : "signal");
             expect(yield* fs.exists(`${root}/.beep/yeet/jobs/${record.jobId}.lock`)).toBe(false);
+            expect(yield* launcher.cancel(record.jobId)).toBe("already-terminal");
+            expect(
+              yield* launcher.markFinished(
+                record.jobId,
+                Job.ProofJobOutcome.make({ verdictOutcome: "success", endedAt: stamp })
+              )
+            ).toEqual(final);
+            expect(
+              yield* launcher.markRunning(record.jobId, Job.ProofJobRunner.make({ pid: process.pid, startedAt: stamp }))
+            ).toEqual(final);
+            expect(yield* inbox(root)).toHaveLength(1);
           })
         )
       );
     }
   }
-);
+  // Real clock: stale-generation takeover uses bounded real-clock lock retries.
+  it.effect("takes over a dead lock and removes the lock after each transition", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const fs = yield* FileSystem.FileSystem;
+        const launcher = yield* ProofJobLauncher.make(root);
+        const record = yield* launcher.submit(submission(root));
+        const lock = `${root}/.beep/yeet/jobs/${record.jobId}.lock`;
+        yield* fs.writeFileString(lock, "2147483647:dead-holder");
+        yield* running(root, launcher, record.jobId);
+        expect(yield* fs.exists(lock)).toBe(false);
+        yield* launcher.cancel(record.jobId);
+        expect(yield* fs.exists(lock)).toBe(false);
+        yield* launcher.markFinished(
+          record.jobId,
+          Job.ProofJobOutcome.make({ verdictOutcome: "success", endedAt: stamp })
+        );
+        expect(yield* fs.exists(lock)).toBe(false);
+        yield* launcher.finalize(
+          record.jobId,
+          Job.ProofJobSystemdResult.make({ serviceResult: "success", finalizedAt: stamp })
+        );
+        expect(yield* fs.exists(lock)).toBe(false);
+        yield* launcher.read(record.jobId);
+        expect(yield* fs.exists(lock)).toBe(false);
+      })
+    )
+  );
+  for (const verdictOutcome of ["success", "failure"] as const) {
+    it.effect(`settles an orphaned finished ${verdictOutcome} verdict and wait acknowledges it`, () =>
+      fixture(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const launcher = yield* ProofJobLauncher.make(root);
+          const record = yield* launcher.submit(submission(root));
+          yield* running(root, launcher, record.jobId);
+          yield* launcher.markFinished(record.jobId, Job.ProofJobOutcome.make({ verdictOutcome, endedAt: stamp }));
+          yield* writeExecutable(`${root}/systemctl`, "#!/bin/sh\nprintf 'not-found\\n'\n");
+          const reconciled = O.getOrThrow(yield* launcher.read(record.jobId));
+          expect(reconciled.phase).toBe("finished");
+          expect(O.getOrThrow(reconciled.systemd).serviceResult).toBe("unknown");
+          expect(yield* launcher.wait(record.jobId, Job.ProofJobWaitOptions.make({}))).toEqual(
+            Job.ProofJobWaitSettled.make({ record: reconciled })
+          );
+          const rows = yield* inbox(root);
+          expect(rows).toHaveLength(1);
+          expect(rows[0]?.severity).toBe(verdictOutcome === "success" ? "P2" : "P1");
+          expect((yield* readYeetAckState(root, yeetProofJobRowId(record))).receipt?.resolution).toMatchObject({
+            kind: "observed",
+            via: "job-wait",
+          });
+          expect(yield* fs.exists(`${root}/.beep/yeet/jobs/${record.jobId}.lock`)).toBe(false);
+        })
+      )
+    );
+  }
+});
 
 describe("job wait wave return", () => {
   it.layer(TestConsole.layer, { timeout: "30 seconds" })((it) => {
@@ -1405,7 +1406,7 @@ const commandCheckoutLayer = Layer.effectContext(
 ).pipe(
   Layer.provideMerge(
     Layer.merge(
-      Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
+      Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer),
       Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
     )
   )
@@ -1833,37 +1834,37 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
   });
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds", excludeTestServices: true })(
-  "proof job journal boundaries",
-  (it) => {
-    it.effect("does not invent an attempt when the journal or start row is missing", () =>
-      fixture(
-        Effect.fnUntraced(function* (root) {
-          const fs = yield* FileSystem.FileSystem;
-          const journal = `${root}/attempts.ndjson`;
-          expect(yield* Job.appendProofJobAttemptTerminated(journal, attemptId, "signal")).toBe(false);
-          yield* fs.writeFileString(journal, "");
-          expect(yield* Job.appendProofJobAttemptTerminated(journal, attemptId, "signal")).toBe(false);
-          expect(yield* fs.exists(`${journal}.lock`)).toBe(false);
-        })
-      )
-    );
-    it.effect("reports a busy attempt journal without publishing a false finalization", () =>
-      fixture(
-        Effect.fnUntraced(function* (root) {
-          const fs = yield* FileSystem.FileSystem;
-          const journal = `${root}/attempts.ndjson`;
-          yield* fs.writeFileString(journal, "");
-          yield* fs.writeFileString(`${journal}.lock`, `${process.pid}:live-holder`);
-          expect(
-            yield* Job.appendProofJobAttemptTerminated(journal, attemptId, "signal").pipe(Effect.flip)
-          ).toMatchObject({ message: "Attempt journal stayed busy during proof-job finalization." });
-          expect(yield* fs.readFileString(journal)).toBe("");
-        })
-      )
-    );
-  }
-);
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), {
+  timeout: "30 seconds",
+  excludeTestServices: true,
+})("proof job journal boundaries", (it) => {
+  it.effect("does not invent an attempt when the journal or start row is missing", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const fs = yield* FileSystem.FileSystem;
+        const journal = `${root}/attempts.ndjson`;
+        expect(yield* Job.appendProofJobAttemptTerminated(journal, attemptId, "signal")).toBe(false);
+        yield* fs.writeFileString(journal, "");
+        expect(yield* Job.appendProofJobAttemptTerminated(journal, attemptId, "signal")).toBe(false);
+        expect(yield* fs.exists(`${journal}.lock`)).toBe(false);
+      })
+    )
+  );
+  it.effect("reports a busy attempt journal without publishing a false finalization", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const fs = yield* FileSystem.FileSystem;
+        const journal = `${root}/attempts.ndjson`;
+        yield* fs.writeFileString(journal, "");
+        yield* fs.writeFileString(`${journal}.lock`, `${process.pid}:live-holder`);
+        expect(
+          yield* Job.appendProofJobAttemptTerminated(journal, attemptId, "signal").pipe(Effect.flip)
+        ).toMatchObject({ message: "Attempt journal stayed busy during proof-job finalization." });
+        expect(yield* fs.readFileString(journal)).toBe("");
+      })
+    )
+  );
+});
 
 type BookkeepingCase = {
   readonly identity: string;
@@ -1891,7 +1892,7 @@ const expectBookkeeping = Effect.fnUntraced(function* (
   expect(O.getOrThrow(finished.outcome).verdictOutcome).toBe(testCase.outcome);
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "proof verdict bookkeeping",
   (it) => {
     for (const testCase of bookkeepingCases) {
@@ -1971,7 +1972,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
   }
 );
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "proof phase record integration",
   (it) => {
     for (const measurement of ["valid", "invalid", "absent"]) {
@@ -2035,6 +2036,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             const recorder = yield* Ref.make<ReadonlyArray<Job.YeetExecutedStep>>([]);
             const execute = (steps: ReadonlyArray<Job.RepoPlanStep>) =>
               Job.runProofPhaseForTesting(context, steps, recorder).pipe(
+                Effect.provideServiceEffect(Git, Git.make),
                 Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
                 Effect.provideService(FileSystem.FileSystem, filesystem)
               );
@@ -2079,7 +2081,7 @@ describe("proof job termination reasons", () => {
   });
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "proof job record guards",
   (it) => {
     it.effect("refuses a record path that is not a regular file", () =>

@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   FallowReportFinding,
   FallowReportOk,
@@ -186,8 +187,11 @@ const encodeYeetVerdictEffect = S.encodeEffect(YeetVerdict);
 const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
 const encodeTerminated = S.encodeEffect(S.fromJsonString(YeetAttemptTerminated));
 
-const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
+const PlatformLayer = Layer.provideMerge(
+  Git.layer,
+  NodeChildProcessSpawner.layer.pipe(
+    Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
+  )
 );
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const attemptUuid = S.decodeUnknownEffect(UUID);
@@ -822,7 +826,6 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "fallow:audit",
         "fallow:dead-code",
         "fallow:health",
-        "quality:shadcn-lint",
         "quality:security",
         "quality:secrets",
         "quality:commitlint",
@@ -839,7 +842,6 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "repo-sanity:sherif",
         "repo-sanity:config-typecheck",
         "repo-sanity:goals-ops-typecheck",
-        "quality:cache-policy",
         "quality:build",
         "quality:desktop-ipc",
         "quality:jsdoc-ratchet",

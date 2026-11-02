@@ -65,6 +65,7 @@ import { YEET_REVIEW_WINDOW_DEFAULT } from "./ReviewWindow.ts";
 import { readSquashCommitlintForPullRequest, renderSquashCommitlintVerdict } from "./SquashCommitlint.ts";
 import { collectYeetStatus, YeetStatusRemote } from "./Status.ts";
 import { mergeReadyCriterionHolds, YeetMergeReady } from "./Verdict.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
@@ -903,6 +904,7 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const read = yield* (dependencies.read ?? readPullRequestForReady)(context);
   const decision = decideYeetReadyGate(read, inherited);

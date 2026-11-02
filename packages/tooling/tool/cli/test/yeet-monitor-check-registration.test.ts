@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   awaitYeetCheckRegistration,
   isAwaitingYeetCheckRegistration,
@@ -209,22 +210,25 @@ const PR_VIEW_JSON = `{"number":558,"headRefName":"feat/yeet-monitor-hardening",
 
 /** Answers `gh pr view` and `gh api`; the check watch answers from `watch`. */
 const monitorSpawnerLayer = (watch: { readonly exitCode: number; readonly output: string }) =>
-  Layer.effect(
-    ChildProcessSpawner.ChildProcessSpawner,
-    Effect.succeed(
-      ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) {
-          return Effect.die("the monitor phase never spawns a piped command");
-        }
-        const line = A.join([command.command, ...commandArgs(command)], " ");
-        if (Str.includes("pr view")(line)) {
-          return Effect.succeed(stubHandle(0, PR_VIEW_JSON));
-        }
-        if (Str.includes("pr checks")(line)) {
-          return Effect.succeed(stubHandle(watch.exitCode, watch.output));
-        }
-        return Effect.succeed(stubHandle(0, "[]"));
-      })
+  Layer.provideMerge(
+    Git.layer,
+    Layer.effect(
+      ChildProcessSpawner.ChildProcessSpawner,
+      Effect.succeed(
+        ChildProcessSpawner.make((command) => {
+          if (!ChildProcess.isStandardCommand(command)) {
+            return Effect.die("the monitor phase never spawns a piped command");
+          }
+          const line = A.join([command.command, ...commandArgs(command)], " ");
+          if (Str.includes("pr view")(line)) {
+            return Effect.succeed(stubHandle(0, PR_VIEW_JSON));
+          }
+          if (Str.includes("pr checks")(line)) {
+            return Effect.succeed(stubHandle(watch.exitCode, watch.output));
+          }
+          return Effect.succeed(stubHandle(0, "[]"));
+        })
+      )
     )
   );
 
@@ -355,6 +359,7 @@ describe("the monitor check watch recorder", () => {
         yield* runMonitorCheckWatchForTesting(context, checkSteps, recorder, "yeet monitor failed.", [
           Duration.zero,
         ]).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, registrationThenSuccessSpawner(callsRef))
         );
 
@@ -408,7 +413,10 @@ describe("plain monitor required census", () => {
             recorder,
             "watch failed",
             []
-          ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, censusSpawner(calls, [required])));
+          ).pipe(
+            Effect.provideServiceEffect(Git, Git.make),
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, censusSpawner(calls, [required]))
+          );
           expect(yield* Ref.get(calls)).toBe(1);
           expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([0]);
           expect(
@@ -436,7 +444,10 @@ describe("plain monitor required census", () => {
               recorder,
               "watch failed",
               []
-            ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, censusSpawner(calls, [required])))
+            ).pipe(
+              Effect.provideServiceEffect(Git, Git.make),
+              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, censusSpawner(calls, [required]))
+            )
           );
           expect(error.message).toContain("watch failed");
           expect(yield* Ref.get(calls)).toBe(1);
@@ -476,6 +487,8 @@ describe("plain monitor required census", () => {
             "watch failed",
             []
           ).pipe(
+            // `Git` is rebuilt over the scripted spawner: the monitor phase's `currentCommitSha` runs through the kit (W1b).
+            Effect.provideServiceEffect(Git, Git.make),
             Effect.provideService(
               ChildProcessSpawner.ChildProcessSpawner,
               censusSpawner(calls, [requiredPending, requiredGreen])
@@ -508,6 +521,7 @@ describe("plain monitor required census", () => {
               "watch failed",
               []
             ).pipe(
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, censusSpawner(calls, [requiredGreen], all))
             )
           );
@@ -537,6 +551,7 @@ describe("plain monitor required census", () => {
               [],
               timeout
             ).pipe(
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, censusSpawner(calls, [requiredPending]))
             )
           );

@@ -104,7 +104,14 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("doctest Turbo inputs", (it) 
         "packages/tooling/tool/cli/test/global-cleanup.ts",
         "packages/upstream/src/index.ts",
       ];
-      const unrelated = ["README.md", "packages/consumer/README.md", "packages/unrelated/src/index.ts"];
+      // A fixture package's own Vitest result cache lives under a nested `node_modules`;
+      // it is rewritten by every run and must never feed the doctest hash (audit G4).
+      const unrelated = [
+        "README.md",
+        "packages/consumer/README.md",
+        "packages/unrelated/src/index.ts",
+        "packages/consumer/test/fixtures/pkg/node_modules/.vite/vitest/da39a3ee/results.json",
+      ];
       yield* Effect.forEach(
         A.filter([...inputs, ...unrelated], (file) => file !== "packages/consumer/package.json"),
         (file) => writeFile(root, file, "{}\n")

@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   generateSchemaCatalogDocument,
   generateSchemaCatalogShards,
@@ -24,14 +25,20 @@ import {
   writeProjectFile,
 } from "./support/CommandTest.ts";
 
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const exampleShard = "standards/schema-catalog/@beep/example.generated.jsonc";
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
-  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+const testLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    TestConsole.layer,
+    FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer))),
+    TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer)))
+  )
 );
 
 const writeSchemaCatalogFixture = Effect.fn("SchemaCatalogTest.writeFixture")(function* () {

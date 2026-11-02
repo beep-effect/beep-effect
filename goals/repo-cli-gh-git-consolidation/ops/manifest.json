@@ -34,7 +34,9 @@
   "researchReports": [
     "research/SOURCES.md",
     "research/p0-site-inventory-2026-11-02.md",
-    "research/is-ancestor-prune-differential-w0.json"
+    "research/is-ancestor-prune-differential-w0.json",
+    "research/git-readers-differential-w1a.json",
+    "research/yeet-git-differential-w1b.json"
   ],
   "agentLaunchers": [
     {
@@ -90,6 +92,14 @@
     {
       "path": "ops/is-ancestor-prune-differential.ts",
       "purpose": "W0 differential: the frozen merge-base --is-ancestor probes and worktree prune/remove captures compared with Git.isAncestor, Git.worktreePrune and Git.worktreeRemove over scratch repositories, including a shallow clone and a non-repository."
+    },
+    {
+      "path": "ops/git-readers-differential-w1a.ts",
+      "purpose": "W1a differential: the frozen GitExec typed readers (rev-parse, merge-base, ls-tree, name-status renames, dirty-path collectors, current branch) compared with their Git-backed replacements over scratch repositories with branched history, renames at and below 50%, a spaced path, a deletion, dirty paths, an unknown ref, an option-like ref and a non-repository."
+    },
+    {
+      "path": "ops/yeet-git-differential-w1b.ts",
+      "purpose": "W1b differential: the frozen Yeet git bodies (base-ref refresh with and without an origin remote, current commit sha on a branch, detached and unborn, the is-ancestor probes, and the head-install preflight's worktree add, remove --force and prune) compared with their Git-backed replacements over scratch repositories with a bare origin carrying a tag, an option-like ref and a non-repository."
     }
   ]
 }

@@ -43,6 +43,7 @@ import {
 import { currentCommitSha, runGitOutput } from "./GitExec.ts";
 import { renderJson, writeTextFile } from "./IssueArtifacts.ts";
 import { YeetProofTier } from "./Planner.ts";
+import type { Git } from "@beep/git/Git";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
@@ -1602,6 +1603,7 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
   | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom
   | Digest.Digest
+  | Git
 > {
   const artifactDir = yield* artifactDirForContext(context);
   const statePath = yield* runStatePathForContext(context);
@@ -1787,6 +1789,7 @@ export const assertReusableVerifiedState = Effect.fn("Yeet.assertReusableVerifie
   | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom
   | Digest.Digest
+  | Git
 > {
   const state = yield* loadVerifiedState(context);
   const expectedCommitSha = yield* currentCommitSha(context);

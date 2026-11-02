@@ -55,13 +55,21 @@ Sibling goals:
 
 ## Current Phase
 
-P0–P3 are complete under autonomous acceptance v1. Implementation [PR #2411](https://github.com/beep-effect/beep-effect/pull/2411) merged as `3057999b33` under S11, with cancelled hosted outcomes explicitly retained. P4/P5 final closeout is prepared in [final follow-up PR #2502](https://github.com/beep-effect/beep-effect/pull/2502); operative lifecycle stays active until current readiness and merge receipts verify completion. The post-merge v24 benchmark remains **37/538**, retaining all 34 protected and all 37 previous matches. Structural recovery and alert noise remain poor; attorney attendance is optional.
+P0–P3 are complete under autonomous acceptance v1. Implementation [PR #2411](https://github.com/beep-effect/beep-effect/pull/2411) merged as `3057999b33` under S11, with cancelled hosted outcomes explicitly retained. P4/P5 final closeout is prepared in [strict final PR #2513](https://github.com/beep-effect/beep-effect/pull/2513); operative lifecycle stays active until current readiness and merge receipts verify completion. The post-merge v24 benchmark remains **37/538**, retaining all 34 protected and all 37 previous matches. Structural recovery and alert noise remain poor; attorney attendance is optional.
 
 ## Current Acceptance Authority
 
 The user explicitly requires autonomous completion without attorney presence. [Autonomous acceptance v1](research/AUTONOMOUS-ACCEPTANCE-v1.md) governs current work: independent automated review/adjudication, immutable references/results, explicit uncertainty and optional later attorney review. Historical human-hold records remain intact and are superseded for current completion.
 
 ## Latest Evidence
+
+- [Accepted coverage-repair integration](history/2026-11-02-v26-coverage-repair-integration.json): main #2548 and #2553 supply the shared CLI repairs. All 29 v26 pins remain exact. Fresh positive and allowed replays reproduce the complete v26 result bytes and all 251 prediction reports exactly, retaining 37/538 and every previous pass. The helper's focused coverage proof is scoped separately; its exception merge does not supply final-PR hosted readiness.
+
+- [v26 package-script compatibility](history/2026-11-02-v26-package-script-compatibility.json): accepted main #2535 fixes inherited generator-test expectations, and #2533 fixes the shared helper's Effect.fn form. The 21 algorithm files and dependency lock remain unchanged; 29 archived pre-prediction pins include the updated package-script environment. Both complete cohort results match v25 apart from the implementation digest, all 251 reports are byte-identical, and all 37 previous matches are retained. Accuracy remains poor; no fresh review is claimed.
+
+- [v25 dependency compatibility](history/2026-11-02-v25-dependency-compatibility.json): accepted main coverage fix #2517 and dependency updates are synchronized. All 21 algorithm files are unchanged; 24 pre-prediction pins include the dependency environment. Both cohort result values match v24 apart from implementation digest, and all 251 prediction reports are byte-identical. No accuracy gain, label change or new review is claimed.
+
+- [Strict pre-merge acceptance hold](history/2026-11-02-premerge-acceptance-hold.md): #2502 merged with pending checks and its canonical completion refresh is unsatisfied. Final PR #2513 must earn normal readiness before merge. All 21 algorithm files remain unchanged; the dependency update is covered by the v25 compatibility replay above.
 
 - [Post-merge v24 report and closeout](history/2026-11-01-post-merge-evaluation.md): current implementation freeze, fixed replay, retained/lost gate, corrected nesting diagnostic, source-bound historical review identity, exact v11 byte restoration and current package proofs.
 - [Delivery exception](history/2026-11-01-post-merge-delivery.json) and [closeout reflection](history/reflections/2026-11-01-codex.md): seven resolved threads, recorded S11 merge and explicit non-passing hosted outcomes.

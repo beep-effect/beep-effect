@@ -31,12 +31,23 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, W0 in review: `Git.isAncestor` and `Git.worktreePrune` in `@beep/git`, `Git.layer` at the repo-cli
-runtime edge, and the Knowledge, Quality residue, Ci route-census, GitWorktree and TmpfsReap sites on them (SPEC
-D-07). P0 is complete: [`research/p0-site-inventory-2026-11-02.md`](./research/p0-site-inventory-2026-11-02.md).
-Next: W1 (fail-closed parsers, rename score, bounded output; the repo-cli and Yeet `GitExec` layers).
+P1 Implement, W1 in review in two halves. W1a (#2539): the typed readers of `internal/repo-run/GitExec.ts`
+run through `Git` behind one adapter fold, with `Git` widened into the Knowledge, Quality, Ci, Worktree and Yeet
+requirement unions that reach them (SPEC D-08). W1b (this PR): Yeet's own git spawns run through `Git`
+(`refreshBaseRef` -> `fetch` / `revParse`, `currentCommitSha` -> `revParse`, the `FinalCheckRefresh` and `Sweep`
+is-ancestor probes -> `isAncestor`, the head-install preflight's `worktreeAdd` / `worktreeRemove` /
+`worktreePrune` read back through `captureGitKitExit`), `Git` lifted into the Yeet unions, and the leaf
+`Git.make` provisions dropped from `GitWorktree.ts` and `TmpfsReap.ts` (SPEC D-09); `lockfileChangedSinceBase`
+waits for the G7 pathspec. W0 merged (#2514); the W1 kit merged (#2522). Next: W2.
 
 ## Latest Evidence
+
+- 2026-11-02 W1b: `research/yeet-git-differential-w1b.json` (31 scenarios, 27 same, 4 classified, 0
+  unclassified); repo-cli typecheck clean, every `yeet-*`, `step-git-exec`, `tmpfs-reap`, `residue-reap`,
+  `git-worktree` and `git-adoption-sites` suite green (64 files, 1640 tests).
+- 2026-11-02 W1a: `research/git-readers-differential-w1a.json` (45 scenarios, 28 same, 17 classified, 0
+  unclassified); repo-cli typecheck clean, `step-git-exec` (fold unit tests and a real-repository reader test),
+  knowledge, quality, ci-route, worktree, coverage and yeet final-check suites green.
 
 - 2026-11-02 P0: 36 site-list rows censused with the kit gaps G1-G10 and a six-wave plan (PLAN "Waves").
 - 2026-11-02 W0: `research/is-ancestor-prune-differential-w0.json` (21 scenarios, 18 same, 3 classified, 0

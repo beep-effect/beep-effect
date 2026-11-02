@@ -40,6 +40,7 @@ import {
 import { writeIssueArtifacts } from "./IssueArtifacts.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { YeetBaseFreshness, YeetStashState } from "./Verdict.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -443,7 +444,7 @@ export const stashUnstagedWorktree = Effect.fn("Yeet.stashUnstagedWorktree")(fun
 ): Effect.fn.Return<
   O.Option<YeetStashState>,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Digest.Digest
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Digest.Digest | Git
 > {
   const unstagedPaths = yield* collectUnstagedTrackedPaths(context.repoRoot);
   const untrackedPaths = yield* collectUntrackedPaths(context.repoRoot);
@@ -705,7 +706,7 @@ export const assessBaseFreshness = Effect.fn("Yeet.assessBaseFreshness")(functio
 ): Effect.fn.Return<
   YeetBaseFreshness,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const mergeBase = yield* runGitOutput(context.repoRoot, ["merge-base", context.base, "HEAD"]).pipe(
     Effect.mapBoth({
@@ -807,7 +808,7 @@ export const enforceBaseFreshness = Effect.fn("Yeet.enforceBaseFreshness")(funct
 ): Effect.fn.Return<
   YeetBaseFreshness,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const freshness = yield* assessBaseFreshness(context);
   if (freshness.behindCount === 0) {
@@ -903,7 +904,7 @@ const collectExistingCommitPublishIntent = Effect.fn("Yeet.collectExistingCommit
 ): Effect.fn.Return<
   O.Option<YeetExistingCommitPublishIntent>,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const remoteRef = `origin/${context.branch}`;
   const remoteRefExists = yield* runRepoCommandCapture(
@@ -936,7 +937,7 @@ const emptyIndexPublishIntent = Effect.fn("Yeet.emptyIndexPublishIntent")(functi
 ): Effect.fn.Return<
   YeetPublishIntent,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const cleanWorktree = A.isReadonlyArrayEmpty(unstagedPaths) && A.isReadonlyArrayEmpty(untrackedPaths);
   const existingCommitIntent = cleanWorktree
@@ -1054,7 +1055,7 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
 ): Effect.fn.Return<
   YeetPublishIntent,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const { stagedPaths, unstagedPaths, untrackedPaths } = yield* collectPublishWorktreePaths(context.repoRoot);
 
@@ -1107,7 +1108,7 @@ export const validatePublishIntentStillSafe = Effect.fn("Yeet.validatePublishInt
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const { stagedPaths, unstagedPaths, untrackedPaths } = yield* collectPublishWorktreePaths(context.repoRoot);
   const unexpectedStagedPaths = publishPathsOutsideIntent(intent.paths, stagedPaths);
@@ -1196,7 +1197,7 @@ export const stageReviewedPublishIntent = Effect.fn("Yeet.stageReviewedPublishIn
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   yield* validatePublishIntentStillSafe(context, intent, stagedOnly);
   const existingPaths = yield* collectExistingPublishIntentPaths(context, intent);
@@ -1291,7 +1292,7 @@ export const validatePostCommitProofDidNotChangeWorktree = Effect.fn(
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const { stagedPaths, unstagedPaths, untrackedPaths } = yield* collectPublishWorktreePaths(context.repoRoot);
   const changedPaths = sortedUniquePaths([...stagedPaths, ...unstagedPaths, ...untrackedPaths]);

@@ -1,3 +1,4 @@
+import { Git, GitCommandError, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 import { makeRouteGit } from "@beep/repo-cli/commands/Ci/RouteCensus";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { expect, it } from "@effect/vitest";
@@ -93,6 +94,49 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("route git over a real
       const error = yield* Effect.flip(git.ensureHeads([ABSENT]));
       expect(error.reason).toBe("git");
       assertInclude(error.message, "git fetch of pull-request heads exited");
+    })
+  );
+});
+
+// The kit's typed failures each render their own `exited …` wording in the route error (W0, SPEC D-07):
+// git's exit code when it ran, the pre-spawn refusal otherwise, and the two typed repository answers.
+const isAncestorFailure = (error: GitCommandError | NotARepositoryError | UnknownRefError) =>
+  Effect.gen(function* () {
+    const git = yield* makeRouteGit("/repo");
+    return yield* Effect.flip(git.isAncestor("a1", "b2"));
+  }).pipe(Effect.provideService(Git, Git.makeTest({ isAncestor: () => Effect.fail(error) })));
+
+it.layer(NodeCommandTestLayer, { timeout: "30 seconds" })("route git over the kit's typed failures", (it) => {
+  it.effect("names git's exit code when the probe ran and failed", () =>
+    Effect.gen(function* () {
+      const failure = yield* isAncestorFailure(
+        GitCommandError.make({ kind: "failed", args: ["merge-base"], cwd: "/repo", exitCode: 1, stderr: "noisy" })
+      );
+      expect(failure.reason).toBe("git");
+      assertInclude(failure.message, "git merge-base --is-ancestor a1 b2 exited 1.");
+    })
+  );
+
+  it.effect("names a pre-spawn refusal, which has no exit code", () =>
+    Effect.gen(function* () {
+      const failure = yield* isAncestorFailure(
+        GitCommandError.make({ kind: "refused", args: ["merge-base"], cwd: "/repo", stderr: "", detail: "option-like" })
+      );
+      assertInclude(failure.message, "exited before spawning (");
+    })
+  );
+
+  it.effect("names a working directory outside a repository", () =>
+    Effect.gen(function* () {
+      const failure = yield* isAncestorFailure(NotARepositoryError.make({ cwd: "/repo" }));
+      assertInclude(failure.message, "exited outside a repository.");
+    })
+  );
+
+  it.effect("names the unknown object", () =>
+    Effect.gen(function* () {
+      const failure = yield* isAncestorFailure(UnknownRefError.make({ ref: "a1", cwd: "/repo" }));
+      assertInclude(failure.message, "exited with an unknown object (a1).");
     })
   );
 });
