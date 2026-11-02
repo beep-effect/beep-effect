@@ -37,7 +37,7 @@ export class PolicyFingerprintError extends S.TaggedError<PolicyFingerprintError
 ) {}
 
 /**
- * The name of one generated seal task: `//#lint:policy-fingerprint:<key>`.
+ * The key of one generated seal task, `@beep/repo-cli#lint:policy-fingerprint:<key>`.
  *
  * **Example** (Accept a key)
  *
