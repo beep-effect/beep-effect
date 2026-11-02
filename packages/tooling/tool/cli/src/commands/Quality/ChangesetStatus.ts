@@ -12,6 +12,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
@@ -30,12 +32,13 @@ import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { manifestParser } from "../../internal/ManifestRead.ts";
-import { runCaptured } from "../../internal/process/index.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { changesetPackageReferencesFromText, collectWorkspacePackageJsonFiles } from "./ChangesetGraph.ts";
 import { ChangesetStatusError } from "./Quality.errors.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { ChangesetGraphPackageReference } from "./ChangesetGraph.ts";
 
 /**
@@ -48,7 +51,6 @@ export { ChangesetStatusError } from "./Quality.errors.ts";
 
 const $I = $RepoCliId.create("commands/Quality/ChangesetStatus");
 
-const nulSeparator = "\u0000";
 const changesetDirName = ".changeset";
 const changesetConfigPath = ".changeset/config.json";
 const changesetReadmeFilename = "README.md";
@@ -250,13 +252,6 @@ class ChangesetStatusChangesetConfig extends S.Opaque<
 const parsePackageJson = manifestParser(["name", "version", "private"]);
 const decodeChangesetConfig = S.decodeUnknownEffect(S.fromJsonString(ChangesetStatusChangesetConfig));
 
-const toNulSeparatedPaths: (output: string) => ReadonlyArray<string> = flow(
-  Str.split(nulSeparator),
-  A.filter(Str.isNonEmpty),
-  A.dedupe,
-  A.sort(Order.String)
-);
-
 const workspaceDirFromPackageJsonPath = Str.replace(/\/package\.json$/, "");
 
 const isChangesetStatusNeutralPath = (filePath: string): boolean =>
@@ -415,44 +410,44 @@ export const uncoveredWorkspacePackageNames: {
   ): ReadonlyArray<string>;
 } = dual(3, uncoveredImpl);
 
-const collectGitDiffNameOnlyPaths = Effect.fn("ChangesetStatus.collectGitDiffNameOnlyPaths")(function* (
+// The wording of the bounded capture these reads ran before W2 (SPEC D-10); the kit's command line
+// stands in for the frozen argv.
+const changesetGitErrorAdapter: GitCommandErrorAdapter<ChangesetStatusError> = {
+  onSpawnFailure: (commandLine) => ChangesetStatusError.new(`Failed to run ${commandLine}.`),
+  onNonZeroExit: ({ commandLine, exitCode }) =>
+    ChangesetStatusError.make({ message: `${commandLine} failed with exit code ${exitCode}.` }),
+  onTruncated: O.none(),
+};
+
+const canonicalPaths: (paths: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
+  A.filter(Str.isNonEmpty),
+  A.dedupe,
+  A.sort(Order.String)
+);
+
+// `Git.changedFiles` over `<since>...HEAD`: the paths the branch changed since its base, deduped and sorted.
+const collectChangedPathsSince = Effect.fn("ChangesetStatus.collectChangedPathsSince")(function* (
   repoRoot: string,
-  args: ReadonlyArray<string>
-): Effect.fn.Return<
-  ReadonlyArray<string>,
-  ChangesetStatusError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const result = yield* runCaptured({
-    command: "git",
-    args,
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(ChangesetStatusError.mapError(`Failed to run git ${A.join(args, " ")}.`));
-  if (result.exitCode !== 0) {
-    return yield* ChangesetStatusError.make({
-      message: `git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`,
-    });
+  options: {
+    readonly since: string;
+    readonly diffFilter: string;
+    readonly noRenames?: boolean;
+    readonly pathspec?: ReadonlyArray<string>;
   }
-  return toNulSeparatedPaths(result.output);
+): Effect.fn.Return<ReadonlyArray<string>, ChangesetStatusError, Git> {
+  const git = yield* Git;
+  const { since, ...flags } = options;
+  const range = { base: since, head: "HEAD", ...flags };
+  return yield* git.changedFiles(repoRoot, range).pipe(
+    Effect.mapBoth({
+      onFailure: adaptGitKitError(GitCommand.changedFiles(since, "HEAD", false, flags), changesetGitErrorAdapter),
+      onSuccess: canonicalPaths,
+    })
+  );
 });
 
-const collectChangedFilesSince = (
-  repoRoot: string,
-  since: string
-): Effect.Effect<
-  ReadonlyArray<string>,
-  ChangesetStatusError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> =>
-  collectGitDiffNameOnlyPaths(repoRoot, [
-    "diff",
-    "--name-only",
-    "-z",
-    "--no-renames",
-    "--diff-filter=ACMRTUXBD",
-    `${since}...HEAD`,
-  ]);
+const collectChangedFilesSince = (repoRoot: string, since: string) =>
+  collectChangedPathsSince(repoRoot, { since, diffFilter: "ACMRTUXBD", noRenames: true });
 
 const readChangesetIgnoredPackageNames = Effect.fn("ChangesetStatus.readChangesetIgnoredPackageNames")(function* (
   repoRoot: string
@@ -479,19 +474,15 @@ const collectAddedChangesetReferences = Effect.fn("ChangesetStatus.collectAddedC
 ): Effect.fn.Return<
   ReadonlyArray<ChangesetGraphPackageReference>,
   ChangesetStatusError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const addedPaths = yield* collectGitDiffNameOnlyPaths(repoRoot, [
-    "diff",
-    "--name-only",
-    "-z",
-    "--diff-filter=A",
-    `${since}...HEAD`,
-    "--",
-    changesetDirName,
-  ]);
+  const addedPaths = yield* collectChangedPathsSince(repoRoot, {
+    since,
+    diffFilter: "A",
+    pathspec: [changesetDirName],
+  });
   const changesetFiles = pipe(
     addedPaths,
     A.filter(
@@ -591,7 +582,7 @@ const runEnforcedCheck = Effect.fn("ChangesetStatus.runEnforcedCheck")(function*
 ): Effect.fn.Return<
   void,
   ChangesetStatusError | CliReportedExit,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const workspaces = yield* collectChangedWorkspacePackages(repoRoot, partition.productWorkspaceDirs);
   yield* Console.log(
@@ -649,7 +640,7 @@ export const runChangesetStatus = Effect.fn("ChangesetStatus.runChangesetStatus"
 ): Effect.fn.Return<
   void,
   ChangesetStatusError | CliReportedExit,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const base = O.getOrElse(since, () => "origin/main");
   const changedFiles = yield* collectChangedFilesSince(repoRoot, base);

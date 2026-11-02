@@ -17,17 +17,19 @@ import { GitObjectId } from "@beep/schema/Conformance";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { IsoDateTimeString } from "@beep/skill-contract";
 import { A, Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ProcessPid } from "../../internal/repo-run/ProcessTable.ts";
 import { PosInt } from "../../internal/schema/PosInt.ts";
+import type { WorktreeEntry } from "@beep/git/Git";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.schemas");
 
 const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }));
 
 const REFS_HEADS_PREFIX = "refs/heads/";
-const WORKTREE_PREFIX = "worktree ";
 
 /**
  * One parsed entry from `git worktree list --porcelain`.
@@ -759,117 +761,83 @@ export class WorktreeRemovalReceipt extends S.Opaque<WorktreeRemovalReceipt, { r
   )
 ) {}
 
-type PorcelainAccumulator = {
-  path: string;
-  head: string | null;
-  branch: string | null;
-  detached: boolean;
-  locked: boolean;
-  prunable: boolean;
-};
-
 const stripRefsHeads = (ref: string): string =>
   Str.startsWith(REFS_HEADS_PREFIX)(ref) ? Str.slice(REFS_HEADS_PREFIX.length)(ref) : ref;
 
-const accumulatorEntry = (accumulator: PorcelainAccumulator): WorktreeListEntry =>
-  WorktreeListEntry.make({
-    path: accumulator.path,
-    head: accumulator.head,
-    branch: accumulator.branch,
-    detached: accumulator.detached,
-    locked: accumulator.locked,
-    prunable: accumulator.prunable,
-  });
-
-const applyPorcelainAttribute = (current: PorcelainAccumulator, line: string): void => {
-  if (Str.startsWith("HEAD ")(line)) {
-    current.head = Str.slice("HEAD ".length)(line);
-  } else if (Str.startsWith("branch ")(line)) {
-    current.branch = stripRefsHeads(Str.slice("branch ".length)(line));
-  } else if (line === "detached") {
-    current.detached = true;
-  } else if (line === "locked" || Str.startsWith("locked ")(line)) {
-    current.locked = true;
-  } else if (line === "prunable" || Str.startsWith("prunable ")(line)) {
-    current.prunable = true;
-  }
-};
-
-type PorcelainBlock = {
-  readonly path: string;
-  readonly attributes: Array<string>;
-};
-
-// Group porcelain lines into one block per `worktree ` header; lines before the first header have no block and are dropped.
-const porcelainBlocks = (lines: ReadonlyArray<string>): ReadonlyArray<PorcelainBlock> => {
-  const blocks: Array<PorcelainBlock> = [];
-  for (const line of lines) {
-    if (Str.startsWith(WORKTREE_PREFIX)(line)) {
-      blocks.push({ path: Str.slice(WORKTREE_PREFIX.length)(line), attributes: [] });
-      continue;
-    }
-    const current = blocks[blocks.length - 1];
-    if (current !== undefined) {
-      current.attributes.push(line);
-    }
-  }
-  return blocks;
-};
-
-const blockEntry = (block: PorcelainBlock): WorktreeListEntry => {
-  const accumulator: PorcelainAccumulator = {
-    path: block.path,
-    head: null,
-    branch: null,
-    detached: false,
-    locked: false,
-    prunable: false,
-  };
-  for (const line of block.attributes) {
-    applyPorcelainAttribute(accumulator, line);
-  }
-  return accumulatorEntry(accumulator);
-};
-
 const isWorktreeListPath = S.is(WorktreeListEntry.fields.path);
-const WorktreePorcelainInput = S.Union([S.Literal(""), S.String.check(S.isPattern(/\0/u))]).pipe(
-  $I.annoteSchema("WorktreePorcelainInput", {
-    description: "Empty output or a NUL-delimited Git worktree listing; nonempty line-delimited output is ambiguous.",
-  })
-);
-const decodeWorktreePorcelainInput = S.decodeUnknownEffect(WorktreePorcelainInput);
 
 /**
- * Parse `git worktree list --porcelain -z` output into structured entries.
+ * Map one `Git.worktreeList` entry onto the Worktree command's listing shape.
  *
  * **Details**
  *
- * NUL delimiters preserve record boundaries even when a Git path contains a
- * newline. Paths containing control characters are excluded from managed
- * worktree operations. Non-NUL listings are rejected as ambiguous.
+ * The kit's `WorktreeEntry` keeps the branch as its full refname and models an absent head or
+ * branch as a missing key; the command's `WorktreeListEntry` strips `refs/heads/` and uses `null`,
+ * the shape its reports and receipts serialize. A path carrying a control character is excluded
+ * from managed worktree operations, as the retired porcelain parser excluded it, so the result is
+ * `None` for such an entry. The kit's listing is fail-closed (`parseWorktreeList`), which is where
+ * the parser's own NUL-delimiter refusal went (repo-cli-gh-git-consolidation W2, SPEC D-10).
  *
- * **Example** (Parse a single-worktree listing)
+ * **Example** (Map a branch entry)
  *
  * ```ts
- * import { parseWorktreePorcelain } from "@beep/repo-cli/commands/Worktree"
- * import * as Effect from "effect/Effect"
+ * import { WorktreeEntry } from "@beep/git/Git"
+ * import { worktreeListEntryFromGit } from "@beep/repo-cli/commands/Worktree"
+ * import * as O from "effect/Option"
  *
- * const entries = await Effect.runPromise(parseWorktreePorcelain("worktree /repo\0HEAD abc123\0branch refs/heads/main\0\0"))
- * console.log(entries.length)
+ * const entry = worktreeListEntryFromGit(
+ *   WorktreeEntry.make({
+ *     path: "/repo",
+ *     head: "1111111111111111111111111111111111111111",
+ *     branch: "refs/heads/main",
+ *     detached: false,
+ *     bare: false,
+ *     prunable: false,
+ *   })
+ * )
+ * console.log(O.map(entry, (listed) => listed.branch)) // Some("main")
  * ```
  *
- * @param porcelain - Raw stdout from `git worktree list --porcelain -z`.
- * @returns An effect yielding one entry per worktree block, or a schema failure for ambiguous input.
+ * @param entry - One entry of the kit's `worktree list --porcelain -z` reading.
+ * @returns The command's listing entry, or `None` for a path with control characters.
  * @category parsing
  * @since 0.0.0
  */
-export const parseWorktreePorcelain = Effect.fn("Worktree.parseWorktreePorcelain")(function* (porcelain: string) {
-  const input = yield* decodeWorktreePorcelainInput(porcelain);
-  return A.map(
-    A.filter(porcelainBlocks(Str.split(input, "\0")), (block) => isWorktreeListPath(block.path)),
-    blockEntry
+export const worktreeListEntryFromGit = (entry: WorktreeEntry): O.Option<WorktreeListEntry> =>
+  O.map(O.liftPredicate(entry.path, isWorktreeListPath), (path) =>
+    WorktreeListEntry.make({
+      path,
+      head: O.getOrNull(O.fromUndefinedOr(entry.head)),
+      branch: O.getOrNull(O.map(O.fromUndefinedOr(entry.branch), stripRefsHeads)),
+      detached: entry.detached,
+      locked: P.isNotUndefined(entry.locked),
+      prunable: entry.prunable,
+    })
   );
-});
+
+/**
+ * Map a whole `Git.worktreeList` reading onto the Worktree command's listing shape.
+ *
+ * **Example** (Drop a hostile path from the listing)
+ *
+ * ```ts
+ * import { WorktreeEntry } from "@beep/git/Git"
+ * import { worktreeListEntriesFromGit } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const entries = worktreeListEntriesFromGit([
+ *   WorktreeEntry.make({ path: "/repo", detached: false, bare: false, prunable: false }),
+ *   WorktreeEntry.make({ path: "/repo\n/unrelated", detached: true, bare: false, prunable: false }),
+ * ])
+ * console.log(entries.length) // 1
+ * ```
+ *
+ * @param entries - The kit's listing, first entry the main working tree.
+ * @returns The command's listing entries, in git's order, hostile paths excluded.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const worktreeListEntriesFromGit = (entries: ReadonlyArray<WorktreeEntry>): ReadonlyArray<WorktreeListEntry> =>
+  A.getSomes(A.map(entries, worktreeListEntryFromGit));
 
 /**
  * Number of seconds within which measured activity classifies a checkout as

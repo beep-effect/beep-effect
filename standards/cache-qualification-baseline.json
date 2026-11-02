@@ -2180,7 +2180,6 @@
             "!**/dist/**",
             "!**/node_modules/**",
             "!**/storybook-static/**",
-            "!**/test/fixtures/**",
             "!.claude/worktrees/**",
             "!scratchpad/.jsdoc-loop/**",
             "!scratchpad/docs/**",
@@ -2192,7 +2191,7 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
-            "scratchpad/**/*.ts",
+            "scratchpad/**/*.{ts,tsx}",
             "tools/**/*.{ts,tsx}",
             "tsdoc.json",
             "{packages,apps,infra}/**/*.{ts,tsx}"
@@ -2222,14 +2221,7 @@
         "configuration": {
           "cache": true,
           "inputs": [
-            "!**/.beep/**",
-            "!**/.next/**",
-            "!**/.turbo/**",
-            "!**/build/**",
-            "!**/coverage/**",
-            "!**/dist/**",
             "!**/node_modules/**",
-            "!**/storybook-static/**",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
@@ -122156,7 +122148,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "f66f0ebc253988258348c486b292b2daeb0d635c9c681ffcaf948f93b89bf9d7"
+        "sha256": "a56eee4c0101cbcfa52b23ea4a7403e9ef3e5d9155794ad55da80cae469f5bf4"
       }
     ]
   }

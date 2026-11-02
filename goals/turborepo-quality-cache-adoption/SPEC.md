@@ -559,3 +559,19 @@ The census command digest binds the complete workspace script map; it does not
 prove command equivalence. Keep pure counterparts and all other computations
 pending. Returning to the retained population is the data-only reversal; preserve
 the newer evidence and change no runtime cache policy or qualification record.
+
+
+### Retain the enabled global configuration layout, 2026-11-02
+
+- Keep `futureFlags.globalConfiguration` enabled, preserve the root `global`
+  block and its six current input paths, and keep root-only global settings out
+  of child configurations. The source review binds all 26 actual child files.
+- Use the exact stable/canary native controls to distinguish global-hash files
+  from per-task global-input projection, restoration and child invalidation.
+  The tested child negation does not remove the global input on either pin;
+  do not promise a narrowing optimization from the documentation alone.
+- This is a no-change feature decision. It grants no task qualification,
+  broader graph-family acceptance, production activation or measured savings.
+  Any real input removal or client/layout change needs renewed evidence.
+- Reverse by reverting this research decision and registration, preserving the
+  original failed and passing receipts. Runtime configuration is unchanged.

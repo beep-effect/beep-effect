@@ -920,6 +920,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
             const spawned: Array<string> = [];
             yield* runBunAudit(repoRoot).pipe(
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
             );
 
@@ -991,10 +992,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             return Effect.die("SAST test requires a standard command");
           }
           A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
-          const output = A.contains(commandArgs(command), "--name-only") ? `${ignored}\n${changed}\n` : "";
+          const output = A.contains(commandArgs(command), "--name-only") ? `${ignored}\0${changed}\0` : "";
           return Effect.succeed(qualityCommandHandle(output, 0));
         });
         yield* runGithubChecks("sast").pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
@@ -1023,6 +1025,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           return Effect.succeed(qualityCommandHandle("", 0));
         });
         yield* runGithubChecks("sast").pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
@@ -1073,10 +1076,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             return Effect.die("SAST test requires a standard command");
           }
           A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
-          const output = A.contains(commandArgs(command), "--name-only") ? A.join(changed, "\n") : "";
+          const output = A.contains(commandArgs(command), "--name-only") ? `${A.join(changed, "\0")}\0` : "";
           return Effect.succeed(qualityCommandHandle(output, 0));
         });
         yield* runGithubChecks("sast").pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
@@ -1111,6 +1115,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           function* () {
             const spawned: Array<string> = [];
             yield* runGithubChecks("review-fix").pipe(
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
             );
 
@@ -1467,13 +1472,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         expectedTurboArgs("lint:schema-catalog", ["--summarize"])
       );
       expect(qualityLaneArgs(lanes, "lint:oxlint")).toEqual(["run", "lint:oxlint"]);
-      expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:regenerated")).toEqual([
-        "run",
-        "beep",
-        "quality",
-        "jsdoc-ratchet",
-        "--regenerate",
-      ]);
+      // The regenerated ratchet rides the cached root chain
+      // (`//#jsdoc:inventory:check` -> `//#jsdoc:ratchet:check`), not an in-process scan.
+      expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:regenerated")).toEqual(
+        expectedTurboArgs("jsdoc:ratchet:check", ["--summarize"])
+      );
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:committed")).toEqual([
         "run",
         "beep",
@@ -1483,6 +1486,46 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(A.map(githubCheckLanesForModeForTesting("/repo", "cheap-gates"), (lane) => lane.id)).toEqual(
         A.map(lanes, (lane) => lane.id)
       );
+    });
+
+    it("hands the cheap tier's JSDoc inventory to the pre-push ratchet through the Turbo content hash", () => {
+      const cheap = githubCheckLanesForModeForTesting("/repo", "cheap-gates");
+      const prePush = githubCheckLanesForModeForTesting("/repo", "pre-push");
+      // Cheap tier: one Turbo run of the ratchet task, whose dependency produces the inventory.
+      expect(qualityLaneArgs(cheap, "quality:jsdoc-ratchet:regenerated")).toEqual(
+        expectedTurboArgs("jsdoc:ratchet:check", ["--summarize"])
+      );
+      // Pre-push: the hosted lane body without `--inventory`, so it re-enters the same
+      // producer task. A same-tree run restores the cheap tier's inventory from cache; a
+      // different head or tree misses and rescans. A bare file path would skip that check.
+      expect(qualityLaneArgs(prePush, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
+      const body = ciLaneStepsForTesting(
+        "/repo",
+        "jsdoc-ratchet",
+        CiLaneRunOptions.make({
+          affected: false,
+          base: "origin/main",
+          head: "HEAD",
+          summarize: false,
+          mode: "affected",
+          to: "HEAD",
+          last: false,
+          changesetStatus: false,
+          validateEnvelopes: false,
+        })
+      );
+      expect(A.map(body, (step) => step.label)).toEqual(["ci:jsdoc-ratchet:inventory", "ci:jsdoc-ratchet:ratchet"]);
+      expect(body[0]?.args).toEqual(expectedTurboArgs("jsdoc:inventory:check", ["--summarize"]));
+      expect(body[1]?.args).toEqual([
+        "run",
+        "beep",
+        "quality",
+        "jsdoc-ratchet",
+        "--inventory",
+        ".beep/ci/jsdoc-documentation.inventory.jsonc",
+      ]);
+      // No lane in either tier still regenerates in-process.
+      expect(A.some([...cheap, ...prePush], (lane) => A.contains(lane.step.args, "--regenerate"))).toBe(false);
     });
 
     // TTC ruling 28: a lane id names the command it runs and doubles as the step
@@ -3836,6 +3879,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   })
                 ),
                 Effect.provideService(Console.Console, testConsole),
+                Effect.provideServiceEffect(Git, Git.make),
                 Effect.provideService(
                   ChildProcessSpawner.ChildProcessSpawner,
                   cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
@@ -3887,6 +3931,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   })
                 ),
                 Effect.provideService(Console.Console, testConsole),
+                Effect.provideServiceEffect(Git, Git.make),
                 Effect.provideService(
                   ChildProcessSpawner.ChildProcessSpawner,
                   cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
@@ -3946,6 +3991,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               })
             ).pipe(
               Effect.provideService(Console.Console, testConsole),
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(
                 ChildProcessSpawner.ChildProcessSpawner,
                 cheapGatesSpawner(spawned, failedCommands, policyCommandKey)
@@ -4966,6 +5012,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                     );
                     const spawned = A.empty<string>();
                     const exit = yield* runRootLintPolicyTask(full, "review-base").pipe(
+                      Effect.provideServiceEffect(Git, Git.make),
                       Effect.provideService(
                         ChildProcessSpawner.ChildProcessSpawner,
                         cheapGatesSpawner(spawned, [policyStepCommand(failed)], policyCommandKey)

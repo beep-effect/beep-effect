@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   AccountHeadroomSource,
@@ -107,13 +108,16 @@ const runtimeWith = <ROut, E>(source: Layer.Layer<ROut, E>) =>
 
 // Files stay virtual and no process runs: every service a live source needs,
 // named explicitly.
-const platform = Layer.mergeAll(
-  MemoryFileSystem.layer,
-  Path.layer,
-  NodeCrypto.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make(() => Effect.die("no process execution in this test"))
+const platform = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    MemoryFileSystem.layer,
+    Path.layer,
+    NodeCrypto.layer,
+    Layer.succeed(
+      ChildProcessSpawner.ChildProcessSpawner,
+      ChildProcessSpawner.make(() => Effect.die("no process execution in this test"))
+    )
   )
 );
 
