@@ -64,6 +64,7 @@ import {
   FinalCheckStatusDrift,
 } from "./FinalCheckRefresh.schemas.ts";
 import { runGitFoldedStdout, runGitOutput, runGitPathList } from "./GitExec.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
