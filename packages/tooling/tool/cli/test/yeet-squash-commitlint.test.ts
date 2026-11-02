@@ -26,21 +26,18 @@ import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
-import * as Result from "effect/Result";
-import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { commandArgs } from "./support/commandArgs.ts";
-
-const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
+import { githubCallLine, recordedGithub } from "./support/YeetGithub.ts";
+import type { GithubCall, GithubRoutes } from "./support/YeetGithub.ts";
 
 // This repository's recorded settings (`gh api repos/{owner}/{repo}`, 2026-10-18).
 const repoDefaults = GitHubSquashDefaults.make({ title: "COMMIT_OR_PR_TITLE", message: "COMMIT_MESSAGES" });
@@ -254,31 +251,42 @@ const pullFacts = SquashPullRequestFacts.make({
   body: O.some("## Summary"),
 });
 
-const ghAnswers = (script: GhScript): ReadonlyArray<readonly [string, { exitCode: number; output: string }]> => [
-  [
-    "/pulls/1913/commits",
-    // Two pages, as `--paginate --slurp` returns them.
-    {
-      exitCode: 0,
-      output: encodeJson(
-        A.map(A.chunksOf(2)(A.map(script.commits, (message) => ({ commit: { message } }))), (page) => page)
-      ),
-    },
-  ],
-  ["/pulls/1913", { exitCode: 0, output: encodeJson({ number: 1913, title: pullFacts.title, body: "## Summary" }) }],
-  [
-    "repos/{owner}/{repo}",
-    {
-      exitCode: script.settingsExit ?? 0,
-      output: encodeJson(
-        script.settings ?? {
-          squash_merge_commit_title: "COMMIT_OR_PR_TITLE",
-          squash_merge_commit_message: "COMMIT_MESSAGES",
-        }
-      ),
-    },
-  ],
-];
+// The REST pull request record `GithubRest.pullRequest` decodes.
+const pullRecord = {
+  number: 1913,
+  node_id: "PR_kwDOAbC1",
+  title: pullFacts.title,
+  body: "## Summary",
+  state: "open",
+  draft: false,
+  merged_at: null,
+  head: { ref: "feat/squash", sha: "212fe39b4f0000000000000000000000000000aa" },
+  base: { ref: "main" },
+  html_url: "https://github.com/beep-effect/beep-effect/pull/1913",
+  user: { login: "kriegcloud" },
+  labels: [],
+  created_at: "2026-10-18T00:00:00Z",
+  updated_at: "2026-10-18T00:00:00Z",
+};
+
+// GitHub answers from recorded payloads routed by path; `bunx commitlint` is
+// either scripted or passed through to the real binary.
+const repositorySettings = (script: GhScript) => ({
+  status: (script.settingsExit ?? 0) === 0 ? 200 : 500,
+  body: script.settings ?? {
+    squash_merge_commit_title: "COMMIT_OR_PR_TITLE",
+    squash_merge_commit_message: "COMMIT_MESSAGES",
+  },
+});
+
+const githubRoutes =
+  (script: GhScript): GithubRoutes =>
+  (call) =>
+    ({
+      "{repo}/pulls/1913/commits": { body: A.map(script.commits, (message) => ({ commit: { message } })) },
+      "{repo}/pulls/1913": { body: pullRecord },
+      "{repo}": repositorySettings(script),
+    })[call.path];
 
 const scriptedSpawner = (
   script: GhScript,
@@ -289,16 +297,12 @@ const scriptedSpawner = (
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("the squash reader never spawns a piped command");
     const line = A.join([command.command, ...commandArgs(command)], " ");
     const record = Ref.update(calls, A.append(line));
-    if (command.command === "bunx") {
-      return script.commitlint === undefined
-        ? record.pipe(Effect.andThen(real.spawn(command)))
-        : record.pipe(Effect.as(stubHandle(script.commitlint.exitCode, script.commitlint.output)));
+    if (command.command === "bunx" && script.commitlint === undefined) {
+      return record.pipe(Effect.andThen(real.spawn(command)));
     }
-    const answer = A.findFirst(ghAnswers(script), ([fragment]) => Str.includes(fragment)(line)).pipe(
-      O.map(([, found]) => found),
-      O.getOrElse(() => ({ exitCode: 1, output: `unexpected command: ${line}` }))
-    );
-    return record.pipe(Effect.as(stubHandle(answer.exitCode, answer.output)));
+    return command.command === "bunx" && script.commitlint !== undefined
+      ? record.pipe(Effect.as(stubHandle(script.commitlint.exitCode, script.commitlint.output)))
+      : record.pipe(Effect.as(stubHandle(1, `unexpected command: ${line}`)));
   });
 
 // The Node spawner only asks the filesystem whether `cwd` exists (`fs.access`), so the
@@ -306,7 +310,11 @@ const scriptedSpawner = (
 // commitlint itself is real, against the repo's own config.
 const withScripted = Effect.fn("withScripted")(function* <A, E, R>(
   script: GhScript,
-  use: (calls: Ref.Ref<ReadonlyArray<string>>, context: RepoRunContext) => Effect.Effect<A, E, R>
+  use: (
+    calls: Ref.Ref<ReadonlyArray<string>>,
+    context: RepoRunContext,
+    github: ReadonlyArray<GithubCall>
+  ) => Effect.Effect<A, E, R>
 ) {
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
@@ -315,7 +323,9 @@ const withScripted = Effect.fn("withScripted")(function* <A, E, R>(
   yield* fs.makeDirectory(repoRoot, { recursive: true });
   const real = yield* ChildProcessSpawner.ChildProcessSpawner;
   const calls = yield* Ref.make<ReadonlyArray<string>>(A.empty());
-  return yield* use(calls, contextAt(repoRoot)).pipe(
+  const github = recordedGithub(githubRoutes(script));
+  return yield* use(calls, contextAt(repoRoot), github.calls).pipe(
+    github.provide,
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedSpawner(script, calls, real))
   );
 });
@@ -331,15 +341,14 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
   it.effect("a clean PR passes the real commitlint", () =>
     withScripted(
       { commits: [commit("docs(doctrine): admit Codex", "Why."), commit("chore(doctrine): re-request review")] },
-      (calls, context) =>
+      (calls, context, github) =>
         Effect.gen(function* () {
           const report = yield* readSquashCommitlint(context, pullFacts);
           expect(report.verdict._tag).toBe("pass");
           expect(report.message.header).toBe(`${pullFacts.title} (#1913)`);
           expect(report.message.body).toContain("* docs(doctrine): admit Codex\n\nWhy.");
-          const spawned = yield* Ref.get(calls);
-          expect(A.some(spawned, Str.startsWith("gh api repos/{owner}/{repo}/pulls/1913/commits"))).toBe(true);
-          expect(A.some(spawned, Str.startsWith("bunx commitlint --verbose"))).toBe(true);
+          expect(A.map(github, githubCallLine)).toEqual(["GET {repo}", "GET {repo}/pulls/1913/commits"]);
+          expect(A.some(yield* Ref.get(calls), Str.startsWith("bunx commitlint --verbose"))).toBe(true);
         })
     )
   );
@@ -378,13 +387,16 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
   it.effect("reads the pull request first when given only a number", () =>
     withScripted(
       { commits: [commit("fix(x): one", "Body.")], commitlint: { exitCode: 0, output: "" } },
-      (calls, context) =>
+      (_calls, context, github) =>
         Effect.gen(function* () {
           const report = yield* readSquashCommitlintForPullRequest(context, 1913);
           expect(report.message.header).toBe(`${pullFacts.title} (#1913)`);
           expect(report.message.body).toBe(`Body.\n\n${trailer}`);
-          expect(A.some(yield* Ref.get(calls), Str.startsWith("gh api repos/{owner}/{repo}/pulls/1913 "))).toBe(false);
-          expect(A.some(yield* Ref.get(calls), (line) => line === "gh api repos/{owner}/{repo}/pulls/1913")).toBe(true);
+          expect(A.map(github, githubCallLine)).toEqual([
+            "GET {repo}/pulls/1913",
+            "GET {repo}",
+            "GET {repo}/pulls/1913/commits",
+          ]);
         })
     )
   );

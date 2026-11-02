@@ -81,49 +81,16 @@ export const zipProducerReport = Effect.fn("HostedProducerTest.zip")(function* (
   return yield* fs.readFile(path.join(directory, "report.zip"));
 });
 
-const prepareChannel = Effect.fn("PublishedAcceptanceTest.channel")(function* (
+/** Bind a controlled complete observation to independent approval and real archived metadata. */
+export const preparePublishedProducerObservation = Effect.fn("PublishedAcceptanceTest.publishObservation")(function* (
   directory: string,
-  original: CacheProducerBundle,
-  sourceBinding: CacheProducerBinding,
-  contract: CacheTaskContract,
+  observation: CacheProducerObservation,
+  binding: CacheProducerBinding,
   runId: number
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const now = yield* Clock.currentTimeMillis;
-  const uploadApproval = CacheProducerUploadApproval.make({
-    targetSha256: sourceBinding.configurationDigest,
-    artifactKeySha256: sourceBinding.runtimeKeyDigest,
-  });
-  const binding = CacheProducerBinding.make({ ...sourceBinding, uploadApproval: O.some(uploadApproval) });
-  const observed = CacheAdapterRuntimeObservation.make({
-    role: "writer",
-    phase: "ready",
-    tokioNamedThreadsIncludingBlocking: 2,
-    totalThreads: 6,
-    memoryPeakBytes: 1024,
-  });
-  const bundle = CacheProducerBundle.make({
-    ...original,
-    upload: O.some(
-      CacheHostedProducerUpload.make({
-        taskHash: "0123456789abcdef",
-        archiveSha256: binding.configurationDigest,
-        archiveBytes: 128,
-        status: 202,
-      })
-    ),
-    adapterRuntime: O.some(
-      CacheProducerAdapterReceipt.make({
-        backendSha256: Sha256Hex.make(binding.configurationDigest),
-        targetSha256: uploadApproval.targetSha256,
-        ready: { ...observed, role: "writer", phase: "ready" },
-        afterLoad: { ...observed, role: "writer", phase: "after-load" },
-      })
-    ),
-  });
-  const issuer = yield* initializeCacheProducerIssuer(directory, binding, contract);
-  const observation = CacheProducerObservation.make({ observation: bundle, envelope: yield* issuer.issue(bundle) });
   const approval = CacheHostedProducerApproval.make({
     repository: RepoRef.make({ owner: "beep-effect", repo: "beep-effect" }),
     repositoryId: 33,
@@ -171,14 +138,57 @@ const prepareChannel = Effect.fn("PublishedAcceptanceTest.channel")(function* (
     },
   };
   return {
-    issuer,
     observation,
     approval,
     reference,
     publication: CacheProducerPublication.make({ reference, archive }),
     run,
     artifact,
+    workflow,
   };
+});
+
+const prepareChannel = Effect.fn("PublishedAcceptanceTest.channel")(function* (
+  directory: string,
+  original: CacheProducerBundle,
+  sourceBinding: CacheProducerBinding,
+  contract: CacheTaskContract,
+  runId: number
+) {
+  const uploadApproval = CacheProducerUploadApproval.make({
+    targetSha256: sourceBinding.configurationDigest,
+    artifactKeySha256: sourceBinding.runtimeKeyDigest,
+  });
+  const binding = CacheProducerBinding.make({ ...sourceBinding, uploadApproval: O.some(uploadApproval) });
+  const observed = CacheAdapterRuntimeObservation.make({
+    role: "writer",
+    phase: "ready",
+    tokioNamedThreadsIncludingBlocking: 2,
+    totalThreads: 6,
+    memoryPeakBytes: 1024,
+  });
+  const bundle = CacheProducerBundle.make({
+    ...original,
+    upload: O.some(
+      CacheHostedProducerUpload.make({
+        taskHash: "0123456789abcdef",
+        archiveSha256: binding.configurationDigest,
+        archiveBytes: 128,
+        status: 202,
+      })
+    ),
+    adapterRuntime: O.some(
+      CacheProducerAdapterReceipt.make({
+        backendSha256: Sha256Hex.make(binding.configurationDigest),
+        targetSha256: uploadApproval.targetSha256,
+        ready: { ...observed, role: "writer", phase: "ready" },
+        afterLoad: { ...observed, role: "writer", phase: "after-load" },
+      })
+    ),
+  });
+  const issuer = yield* initializeCacheProducerIssuer(directory, binding, contract);
+  const observation = CacheProducerObservation.make({ observation: bundle, envelope: yield* issuer.issue(bundle) });
+  return { issuer, ...(yield* preparePublishedProducerObservation(directory, observation, binding, runId)) };
 });
 
 /** Shared pure fixture client for the workflow-content endpoint. */

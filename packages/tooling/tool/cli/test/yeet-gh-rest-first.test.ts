@@ -3,12 +3,17 @@ import { GitHubError } from "@beep/github/GitHubError";
 import { GitHubGraphQLError } from "@beep/github/GraphQL";
 import { Repo, RepoRef } from "@beep/github/Repo";
 import {
+  outstanding,
+  ReviewThreadActor,
+  ReviewThreadComment,
+  ReviewThreadNode,
+  ReviewThreads,
+} from "@beep/github/ReviewThread";
+import {
   decideGraphqlBudget,
   GithubCheckRunRecord,
   GithubPullRequestRecord,
   GithubRest,
-  GithubReviewThreadNode,
-  GithubReviewThreads,
   GraphqlBudget,
   GraphqlBudgetDecisionInput,
   GraphqlBudgetExhausted,
@@ -20,33 +25,41 @@ import {
   selectGithubIdentity,
 } from "@beep/repo-cli/test/SharedInternals";
 import {
-  countOutstandingThreads,
+  buildYeetGhLogin,
   decideYeetGhMergeGate,
   foldCommitMessage,
   latestCheckRunsByName,
+  provideYeetGhLogin,
   recordInheritedRedsWithRest,
   spliceYeetInheritedRedsSection,
   YeetGhGateFacts,
   YeetReadyInheritedRed,
 } from "@beep/repo-cli/test/Yeet";
+import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
-import { dual } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
 
 // Recorded REST payloads (trimmed to the fields the wire schemas read).
@@ -535,6 +548,28 @@ describe("REST merge gate", () => {
     );
   });
 
+  it("keeps the newest run when an older one is listed after it", () => {
+    const latest = latestCheckRunsByName([
+      run(5, "Lint", "completed", "success"),
+      run(1, "Lint", "completed", "failure"),
+    ]);
+    assertSome(
+      O.map(HashMap.get(latest, "Lint"), (entry) => entry.id),
+      5
+    );
+  });
+
+  it("holds on a required context whose run is still in progress, naming it without a no-run note", () => {
+    const verdict = decideYeetGhMergeGate(
+      facts({ checkRuns: [run(1, "Lint", "completed", "success"), run(2, "Test Unit", "in_progress", null)] })
+    );
+    const pending = A.findFirst(verdict.findings, (finding) => finding.reason === "required-pending");
+    assertSome(
+      O.map(pending, (finding) => finding.detail),
+      "Test Unit"
+    );
+  });
+
   it("refuses a moved head, a draft, a conflicted base, and a required red", () => {
     expect(
       reasons(
@@ -573,30 +608,48 @@ describe("REST merge gate", () => {
   });
 });
 
-const thread = (overrides: Partial<Parameters<typeof GithubReviewThreadNode.make>[0]> = {}) =>
-  GithubReviewThreadNode.make({
+const comment = (login: string, isBot = false) =>
+  ReviewThreadComment.make({
+    id: "PRRC_1",
+    databaseId: O.none(),
+    author: O.some(ReviewThreadActor.make({ login, isBot })),
+    body: "",
+    path: "a.ts",
+    line: O.some(1),
+    originalLine: O.some(1),
+    createdAt: "2026-10-06T16:00:00Z",
+    url: "https://github.com/beep-effect/beep-effect/pull/1#discussion_r1",
+  });
+
+const thread = (overrides: Partial<Parameters<typeof ReviewThreadNode.make>[0]> = {}) =>
+  ReviewThreadNode.make({
     id: "PRRT_1",
     isResolved: true,
     isOutdated: false,
+    isCollapsed: false,
     path: "a.ts",
-    line: 1,
-    resolvedBy: { login: "kriegcloud" },
-    comments: { nodes: [{ author: { __typename: "User", login: "kriegcloud" }, createdAt: "2026-10-06T16:00:00Z" }] },
+    line: O.some(1),
+    startLine: O.none(),
+    diffSide: "RIGHT",
+    resolvedBy: O.some("kriegcloud"),
+    comments: [],
+    commentsTruncated: false,
+    newestComment: O.some(comment("kriegcloud")),
     ...overrides,
   });
 
 describe("outstanding review threads", () => {
   it("counts unresolved threads and author-resolved threads a human followed up, not bot acknowledgements", () => {
-    const read = GithubReviewThreads.make({
-      author: O.some("kriegcloud"),
+    const read = ReviewThreads.make({
+      pullRequestAuthor: O.some("kriegcloud"),
       threads: [
         thread(),
-        thread({ id: "PRRT_2", isResolved: false, resolvedBy: null }),
-        thread({ id: "PRRT_3", comments: { nodes: [{ author: { __typename: "User", login: "reviewer" } }] } }),
-        thread({ id: "PRRT_4", comments: { nodes: [{ author: { __typename: "Bot", login: "greptile" } }] } }),
+        thread({ id: "PRRT_2", isResolved: false, resolvedBy: O.none() }),
+        thread({ id: "PRRT_3", newestComment: O.some(comment("reviewer")) }),
+        thread({ id: "PRRT_4", newestComment: O.some(comment("greptile", true)) }),
       ],
     });
-    expect(countOutstandingThreads(read)).toBe(2);
+    expect(outstanding(read)).toBe(2);
   });
 });
 
@@ -636,4 +689,50 @@ describe("GitHub identity selection", () => {
     assertSome(repoSlugFromRemote("ssh://git@github.com/beep-effect/beep-effect"), "beep-effect/beep-effect");
     assertNone(repoSlugFromRemote("not a remote"));
   });
+});
+
+it.layer(NodeCrypto.layer)("the gh-login edge", (it) => {
+  const encoder = new TextEncoder();
+  // `gh auth token` answers `token` (a failure when empty); `git remote get-url origin` names the repository.
+  const spawner = (token: string) =>
+    ChildProcessSpawner.make((command) => {
+      const args = ChildProcess.isStandardCommand(command) ? commandArgs(command) : [];
+      const output = A.contains(args, "token") ? token : "git@github.com:beep-effect/beep-effect.git\n";
+      return Effect.succeed(
+        ChildProcessSpawner.makeHandle({
+          all: Stream.make(encoder.encode(output)),
+          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(Str.isEmpty(output) ? 1 : 0)),
+          getInputFd: () => Sink.drain,
+          getOutputFd: () => Stream.empty,
+          isRunning: Effect.succeed(false),
+          kill: () => Effect.void,
+          pid: ChildProcessSpawner.ProcessId(1),
+          stderr: Stream.empty,
+          stdin: Sink.drain,
+          stdout: Stream.make(encoder.encode(output)),
+          unref: Effect.succeed(Effect.void),
+        })
+      );
+    });
+  const withSpawner = (token: string) =>
+    flow(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner(token)),
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: {} }))
+    );
+
+  it.effect("builds the services as the gh login, with the repository from origin", () =>
+    Effect.gen(function* () {
+      const context = yield* Effect.scoped(buildYeetGhLogin("."));
+      const repo = Context.get(context, Repo);
+      expect(`${repo.owner}/${repo.repo}`).toBe("beep-effect/beep-effect");
+    }).pipe(withSpawner("gho_operator"))
+  );
+
+  it.effect("folds a gh login that returns no token into a GitHub access failure", () =>
+    Effect.gen(function* () {
+      const error = yield* provideYeetGhLogin(".")(GithubRest.use((rest) => rest.pullRequest(1))).pipe(Effect.flip);
+      expect(error.message).toMatch(/^GitHub access failed \(/u);
+      expect(error._tag).toBe("YeetCommandError");
+    }).pipe(withSpawner(""))
+  );
 });
