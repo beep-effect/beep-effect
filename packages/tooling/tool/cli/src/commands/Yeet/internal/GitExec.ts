@@ -324,9 +324,9 @@ export const patientGit: Effect.Effect<GitShape, never, ChildProcessSpawner.Chil
  *
  * **Details**
  *
- * An `origin/<branch>` base runs `Git.fetch(repoRoot, { remote: "origin", ref:
- * "refs/heads/<branch>:refs/remotes/origin/<branch>" })`, the explicit refspec that materializes
- * `origin/<branch>` under a single-branch clone too. Any other base is verified in place with
+ * An `origin/<branch>` base runs `Git.fetch` against remote `origin` with the explicit refspec
+ * `refs/heads/<branch>:refs/remotes/origin/<branch>`, which materializes `origin/<branch>` under a
+ * single-branch clone too. Any other base is verified in place with
  * `Git.revParse(repoRoot, base)`; a base git would read as an option is refused before any spawn
  * and reaches Yeet as the spawn-failure wording.
  *
