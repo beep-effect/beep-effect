@@ -42,7 +42,7 @@ are fixed, never before.
 
 PR #2609 merged manually before positive pre-merge readiness was retained. Its final Check and Policy retry passed after merge, while canonical completion remained unknown. [The retained incident](history/2026-11-02-manual-merge-2609.md) records user-confirmed attribution and exact verification timing without changing earlier receipts.
 
-The user authorized a follow-up PR. Its own current-head hosted proof, resolved reviews, ordinary review window and positive monitor verdict must be archived before strict merge; canonical completion must verify afterward. P4/P5 remain in progress. The follow-up does not waive historical gaps, request S11, or change the completion verifier. Attorney attendance and local full-proof queues are not dependencies.
+The user authorized [final follow-up PR #2626](https://github.com/beep-effect/beep-effect/pull/2626). Its own current-head hosted proof, resolved reviews, ordinary review window and positive monitor verdict must be archived before strict merge; canonical completion must verify afterward. P4/P5 remain in progress. The follow-up does not waive historical gaps, request S11, or change the completion verifier. Attorney attendance and local full-proof queues are not dependencies.
 
 The retained v27 replay remains 37/538 with all 34 protected and all 37 previous matches. The 29-file freeze identifies its measured environment; later repository revisions are not silently relabelled as new benchmark environments. All prior human-gated notes below are historical, superseded by autonomous acceptance v1.
 

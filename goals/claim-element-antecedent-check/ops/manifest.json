@@ -26,7 +26,7 @@
     "grandfathered": false,
     "pullRequests": [
       {
-        "number": 2609,
+        "number": 2626,
         "role": "final"
       }
     ],
@@ -112,9 +112,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "User-authorized follow-up after the manual merge of #2609. Its final Check and Policy retry passed after merge, but canonical completion remains unknown because no positive pre-merge monitor verdict was retained. The new incident and reflection preserve that history. This follow-up must bind its own final PR and branch verdict, earn current-head readiness before strict merge, and verify canonical completion afterward. Raw lifecycle stays active; 37/538, all 34 protected/all 37 previous matches, reference labels, prior results and v27 freeze remain intact. No fresh benchmark, attorney authority, S11 exception, verifier change or local full-proof queue is claimed.",
+  "statusNote": "User-authorized final follow-up #2626 after the manual merge of #2609. Its final Check and Policy retry passed after merge, but canonical completion remains unknown because no positive pre-merge monitor verdict was retained. The new incident and reflection preserve that history. This final is bound to #2626 and its own branch verdict; it must earn current-head readiness before strict merge, and verify canonical completion afterward. Raw lifecycle stays active; 37/538, all 34 protected/all 37 previous matches, reference labels, prior results and v27 freeze remain intact. No fresh benchmark, attorney authority, S11 exception, verifier change or local full-proof queue is claimed.",
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2609
+    "finalPullRequest": 2626
   }
 }
