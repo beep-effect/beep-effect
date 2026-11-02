@@ -384,7 +384,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
   );
 
   it.effect(
-    "keeps check and audit cache keys coupled to repository safety configs",
+    "keeps the check cache key coupled to repository safety configs",
     Effect.fn(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -394,7 +394,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
       const tasks = R.get(turboConfig, "tasks").pipe(O.flatMap(decodeUnknownRecordStringOption), O.getOrThrow);
       const configInputs = ["$TURBO_ROOT$/.codex/config.toml", "$TURBO_ROOT$/.claude/settings.json"];
 
-      A.forEach(["check", "audit"], (taskName) => {
+      A.forEach(["check"], (taskName) => {
         const task = R.get(tasks, taskName).pipe(O.flatMap(decodeUnknownStructInlineSchemaOption), O.getOrThrow);
         assert.deepEqual(A.intersection(task.inputs, configInputs), configInputs);
       });

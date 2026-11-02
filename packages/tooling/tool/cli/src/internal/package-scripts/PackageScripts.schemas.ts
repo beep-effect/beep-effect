@@ -85,7 +85,6 @@ export const TaskScriptName = LiteralKit([
   "test:integration:parallel",
   "coverage",
   "docgen",
-  "audit",
   "package-test-typecheck",
   "codegen",
   "lint:deprecated-apis",
@@ -119,7 +118,6 @@ export const ImplScriptName = LiteralKit([
   "beep:test:integration",
   "beep:coverage",
   "beep:docgen",
-  "beep:audit",
   "beep:doctest",
 ]).pipe(
   $I.annoteSchema("ImplScriptName", { description: "Package-owned implementation keys whose values remain free." })
@@ -1058,43 +1056,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
   TaskScriptRule.make({ kind: "exempt", name: "docgen", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
   TaskScriptRule.make({
     kind: "library",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({
-    kind: "tool",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({
-    kind: "ecosystem",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({
-    kind: "app",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({
-    kind: "lab",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({
-    kind: "infra",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({ kind: "exempt", name: "audit", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
-  TaskScriptRule.make({
-    kind: "library",
     name: "package-test-typecheck",
     presence: { _tag: "required" },
     binding: { _tag: "cli", command: "beep-cli quality test-tsgo-package" },
@@ -1361,12 +1322,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   ImplScriptDefault.make({ kind: "library", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
   ImplScriptDefault.make({
     kind: "library",
-    name: "beep:audit",
-    value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
-  }),
-  ImplScriptDefault.make({
-    kind: "library",
     name: "beep:doctest",
     value: "BEEP_VITEST_DOCTEST=1 bunx vitest run",
   }),
@@ -1389,12 +1344,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     value: "bunx --bun vitest run test/integration --passWithNoTests",
   }),
   ImplScriptDefault.make({ kind: "tool", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
-  ImplScriptDefault.make({
-    kind: "tool",
-    name: "beep:audit",
-    value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
-  }),
   ImplScriptDefault.make({ kind: "tool", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
   ImplScriptDefault.make({ kind: "ecosystem", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
   ImplScriptDefault.make({
@@ -1417,12 +1366,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   ImplScriptDefault.make({ kind: "ecosystem", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
   ImplScriptDefault.make({
     kind: "ecosystem",
-    name: "beep:audit",
-    value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
-  }),
-  ImplScriptDefault.make({
-    kind: "ecosystem",
     name: "beep:doctest",
     value: "BEEP_VITEST_DOCTEST=1 bunx vitest run",
   }),
@@ -1441,11 +1384,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     value: "bunx --bun vitest run test/integration --passWithNoTests",
   }),
   ImplScriptDefault.make({ kind: "app", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
-  ImplScriptDefault.make({
-    kind: "app",
-    name: "beep:audit",
-    value: "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-  }),
   ImplScriptDefault.make({ kind: "app", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:build", value: "tsrs -p tsconfig.check.json" }),
   ImplScriptDefault.make({
@@ -1467,11 +1405,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     value: "bunx --bun vitest run test/integration --passWithNoTests",
   }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
-  ImplScriptDefault.make({
-    kind: "lab",
-    name: "beep:audit",
-    value: "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-  }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
   ImplScriptDefault.make({
@@ -1498,12 +1431,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
       "bun run --cwd node_modules/@pulumi/gharunners build && bunx vitest run --coverage --exclude=test/integration/**",
   }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
-  ImplScriptDefault.make({
-    kind: "infra",
-    name: "beep:audit",
-    value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
-  }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
 ];
 

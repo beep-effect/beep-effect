@@ -48,7 +48,6 @@ const presenceRows: ReadonlyArray<readonly [string, string]> = [
   ["test:integration:parallel", "optional absent optional optional absent absent optional"],
   ["coverage", "required required required optional required required optional"],
   ["docgen", "required required required optional absent required optional"],
-  ["audit", "required required required required required required optional"],
   ["package-test-typecheck", "required required required required required required optional"],
   ["codegen", "derived derived derived derived derived derived optional"],
   ["lint:deprecated-apis", "required required required required required required absent"],
@@ -95,7 +94,7 @@ describe("canonical package scripts schemas", () => {
   it.effect(
     "decodes every rule row and matches the ratified presence matrix literally",
     Effect.fnUntraced(function* () {
-      expect(taskScriptRules).toHaveLength(119);
+      expect(taskScriptRules).toHaveLength(112);
       yield* Effect.forEach(taskScriptRules, (rule) => decodeRule(rule));
       for (const [name, expected] of presenceRows) {
         const actual = A.map(PackageKind.literals, (kind) =>
@@ -108,8 +107,8 @@ describe("canonical package scripts schemas", () => {
           )
         ).toBe(expected);
       }
-      expect(TaskScriptName.literals).toHaveLength(17);
-      expect(implScriptDefaults).toHaveLength(56);
+      expect(TaskScriptName.literals).toHaveLength(16);
+      expect(implScriptDefaults).toHaveLength(50);
     })
   );
   it.effect(
