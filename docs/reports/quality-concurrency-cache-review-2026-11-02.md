@@ -1,0 +1,59 @@
+# Cache baseline review: profile-derived quality concurrency
+
+Reviewed 2026-11-02 for `claude/perf-quality-concurrency-d42a27` (PR #2560).
+
+`bun run beep cache audit` reported 3 blocking findings, all introduced by this
+branch: configuration drift for the root subject `//` tasks
+`//#lint:policy-fingerprint:goals-doctor`, `//#lint:policy-fingerprint:knowledge`
+and `//#lint:policy-fingerprint:lint-deprecated-apis`, plus the matching
+`configuration-source-drift` review row for `turbo.json`.
+
+The branch adds `packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts`
+to the import closure of `Quality/Tasks.ts`, `Quality/internal/GithubChecks.ts`
+and `Lint/LintDeprecatedApis.command.ts` (the resolved concurrency plan those
+planners now read). `Quality.plan.ts` imports
+`internal/repo-run/ProcessAttachment.ts` (ancestry pids, to exclude this run's
+own admission lease), which imports `internal/repo-run/ProcessTable.ts`.
+`bun run beep lint policy-fingerprint --write` regenerated
+`standards/policy-tools.fingerprint.json` and added these input paths:
+
+| seal task | added inputs |
+| --- | --- |
+| `//#lint:policy-fingerprint:goals-doctor` | `Quality/Quality.plan.ts` |
+| `//#lint:policy-fingerprint:knowledge` | `Quality/Quality.plan.ts` |
+| `//#lint:policy-fingerprint:lint-deprecated-apis` | `Quality/Quality.plan.ts`, `internal/repo-run/ProcessAttachment.ts`, `internal/repo-run/ProcessTable.ts` |
+
+All paths are under `packages/tooling/tool/cli/src/`. Commands, outputs, cache
+flags and dependency edges are unchanged. The only change is the added input
+paths. No qualification is granted, no exception rows are added, and no other
+subject changes. `standards/cache-qualification-baseline.json` equals
+`origin/main` (6bb8584b6d) before this request.
+
+## Main merge (2026-11-02, origin/main 2020889561)
+
+Merging `origin/main` brought #2559 (Turbo cache hygiene), #2561 (lane dedupe),
+#2551 and others, each with its own stamp. The baseline was taken from `main`
+and the fingerprint regenerated with `bun run beep lint policy-fingerprint
+--write`. The audit reported the same three `//#lint:policy-fingerprint:*`
+configuration-drift tasks for the same five added input paths in the table
+above; nothing else drifted. The re-recorded request binds `previous` to
+main's baseline bytes.
+
+## Main merge (2026-11-02, origin/main 226c252e34)
+
+Merging `origin/main` brought #2563 (pre-commit catalog-shard hook), #2580,
+#2546 and others. The baseline was taken from `main` and the fingerprint
+regenerated with `bun run beep lint policy-fingerprint --write`. The audit
+reported the same three seal tasks for the same added input paths, plus one
+more:
+
+| seal task | added input | source |
+| --- | --- | --- |
+| `//#lint:policy-fingerprint:lint-schema-catalog` | `packages/tooling/tool/cli/src/internal/cli/ShardScope.ts` | inherited from #2563 |
+
+#2563 made `commands/Lint/SchemaCatalog.ts` import `internal/cli/ShardScope.ts`
+but did not regenerate the seal, so `main`'s `turbo.json` and
+`standards/policy-tools.fingerprint.json` omit that path. This branch does not
+touch either file; regenerating the fingerprint on the merged tree adds the
+path, and this stamp records it under the same root subject `//`. Commands,
+outputs and cache settings are unchanged, and no qualification is granted.

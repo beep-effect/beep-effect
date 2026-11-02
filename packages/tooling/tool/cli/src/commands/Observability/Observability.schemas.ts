@@ -526,10 +526,18 @@ export type CatalogRunMode = typeof CatalogRunMode.Type;
  * @category models
  * @since 0.0.0
  */
-export const GeneratedFileStatus = LiteralKit(["current", "wrote", "stale", "missing", "orphaned", "removed"]).pipe(
+export const GeneratedFileStatus = LiteralKit([
+  "current",
+  "wrote",
+  "stale",
+  "missing",
+  "orphaned",
+  "removed",
+  "skipped",
+]).pipe(
   $I.annoteSchema("GeneratedFileStatus", {
     description:
-      "Whether a generated file was current, rewritten, stale, missing, orphaned (no owning package) or removed.",
+      "Whether a generated file was current, rewritten, stale, missing, orphaned (no owning package), removed, or skipped because a path-scoped run does not cover it.",
   })
 );
 

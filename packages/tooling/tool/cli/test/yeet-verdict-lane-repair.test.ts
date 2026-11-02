@@ -295,7 +295,9 @@ describe("yeet verdict lane repair commands", () => {
 describe("lane-run hint helpers", () => {
   it("matches catalog hints by exact lane id only", () => {
     assertSome(knownSubLaneRemediationForLaneId("goals:index-check"), GOALS_INDEX_HINT);
-    assertSome(knownSubLaneRemediationForLaneId("quality:shadcn-lint"), SHADCN_HINT);
+    assertSome(knownSubLaneRemediationForLaneId("lint:shadcn"), SHADCN_HINT);
+    // The pre-push `quality:shadcn-lint` lane retired on 2026-11-02; only the root task id matches.
+    assertNone(knownSubLaneRemediationForLaneId("quality:shadcn-lint"));
     assertSome(knownSubLaneRemediationFromOutput("[beep-cli] lint:shadcn: failed in 12ms"), SHADCN_HINT);
     assertNone(knownSubLaneRemediationForLaneId("quality:coverage"));
     assertNone(knownSubLaneRemediationForLaneId("repo-sanity:changeset-graph"));
