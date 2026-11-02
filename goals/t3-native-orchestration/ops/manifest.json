@@ -6,7 +6,7 @@
     "title": "T3-Native Orchestration",
     "status": "active",
     "created": "2026-11-01",
-    "updated": "2026-11-01",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/t3-native-orchestration",
@@ -34,7 +34,9 @@
     "goals/t3-native-orchestration/GOAL.md",
     "goals/t3-native-orchestration/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -44,23 +46,25 @@
       "command": "/goal follow the instructions in goals/t3-native-orchestration/GOAL.md"
     }
   ],
-  "provides": ["orchestration/t3-native"],
+  "provides": [
+    "orchestration/t3-native"
+  ],
   "requires": [],
   "phases": [
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

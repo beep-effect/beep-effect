@@ -33,11 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. Start by re-verifying the removal map against current `main` and reading the installed T3 server's MCP tool listing.
+P2 Verify — the deletions, skill rewrites and regenerations landed on lane `feat/t3-native-orchestration`; gates and the live T3 round trip are running.
 
 ## Latest Evidence
 
-Not started.
+2026-11-02: removal map re-verified against `6bb8584b6d` (every row still present); installed T3 tool listing captured in `history/2026-11-02-t3-tool-listing.md`; live round-trip receipt in `history/2026-11-02-t3-round-trip.md`.
 
 ## Notes
 

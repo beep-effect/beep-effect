@@ -1,0 +1,25 @@
+{
+  "previous": "fb66163dc4f064bcb55dfc24680e8f00fd58231eb49865567283fc3f633406be",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (t3-native-orchestration)",
+    "reason": "Re-record the legacy cache posture of the four subjects that drifted when the agent-message CLI, the AiProviderCliSession adapters and @beep/t3-code were deleted: manifest bytes and tsconfig references changed; no command, output, cache flag or env key changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/t3-native-orchestration-cache-review-2026-11-02.md",
+      "sha256": "e73ebd855c4912225d2a6043d97699581e9c35a67a28df48c10ec30832b16cdd"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/ai-provider-cli",
+    "@beep/repo-ai-metrics",
+    "@beep/repo-cli"
+  ],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

@@ -94,10 +94,6 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     []
   )(() => import("../../commands/AgentEffectiveness/index.ts").then((module) => module.agentEffectivenessCommand)),
   groupRoute(
-    { name: "agent-message", description: "Durable scoped messages between explicitly owned agent sessions" },
-    []
-  )(() => import("../../commands/AgentMessage/index.ts").then((module) => module.agentMessageCommand)),
-  groupRoute(
     { name: "ai-metrics", description: "Collect, normalize, and plan deployment for AI-agent metrics" },
     []
   )(() => import("../../commands/AIMetrics/index.ts").then((module) => module.aiMetricsCommand)),

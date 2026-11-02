@@ -47,7 +47,8 @@ on the box (invisible to PRs, lost with the machine).
 `npm`, session idle, watch done and custom polls. Holds are its first
 producer. `yeet monitor`, `job wait` and orchestrator waits can adopt it
 later. Wakes are delivered as messages through the existing
-`agent-message-router` delivery store, not through a new queue.
+`agent-message-router` delivery store, not through a new queue (superseded; see
+the 2026-11-02 entry).
 
 **Rationale:** The recommended option. The repo sleep-polls in many places,
 and a holds-only poller would leave all of them as they are. Reusing the
@@ -221,3 +222,19 @@ Junie adapter into a third goal (the dispatcher is small, and
 orchestrator-first delivery already covers the common case), and graduating
 holds only (the operator's core ask was an agent woken when the event
 happens).
+
+## 2026-11-02 — wake-service superseded by T3-native orchestration
+
+**Question:** The wake design above routes wakes through `agent-message-router`
+and launches lanes through `@beep/ai-provider-cli` sessions. Both were deleted
+by `goals/t3-native-orchestration`. What happens to `retired:wake-service`?
+
+**Answer:** Superseded (`supersededBy: t3-native-orchestration`). Wakes are T3
+scheduled tasks (`schedule_task`) and PR watches (`watch_pull_request`), and a
+lane is launched with `delegate_task` or `t3_thread_launch`. The packets are
+`retired:wake-service` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/wake-service)), `retired:agent-message-router` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/agent-message-router)) and `retired:agent-session-bridges` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/agent-session-bridges)). `goals/hold-ledger` keeps the hold register.
+
+**Rationale:** T3 Code injects its MCP server into every session it launches and
+already schedules and wakes threads; rebuilding that on a beep mailbox was
+withdrawn by the operator on 2026-11-01 (`explorations/t3code-fleet-driver`).
+

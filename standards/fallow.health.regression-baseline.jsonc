@@ -44,6 +44,11 @@
         "count": 1
       }
     },
+    "packages/drivers/git/test/integration/GitSurface.int.test.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
     "packages/drivers/graph-3d/src/Graph3D.projection.ts": {
       "complexity_moderate": {
         "count": 1
@@ -113,14 +118,6 @@
         "count": 1
       }
     },
-    "packages/foundation/modeling/schema/src/CryptoWalletAddress/CryptoWalletAddress.schema.ts": {
-      "complexity_moderate": {
-        "count": 1
-      },
-      "crap_moderate": {
-        "count": 1
-      }
-    },
     "packages/foundation/modeling/schema/src/Csv/Csv.schema.ts": {
       "complexity_moderate": {
         "count": 1
@@ -138,14 +135,6 @@
     },
     "packages/foundation/modeling/schema/src/internal/crypto.ts": {
       "complexity_moderate": {
-        "count": 1
-      }
-    },
-    "packages/foundation/modeling/utils/src/Glob.ts": {
-      "complexity_moderate": {
-        "count": 1
-      },
-      "crap_moderate": {
         "count": 1
       }
     },
@@ -299,11 +288,6 @@
         "count": 1
       }
     },
-    "packages/law-practice/domain/src/values/Footnote/Footnote.model.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/ontology/ui/src/aggregates/Session/Session.explorer.tsx": {
       "complexity_moderate": {
         "count": 1
@@ -339,19 +323,6 @@
     },
     "packages/tooling/library/repo-utils/src/Graph.ts": {
       "complexity_moderate": {
-        "count": 1
-      }
-    },
-    "packages/tooling/library/repo-utils/src/Root.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
-    "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts": {
-      "complexity_moderate": {
-        "count": 1
-      },
-      "crap_moderate": {
         "count": 1
       }
     },
@@ -419,11 +390,6 @@
         "count": 1
       }
     },
-    "packages/tooling/tool/cli/src/commands/Files/internal/FlattenMedia.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/tooling/tool/cli/src/commands/Files/internal/Process.ts": {
       "complexity_moderate": {
         "count": 3
@@ -432,19 +398,9 @@
         "count": 1
       }
     },
-    "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/tooling/tool/cli/src/commands/Goals/Migration.ts": {
       "complexity_moderate": {
         "count": 2
-      }
-    },
-    "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts": {
-      "complexity_moderate": {
-        "count": 1
       }
     },
     "packages/tooling/tool/cli/src/commands/Laws/EffectFn.ts": {
@@ -491,7 +447,7 @@
     },
     "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts": {
       "complexity_moderate": {
-        "count": 2
+        "count": 1
       }
     },
     "packages/tooling/tool/cli/src/commands/Lint/SchemaTopology.ts": {
@@ -548,11 +504,6 @@
     },
     "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/DockerResolver.ts": {
       "complexity_moderate": {
-        "count": 3
-      }
-    },
-    "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/EffectResolver.ts": {
-      "complexity_moderate": {
         "count": 1
       }
     },
@@ -580,11 +531,6 @@
         "count": 2
       }
     },
-    "packages/tooling/tool/cli/test/files-command.test.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/tooling/tool/cli/test/research-library-acquisition.test.ts": {
       "complexity_moderate": {
         "count": 1
@@ -594,20 +540,112 @@
       "complexity_moderate": {
         "count": 1
       }
+    },
+    "packages/tooling/tool/cli/test/yeet-merge-gate.test.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
     }
   },
   "runtime_coverage_findings": [],
   "target_keys": [
     "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.ts:high impact",
     "packages/tooling/tool/cli/src/commands/Research/Library/Library.evidence.ts:high impact",
-    "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts:complexity",
+    "packages/foundation/capability/cli-kit/test/helpers/renderContext.ts:high impact",
+    "apps/labs/semantica/src/canary/Command.ts:hidden coupling",
+    "apps/labs/semantica/src/runtime/Layer.ts:hidden coupling",
+    "packages/tooling/tool/cli/src/commands/Lint/OpaqueRoundtrips.ts:high impact",
+    "packages/drivers/postgres/src/Postgres.errors.ts:hidden coupling",
+    "packages/foundation/capability/cli-kit/src/internal/renderMarkdown.ts:high impact",
+    "apps/labs/semantica/test/Canary.test.ts:hidden coupling",
+    "packages/tooling/library/ai-metrics/src/privacy.ts:hidden coupling",
+    "apps/professional-desktop/server/OntologyMcpTransport.ts:hidden coupling",
+    "packages/tooling/tool/cli/src/commands/Skills/Skills.errors.ts:hidden coupling",
+    "packages/tooling/tool/cli/src/commands/Skills/Skills.service.ts:hidden coupling",
+    "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:hidden coupling",
+    "packages/tooling/tool/cli/src/commands/Quality/EffectDiagnostics.ts:hidden coupling",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.ts:high impact",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts:complexity",
     "packages/ecosystem/effect-drizzle/src/pg/model.ts:complexity",
-    "packages/tooling/tool/cli/src/commands/Research/Library/Library.inventory.ts:high impact",
     "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts:complexity",
+    "packages/drivers/duckdb/src/internal/connection.ts:hidden coupling",
+    "packages/tooling/tool/cli/src/commands/Research/Library/Library.inventory.ts:high impact",
+    "packages/shared/domain/test/EntityKernel.test.ts:hidden coupling",
+    "packages/shared/domain/src/entity/EntityId.ts:hidden coupling",
+    "packages/shared/domain/src/entity/EntityRef.ts:hidden coupling",
+    "packages/tooling/library/ai-metrics/src/config-snapshot.ts:hidden coupling",
+    "packages/foundation/modeling/utils/src/DateTime.ts:hidden coupling",
+    "apps/labs/semantica/test/C0Slice.test.ts:hidden coupling",
+    "packages/tooling/library/ai-metrics/src/install.ts:hidden coupling",
+    "packages/law-practice/server/src/PracticeKg.tool-handlers.ts:hidden coupling",
+    "packages/drivers/occt/src/internal/kernel.ts:hidden coupling",
+    "packages/law-practice/server/src/PracticeKg.schemas.ts:hidden coupling",
+    "packages/tooling/library/codegen-kit/src/internal/transforms.ts:hidden coupling",
     "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:complexity",
+    "packages/drivers/drizzle/src/Drizzle.errors.ts:hidden coupling",
+    "packages/tooling/tool/cli/src/commands/Skills/Skills.render.ts:hidden coupling",
+    "apps/labs/semantica/test/Gold.test.ts:hidden coupling",
     "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts:complexity",
+    "packages/tooling/tool/cli/src/commands/HarnessLedger/internal/PruneWindow.ts:hidden coupling",
+    "packages/tooling/library/ai-metrics/src/source-discovery.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:hidden coupling",
+    "packages/law-practice/server/src/PracticeKg.projections.ts:hidden coupling",
+    "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:hidden coupling",
+    "packages/law-practice/server/src/PracticeKg.claims.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/refs-refresh-plan.test.ts:hidden coupling",
+    "packages/drivers/acp/test/protocol.test.ts:hidden coupling",
+    "packages/foundation/modeling/utils/src/Random.ts:hidden coupling",
+    "packages/drivers/acp/src/internal/jsonrpc.ts:hidden coupling",
+    "packages/drivers/occt/src/internal/shading.ts:hidden coupling",
+    "packages/tooling/tool/cli/src/commands/Refs/Refs.service.ts:hidden coupling",
+    "packages/drivers/occt/test/Shading.test.ts:hidden coupling",
+    "apps/todox/src/app/page.tsx:hidden coupling",
+    "packages/tooling/tool/cli/test/yeet-settle.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts:hidden coupling",
+    "apps/oip-web/src/app/page.tsx:hidden coupling",
+    "packages/foundation/modeling/utils/src/NodeUrl.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts:hidden coupling",
+    "packages/drivers/box/src/_generated/Box.models.gen.ts:hidden coupling",
+    "packages/drivers/box/scripts/generate.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/yeet-verdict-json.test.ts:hidden coupling",
+    "packages/drivers/occt/test/Occt.service.test.ts:hidden coupling",
     "packages/foundation/ui-system/ui/src/components/live-waveform.tsx:complexity",
-    "packages/foundation/ui-system/ui/src/components/orb.tsx:complexity"
+    "packages/drivers/runpod/src/Runpod.service.ts:hidden coupling",
+    "packages/foundation/modeling/utils/src/FileSystem.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/architecture-operation-plan.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/yeet-watch-mode.test.ts:hidden coupling",
+    "packages/law-practice/use-cases/src/PracticeKg.tools.ts:hidden coupling",
+    "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts:hidden coupling",
+    "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts:hidden coupling",
+    "packages/shared/domain/src/entity/BaseEntity.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/package-scripts.policy.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/refs-schemas.test.ts:hidden coupling",
+    "packages/tooling/library/ai-metrics/test/ingest.test.ts:hidden coupling",
+    "packages/tooling/library/ai-sync/src/generator.ts:hidden coupling",
+    "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts:hidden coupling",
+    "packages/shared/domain/test/Organization.test.ts:hidden coupling",
+    "packages/drivers/drizzle/test/Drizzle.errors.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/src/internal/cli/LintRouting.ts:hidden coupling",
+    "packages/drivers/postgres/test/Postgres.errors.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/ai-metrics-command.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/harness-ledger.test.ts:hidden coupling",
+    "apps/oip-web/src/app/layout.tsx:hidden coupling",
+    "packages/foundation/capability/technical-drawing/test/Shading.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/effect-vitest-primitives.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/package-scripts.schemas.test.ts:hidden coupling",
+    "packages/drivers/runpod/scripts/generate.ts:hidden coupling",
+    "packages/drivers/box/src/_generated/Box.operations.gen.ts:hidden coupling",
+    "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/refs-timer.test.ts:hidden coupling",
+    "packages/foundation/capability/technical-drawing/test/FigureSet.test.ts:hidden coupling",
+    "packages/tooling/tool/cli/test/yeet-watch-stream.test.ts:hidden coupling",
+    "packages/drivers/duckdb/test/DuckDbClient.test.ts:hidden coupling",
+    "packages/foundation/ui-system/ui/src/components/orb.tsx:complexity",
+    "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:hidden coupling"
   ]
 }

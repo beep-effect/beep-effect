@@ -21,7 +21,8 @@ item through a mergeable PR.
 
 None — graduated. Work continues in
 [`goals/hold-ledger`](../../goals/hold-ledger/README.md) (first, starting with the
-jsdom slice) and [`goals/wake-service`](../../goals/wake-service/README.md).
+jsdom slice). `retired:wake-service` is `retired:wake-service` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/wake-service)), superseded by
+`goals/t3-native-orchestration` (wakes are T3 scheduled tasks).
 Gated re-entry points (Junie adapter, wave 2 test skips, yeet wait adoption,
 `llm-runtime-dispatch`) live in [`MAP.md`](./MAP.md); a fired gate reopens this
 packet at `decompose`.
@@ -40,10 +41,10 @@ packet at `decompose`.
 ## Trail
 
 - 2026-10-31: research gap check found reusable provider adapters
-  (`@beep/ai-provider-cli`) and the agent-message router, plus the manual hold
+  (`@beep/ai-provider-cli`) and the agent-message router (both since retired), plus the manual hold
   register. Align settled 12 questions in three rounds, shape was accepted,
   `MAP.md` was written, and the packet graduated to `goals/hold-ledger` and
-  `goals/wake-service`.
+  `retired:wake-service`.
 - 2026-10-28: packet opened at capture from the 2026-10-22 request, with the
   research report, research notes, ideation and the 2026-10-27 skulk reading
   pre-seeded. The align frontier is seeded with six questions.
