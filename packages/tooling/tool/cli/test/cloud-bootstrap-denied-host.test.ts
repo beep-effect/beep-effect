@@ -150,7 +150,19 @@ exec /usr/bin/mv "$@"
 case "$*" in *typos.tar.gz*|*gitleaks.tar.gz*) printf 'tar %s\\n' "$*" >> "$FIXTURE/events" ;; esac
 exec /usr/bin/tar "$@"
 `,
-  sudo: "#!/bin/sh\nexit 1\n",
+  // No sudo by default. With FIXTURE_SUDO=capable it answers `sudo -n true` and
+  // re-dispatches `sudo -n ln ...` to the ln stub above, so link_global reaches
+  // the same stubbed ln whether /usr/local/bin is writable (a root runner) or
+  // not (a non-root runner). Nothing is ever run with real privilege.
+  sudo: `#!/bin/sh
+[ "$FIXTURE_SUDO" = capable ] || exit 1
+[ "$1" = -n ] && shift
+case "$1" in
+  true) exit 0 ;;
+  ln) shift; exec "$FIXTURE/bin/ln" "$@" ;;
+  *) echo "sudo stub: unexpected $1" >&2; exit 1 ;;
+esac
+`,
   // Pre-existing publication tools: pinned unless the scenario marks them stale.
   typos: `#!/bin/sh
 v=$(cat "$FIXTURE/typos.version"); [ "\${FIXTURE_TYPOS:-pinned}" = stale ] && v=0.0.1
@@ -196,6 +208,7 @@ type Scenario = {
   readonly installFail?: "dir" | "copy";
   readonly mvFail?: "typos";
   readonly lnFail?: string;
+  readonly sudo?: "capable";
 };
 
 // Each scenario field becomes one stub-facing environment variable; fields a
@@ -222,6 +235,7 @@ const scenarioEnvKeys: { readonly [K in keyof Scenario]-?: string } = {
   installFail: "FIXTURE_INSTALL_FAIL",
   mvFail: "FIXTURE_MV_FAIL",
   lnFail: "FIXTURE_LN_FAIL",
+  sudo: "FIXTURE_SUDO",
 };
 
 const scenarioEnv = (scenario: Scenario): Record<string, string> =>
@@ -717,8 +731,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
         node: "pinned",
         typos: "stale",
         lnFail: "typos",
+        sudo: "capable",
       });
       yield* expectCorePrepared(fixture, result);
+      // The link was attempted on either branch (direct ln or sudo -n ln).
+      expect(yield* readEvents(fixture.root)).toMatch(/^ln -sf \S+\/\.bun\/bin\/typos \/usr\/local\/bin\/typos$/m);
       expect(result.stderr).toContain("typos: installed in");
       expect(result.stderr).toContain("but the global link failed");
       expect(yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"))).not.toBe(OLD_TYPOS);
