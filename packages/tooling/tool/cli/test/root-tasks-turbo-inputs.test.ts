@@ -113,6 +113,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "knowledge:semantic-delta": "docs/c3-probe.md",
   "knowledge:refs-check": "docs/c3-probe.md",
   "lint:schema-first": "standards/schema-first.inventory.jsonc",
+  "lint:schema-catalog": "standards/schema-catalog/@fixture/member.generated.jsonc",
   "lint:identity-registry": "tools/fixture/c3-probe.ts",
   "lint:circular": "packages/foundation/fixture/src/c3-probe.ts",
   "lint:effect-imports": "apps/fixture/c3-probe.mts",
@@ -389,9 +390,12 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
       "ignores generated job artifacts in qualified root input boundaries",
       Effect.fnUntraced(function* () {
         const { root, tasks, binary } = yield* fixture();
+        // `lint:schema-catalog` shares the schema-first scanner's globs (same owner
+        // resolver, same source walk), so it carries the same artifact exposure.
         const scannerOwnedInputs = [
           "//#lint:allowlist",
           "//#lint:schema-first",
+          "//#lint:schema-catalog",
           "//#lint:effect-imports",
           "//#lint:tsgo-rules",
         ];
