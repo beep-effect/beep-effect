@@ -6,6 +6,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -18,8 +20,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import { runGitOutput } from "../../internal/repo-run/index.ts";
+import { adaptGitKitError } from "../../internal/repo-run/index.ts";
 import { makeJsonLinesStore, partitionJsonLines } from "../../internal/state/JsonLinesStore.ts";
 import { repositoryJsonLinesFileName, resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import { PrNumber, PrRepository } from "../Yeet/internal/Provenance.ts";
@@ -213,10 +214,6 @@ const gitAdapter: GitCommandErrorAdapter<SessionLedgerError> = {
   onTruncated: O.none(),
 };
 
-const gitLine = Effect.fn("SessionLedger.gitLine")(function* (cwd: string, args: ReadonlyArray<string>) {
-  return Str.trim(yield* runGitOutput(cwd, args, gitAdapter));
-});
-
 /**
  * The checkout facts a ledger row is stamped with.
  *
@@ -278,9 +275,18 @@ export const sessionCheckoutFacts = Effect.fn("SessionLedger.checkoutFacts")(fun
   const repository = yield* detectPrRepository(cwd).pipe(
     Effect.mapError((error) => SessionLedgerError.make({ reason: "git", message: error.message, cause: error }))
   );
-  const checkout = path.resolve(yield* gitLine(cwd, ["rev-parse", "--show-toplevel"]));
-  const common = yield* gitLine(cwd, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
-  const branch = yield* gitLine(cwd, ["rev-parse", "--abbrev-ref", "HEAD"]);
+  const git = yield* Git;
+  const checkout = path.resolve(
+    yield* git.repoRoot(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.repoRoot(), gitAdapter)))
+  );
+  const common = yield* git.commonDir(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.commonDir(), gitAdapter)));
+  // `rev-parse --abbrev-ref HEAD` printed the literal `HEAD` when detached; the kit reads that as none.
+  const branch = yield* git.currentBranch(cwd).pipe(
+    Effect.mapBoth({
+      onFailure: adaptGitKitError(GitCommand.currentBranch(), gitAdapter),
+      onSuccess: O.getOrElse(() => "HEAD"),
+    })
+  );
   const facts: SessionCheckoutFacts = {
     repository,
     clone: path.dirname(path.resolve(common)),
