@@ -40,7 +40,7 @@ are fixed, never before.
 
 ## Current Blockers
 
-No remaining attendance dependency. [The post-merge report](history/2026-11-01-post-merge-evaluation.md) records v24 at 37/538, all 34 protected/all 37 prior matches retained, the exact historical byte restoration, current package proofs and bounded review uncertainty. Implementation PR #2411 merged under S11; its pending/cancelled jobs are not claimed green. The final follow-up carries the new measurement and closeout reflection, while canonical current-head readiness and merge evidence remain required for operative completed-retained status. Historical holds below remain evidence.
+No remaining attendance dependency. [The post-merge report](history/2026-11-01-post-merge-evaluation.md) records v24 at 37/538, all 34 protected/all 37 prior matches retained, the exact historical byte restoration, current package proofs and bounded review uncertainty. Implementation PR #2411 merged under S11; its pending/cancelled jobs are not claimed green. [Final follow-up PR #2502](https://github.com/beep-effect/beep-effect/pull/2502) carries the new measurement and closeout reflection, while canonical current-head readiness and merge evidence remain required for operative completed-retained status. Historical holds below remain evidence.
 
 ## Historical checkpoints and superseded holds
 

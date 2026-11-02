@@ -23,7 +23,25 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2502,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_claim-element-closeout-de30f7bf5b55/verdict.json",
+        "gating": true
+      },
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -94,5 +112,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Implementation PR #2411 merged as 3057999b33 under the designated orchestrator S11 exception; its hosted jobs were pending/cancelled, not green. Post-merge v24 retains 37/538, all 34 protected and all 37 prior matches with zero losses. All 115 sampled questions and 605 evidence quotes preserve historical automated judgments; actual-attorney flags remain false. Exact original v11 bytes are restored and all 631 pins match. Three current package audit/docgen checks pass. Closeout reflection and final follow-up evidence are prepared; operative lifecycle remains active until canonical readiness and merge receipts verify completion."
+  "statusNote": "Implementation PR #2411 merged as 3057999b33 under the designated orchestrator S11 exception; its hosted jobs were pending/cancelled, not green. Post-merge v24 retains 37/538, all 34 protected and all 37 prior matches with zero losses. All 115 sampled questions and 605 evidence quotes preserve historical automated judgments; actual-attorney flags remain false. Exact original v11 bytes are restored and all 631 pins match. Three current package audit/docgen checks pass. Closeout reflection and final follow-up evidence are prepared; operative lifecycle remains active until canonical readiness and merge receipts verify completion. Final follow-up PR #2502 declares prospective completed-retained status; the operative lifecycle remains active until exact-head readiness, required-check and merge-time rule-suite receipts verify it.",
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2502
+  }
 }

@@ -55,7 +55,7 @@ Sibling goals:
 
 ## Current Phase
 
-P0–P3 are complete under autonomous acceptance v1. Implementation [PR #2411](https://github.com/beep-effect/beep-effect/pull/2411) merged as `3057999b33` under S11, with cancelled hosted outcomes explicitly retained. P4/P5 final closeout is prepared in a follow-up PR; operative lifecycle stays active until current readiness and merge receipts verify completion. The post-merge v24 benchmark remains **37/538**, retaining all 34 protected and all 37 previous matches. Structural recovery and alert noise remain poor; attorney attendance is optional.
+P0–P3 are complete under autonomous acceptance v1. Implementation [PR #2411](https://github.com/beep-effect/beep-effect/pull/2411) merged as `3057999b33` under S11, with cancelled hosted outcomes explicitly retained. P4/P5 final closeout is prepared in [final follow-up PR #2502](https://github.com/beep-effect/beep-effect/pull/2502); operative lifecycle stays active until current readiness and merge receipts verify completion. The post-merge v24 benchmark remains **37/538**, retaining all 34 protected and all 37 previous matches. Structural recovery and alert noise remain poor; attorney attendance is optional.
 
 ## Current Acceptance Authority
 
