@@ -1,7 +1,7 @@
 import { Git } from "@beep/git/Git";
 import { lintCommand } from "@beep/repo-cli/commands/Lint";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
-import { rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
+import { localQualityConcurrencyPlan, rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
 import { readTurboCacheEnvironment } from "@beep/repo-cli/test/SharedInternals";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
@@ -63,6 +63,9 @@ const platform = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(
   Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer))
 );
 const runCommand = Command.runWith(lintCommand, { version: "0.0.0" });
+// The type-aware sweep takes its worker count from the host's concurrency plan (no
+// MemoryStats here, so the unscaled local plan): 4 on CI and small hosts, wider on a workstation.
+const oxlintThreadsArg = `--threads=${localQualityConcurrencyPlan().oxlintThreads}`;
 const run = (args: ReadonlyArray<string>, env: Record<string, string> = {}) =>
   runCommand(args).pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)));
 const runSweepCommand = Effect.fnUntraced(function* (
@@ -302,7 +305,7 @@ describe("thin lint workers", { concurrent: false }, () => {
             "--config",
             `${root}/.oxlintrc.deprecated-apis.jsonc`,
             "--disable-nested-config",
-            "--threads=4",
+            oxlintThreadsArg,
             prefix,
           ],
           cwd: root,
@@ -358,7 +361,7 @@ describe("thin lint workers", { concurrent: false }, () => {
             "--config",
             `${root}/.oxlintrc.deprecated-apis.jsonc`,
             "--disable-nested-config",
-            "--threads=4",
+            oxlintThreadsArg,
             "apps",
             "packages",
             "infra",
@@ -446,7 +449,7 @@ describe("thin lint workers", { concurrent: false }, () => {
           "--config",
           `${root}/.oxlintrc.deprecated-apis.jsonc`,
           "--disable-nested-config",
-          "--threads=4",
+          oxlintThreadsArg,
           "--no-error-on-unmatched-pattern",
           "apps/labs/ciops",
         ]);

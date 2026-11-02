@@ -911,11 +911,11 @@
         "Exact-client regression evidence",
         "Change only one experimental flag at a time"
       ],
-      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
-      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "retain observed setting pending current evidence",
-      "acceptanceStatus": "pending",
+      "beepUseCase": "Preserve the current root global namespace and inherited child task configuration without changing semantic input coverage.",
+      "expectedBenefit": "No new production speedup is measured. Retaining the existing layout avoids an unnecessary configuration migration.",
+      "correctnessCase": "Both pinned clients pass 72 actual task observations and six invalid-configuration refusals; a missed child policy write fails the intended native invalidation control.",
+      "disposition": "Retain the enabled global namespace and current input declarations; do not infer an exclusion optimization from the schema description.",
+      "acceptanceStatus": "accepted-retain-current-setting",
       "runtimeObservation": {
         "report": "native-input-controls.json",
         "scope": "Pinned local globalConfiguration profile; no other future flag is inferred.",
@@ -932,6 +932,17 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "finalReview": {
+        "report": "global-configuration-feature-review.json",
+        "nativeReport": "native-global-configuration-controls.json",
+        "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
+        "reopenWhen": "A client upgrade, global input change, child/global namespace migration or proposed exclusion optimization needs new source and runtime evidence."
+      },
+      "currentNativeObservation": {
+        "report": "native-global-configuration-controls.json",
+        "scope": "Two synthetic workspaces per layout, legacy/global projection, root/child input invalidation and output restoration on stable 2.11.10 and canary 2.11.11-canary.1.",
+        "authority": "No computation qualification, production change or whole-goal acceptance."
       }
     },
     {
@@ -1076,7 +1087,8 @@
     "acceptedNotApplicable": 1,
     "acceptedRetainCurrentAbsence": 5,
     "acceptedRetainCurrentDefault": 1,
-    "pending": 28
+    "pending": 27,
+    "acceptedRetainCurrentSetting": 1
   },
   "nativeAvailabilityCounts": {
     "flagCasesAccepted": 56,

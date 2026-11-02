@@ -1,5 +1,6 @@
 import { lintCommand } from "@beep/repo-cli";
 import { LintCommandTestKit } from "@beep/repo-cli/test/Lint";
+import { localQualityConcurrencyPlan } from "@beep/repo-cli/test/Quality";
 import { findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
@@ -21,6 +22,9 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, NodeCommandTestLayer, temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
+// The type-aware sweep takes its worker count from the host's concurrency plan: 4 on CI and
+// small hosts, wider on a workstation.
+const oxlintThreadsArg = `--threads=${localQualityConcurrencyPlan().oxlintThreads}`;
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const testLayer = Layer.mergeAll(
   NodeCommandTestLayer,
@@ -278,7 +282,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         yield* runLintCommand(["deprecated-apis", "--full"]);
         const calls = yield* nativeInvocations();
         expect(calls).toHaveLength(1);
-        expect(calls[0]).toContain("--disable-nested-config --threads=4 apps packages infra");
+        expect(calls[0]).toContain(`--disable-nested-config ${oxlintThreadsArg} apps packages infra`);
         expect(calls[0]).toContain(".oxlintrc.deprecated-apis.jsonc");
         expect(calls[0]).not.toContain("--cache");
       })
@@ -309,7 +313,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         yield* runLintCommand(["deprecated-apis", "--package", "packages"]);
         const calls = yield* nativeInvocations();
         expect(calls).toHaveLength(1);
-        expect(calls[0]).toContain("--disable-nested-config --threads=4 packages");
+        expect(calls[0]).toContain(`--disable-nested-config ${oxlintThreadsArg} packages`);
         expect(calls[0]).not.toContain("apps packages infra");
       })
     );

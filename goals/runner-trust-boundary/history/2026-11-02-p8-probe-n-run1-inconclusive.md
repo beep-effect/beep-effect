@@ -25,7 +25,7 @@ key material or host address appears below.
 No job ran on either the original or the replayed registration after
 09:11:44: the only job recorded for the runner name is the probe job itself.
 The second host's kill used `pkill -f /root/rtb/bin/Runner` against a
-listener started as `./bin/Runner.Listener`, so it did not match (review on
+listener started by a relative path from its scratch directory, so it did not match (review on
 #2552). That listener could have kept retrying until its 120 s timeout. The
 registration was already deleted (09:28:28 "Runner not found"), no job was
 recorded for it, and the host terminated at 09:28:44. #2552 starts the
