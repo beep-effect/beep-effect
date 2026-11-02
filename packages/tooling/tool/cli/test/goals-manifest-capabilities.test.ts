@@ -96,6 +96,16 @@ const readTrackedManifests = Effect.fn("GoalsManifestCapabilitiesTest.readTracke
   );
 });
 
+/**
+ * Runs an effect under a fresh TestConsole and returns its exit with the captured console lines.
+ * Keeps the per-test console provide out of test bodies (EV002); the helper owns the layer.
+ */
+const captureConsole = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+  Effect.gen(function* () {
+    const exit = yield* Effect.exit(effect);
+    return { exit, logs: yield* TestConsole.logLines, errors: yield* TestConsole.errorLines };
+  }).pipe(provideScopedLayer(Layer.fresh(TestConsole.layer)));
+
 const writeSyntheticPacket = Effect.fn("GoalsManifestCapabilitiesTest.writeSyntheticPacket")(function* (packet: {
   readonly slug: string;
   readonly manifest: unknown;
@@ -365,18 +375,11 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("GoalManifest capabi
           // Parses as JSON but does not decode as a GoalManifest.
           yield* writeProjectFile("goals/undecodable/ops/manifest.json", '{ "initiative": {} }\n');
 
-          const json = yield* Effect.andThen(runGoalsIndex(["--json"]), TestConsole.logLines).pipe(
-            provideScopedLayer(Layer.fresh(TestConsole.layer))
-          );
-          const plain = yield* Effect.andThen(runGoalsIndex([]), TestConsole.logLines).pipe(
-            provideScopedLayer(Layer.fresh(TestConsole.layer))
-          );
-          const conflict = yield* Effect.gen(function* () {
-            const exit = yield* Effect.exit(runGoalsIndex(["--write", "--json"]));
-            return { exit, errors: yield* TestConsole.errorLines };
-          }).pipe(provideScopedLayer(Layer.fresh(TestConsole.layer)));
+          const json = yield* captureConsole(runGoalsIndex(["--json"]));
+          const plain = yield* captureConsole(runGoalsIndex([]));
+          const conflict = yield* captureConsole(runGoalsIndex(["--write", "--json"]));
 
-          return { json, plain, conflict, content: yield* buildPortfolioIndexContent() };
+          return { json: json.logs, plain: plain.logs, conflict, content: yield* buildPortfolioIndexContent() };
         })
       );
 
