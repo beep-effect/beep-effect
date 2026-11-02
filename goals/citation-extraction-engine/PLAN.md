@@ -205,9 +205,11 @@ layout and lengths under captured limits/timing; its data is not an issued
 capability. The [scoped value owner](./history/evidence/2026-11-02-owned-unicode-state.md)
 now retains native state, returns detached storage reads and rejects an
 unchanged allocation that substitutes another native value with equal projected
-text. Builtin literal composition, hash/callback dispatch and HTML transport
-still need to carry that state; ownership proof does not close their integration
-or target parity.
+text. [Native literal composition](./history/evidence/2026-11-02-native-literal-composition.md)
+now carries it through the four primitive builtins and the real reservation
+ledger, matching all 1,068 non-HTML histories and 2,784 transitions. Hash/callback
+protocol dispatch, HTML transport and full registry semantics still need their
+integration; these proofs do not close target parity.
 
 ## Delivery Rule
 

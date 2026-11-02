@@ -204,7 +204,9 @@
         "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-11-02-python-unicode-representation.md",
         "packages/law-practice/server/test/CitationCleanerUnicodeValues.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-02-owned-unicode-state.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-owned-unicode-state.md",
+        "packages/law-practice/server/test/CitationLiteralUnicodeComposition.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-native-literal-composition.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

@@ -1,6 +1,7 @@
 /**
  * Literal cleaning scans adapted from eyecite 2.7.6 clean.py.
  * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
+ * Native Unicode layout follows CPython 3.11.15, PSF-2.0.
  * @internal
  * @packageDocumentation
  * @since 0.0.0
@@ -24,7 +25,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationCleanerProduced } from "./CleanerPipeline.ts";
 import { CitationCleanerTextAllocation, CitationCleanerTextOutput } from "./CleanerTextIdentity.ts";
+import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
+import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import type { CitationCleanerTextCharge, CitationCleanerWork } from "./CleanerPipeline.ts";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
@@ -81,6 +84,17 @@ export class CitationLiteralCleanerStage extends S.Opaque<
     })
   )
 ) {}
+/** @internal @category models @since 0.0.0 */
+export class CitationLiteralCleanerUnicodeStage extends S.Opaque<
+  CitationLiteralCleanerUnicodeStage,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ ...CitationLiteralCleanerStage.fields, storage: CitationPythonUnicodeStorage }).pipe(
+    $I.annoteSchema("CitationLiteralCleanerUnicodeStage", {
+      description: "Literal output with exact source code-point storage and original pre-materialization reservations.",
+    })
+  )
+) {}
 const Reason = LiteralKit(["invalid-input", "limit-exceeded", "deadline-exceeded"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed primitive input/count/deadline failures without text or causes." })
 );
@@ -122,10 +136,16 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
   const outputCeiling = limits.producedTextUtf16;
   const deadline = limits.cleanDeadline.pipe(Duration.toMillis, Duration.millis);
   const clock = yield* Clock.Clock;
+  const operationMillis = Duration.toMillis(limits.operationDeadline);
+  const cleanMillis = Duration.toMillis(limits.cleanDeadline);
+  const nativeDeadline = Duration.millis(cleanMillis <= operationMillis ? cleanMillis : operationMillis);
+  const timeLimit = cleanMillis <= operationMillis ? "cleanDeadline" : "operationDeadline";
+  const unicode = yield* makeCitationPythonUnicode(limits).pipe(Effect.mapError(() => failure("invalid-input")));
   const makeApply = <E>(
     schema: typeof Input,
     maximumInput: number,
-    reserve: (units: number) => Effect.Effect<void, E>
+    reserve: (units: number) => Effect.Effect<void, E>,
+    selection: O.Option<Uint8Array> = O.none()
   ) =>
     Effect.fn("Citation.applyLiteralCleaner")(
       function* (input: unknown) {
@@ -147,9 +167,14 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
               if (size > 0) MutableList.append(output, render());
             })
           );
-          const appendRange = Effect.fn("Citation.appendCleanedRange")((start: number, end: number) =>
-            append(end - start, () => Str.slice(start, end)(text))
-          );
+          const appendRange = Effect.fn("Citation.appendCleanedRange")(function* (start: number, end: number) {
+            if (O.isSome(selection))
+              for (let index = start; index < end; index++) {
+                if (index % 8192 === 0) yield* Effect.yieldNow;
+                selection.value[index] = 1;
+              }
+            return yield* append(end - start, () => Str.slice(start, end)(text));
+          });
           if (cleaner === "xml") {
             let end = 0;
             if (Str.startsWith("<?xml")(text)) {
@@ -183,7 +208,10 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
               } else if (!isMatch && run >= 0) {
                 if (cleaner !== "underscores" || index - run >= 2) {
                   yield* appendRange(unchanged, run);
-                  if (cleaner !== "underscores") yield* append(1, () => " ");
+                  if (cleaner !== "underscores") {
+                    if (O.isSome(selection)) selection.value[run] = 2;
+                    yield* append(1, () => " ");
+                  }
                   matches++;
                   wholeWhitespace = cleaner !== "underscores" && run === 0 && index === length;
                   unchanged = index;
@@ -204,45 +232,121 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
       Effect.provideService(Clock.Clock, clock)
     );
   const applyOutput = makeApply(Input, sourceCeiling, () => Effect.void);
+  const stageSelection = Effect.fn("Citation.evaluateLiteralCleanerStage")(
+    function* (input: unknown, work: CitationCleanerWork, selection: O.Option<Uint8Array>) {
+      const charges: Array<CitationCleanerTextCharge> = [];
+      const reserve = Effect.fn("Citation.reserveLiteralSlice")((units: number) =>
+        work.reserveText(units).pipe(
+          Effect.tap((charge) =>
+            Effect.sync(() => {
+              charges.push(charge);
+            })
+          ),
+          Effect.asVoid
+        )
+      );
+      const result = yield* makeApply(
+        StageInput,
+        CitationEngineAbsoluteMaxima.producedTextUtf16,
+        reserve,
+        selection
+      )(input).pipe(
+        Effect.catchTag(
+          "CitationLiteralCleanerFailure",
+          (error): Effect.Effect<never, CitationLiteralCleanerFailure | CitationSafetyLimitExceeded> => {
+            if (error.reason === "limit-exceeded")
+              return Effect.fail(CitationSafetyLimitExceeded.make({ operation: "clean", limit: "producedTextUtf16" }));
+            if (error.reason === "deadline-exceeded")
+              return Effect.fail(CitationSafetyLimitExceeded.make({ operation: "clean", limit: "cleanDeadline" }));
+            return Effect.fail(error);
+          }
+        )
+      );
+      return CitationLiteralCleanerStage.make({ ...result, charges });
+    },
+    Effect.provideService(Clock.Clock, clock)
+  );
+  const stageUnicode = Effect.fn("Citation.applyNativeLiteralCleaner")(
+    function* (cleaner: unknown, storage: unknown, work: CitationCleanerWork) {
+      const name = yield* S.decodeUnknownEffect(CitationLiteralCleaner)(cleaner).pipe(
+        Effect.mapError(() => failure("invalid-input"))
+      );
+      const source = yield* unicode.fromStorage(storage).pipe(
+        Effect.mapError((error) =>
+          error.reason === "invalid-input"
+            ? failure("invalid-input")
+            : CitationSafetyLimitExceeded.make({
+                operation: "clean",
+                limit: error.reason === "limit-exceeded" ? "producedTextUtf16" : timeLimit,
+              })
+        )
+      );
+      // Selection is bounded metadata over the validated input, not produced text.
+      // 1 retains a source point; 2 emits the one replacement space at a run start.
+      const selection = new Uint8Array(source.utf16Units);
+      const result = yield* stageSelection({ cleaner: name, text: source.text }, work, O.some(selection));
+      const readPoint = (index: number) => {
+        let point = 0;
+        for (let part = 0; part < source.storage.width; part++)
+          point += O.getOrElse(O.fromUndefinedOr(source.storage.bytes[index + part]), () => 0) * 2 ** (8 * part);
+        return point;
+      };
+      let points = 0;
+      let largest = 0;
+      let units = 0;
+      let offset = 0;
+      for (let index = 0; index < source.storage.bytes.length; index += source.storage.width) {
+        if (index % (source.storage.width * 4096) === 0) yield* Effect.yieldNow;
+        const original = readPoint(index);
+        const flag = selection[offset];
+        if (original > 65535 && selection[offset + 1] !== flag) return yield* failure("invalid-input");
+        if (flag === 1 || flag === 2) {
+          if (flag === 2 && original > 65535) return yield* failure("invalid-input");
+          const point = flag === 2 ? 32 : original;
+          if (point > largest) largest = point;
+          units += point > 65535 ? 2 : 1;
+          points++;
+        }
+        offset += original > 65535 ? 2 : 1;
+      }
+      if (units !== Str.length(result.text)) return yield* failure("invalid-input");
+      const width = largest <= 255 ? 1 : largest <= 65535 ? 2 : 4;
+      // All result slices and replacements have already reserved their units.
+      const bytes = new Uint8Array(points * width);
+      offset = 0;
+      let cursor = 0;
+      for (let index = 0; index < source.storage.bytes.length; index += source.storage.width) {
+        if (index % (source.storage.width * 4096) === 0) yield* Effect.yieldNow;
+        const original = readPoint(index);
+        const flag = selection[offset];
+        if (flag === 1 || flag === 2) {
+          let point = flag === 2 ? 32 : original;
+          for (let part = 0; part < width; part++) {
+            bytes[cursor++] = point & 255;
+            point >>>= 8;
+          }
+        }
+        offset += original > 65535 ? 2 : 1;
+      }
+      return CitationLiteralCleanerUnicodeStage.make({
+        ...result,
+        storage: CitationPythonUnicodeStorage.make({ width, bytes }),
+      });
+    },
+    Effect.timeoutOrElse({
+      duration: nativeDeadline,
+      orElse: () => Effect.fail(CitationSafetyLimitExceeded.make({ operation: "clean", limit: timeLimit })),
+    }),
+    Effect.provideService(Clock.Clock, clock)
+  );
   return {
     applyOutput,
     apply: Effect.fn("Citation.applyLiteralText")((input: unknown) =>
       applyOutput(input).pipe(Effect.map((result) => result.text))
     ),
-    stage: Effect.fn("Citation.applyLiteralCleanerStage")(
-      function* (input: unknown, work: CitationCleanerWork) {
-        const charges: Array<CitationCleanerTextCharge> = [];
-        const reserve = Effect.fn("Citation.reserveLiteralSlice")((units: number) =>
-          work.reserveText(units).pipe(
-            Effect.tap((charge) =>
-              Effect.sync(() => {
-                charges.push(charge);
-              })
-            ),
-            Effect.asVoid
-          )
-        );
-        const result = yield* makeApply(
-          StageInput,
-          CitationEngineAbsoluteMaxima.producedTextUtf16,
-          reserve
-        )(input).pipe(
-          Effect.catchTag(
-            "CitationLiteralCleanerFailure",
-            (error): Effect.Effect<never, CitationLiteralCleanerFailure | CitationSafetyLimitExceeded> => {
-              if (error.reason === "limit-exceeded")
-                return Effect.fail(
-                  CitationSafetyLimitExceeded.make({ operation: "clean", limit: "producedTextUtf16" })
-                );
-              if (error.reason === "deadline-exceeded")
-                return Effect.fail(CitationSafetyLimitExceeded.make({ operation: "clean", limit: "cleanDeadline" }));
-              return Effect.fail(error);
-            }
-          )
-        );
-        return CitationLiteralCleanerStage.make({ ...result, charges });
-      },
-      Effect.provideService(Clock.Clock, clock)
+    stage: Effect.fn("Citation.applyLiteralCleanerStage")((input: unknown, work: CitationCleanerWork) =>
+      stageSelection(input, work, O.none())
     ),
+    stageUnicode,
   };
 });

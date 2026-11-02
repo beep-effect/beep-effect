@@ -321,6 +321,9 @@ into explicit little-endian storage and a separate JavaScript text projection.
 It preserves surrogate source code points, validates native widths and lengths,
 and uses bounded, interruptible scans. Projection does not normalize the native
 source representation or issue a runtime ownership capability.
+The literal cleaner adapter retains source code points selected by its existing
+substring/replacement scans and rebuilds canonical native storage without a
+round trip through JavaScript text.
 
 Changes: the adaptation uses schema-owned TypeScript data, captured Effect
 comparison/work services, bounded probes and allocations, typed redacted

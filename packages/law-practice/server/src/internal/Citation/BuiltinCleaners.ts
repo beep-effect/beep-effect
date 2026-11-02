@@ -93,21 +93,22 @@ export const makeCitationBuiltinCleaners = Effect.fn("Citation.makeBuiltinCleane
     const name = yield* S.decodeUnknownEffect(CitationBuiltinCleanerName)(input).pipe(
       Effect.mapError(() => fail("unknown-step"))
     );
+    if (name !== "html") {
+      const source = yield* Effect.fromOption(yield* values.getUnicode(value), () => fail("builtin-input-type"));
+      const output = yield* literal.stageUnicode(name, source.storage, work);
+      const result = yield* values.materializeUnicode(value, output, output.storage);
+      return CitationCleanerProduced.make({ value: result, charges: output.charges });
+    }
     const text = yield* values.getText(value);
-    const output =
-      name === "html"
-        ? O.isSome(text)
-          ? yield* html.stage(text.value.text, work)
-          : yield* values
-              .getBytes(value)
-              .pipe(
-                Effect.flatMap((bytes) =>
-                  O.isSome(bytes) ? html.stageBytes(bytes.value, work) : Effect.fail(fail("builtin-input-type"))
-                )
-              )
-        : O.isSome(text)
-          ? yield* literal.stage({ cleaner: name, text: text.value.text }, work)
-          : yield* fail("builtin-input-type");
+    const output = O.isSome(text)
+      ? yield* html.stage(text.value.text, work)
+      : yield* values
+          .getBytes(value)
+          .pipe(
+            Effect.flatMap((bytes) =>
+              O.isSome(bytes) ? html.stageBytes(bytes.value, work) : Effect.fail(fail("builtin-input-type"))
+            )
+          );
     const result = yield* values.materialize(value, output);
     return CitationCleanerProduced.make({ value: result, charges: output.charges });
   }, Effect.mapError(translate));
