@@ -39,10 +39,13 @@ operator approved starting this work.
 the bootstrap's retry loop alone, or does the first smoke session need the
 npm-installed-bun fallback?
 
-**Answer:** The retry loop alone was enough in every observed run. The
-account-1 smoke (#2486, receipt
+**Answer:** The retry loop alone was enough in the runs with public receipts:
+the account-1 smoke (#2486, receipt
 `goals/cloud-agent-readiness/history/2026-11-01-claude-cloud-smoke.md`) and
-the later Claude smokes the orchestrator reported completed setup without the npm fallback. The fallback
+the account-2 smoke (#2487, `history/2026-11-01-fleet-cloud-setup.md`) both
+completed setup without the npm fallback. The orchestrator reported accounts
+3 and 4 as passing on 2026-11-02, but they have no public receipt yet and are
+not counted here. The fallback
 stays documented in `docs/runbooks/cloud-environments.md`, but no observed run
 needed it.
 

@@ -129,8 +129,10 @@ authorization or current fact where they differ from this list:
   (`standards/memory-architecture/04-decision-log.md`) and must not be
   reintroduced.
 - **Manual operator setup.** "Operator runs the per-account UI setups" is
-  superseded. The four Claude environments are set up and smoke-tested under
-  `goals/cloud-agent-readiness` (#2486, #2487). Codex and Cursor status is
+  superseded. Four Claude environments are set up under
+  `goals/cloud-agent-readiness`. Public receipts show smokes passing for
+  account 1 (#2486) and account 2 (#2487). Accounts 3 and 4 were reported by
+  the orchestrator but have no public receipt yet. Codex and Cursor status is
   tracked there.
 - **Secret paths.** The 1Password items (the `op` CLI download allowlist and
   the agent shim notes) describe where secrets could flow. They do not
