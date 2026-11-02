@@ -17,8 +17,7 @@ fixture location alone does not establish an invalid alert.
 Current delivery: implementation PR #2389 is merged. Final receipt PR #2488
 must capture genuine canonical readiness before merge, retain exact external
 closure evidence, and yield verified post-merge receipts for both packets.
-The twenty supplemental dependency alerts remain open despite fixed graph
-versions; all fifteen Cloud findings are Fixed and code/secret inventories
+The twenty supplemental dependency alerts were all Fixed on 2026-11-01; all fifteen Cloud findings are Fixed and code/secret inventories
 show zero open alerts. The final PR changes evidence only.
 
 ## Non-Goals
@@ -317,6 +316,7 @@ After #2488 merges and all exact external statuses are verified, run
 `active` with prospective `completed-retained` until verified receipts derive
 completion. No gate is weakened and no readiness receipt is fabricated.
 
-Dependency IDs #450–#469 still require exact closure and a zero-open inventory;
-fixed versions in the dependency graph alone do not establish closure. See the
+Dependency IDs #450–#469 are Fixed (GitHub REST, observed 2026-11-01) and the
+Dependabot, code-scanning and secret-scanning open inventories are zero. See the
+[final closeout evidence](../codex-security-findings-2026-10-28/research/2026-11-01-final-closeout.md) and the earlier
 [accepted closeout evidence](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

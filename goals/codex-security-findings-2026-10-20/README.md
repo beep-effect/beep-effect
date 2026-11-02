@@ -10,8 +10,8 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 All eight original Cloud IDs remain Fixed. The 123 captured Dependabot IDs
 are resolved: 121 Fixed, two withdrawn. The seven October 28 Cloud IDs are
-also Fixed. The twenty newer dependency fixes merged in #2389, but their
-external alerts remain open pending reconciliation. Code and secret scanning
+also Fixed. The twenty newer dependency fixes merged in #2389, and their
+alerts were all Fixed on 2026-11-01. Code and secret scanning
 show zero open alerts. See [current revalidation](research/2026-10-31-revalidation.md).
 
 ## Mission
@@ -137,6 +137,7 @@ After #2488 merges and all exact external statuses are verified, run
 `active` with prospective `completed-retained` until verified receipts derive
 completion. No gate is weakened and no readiness receipt is fabricated.
 
-Dependency IDs #450–#469 still require exact closure and a zero-open inventory;
-fixed versions in the dependency graph alone do not establish closure. See the
+Dependency IDs #450–#469 are Fixed (GitHub REST, observed 2026-11-01) and the
+Dependabot, code-scanning and secret-scanning open inventories are zero. See the
+[final closeout evidence](../codex-security-findings-2026-10-28/research/2026-11-01-final-closeout.md) and the earlier
 [accepted closeout evidence](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

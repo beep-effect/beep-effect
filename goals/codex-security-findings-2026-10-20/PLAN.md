@@ -6,8 +6,8 @@ Status: `active`.
 
 The original fifteen Cloud findings and historical 123 dependency IDs are
 resolved. Implementation PR #2389 is merged, with all 35 hosted check jobs
-ultimately green. Its twenty dependency fixes appear in the graph, while
-IDs #450–#469 remain externally open. Code and secret scanning show zero open
+ultimately green. Its twenty dependency fixes appear in the graph, and
+IDs #450–#469 were all Fixed on 2026-11-01. Code and secret scanning show zero open
 alerts. #2488 is the final reconciliation PR: capture genuine final-head
 canonical readiness before merge, then verify external closure and completion
 receipts for both packets.
@@ -51,7 +51,7 @@ git diff --check -- goals/codex-security-findings-2026-10-20
 All 123 captured alert IDs in `ops/dependabot.json` have been revalidated as
 resolved, separately from the eight Cloud identities. Twenty additional
 dependency alerts (#450–#469) are tracked in the October 28 packet. Their fixes
-merged in #2389; their external closure remains pending despite fixed graph versions.
+merged in #2389, and all twenty alerts were Fixed on 2026-11-01.
 
 ## Closeout ordering
 
@@ -78,6 +78,7 @@ After #2488 merges and all exact external statuses are verified, run
 `active` with prospective `completed-retained` until verified receipts derive
 completion. No gate is weakened and no readiness receipt is fabricated.
 
-Dependency IDs #450–#469 still require exact closure and a zero-open inventory;
-fixed versions in the dependency graph alone do not establish closure. See the
+Dependency IDs #450–#469 are Fixed (GitHub REST, observed 2026-11-01) and the
+Dependabot, code-scanning and secret-scanning open inventories are zero. See the
+[final closeout evidence](../codex-security-findings-2026-10-28/research/2026-11-01-final-closeout.md) and the earlier
 [accepted closeout evidence](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

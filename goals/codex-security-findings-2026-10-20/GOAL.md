@@ -56,7 +56,7 @@ same blocker repeats after reasonable investigation.
 
 PRs #1930 and #2333 are merged; all fifteen Cloud IDs are Fixed. The original
 123 dependency IDs are resolved (121 fixed, two withdrawn). #2389 merged the
-20 newer dependency fixes; their exact alerts remain open pending reconciliation.
+20 newer dependency fixes; all twenty alerts were Fixed on 2026-11-01.
 Code and secret scanning show zero open alerts. Read the linked
 `../codex-security-findings-2026-10-28/GOAL.md` and complete both inventories.
 

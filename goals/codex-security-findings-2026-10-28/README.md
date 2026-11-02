@@ -35,8 +35,7 @@ and completion evidence through PR #2488 with no packet-applicable finding open.
 The fixes for the seven Cloud findings merged in #2333; every exact ID is
 verified Fixed. All fifteen Cloud findings across both packets are Fixed.
 The twenty supplemental dependency fixes merged in #2389, whose 35 hosted
-check jobs ultimately passed. IDs #450–#469 remain externally open despite
-fixed versions in the dependency graph. The four code-scanning and five
+check jobs ultimately passed. IDs #450–#469 were all Fixed on 2026-11-01. The four code-scanning and five
 secret-scanning alerts are resolved, with zero open inventories.
 
 PR #2488 delivers final receipt reconciliation. Its genuine canonical readiness
@@ -108,6 +107,7 @@ After #2488 merges and all exact external statuses are verified, run
 `active` with prospective `completed-retained` until verified receipts derive
 completion. No gate is weakened and no readiness receipt is fabricated.
 
-Dependency IDs #450–#469 still require exact closure and a zero-open inventory;
-fixed versions in the dependency graph alone do not establish closure. See the
+Dependency IDs #450–#469 are Fixed (GitHub REST, observed 2026-11-01) and the
+Dependabot, code-scanning and secret-scanning open inventories are zero. See the
+[final closeout evidence](research/2026-11-01-final-closeout.md) and the earlier
 [accepted closeout evidence](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

@@ -50,8 +50,8 @@ same blocker repeats after reasonable investigation.
 ## Current acceptance — 2026-10-31
 
 The seven Cloud IDs are Fixed after #2333 merge. #2389 merged the twenty
-newer dependency fixes (#450–#469), but their alerts remain open pending graph
-reconciliation. The nine code/secret-scanning alerts are resolved; preserve
+newer dependency fixes (#450–#469); all twenty alerts were Fixed on
+2026-11-01. The nine code/secret-scanning alerts are resolved; preserve
 zero-open inventories and all exact identities. #2488 is the final receipt PR.
 
 ## Final receipt reconciliation — October 31
