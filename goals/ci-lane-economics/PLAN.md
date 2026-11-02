@@ -13,6 +13,32 @@ Status: `active`
 
 ## Notes
 
+- Population ratification (2026-11-02): ruleset `10240248` changed eight
+  times after window 3 with no packet entry: `52153287` (10-06),
+  `52592290` (10-09) and `53095924` (10-14) kept 16 contexts; `53211930`
+  (2026-10-14T17:55:21.339Z) removed `Knip` (15); `53232671` added the
+  `beep-reviewer` app check (16); `53390820` (10-15) added `Heavy / Effect
+  Diagnostics` (17); `54903486` (10-27T03:20Z) removed `beep-reviewer` (16);
+  `54940515`, effective 2026-10-27T09:49:40.844Z, removed `Heavy / Effect
+  Diagnostics`. Version `54940515` is ratified at exactly 15 required
+  contexts (verified from `gh api
+  repos/beep-effect/beep-effect/rulesets/10240248/history/54940515`; the
+  live ruleset lists the same 15) and is the window-4 population. The first
+  complete seven-day span under it starts no earlier than
+  2026-10-27T09:49:41Z, so window 4 is `2026-10-27T10:00:00Z` →
+  `2026-11-03T10:00:00Z`; the half-open week need not start at midnight,
+  only lie inside one population. The census gained the per-day peak
+  CI-active branches column (repair decision 3, ruling 6) and splits any span
+  whose GitHub listing exceeds 1000 runs, which this week does (1,202 runs by
+  11-02T08:00Z against 927 in all of window 3).
+
+- Governor status (2026-11-02): the `beep ci slots acquire` governor signed
+  in `research/repair-decision-3.md` was never built; no code, hook or PR
+  carries it. Window 4 is therefore censused under the load the operator's
+  sessions actually put on `check.yml`, and the per-day peak column decides
+  whether a breach is attributable to load above the six-branch cap. See
+  `SPEC.md` Decision Log D1.
+
 - Admission verdict (2026-10-01): window 3 (2026-09-23 → 2026-09-30) is
   denied; see `research/admission-week-3-p95.md`. 09-23/24 clear every gate;
   from 09-25 run volume rose 10–25× (58 branches in a day, 44
