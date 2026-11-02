@@ -4,7 +4,7 @@
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `align`
-Status: `killed`
+Status: `active`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -15,7 +15,7 @@ The TS7 exit (#1833) left `infra/` as the last place that still needs TypeScript
 
 ## Next Open Question
 
-None — killed 2026-10-15 (see [`DECISIONS.md`](./DECISIONS.md)). Reopen at research only if Alchemy gains coverage for Vercel, the GitHub runner module and host-level resources.
+Grill session (align, reopened 2026-11-02): is the target "no TypeScript 6 in `infra/`" (finish the isolation by precompiling, option C) or "no Pulumi" (full or converging migration)? The eight-question frontier is in [`ops/manifest.json`](./ops/manifest.json) `openQuestions` and at the end of [`RESEARCH.md`](./RESEARCH.md) "2026-11-02 — Recommendation". Recommendation on the table: C now, Alchemy-first-for-new as policy (B), full migration (A) held behind named gates.
 
 ## Read This First
 
@@ -28,6 +28,7 @@ None — killed 2026-10-15 (see [`DECISIONS.md`](./DECISIONS.md)). Reopen at res
 
 ## Trail
 
+- 2026-11-02: reopened at research on the operator's request (dedicated investigation session), then advanced to align. Research refreshed against the Alchemy checkout at `450702936d` (beta.84 + 246) and `llms.txt`: six Pulumi programs inventoried, 40 resource kinds covered / 9 gaps / 1 partial, per-gap options, three options (full, hybrid, Pulumi-stays-precompiled) with state and rollback plans, recommendation C + B policy. No infra change, no deploy, no secrets. Next: grill session over the eight frontier questions.
 - 2026-10-15: killed at align. The operator ruled out an Alchemy migration ("isolate it to infra"); Pulumi's TypeScript 6 need is being confined to `infra/` as a TS7 exit follow-up.
 - 2026-10-15: research inventoried five Pulumi programs, pinned provider/TS6 obligations and Effect reuse bricks; fetched Alchemy beta.83 docs/source/licenses, mapped coverage gaps, and retained unanswered align questions. No deployment or publication performed.
 

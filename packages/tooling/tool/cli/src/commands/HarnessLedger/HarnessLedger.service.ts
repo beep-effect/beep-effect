@@ -14,6 +14,8 @@ import {
   HarnessFingerprintParts,
   HarnessLedgerRow,
   harnessFingerprintFromParts,
+  hookPulseNamespace,
+  hookPulseNamespaceCutoverMillis,
   isStale,
   LedgerDisposition,
   makeHarnessLedgerRowId,
@@ -389,6 +391,8 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
     windowFull: observed.sessionsObserved >= options.windowSessions,
     sessionsSkippedOutOfRegime: observed.sessionsSkippedOutOfRegime,
     sessionsSkippedUnstamped: observed.sessionsSkippedUnstamped,
+    sessionsSkippedPreCutover: observed.sessionsSkippedPreCutover,
+    namespaceCutover: observed.namespaceCutover,
     sessionsByAgentKind: observed.sessionsByAgentKind,
     sessionsSkippedMixedFingerprint: observed.sessionsSkippedMixedFingerprint,
     refusalsByAgentKind: observed.refusalsByAgentKind,
@@ -418,11 +422,15 @@ const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (
   const harnessHash = yield* deriveHarnessHash(fingerprint).pipe(
     Effect.mapError(HarnessLedgerIoError.wrap("Failed to derive the current harness hash."))
   );
+  const namespace = yield* hookPulseNamespace.pipe(
+    Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve the hook-pulse namespace."))
+  );
   const observed = yield* observeSessionWindow(
     options.stateDir,
     options.windowSessions,
     harnessHash,
-    options.agentKind
+    options.agentKind,
+    hookPulseNamespaceCutoverMillis(namespace)
   );
   // A zero-touch observation remains advisory until tool identities and surface
   // coverage are reconciled. No incomplete collection can persist a non-use claim.

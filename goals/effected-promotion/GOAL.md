@@ -8,9 +8,12 @@ Outcome: every promotable `scratchpad/effected` module lives in its own
 `@beep/*` package (wave plan in PLAN.md), the duplicates it replaces are
 retired, and `@effected/github` is gone.
 
-Status: the closing PR C proposes the closeout (SPEC D-60); the packet stays
-`active` until `bun run beep goals completion refresh --slug effected-promotion`
-verifies it. A resumed session finishes C's open gate work.
+Status: complete. The closing PR C (#2476) merged as `a0589d263d` and
+`bun run beep goals completion refresh --slug effected-promotion` verified the
+`completed-retained` proposal on 2026-11-01
+(`history/completion-verified-2026-11-01.md`). `initiative.status` stays
+`active` by design: completion is derived from clone-scoped receipts. The
+follow-up sites live in `goals/repo-cli-gh-git-consolidation`.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
@@ -47,7 +50,7 @@ Workflow:
 Acceptance:
 
 - [x] `SPEC.md` acceptance criteria are satisfied.
-- [ ] Required verification commands pass, or unrelated failures are reproduced
+- [x] Required verification commands pass, or unrelated failures are reproduced
       and recorded separately.
 - [x] No unrelated refactors or formatting churn.
 

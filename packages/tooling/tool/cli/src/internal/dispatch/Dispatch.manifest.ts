@@ -26,6 +26,7 @@
  */
 
 import { CommandGroupHelp } from "./Dispatch.schemas.ts";
+import type { Git } from "@beep/git/Git";
 import type { FsUtils, TSMorphService } from "@beep/repo-utils";
 import type { BunServices } from "@effect/platform-bun/BunServices";
 import type * as Command from "effect/cli/Command";
@@ -48,6 +49,7 @@ export type BaseServices =
   | HttpClient.HttpClient
   | Digest.Digest
   | SecureRandom.SecureRandom
+  | Git
   | Scope.Scope;
 
 // The service each `RuntimeService` key provides; a type-level map, never a value.

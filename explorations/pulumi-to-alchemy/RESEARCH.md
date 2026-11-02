@@ -415,3 +415,298 @@ short forms are mirrored in `ops/manifest.json` exploration.openQuestions.
    active CI/OIP/AI metrics from unproved Storybook/OpenClaw deployment state?
 9. What first reversible vertical slice and acceptance evidence would test the
    chosen direction without making the fleet/state migration the first experiment?
+
+## 2026-11-02 — Reopened research
+
+### 2026-11-02 — Scope and what changed since the 10-15 kill
+
+Research only, on checkout `cda8f0d199` (branch `claude/explore-pulumi-to-alchemy-40ee3a`
+off `main`). No `pulumi` or `alchemy` command ran, no cloud credential or 1Password reference
+was resolved, no infra file was changed. Alchemy coverage is verified against the local
+reference checkout (`$HOME/YeeBois/references/effect/alchemy` at `450702936d`, 2026-11-01,
+`v2.0.0-beta.84` + 246 commits) and the fetched [llms.txt](https://alchemy.run/llms.txt);
+receipts are in [research/FETCHES.json](research/FETCHES.json) and
+[research/SOURCES.md](research/SOURCES.md) section 6. Deployment and liveness claims below are
+read from repo receipts and are **UNVERIFIED** against live cloud state, as on 10-15.
+
+Deltas since the 2026-10-15 sections:
+
+| Area | 2026-10-15 | 2026-11-02 |
+| --- | --- | --- |
+| TS6 coupling | root `patches/@pulumi%2Fpulumi@3.268.0.patch` redirects the hoisted runtime to the `@typescript/typescript6` bridge; syncpack holds `@pulumi/pulumi` exact | Patch gone; `@pulumi/pulumi` is `3.273.0` in the catalog with no hold. Every infra `Pulumi.yaml` preloads `infra/pulumi-typescript6.cjs` through `runtime.options.nodeargs`, which resolves `typescript` to infra's nested `^6.0.3`. Syncpack keeps one version group for that pin (`syncpack.config.ts:153-163`). Root `postinstall` still runs `infra:prepare-gha-runners` with infra's nested compiler (`<infra>/node_modules/typescript/bin/tsc`), so **every `bun install` in the repo compiles with TypeScript 6** |
+| Pulumi programs | five | **six**: `infra/turbo-cache-lab/Pulumi.yaml` (disposable conformance lab reusing `CiTurboCache`; `lab-aws.sh` wraps `pulumi stack init` and `config set`) |
+| CiTurboCache | 30 direct resources | +`aws.sns.Topic`, `aws.sns.TopicSubscription`, `aws.cloudwatch.MetricAlarm` (#2252 throttle alarm) |
+| Alchemy in the repo | none | **three live stacks**: `apps/beep-effect-web/alchemy.run.ts` (`BeepEffectWeb`, `Cloudflare.Website.Vite`, `Cloudflare.state()`, CI deploy on `main`, first green run 41244684210, site live at beep-effect.com) and `infra/r2-cache/` (`BeepTurboR2Pilot`, `BeepTurboR2SignedCredentials`, run from a frozen tool clone of Alchemy commit `95f1581` with local state under `$HOME/.local/state/beep/r2-cache/alchemy`). Catalog pins `alchemy` and `@alchemy.run/cloudflare` at `2.0.0-beta.84` |
+| Alchemy release | `2.0.0-beta.83` (2026-10-12) | `latest` `2.0.0-beta.84` (2026-10-24); main is 246 commits ahead with no newer tag |
+| Pulumi upstream TS7 | not checked | `sdk/nodejs` optional peer is still `typescript >= 3.8.3 < 7`; an issue-title search for "typescript 7" in pulumi/pulumi finds nothing relevant (E71). No upstream TS7 support is in flight |
+
+What `goals/beep-effect-web-alchemy` learned (SPEC decision log and reflection), relevant here:
+per-package stacks are Alchemy's own guidance for different deploy cadences; `Cloudflare.state()`
+documents no lock, so prod deploys run only in CI under a concurrency group and the stack
+refuses `prod` without `CI=true`; the state store needs a registered workers.dev subdomain
+(Cloudflare error 10007); the shared IaC token lacked Secrets Store, Workers domains and ruleset
+scopes, so a dedicated least-privilege token was minted; Alchemy adopts nothing it cannot prove
+it owns; credentials flow through `op run`, never `alchemy profile`. "Most of the time went to
+repo gates, not to Alchemy."
+
+### 2026-11-02 — Alchemy as of the checkout (source-verified)
+
+- **Packaging.** Split provider packages under `@alchemy.run/*`: `aws`, `cloudflare`,
+  `cloudflare-runtime`, `docker`, `kubernetes`, `github`, `git`, `hetzner`, `fly`, `railway`,
+  `gcp`, `neon`, `planetscale`, `turso`, `redis`, `sql`, `prisma`, `drizzle`, `stripe`, `axiom`,
+  `acme`, `domain`, `doppler`, `infisical`, `better-auth`, `frontend-frameworks`, `test`. **No
+  `vercel` package**; the 37 "vercel" hits in `packages/` are OIDC audience strings, Next.js
+  source detection and test fixtures.
+- **TypeScript.** Workspace catalog `typescript: ^7.0.2`; a `typescript-classic: 6.0.3` catalog
+  exists only for SvelteKit and TS5 for Next.js. the `alchemy` package manifest (`<checkout>/packages/alchemy/package.json`) has no
+  `typescript` dependency or peer. Peer `effect ^4.0.5`; the repo catalog is `effect 4.1.1`
+  and the lock already resolves it for beep-effect-web.
+- **State stores** (`alchemy/src/State/`, `aws/src/StateStore/`, `cloudflare/src/StateStore/`):
+  local `.alchemy/`; Cloudflare Durable Object SQLite (encrypted, keys in Secrets Store, **no
+  stage lock**); **AWS S3** via `BucketState` with a per-`(stack, stage)` `__lease__.json`
+  written by conditional put, 60 s TTL, refreshed by the holder, so a second deploy fails fast
+  (new since 10-15; `alchemy state bootstrap --backend aws` provisions the bucket in CI);
+  **AWS DynamoDB** with an S3 overflow bucket and `alchemy state migrate` from S3; Postgres as
+  the documented custom-store example; in-memory for tests.
+- **Adoption** (`AdoptPolicy.ts`, `cli/adopting-resources.mdx`): with no prior state the
+  engine calls the provider's `read`; an owned or ownership-less resource is adopted silently,
+  an `Unowned` one fails with `OwnedBySomeoneElse` unless `--adopt`/`adopt(true)`. Recovery of
+  a wiped store needs no flag. **No Pulumi (or Terraform) state importer exists**; the only
+  "pulumi" mentions are prose in blog posts and the binding guide.
+- **Commands** (`alchemy/src/Command/`): `Build`, `Exec`, `Dev`, `Local`, `Memo`, with env
+  redaction (`Redaction.ts`). `Exec.delete` is still `Effect.void` (`Exec.ts:127`). **No remote
+  or SSH command.** `hetzner/src/Ssh.ts` is an exec/scp client over `effect/process`, but it is a
+  Hetzner `Server` binding that uses the server's Alchemy-managed deploy key. `aws/src/Bootstrap/Ec2.ts`
+  renders a systemd unit only for the hosted `AWS.EC2.Instance` program; there is no general
+  systemd or managed-file resource.
+- **GitHub** (`github/src`): `Repository`, `Secret(s)`, `Variable(s)`, `Environment`, `Webhook`,
+  `Ruleset`, `BranchProtection`, `Release`, `Label`, `Milestone`, `TeamAccess`,
+  `PersonalAccessToken`, issue and PR actions. Nothing about self-hosted runners.
+- **Terraform.** No module bridge; "terraform" appears only in comments.
+- **CLI**: `deploy`, `plan`, `destroy`, `drift` (re-observe and optionally repair), `nuke`,
+  `state`, `dev`, `logs`, `profile`, `--adopt`.
+
+### 2026-11-02 — Coverage matrix, resource by resource
+
+Left column: every `new <provider>.<Resource>(` site in `infra/src/*.ts` (construction sites,
+with instance multipliers where a helper loops). Middle: the Alchemy resource in the checkout,
+as a path under `<checkout>/packages/aws/src/` or `<checkout>/packages/cloudflare/src/`, or **GAP**. A match means an
+implementation exists; property parity and adoption behaviour are untested. "Merge" means several
+Pulumi identities become one Alchemy identity, which matters for adoption (one `read`, one state
+row).
+
+**`beep-ci-runners` / `CiRunnersStack`** (`infra/src/CiRunners.ts`)
+
+| Pulumi resource | Alchemy | Note |
+| --- | --- | --- |
+| `aws.ec2.Vpc` | `AWS/EC2/Vpc.ts` | |
+| `aws.ec2.DefaultSecurityGroup` | `AWS/EC2/DefaultSecurityGroup.ts` | |
+| `aws.ec2.InternetGateway` | `AWS/EC2/InternetGateway.ts` | |
+| `aws.ec2.RouteTable`, `aws.ec2.Route` | `AWS/EC2/RouteTable.ts`, `AWS/EC2/Route.ts` | |
+| `aws.ec2.Subnet` ×5, `aws.ec2.RouteTableAssociation` ×5 | `AWS/EC2/Subnet.ts`, `AWS/EC2/RouteTableAssociation.ts` | |
+| `aws.ec2.SecurityGroup` | `AWS/EC2/SecurityGroup.ts` | |
+| `aws.vpc.SecurityGroupEgressRule` | `AWS/EC2/SecurityGroupRule.ts` | different resource name and shape (`type: egress`) |
+| `aws.ec2.FlowLog` | `AWS/EC2/FlowLog.ts` | |
+| `aws.cloudwatch.LogGroup` ×2 | `AWS/Logs/LogGroup.ts` | |
+| `aws.iam.Role` ×2, `aws.iam.RolePolicy` ×2 | `AWS/IAM/Role.ts` (`inlinePolicies`, `managedPolicyArns`, `permissionsBoundary`) | **merge**: RolePolicy folds into Role |
+| `aws.ec2.LaunchTemplate` | `AWS/AutoScaling/LaunchTemplate.ts` (`imageId`, `instanceType`, `userData`, `metadataOptions`) | verify block-device and IMDS parity; its Platform variant also manages a role |
+| `aws.lambda.Function` (reaper; `pulumi.asset.AssetArchive` + `StringAsset`) | `AWS/Lambda/Function.ts` | Alchemy bundles from an Effect program or takes `bundle: false` with `handler`/`runtime` (`nodejs22.x`/`nodejs24.x`); inline-string code becomes a bundle directory |
+| `aws.lambda.Permission` | `AWS/Lambda/Permission.ts` | |
+| `aws.cloudwatch.EventRule`, `aws.cloudwatch.EventTarget` | `AWS/EventBridge/Rule.ts` (`scheduleExpression`, embedded targets; `ToLambda.ts`) | **merge**: target folds into rule |
+
+**`beep-ci-runners` / `CiTurboCache`** (`infra/src/CiTurboCache.ts`; also the whole
+`beep-turbo-cache-lab` program)
+
+| Pulumi resource | Alchemy | Note |
+| --- | --- | --- |
+| `aws.s3.Bucket`, `BucketPublicAccessBlock`, `BucketServerSideEncryptionConfiguration`, `BucketLifecycleConfiguration`, `BucketPolicy` | `AWS/S3/Bucket.ts` (`publicAccessBlock`, `encryption`, `lifecycleRules`, `policy`, `versioning`) | **merge** 5→1 |
+| `aws.cloudwatch.LogGroup` ×3 | `AWS/Logs/LogGroup.ts` | |
+| `aws.iam.Role` ×3, `aws.iam.RolePolicy` ×3 | `AWS/IAM/Role.ts` | **merge** |
+| `aws.lambda.Function` ×3 (`pulumi.asset.FileArchive` of a prebuilt zip under `BEEP_INFRA_ARTIFACTS_ROOT`) | `AWS/Lambda/Function.ts` | needs the prebuilt-zip path (`bundle: false`); verify zip-from-path and `reservedConcurrentExecutions` |
+| `aws.lambda.Permission` ×3 | `AWS/Lambda/Permission.ts` | |
+| `aws.apigatewayv2.Api`, `Authorizer` (REQUEST), `Integration` ×2, `Route` ×5, `Stage` | `AWS/ApiGatewayV2/{Api,Authorizer,Integration,Route,Stage}.ts` (`authorizerType: "REQUEST"`, `identitySource`) | `HttpApi.ts` is a higher-level alternative |
+| `aws.sns.Topic`, `aws.sns.TopicSubscription` | `AWS/SNS/Topic.ts`, `AWS/SNS/Subscription.ts` | |
+| `aws.cloudwatch.MetricAlarm` | `AWS/CloudWatch/Alarm.ts` | |
+
+**`beep-ci-runners` / `CiFleetController`** (`infra/src/CiFleetController.ts`)
+
+| Pulumi resource | Alchemy | Note |
+| --- | --- | --- |
+| `aws.ssm.Parameter` | `AWS/SSM/Parameter.ts` | |
+| `aws.iam.Policy` | `AWS/IAM/Policy.ts` | |
+| `aws.kms.Grant` ×6 | **GAP** | `AWS/KMS/` has `Key`, `Alias`, `KeyBinding` and crypto operations; no managed Grant |
+| `gharunners.Module` (`terraform-module` 0.2.2 → `github-aws-runners/github-runner/aws` 7.10.1; ~220 live resources per the 2026-10-06 receipt) | **GAP** | no Terraform-module bridge; `AWS/AutoScaling/AutoScalingGroup.ts`, `Lambda`, `SQS`, `EventBridge`, `SSM` primitives exist, but the webhook/scale-up/scale-down/syncer/termination-watcher composite does not |
+| `gharunners.Provider`, `aws.Provider` | `AWS.providers()`, `Region.of` | provider pinning is a Layer, not a resource |
+
+**`beep-ci-runners` / `AccountCostControls`** (`infra/src/AccountCostControls.ts`)
+
+| Pulumi resource | Alchemy | Note |
+| --- | --- | --- |
+| `aws.Provider` (explicit `us-east-1`) | `Region.of("us-east-1")` layer | |
+| `aws.budgets.Budget` | `AWS/Budgets/Budget.ts` (`notificationType`, subscribers) | |
+| `aws.costexplorer.AnomalyMonitor`, `AnomalySubscription` | `AWS/CostExplorer/AnomalyMonitor.ts`, `AnomalySubscription.ts` | |
+| `aws.costexplorer.CostAllocationTag` ×6 | **GAP** (thin) | only the `UpdateCostAllocationTagsStatus` action exists; a custom resource over it is small. Retain-on-delete today |
+| `aws.computeoptimizer.EnrollmentStatus` | **GAP** | no `ComputeOptimizer` service directory |
+| `aws.costoptimizationhub.EnrollmentStatus` | **GAP** | no `CostOptimizationHub` service directory |
+
+**`opip-web` / `OipWebStack`** (`infra/src/OipWeb.ts`)
+
+| Pulumi resource | Alchemy | Note |
+| --- | --- | --- |
+| `aws.s3.Bucket`, `BucketPublicAccessBlock`, `BucketServerSideEncryptionConfiguration`, `BucketPolicy`, `BucketVersioning` | `AWS/S3/Bucket.ts` | **merge** 5→1; assets bucket `assets.oip.law` / `staging-assets.oip.law` |
+| `aws.dynamodb.Table` (optional Pulumi S3-backend lock table) | `AWS/DynamoDB/Table.ts` | purpose disappears under Alchemy (S3 state has its own lease) |
+| `vercel.Project` (Next.js, `cd ../.. && bun run --cwd apps/oip-web build:pwa`, git repository, deployment authentication) | **GAP** | no Vercel provider |
+| `vercel.ProjectEnvironmentVariable` ×7 | **GAP** | |
+| `vercel.ProjectDomain` ×6 (gated by `attachProductionDomains`/`attachStagingDomain`) | **GAP** | |
+| `cloudflare.DnsRecord` (zone-gated, imported IDs) | `Cloudflare/DNS/Record.ts` | adoption of existing records needs `--adopt` per the beep-effect-web notes |
+
+**`beep-storybook` / `StorybookStack`**: `vercel.Project` → **GAP**. Never applied (10-15
+finding unchanged); `apps/storybook/vercel.json` still exists.
+
+**`beep-effect-ai-metrics` / `AIMetricsStack`**: `command.remote.Command` ×3 (SSH via the
+local agent socket to dankserver; preflight/apply/health) → **GAP**: no remote command resource.
+The rendering (Compose, systemd units, scripts) is pure code already.
+
+**`beep-openclaw` / `OpenClawStack`**: `command.local.Command` ×4–5 (stage/apply/probe/
+acceptance, optional backup) → **PARTIAL**: `Command.Exec` runs local programs with redacted
+env, memoizes on content hash, and surfaces stdout, but its delete is a no-op. OpenClaw already
+owns rollback, drift and backup in its own scripts, so the loss is smaller than for AI metrics.
+
+**Tally.** 40 distinct Pulumi resource kinds map to an Alchemy resource (some by merge), 9 kinds
+are gaps (`kms.Grant`, `gharunners.Module`, `CostAllocationTag`, two enrollment statuses,
+three Vercel kinds, `command.remote.Command`) and 1 is partial (`command.local.Command`). By
+live resource count the picture inverts: the runner module alone is ~220 of the production CI
+stack's ~298 resources (78 direct + module), and it is the one with no path.
+
+### 2026-11-02 — Gap list with a per-gap option
+
+| # | Gap | Options | Lean (for the grill) |
+| --- | --- | --- | --- |
+| G1 | Terraform runner module (`ghaRunners`, ~220 resources, MIT) | (a) keep `beep-ci-runners` on Pulumi; (b) port the composite to Alchemy AWS primitives with attribution (large: webhook, SQS, scale-up/down Lambdas, SSM, ASG, syncer, termination watcher); (c) replace the service (GitHub-hosted larger runners; Blacksmith is banned by ruling) and delete the fleet; (d) drive Terraform/OpenTofu from `Command.Exec` (BUSL/MPL review, delete no-op) | (a) now; (c) is a cost decision, not an IaC one |
+| G2 | `aws.kms.Grant` ×6 | custom provider over `CreateGrant`/`RetireGrant` (thin); only meaningful if G1 moves | follows G1 |
+| G3 | `CostAllocationTag` ×6 | custom resource over `UpdateCostAllocationTagsStatus` (thin, idempotent, retain-on-delete) or drop from IaC and record in `docs/runbooks/aws-cost-operations.md` | custom resource if AccountCostControls moves, else drop |
+| G4 | Compute Optimizer and Cost Optimization Hub enrollments | custom provider over the two enrollment APIs, or treat as one-time account settings outside IaC (they are retain-on-delete singletons already) | drop from IaC, runbook record |
+| G5 | Vercel (OIP project + 7 env vars + 6 domains; Storybook project) | (a) keep `opip-web`/`beep-storybook` on Pulumi; (b) custom Alchemy Vercel provider over the REST API (three resource kinds, moderate); (c) replace the service: `apps/oip-web` to Cloudflare Workers via `Cloudflare.Website.Nextjs` (OpenNext; PWA build, `next/image`, HubSpot and Sanity to re-verify) and Storybook to `Cloudflare.Website.StaticSite`; (d) drop Vercel project config from IaC (Vercel's Git integration deploys regardless; `vercel.json` exists in both apps) and keep DNS + assets in Alchemy | (d) for Storybook now; (a) or (c) for OIP is a product call |
+| G6 | Remote SSH commands (AI metrics) | (a) custom Alchemy provider wrapping `ssh` over `effect/process` (pattern: `hetzner/src/Ssh.ts`; repo brick: `StepExec`); (b) make `beep ai-metrics install apply` real (today dry-run-only, `Programs.ts:1159`) and retire the stack; (c) keep on Pulumi | (b): this was never cloud IaC |
+| G7 | Local commands (OpenClaw) | `Command.Exec` for create/update with OpenClaw's own rollback; or Effect CLI as G6(b); or keep on Pulumi | same route as G6 |
+| G8 | Pulumi stack config and `secure:` ciphertext (`hubSpotServiceKey`, `notificationEmailAddresses`, passphrase `CLOUD_PULUMI_ENCRYPTION_PASSPHRASE`) | Alchemy reads `effect/Config` from env/ConfigProvider via `op run`; checked-in encrypted values move to `op://` references; stack YAML config becomes typed stack props | applies to every moved stack |
+| G9 | State backend (`s3://oip-law-pulumi-state` for CI and OIP; local/unknown for the host stacks) | Alchemy S3 state (`BucketState` lease) in the same account, or the existing Cloudflare store (no lock, CI-serialized); no importer, so adoption is by `read` + `--adopt` | S3 state for AWS stacks, Cloudflare store for Cloudflare stacks; one grill question |
+
+### 2026-11-02 — Option C feasibility: Pulumi stays, TypeScript 6 leaves
+
+Pulumi's Node runtime (`@pulumi/pulumi@3.273.0`, installed) registers ts-node and loads
+`typescript` only when `PULUMI_NODEJS_TYPESCRIPT === "true"` (`cmd/run/run.js:234`, branch at
+`:279-350`); the CLI sets that from `runtime.options.typescript`, default on for `nodejs`.
+`tsutils.typeScriptRequireStrings` and `loadTypeScriptCompilerOptions` run only inside that
+branch. The other `typescript-shim` consumers are the closure serializer
+(`runtime/closure/{parseFunction,rewriteSuper,utils}.js`, reached only through
+`serializeFunction`/`CallbackFunction`, **NOT FOUND** in `infra/src` on 10-15 and re-checked
+today) and `provider/experimental/analyzer.js` (component provider authoring, unused). So a
+program whose `main` is compiled JavaScript with `runtime.options.typescript: false` needs no
+TypeScript at deploy time, and `infra/pulumi-typescript6.cjs` plus the six `nodeargs` lines go.
+
+What a precompile step needs: an emitting tsconfig for `infra/src` (today `noEmit: true`,
+checked by `tsrs -b`), `rewriteRelativeImportExtensions` because infra imports use `.ts`
+specifiers and the package is `type: module`, an output directory the six `Pulumi.yaml` `main`
+fields point at, and a build step before `pulumi preview|up` (local runbooks; there is no
+Pulumi deploy workflow in `.github/workflows/`). Whether `tsrs`/`tsgo` emit is used, or TS7's
+own `tsc`, is a spike question; the repo's `check` gates stay on tsrs either way.
+
+The second TS6 consumer is the ghaRunners SDK build: `scripts/build.js:26-41` throws unless the
+compiler major is 6. That guard is repo-authored (the SDK's `package.json` pins
+`typescript ^6.0.3` because the guard exists, not the other way round); the SDK emits JS plus
+`.d.ts` from seven files with `module: nodenext`. Compiling it with TypeScript 7 (declaration
+emit included) or checking in the compiled `bin/` are both candidates. Because root
+`postinstall` runs this build, it is the item that currently forces TypeScript 6 into every
+checkout and worktree.
+
+Outside infra, `@typescript/typescript6` stays for the schema-opaque codemod and the scratchpad
+JSDoc census (`docs/runbooks/typescript-toolchain.md:208-211`); that is a separate obligation
+this packet does not own.
+
+### 2026-11-02 — Three candidate options
+
+| | A. Full migration to Alchemy | B. Hybrid: Alchemy for Cloudflare and web, Pulumi retained for the gaps | C. Pulumi stays, TS6 removed by precompiling |
+| --- | --- | --- | --- |
+| What moves | all six programs; G1–G9 all need an answer first | nothing that is live today moves; policy: new infrastructure Cloudflare-first on Alchemy, no new Pulumi stacks; dormant stacks retired; Storybook/OIP DNS and assets are the only adoption candidates | nothing moves; `infra/src` is emitted to JS, `typescript: false`, preload and TS6 pin removed, ghaRunners guard relaxed |
+| Removes TS6 from infra | yes, eventually | no (needs C anyway) | **yes** |
+| Removes Pulumi | yes | no | no |
+| Blocking gaps | G1 (no path but destroy/recreate or a large port), G5, G6 | none | none |
+| Custom providers to write | KMS Grant, cost tag, two enrollments, Vercel (or replace), remote command | none now | none |
+| State risk | highest: every adopted resource is a `read`-based takeover with no importer; the runner module cannot be adopted | low: only new or dormant stacks | none |
+| Beta exposure | all production infra on a `2.0.0-beta.*` with no semver promise; main moves ~250 commits per release | bounded to Cloudflare stacks (already the case) | none |
+| Effort shape | months, operator-attended applies for the fleet | days per adopted stack; policy document | 1–2 PRs plus a credential-free spike |
+| What it buys | one toolchain, Effect-native infra, Alchemy `drift`/`dev`/typed bindings for the Lambda cache | the direction without the cliff; keeps the door open for A as Alchemy matures | the operator's stated pain (TS6 in every install) gone now |
+
+### 2026-11-02 — State migration and rollback per option
+
+**A. Full migration**, per stack, in order Storybook (dormant) → turbo-cache-lab (disposable)
+→ OIP → AccountCostControls → CiTurboCache → CiRunnersStack/CiFleetController (last, or never):
+
+1. Freeze: `pulumi stack export` to an archive outside the repo; refresh-and-expect-no-changes
+   first so the archive equals live state (the 2026-10-01 receipt shows state and live can
+   differ after Lambda edits).
+2. Write the Alchemy stack with the same physical names and tags; `alchemy plan` against the
+   chosen state store (S3 state in the same account for AWS stacks). Every pre-existing
+   resource must plan as adopt or no-op; any create or replace is a stop.
+3. `alchemy deploy --adopt` only for resources the provider reports `Unowned`; verify the
+   state rows with `alchemy state`.
+4. Remove the resources from Pulumi state (`pulumi state delete` per URN, or
+   `pulumi stack rm --force` after everything is adopted). Never `pulumi destroy`.
+5. Rollback: delete the Alchemy stage state (`alchemy state` delete, not `alchemy destroy`),
+   `pulumi stack import` the archive, `pulumi preview --expect-no-changes`. Resources never
+   changed, so rollback is a state operation only.
+6. Exception: the runner module has no adopt path. It is destroyed and recreated under a
+   replacement (fleet downtime, GitHub App webhook re-registration), or kept on Pulumi, which is
+   why B exists.
+
+**B. Hybrid**: only new or dormant stacks touch Alchemy. New Cloudflare stacks: nothing to
+migrate; rollback is `alchemy destroy` of a stage. Storybook: `pulumi stack rm` after confirming
+the Vercel project is console-managed or deleted. OIP DNS/assets, if adopted: steps 1–5 above
+for one bucket and six records. CI and host stacks: unchanged, their Pulumi S3 backend and
+passphrase stay. Consolidation question for the grill: the r2-cache stacks keep local state in
+`$HOME/.local/state/beep`; moving them to the Cloudflare store is its own small adopt.
+
+**C. Pulumi stays**: no state moves. Rollback is a git revert of the `Pulumi.yaml`
+`typescript`/`main`/`nodeargs` lines, the preload file, the syncpack group and the SDK guard;
+a local file-backend `pulumi preview` on the compiled program proves the runtime path before
+any S3-backed preview (the 10-15 recipe, minus the "Found typescript version 6.0.3" log line
+which must now be absent).
+
+### 2026-11-02 — Recommendation (for the grill to confirm or overturn)
+
+Do **C now and B as standing policy**; hold A behind named gates.
+
+- C answers the operator's concrete pain (TypeScript 6 compiled on every `bun install`,
+  the preload, the syncpack exception) in one or two PRs without touching cloud state, and it
+  does not depend on Alchemy at all. The 10-15 kill chose isolation; C finishes it.
+- B is already true in practice (three Alchemy stacks live, none of them a Pulumi port) and
+  costs only a written policy plus retiring the dormant Storybook program. It keeps the
+  direction the operator wants without taking ~220 fleet resources through a `read`-based
+  takeover on a beta.
+- A becomes worth re-pricing when any of these fire: Alchemy ships a non-beta 2.0; the runner
+  fleet is replaced or ported (G1); OIP leaves Vercel or an Alchemy Vercel provider exists (G5);
+  the host stacks move to the Effect CLI (G6/G7). Each gate is a re-entry point for this packet
+  at `decompose`, not a reason to keep it active.
+
+Questions the grill session must settle (mirrored in `ops/manifest.json` `openQuestions`):
+
+1. Goal statement: is the target "no TypeScript 6 in `infra/`" (C suffices) or "no Pulumi"
+   (A, or B converging on A)?
+2. Standing policy: is new infrastructure Alchemy-first, and does any new Pulumi stack need an
+   exception? Which state store is canonical for Alchemy stacks (Cloudflare store, S3 state
+   with lease, or per-cloud), and do the r2-cache stacks leave local state?
+3. OIP hosting: stay on Vercel (then keep `opip-web` on Pulumi, or drop Vercel project config
+   from IaC and keep only DNS/assets), or move `apps/oip-web` to Cloudflare Workers via
+   OpenNext? Product and risk call, not an IaC call.
+4. Storybook: retire the never-applied `beep-storybook` program (and the Vercel project?) now?
+5. Runner fleet: keep the Terraform module on Pulumi indefinitely, or schedule a replacement
+   (GitHub-hosted larger runners vs an Alchemy-native composite), with the cost comparison as
+   its own exploration?
+6. Host stacks (AI metrics, OpenClaw): Pulumi, Alchemy custom resources, or the Effect CLI
+   that already renders them?
+7. Appetite for the credential-free spike that gates C: compiled-JS `pulumi preview` on a file
+   backend with `typescript: false`, plus the ghaRunners SDK built by TypeScript 7 and its
+   `node --test` suite green.
+8. Account singletons (G3, G4): keep in IaC through thin custom resources, or move to the cost
+   runbook as one-time settings?

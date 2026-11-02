@@ -295,6 +295,9 @@
         "packages/law-practice/domain/test/fixtures/claim-element/positive/**/*.json",
         "goals/claim-element-antecedent-check/history/label-conformance-drafts/**/*.json",
         "goals/claim-element-antecedent-check/history/label-source-exclusions/**/*.json",
+        // Frozen measurement outputs retain the exact bytes recorded before later repairs.
+        "goals/claim-element-antecedent-check/history/*-evaluation.json",
+        "goals/claim-element-antecedent-check/history/*-results.json",
         // Immutable automated reviewer receipts bind exact input/output bytes.
         "goals/claim-element-antecedent-check/history/autonomous-review-v1/reference-*-round*.json",
         "goals/claim-element-antecedent-check/history/autonomous-review-v1/allowed-*-round*.json",

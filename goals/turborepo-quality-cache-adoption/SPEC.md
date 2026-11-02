@@ -382,8 +382,13 @@ No configuration, qualification state or production consumer changes.
 
 ### Attempt and publication identities, 2026-10-30
 
-- Preserve the attempt's starting head, resolved source and diff fingerprint.
-  Publishing staged changes may create a different commit within that attempt.
+- Preserve the attempt's starting head and diff fingerprint. Publishing staged
+  changes may create a different commit within that same attempt. After its
+  owned commit succeeds, resolve subsequent scheduler tickets, proof-shadow
+  facts, verdict and terminal journal rows to the commit it created. The
+  attempt-started row retains the original source identity; an unrelated head
+  change still refuses publication. Push-only, already-committed and
+  non-publish attempts retain their existing resolution behavior.
 - Add an optional published-head identity to the existing verdict. Record it
   only around a successful owned Git push with unchanged head; an unsuccessful
   push or head drift grants no such identity. This is transport provenance,
@@ -396,6 +401,14 @@ No configuration, qualification state or production consumer changes.
   must make the regression test fail. This adds no production authority.
 - Reverse by removing the new writer path while retaining backward-compatible
   decoding of already emitted records. Do not rewrite historical attempts.
+
+The clarification above adopts the accepted
+[#2478 implementation](https://github.com/beep-effect/beep-effect/commit/f69e6dd06759639279eed885665a5c564528bd7c)
+on 2026-11-02. Its disposable-remote regressions bind the created commit in
+verdicts, leases, shadow facts and both finished and interrupted terminal rows.
+That commit identity is provenance for what ran and was pushed; it grants no
+cache qualification or hosted-proof reuse. Reversal remains a repair PR that
+preserves the original journal and readable historical verdicts.
 
 ### Publication-repair hosted escape, 2026-10-30
 
