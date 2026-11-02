@@ -1457,12 +1457,16 @@ const scaffoldRule = (scripts: HashMap.HashMap<string, string>, rule: TaskScript
  *   binding: TaskScriptBinding.cases.indirection.make({ impl: "beep:build", ifPresent: true }),
  * })
  * console.log(HashMap.size(applyScaffoldRuleForTesting(HashMap.empty(), rule))) // 2
+ * console.log(HashMap.size(applyScaffoldRuleForTesting(rule)(HashMap.empty()))) // 2
  * ```
  *
  * @category testing
  * @since 0.0.0
  */
-export const applyScaffoldRuleForTesting = scaffoldRule;
+export const applyScaffoldRuleForTesting: {
+  (scripts: HashMap.HashMap<string, string>, rule: TaskScriptRule): HashMap.HashMap<string, string>;
+  (rule: TaskScriptRule): (scripts: HashMap.HashMap<string, string>) => HashMap.HashMap<string, string>;
+} = dual(2, scaffoldRule);
 
 const scaffoldRuleEnabled =
   (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>) => (rule: TaskScriptRule) =>
