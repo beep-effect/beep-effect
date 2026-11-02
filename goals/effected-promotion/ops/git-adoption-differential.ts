@@ -19,7 +19,9 @@
  *
  * Exit code 1 when any gate fails.
  */
+
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
 import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -400,8 +402,10 @@ const program = Effect.gen(function* () {
   if (!gates.unclassified) process.exitCode = 1;
 }).pipe(Effect.scoped);
 
+// `Git` rides beside the platform services: `isRegisteredWorktree` / `removeGitWorktree` take it from the context
+// since repo-cli-gh-git-consolidation W1b dropped their leaf `Git.make` provision.
 NodeRuntime.runMain(
-  Layer.build(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)).pipe(
+  Layer.build(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))).pipe(
     Effect.flatMap((services) => program.pipe(Effect.provide(services))),
     Effect.scoped
   )
