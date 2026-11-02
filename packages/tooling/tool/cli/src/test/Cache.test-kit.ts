@@ -128,6 +128,12 @@ export {
   CacheProducerWorkflowFile,
 } from "../commands/Cache/Cache.workflow.schemas.ts";
 export {
+  downloadCacheProducerPrivateObservation,
+  readCacheProducerPrivateObservation,
+  removeCacheProducerPrivateObservation,
+  uploadCacheProducerPrivateObservation,
+} from "../commands/Cache/Cache.workflow.storage.ts";
+export {
   assertCacheProducerUploadRuntime,
   assertCacheProducerWorkflowLocation,
   assertCacheProducerWorkflowProfile,
