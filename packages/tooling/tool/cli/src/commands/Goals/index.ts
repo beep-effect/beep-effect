@@ -49,6 +49,13 @@ export * from "./CompletionEvidence.service.ts";
  */
 export * from "./CompletionEvidence.ts";
 /**
+ * Workstation-scoped goal completion receipt store shared by every clone.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./CompletionReceiptStore.service.ts";
+/**
  * Doctor command and baseline-ratchet exports.
  *
  * @category cli-commands

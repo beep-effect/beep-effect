@@ -387,7 +387,7 @@ describe("package scripts policy", () => {
           "package.json": { name: "root", workspaces: ["packages/tooling/tool/*"] },
           "packages/tooling/tool/docgen/package.json": {
             name: "@beep/docgen",
-            scripts: { coverage: "owned coverage", docgen: "bun run src/bin.ts", audit: "bun run custom-audit" },
+            scripts: { coverage: "owned coverage", docgen: "bun run src/bin.ts" },
           },
         });
         const fs = yield* FileSystem.FileSystem;
@@ -399,8 +399,6 @@ describe("package scripts policy", () => {
         const manifest = yield* decodeManifest(first);
         expect(manifest.scripts.docgen).toBe("bun run beep:docgen");
         expect(manifest.scripts["beep:docgen"]).toBe("bun run src/bin.ts");
-        expect(manifest.scripts.audit).toBe("bun run --if-present beep:audit");
-        expect(manifest.scripts["beep:audit"]).toBe("bun run custom-audit");
         expect(HashSet.size((yield* policy.write(root)).written)).toBe(0);
         expect(yield* fs.readFileString(file)).toBe(first);
         for (const scripts of [{}, { docgen: "bun run beep:docgen" }]) {

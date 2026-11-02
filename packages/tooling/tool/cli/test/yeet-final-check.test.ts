@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { configStringOption } from "@beep/repo-cli/test/SharedInternals";
@@ -427,11 +428,14 @@ const scriptedSpawner = (failing: ReadonlyArray<string> = []) =>
   });
 
 const platformWith = (failing: ReadonlyArray<string> = []) =>
-  Layer.mergeAll(
-    MemoryFileSystem.layer,
-    Path.layer,
-    BunCrypto.layer,
-    Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, scriptedSpawner(failing))
+  Layer.provideMerge(
+    Git.layer,
+    Layer.mergeAll(
+      MemoryFileSystem.layer,
+      Path.layer,
+      BunCrypto.layer,
+      Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, scriptedSpawner(failing))
+    )
   );
 
 // A moved test tree as #2241 made it: one modified file whose diff is wider than
@@ -474,6 +478,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
       Effect.gen(function* () {
         const commands = yield* Ref.make<ReadonlyArray<string>>([]);
         const rewrites = yield* collectExpectationRewrites("/repo", BASE).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, treeMoveGit(commands))
         );
         expect(rewrites).toEqual([
@@ -522,6 +527,7 @@ const scriptedGit = (script: GitScript) =>
   );
 const collectWith = (script: GitScript) =>
   collectExpectationRewrites("/repo", BASE).pipe(
+    Effect.provideServiceEffect(Git, Git.make),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedGit(script))
   );
 const spawnFailure = PlatformError.systemError({

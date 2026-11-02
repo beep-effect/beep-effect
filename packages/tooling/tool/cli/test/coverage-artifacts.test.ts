@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import {
   CoveragePackageArtifact,
@@ -40,6 +41,9 @@ import * as Struct from "effect/Struct";
 import { ts } from "ts-morph";
 import { parse } from "vite";
 import { hostNodeExecutable } from "./helpers/native-node.ts";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
 const nativeTestRuntime = process.versions.bun === undefined ? "node" : "bun";
 const nativeTestVersion = process.versions.bun ?? process.versions.node;
@@ -435,7 +439,7 @@ const compoundFixture = Effect.fnUntraced(function* (secondRuntime: "bun" | "nod
   return { ...f, packages, options, write };
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "coverage artifact integrity",
   (it) => {
     describe("runtime invocation integrity", () => {

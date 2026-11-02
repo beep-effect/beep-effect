@@ -924,3 +924,36 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   examples enforce their existing service-free Effect contract. The initial
   boolean branch widened that contract; an intended compile failure demonstrates
   why the dependency must stay at the producer boundary.
+
+
+### Route protected inspection through the admitted reusable workflow, 2026-11-02
+
+- The first live manual run was never assigned a runner. A current organization
+  runner-group read excludes the standalone inspection path and admits
+  `heavy.yml@refs/heads/main`. GitHub grants selected workflow access to jobs
+  defined directly in those workflows, including reusable workflow leaves.
+- Keep the manual, main-only dispatcher and move its credential-free inspection
+  leaf into the already admitted Heavy workflow. An explicit boolean mode
+  defaults off. Only that mode omits the ordinary quality matrix; existing
+  callers retain their expanded contexts and default admission behavior. The
+  inspection leaf also requires the exact main dispatcher and manual event.
+- Preserve contents-read permissions, protected environment, exact source
+  checkout, disabled cache/app-secret setup, sandbox prerequisite, ten-minute
+  execution ceiling, one-day report retention and single-dispatch concurrency.
+  Do not broaden the runner-group allowlist, provision runners or enable signing.
+- Reversal disables this optional route and removes the inspection mode and leaf;
+  ordinary Heavy callers, storage roles, bucket and cache services remain owned
+  by their existing authorities. Obtain a real post-merge inspection receipt
+  before producer approval; this routing component alone proves none.
+
+
+### Safe supervisor failure hints, 2026-11-02
+
+Extend the existing capture guard with a finite annotated vocabulary of fixed
+hints. On a nonzero exit, recognize a member in private output and quote only
+that source literal; attach no captured substring or raw cause. Unknown output
+keeps the generic error, and truncation fails before recognition. A hint is an
+untrusted diagnostic observation, not root-cause or qualification authority.
+Existing exit/truncation gates, input checks, deadlines and rollout policy stay
+intact. Reversal removes hint recognition from the same guard while retaining
+its existing bounded failure behavior.

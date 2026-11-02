@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { HEAVY_ADMISSION_LABEL, HeavyAdmission } from "@beep/repo-cli/commands/Ci";
 import {
@@ -667,7 +668,10 @@ describe("B7 settle contracts", () => {
             assertNone(result);
             expect(yield* TestConsole.errorLines).toHaveLength(1);
           }
-        }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner(code, output)))
+        }).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner(code, output))
+        )
       );
     });
   }
@@ -1070,6 +1074,7 @@ it.layer(platform, { timeout: "30 seconds" })((it) =>
           return Effect.succeed(handle(0, "[]"));
         });
         const result = yield* collectYeetStatus(contextFor(root), true).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
         );
         expect(yield* Ref.get(checkReads)).toBe(2);
@@ -1179,6 +1184,7 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
             const restReads = yield* Ref.make(0);
             const runner = selfLoopRunner(restRecoveryAvailable, pageReads, restReads);
             const failure = yield* collectYeetStatus(contextFor(root), true).pipe(
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner),
               Effect.flip
             );
@@ -1251,7 +1257,10 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
             ),
           rulesetRead: () => Effect.succeedNone,
           pollInterval: Duration.zero,
-        }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner));
+        }).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
+        );
         expect(terminal).toBe("closed");
         expect(yield* Ref.get(reruns)).toBe(1);
         expect(A.join(A.map(yield* TestConsole.logLines, String), "\n")).toContain("rerun budget spent");

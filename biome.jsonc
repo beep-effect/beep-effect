@@ -203,7 +203,11 @@
         "noAccumulatingSpread": "off"
       },
       "suspicious": {
-        "noDeprecatedImports": "error",
+        // Project-domain rule: enabling it here makes every `biome check .` scan the
+        // whole repository (1.8 s / ~75 CPU-s per package, for ~0.1 s of linting; 188
+        // packages per Turbo lint run). It runs once at the root instead, as the
+        // cached `lint:deprecated-imports` task inside `beep lint policy`.
+        "noDeprecatedImports": "off",
         // Effect style alignment. noVar is mandatory (P2, 0 violations). noConsole stays
         // advisory: enforcing it repo-wide is a large, separate effort and much console
         // use is legitimate (see STYLE.md).

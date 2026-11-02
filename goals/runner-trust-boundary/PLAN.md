@@ -280,6 +280,15 @@ ratified in
 4. [ ] Close exception E1 only after those checks pass; update README, plan,
    spec, manifest, reflection, and index in the same reviewed PR.
 
+P8 progress, 2026-11-02 (receipt
+[`history/2026-11-02-p8-state-audit.md`](./history/2026-11-02-p8-state-audit.md)):
+item 1 is resolved by the Decision Log route choice (no in-VM location is safe
+from a sudo-capable job, so E1 closes through server-side rejection); the
+verifier's roster reads now use the organization list so item 3's
+deregistration check observes the runner; and run `41409672251` re-proved
+Gates A through J and L, `AMI_PIN`, `METADATA_DISABLED`, deregistration and
+teardown on `main`. The operator granted the replay window the same day. Probe N in `fleet-shadow-check.yml` and [`ops/post-release-replay.sh`](./ops/post-release-replay.sh) implement item 2; the step must merge to `main` before it can run, because group 4 admits the workflow only at `refs/heads/main`.
+
 ## Verification commands
 
 ```sh

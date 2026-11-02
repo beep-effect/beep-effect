@@ -14,6 +14,7 @@ import {
   CiWorkflowJobsPage,
   CiWorkflowWindowRun,
   CiWorkflowWindowRunJobs,
+  ciLaneTimingDayPeaks,
   ciLaneTimingRow,
   ciLaneTimingsCommand,
   ciLaneTimingsReport,
@@ -1106,6 +1107,56 @@ describe("ci lane timing admission window", () => {
     })
   );
 
+  it.effect("admits the ten-shard Test Unit layout and refuses a run that mixes the two layouts", () =>
+    Effect.gen(function* () {
+      const tenShardNames = [
+        "repo-cli-1",
+        "repo-cli-2",
+        "repo-cli-3",
+        "repo-cli-4",
+        "repo-cli-5",
+        "repo-cli-6",
+        "unit-a",
+        "unit-b",
+        "unit-c",
+        "unit-d",
+      ];
+      const shardJobs = (run: CiWorkflowWindowRun, names: ReadonlyArray<string>) =>
+        A.map(names, (partition, index) =>
+          job({
+            completed_at: "2026-11-05T00:12:00Z",
+            id: 300 + index,
+            name: `Test Unit (${partition})`,
+            run_id: run.id,
+            started_at: `2026-11-05T00:0${2 + (index % 3)}:00Z`,
+          })
+        );
+      const aggregator = (run: CiWorkflowWindowRun) =>
+        job({
+          completed_at: "2026-11-05T00:15:00Z",
+          id: 399,
+          name: "Test Unit",
+          run_id: run.id,
+          started_at: "2026-11-05T00:01:00Z",
+        });
+      const complete = windowRun({ id: 300 });
+      // Five repo-cli shards with unit-a, unit-c and unit-d: the old layout misses unit-b, the new one misses
+      // repo-cli-6 and unit-b, so neither is whole and the span is incomplete.
+      const mixed = windowRun({ id: 301 });
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        windowRunJobs(complete, [...shardJobs(complete, tenShardNames), aggregator(complete)]),
+        windowRunJobs(mixed, [
+          ...shardJobs(mixed, [...A.take(tenShardNames, 5), "unit-a", "unit-c", "unit-d"]),
+          aggregator(mixed),
+        ]),
+      ]);
+      expect(laneStat(report, "Test Unit").n).toBe(1);
+      // Earliest shard start 00:02 to aggregator completion 00:15.
+      assertSome(laneStat(report, "Test Unit").p95Seconds, 780);
+      expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(1);
+    })
+  );
+
   it.effect("renders an unratified version without claiming a ratified context count", () =>
     Effect.gen(function* () {
       const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
@@ -1207,7 +1258,7 @@ describe("ci lane timing admission window", () => {
         const exitFailed = Exit.isFailure(exit);
         assertTrue(exitFailed);
         expect(exit.cause.toString()).toContain(
-          "must expose a ratified required-context count (16 or 17 or 18); observed 19"
+          "must expose a ratified required-context count (15 or 16 or 17 or 18); observed 19"
         );
       }
     })
@@ -1309,6 +1360,194 @@ describe("ci lane timing admission window", () => {
         )(renderCiLaneTimingWindowMarkdown(report))
       );
     }).pipe(Effect.provideService(CiLaneTimingGithubClient, windowGithubClient(commands, response)));
+  });
+
+  it.effect("admits the ratified 15-context version after the Knip removal", () => {
+    const commands = A.empty<string>();
+    const historyJson =
+      '[{"version_id":54940515,"updated_at":"2026-10-27T04:49:40.844-05:00"},{"version_id":50918272,"updated_at":"2026-09-25T09:46:59.802-05:00"}]';
+    const snapshot15Json = pipe(
+      RULESET_SNAPSHOT_17_JSON,
+      Str.replace('{"context":"Heavy / Lint Policy"},', ""),
+      Str.replace('{"context":"Knip"},', "")
+    );
+    const response = (endpoint: string) =>
+      Str.includes("/history?")(endpoint)
+        ? Effect.succeed(historyJson)
+        : Str.endsWith("/history/54940515")(endpoint)
+          ? Effect.succeed(snapshot15Json)
+          : windowGithubResponse(endpoint);
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(
+        ".",
+        windowOptions({
+          since: DateTime.makeUnsafe("2026-10-28T00:00:00Z"),
+          until: DateTime.makeUnsafe("2026-11-04T00:00:00Z"),
+        })
+      );
+      strictEqual(report.contextCount, 15);
+      deepStrictEqual(
+        O.map(report.rulesetVersion, (version) => version.version_id),
+        O.some(54940515)
+      );
+      assertTrue(A.some(commands, Str.endsWith("/history/54940515")));
+      assertTrue(
+        Str.includes(
+          "- required contexts: 15 (expected 15; ruleset 10240248 version 54940515 effective 2026-10-27T09:49:40.844Z)"
+        )(renderCiLaneTimingWindowMarkdown(report))
+      );
+    }).pipe(Effect.provideService(CiLaneTimingGithubClient, windowGithubClient(commands, response)));
+  });
+
+  it.effect("splits a span whose listing exceeds the 1000-run cap before paging it", () => {
+    const commands = A.empty<string>();
+    const historyJson =
+      '[{"version_id":54940515,"updated_at":"2026-10-27T04:49:40.844-05:00"},{"version_id":50918272,"updated_at":"2026-09-25T09:46:59.802-05:00"}]';
+    const snapshot15Json = pipe(
+      RULESET_SNAPSHOT_17_JSON,
+      Str.replace('{"context":"Heavy / Lint Policy"},', ""),
+      Str.replace('{"context":"Knip"},', "")
+    );
+    const run = (id: number, createdAt: string) =>
+      `{"created_at":"${createdAt}","event":"pull_request","head_branch":"lane-${id}","head_sha":"sha-${id}","id":${id},"run_attempt":1,"run_started_at":"${createdAt}","updated_at":"${createdAt}"}`;
+    const firstHalf = encodeURIComponent("2026-10-28T00:00:00.000Z..2026-10-31T12:00:00.000Z");
+    const secondHalf = encodeURIComponent("2026-10-31T12:00:00.000Z..2026-11-04T00:00:00.000Z");
+    // First matching route wins; the capped full-span listing is the last workflow-runs route, so the
+    // half-span listings are matched before it.
+    const routes: ReadonlyArray<{ readonly matches: (endpoint: string) => boolean; readonly body: string }> = [
+      { matches: Str.includes("/history?"), body: historyJson },
+      { matches: Str.endsWith("/history/54940515"), body: snapshot15Json },
+      { matches: Str.includes("event=push"), body: '{"total_count":0,"workflow_runs":[]}' },
+      {
+        matches: Str.includes(`created=${firstHalf}`),
+        body: `{"total_count":1,"workflow_runs":[${run(201, "2026-10-29T10:00:00Z")}]}`,
+      },
+      {
+        matches: Str.includes(`created=${secondHalf}`),
+        body: `{"total_count":1,"workflow_runs":[${run(202, "2026-11-01T10:00:00Z")}]}`,
+      },
+      {
+        matches: Str.includes("/actions/workflows/"),
+        body: `{"total_count":1500,"workflow_runs":[${run(200, "2026-10-28T10:00:00Z")}]}`,
+      },
+    ];
+    const response = (endpoint: string) =>
+      O.match(
+        A.findFirst(routes, (route) => route.matches(endpoint)),
+        { onNone: () => windowGithubResponse(endpoint), onSome: (route) => Effect.succeed(route.body) }
+      );
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(
+        ".",
+        windowOptions({
+          since: DateTime.makeUnsafe("2026-10-28T00:00:00Z"),
+          until: DateTime.makeUnsafe("2026-11-04T00:00:00Z"),
+        })
+      );
+      // The capped full-span page is discarded; only the halves' runs are censused.
+      strictEqual(report.runCount, 2);
+      const runPageCommands = A.filter(commands, Str.includes("/actions/workflows/"));
+      assertTrue(A.some(runPageCommands, Str.includes(`created=${firstHalf}`)));
+      assertTrue(A.some(runPageCommands, Str.includes(`created=${secondHalf}`)));
+      assertTrue(A.some(commands, Str.includes("/actions/runs/201/jobs")));
+      assertTrue(A.some(commands, Str.includes("/actions/runs/202/jobs")));
+      assertTrue(!A.some(commands, Str.includes("/actions/runs/200/jobs")));
+      deepStrictEqual(
+        A.map(report.dayPeaks, (peak) => [peak.day, peak.peakRuns, peak.peakBranches]),
+        [
+          ["2026-10-29", 1, 1],
+          ["2026-11-01", 1, 1],
+        ]
+      );
+    }).pipe(Effect.provideService(CiLaneTimingGithubClient, windowGithubClient(commands, response)));
+  });
+
+  it("sweeps per-day peak CI-active runs and branches, carrying load across midnight", () => {
+    const run = (id: number, branch: string, start: string, end: string) =>
+      CiWorkflowWindowRun.make({
+        created_at: DateTime.makeUnsafe(start),
+        event: "pull_request",
+        head_branch: O.some(branch),
+        head_sha: `sha-${id}`,
+        id,
+        run_attempt: 1,
+        run_started_at: O.some(DateTime.makeUnsafe(start)),
+        updated_at: O.some(DateTime.makeUnsafe(end)),
+      });
+    const peaks = ciLaneTimingDayPeaks([
+      // Three runs overlap at 10:10 on 10-28, but only two branches: `a` has two live runs.
+      run(1, "a", "2026-10-28T10:00:00Z", "2026-10-28T10:20:00Z"),
+      run(2, "a", "2026-10-28T10:05:00Z", "2026-10-28T10:15:00Z"),
+      run(3, "b", "2026-10-28T10:10:00Z", "2026-10-28T10:30:00Z"),
+      // Spans midnight: the tick attributes one live run and branch to 10-30.
+      run(4, "c", "2026-10-29T23:50:00Z", "2026-10-30T00:10:00Z"),
+      // No in-flight bounds: contributes nothing.
+      CiWorkflowWindowRun.make({
+        created_at: DateTime.makeUnsafe("2026-10-31T00:00:00Z"),
+        event: "push",
+        head_sha: "sha-5",
+        id: 5,
+        run_attempt: 1,
+      }),
+    ]);
+    deepStrictEqual(
+      A.map(peaks, (peak) => [peak.day, peak.peakRuns, peak.peakBranches]),
+      [
+        ["2026-10-28", 3, 2],
+        ["2026-10-29", 1, 1],
+        ["2026-10-30", 1, 1],
+      ]
+    );
+    const report = CiLaneTimingWindowReport.make({
+      attribution: [],
+      contextCount: 15,
+      dayPeaks: peaks,
+      laneStats: [],
+      pickup: { breached: false, maxSeconds: O.none(), n: 0, p50Seconds: O.none(), p95Seconds: O.none() },
+      requiredContexts: [],
+      rulesetVersion: O.none(),
+      rows: [],
+      runCount: 5,
+      schemaVersion: "ci-lane-timing-window/v1",
+    });
+    const markdown = renderCiLaneTimingWindowMarkdown(report);
+    expect(markdown).toContain("## Per-day peak CI-active branches");
+    expect(markdown).toContain("| 2026-10-28 | 3 | 2 | within cap |");
+    expect(renderCiLaneTimingWindowSummary(report)).toContain(
+      "peak CI-active branches: 2 on 2026-10-28 (within cap); 0 of 3 days above the cap of 6."
+    );
+  });
+
+  it("names a day above the six-branch cap", () => {
+    const run = (id: number) =>
+      CiWorkflowWindowRun.make({
+        created_at: DateTime.makeUnsafe("2026-10-31T12:00:00Z"),
+        event: "pull_request",
+        head_branch: O.some(`lane-${id}`),
+        head_sha: `sha-${id}`,
+        id,
+        run_attempt: 1,
+        run_started_at: O.some(DateTime.makeUnsafe("2026-10-31T12:00:00Z")),
+        updated_at: O.some(DateTime.makeUnsafe("2026-10-31T12:30:00Z")),
+      });
+    const peaks = ciLaneTimingDayPeaks(A.map(A.range(1, 8), run));
+    deepStrictEqual(
+      A.map(peaks, (peak) => [peak.day, peak.peakRuns, peak.peakBranches]),
+      [["2026-10-31", 8, 8]]
+    );
+    const report = CiLaneTimingWindowReport.make({
+      attribution: [],
+      contextCount: 15,
+      dayPeaks: peaks,
+      laneStats: [],
+      pickup: { breached: false, maxSeconds: O.none(), n: 0, p50Seconds: O.none(), p95Seconds: O.none() },
+      requiredContexts: [],
+      rulesetVersion: O.none(),
+      rows: [],
+      runCount: 8,
+      schemaVersion: "ci-lane-timing-window/v1",
+    });
+    expect(renderCiLaneTimingWindowMarkdown(report)).toContain("| 2026-10-31 | 8 | 8 | above cap (+2) |");
   });
 
   it.effect("fails closed when a ratified version exposes a different context count", () => {

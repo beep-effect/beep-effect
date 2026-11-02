@@ -179,14 +179,18 @@ const show: {
   (path: string): (ref: string) => GitInvocation;
 } = dual(2, (ref: string, path: string): GitInvocation => git(["show", `${ref}:${path}`]));
 
+/** The `--` separator plus `pathspec`, or nothing when there is no pathspec to scope by. */
+const pathspecArgs = (pathspec: ReadonlyArray<string> | undefined): ReadonlyArray<string> =>
+  pathspec !== undefined && pathspec.length > 0 ? ["--", ...pathspec] : [];
+
 // Implementation of GitCommand.lsTree; the public contract lives on the static.
 const lsTree: {
-  (ref: string, pathspec?: ReadonlyArray<string>): GitInvocation;
-  (pathspec?: ReadonlyArray<string>): (ref: string) => GitInvocation;
+  (ref: string, pathspec?: ReadonlyArray<string>, fullTree?: boolean): GitInvocation;
+  (pathspec?: ReadonlyArray<string>, fullTree?: boolean): (ref: string) => GitInvocation;
 } = dual(
   (args) => P.isString(args[0]),
-  (ref: string, pathspec: ReadonlyArray<string> = []): GitInvocation =>
-    git(["ls-tree", "-r", "-z", ref, ...(pathspec.length > 0 ? ["--", ...pathspec] : [])])
+  (ref: string, pathspec: ReadonlyArray<string> = [], fullTree?: boolean): GitInvocation =>
+    git(["ls-tree", "-r", "-z", ...(fullTree === true ? ["--full-tree"] : []), ref, ...pathspecArgs(pathspec)])
 );
 
 // Implementation of GitCommand.refExists; the public contract lives on the static.
@@ -210,21 +214,81 @@ const isAncestor: {
   (ancestor: string, descendant: string): GitInvocation => git(["merge-base", "--is-ancestor", ancestor, descendant])
 );
 
+/**
+ * The change-selection options every `--name-only` diff constructor accepts.
+ * The service validates `diffFilter` (git's `[ACDMRTUXB*]` letters, lower
+ * case excluding) and the pathspec before any spawn; the constructor renders
+ * them verbatim.
+ */
+type DiffListOptions = {
+  readonly diffFilter?: string;
+  readonly noRenames?: boolean;
+  readonly pathspec?: ReadonlyArray<string>;
+};
+
+/** `[--no-renames] [--diff-filter=<letters>]` — the flags {@link DiffListOptions} renders before the range. */
+const diffListFlags = (options: DiffListOptions): ReadonlyArray<string> => [
+  ...(options.noRenames === true ? ["--no-renames"] : []),
+  ...(options.diffFilter !== undefined ? [`--diff-filter=${options.diffFilter}`] : []),
+];
+
+/** The two spellings of a two-ref diff range: merge-base `base...head`, or the plain tree-to-tree pair. */
+const rangeArgs = (base: string, head: string, twoDot: boolean | undefined): ReadonlyArray<string> =>
+  twoDot === true ? [base, head] : [`${base}...${head}`];
+
+/** {@link DiffListOptions} plus `twoDot`, which selects the plain `<base> <head>` pair over `<base>...<head>`. */
+type ChangedFilesOptions = DiffListOptions & { readonly twoDot?: boolean };
+
 // Implementation of GitCommand.changedFiles; the public contract lives on the static.
-const changedFiles = (base: string, head: string, relative = false): GitInvocation =>
-  git(["diff", "--name-only", "-z", relative ? "--relative" : "--no-relative", `${base}...${head}`]);
+const changedFiles = (base: string, head: string, relative = false, options: ChangedFilesOptions = {}): GitInvocation =>
+  git([
+    "diff",
+    "--name-only",
+    "-z",
+    relative ? "--relative" : "--no-relative",
+    ...diffListFlags(options),
+    ...rangeArgs(base, head, options.twoDot),
+    ...pathspecArgs(options.pathspec),
+  ]);
+
+/** {@link DiffListOptions} plus `head`, the commit the working tree or index is compared against instead of the default. */
+type WorkingDiffOptions = DiffListOptions & { readonly head?: string };
 
 // Implementation of GitCommand.unstagedChanges; the public contract lives on the static.
-const unstagedChanges = (relative = false): GitInvocation =>
-  git(["diff", "--name-only", "-z", relative ? "--relative" : "--no-relative"]);
+const unstagedChanges = (relative = false, options: WorkingDiffOptions = {}): GitInvocation =>
+  git([
+    "diff",
+    "--name-only",
+    "-z",
+    relative ? "--relative" : "--no-relative",
+    ...diffListFlags(options),
+    ...(options.head !== undefined ? [options.head] : []),
+    ...pathspecArgs(options.pathspec),
+  ]);
 
 // Implementation of GitCommand.stagedChanges; the public contract lives on the static.
-const stagedChanges = (relative = false): GitInvocation =>
-  git(["diff", "--name-only", "-z", relative ? "--relative" : "--no-relative", "--cached"]);
+const stagedChanges = (relative = false, options: WorkingDiffOptions = {}): GitInvocation =>
+  git([
+    "diff",
+    "--name-only",
+    "-z",
+    relative ? "--relative" : "--no-relative",
+    "--cached",
+    ...diffListFlags(options),
+    ...(options.head !== undefined ? [options.head] : []),
+    ...pathspecArgs(options.pathspec),
+  ]);
 
 // Implementation of GitCommand.untrackedFiles; the public contract lives on the static.
-const untrackedFiles = (relative = false): GitInvocation =>
-  git(["ls-files", "--others", "--exclude-standard", "-z", ...(relative ? [] : ["--full-name"])]);
+const untrackedFiles = (relative = false, pathspec: ReadonlyArray<string> = []): GitInvocation =>
+  git([
+    "ls-files",
+    "--others",
+    "--exclude-standard",
+    "-z",
+    ...(relative ? [] : ["--full-name"]),
+    ...pathspecArgs(pathspec),
+  ]);
 
 /**
  * The options {@link GitCommand.revParse} accepts: `peel` appends git's
@@ -392,6 +456,7 @@ type NameStatusOptions = {
   readonly findRenames?: number;
   readonly diffFilter?: string;
   readonly pathspec?: ReadonlyArray<string>;
+  readonly twoDot?: boolean;
 };
 
 // Implementation of GitCommand.nameStatus; the public contract lives on the static.
@@ -408,16 +473,54 @@ const nameStatus = (
     relative ? "--relative" : "--no-relative",
     ...(options.findRenames !== undefined ? [`--find-renames=${options.findRenames}%`] : []),
     ...(options.diffFilter !== undefined ? [`--diff-filter=${options.diffFilter}`] : []),
-    head === undefined ? base : `${base}...${head}`,
-    ...(options.pathspec !== undefined && options.pathspec.length > 0 ? ["--", ...options.pathspec] : []),
+    ...(head === undefined ? [base] : rangeArgs(base, head, options.twoDot)),
+    ...pathspecArgs(options.pathspec),
   ]);
 
 // Implementation of GitCommand.defaultBranch; the public contract lives on the static.
 const defaultBranch = (remote = "origin"): GitInvocation =>
   git(["symbolic-ref", "--quiet", "--short", `refs/remotes/${remote}/HEAD`]);
 
+/**
+ * How {@link GitCommand.currentBranch} asks for the branch name.
+ *
+ * **Details**
+ *
+ * `abbrev-ref` runs `rev-parse --abbrev-ref HEAD`, which answers the literal
+ * `HEAD` on a detached head and fails on an unborn branch; `show-current`
+ * runs `branch --show-current`, which prints NOTHING on a detached head and
+ * names an unborn branch. The `Git` service maps both detached spellings to
+ * `Option.none`.
+ *
+ * **Example** (Validate a current-branch mode)
+ *
+ * ```ts
+ * import { CurrentBranchMode } from "@beep/git/GitCommand";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CurrentBranchMode)("show-current")) // true
+ * console.log(S.is(CurrentBranchMode)("symbolic")) // false
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CurrentBranchMode = LiteralKit(["abbrev-ref", "show-current"]).pipe(
+  $I.annoteSchema("CurrentBranchMode", { description: "Which git question answers the current branch name." })
+);
+/**
+ * Selects the git question {@link GitCommand.currentBranch} asks.
+ *
+ * @see {@link CurrentBranchMode} for the runtime schema of accepted modes.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CurrentBranchMode = typeof CurrentBranchMode.Type;
+
 // Implementation of GitCommand.currentBranch; the public contract lives on the static.
-const currentBranch = (): GitInvocation => git(["rev-parse", "--abbrev-ref", "HEAD"]);
+const currentBranch = (mode: CurrentBranchMode = "abbrev-ref"): GitInvocation =>
+  mode === "show-current" ? git(["branch", "--show-current"]) : git(["rev-parse", "--abbrev-ref", "HEAD"]);
 
 // Implementation of GitCommand.repoRoot; the public contract lives on the static.
 const repoRoot = (): GitInvocation => git(["rev-parse", "--show-toplevel"]);
@@ -430,34 +533,56 @@ const commitInfo = (ref = "HEAD"): GitInvocation =>
   git(["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", ref]);
 
 /**
- * The `git log` record format: a NUL record opener followed by the five
- * NUL-joined header fields the log listing decodes.
+ * The `git log` record format: a NUL record opener followed by the six
+ * NUL-joined header fields the log listing decodes — `%H`, `%aI`, `%cI`,
+ * `%an`, `%ae` and the subject `%s`.
  *
  * **Details**
  *
- * Paths are nonempty and cannot contain NUL, so the empty token emitted
- * before a header is an unambiguous boundary outside the pathname space.
- * The five header tokens are read by position before parsing path tokens.
+ * Paths and name-status codes are nonempty and cannot contain NUL, so the
+ * empty token emitted before a header is an unambiguous boundary outside the
+ * body space. The six header tokens are read by position before parsing the
+ * body; `%s` is the message's first paragraph folded onto one line, so it
+ * cannot carry a newline and, like every commit-message byte, cannot carry a
+ * NUL.
  */
-const LOG_FORMAT = "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae";
+const LOG_FORMAT = "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s";
+
+/**
+ * The body-shape options {@link GitCommand.log} accepts beyond the walk
+ * itself. `nameStatus` swaps `--name-only` for `--name-status`; `diffFilter`
+ * and `findRenames` select and detect changes in either body mode (the
+ * service validates both pre-spawn); `quotePath: false` prepends the global
+ * `-c core.quotePath=false`.
+ */
+type LogOptions = {
+  readonly nameStatus?: boolean;
+  readonly diffFilter?: string;
+  readonly findRenames?: number;
+  readonly quotePath?: false;
+};
 
 // Implementation of GitCommand.log; the public contract lives on the static.
 const log = (
   paths: ReadonlyArray<string> = [],
   follow = false,
   limit?: number,
-  firstParentDiffMerges = false
+  firstParentDiffMerges = false,
+  options: LogOptions = {}
 ): GitInvocation =>
   git([
+    ...(options.quotePath === false ? ["-c", "core.quotePath=false"] : []),
     "log",
     "--no-show-signature",
     "-z",
     LOG_FORMAT,
-    "--name-only",
+    options.nameStatus === true ? "--name-status" : "--name-only",
+    ...(options.diffFilter !== undefined ? [`--diff-filter=${options.diffFilter}`] : []),
+    ...(options.findRenames !== undefined ? [`--find-renames=${options.findRenames}%`] : []),
     ...(follow ? ["--follow"] : []),
     ...(firstParentDiffMerges ? ["--diff-merges=first-parent"] : []),
     ...(limit !== undefined ? [`--max-count=${limit}`] : []),
-    ...(paths.length > 0 ? ["--", ...paths] : []),
+    ...pathspecArgs(paths),
   ]);
 
 /**
@@ -512,8 +637,95 @@ const configGet = (key: string, scope?: GitConfigScope): GitInvocation =>
 const remoteUrl = (remote = "origin", push = false): GitInvocation =>
   git(["remote", "get-url", ...(push ? ["--push"] : []), remote]);
 
+/**
+ * `--untracked-files=<mode>`'s domain: `all` lists every file inside an
+ * untracked directory, `normal` (git's default) collapses the directory to
+ * one `dir/` entry, `no` omits untracked paths entirely.
+ *
+ * **Example** (Validate an untracked-files mode)
+ *
+ * ```ts
+ * import { StatusUntrackedFiles } from "@beep/git/GitCommand";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(StatusUntrackedFiles)("all")) // true
+ * console.log(S.is(StatusUntrackedFiles)("-uall")) // false
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const StatusUntrackedFiles = LiteralKit(["all", "normal", "no"]).pipe(
+  $I.annoteSchema("StatusUntrackedFiles", { description: "How `git status` reports untracked paths." })
+);
+/**
+ * Selects how `git status` reports untracked paths.
+ *
+ * @see {@link StatusUntrackedFiles} for the runtime schema of accepted modes.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type StatusUntrackedFiles = typeof StatusUntrackedFiles.Type;
+
+/**
+ * `--ignore-submodules=<when>`'s domain: `none` reports a submodule as
+ * changed when it has untracked or modified files or its HEAD moved,
+ * `untracked` ignores untracked content, `dirty` ignores all working-tree
+ * changes, `all` hides submodule changes entirely.
+ *
+ * **Example** (Validate an ignore-submodules mode)
+ *
+ * ```ts
+ * import { StatusIgnoreSubmodules } from "@beep/git/GitCommand";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(StatusIgnoreSubmodules)("none")) // true
+ * console.log(S.is(StatusIgnoreSubmodules)("never")) // false
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const StatusIgnoreSubmodules = LiteralKit(["none", "untracked", "dirty", "all"]).pipe(
+  $I.annoteSchema("StatusIgnoreSubmodules", { description: "Which submodule changes `git status` ignores." })
+);
+/**
+ * Selects which submodule changes `git status` ignores.
+ *
+ * @see {@link StatusIgnoreSubmodules} for the runtime schema of accepted modes.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type StatusIgnoreSubmodules = typeof StatusIgnoreSubmodules.Type;
+
+/**
+ * The options {@link GitCommand.status} accepts. `noOptionalLocks` is the one
+ * GLOBAL flag (`git --no-optional-locks status ...`), rendered before the
+ * subcommand; the rest follow `--porcelain -z`, and the pathspec sits behind
+ * `--`.
+ */
+type StatusOptions = {
+  readonly ignoreSubmodules?: StatusIgnoreSubmodules;
+  readonly noOptionalLocks?: boolean;
+  readonly noRenames?: boolean;
+  readonly pathspec?: ReadonlyArray<string>;
+  readonly untrackedFiles?: StatusUntrackedFiles;
+};
+
 // Implementation of GitCommand.status; the public contract lives on the static.
-const status = (): GitInvocation => git(["status", "--porcelain", "-z"]);
+const status = (options: StatusOptions = {}): GitInvocation =>
+  git([
+    ...(options.noOptionalLocks === true ? ["--no-optional-locks"] : []),
+    "status",
+    "--porcelain",
+    "-z",
+    ...(options.untrackedFiles !== undefined ? [`--untracked-files=${options.untrackedFiles}`] : []),
+    ...(options.ignoreSubmodules !== undefined ? [`--ignore-submodules=${options.ignoreSubmodules}`] : []),
+    ...(options.noRenames === true ? ["--no-renames"] : []),
+    ...pathspecArgs(options.pathspec),
+  ]);
 
 // Implementation of GitCommand.submoduleStatus; the public contract lives on the static.
 const submoduleStatus = (paths: ReadonlyArray<string> = [], recursive = false): GitInvocation =>
@@ -895,8 +1107,9 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git ls-tree -r -z <ref> [-- <pathspec>...]` — every path in the tree at
-   * `ref`, recursively, NUL-terminated, optionally scoped to `pathspec`.
+   * `git ls-tree -r -z [--full-tree] <ref> [-- <pathspec>...]` — every path in
+   * the tree at `ref`, recursively, NUL-terminated, optionally scoped to
+   * `pathspec`.
    *
    * **Gotchas**
    *
@@ -904,6 +1117,11 @@ export class GitCommand {
    * caller must split on `"\0"`, never on `"\n"`. When `pathspec` is provided,
    * a literal `--` separator is inserted before the pathspec entries to prevent
    * git from interpreting pathspec values as options.
+   *
+   * Without `--full-tree`, `ls-tree` run from a subdirectory lists only that
+   * subdirectory's entries, with paths relative to it. `fullTree: true` makes
+   * the listing root-anchored whatever the `cwd`, so a reader need not resolve
+   * the repository root first.
    *
    * **Example** (Inspect ls tree argv)
    *
@@ -913,6 +1131,16 @@ export class GitCommand {
    * const invocation = GitCommand.lsTree("HEAD", ["src"]);
    *
    * console.log(invocation.redactedArgs.join(" ")) // ls-tree -r -z HEAD -- src
+   * ```
+   *
+   * **Example** (List the whole tree from any cwd)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.lsTree("HEAD", [], true);
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // ls-tree -r -z --full-tree HEAD
    * ```
    *
    * @category constructors
@@ -1009,9 +1237,16 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git diff --name-only -z [--relative] <base>...<head>` — the paths that
-   * differ between the merge base of `base` and `head`, and `head` itself,
-   * NUL-terminated.
+   * `git diff --name-only -z (--relative | --no-relative) [--no-renames] [--diff-filter=<letters>] (<base>...<head> | <base> <head>) [-- <pathspec>...]`
+   * — the paths that differ between the merge base of `base` and `head`, and
+   * `head` itself, NUL-terminated.
+   *
+   * `options.noRenames` turns rename detection off so a moved file lists as
+   * its old AND new path; `options.diffFilter` keeps only the named status
+   * letters (lower case excludes them); `options.pathspec` scopes the diff
+   * behind `--`; `options.twoDot` emits the plain `<base> <head>` pair — a
+   * tree-to-tree comparison — instead of the merge-base `...` form. With no
+   * option passed the argv is exactly the four-flag range form it always was.
    *
    * **Gotchas**
    *
@@ -1038,6 +1273,22 @@ export class GitCommand {
    * console.log(invocation.redactedArgs.join(" ")) // diff --name-only -z --relative main...feature
    * ```
    *
+   * **Example** (Filter, scope and compare trees directly)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.changedFiles("main", "HEAD", false, {
+   *   noRenames: true,
+   *   diffFilter: "ACMR",
+   *   twoDot: true,
+   *   pathspec: ["src"],
+   * });
+   *
+   * console.log(invocation.redactedArgs.join(" "));
+   * // diff --name-only -z --no-relative --no-renames --diff-filter=ACMR main HEAD -- src
+   * ```
+   *
    * @category constructors
    * @since 0.0.0
    */
@@ -1048,14 +1299,16 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git diff --name-only -z (--relative | --no-relative)` — the paths with
-   * unstaged working-tree changes (the working tree against the index),
-   * NUL-terminated.
+   * `git diff --name-only -z (--relative | --no-relative) [--no-renames] [--diff-filter=<letters>] [<head>] [-- <pathspec>...]`
+   * — the paths with unstaged working-tree changes (the working tree against
+   * the index, or against `options.head` when one is given), NUL-terminated.
    *
    * `relative` behaves as it does for {@link GitCommand.changedFiles}, including the
    * explicit-flag-in-both-branches rule: `--no-relative` is passed for
    * `relative: false` so a configured `diff.relative=true` cannot silently make the
-   * output cwd-relative.
+   * output cwd-relative. `noRenames`, `diffFilter` and `pathspec` render as
+   * they do for {@link GitCommand.changedFiles}; `head` names a commit to
+   * compare the working tree against instead of the index.
    *
    * **Example** (Inspect unstaged changes argv)
    *
@@ -1065,6 +1318,17 @@ export class GitCommand {
    * const invocation = GitCommand.unstagedChanges(true);
    *
    * console.log(invocation.redactedArgs.join(" ")) // diff --name-only -z --relative
+   * ```
+   *
+   * **Example** (Compare the working tree against HEAD under a pathspec)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.unstagedChanges(false, { diffFilter: "ACMR", head: "HEAD", pathspec: ["src"] });
+   *
+   * console.log(invocation.redactedArgs.join(" "));
+   * // diff --name-only -z --no-relative --diff-filter=ACMR HEAD -- src
    * ```
    *
    * @category constructors
@@ -1077,11 +1341,14 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git diff --name-only -z (--relative | --no-relative) --cached` — the paths
-   * staged for the next commit (the index against `HEAD`), NUL-terminated.
+   * `git diff --name-only -z (--relative | --no-relative) --cached [--no-renames] [--diff-filter=<letters>] [<head>] [-- <pathspec>...]`
+   * — the paths staged for the next commit (the index against `HEAD`, or
+   * against `options.head` when one is given), NUL-terminated.
    *
    * `relative` behaves as it does for {@link GitCommand.changedFiles}, including the
-   * explicit `--no-relative` on the `relative: false` branch.
+   * explicit `--no-relative` on the `relative: false` branch. `noRenames`,
+   * `diffFilter`, `head` and `pathspec` render as they do for
+   * {@link GitCommand.unstagedChanges}, after `--cached`.
    *
    * **Example** (Inspect staged changes argv)
    *
@@ -1091,6 +1358,17 @@ export class GitCommand {
    * const invocation = GitCommand.stagedChanges();
    *
    * console.log(invocation.redactedArgs.join(" ")) // diff --name-only -z --no-relative --cached
+   * ```
+   *
+   * **Example** (Staged additions only, renames split into delete plus add)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.stagedChanges(false, { noRenames: true, diffFilter: "A" });
+   *
+   * console.log(invocation.redactedArgs.join(" "));
+   * // diff --name-only -z --no-relative --cached --no-renames --diff-filter=A
    * ```
    *
    * @category constructors
@@ -1103,8 +1381,9 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git ls-files --others --exclude-standard -z [--full-name]` — the untracked
-   * paths git is not ignoring, NUL-terminated.
+   * `git ls-files --others --exclude-standard -z [--full-name] [-- <pathspec>...]`
+   * — the untracked paths git is not ignoring, NUL-terminated, optionally
+   * scoped to `pathspec` behind `--`.
    *
    * `ls-files` reports paths relative to `cwd` by default, matching the
    * `--relative` diffs. When `relative` is `false`, `--full-name` makes it emit
@@ -1120,6 +1399,16 @@ export class GitCommand {
    * const invocation = GitCommand.untrackedFiles();
    *
    * console.log(invocation.redactedArgs.join(" ")) // ls-files --others --exclude-standard -z --full-name
+   * ```
+   *
+   * **Example** (Scope the listing to a subtree)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.untrackedFiles(false, ["packages"]);
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // ls-files --others --exclude-standard -z --full-name -- packages
    * ```
    *
    * @category constructors
@@ -1593,18 +1882,20 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git diff --name-status -z (--relative | --no-relative) [--find-renames=<n>%] [--diff-filter=<letters>] [<base> | <base>...<head>] [-- <pathspec>...]`
+   * `git diff --name-status -z (--relative | --no-relative) [--find-renames=<n>%] [--diff-filter=<letters>] [<base> | <base>...<head> | <base> <head>] [-- <pathspec>...]`
    * — the changed paths WITH their one-letter status codes, NUL-terminated.
    *
    * With `head` omitted this is the single-argument diff form: the working tree
    * (staged + unstaged) against `base` — NOT a two-ref range. With `head`
    * present it is the familiar `base...head` merge-base form, matching
-   * {@link GitCommand.changedFiles}. `-z` and the explicit relative flag follow
-   * the same rules as {@link GitCommand.changedFiles}. In `-z` mode a rename or
-   * copy entry is THREE NUL tokens: `R<score>`, the old path, the new path.
-   * `options.findRenames` sets the similarity threshold rename detection
-   * uses, `options.diffFilter` keeps only the named status letters (lower
-   * case excludes them), and `options.pathspec` scopes the diff after `--`.
+   * {@link GitCommand.changedFiles}, or the plain `<base> <head>` tree-to-tree
+   * pair when `options.twoDot` is set. `-z` and the explicit relative flag
+   * follow the same rules as {@link GitCommand.changedFiles}. In `-z` mode a
+   * rename or copy entry is THREE NUL tokens: `R<score>`, the old path, the
+   * new path. `options.findRenames` sets the similarity threshold rename
+   * detection uses, `options.diffFilter` keeps only the named status letters
+   * (lower case excludes them), and `options.pathspec` scopes the diff after
+   * `--`.
    *
    * **Example** (Inspect name status argv)
    *
@@ -1670,13 +1961,16 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git rev-parse --abbrev-ref HEAD` — the name of the branch `HEAD` is
-   * pointing to.
+   * `git rev-parse --abbrev-ref HEAD` (the default, `"abbrev-ref"`) — the
+   * name of the branch `HEAD` is pointing to — or `git branch --show-current`
+   * (`"show-current"`), git's dedicated question for the same name.
    *
    * **Gotchas**
    *
-   * Returns `"HEAD"` (detached state), `"<branch>"` (an attached branch), or
-   * fails if the repository has no commits.
+   * `abbrev-ref` returns `"HEAD"` (detached state), `"<branch>"` (an attached
+   * branch), or fails if the repository has no commits. `show-current` prints
+   * an EMPTY line when detached and names an unborn branch instead of failing;
+   * `Git.currentBranch` reads both detached spellings as `Option.none`.
    *
    * **Example** (Inspect current branch argv)
    *
@@ -1686,6 +1980,16 @@ export class GitCommand {
    * const invocation = GitCommand.currentBranch();
    *
    * console.log(invocation.redactedArgs.join(" ")) // rev-parse --abbrev-ref HEAD
+   * ```
+   *
+   * **Example** (Ask through branch --show-current)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.currentBranch("show-current");
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // branch --show-current
    * ```
    *
    * @category constructors
@@ -1784,23 +2088,29 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git log -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae --name-only` —
-   * a commit listing carrying each commit's sha, both ISO dates, its author
-   * identity and the paths it touched. Four optional flags follow, in this
-   * order: `--follow`, `--diff-merges=first-parent`, `--max-count=N`, then
-   * the `--` separator and the pathspec.
+   * `git [-c core.quotePath=false] log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s (--name-only | --name-status) [--diff-filter=<letters>] [--find-renames=<n>%]`
+   * — a commit listing carrying each commit's sha, both ISO dates, its author
+   * identity, its subject and the paths it touched. Three optional flags
+   * follow, in this order: `--follow`, `--diff-merges=first-parent`,
+   * `--max-count=N`, then the `--` separator and the pathspec.
    *
    * `-z` is unconditional and does two things at once: it terminates the
    * `--format` output with a NUL instead of a newline, and it makes
-   * `--name-only` emit paths RAW — no C-style quoting — so a path containing
-   * a space, a quote or a newline comes back verbatim and `core.quotePath`
-   * never enters the picture.
+   * `--name-only` and `--name-status` emit paths RAW — no C-style quoting —
+   * so a path containing a space, a quote or a newline comes back verbatim
+   * and `core.quotePath` never enters the picture. `options.quotePath: false`
+   * still prepends the global `-c core.quotePath=false` for a consumer whose
+   * argv contract names it; under `-z` it changes no byte of the output.
    *
-   * `%x00` opens every record with an empty NUL token, which a pathname
-   * cannot contain. Each record is then
-   * `\0<sha>\0<authoredAt>\0<committedAt>\0<authorName>\0<authorEmail>\0`
-   * followed, when the commit touched anything, by `\n` and one
-   * NUL-terminated path per changed file.
+   * `%x00` opens every record with an empty NUL token, which neither a
+   * pathname nor a status code can be. Each record is then
+   * `\0<sha>\0<authoredAt>\0<committedAt>\0<authorName>\0<authorEmail>\0<subject>\0`
+   * followed, when the commit touched anything, by `\n` and the body: one
+   * NUL-terminated path per changed file under `--name-only`, or under
+   * `--name-status` (`options.nameStatus`) the same `<code>\0<path>\0` /
+   * `R<score>\0<old>\0<new>\0` tokens `GitCommand.nameStatus` emits.
+   * `options.diffFilter` and `options.findRenames` apply in either body mode;
+   * a commit whose diff the filter empties is omitted from the walk by git.
    *
    * `--follow` requires exactly one path — git's own restriction, enforced
    * pre-spawn by `Git.log`. Without `--diff-merges=first-parent` a merge
@@ -1814,7 +2124,23 @@ export class GitCommand {
    *
    * const invocation = GitCommand.log(["src/main.ts"], true, 5, true);
    *
-   * console.log(invocation.redactedArgs.join(" ")) // log -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae --name-only --follow --diff-merges=first-parent --max-count=5 -- src/main.ts
+   * console.log(invocation.redactedArgs.join(" ")) // log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s --name-only --follow --diff-merges=first-parent --max-count=5 -- src/main.ts
+   * ```
+   *
+   * **Example** (Deletions and renames with their status codes)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.log([], false, undefined, false, {
+   *   nameStatus: true,
+   *   diffFilter: "DR",
+   *   findRenames: 50,
+   *   quotePath: false,
+   * });
+   *
+   * console.log(invocation.redactedArgs.join(" "));
+   * // -c core.quotePath=false log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s --name-status --diff-filter=DR --find-renames=50%
    * ```
    *
    * @category constructors
@@ -1885,14 +2211,28 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git status --porcelain -z` — the porcelain (stable, machine-readable) short
-   * status of every modified file in the working tree, NUL-terminated.
+   * `git [--no-optional-locks] status --porcelain -z [--untracked-files=<mode>] [--ignore-submodules=<when>] [--no-renames] [-- <pathspec>...]`
+   * — the porcelain (stable, machine-readable) short status of every modified
+   * file in the working tree, NUL-terminated.
+   *
+   * `options.untrackedFiles` picks how untracked paths list (`all` names
+   * every file inside an untracked directory, where git's default collapses
+   * it to one `dir/` entry); `options.ignoreSubmodules` picks which submodule
+   * changes are hidden; `options.noRenames` reports a staged rename as a
+   * delete plus an add instead of one `R` entry carrying the original path;
+   * `options.pathspec` scopes the report behind `--`. With no option passed
+   * the argv is exactly `status --porcelain -z`.
    *
    * **Gotchas**
    *
    * `-z` is load-bearing here too, for the same reason as
    * {@link GitCommand.lsTree}: split the output on `"\0"`, never on `"\n"`.
    * Each entry is a pair of status codes followed by a space and the path.
+   *
+   * `--no-optional-locks` is a GLOBAL git flag, not a `status` option: it is
+   * rendered BEFORE the subcommand, so a reader that must not touch the index
+   * (a monitor polling a tree another process is working in) can skip the
+   * opportunistic index refresh git would otherwise write.
    *
    * **Example** (Inspect status argv)
    *
@@ -1902,6 +2242,23 @@ export class GitCommand {
    * const invocation = GitCommand.status();
    *
    * console.log(invocation.redactedArgs.join(" ")) // status --porcelain -z
+   * ```
+   *
+   * **Example** (A lock-free, untracked-expanding, rename-free read)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.status({
+   *   noOptionalLocks: true,
+   *   untrackedFiles: "all",
+   *   ignoreSubmodules: "none",
+   *   noRenames: true,
+   *   pathspec: ["packages"],
+   * });
+   *
+   * console.log(invocation.redactedArgs.join(" "));
+   * // --no-optional-locks status --porcelain -z --untracked-files=all --ignore-submodules=none --no-renames -- packages
    * ```
    *
    * @category constructors

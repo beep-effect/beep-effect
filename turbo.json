@@ -698,6 +698,7 @@
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.service.ts",
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.ts",
+        "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
@@ -795,6 +796,8 @@
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
+        "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
+        "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
         "packages/tooling/tool/cli/src/internal/stats/NearestRank.ts"
       ]
     },
@@ -1216,6 +1219,7 @@
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.service.ts",
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.ts",
+        "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
@@ -1382,6 +1386,8 @@
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
         "packages/tooling/tool/cli/src/internal/schema/TextCodec.ts",
+        "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
+        "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
         "packages/tooling/tool/cli/src/internal/stats/NearestRank.ts"
       ]
     },
@@ -4391,49 +4397,6 @@
       "dependsOn": ["^codegen"],
       "inputs": ["$TURBO_DEFAULT$", "!.beep/**", "!.fallow/**"]
     },
-    "audit": {
-      "cache": false,
-      "dependsOn": ["^audit"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/biome.jsonc",
-        "$TURBO_ROOT$/vitest.shared.ts",
-        "$TURBO_ROOT$/vite.shared.ts",
-        "!.beep/**",
-        "!.fallow/**"
-      ],
-      "env": [
-        "APP_ADMINS_EMAILS",
-        "ALLOWED_EMAILS",
-        "DATABASE_URL",
-        "DATABASE_URL_UNPOOLED",
-        "EMAIL_*",
-        "AUTH_*",
-        "OPENAI_*",
-        "SECURITY_*",
-        "OAUTH_*",
-        "NEXT_PUBLIC_*",
-        "LIVEBLOCKS_*",
-        "RESEND_*",
-        "BEEP_TEST_*",
-        "BEEP_TIKA_*"
-      ],
-      "outputs": [
-        "dist/**",
-        "build/**",
-        ".next/**",
-        "next-env.d.ts",
-        ".expo/**",
-        "_next/**",
-        ".output/**",
-        ".vercel/output/**",
-        "docs/**",
-        "**/node_modules/.tmp/*.tsbuildinfo",
-        "!**/.turbo/**",
-        "!.next/cache/**"
-      ],
-      "outputLogs": "new-only"
-    },
     "transit": {
       "dependsOn": ["^transit"]
     },
@@ -4699,6 +4662,28 @@
         "infra/**/*.{ts,js,mjs}",
         "packages/tooling/policy-pack/lint-rules/src/**",
         "!**/node_modules/**",
+        "!.claude/worktrees/**"
+      ]
+    },
+    "//#lint:deprecated-imports": {
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "biome.jsonc",
+        "bun.lock",
+        "apps/**/*.{ts,tsx,js,jsx,mjs,cjs,mts,cts}",
+        "packages/**/*.{ts,tsx,js,jsx,mjs,cjs,mts,cts}",
+        "infra/**/*.{ts,tsx,js,jsx,mjs,cjs,mts,cts}",
+        "apps/**/package.json",
+        "packages/**/package.json",
+        "infra/**/package.json",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/.next/**",
+        "!**/.turbo/**",
+        "!**/coverage/**",
+        "!**/storybook-static/**",
         "!.claude/worktrees/**"
       ]
     },
