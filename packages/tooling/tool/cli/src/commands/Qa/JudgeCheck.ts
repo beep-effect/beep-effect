@@ -465,14 +465,37 @@ export const raiseCrossCheckFailure: {
       : Effect.fail(QaCommandError.make({ message: renderCrossCheckFailure(round, check) }))
 );
 
-const requireInventoryRoundImpl = Effect.fn("QaJudgeCheck.requireInventoryRound")(function* (
-  round: number,
-  inventory: QaInventory
-): Effect.fn.Return<void, QaCommandError> {
-  const verdict = yield* evaluateDeclaredRoundCoherent(
-    DeclaredRoundCoherentInput.make({ declaredRound: inventory.round, requestedRound: round })
-  );
-  return yield* DeclaredRoundCoherentVerdict.match(verdict, {
+/**
+ * Fail when a round-coherence verdict is denied.
+ *
+ * **Details**
+ *
+ * Callers that keep the verdict (the judge-lint certificate) evaluate the gate
+ * once and pass the verdict here; {@link requireInventoryRound} evaluates and
+ * delegates, so both report the same message.
+ *
+ * **Example** (Fail on a copied inventory round)
+ *
+ * ```ts
+ * import { DeclaredRoundCoherentInput, evaluateDeclaredRoundCoherent } from "@beep/repo-cli/commands/Qa/JudgeContract"
+ * import { requireRoundCoherentVerdict } from "@beep/repo-cli/commands/Qa/JudgeCheck"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = evaluateDeclaredRoundCoherent(
+ *   DeclaredRoundCoherentInput.make({ declaredRound: 2, requestedRound: 1 })
+ * ).pipe(Effect.flatMap(requireRoundCoherentVerdict), Effect.flip)
+ * console.log(Effect.runSync(program).message) // "qa judge inventory declares round 2 but round 1 was requested."
+ * ```
+ *
+ * @param verdict - Evaluated round-coherence verdict.
+ * @returns Success when allowed, the operator-facing failure when denied.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const requireRoundCoherentVerdict = (
+  verdict: DeclaredRoundCoherentVerdict
+): Effect.Effect<void, QaCommandError> =>
+  DeclaredRoundCoherentVerdict.match(verdict, {
     allowed: () => Effect.void,
     denied: ({ audit }) =>
       Effect.fail(
@@ -481,6 +504,15 @@ const requireInventoryRoundImpl = Effect.fn("QaJudgeCheck.requireInventoryRound"
         })
       ),
   });
+
+const requireInventoryRoundImpl = Effect.fn("QaJudgeCheck.requireInventoryRound")(function* (
+  round: number,
+  inventory: QaInventory
+): Effect.fn.Return<void, QaCommandError> {
+  const verdict = yield* evaluateDeclaredRoundCoherent(
+    DeclaredRoundCoherentInput.make({ declaredRound: inventory.round, requestedRound: round })
+  );
+  return yield* requireRoundCoherentVerdict(verdict);
 });
 
 /**

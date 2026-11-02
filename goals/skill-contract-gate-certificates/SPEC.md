@@ -54,21 +54,24 @@ re-entry (ruled 2026-10-14, recorded in that exploration's `DECISIONS.md`):
 
 ## Acceptance Criteria
 
-- [x] `@beep/skill-contract` exports the certificate schemas (envelope, five outcomes,
+- [ ] `@beep/skill-contract` exports the certificate schemas (envelope, five outcomes,
       reach, aggregate) with codec round-trip and property tests.
       (`src/GateCertificate.ts`, `test/GateCertificate.test.ts`; 2026-11-02, pending review)
-- [x] The QA judge settlement produces one certificate per run whose per-check
+- [ ] The QA judge settlement produces one certificate per run whose per-check
       outcomes match the existing judge checks (behavioural parity test against the
       current `JudgeCheck` results on the same fixtures).
-      (`certifyQaJudgeSettlement`, `test/qa-judge-certificate.test.ts`; pending review)
-- [x] An aggregate containing any in-reach `cantTell` or `untested` check is never
+      (production: `judge-lint` and `judge-ingest` write `gate-certificate.json`;
+      frozen-legacy parity in `test/qa-round-pipeline.test.ts`; pending review)
+- [ ] An aggregate containing any in-reach `cantTell` or `untested` check is never
       `passed` (property test). (kernel property plus QA untested-gate property)
-- [x] Apply-by-id refuses a stale digest and an unknown id (tests). (kernel and QA tests)
-- [x] No unrelated refactors or formatting churn. (pending independent review)
+- [ ] Apply-by-id refuses a stale digest and an unknown id (tests). (kernel and QA tests)
+- [ ] No unrelated refactors or formatting churn. (pending independent review)
 
-Ticks record local evidence in
+Unchecked on purpose (2026-11-02, after the independent review of `f6bdfc74`):
+the parenthetical evidence is local and recorded in
 [`history/2026-11-02-p0-p1-evidence.md`](./history/2026-11-02-p0-p1-evidence.md).
-They do not close the goal: independent review, Yeet and merge are still owed.
+Boxes are ticked only after the independent panel accepts the production path,
+exact-head `yeet final-check` passes, and the PR merges.
 
 ## Verification Matrix
 
@@ -98,7 +101,10 @@ them and record each in the Decision Log.
 | 2026-11-02 | Reach is certificate-level (`complete/incomplete/unknown`); each check carries `inReach: boolean`. | Amendment J forbids a nullable `conforms`; a per-check scope bit is what "in-reach check" needs. | Replace the boolean with a per-check literal. |
 | 2026-11-02 | Apply-by-id plan binds to the certificate envelope's own `EvidenceSubject` (name + digest the caller computes over the encoded bytes); stale digest is refused before ids are read; any unknown id refuses the whole plan; refusal is a value. | The kernel stays schemas-only (no hashing service); the producer owns digest computation, as for every other kernel receipt. | Change `applyGateCertificatePlan`. |
 | 2026-11-02 | QA producer: `certifyQaJudgeSettlement` in `JudgeContract.ts` maps allowed -> `passed`, denied -> `failed`, gate not run -> `untested`, reach `complete` (all five declared gates listed and in reach); `settleAgainstRound` in `JudgeCheck.ts` is now the single settlement behind `crossCheckAgainstRound` and the certificate. | Fixture parity with existing `JudgeCheck` outcomes; `untested` is the honest outcome when a flow stops early at decode. | Inline `settleAgainstRound` back into `crossCheckAgainstRound` and drop the producer. |
-| 2026-11-02 | `judge-lint`/`judge-ingest` do not write a certificate file yet; `JudgeLint.ts` and `QaJudgeGateId.ts` are unchanged. | No consumer exists in this slice; writing a file changes CLI behaviour and adds a Crypto requirement to the command for nothing that reads it. The producer is a typed value API. | A later slice writes the receipt beside `inventory.json`. |
+| 2026-11-02 | ~~`judge-lint`/`judge-ingest` do not write a certificate file yet.~~ Superseded the same day by the next row after parent review. | The acceptance criterion needs one certificate per real run. | — |
+| 2026-11-02 | Production emission: every `judge-lint` run that finds `inventory.json` writes `<round>/gate-certificate.json`, failures included: evaluated gates as `passed`/`failed`, gates after the first denial (or after an event-log read failure) as `untested`. `judge-ingest` writes it only when it writes `inventory.json` (all five gates passed); a refused ingest writes nothing, as before. The envelope subject is the SHA-256 of the exact `inventory.json` bytes (lint hashes the bytes it read; ingest hashes the bytes it writes). Printed lines, error messages and exit codes are unchanged. | Parent ruling (one certificate per actual run, persisted at the existing round artifact boundary, legacy results preserved). The inventory file is the only stable subject, so a refused ingest has nothing to bind. | Remove the `writeQaJudgeCertificate` calls in `JudgeLint.ts` and `JudgeIngest.ts`. |
+| 2026-11-02 | Digest binding: `writeQaJudgeCertificate` returns `QaJudgeCertificate { receipt, subject }` where `subject` is the SHA-256 of the exact `gate-certificate.json` bytes written; `applyQaJudgeCertificatePlan(plan, bytes)` decodes and re-hashes the bytes before calling the kernel, so a changed receipt is refused as `stale-digest`. The kernel stays schemas-only and documents that its caller must recompute the subject. | Independent review R1: the kernel compared a caller-supplied subject that nothing tied to the receipt. Hashing stays in `@beep/repo-cli`, which already has `Sha256HexFromBytes` and a Digest service. | Drop the wrapper; callers go back to supplying the subject. |
+| 2026-11-02 | Re-recorded `standards/cache-qualification-baseline.json` for subject `//` (`beep cache baseline --request`, review in `research/cache-baseline-review-2026-11-02.md`). | `beep lint policy-fingerprint --write` adds `GateCertificate.ts` to `//#lint:policy-fingerprint:quality` inputs, which `quality cache-policy` flags as configuration drift. Inputs only; no qualification granted. | Revert the baseline, `turbo.json` and fingerprint lines with the module. |
 | 2026-11-02 | No changeset. | `@beep/skill-contract` is `private: true`; `.changeset/README.md` says private workspaces need no notes and the graph guard rejects notes naming them. The change is additive. | Add a changeset if the package becomes publishable. |
 
 ## Exception Ledger

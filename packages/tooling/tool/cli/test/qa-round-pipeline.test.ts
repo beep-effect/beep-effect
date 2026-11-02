@@ -36,8 +36,18 @@ import {
   runQaJudgePack,
   runQaReport,
 } from "@beep/repo-cli/commands/Qa";
+import { applyQaJudgeCertificatePlan, GATE_CERTIFICATE_FILE } from "@beep/repo-cli/commands/Qa/JudgeIngest";
+import { Sha256HexFromBytes } from "@beep/schema/Sha256";
+import {
+  EvidenceDigest,
+  EvidenceSubject,
+  GateCertificateApplyPlan,
+  GateCertificateReceipt,
+  GateId,
+} from "@beep/skill-contract";
 import { it } from "@beep/test-runner";
 import { A, thunk } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import * as Console from "effect/Console";
@@ -53,7 +63,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 import type { ProbeVideoRequest } from "@beep/ffmpeg";
 
 const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
-const QaLayer = SessionStore.layer.pipe(Layer.provideMerge(PlatformLayer));
+const QaLayer = Layer.merge(SessionStore.layer.pipe(Layer.provideMerge(PlatformLayer)), BunCrypto.layer);
 
 const withTempCwd = <A, E, R>(use: (cwd: string) => Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -659,6 +669,260 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
             runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }))
           );
           expect(error.message).toContain("declares round 2 but round 1 was requested");
+        })
+      )
+    );
+  });
+
+  describe("commands/Qa judge runs emit one gate certificate", () => {
+    const decodeCertificate = S.decodeUnknownEffect(S.fromJsonString(GateCertificateReceipt));
+    const sha256 = S.decodeEffect(Sha256HexFromBytes);
+    const utf8 = new TextDecoder();
+    // Independent of the producer: hashes the bytes on disk with the shared schema helper.
+    const subjectOf = Effect.fnUntraced(function* (name: string, bytes: Uint8Array) {
+      return EvidenceSubject.make({ digest: EvidenceDigest.make({ sha256: yield* sha256(bytes) }), name });
+    });
+    const certificateOf = Effect.fnUntraced(function* (root: string) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const bytes = yield* fs.readFile(path.join(root, GATE_CERTIFICATE_FILE));
+      const receipt = yield* decodeCertificate(utf8.decode(bytes));
+      return { bytes, receipt };
+    });
+    const outcomesOf = (receipt: GateCertificateReceipt) =>
+      A.map(receipt.predicate.checks, (check) => `${check.checkId}:${check.outcome}`);
+    const inventoryBody = (round: number, path: string, eventIds: ReadonlyArray<number>) =>
+      encodeJson({
+        findings: [
+          {
+            evidence: [{ eventIds, kind: "strip", path }],
+            fix: "Fix it.",
+            id: `R${round}-01`,
+            lens: "selection-smear",
+            repro: "Drag the sash.",
+            severity: "P1",
+            title: "Selection smear",
+          },
+        ],
+        judge: { effort: "high", model: "gpt-daybreak-blue-latest" },
+        requiredCount: 1,
+        round,
+        schemaVersion: "qa-inventory/v1",
+        sessionRef: "session.json",
+      });
+    const lintRound1 = Effect.fn("lintRound1")(
+      function* (cwd: string) {
+        const failure = yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(
+          Effect.flip,
+          Effect.map((error) => error.message),
+          Effect.option
+        );
+        const lines = A.filter(yield* TestConsole.logLines, P.isString);
+        return { failure, lines };
+      },
+      Effect.provideServiceEffect(Console.Console, TestConsole.make)
+    );
+
+    // Frozen legacy expectations: the lines and failures judge-lint produced
+    // before certificates existed, plus the certificate each run must write.
+    const lintCases = [
+      {
+        name: "clean",
+        cite: { eventIds: [1], path: "frames/a.png" },
+        legacy: { lines: ["  cross-check: ok"], failure: O.none<string>() },
+        outcomes: ["passed", "passed", "passed", "passed", "passed"],
+        aggregate: "passed",
+      },
+      {
+        name: "missing artifact",
+        cite: { eventIds: [1], path: "frames/ghost.png" },
+        legacy: {
+          lines: [
+            "qa judge inventory for round 1 cites evidence the round cannot back up.\n  missing artifact: frames/ghost.png",
+          ],
+          failure: O.some("qa judge-lint: round 1 inventory is not backed by evidence"),
+        },
+        outcomes: ["passed", "passed", "failed", "passed", "failed"],
+        aggregate: "failed",
+      },
+      {
+        name: "missing event id",
+        cite: { eventIds: [412], path: "frames/a.png" },
+        legacy: {
+          lines: ["qa judge inventory for round 1 cites evidence the round cannot back up.\n  missing event id: 412"],
+          failure: O.some("qa judge-lint: round 1 inventory is not backed by evidence"),
+        },
+        outcomes: ["passed", "passed", "passed", "failed", "failed"],
+        aggregate: "failed",
+      },
+    ] as const;
+    const gateIds = [
+      "judge-output-inventory-decodes",
+      "declared-round-coherent",
+      "cited-artifact-exists",
+      "cited-event-id-exists",
+      "evidence-cross-check-clean",
+    ] as const;
+    const expectedOutcomes = (outcomes: ReadonlyArray<string>) =>
+      A.map(gateIds, (id, index) => `${id}:${outcomes[index] ?? "missing"}`);
+
+    it.effect("judge-lint keeps its legacy output and writes a certificate bound to the exact inventory bytes", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          yield* fs.makeDirectory(path.join(layout.root, "frames"), { recursive: true });
+          yield* fs.writeFileString(path.join(layout.root, "frames", "a.png"), "frame");
+          const inventoryPath = path.join(layout.root, "inventory.json");
+
+          for (const testCase of lintCases) {
+            yield* fs.writeFileString(
+              inventoryPath,
+              yield* inventoryBody(1, testCase.cite.path, testCase.cite.eventIds)
+            );
+            const { failure, lines } = yield* lintRound1(cwd);
+            const { receipt } = yield* certificateOf(layout.root);
+            const inventoryBytes = yield* fs.readFile(inventoryPath);
+
+            expect(lines, testCase.name).toEqual([
+              "qa judge-lint: round 1",
+              "  findings: 1 (required 1)",
+              `  inventory: ${inventoryPath}`,
+              ...testCase.legacy.lines,
+            ]);
+            expect(failure, testCase.name).toEqual(testCase.legacy.failure);
+            expect(outcomesOf(receipt), testCase.name).toEqual(expectedOutcomes(testCase.outcomes));
+            expect(receipt.predicate.outcome, testCase.name).toBe(testCase.aggregate);
+            expect(receipt.subject, testCase.name).toEqual([yield* subjectOf("inventory.json", inventoryBytes)]);
+          }
+        })
+      )
+    );
+
+    it.effect("judge-lint certifies gates after the first denial as untested and keeps the legacy errors", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          const inventoryPath = path.join(layout.root, "inventory.json");
+          const lint = () =>
+            runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(Effect.flip);
+
+          yield* fs.writeFileString(inventoryPath, yield* inventoryBody(2, "frames/a.png", [1]));
+          const copied = yield* lint();
+          const afterRound = (yield* certificateOf(layout.root)).receipt;
+
+          yield* fs.writeFileString(inventoryPath, "{");
+          const malformed = yield* lint();
+          const afterDecode = (yield* certificateOf(layout.root)).receipt;
+
+          expect(copied).toMatchObject({
+            _tag: "QaCommandError",
+            message: "qa judge inventory declares round 2 but round 1 was requested.",
+          });
+          expect(outcomesOf(afterRound)).toEqual(
+            expectedOutcomes(["passed", "failed", "untested", "untested", "untested"])
+          );
+          expect(afterRound.predicate.outcome).toBe("failed");
+          expect(malformed).toMatchObject({
+            _tag: "QaCommandError",
+            message: `qa judge-lint could not parse ${inventoryPath} as JSON.`,
+          });
+          expect(outcomesOf(afterDecode)).toEqual(
+            expectedOutcomes(["failed", "untested", "untested", "untested", "untested"])
+          );
+          expect(
+            A.every(afterDecode.predicate.checks, (check) =>
+              check.outcome === "untested" ? A.isReadonlyArrayEmpty(check.evidenceSubjects) : true
+            )
+          ).toBe(true);
+          expect(afterDecode.subject).toEqual([yield* subjectOf("inventory.json", new TextEncoder().encode("{"))]);
+        })
+      )
+    );
+
+    it.effect("judge-lint writes no certificate when the round has no inventory", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(Effect.flip);
+          expect(yield* fs.exists(path.join(layout.root, GATE_CERTIFICATE_FILE))).toBe(false);
+        })
+      )
+    );
+
+    it.effect("judge-ingest certifies the written inventory bytes and writes nothing when it refuses", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          const transcript = path.join(cwd, "judge-stdout.txt");
+          const certificatePath = path.join(layout.root, GATE_CERTIFICATE_FILE);
+
+          yield* fs.writeFileString(
+            transcript,
+            `${fence}json\n${yield* inventoryBody(1, "frames/ghost.png", [1])}\n${fence}\n`
+          );
+          const refused = yield* runQaJudgeIngest(
+            cwd,
+            QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) })
+          ).pipe(Effect.flip);
+          expect(refused).toMatchObject({
+            _tag: "QaCommandError",
+            message:
+              "qa judge inventory for round 1 cites evidence the round cannot back up.\n  missing artifact: frames/ghost.png",
+          });
+          expect(yield* fs.exists(certificatePath)).toBe(false);
+
+          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
+          const { receipt } = yield* certificateOf(layout.root);
+          const inventoryBytes = yield* fs.readFile(path.join(layout.root, "inventory.json"));
+
+          expect(outcomesOf(receipt)).toEqual(expectedOutcomes(["passed", "passed", "passed", "passed", "passed"]));
+          expect(receipt.predicate.outcome).toBe("passed");
+          expect(receipt.subject).toEqual([yield* subjectOf("inventory.json", inventoryBytes)]);
+        })
+      )
+    );
+
+    it.effect("applies a plan only to the exact certificate bytes it was made against", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          const inventoryPath = path.join(layout.root, "inventory.json");
+          yield* fs.writeFileString(inventoryPath, yield* inventoryBody(1, "frames/ghost.png", [1]));
+          yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(Effect.flip);
+          const first = yield* certificateOf(layout.root);
+          const plan = (ids: A.NonEmptyReadonlyArray<string>) =>
+            Effect.map(subjectOf(GATE_CERTIFICATE_FILE, first.bytes), (certificate) =>
+              GateCertificateApplyPlan.make({ certificate, checkIds: A.map(ids, (id) => GateId.make(id)) })
+            );
+
+          const applied = yield* applyQaJudgeCertificatePlan(yield* plan(["cited-artifact-exists"]), first.bytes);
+          const unknown = yield* applyQaJudgeCertificatePlan(yield* plan(["not-a-qa-gate"]), first.bytes);
+
+          // A changed receipt: the same run re-certified after the inventory was fixed.
+          yield* fs.makeDirectory(path.join(layout.root, "frames"), { recursive: true });
+          yield* fs.writeFileString(path.join(layout.root, "frames", "ghost.png"), "frame");
+          yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }));
+          const second = yield* certificateOf(layout.root);
+          const stale = yield* applyQaJudgeCertificatePlan(yield* plan(["cited-artifact-exists"]), second.bytes);
+
+          expect(applied).toMatchObject({
+            checks: [{ checkId: "cited-artifact-exists", outcome: "failed" }],
+            verdict: "applied",
+          });
+          expect(unknown).toMatchObject({ reason: "unknown-id", unknownIds: ["not-a-qa-gate"], verdict: "refused" });
+          expect(second.receipt.predicate.outcome).toBe("passed");
+          expect(stale).toMatchObject({ reason: "stale-digest", verdict: "refused" });
         })
       )
     );

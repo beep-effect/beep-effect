@@ -1,11 +1,9 @@
 import { MarkerEvent, RoundLayout, RoundNumber } from "@beep/qa-capture";
 import {
   certifyQaJudgeSettlement,
-  crossCheckAgainstRound,
   DeclaredRoundCoherentInput,
   evaluateDeclaredRoundCoherent,
   evaluateJudgeOutputInventoryDecodes,
-  isCrossCheckClean,
   JudgeOutputInventoryDecodesInput,
   JudgeOutputInventoryDecodesVerdict,
   QaEventLog,
@@ -14,11 +12,16 @@ import {
   QaJudgeSettlement,
   settleAgainstRound,
 } from "@beep/repo-cli/commands/Qa";
+import {
+  applyQaJudgeCertificatePlan,
+  GATE_CERTIFICATE_FILE,
+  writeQaJudgeCertificate,
+} from "@beep/repo-cli/commands/Qa/JudgeIngest";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import {
-  applyGateCertificatePlan,
   EvidenceDigest,
   EvidenceSubject,
+  GateCertificate,
   GateCertificateApplyPlan,
   GateCertificatePredicateType,
   GateCertificateReceipt,
@@ -37,7 +40,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import type { CheckOutcome, GateCertificate } from "@beep/skill-contract";
+import type { CheckOutcome } from "@beep/skill-contract";
 
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const encodeReceipt = S.encodeUnknownEffect(S.fromJsonString(GateCertificateReceipt));
@@ -89,18 +92,6 @@ const inventoryText = (path: string, eventIds: ReadonlyArray<number>) =>
     sessionRef: "session.json",
   });
 
-const outcomesById = (certificate: GateCertificate) =>
-  A.map(certificate.checks, (check) => [check.checkId, check.outcome] as const);
-
-const legacyOutcome = (allowed: boolean): CheckOutcome => (allowed ? "passed" : "failed");
-
-const fixtures = [
-  { cited: "frames/a.png", eventIds: [2], name: "clean" },
-  { cited: "frames/ghost.png", eventIds: [2], name: "missing artifact" },
-  { cited: "frames/a.png", eventIds: [9], name: "missing event id" },
-  { cited: "frames/ghost.png", eventIds: [9, 2], name: "both missing" },
-] as const;
-
 it.layer(TestLayer, { timeout: "30 seconds" })("commands/Qa judge settlement gate certificate", (it) => {
   const roundFixture = Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -123,7 +114,6 @@ it.layer(TestLayer, { timeout: "30 seconds" })("commands/Qa judge settlement gat
     const round = yield* evaluateDeclaredRoundCoherent(
       DeclaredRoundCoherentInput.make({ declaredRound: inventory.round, requestedRound: RoundNumber.make(1) })
     );
-    const legacy = yield* crossCheckAgainstRound(layout, inventory, eventLog);
     const leaves = yield* settleAgainstRound(layout, inventory, eventLog);
     const subject = yield* subjectFor("qa/round-1/inventory.json", text);
     const receipt = yield* certifyQaJudgeSettlement(
@@ -136,41 +126,24 @@ it.layer(TestLayer, { timeout: "30 seconds" })("commands/Qa judge settlement gat
         round: O.some(round),
       })
     );
-    return { leaves, legacy, receipt, round, subject };
+    return { leaves, receipt, round, subject };
   });
 
-  it.effect("matches the existing JudgeCheck outcomes on the same round fixtures", () =>
+  it.effect("certifies the five declared gates in contract order against the contract subject", () =>
     Effect.gen(function* () {
       const layout = yield* roundFixture;
-      for (const fixture of fixtures) {
-        const { leaves, legacy, receipt, round, subject } = yield* settleFixture(
-          layout,
-          fixture.cited,
-          fixture.eventIds
-        );
-        const certificate = receipt.predicate;
+      const { receipt, subject } = yield* settleFixture(layout, "frames/a.png", [2]);
 
-        expect(outcomesById(certificate), fixture.name).toEqual([
-          ["judge-output-inventory-decodes", "passed"],
-          ["declared-round-coherent", legacyOutcome(round.verdict === "allowed")],
-          ["cited-artifact-exists", legacyOutcome(!A.isReadonlyArrayNonEmpty(legacy.missingPaths))],
-          ["cited-event-id-exists", legacyOutcome(!A.isReadonlyArrayNonEmpty(legacy.missingEventIds))],
-          ["evidence-cross-check-clean", legacyOutcome(isCrossCheckClean(legacy))],
-        ]);
-        expect(certificate.outcome, fixture.name).toBe(isCrossCheckClean(legacy) ? "passed" : "failed");
-        expect(leaves.crossCheck.verdict).toBe(isCrossCheckClean(legacy) ? "allowed" : "denied");
-        expect(certificate.reach).toBe("complete");
-        expect(certificate.contractSubject).toEqual(QaJudgeContractSubject);
-        expect(receipt.predicateType).toBe(GateCertificatePredicateType);
-        expect(receipt.subject).toEqual([subject]);
-        expect(A.map(certificate.checks, (check) => check.checkId)).toEqual(
-          A.map(QaJudgeContract.gates.declarations, (declaration) => declaration.id)
-        );
-
-        const json = yield* encodeReceipt(receipt);
-        const decoded = yield* decodeReceipt(json);
-        expect(S.toEquivalence(GateCertificateReceipt)(decoded, receipt)).toBe(true);
-      }
+      expect(A.map(receipt.predicate.checks, (check) => check.checkId)).toEqual(
+        A.map(QaJudgeContract.gates.declarations, (declaration) => declaration.id)
+      );
+      expect(receipt.predicate.reach).toBe("complete");
+      expect(receipt.predicate.contractSubject).toEqual(QaJudgeContractSubject);
+      expect(receipt.predicateType).toBe(GateCertificatePredicateType);
+      expect(receipt.subject).toEqual([subject]);
+      expect(
+        S.toEquivalence(GateCertificateReceipt)(yield* decodeReceipt(yield* encodeReceipt(receipt)), receipt)
+      ).toBe(true);
     })
   );
 
@@ -214,23 +187,54 @@ it.layer(TestLayer, { timeout: "30 seconds" })("commands/Qa judge settlement gat
     { arbitrary: fcRuns(10) }
   );
 
-  it.effect("applies a digest-bound plan to the produced certificate and refuses stale or unknown ids", () =>
+  it.effect("binds plans to the producer's written bytes and refuses a changed receipt", () =>
     Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
       const layout = yield* roundFixture;
-      const { receipt } = yield* settleFixture(layout, "frames/ghost.png", [2]);
-      const json = yield* encodeReceipt(receipt);
-      const certificate = yield* subjectFor("qa/round-1/certificate.json", json);
-      const stale = yield* subjectFor("qa/round-1/certificate.json", `${json}\n`);
-      const plan = (subject: EvidenceSubject, ids: A.NonEmptyReadonlyArray<string>) =>
-        GateCertificateApplyPlan.make({ certificate: subject, checkIds: A.map(ids, (id) => GateId.make(id)) });
+      const { leaves, round, subject } = yield* settleFixture(layout, "frames/ghost.png", [2]);
+      const decode = yield* evaluateJudgeOutputInventoryDecodes(
+        JudgeOutputInventoryDecodesInput.make({ candidate: yield* inventoryText("frames/ghost.png", [2]) })
+      );
+      const written = yield* writeQaJudgeCertificate(
+        layout,
+        QaJudgeSettlement.make({
+          artifact: O.some(leaves.artifact),
+          crossCheck: O.some(leaves.crossCheck),
+          decode: O.some(decode),
+          eventId: O.some(leaves.eventId),
+          inventory: subject,
+          round: O.some(round),
+        })
+      );
+      const bytes = yield* fs.readFile(path.join(layout.root, GATE_CERTIFICATE_FILE));
+      const plan = (ids: A.NonEmptyReadonlyArray<string>) =>
+        GateCertificateApplyPlan.make({ certificate: written.subject, checkIds: A.map(ids, (id) => GateId.make(id)) });
 
-      const applied = applyGateCertificatePlan(plan(certificate, ["cited-artifact-exists"]), certificate, receipt);
-      const refusedStale = applyGateCertificatePlan(plan(stale, ["cited-artifact-exists"]), certificate, receipt);
-      const refusedUnknown = applyGateCertificatePlan(plan(certificate, ["not-a-qa-gate"]), certificate, receipt);
+      // The producer's subject is the digest of exactly what it wrote.
+      expect(written.subject).toEqual(yield* subjectFor(GATE_CERTIFICATE_FILE, new TextDecoder().decode(bytes)));
 
-      expect(applied).toMatchObject({ checks: [{ checkId: "cited-artifact-exists", outcome: "failed" }] });
-      expect(refusedStale).toMatchObject({ reason: "stale-digest", verdict: "refused" });
-      expect(refusedUnknown).toMatchObject({ reason: "unknown-id", unknownIds: ["not-a-qa-gate"], verdict: "refused" });
+      const applied = yield* applyQaJudgeCertificatePlan(plan(["cited-artifact-exists"]), bytes);
+      const unknown = yield* applyQaJudgeCertificatePlan(plan(["not-a-qa-gate"]), bytes);
+
+      // A changed receipt that still decodes: its verification time rewritten.
+      const changed = yield* encodeReceipt(
+        GateCertificateReceipt.make({
+          ...written.receipt,
+          predicate: GateCertificate.make({ ...written.receipt.predicate, timeVerified: "2000-01-01T00:00:00.000Z" }),
+        })
+      );
+      const stale = yield* applyQaJudgeCertificatePlan(
+        plan(["cited-artifact-exists"]),
+        new TextEncoder().encode(changed)
+      );
+
+      expect(applied).toMatchObject({
+        checks: [{ checkId: "cited-artifact-exists", outcome: "failed" }],
+        verdict: "applied",
+      });
+      expect(unknown).toMatchObject({ reason: "unknown-id", unknownIds: ["not-a-qa-gate"], verdict: "refused" });
+      expect(stale).toMatchObject({ reason: "stale-digest", unknownIds: [], verdict: "refused" });
     })
   );
 });

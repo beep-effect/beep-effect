@@ -496,10 +496,17 @@ const applyGateCertificatePlanImpl = (
  *
  * **Details**
  *
- * `certificate` is the name and digest the caller computed for `receipt`'s
- * encoded bytes. A plan bound to any other subject is refused as
+ * A plan bound to any subject other than `certificate` is refused as
  * `stale-digest` before ids are inspected. Otherwise any plan id the
  * certificate does not contain refuses the whole plan as `unknown-id`.
+ *
+ * **Gotchas**
+ *
+ * This package is schemas-only and cannot hash, so it cannot check that
+ * `certificate` describes `receipt`. Call it only from a boundary that
+ * recomputes `certificate` from the exact encoded receipt bytes it read
+ * (the QA judge's `applyQaJudgeCertificatePlan` in `@beep/repo-cli` is one).
+ * Passing the plan's own subject back in defeats the stale-digest refusal.
  *
  * **Example** (Refuse a stale plan)
  *
