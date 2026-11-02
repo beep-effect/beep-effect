@@ -3955,16 +3955,17 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it("resolves the concurrency plan from the profile, the overrides and the admission load", () => {
       const idle = O.none<QualityAdmissionLoad>();
-      expect(resolveQualityConcurrencyPlan(ciDetection, {}, idle)).toMatchObject({
+      const ciPlan = resolveQualityConcurrencyPlan(ciDetection, {}, idle);
+      expect(ciPlan).toMatchObject({
         profile: "ci",
         rootTurbo: 4,
         policyLint: 4,
         cheapGates: 4,
         prePushLanes: 1,
         oxlintThreads: 4,
-        admission: O.none(),
         notes: [],
       });
+      assertNone(ciPlan.admission);
       expect(resolveQualityConcurrencyPlan(currentDetection, {}, idle)).toMatchObject({
         profile: "current",
         rootTurbo: 3,
@@ -4015,11 +4016,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(
         resolveQualityConcurrencyPlan(workstationDetection, { BEEP_QUALITY_CHECK_CONCURRENCY: "8" }, half)
       ).toMatchObject({ policyLint: 8, rootTurbo: 4 });
-      expect(resolveQualityConcurrencyPlan(ciDetection, {}, half)).toMatchObject({
-        rootTurbo: 4,
-        admission: O.none(),
-        notes: [],
-      });
+      const ciPlanUnderLoad = resolveQualityConcurrencyPlan(ciDetection, {}, half);
+      expect(ciPlanUnderLoad).toMatchObject({ rootTurbo: 4, notes: [] });
+      assertNone(ciPlanUnderLoad.admission);
       // A saturated host degrades to the `current` widths, never below them.
       const saturated = O.some(QualityAdmissionLoad.make({ activeTokens: 9, capacityTokens: 9 }));
       expect(resolveQualityConcurrencyPlan(workstationDetection, {}, saturated)).toMatchObject({
