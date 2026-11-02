@@ -152,16 +152,67 @@ Known gotchas:
   committed under the repo's `.claude/`.
 - SessionStart hooks run on every start and resume; the bootstrap's lockfile
   stamp keeps that cheap.
-- `.mcp.json` servers that need `op`, a workstation binary or a non-allowlisted
-  host fail to connect in the VM (observed: `beep-m365-outbox` without `op`;
-  `phoenix-docs` and `stately` refused by the proxy). They are optional; the
+- Some `.mcp.json` servers fail to connect in the VM. They are optional; the
   session continues without them and nothing in the bootstrap or package proof
-  depends on them.
+  depends on them. See [MCP availability in a Claude cloud session](#mcp-availability-in-a-claude-cloud-session).
 - Publishing follows the packet's D4 handoff: commit, push the assigned branch,
   open a draft PR through the session's GitHub integration with the proof
   output in the body, and request `ready-for-heavy` plus the Yeet closeout
   there. `monitor --until-ready`, the label and `sweep --retire` stay
   operator-side.
+
+### MCP availability in a Claude cloud session
+
+Packet decision D7: workstation-only servers are documented as expected
+failures, not forked out of `.mcp.json`. No documented host-conditional MCP
+setting exists in the sources reviewed for the packet (Claude Code `2.1.316`
+help and the official `mcp`, `managed-mcp`, `settings`, `settings-reference`,
+`cloud-environments` and `claude-code-on-the-web` pages), so none is used here.
+That is a bounded negative, not proof that no mechanism exists; research:
+[`2026-11-02-mcp-scoping-hook-evidence`](../../goals/cloud-agent-readiness/history/2026-11-02-mcp-scoping-hook-evidence.md).
+The routes that do exist are a per-machine split by file location (local or
+user scope never reaches the VM) and organization-managed MCP; neither is
+applied.
+
+Scope of the table: an Anthropic-hosted cloud session with one repository,
+outside a project thread, reading the committed `.mcp.json` and
+`.claude/settings.json` (`enabledMcpjsonServers`, `disabledMcpjsonServers`)
+at `main` `14a4596d`. A project thread applies none of the repo settings, so
+the approval column does not hold there. Observations are vendor session
+start reports (three starts in two sessions on 2026-11-02); they are evidence
+for those starts, not a guarantee. Hermetic or simulated runs are not counted.
+
+| Server | Transport | Committed approval | Observed (2026-11-02) | Cloud expectation |
+| --- | --- | --- | --- | --- |
+| `nlp` | stdio (`bun`) | — | connected in all three starts | qualified after the bootstrap installs dependencies |
+| `fallow` | stdio (`node_modules/.bin`) | — | connected in all three starts | qualified after the bootstrap; fails `ENOENT` before it (packet F11) |
+| `shadcn` | stdio (`bunx`) | — | connected once; 30 s connect timeout twice (both starts that reinstalled dependencies) | optional, can time out; cause not established |
+| `next-devtools` | stdio (`bunx`) | — | same as `shadcn` | optional, can time out; cause not established |
+| `beep-m365-outbox` | stdio (`op`) | — | failed: `op` not found, every start | expected failure: Claude cloud lanes skip `op` (`BEEP_CLOUD_SKIP_OP=1`) and carry no secrets |
+| `stately` | http | enabled | failed: proxy refused tunnel (403), every start | expected failure under the current network allowlist (not expanded) |
+| `phoenix-docs` | http | enabled | failed: proxy refused tunnel (403), every start | expected failure under the current network allowlist (not expanded) |
+| `serena` | stdio | disabled | not attempted | not connected wherever the committed settings are read |
+| `chrome-devtools` | stdio | disabled | not attempted | not connected |
+| `webstorm` | http (loopback IDE) | disabled | not attempted | not connected; workstation IDE only |
+| `phoenix` | http (tailnet) | disabled | not attempted | not connected; private tailnet host |
+
+Names outside the table:
+
+- **Vendor-provided, not `.mcp.json`:** the GitHub MCP tools and any claude.ai
+  connectors in a cloud session come from the vendor session and the account,
+  not from the repo. They are not repo doctrine and are not qualified here.
+- **Retired, never re-add:** `basic-memory` and `codegraph` (removed
+  2026-08-29) and the `graft` code graph (removed 2026-10-28); see
+  `standards/memory-architecture/04-decision-log.md`.
+- **Historical:** D7's original 2026-10-01 list (`serena`, `webstorm`,
+  `phoenix`, `phoenix-docs`, `chrome-devtools`) predates the committed
+  rejections. Four of those are now disabled by settings; `phoenix-docs` is
+  enabled and fails at the proxy.
+
+A failed optional server is a connection error, not a repo-hook or bootstrap
+failure: do not block a lane on it, and do not expand the allowlist or add
+secrets to make one connect without a packet decision. Re-check this table
+when `.mcp.json` or the approval lists change.
 
 ## Codex cloud: per-account setup
 
@@ -227,7 +278,16 @@ Cloud lanes follow the pool doctrine in [`AGENTS.md`](../../AGENTS.md) and
 other lane; `claude --cloud` clones the pushed branch, so push before
 delegating. Credits and limits per vendor are account state, not repo state:
 check `Settings → Usage` on each Claude account and the Codex usage page before
-fanning out.
+fanning out. The Claude cloud promotional credit, its exclusions and its
+expiry are metered in [agent-pools, Cloud](./agent-pools.md#cloud-claude-cloud-session-credit).
+
+Qualification status (no account count is claimed beyond receipts):
+
+| Vendor | Status | Receipt |
+| --- | --- | --- |
+| Claude cloud | Smoke passed on two accounts with public receipts (account 1 ran the full D4 loop; account 2 ran `--help` and the package proof); two more smokes were reported privately and are not counted | [`2026-11-01-claude-cloud-smoke`](../../goals/cloud-agent-readiness/history/2026-11-01-claude-cloud-smoke.md), [`2026-11-01-fleet-cloud-setup`](../../goals/cloud-agent-readiness/history/2026-11-01-fleet-cloud-setup.md) |
+| Codex cloud | Bootstrap and package proof passed; publishing the reusable environment failed twice without diagnostics, so it is **not runnable** | same fleet note |
+| Cursor Cloud Agent | Bootstrap snapshot only; **no agent package proof** | same fleet note |
 
 ## Sources
 

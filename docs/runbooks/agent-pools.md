@@ -64,7 +64,7 @@ the CLI is signed in to (`●`, read from the Claude and Codex CLIs' own config 
 Ranking: ready accounts first; a week already running down before an untouched one, whose quota
 cannot expire while it waits; then weekly percent left per hour until reset. Every percentage means
 quota left. A detail line shows the session window, model-scoped windows, credit balances (Claude
-cloud session credits with their expiry, ChatGPT credits), unused ChatGPT limit resets, and the plan.
+cloud session credits with their expiry, metered under Cloud below; ChatGPT credits), unused ChatGPT limit resets, and the plan.
 A poll that fails keeps the account's last good reading, marked with its age. `bun run beep accounts
 status` prints the same board once; `--json` emits the `accounts-status/v2` report (one group per
 provider). Muse reports no windows while its five-hour window is idle. Kimi Code shows its
@@ -148,6 +148,39 @@ dashboard cookies. Cursor staff (Dean Rie, 2026-08-10) classed that with unoffic
 "can trigger abuse enforcement, up to and including an account ban"
 (https://forum.cursor.com/t/does-using-oh-my-pi-s-cursor-provider-or-an-openai-compatible-proxy-to-the-same-endpoints-violate-cursor-s-tos/167778).
 Do not ship a usage scraper in this public repo (D17).
+
+### Cloud (Claude cloud session credit)
+
+The fourth meter (packet `goals/cloud-agent-readiness`, SPEC D6). It changes no pool order:
+it only says which surface a Claude lane should run on while promotional cloud credit lasts.
+VM setup, network and MCP expectations live in
+[cloud environments](./cloud-environments.md).
+
+Source of record: the Claude Help Center article
+[Cloud sessions bonus credit promotion](https://support.claude.com/en/articles/17152539-cloud-sessions-bonus-credit-promotion)
+(read 2026-11-02; the page carries no exact update date). Re-read it before relying on any line
+below; the article wins on conflict.
+
+| Item | Rule |
+| --- | --- |
+| Eligible accounts | Individual Pro and Max subscriptions active when the promotion started, signed in with a claude.ai account. Team, Enterprise, trial, past-due, Bedrock, Vertex AI and API-key authentication are excluded. |
+| Eligible work | Cloud sessions only, started from web, desktop, CLI or mobile. |
+| Excluded work | Projects, Routines, Remote Control sessions (they run locally), chat, Cowork, and any Claude use outside a cloud session. Do not count those against the credit. |
+| Order of spend | The bonus applies automatically once a cloud session starts and is spent first. While it lasts, cloud usage does not count toward the plan's usage limits; after it runs out, cloud sessions count against those limits like local sessions. |
+| Weekly-limit banner | Not an admission blocker on its own. The article states the bonus is separate from weekly usage-limit changes, so a weekly banner does not prove the credit is spent. A cloud lane is blocked only by a concrete refusal from the session itself (a quota or rate-limit error), and then it steps down the Claude chain like any other quota failure. |
+| Usage credits (paid) | Not needed for the bonus. Keep paid usage credits off, keep auto-reload off, and make no purchase, reload, plan change or billing change to extend cloud work: those are operator money decisions (`AGENTS.md` Autonomy). On Pro, selecting Fable requires usage credits, so a Pro-account cloud lane runs `claude-opus-5-5`. |
+| Expiry | November 4, 2026, 11:59 PM PT, which is `2026-11-05T07:59Z` (PST, after daylight time ended November 1). Unused credit is not stated to carry over; plan for none. |
+
+**Reading the meter.** The balance and expiry are account state, never repo state. The
+operator reads them from the account's usage settings; `bun run beep accounts` shows the
+cloud-credit balance with its expiry on the Claude detail line when the proxy login reports it.
+Never record per-account balances, account emails, session ids or private handoff contents in
+this public repo; packet notes cite this runbook and the public article instead.
+
+**Admission.** Until expiry, prefer a cloud session for a bounded Claude lane that needs no
+workstation-only capability (secrets, systemd user bus, recorded QA, private corpora, the
+workstation-only MCP servers in the cloud runbook's MCP table). After expiry, or once a session
+refuses for quota, cloud work is ordinary plan usage and the Opus meter above governs.
 
 ## Seat map
 
