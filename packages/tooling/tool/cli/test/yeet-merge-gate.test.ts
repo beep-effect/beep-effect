@@ -76,6 +76,7 @@ const fixtureRuns = A.map(checkRunsFixture.check_runs, (run) =>
   MergeGateCheckRun.make({ id: run.id, name: run.name, status: run.status, conclusion: run.conclusion })
 );
 const readyAtIso = timelineFixture[0]?.created_at ?? "2026-10-06T08:00:52Z";
+const readyEvent = timelineFixture[0]?.event ?? "ready_for_review";
 const suiteInstants = A.map(checkSuitesFixture.check_suites, (suite) => suite.created_at);
 const pushedAtIso = A.sort(suiteInstants, Str.Order)[0] ?? readyAtIso;
 const anchoredAt = DateTime.makeUnsafe(pushedAtIso > readyAtIso ? pushedAtIso : readyAtIso);
@@ -896,7 +897,6 @@ const workflowRunPages = (additionalActiveRuns: GhScript["additionalActiveRuns"]
     : []),
 ];
 
-// The recorded answer for each `gh` call, matched on a fragment of its argv, first match wins.
 const scriptReviewerRules = (script: GhScript) =>
   script.reviewerRequired === true
     ? [
@@ -934,52 +934,77 @@ const squashAnswers = (script: GhScript): ReadonlyArray<readonly [string, Script
     ],
   ];
 };
-const ghAnswers = (script: GhScript): ReadonlyArray<readonly [string, ScriptedAnswer]> => [
-  ["/merge", { exitCode: 0, output: script.mergeResponse }],
-  // S11 post-merge steps: the PR comment, the leftover-run listings, and each cancel.
-  [`/issues/${pullFixture.number}/comments`, { exitCode: script.commentExit ?? 0, output: "{}" }],
-  // Run 14 belongs to another head; the server-side filter should not return it, and the gate never cancels it.
-  [
-    "/actions/runs?",
-    {
-      exitCode: script.queuedExit ?? 0,
-      output: encodeJson(workflowRunPages(script.additionalActiveRuns)),
-    },
-  ],
-  [`/runs/${script.cancelFailId ?? -1}/cancel`, { exitCode: 1, output: "cancel refused" }],
-  ["/cancel", { exitCode: 0, output: "" }],
-  // The review-window reader asks through --jq: timeline rows as `<event>\t<instant>`, suites as instants.
-  [
-    "/timeline",
-    { exitCode: script.windowExit, output: `${timelineFixture[0]?.event ?? "ready_for_review"}\t${readyAtIso}\n` },
-  ],
-  ["/check-suites", { exitCode: script.windowExit, output: A.join(suiteInstants, "\n") }],
-  ["graphql", { exitCode: script.threadsExit, output: encodeJson(script.threads ?? threadsFixture) }],
-  ["rules/branches/", { exitCode: script.rulesExit, output: encodeJson(scriptReviewerRules(script)) }],
-  ["?check_name=beep-reviewer", { exitCode: 0, output: encodeJson(scriptReviewerPage(script)) }],
-  // The inherited-red evidence: the merge base of base...head, then its check runs. By
-  // default the base mirrors the head, so a scripted red on the head reads as inherited.
+// Defaults applied once, so the answer tables below carry no fallbacks. The base
+// check runs mirror the head's unless a script says otherwise, so a scripted red on
+// the head reads as inherited by default.
+const scriptDefaults = {
+  baseTipSha: mergeBaseSha,
+  cancelFailId: -1,
+  checkRuns: checkRunsFixture as unknown,
+  commentExit: 0,
+  compareExit: 0,
+  queuedExit: 0,
+  threads: threadsFixture as unknown,
+};
+const resolveScript = (script: GhScript) => {
+  const resolved = { ...scriptDefaults, ...script };
+  return {
+    ...resolved,
+    baseCheckRuns: resolved.baseCheckRuns ?? resolved.checkRuns,
+    baseTipCheckRuns: resolved.baseTipCheckRuns ?? resolved.checkRuns,
+  };
+};
+type ResolvedGhScript = ReturnType<typeof resolveScript>;
+type GhAnswerRoute = readonly [string, ScriptedAnswer];
+const answer = (exitCode: number, output: string): ScriptedAnswer => ({ exitCode, output });
+
+// The merge PUT and the S11 post-merge steps: the PR comment, the leftover-run listing
+// (run 14 belongs to another head; the server-side filter should not return it, and the
+// gate never cancels it) and each cancel.
+const postMergeAnswers = (script: ResolvedGhScript): ReadonlyArray<GhAnswerRoute> => [
+  ["/merge", answer(0, script.mergeResponse)],
+  [`/issues/${pullFixture.number}/comments`, answer(script.commentExit, "{}")],
+  ["/actions/runs?", answer(script.queuedExit, encodeJson(workflowRunPages(script.additionalActiveRuns)))],
+  [`/runs/${script.cancelFailId}/cancel`, answer(1, "cancel refused")],
+  ["/cancel", answer(0, "")],
+];
+
+// The gate's reads: the review window (asked through --jq: timeline rows as
+// `<event>\t<instant>`, suites as instants), the threads, the ruleset and the reviewer page.
+const gateReadAnswers = (script: ResolvedGhScript): ReadonlyArray<GhAnswerRoute> => [
+  ["/timeline", answer(script.windowExit, `${readyEvent}\t${readyAtIso}\n`)],
+  ["/check-suites", answer(script.windowExit, A.join(suiteInstants, "\n"))],
+  ["graphql", answer(script.threadsExit, encodeJson(script.threads))],
+  ["rules/branches/", answer(script.rulesExit, encodeJson(scriptReviewerRules(script)))],
+  ["?check_name=beep-reviewer", answer(0, encodeJson(scriptReviewerPage(script)))],
+];
+
+// The inherited-red evidence: the compare of base...head names the merge base and the
+// base tip, then each commit's check runs; the head's check runs are matched last because
+// their fragment is a suffix of the other two.
+const baseEvidenceAnswers = (script: ResolvedGhScript): ReadonlyArray<GhAnswerRoute> => [
   [
     `/compare/${pullFixture.base.ref}...${headSha}`,
-    {
-      exitCode: script.compareExit ?? 0,
-      output: encodeJson({
-        merge_base_commit: { sha: mergeBaseSha },
-        base_commit: { sha: script.baseTipSha ?? mergeBaseSha },
-      }),
-    },
+    answer(
+      script.compareExit,
+      encodeJson({ merge_base_commit: { sha: mergeBaseSha }, base_commit: { sha: script.baseTipSha } })
+    ),
   ],
-  [
-    `commits/${mergeBaseSha}/check-runs`,
-    { exitCode: 0, output: encodeJson([script.baseCheckRuns ?? script.checkRuns ?? checkRunsFixture]) },
-  ],
-  [
-    `commits/${script.baseTipSha ?? "none"}/check-runs`,
-    { exitCode: 0, output: encodeJson([script.baseTipCheckRuns ?? script.checkRuns ?? checkRunsFixture]) },
-  ],
-  ["/check-runs", { exitCode: 0, output: encodeJson([script.checkRuns ?? checkRunsFixture]) }],
-  ...squashAnswers(script),
+  [`commits/${mergeBaseSha}/check-runs`, answer(0, encodeJson([script.baseCheckRuns]))],
+  [`commits/${script.baseTipSha}/check-runs`, answer(0, encodeJson([script.baseTipCheckRuns]))],
+  ["/check-runs", answer(0, encodeJson([script.checkRuns]))],
 ];
+
+// The recorded answer for each `gh` call, matched on a fragment of its argv, first match wins.
+const ghAnswers = (script: GhScript): ReadonlyArray<GhAnswerRoute> => {
+  const resolved = resolveScript(script);
+  return [
+    ...postMergeAnswers(resolved),
+    ...gateReadAnswers(resolved),
+    ...baseEvidenceAnswers(resolved),
+    ...squashAnswers(script),
+  ];
+};
 
 // `bunx commitlint` is scripted too: the gate's own tests never run the real
 // linter (yeet-squash-commitlint.test.ts does); by default it passes.
@@ -1155,7 +1180,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           (calls) =>
             Effect.gen(function* () {
               const result = yield* readMergeGate(context, pullFixture.number);
-              expect(O.map(result.baseRuns, (base) => base.baseTip.sha)).toEqual(O.some(baseTipSha));
+              assertSome(
+                O.map(result.baseRuns, (base) => base.baseTip.sha),
+                baseTipSha
+              );
               return yield* Ref.get(calls);
             })
         );
