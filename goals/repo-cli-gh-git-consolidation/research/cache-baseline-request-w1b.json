@@ -1,0 +1,20 @@
+{
+  "previous": "fb66163dc4f064bcb55dfc24680e8f00fd58231eb49865567283fc3f633406be",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (repo-cli-gh-git-consolidation W1b, feat/gh-git-w1b-yeet)",
+    "reason": "Record the W1b root re-seal: Yeet/internal/GitExec.ts enters the goals-doctor and knowledge policy closures after the leaf Git.make provisions in GitWorktree.ts and TmpfsReap.ts are dropped; no manifest or dependency changes; no qualification is granted.",
+    "basis": {
+      "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w1b.md",
+      "sha256": "23edadefc89d8f745b91a13deedf85bd65c6acbae19bd0f41b6a00cfac328764"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}
