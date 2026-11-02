@@ -24,15 +24,22 @@ Input-set change in `packages/foundation/modeling/identity/turbo.json`
 (subject `@beep/identity`): `!$TURBO_ROOT$/.claude/worktrees/**` on `lint`.
 Biome reads the package and the root configuration files, not nested lanes.
 
-Of the drifted tasks only `//#lint:tsgo-rules` is cached on `main`; the
-others are uncached there. Commands, outputs, `dependsOn`, cache flags,
+After #2559 (merged into this branch) `//#lint:tsgo-rules`,
+`//#lint:retired-effect-paths`, `//#lint:retired-iri-authorities`,
+`//#lint:markdown-fences`, `//#lint:schema-tag-idioms` and `//#lint:holds` are
+cached; the Fallow, typos, `coverage` and `package-test-typecheck` rows and
+`@beep/identity#lint` stay uncached. For the cached rows the exclusions remove
+only paths their `git ls-files` listing never returns, so a replayed result
+cannot depend on a removed input. Commands, outputs, `dependsOn`, cache flags,
 qualification scope, profile, epoch and qualification states do not change.
 This reviews the declared input-set change only. It is not evidence that any
 computation is newly qualified or that a quality gate has passed.
 
 Drifted computations reported by `bun run beep cache audit`:
 
-- `//#lint:tsgo-rules` (configuration-drift)
+- `//#lint:tsgo-rules`, `//#lint:retired-effect-paths`,
+  `//#lint:retired-iri-authorities`, `//#lint:markdown-fences`,
+  `//#lint:schema-tag-idioms`, `//#lint:holds` (configuration-drift)
 - configuration sources `turbo.json` and
   `packages/foundation/modeling/identity/turbo.json` (configuration-source-drift)
 

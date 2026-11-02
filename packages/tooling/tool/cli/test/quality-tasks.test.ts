@@ -7176,6 +7176,16 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "build",
           "--concurrency=4",
           "--summarize",
+          "--filter=@beep/repo-cli",
+          "--filter=@beep/repo-utils",
+          "--filter=@beep/a",
+          "--filter=@beep/b",
+          "--filter=@beep/c",
+          "--filter=@beep/d",
+          "--filter=@beep/e",
+          "--filter=@beep/f",
+          "--filter=@beep/g",
+          "--filter=@beep/h",
           "--force",
           "--remote-only",
           "--output-logs=errors-only",
@@ -7197,6 +7207,36 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=2"))).toHaveLength(1);
         expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=1"))).toHaveLength(9);
       }));
+
+    it("filters the full-coverage prebuild to the coverage owners", () => {
+      // Quality audit A2 (2026-11-02): an unfiltered `turbo run build` prebuild also
+      // built @beep/storybook, which owns no coverage task and is in no owner's
+      // build closure. The prebuild now carries one positive filter per owner, as
+      // the selected-coverage path already did; turbo adds each owner's `^build`.
+      const packageNames = ["@beep/schema", "@beep/repo-cli", "@beep/utils"];
+      const [prebuild, ...shards] = coverageFullStepsForTesting("/repo", packageNames, ["--summarize"]);
+      const prebuildFilters = A.filter(prebuild.args, Str.startsWith("--filter="));
+      expect(prebuildFilters).toEqual(A.map(packageNames, (name) => `--filter=${name}`));
+      expect(prebuild.args).not.toContain("--only");
+      expect(prebuild.args).not.toContain("--filter=@beep/storybook");
+      const selected = coverageSelectedStepsForTesting("/repo", packageNames, ["--summarize"], {
+        hosted: true,
+        writeBaseline: false,
+      });
+      expect(prebuildFilters).toEqual(A.filter(selected[0].args, Str.startsWith("--filter=")));
+      // Every owner still lands in exactly one shard behind the filtered prebuild.
+      const shardFilters = pipe(
+        shards,
+        A.flatMap((step) => A.filter(step.args, Str.startsWith("--filter=@beep/"))),
+        A.sort(Order.String)
+      );
+      expect(shardFilters).toEqual(
+        A.sort(
+          A.map(packageNames, (name) => `--filter=${name}`),
+          Order.String
+        )
+      );
+    });
 
     it("uses the hosted shard worker shape for full baseline regeneration", () => {
       const steps = coverageFullStepsForTesting(

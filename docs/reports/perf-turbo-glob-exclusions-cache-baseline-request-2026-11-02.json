@@ -1,11 +1,11 @@
 {
-  "previous": "fb66163dc4f064bcb55dfc24680e8f00fd58231eb49865567283fc3f633406be",
+  "previous": "e0dd37d80ffdd3cd724431eb5e3748aa9a6ad1b9f7ee4fd54345c8e52b77caab",
   "review": {
     "reviewer": "Claude Opus 5.5 (perf-turbo-glob-exclusions, claude/perf-turbo-glob-exclusions-fb5814)",
     "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
     "basis": {
       "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-      "sha256": "4a4104da68fdd87dc7c34a5ace88aa1020f06e4a0d68ee5ae0ff5ceafc277176"
+      "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
     }
   },
   "subjects": [
