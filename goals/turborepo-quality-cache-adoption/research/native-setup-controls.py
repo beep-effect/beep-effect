@@ -205,6 +205,7 @@ for channel, (binary, digest) in clients.items():
             ["git", "init", "--quiet", str(root)],
             env=git_env,
             check=True,
+            timeout=5,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -220,6 +221,7 @@ for channel, (binary, digest) in clients.items():
             ],
             env=git_env,
             check=True,
+            timeout=5,
             stdout=subprocess.DEVNULL,
         )
         subprocess.run(
@@ -242,6 +244,7 @@ for channel, (binary, digest) in clients.items():
             ],
             env=git_env,
             check=True,
+            timeout=5,
             stdout=subprocess.DEVNULL,
         )
         (root / ".gitignore").write_text("/.turbo/\n")
