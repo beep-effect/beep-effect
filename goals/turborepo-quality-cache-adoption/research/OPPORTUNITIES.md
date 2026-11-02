@@ -673,3 +673,14 @@ pairs. Reuse the existing streaming collector instead of checking output size
 after unbounded collection. Preserve the ten-second process and three-minute
 observation limits with an owned process wrapper, and refuse existing reports.
 This refresh grants no real computation qualification or production flag change.
+
+### 2026-11-02 — native driver path and source snapshot review
+
+Review found an unresolved research path beside a resolved repository root and
+a second harness read after the function had already been parsed. A real symlink
+invocation reproduced the path failure. Canonicalize both paths and bind harness
+and pin digests to the exact captured bytes used for parsing. Real controlled
+mutations of each file now fail before native controls; both files are restored
+byte-identically. Forty-four alias-path cases match the canonical invocation.
+Outside-checkout pin manifests fail explicitly. Keep these observations separate
+from the earlier published source and preserve that proof through immutable Git.

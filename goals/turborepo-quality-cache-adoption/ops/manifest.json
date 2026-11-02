@@ -112,7 +112,8 @@
     "research/native-selection-current-canary-controls.json",
     "research/native-selection-historical-compatibility-controls.json",
     "research/selection-current-driver-controls.json",
-    "research/selection-current-canary-checkpoint.json"
+    "research/selection-current-canary-checkpoint.json",
+    "research/selection-review-source-controls.json"
   ],
   "agentLaunchers": [
     {

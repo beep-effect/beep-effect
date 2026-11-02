@@ -32,16 +32,21 @@ assert sys.platform == "linux", "Selection controls require Linux native clients
 os.umask(0o077)
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--output", type=Path, required=True)
-parser.add_argument("--pins", type=Path)
+parser.add_argument("--pins", type=Path, help="Reviewed pin manifest within this checkout")
 parser.add_argument("--stable", type=Path)
 args = parser.parse_args()
 assert not args.output.exists(), "Existing reports are refused"
 repo = Path(__file__).resolve().parents[3]
-research = Path(__file__).parent
+research = Path(__file__).resolve().parent
 pins_path = (args.pins or research / "current-client-pins.json").resolve()
+try:
+    pins_path.relative_to(repo)
+except ValueError:
+    raise SystemExit("Pin manifest must be within the checkout.") from None
 harness = research / "native-future-flag-availability.py"
+harness_bytes = harness.read_bytes()
 function = next(
-    node for node in ast.parse(harness.read_text()).body
+    node for node in ast.parse(harness_bytes.decode("utf-8")).body
     if isinstance(node, ast.FunctionDef) and node.name == "run_bounded"
 )
 capture = {
@@ -83,12 +88,20 @@ bun_version = subprocess.check_output(
     [str(bun), "--version"], timeout=5, text=True
 ).strip()
 assert bun_version == (repo / ".bun-version").read_text().strip(), "Bun pin changed"
-pins = json.loads(pins_path.read_text())
+pins_bytes = pins_path.read_bytes()
+pins = json.loads(pins_bytes)
 source_paths = [Path(__file__).resolve(), pins_path, harness, repo / ".bun-version"]
+captured_sources = {pins_path: pins_bytes, harness: harness_bytes}
 source_bindings = {
-    path.relative_to(repo).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+    path.relative_to(repo).as_posix(): hashlib.sha256(
+        captured_sources[path] if path in captured_sources else path.read_bytes()
+    ).hexdigest()
     for path in source_paths
 }
+assert all(
+    hashlib.sha256((repo / path).read_bytes()).hexdigest() == digest
+    for path, digest in source_bindings.items()
+), "Selection sources changed before controls"
 timeout_digest = hashlib.sha256(timeout.read_bytes()).hexdigest()
 clients = {
     "stable": args.stable or repo / "node_modules/@turbo/linux-64/bin/turbo",

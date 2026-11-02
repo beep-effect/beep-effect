@@ -591,3 +591,9 @@ the newer evidence and change no runtime cache policy or qualification record.
   settings. Real consumer and tuple evidence remain required.
 - Reverse by reverting this driver/registration change while retaining both
   report generations and the historical Git source. Runtime policy is unchanged.
+
+Selection replay inputs use canonical checkout paths and repository-contained
+pin manifests. Bind parsed pin bytes and executed harness bytes from the same
+captured snapshots; verify those snapshots against disk before and after the
+controls. Retain source-change refusals and symlink-path regression evidence
+without replacing the earlier source-bound observations.

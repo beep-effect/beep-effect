@@ -1172,7 +1172,9 @@
     "checkpoint": "selection-current-canary-checkpoint.json",
     "currentPairCases": 44,
     "historicalCompatibilityCases": 44,
-    "driverRefusals": 7,
-    "priorReportUnchanged": true
+    "driverRefusals": 10,
+    "priorReportUnchanged": true,
+    "symlinkReplayCases": 44,
+    "sourceBindingReviewControls": "selection-review-source-controls.json"
   }
 }

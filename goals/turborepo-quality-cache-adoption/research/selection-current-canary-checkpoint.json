@@ -1,15 +1,15 @@
 {
   "schemaVersion": "cache-selection-current-canary-checkpoint/v1",
-  "recordedAt": "2026-11-02T18:20:42.552194+00:00",
+  "recordedAt": "2026-11-02T18:53:56.751323+00:00",
   "authority": "Exact-pin synthetic task-selection regressions and driver integrity only. No current-root semantic review, task qualification, flag activation, remote rollout or whole-goal acceptance.",
   "sourceBaseRevision": "9f4bf57385a8adb6b3ff4d7fe5499ebfcd184cce",
   "sourceState": "working-tree-bound",
   "driver": {
     "path": "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py",
-    "sha256": "beadd2ed9db40737f7714425aa88ba403927247a9dc77ca1c1e592c23b8b7580"
+    "sha256": "ccbd4f76f0434a4333f8e2574b36589920d9c7f15593297da35b1a5a48401828"
   },
   "sourceBindings": {
-    "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py": "beadd2ed9db40737f7714425aa88ba403927247a9dc77ca1c1e592c23b8b7580",
+    "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py": "ccbd4f76f0434a4333f8e2574b36589920d9c7f15593297da35b1a5a48401828",
     "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json": "b98316567400a2323e0868b8558fb9250d7ceb5fd2e2af7354782e5bc8803c6d",
     "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py": "e2e51ecc6b3a3ca2e0553a13a061ebfc9b39d6239c8d935bbdbd411296c54736",
     ".bun-version": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35"
@@ -26,8 +26,8 @@
       }
     },
     "report": "research/native-selection-current-canary-controls.json",
-    "sha256": "621d593b64eb96ca4c10c20766d0d3428411119c389a650cfeac553a1522724f",
-    "rawReportSha256": "48cfdfddef3cf94636172b6c95c81cb6140bb560a8d13d55c9354f5b159495ae",
+    "sha256": "f7444ccc7883d269bfdf9df091f814846d9c3f9e9e00ec36b6720951384d9ee3",
+    "rawReportSha256": "aa8f8db72a67dc5e74591b18e821ce1c7ce6ac6a455bbf734c563a148ff4e45a",
     "assertedCases": 44,
     "nativeInvocations": 88
   },
@@ -43,7 +43,7 @@
       }
     },
     "report": "research/native-selection-historical-compatibility-controls.json",
-    "sha256": "ca1769f56e229294c711290e757aedd44ec9d9588b8e4d0bb8fb66fa0daf85fa",
+    "sha256": "33dd85cdb33dcfd3fc3598b06d3f6d131d70b32efbd91781fde629df45bb3ec5",
     "assertedCases": 44,
     "nativeInvocations": 88,
     "semanticProjectionEqualToOriginal": true
@@ -58,7 +58,7 @@
   },
   "driverControls": {
     "report": "research/selection-current-driver-controls.json",
-    "sha256": "49dcb73471bcc664b3615271fc5e7e97cd696c42eb3d8146bcbbd4b3d43f0a01",
+    "sha256": "591b43ecd4d3941dd18c846108d5eedb6d3108ac7808b895592caa022c0fa2cd",
     "refusals": 7,
     "expectedDiagnosticsMatched": true,
     "ownedChildrenGoneAfterBoundRefusals": true
@@ -86,5 +86,27 @@
   "productionChanged": false,
   "qualificationGranted": false,
   "featureAcceptanceChanged": false,
-  "allWholeGoalAcceptanceUnproven": true
+  "allWholeGoalAcceptanceUnproven": true,
+  "priorPublishedProof": {
+    "commit": "1a32869a1dcd2e4ceadbae6808d3dceb2475b6ad",
+    "driverSha256": "beadd2ed9db40737f7714425aa88ba403927247a9dc77ca1c1e592c23b8b7580",
+    "reports": {
+      "native-selection-current-canary-controls.json": "621d593b64eb96ca4c10c20766d0d3428411119c389a650cfeac553a1522724f",
+      "native-selection-historical-compatibility-controls.json": "ca1769f56e229294c711290e757aedd44ec9d9588b8e4d0bb8fb66fa0daf85fa",
+      "selection-current-driver-controls.json": "49dcb73471bcc664b3615271fc5e7e97cd696c42eb3d8146bcbbd4b3d43f0a01"
+    },
+    "scope": "Published pre-review current/compatibility observations and seven driver controls; source and report bytes remain available at this immutable Git commit."
+  },
+  "reviewRepair": {
+    "threads": ["PRRT_kwDOPbO_N86yzv9q", "PRRT_kwDOPbO_N86yzv96"],
+    "report": "research/selection-review-source-controls.json",
+    "sha256": "3635bcac47d7ebbc1e638410219d81ae0f64f79d3097b85b98fd7da80bcbfc35",
+    "symlinkCases": 44,
+    "beforePathFailureReproduced": true,
+    "canonicalAliasSourceBindingsAndSemanticsEqual": true,
+    "sourceMutationRefusals": 2,
+    "externalManifestRefusedExplicitly": true,
+    "mutatedSourcesRestoredByteIdentical": true,
+    "scope": "Resolve repository/research paths canonically; bind parsed/executed harness and pin bytes from their captured snapshots. Real mutations between loading and binding are refused before native controls."
+  }
 }

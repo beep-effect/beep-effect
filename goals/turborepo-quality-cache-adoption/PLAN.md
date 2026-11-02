@@ -583,3 +583,16 @@ Four feature rows link the current-pair observation without changing their
 acceptance state. The 27 unfinished feature decisions, actual-root consumer
 review, real computation qualification and every whole-goal criterion remain
 open. No production flag, cache policy, credential or infrastructure changes.
+
+
+### Selection driver source/path review follow-through
+
+Two review findings are repaired by canonical path resolution and hashing the
+actual harness and pin snapshots used by the driver. A before/after symlink
+control reproduces the original error, then passes all 44 cases with identical
+semantic/source projections. Real harness and pin-file mutations fail before
+controls; both files are restored exactly, and external manifests fail clearly.
+The current and historical pairs were replayed on the revised source; all seven
+existing refusals still pass. The earlier published proof remains bound to
+commit `1a32869a1dcd2e4ceadbae6808d3dceb2475b6ad`. No acceptance state,
+production setting or qualification changes.

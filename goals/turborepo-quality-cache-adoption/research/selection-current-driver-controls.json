@@ -19,26 +19,26 @@
       "exit": 1,
       "expectedDiagnosticMatched": true,
       "reportPreserved": true,
-      "diagnosticSha256": "7583d5b8e41f31d07e03d576af8fe008e96d4991715689c06bdb9f423b14ffed"
+      "diagnosticSha256": "2bd62548223c6996fd0dec906ca92e20d0eea170adc3a63b99c910a684051f63"
     },
     {
       "control": "omitted-prerequisite",
       "exit": 1,
       "expectedDiagnosticMatched": true,
       "reportPreserved": true,
-      "diagnosticSha256": "4b31cb5d95c4eb5c750f3b909cfc2f21f1dc44707646a4d9e00504966e77ccac"
+      "diagnosticSha256": "19fac93c7ce281e742bba2c734a3b1c80e3964d5a8e9c1dbfe45dddd41008c2c"
     },
     {
       "control": "stream-byte-bound",
       "expectedDiagnosticMatched": true,
-      "elapsedSeconds": 0.01,
+      "elapsedSeconds": 0.008,
       "ownedChildActiveAfterReturn": false,
       "ownedChildTerminalState": "absent"
     },
     {
       "control": "owned-process-timeout",
       "expectedDiagnosticMatched": true,
-      "elapsedSeconds": 0.281,
+      "elapsedSeconds": 0.283,
       "ownedChildActiveAfterReturn": false,
       "ownedChildTerminalState": "absent"
     },
@@ -51,5 +51,5 @@
   "historicalCasesCompared": 44,
   "historicalSemanticProjectionEqual": true,
   "historicalReportSha256": "048d44ace9322686c87adeb5cfca07ccc251e16c9e8aba74066b9b46a85e41f9",
-  "driverSha256": "beadd2ed9db40737f7714425aa88ba403927247a9dc77ca1c1e592c23b8b7580"
+  "driverSha256": "ccbd4f76f0434a4333f8e2574b36589920d9c7f15593297da35b1a5a48401828"
 }
