@@ -42,7 +42,16 @@ case " $FIXTURE_UNRESOLVED " in
   *" $host "*) printf '000 000'; echo "curl: (6) Could not resolve host: $host" >&2; exit 6 ;;
 esac
 case " $FIXTURE_MISSING " in
-  *" $host "*) printf '404 000'; echo 'curl: (22) The requested URL returned error: 404' >&2; exit 22 ;;
+  *" $host "*)
+    # Order a mixed failure deterministically: let the other worker record its
+    # denial before this one fails (bounded, so a regression cannot hang).
+    if [ -n "$FIXTURE_FAIL_AFTER_DENIAL" ]; then
+      tries=0
+      until ls "$FIXTURE"/cache/beep/cloud-bootstrap/run.*/"$FIXTURE_FAIL_AFTER_DENIAL".denied >/dev/null 2>&1; do
+        tries=$((tries + 1)); [ "$tries" -ge 500 ] && break; sleep 0.01
+      done
+    fi
+    printf '404 000'; echo 'curl: (22) The requested URL returned error: 404' >&2; exit 22 ;;
 esac
 version=$(cat .nvmrc)
 case "$url" in
@@ -83,6 +92,7 @@ type Scenario = {
   readonly deny?: string;
   readonly unresolved?: string;
   readonly missing?: string;
+  readonly failAfterDenial?: string;
   readonly badSum?: boolean;
 };
 
@@ -138,6 +148,7 @@ const runBootstrap = Effect.fn("CloudBootstrapDeniedHostTest.runBootstrap")(func
       FIXTURE_BAD_SUM: scenario.badSum === true ? "1" : "",
       FIXTURE_BUN: scenario.bun,
       FIXTURE_DENY: scenario.deny ?? "",
+      FIXTURE_FAIL_AFTER_DENIAL: scenario.failAfterDenial ?? "",
       FIXTURE_MISSING: scenario.missing ?? "",
       FIXTURE_NODE: scenario.node,
       FIXTURE_UNRESOLVED: scenario.unresolved ?? "",
@@ -212,7 +223,41 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap require
       const result = yield* runBootstrap(fixture, { bun: "stale", node: "pinned", missing: "github.com" });
       expect(result.exitCode, result.stderr).toBe(1);
       expect(result.stderr).toContain("download or checksum failed");
+      expect(result.stderr).toContain("no required-host denial was recorded before stopping");
       expect(result.stderr).not.toContain("required download host denied");
+      yield* expectUntouched(fixture, result.stderr);
+    })
+  );
+
+  it.effect("does not let a Bun 404 mask an already recorded Node denial", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepareFixture();
+      const result = yield* runBootstrap(fixture, {
+        bun: "stale",
+        node: "stale",
+        missing: "github.com",
+        deny: "nodejs.org",
+        failAfterDenial: "node",
+      });
+      expect(result.exitCode, result.stderr).toBe(78);
+      expect(result.stderr).toContain("download or checksum failed");
+      expect(result.stderr).toContain(remedy("nodejs.org"));
+      yield* expectUntouched(fixture, result.stderr);
+    })
+  );
+
+  it.effect("keeps a Bun denial named when Node fails without a denial", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepareFixture();
+      const result = yield* runBootstrap(fixture, {
+        bun: "stale",
+        node: "stale",
+        deny: "github.com",
+        missing: "nodejs.org",
+      });
+      expect(result.exitCode, result.stderr).toBe(78);
+      expect(result.stderr).toContain("Node");
+      expect(result.stderr).toContain(remedy("github.com"));
       yield* expectUntouched(fixture, result.stderr);
     })
   );

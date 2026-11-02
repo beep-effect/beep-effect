@@ -43,6 +43,15 @@ Base: `origin/main` at `7ae3f014`, in a Claude cloud session.
   The parallel workers, their cleanup, the checksum and GPG checks, the frozen
   install and its three-attempt retry, the vendor guard and the stamps are
   unchanged. The optional `op` worker still only warns.
+- Mixed failures (review follow-up). Bun is waited on first and a non-denial
+  Bun failure stops the loop early; the EXIT trap cancels the downloads still
+  in flight. On `ebc5a1f6`, a Bun `404` with a Node `403` already recorded
+  exited `1` without naming `nodejs.org`. Now a denial another required worker
+  already recorded is still named (exit `78`), after the Bun failure line. A
+  denial still in flight is unknown, so it is not claimed: the exit-1 message
+  says no denial was recorded before stopping and that in-flight downloads
+  were cancelled. A Bun denial with a Node non-denial failure was already exit
+  `78` naming `github.com`, and is now pinned by a test.
 - Not covered: denial of the install registries (`registry.npmjs.org`,
   `buf.build`) during `bun install`. Naming them would mean parsing bun's
   output, which would infer the host, so they keep the existing loud exit-1
@@ -67,13 +76,16 @@ request leaves the host.
 | `github.com` 404 (non-denial) | exit 1: pass | exit 1, no denial line |
 | Node checksum mismatch | exit 1: pass | exit 1, no denial line |
 | Allowed host, then re-run | exit 0: pass | exit 0; install runs once, re-run skips |
+| Bun 404 + Node 403 recorded (`ebc5a1f6` scripts) | exit 1, no `nodejs.org`: **fail** | exit 78 naming `nodejs.org` |
+| Bun 403 + Node 404 | exit 78: pass | exit 78 naming `github.com` |
 
 Every denial case also asserts no `bun install`, `bun add`, `bun run prepare`
 or `ln` call, and that no `~/.bun`, `~/.local`, `~/.bashrc` or `node_modules`
 was created, and that the run directory under the cache was removed. The
 failure-before column comes from running the same test file with the
 `7ae3f014` copies of both scripts swapped in (3 failed, 3 passed). After the
-fix, the new file plus `retained-script-adapters.test.ts` give 26/26 passing.
+fix, the new file plus `retained-script-adapters.test.ts` give 28/28 passing
+(26/26 before the two mixed cases were added).
 The real `/usr/local/bin` links still carry their session-start timestamps.
 
 ## Checks and limits
@@ -88,11 +100,12 @@ The real `/usr/local/bin` links still carry their session-start timestamps.
   JSDoc, and this change touches no `src/` file, so the failure was not
   introduced here. Whether it is inherited from `main` or caused by this VM
   was not proven. Hosted Docgen is the proof.
-- ShellCheck: **not run**. `shellcheck` is not on the VM `PATH`, not in
-  `node_modules`, and not in the apt cache. Installing it would add a tool and
-  need privileged access, both out of this lane's scope. Attribution:
-  environment-only. The matrix's "Script lint" row still needs a run on a
-  workstation or in CI.
+- ShellCheck 0.11.0 (`uvx --from shellcheck-py`, user cache only, no
+  privileged install). On base `7ae3f014` and on head, both scripts give exit
+  `1` with one finding: SC1091 (info) at the unchanged
+  `. "${NVM_DIR}/nvm.sh"` line, which is inherited. With `-S warning`, head
+  exits `0`. The diff adds no finding. (Earlier, `shellcheck` was missing from
+  the VM `PATH`.)
 - Hermetic proof only. No live denied-host run, and no network policy changed.
   The matrix row moves from "unexercised" to "hermetically qualified for the
   download hosts"; its acceptance checkbox stays open until a real denied
