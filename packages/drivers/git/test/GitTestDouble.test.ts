@@ -114,6 +114,7 @@ describe("Git.makeTest", () => {
         refExists: () => double.refExists(cwd, "HEAD"),
         mergeBase: () => double.mergeBase(cwd, "HEAD", "main"),
         mergeBaseOption: () => double.mergeBaseOption(cwd, "HEAD", "main"),
+        isAncestor: () => double.isAncestor(cwd, "HEAD", "main"),
         changedFiles: () => double.changedFiles(cwd, { base: "main", head: "HEAD" }),
         workingChanges: () => double.workingChanges(cwd),
         revParse: () => double.revParse(cwd, "HEAD"),
@@ -182,6 +183,7 @@ describe("Git.makeTest", () => {
         worktreeAdd: () => double.worktreeAdd(cwd, "../worktree"),
         worktreeList: () => double.worktreeList(cwd),
         worktreeRemove: () => double.worktreeRemove(cwd, "../worktree"),
+        worktreePrune: () => double.worktreePrune(cwd),
         lsFiles: () => double.lsFiles(cwd),
       };
       for (const method of R.keys(double)) {

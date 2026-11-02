@@ -160,3 +160,38 @@ implementation choices.
   read-only research lanes covered stacks, TS6/reuse bricks, and alternatives.
 - No implementation code, cloud proof, or independent migration review exists
   from this research stage. The source body fetches were summarized, not vendored.
+
+## 6. 2026-11-02 refresh — sources added on reopen
+
+Research reopened on checkout `cda8f0d199` (branch `claude/explore-pulumi-to-alchemy-40ee3a`,
+base `main`). Coverage was re-verified against the **local Alchemy reference checkout**, not
+from memory or the 10-15 release tree: `$HOME/YeeBois/references/effect/alchemy` at
+`450702936d9b8e759f834da161cf7bfd1a4fe22f` (2026-11-01, `v2.0.0-beta.84` plus 246 commits;
+provisioned by `bun run beep refs provision`, member `alchemy` in `scripts/references.json`).
+Paths below are relative to `packages/` in that checkout. The checkout is ahead of the
+published `latest` (`2.0.0-beta.84`, 2026-10-24), so any resource present in the checkout but
+absent from the tag is **unreleased** until the next beta.
+
+| ID | Source | Fetched / read | Use |
+| --- | --- | --- | --- |
+| E69 | [alchemy.run/llms.txt](https://alchemy.run/llms.txt) | 2026-11-02, curl 0, 96,940 bytes, sha in FETCHES.json | Provider/guide index: AWS, Cloudflare, GitHub, Docker, Command, state store; **no Vercel section** |
+| E70 | [registry.npmjs.org/alchemy](https://registry.npmjs.org/alchemy) dist-tags | 2026-11-02 | `latest` 2.0.0-beta.84 (2026-10-24), `next` 2.0.0-beta.72 |
+| E71 | [GitHub issue search: pulumi/pulumi "typescript 7" in title](https://api.github.com/search/issues?q=repo:pulumi/pulumi+typescript+7+in:title&per_page=10) | 2026-11-02 | 6 hits, none about TypeScript 7 support: no upstream TS7 work is tracked under that title |
+| E72 | [pulumi/pulumi releases/latest](https://api.github.com/repos/pulumi/pulumi/releases/latest) | 2026-11-02 | v3.273.0, 2026-10-28; equals the repo catalog pin |
+| E73 | [pulumi/pulumi sdk/nodejs/package.json (master)](https://raw.githubusercontent.com/pulumi/pulumi/master/sdk/nodejs/package.json) | 2026-11-02 | optional peer `typescript >= 3.8.3 < 7`, `ts-node >= 7.0.1 < 12` |
+| L01 | Local checkout `alchemy/src/{State,Command,AdoptPolicy.ts}`, `aws/src/**`, `cloudflare/src/StateStore`, `hetzner/src/Ssh.ts`, `github/src`, `website/src/content/docs/cli/adopting-resources.mdx` | 2026-11-02 | Coverage matrix, state-store and adoption facts in RESEARCH 2026-11-02 |
+| L02 | Installed `node_modules/@pulumi/pulumi@3.273.0` (`cmd/run/run.js:234-350`, `tsutils.js:29-60`, `typescript-shim.js`, `runtime/closure/*.js`) | 2026-11-02 | When Pulumi's Node runtime loads TypeScript (option C feasibility) |
+
+Licenses are unchanged from section 2: Alchemy Apache-2.0 (checkout `LICENSE`), Pulumi
+Apache-2.0, runner module MIT. No source was copied.
+
+### In-repo capability references added 2026-11-02
+
+| Package / source | Location | Disposition |
+| --- | --- | --- |
+| `@beep/beep-effect-web` Alchemy stack | `apps/beep-effect-web/alchemy.run.ts`; `.github/workflows/deploy-beep-effect-web.yml`; `goals/beep-effect-web-alchemy/{SPEC.md,history/*}` | **REUSE** the per-package stack shape, `Cloudflare.state()` + CI concurrency group, `op run` credential lane, and the recorded gotchas (workers.dev subdomain, token scopes) |
+| r2-cache Alchemy stacks | `infra/r2-cache/alchemy.sh`, `alchemy.run.ts.template`, `alchemy.signed-credentials.ts.template`, `README.md` | **REFERENCE** a second live Alchemy pattern: frozen tool clone, local state under `$HOME/.local/state/beep`, token resources kept out of outputs |
+| TS6 isolation | `infra/pulumi-typescript6.cjs`; `infra/*/Pulumi.yaml` `runtime.options.nodeargs`; `syncpack.config.ts:153-163`; root `package.json` `infra:prepare-gha-runners` + `postinstall` | **REFERENCE** what option C removes |
+| ghaRunners SDK build guard | `infra/ci-runners/sdks/ghaRunners/scripts/build.js:26-41` (`majorVersion !== 6` throws) | **CHANGE CANDIDATE** repo-authored guard, not an upstream requirement |
+| Sixth Pulumi program | `infra/turbo-cache-lab/Pulumi.yaml`, `lab-aws.sh`; `infra/src/internal/turbo-cache-lab-entry.ts` | **REFERENCE** disposable lab reusing `CiTurboCache`; wraps `pulumi stack init/config set` |
+| CiTurboCache additions since 10-15 | `infra/src/CiTurboCache.ts` (`aws.sns.Topic`, `aws.sns.TopicSubscription`, `aws.cloudwatch.MetricAlarm`; PR #2252) | **REFERENCE** the 10-15 count of 30 is stale |
