@@ -42,22 +42,8 @@ const changedFilesErrorAdapter: GitCommandErrorAdapter<DomainError> = {
   onTruncated: O.none(),
 };
 
-/**
- * The diff flags the dirty-axis and base-range readers accept.
- *
- * **Example** (Scope a scan to added, copied, modified and renamed TypeScript)
- *
- * ```ts
- * import type { ChangedFileFilter } from "@beep/repo-cli/test/SharedInternals"
- *
- * const filter: ChangedFileFilter = { diffFilter: "ACMR", pathspecs: ["*.ts", "*.tsx"] }
- * console.log(filter.pathspecs.length) // 2
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type ChangedFileFilter = {
+/** The diff flags the dirty-axis and base-range readers accept. */
+type ChangedFileFilter = {
   /** `--diff-filter=<letters>`; omitted when every status counts. */
   readonly diffFilter?: string;
   /** `--no-renames`, so a moved file lists as its old and new path. */
