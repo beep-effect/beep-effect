@@ -4706,12 +4706,19 @@
       ]
     },
     "//#lint:jsdoc-module-tags": {
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint:quality-jsdoc-module-tags"],
       "inputs": [
         "{.patterns,apps,packages,tooling}/**/*.{hbs,md,ts,tsx}",
-        "!apps/labs/**"
+        "!apps/labs/**",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**"
       ]
     },
     "//#goals:doctor": {
@@ -5086,7 +5093,7 @@
       ]
     },
     "//#lint:retired-effect-paths": {
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint:laws"],
       "inputs": [
@@ -5105,7 +5112,7 @@
       ]
     },
     "//#lint:retired-iri-authorities": {
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint:laws"],
       "inputs": [
@@ -5123,7 +5130,7 @@
       ]
     },
     "//#lint:markdown-fences": {
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint:laws"],
       "inputs": [
@@ -5143,7 +5150,7 @@
       ]
     },
     "//#lint:schema-tag-idioms": {
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint:laws"],
       "inputs": [
@@ -5161,7 +5168,7 @@
       ]
     },
     "//#lint:holds": {
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint:holds"],
       "inputs": [
@@ -5175,7 +5182,10 @@
         "!**/node_modules/**",
         "!**/.beep/**",
         "!**/.turbo/**",
-        "!**/dist/**"
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**"
       ]
     },
     "//#lint:ecosystem-polarity": {
