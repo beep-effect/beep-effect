@@ -39,7 +39,8 @@
     "research/yeet-git-differential-w1b.json",
     "research/dirty-axis-differential-w2.json",
     "research/yeet-remainder-differential-w2b.json",
-    "research/reviewer-ci-github-differential-w3.json"
+    "research/reviewer-ci-github-differential-w3.json",
+    "research/review-thread-differential-w4.json"
   ],
   "agentLaunchers": [
     {
@@ -143,6 +144,58 @@
     {
       "path": "ops/frozen-w3/ReviewerService.old.ts",
       "purpose": "Frozen pre-W3 ReviewerService body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/review-thread-differential-w4.ts",
+      "purpose": "W4 differential: the frozen pre-W4 Yeet GitHub bodies (ops/frozen-w4: the status, watch, merge-gate, reply and closeout review-thread reads and writes, the GhOps outstanding count, the merge gate's REST reads and squash-merge PUT, the squash commitlint reader) compared with their @beep/github ReviewThread, GithubRest, GitHubRepository and GitHubClient replacements over one fixture world per scenario (mixed thread states, more than 100 threads over two pages, a missing, empty and repeated cursor, a failed thread read with and without the REST fallback, a node that is not a pull request, refused mutations and merges), served to the old bodies by a fake gh and bunx and to the new ones through a transport fetch."
+    },
+    {
+      "path": "ops/frozen-w4/GhCall.old.ts",
+      "purpose": "Frozen pre-W4 the GhCall body (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/frozen-w4/GhCollect.old.ts",
+      "purpose": "Frozen pre-W4 the GhCollect body (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/frozen-w4/GhCommand.old.ts",
+      "purpose": "Frozen pre-W4 the GhCommand body (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/frozen-w4/GhOps.old.ts",
+      "purpose": "Frozen pre-W4 the GhOps body (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/frozen-w4/GhSchemas.old.ts",
+      "purpose": "Frozen pre-W4 the closeout review-thread page document and query from closeout/Gh.schemas.ts (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/frozen-w4/GithubGraphql.old.ts",
+      "purpose": "Frozen pre-W4 the GithubGraphql body (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/frozen-w4/MergeGate.old.ts",
+      "purpose": "Frozen pre-W4 the MergeGate body (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/frozen-w4/Reply.old.ts",
+      "purpose": "Frozen pre-W4 the Reply body (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/frozen-w4/SquashCommitlint.old.ts",
+      "purpose": "Frozen pre-W4 the SquashCommitlint body (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/frozen-w4/Status.old.ts",
+      "purpose": "Frozen pre-W4 the Status body (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/frozen-w4/WatchMode.old.ts",
+      "purpose": "Frozen pre-W4 the WatchMode body (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
+    },
+    {
+      "path": "ops/frozen-w4/WritePlan.old.ts",
+      "purpose": "Frozen pre-W4 the reply mutation from closeout/WritePlan.ts (main 930758e06b) replayed by ops/review-thread-differential-w4.ts."
     }
   ]
 }

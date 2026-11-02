@@ -190,11 +190,11 @@ describe("ReviewThread.list pagination", () => {
     )
   );
 
-  it.effect("fails typed when GitHub reports a next page without a cursor", () =>
+  it.effect.each([null, ""])("fails typed when GitHub reports a next page without a cursor (%j)", (endCursor) =>
     Effect.scopedWith((scope) =>
       Effect.gen(function* () {
         const { script, base } = harness([
-          { status: 200, body: { data: listPage([wireThread()], { hasNextPage: true, endCursor: null }) } },
+          { status: 200, body: { data: listPage([wireThread()], { hasNextPage: true, endCursor }) } },
         ]);
         const context = yield* Layer.buildWithScope(ReviewThread.layer.pipe(Layer.provideMerge(base)), scope);
         const error = yield* Effect.flatMap(ReviewThread, (threads) => threads.list(7)).pipe(
@@ -206,6 +206,26 @@ describe("ReviewThread.list pagination", () => {
         assert.strictEqual(error.operation, "pullRequestReviewThreads");
         assert.strictEqual(error.reason, "another page was reported without an end cursor");
         assert.strictEqual(script.count(), 1);
+      })
+    )
+  );
+
+  it.effect("refuses a page that names the cursor it was read from", () =>
+    Effect.scopedWith((scope) =>
+      Effect.gen(function* () {
+        const looping = { hasNextPage: true, endCursor: "cursor-1" };
+        const { script, base } = harness([
+          { status: 200, body: { data: listPage([wireThread({ id: "PRRT_1" })], looping) } },
+          { status: 200, body: { data: listPage([wireThread({ id: "PRRT_1" })], looping) } },
+        ]);
+        const context = yield* Layer.buildWithScope(ReviewThread.layer.pipe(Layer.provideMerge(base)), scope);
+        const error = yield* Effect.flatMap(ReviewThread, (threads) => threads.list(7)).pipe(
+          Effect.provideContext(context),
+          Effect.flip
+        );
+        assert.strictEqual(error.kind, "decode");
+        assert.strictEqual(error.reason, "the same end cursor was reported twice");
+        assert.strictEqual(script.count(), 2);
       })
     )
   );
