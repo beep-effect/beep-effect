@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubError } from "@beep/github/GitHubError";
 import { Repo, RepoRef } from "@beep/github/Repo";
@@ -65,6 +66,10 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+const gitPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 
 const headSha = "abc1234def";
 
@@ -366,7 +371,7 @@ describe("spliceYeetInheritedRedsSection", () => {
   });
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "yeet ready gate run",
   (it) => {
     const recordingMarkReady =
@@ -1018,11 +1023,14 @@ const fakeHandle = (output: string, exitCode = 0) =>
 const mockSpawner = ChildProcessSpawner.make((command) =>
   Effect.succeed(fakeHandle("[]", ChildProcess.isStandardCommand(command) && command.command === "gh" ? 1 : 0))
 );
-const readyPlatform = Layer.mergeAll(
-  MemoryFileSystem.layer,
-  Path.layer,
-  BunCrypto.layer,
-  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, mockSpawner)
+const readyPlatform = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    MemoryFileSystem.layer,
+    Path.layer,
+    BunCrypto.layer,
+    Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, mockSpawner)
+  )
 );
 it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundaries", (it) => {
   it.effect("uses the real ancestor lookup when the head receipt is missing and refuses an empty store", () =>
@@ -1064,6 +1072,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("recovers the ready read through REST while GraphQL is rate limited", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetStatus(context, true).pipe(
+        Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound))
       );
       expect(snapshot.remote.available).toBe(true);
@@ -1083,6 +1092,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("keeps an unread REST review decision unknown and blocks merge readiness", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetStatus(context, true).pipe(
+        Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound))
       );
       expect(snapshot.remote.available).toBe(true);
@@ -1102,6 +1112,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("reports absence only after REST successfully confirms no branch PR", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetStatus(context, true).pipe(
+        Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner("[]"))
       );
       expect(snapshot.remote.available).toBe(false);
@@ -1124,6 +1135,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("retains the read failure when the REST lookup fails too", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetStatus(context, true).pipe(
+        Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner("REST unavailable", 1))
       );
       expect(snapshot.remote.available).toBe(false);
@@ -1146,6 +1158,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("blocks when the recovered PR has closed since the branch lookup", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetStatus(context, true).pipe(
+        Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound, 0, "[]", "CLOSED"))
       );
       expect(
@@ -1162,6 +1175,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("refuses to treat existing review comments as resolved threads", () =>
     Effect.gen(function* () {
       const failure = yield* collectYeetStatus(context, true).pipe(
+        Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound, 0, "[{}]")),
         Effect.flip
       );
@@ -1184,6 +1198,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
             : base.spawn(command);
         });
         const snapshot = yield* collectYeetStatus(context, true).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
         );
         expect(snapshot.remote.available).toBe(false);
@@ -1210,6 +1225,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
             : base.spawn(command);
         });
         const failure = yield* collectYeetStatus(context, true).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner),
           Effect.flip
         );
@@ -1234,6 +1250,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
           return base.spawn(command);
         });
         const snapshot = yield* collectYeetStatus(context, true).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
         );
         expect(snapshot.remote.available).toBe(true);
@@ -1281,7 +1298,10 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
           markReady: () => Effect.void,
-        }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)))._tag
+        }).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
+        ))._tag
       ).toBe("flip");
     })
   );
@@ -1308,7 +1328,11 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       );
       const error = yield* runYeetReady(
         YeetReadyOptions.make({ base: "origin/main", head: "HEAD", packetDir: ".beep/yeet", inherited: ["Lint"] })
-      ).pipe(Effect.flip, Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, counting));
+      ).pipe(
+        Effect.flip,
+        Effect.provideServiceEffect(Git, Git.make),
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, counting)
+      );
       expect(error).toMatchObject({ _tag: "YeetCommandError" });
       expect(error.message).toContain('--inherited needs "<check name>=<attribution>"; got "Lint".');
       expect(yield* Ref.get(spawned)).toBe(0);
@@ -1352,7 +1376,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
     })
   );
 });
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "10 seconds" })(
   "ready confirmation races",
   (it) => {
     it.effect("rewrites a recorded section to None on a no-red rerun after a post-record refusal", () =>
@@ -1541,7 +1565,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 se
         const error = yield* runYeetReadyGate(context, {
           finalCheck: passingFinalCheck,
           read: () => Effect.succeed(prView()),
-        }).pipe(Effect.flip, Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, refusing));
+        }).pipe(
+          Effect.flip,
+          Effect.provideServiceEffect(Git, Git.make),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, refusing)
+        );
         expect(error).toMatchObject({ _tag: "YeetCommandError", command: "bun run beep yeet gh pr ready 42" });
         expect(error.message).toContain("could not mark pull request #42 ready for review");
         const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
@@ -1619,7 +1647,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 se
             markReady: () => Effect.die("the flip must not run before the record succeeds"),
           },
           [lintInherited]
-        ).pipe(Effect.flip, Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, refusing));
+        ).pipe(
+          Effect.flip,
+          Effect.provideServiceEffect(Git, Git.make),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, refusing)
+        );
         expect(error).toMatchObject({ _tag: "YeetCommandError", exitCode: 1 });
         expect(error.message).toContain("could not record the inherited reds in the body of #42");
         expect(error.message).toContain("S11 requires the record before the flip");
@@ -1702,7 +1734,7 @@ describe("ready gate incomplete remote identities", () => {
       detail: expect.stringContaining("on head unknown"),
     });
   });
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
+  it.layer(gitPlatform, { timeout: "10 seconds" })((it) => {
     it.effect("refuses a successful verdict with no head identity before capture", () =>
       Effect.gen(function* () {
         const read = prView();
@@ -1722,7 +1754,7 @@ describe("ready gate incomplete remote identities", () => {
   });
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "ready head after the GraphQL budget wait",
   (it) => {
     const waitingFlip = Effect.fnUntraced(function* (replenished: boolean) {
@@ -1934,7 +1966,7 @@ const scratchClone = Effect.fn("YeetReadyTest.scratchClone")(function* () {
   };
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "yeet ready reviewer re-request",
   (it) => {
     it.effect("pushes one empty re-request commit on top of the flipped head", () =>
@@ -1976,7 +2008,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
   }
 );
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "yeet ready reviewer re-request safety",
   (it) => {
     it.effect("never commits staged changes into the re-request", () =>

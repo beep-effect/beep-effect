@@ -12,17 +12,28 @@
  * truncation each route through the adapter, so a call site migrates onto these
  * helpers without changing the error it surfaces.
  *
+ * Two layers live here. The generic argv runners (`runGitOutput`, `runGitPathList`,
+ * `runGitLines`, `runGitRawOutput`, `runGitFoldedStdout`, `writeGitArchive`,
+ * `guardCloneLocalGitAttributes`) are repo-cli's bounded child-process owner for
+ * arbitrary git argv. The typed readers (`resolveGitCommit`, `resolveGitMergeBase`,
+ * `readGitTree`, `readGitRenames`, the `collect*Paths` trio, `currentBranch`'s
+ * `abbrev-ref` mode and `ensureOriginMain`) each map to one `@beep/git` member and
+ * run through the `Git` service; {@link adaptGitKitError} folds the kit's typed
+ * errors back through the caller's adapter so no call site changes shape
+ * (repo-cli-gh-git-consolidation W1a, SPEC D-08).
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { isOptionLike } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
-import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -37,6 +48,14 @@ import {
   runCapturedStreams,
   runFoldedStdout,
 } from "../process/StepExec.ts";
+import type {
+  GitCommandError,
+  LsTreeEntry,
+  NameStatusEntry,
+  NotARepositoryError,
+  UnknownRefError,
+} from "@beep/git/Git";
+import type { GitInvocation } from "@beep/git/GitCommand";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -105,86 +124,36 @@ export const gitTreeEntriesFromNulOutput = (output: string): O.Option<ReadonlyAr
   return A.length(entries) === A.length(records) ? O.some(entries) : O.none();
 };
 
-const GIT_RENAME_STATUS = /^R([0-9]+)$/u;
-const GIT_COPY_STATUS = /^C[0-9]+$/u;
-const GIT_SINGLE_STATUS = /^[ADMTUXB]$/u;
+/** The `GitTreeEntry` view of one kit `LsTreeEntry`: the repo-cli field names consumers already read. */
+const gitTreeEntryFromLsTree = (entry: LsTreeEntry): GitTreeEntry =>
+  GitTreeEntry.make({ mode: entry.mode, objectType: entry.type, objectId: entry.oid, path: entry.path });
 
-/** Path fields that follow one status field: two for renames and copies, one for every other tracked status. */
-const nameStatusPathCount = (status: string): O.Option<number> => {
-  if (GIT_RENAME_STATUS.test(status) || GIT_COPY_STATUS.test(status)) {
-    return O.some(2);
-  }
-  return GIT_SINGLE_STATUS.test(status) ? O.some(1) : O.none();
-};
+/** Git only reports rename similarity inside `[50, 100]`; the old parser refused anything else, so this does too. */
+const isRenameScore = (score: number): boolean => score >= 50 && score <= 100;
 
-/** Similarity score carried by a rename status, rejecting anything outside Git's `[50, 100]` band. */
-const renameScoreFromStatus = (status: string): O.Option<number> => {
-  const match = GIT_RENAME_STATUS.exec(status);
-  if (match === null || !P.isString(match[1])) {
-    return O.none();
-  }
-  return pipe(
-    N.parse(match[1]),
-    O.filter((score) => score >= 50 && score <= 100)
-  );
-};
+/**
+ * The `GitRenameEntry` view of one kit `NameStatusEntry`: `None` for every non-rename row (copies
+ * included), `Some(None)` for a rename whose source path or in-band score is missing (the kit
+ * carries `score` only when git printed digits), and `Some(Some(entry))` for a well-formed rename.
+ */
+const gitRenameEntryFromNameStatus = (entry: NameStatusEntry): O.Option<O.Option<GitRenameEntry>> =>
+  entry.status === "renamed"
+    ? O.some(
+        O.map(
+          O.all({
+            sourcePath: O.fromUndefinedOr(entry.oldPath),
+            score: O.filter(O.fromUndefinedOr(entry.score), isRenameScore),
+          }),
+          ({ sourcePath, score }) =>
+            GitRenameEntry.make({ sourcePath, targetPath: entry.path, score: S.Natural.make(score) })
+        )
+      )
+    : O.none();
 
-/** One consumed name-status record: how many fields it spans, and the rename it carries (copies carry none). */
-type GitNameStatusRecord = {
-  readonly width: number;
-  readonly rename: O.Option<GitRenameEntry>;
-};
-
-const readNameStatusRecord = (fields: ReadonlyArray<string>, index: number): O.Option<GitNameStatusRecord> => {
-  const status = fields[index];
-  if (!P.isString(status)) {
-    return O.none();
-  }
-  const pathCount = nameStatusPathCount(status);
-  const sourcePath = fields[index + 1];
-  if (O.isNone(pathCount) || !P.isString(sourcePath)) {
-    return O.none();
-  }
-  const width = pathCount.value + 1;
-  if (pathCount.value === 1) {
-    return O.some({ width, rename: O.none<GitRenameEntry>() });
-  }
-  const targetPath = fields[index + 2];
-  if (!P.isString(targetPath)) {
-    return O.none();
-  }
-  if (!GIT_RENAME_STATUS.test(status)) {
-    return O.some({ width, rename: O.none<GitRenameEntry>() });
-  }
-  return O.map(renameScoreFromStatus(status), (score) => ({
-    width,
-    rename: O.some(GitRenameEntry.make({ sourcePath, targetPath, score: S.Natural.make(score) })),
-  }));
-};
-
-/** Parse rename-only rows from exact NUL-delimited name-status output. Copies are consumed but ignored. @category parsing @since 0.0.0 */
-export const gitRenameEntriesFromNulOutput = (output: string): O.Option<ReadonlyArray<GitRenameEntry>> => {
-  if (Str.isEmpty(output)) {
-    return O.some(A.empty<GitRenameEntry>());
-  }
-  if (!Str.endsWith("\0")(output)) {
-    return O.none();
-  }
-  const fields = A.dropRight(Str.split("\0")(output), 1);
-  let index = 0;
-  let renames = A.empty<GitRenameEntry>();
-
-  while (index < A.length(fields)) {
-    const record = readNameStatusRecord(fields, index);
-    if (O.isNone(record)) {
-      return O.none();
-    }
-    index += record.value.width;
-    renames = A.appendAll(renames, O.toArray(record.value.rename));
-  }
-
-  return O.some(renames);
-};
+/** Rename rows of one kit name-status listing, or `None` when a rename row is malformed. */
+const gitRenameEntriesFromNameStatus = (
+  entries: ReadonlyArray<NameStatusEntry>
+): O.Option<ReadonlyArray<GitRenameEntry>> => O.all(A.getSomes(A.map(entries, gitRenameEntryFromNameStatus)));
 
 /**
  * Maps a git subprocess failure onto a command group's own error type.
@@ -221,6 +190,116 @@ export type GitCommandErrorAdapter<E> = {
   }) => E;
   readonly onTruncated: O.Option<(commandLine: string) => E>;
 };
+
+/**
+ * The errors a `@beep/git` member can fail with; {@link adaptGitKitError} folds every one of them.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GitKitError = GitCommandError | NotARepositoryError | UnknownRefError;
+
+/** Whether a value is one of the kit's typed git errors (the dual's data-first discriminator). */
+const isGitKitError = (value: unknown): value is GitKitError =>
+  P.isTagged("GitCommandError")(value) ||
+  P.isTagged("UnknownRefError")(value) ||
+  P.isTagged("NotARepositoryError")(value);
+
+/** A kit parser refusal: `detail` reads `unparseable <what> output: <reason>` after a zero-exit run. */
+const isUnparseableOutput = (failure: GitCommandError): boolean =>
+  O.exists(O.fromUndefinedOr(failure.detail), Str.startsWith("unparseable"));
+
+/**
+ * Folds a `@beep/git` failure through a command group's {@link GitCommandErrorAdapter}.
+ *
+ * **Details**
+ *
+ * The typed readers in this module run through the `Git` service but keep the adapter contract their
+ * callers already satisfy, so one fold maps the kit's errors onto the adapter's three hooks:
+ *
+ * - a `GitCommandError` of kind `"truncated"` is `onTruncated` when the adapter sets it, otherwise
+ *   `onNonZeroExit` with exit code 1 and the kit's `detail` as the output (the bounded capture it
+ *   replaces had no separate signal for a caller that accepts truncation silently);
+ * - a `GitCommandError` whose `detail` starts with `unparseable` (the kit's fail-closed parsers) is
+ *   `onMalformed` when the reader supplies one;
+ * - any other `GitCommandError` carrying an `exitCode` is `onNonZeroExit` with that code and the kit's
+ *   stderr as the output;
+ * - a `GitCommandError` without an `exitCode` (a spawn failure, a timeout or a pre-spawn refusal of an
+ *   option-like argument) is `onSpawnFailure`, with the error itself as the cause;
+ * - `UnknownRefError` and `NotARepositoryError` are `onNonZeroExit` with exit code 128, git's own code
+ *   for both, and the typed error's message as the output.
+ *
+ * `commandLine` is `git` plus the invocation's redacted argv, so the adapter sees the argv the kit ran
+ * rather than the argv the pre-W1a reader used to run.
+ *
+ * **Example** (Fold an unknown ref onto a command group's error)
+ *
+ * ```ts
+ * import { GitCommand } from "@beep/git/GitCommand"
+ * import { UnknownRefError } from "@beep/git/Git"
+ * import { adaptGitKitError } from "@beep/repo-cli/test/RepoRun"
+ * import * as O from "effect/Option"
+ *
+ * const fold = adaptGitKitError(GitCommand.revParse("nope", { peel: "commit" }), {
+ *   onSpawnFailure: (commandLine) => () => `spawn ${commandLine}`,
+ *   onNonZeroExit: ({ exitCode, output }) => `exit ${exitCode}: ${output}`,
+ *   onTruncated: O.none()
+ * })
+ *
+ * console.log(fold(UnknownRefError.make({ ref: "nope", cwd: "/repo" }))) // "exit 128: unknown ref 'nope' in /repo"
+ * ```
+ *
+ * @param invocation - The kit invocation the member ran, for the redacted command line.
+ * @param adapter - Error adapter for the calling command group.
+ * @param onMalformed - Where a reader parses output, the error for a kit parser refusal.
+ * @returns The adapter's error for one kit failure.
+ * @category execution
+ * @since 0.0.0
+ */
+export const adaptGitKitError: {
+  <E>(
+    error: GitKitError,
+    invocation: GitInvocation,
+    adapter: GitCommandErrorAdapter<E>,
+    onMalformed?: O.Option<() => E>
+  ): E;
+  <E>(
+    invocation: GitInvocation,
+    adapter: GitCommandErrorAdapter<E>,
+    onMalformed?: O.Option<() => E>
+  ): (error: GitKitError) => E;
+} = dual(
+  (args) => isGitKitError(args[0]),
+  <E>(
+    error: GitKitError,
+    invocation: GitInvocation,
+    adapter: GitCommandErrorAdapter<E>,
+    onMalformed: O.Option<() => E> = O.none()
+  ): E => {
+    const commandLine = formatCommandLine("git", invocation.redactedArgs);
+    if (!P.isTagged("GitCommandError")(error)) {
+      return adapter.onNonZeroExit({ commandLine, exitCode: 128, output: error.message });
+    }
+    if (error.kind === "truncated") {
+      return O.match(adapter.onTruncated, {
+        onNone: () =>
+          adapter.onNonZeroExit({
+            commandLine,
+            exitCode: 1,
+            output: O.getOrElse(O.fromUndefinedOr(error.detail), () => ""),
+          }),
+        onSome: (toError) => toError(commandLine),
+      });
+    }
+    if (O.isSome(onMalformed) && isUnparseableOutput(error)) {
+      return onMalformed.value();
+    }
+    return O.match(O.fromUndefinedOr(error.exitCode), {
+      onNone: () => adapter.onSpawnFailure(commandLine)(error),
+      onSome: (exitCode) => adapter.onNonZeroExit({ commandLine, exitCode, output: error.stderr }),
+    });
+  }
+);
 
 /**
  * Filters empties, dedupes, and sorts a path list into a stable canonical order.
@@ -590,27 +669,51 @@ export const runGitFoldedStdout = Effect.fn("GitExec.runGitFoldedStdout")(functi
   );
 });
 
-/** Resolve a ref to a verified commit without allowing option reinterpretation. @category execution @since 0.0.0 */
+/**
+ * Resolve a ref to a verified commit without allowing option reinterpretation.
+ *
+ * **Details**
+ *
+ * Runs `Git.revParse(cwd, ref, { peel: "commit" })` (`rev-parse --verify --end-of-options
+ * <ref>^{commit}`); an unknown ref reaches the adapter as a 128 exit whose output is the kit's
+ * `unknown ref` message, and an option-like ref is refused before any spawn (`onSpawnFailure`).
+ *
+ * @category execution
+ * @since 0.0.0
+ */
 export const resolveGitCommit = Effect.fn("GitExec.resolveGitCommit")(function* <E>(
   cwd: string,
   ref: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitStructured(
-    ["rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`],
-    adapter,
-    structuredCapture(cwd)
-  );
+): Effect.fn.Return<string, E, Git> {
+  const git = yield* Git;
+  return yield* git
+    .revParse(cwd, ref, { peel: "commit" })
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse(ref, { peel: "commit" }), adapter)));
 });
 
-/** Resolve the merge base of two refs without allowing option reinterpretation. @category execution @since 0.0.0 */
+/**
+ * Resolve the merge base of two refs without allowing option reinterpretation.
+ *
+ * **Details**
+ *
+ * Runs `Git.mergeBase(cwd, leftRef, rightRef)`, which keeps the loud contract every caller relies
+ * on: two refs with no common ancestor fail through `onNonZeroExit` with git's silent exit 1, and an
+ * option-like ref is refused before any spawn instead of being shielded by `--`.
+ *
+ * @category execution
+ * @since 0.0.0
+ */
 export const resolveGitMergeBase = Effect.fn("GitExec.resolveGitMergeBase")(function* <E>(
   cwd: string,
   leftRef: string,
   rightRef: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitStructured(["merge-base", "--", leftRef, rightRef], adapter, structuredCapture(cwd));
+): Effect.fn.Return<string, E, Git> {
+  const git = yield* Git;
+  return yield* git
+    .mergeBase(cwd, leftRef, rightRef)
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.mergeBase(leftRef, rightRef), adapter)));
 });
 
 /**
@@ -768,22 +871,54 @@ export const guardCloneLocalGitAttributes = Effect.fn("GitExec.guardCloneLocalGi
   }
 });
 
-/** Read and strictly parse one recursive full Git tree. @category execution @since 0.0.0 */
+/**
+ * Read and strictly parse one recursive full Git tree.
+ *
+ * **Details**
+ *
+ * Runs `Git.lsTree` (`ls-tree -r -z <commit>`) from the repository root that `Git.repoRoot(cwd)`
+ * (`rev-parse --show-toplevel`) resolves, so the listing stays whole-tree and repository-relative
+ * exactly as the pre-W1a `--full-tree` argv made it, whatever `cwd` is. Each `LsTreeEntry` is
+ * mapped onto {@link GitTreeEntry}; the kit's parser is fail-closed, so a record it cannot read
+ * becomes `onMalformed()`.
+ *
+ * @category execution
+ * @since 0.0.0
+ */
 export const readGitTree = Effect.fn("GitExec.readGitTree")(function* <E>(
   cwd: string,
   commit: string,
   adapter: GitCommandErrorAdapter<E>,
   onMalformed: () => E
-): Effect.fn.Return<
-  ReadonlyArray<GitTreeEntry>,
-  E,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const output = yield* runGitRawOutput(cwd, ["ls-tree", "-r", "-z", "--full-tree", commit], adapter);
-  return yield* Effect.fromOption(gitTreeEntriesFromNulOutput(output), () => onMalformed());
+): Effect.fn.Return<ReadonlyArray<GitTreeEntry>, E, Git> {
+  const git = yield* Git;
+  const root = yield* git.repoRoot(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.repoRoot(), adapter)));
+  const entries = yield* git
+    .lsTree(root, commit)
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.lsTree(commit), adapter, O.some(onMalformed))));
+  return A.map(entries, gitTreeEntryFromLsTree);
 });
 
-/** Read and strictly parse the rename table for one paired diff and path scope. @category execution @since 0.0.0 */
+/**
+ * Read and strictly parse the rename table for one paired diff and path scope.
+ *
+ * **Details**
+ *
+ * Runs `Git.nameStatus(cwd, { base, head, findRenames: 50, pathspec })` (`diff --name-status -z
+ * --no-relative --find-renames=50% <base>...<head> -- <pathspec>`) and keeps the renamed rows as
+ * {@link GitRenameEntry}; copies and every other status are consumed and ignored. A rename row
+ * without its source path or an in-band similarity score, like output the kit's parser refuses, is
+ * `onMalformed()`.
+ *
+ * **Gotchas**
+ *
+ * The kit diffs the merge-base range (`base...head`), where the pre-W1a reader diffed `base head`
+ * directly. The two agree whenever `base` is an ancestor of `head`, which holds for every caller that
+ * passes a merge base; a `base` on a diverged branch now diffs from the fork point instead.
+ *
+ * @category execution
+ * @since 0.0.0
+ */
 export const readGitRenames = Effect.fn("GitExec.readGitRenames")(function* <E>(
   cwd: string,
   baseCommit: string,
@@ -791,21 +926,24 @@ export const readGitRenames = Effect.fn("GitExec.readGitRenames")(function* <E>(
   pathspec: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>,
   onMalformed: () => E
-): Effect.fn.Return<
-  ReadonlyArray<GitRenameEntry>,
-  E,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const output = yield* runGitRawOutput(
-    cwd,
-    ["diff", "--name-status", "-z", "--find-renames=50%", baseCommit, headCommit, "--", ...pathspec],
-    adapter
-  );
-  return yield* Effect.fromOption(gitRenameEntriesFromNulOutput(output), () => onMalformed());
+): Effect.fn.Return<ReadonlyArray<GitRenameEntry>, E, Git> {
+  const git = yield* Git;
+  const entries = yield* git
+    .nameStatus(cwd, { base: baseCommit, head: headCommit, findRenames: 50, pathspec })
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.nameStatus(baseCommit, headCommit, false, { findRenames: 50, pathspec }),
+          adapter,
+          O.some(onMalformed)
+        )
+      )
+    );
+  return yield* Effect.fromOption(gitRenameEntriesFromNameStatus(entries), () => onMalformed());
 });
 
 /**
- * Collects staged path names via `git diff --cached --name-only -z`.
+ * Collects staged path names via `Git.stagedChanges` (`git diff --name-only -z --no-relative --cached`).
  *
  * **Example** (Read the staged path set)
  *
@@ -832,12 +970,16 @@ export const readGitRenames = Effect.fn("GitExec.readGitRenames")(function* <E>(
 export const collectStagedPaths = Effect.fn("GitExec.collectStagedPaths")(function* <E>(
   cwd: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<ReadonlyArray<string>, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitPathList(cwd, ["diff", "--cached", "--name-only", "-z"], adapter);
+): Effect.fn.Return<ReadonlyArray<string>, E, Git> {
+  const git = yield* Git;
+  const paths = yield* git
+    .stagedChanges(cwd)
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.stagedChanges(), adapter)));
+  return sortedUniquePaths(paths);
 });
 
 /**
- * Collects unstaged tracked path names via `git diff --name-only -z`.
+ * Collects unstaged tracked path names via `Git.unstagedChanges` (`git diff --name-only -z --no-relative`).
  *
  * **Example** (Read the unstaged tracked path set)
  *
@@ -864,12 +1006,16 @@ export const collectStagedPaths = Effect.fn("GitExec.collectStagedPaths")(functi
 export const collectUnstagedPaths = Effect.fn("GitExec.collectUnstagedPaths")(function* <E>(
   cwd: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<ReadonlyArray<string>, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitPathList(cwd, ["diff", "--name-only", "-z"], adapter);
+): Effect.fn.Return<ReadonlyArray<string>, E, Git> {
+  const git = yield* Git;
+  const paths = yield* git
+    .unstagedChanges(cwd)
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.unstagedChanges(), adapter)));
+  return sortedUniquePaths(paths);
 });
 
 /**
- * Collects untracked path names via `git ls-files --others --exclude-standard -z`.
+ * Collects untracked path names via `Git.untrackedFiles` (`git ls-files --others --exclude-standard -z --full-name`).
  *
  * **Details**
  *
@@ -901,8 +1047,12 @@ export const collectUnstagedPaths = Effect.fn("GitExec.collectUnstagedPaths")(fu
 export const collectUntrackedPaths = Effect.fn("GitExec.collectUntrackedPaths")(function* <E>(
   cwd: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<ReadonlyArray<string>, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitPathList(cwd, ["ls-files", "--others", "--exclude-standard", "-z"], adapter);
+): Effect.fn.Return<ReadonlyArray<string>, E, Git> {
+  const git = yield* Git;
+  const paths = yield* git
+    .untrackedFiles(cwd)
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(), adapter)));
+  return sortedUniquePaths(paths);
 });
 
 /**
@@ -918,9 +1068,11 @@ export type CurrentBranchRef = "abbrev-ref" | "show-current";
  *
  * **Details**
  *
- * `"abbrev-ref"` runs `git rev-parse --abbrev-ref HEAD` and `"show-current"` runs
- * `git branch --show-current`. Both forms are kept because they differ on a detached HEAD: the
- * former reports `HEAD`, the latter reports an empty string.
+ * `"abbrev-ref"` runs `Git.currentBranch` (`git rev-parse --abbrev-ref HEAD`), restoring the
+ * literal `HEAD` the kit degrades to `Option.none` on a detached HEAD; `"show-current"` runs
+ * `git branch --show-current` through the bounded capture, since the kit has no member for it. Both
+ * forms are kept because they differ on a detached HEAD: the former reports `HEAD`, the latter
+ * reports an empty string.
  *
  * **Example** (Read the checked-out branch)
  *
@@ -949,22 +1101,29 @@ export const currentBranch = Effect.fn("GitExec.currentBranch")(function* <E>(
   cwd: string,
   adapter: GitCommandErrorAdapter<E>,
   ref: CurrentBranchRef = "abbrev-ref"
-): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitOutput(
-    cwd,
-    ref === "show-current" ? ["branch", "--show-current"] : ["rev-parse", "--abbrev-ref", "HEAD"],
-    adapter
-  );
+): Effect.fn.Return<string, E, Git | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+  if (ref === "show-current") {
+    return yield* runGitOutput(cwd, ["branch", "--show-current"], adapter);
+  }
+  const git = yield* Git;
+  const branch = yield* git
+    .currentBranch(cwd)
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.currentBranch(), adapter)));
+  return O.getOrElse(branch, () => "HEAD");
 });
+
+const ORIGIN_REMOTE = "origin";
+const ORIGIN_MAIN_REFSPEC = "main:refs/remotes/origin/main";
 
 /**
  * Refreshes `origin/main`, unshallowing the clone first when needed.
  *
  * **Details**
  *
- * Runs `git rev-parse --is-shallow-repository`, then a conditional
- * `git fetch origin --quiet --unshallow`, then `git fetch origin main:refs/remotes/origin/main
- * --quiet`, all through the bounded capture profile. The unshallow step is what makes merge-base
+ * Runs `Git.isShallow` (`git rev-parse --is-shallow-repository`), then a conditional
+ * `Git.fetchUnshallow` (`git fetch --unshallow origin`), then `Git.fetch` (`git fetch origin
+ * main:refs/remotes/origin/main`). The kit's fetch argv carries no `--quiet`, so fetch progress
+ * reaches stderr where the pre-W1a reader silenced it. The unshallow step is what makes merge-base
  * resolution reliable on a CI clone.
  *
  * **Example** (Refresh the base ref before a range diff)
@@ -992,12 +1151,17 @@ export const currentBranch = Effect.fn("GitExec.currentBranch")(function* <E>(
 export const ensureOriginMain = Effect.fn("GitExec.ensureOriginMain")(function* <E>(
   cwd: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<void, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const shallow = yield* runGitOutput(cwd, ["rev-parse", "--is-shallow-repository"], adapter);
-  if (shallow === "true") {
-    yield* runGitOutput(cwd, ["fetch", "origin", "--quiet", "--unshallow"], adapter);
+): Effect.fn.Return<void, E, Git> {
+  const git = yield* Git;
+  const shallow = yield* git.isShallow(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.isShallow(), adapter)));
+  if (shallow) {
+    yield* git
+      .fetchUnshallow(cwd, { remote: ORIGIN_REMOTE })
+      .pipe(Effect.mapError(adaptGitKitError(GitCommand.fetchUnshallow(ORIGIN_REMOTE), adapter)));
   }
-  yield* runGitOutput(cwd, ["fetch", "origin", "main:refs/remotes/origin/main", "--quiet"], adapter);
+  yield* git
+    .fetch(cwd, { remote: ORIGIN_REMOTE, ref: ORIGIN_MAIN_REFSPEC })
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.fetch(ORIGIN_REMOTE, ORIGIN_MAIN_REFSPEC), adapter)));
 });
 
 const originRefPrefix = "origin/" as const;

@@ -35,6 +35,7 @@ import {
   unprovenGateVerdicts,
 } from "./GateStaleness.ts";
 import { deriveYeetMergeReady, mergeStateIsAcceptable, outstandingThreadCount } from "./MergeReadiness.policy.ts";
+import type { Git } from "@beep/git/Git";
 
 export { deriveYeetMergeReady } from "./MergeReadiness.policy.ts";
 
@@ -1822,6 +1823,7 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const verdictPath = yield* runArtifactPathForContext(context, "verdict.json");
   const closeoutPath = yield* runArtifactPathForContext(context, "pr-closeout.json");

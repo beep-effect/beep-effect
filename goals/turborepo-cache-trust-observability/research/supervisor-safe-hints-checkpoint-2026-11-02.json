@@ -6,8 +6,8 @@
   "sourceSha256": {
     "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts": "94ecadab93b321e10ac0a13551ae027570321d6bc81d8c355f6bd721f9c4fc86",
     "packages/tooling/tool/cli/test/cache-evidence.test.ts": "d9a71fc188cb2b1bc8d1ef3e5eae132c411116be526ca12d50a64cd567580cad",
-    "standards/jsdoc-documentation.inventory.jsonc": "48672725b6ed23d4b2f9c47a42cf66d3588f057bbb26458cfda6ae91e1ed3ca4",
-    "standards/jsdoc-documentation.inventory.md": "20456724793b69c3d2a3e83839b52d6c2fa7dc9e837bfc63d755d3cb68bf423e"
+    "standards/jsdoc-documentation.inventory.jsonc": "17176fcb4c154cb9256bb87abf93baf80a0c25a71ddb45dad8bf06b057f3cf55",
+    "standards/jsdoc-documentation.inventory.md": "eec328046613e7e72b50fd43ce658ba56130191d3cad0ebaf17bd86d0ff74a4a"
   },
   "failureThatMotivatedChange": {
     "ordinaryStableSeconds": 967.409,
@@ -114,5 +114,38 @@
   ],
   "qualificationGranted": false,
   "productionConfigurationChanged": false,
-  "wholeGoalAcceptanceChanged": false
+  "wholeGoalAcceptanceChanged": false,
+  "mainIntegration": {
+    "baseRevision": "8663b265e7b1e49749930b010b808232020b4469",
+    "sourceBehaviorUnchanged": true,
+    "checks": {
+      "canonicalInventory": {
+        "exit": 0,
+        "elapsedSeconds": 372.433,
+        "finishedAt": "2026-11-02T09:41:40.061158+00:00"
+      },
+      "focusedRunnerRegression53Tests": {
+        "exit": 0,
+        "elapsedSeconds": 6.606,
+        "finishedAt": "2026-11-02T09:43:11.615065+00:00"
+      },
+      "packageQuick": {
+        "exit": 0,
+        "elapsedSeconds": 13.837,
+        "finishedAt": "2026-11-02T09:43:18.873981+00:00"
+      }
+    },
+    "inventoryTotalsDelta": {
+      "publicExports": {
+        "base": 25381,
+        "merged": 25383
+      }
+    },
+    "inventoryFindingTotalsUnchanged": true,
+    "inventoryExplanation": "Canonical regeneration over the merged source; current difference from the accepted main inventory includes two inherited exports and source positions. No baseline, threshold or exception changed.",
+    "inheritedWhitespaceWarnings": [
+      "goals/ci-lane-economics/SPEC.md:45",
+      "goals/ci-lane-economics/research/OPPORTUNITIES.md:1136"
+    ]
+  }
 }
