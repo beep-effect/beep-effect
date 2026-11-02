@@ -3,6 +3,7 @@ import {
   decideMergeGate,
   MERGE_GATE_S11_DEFAULT_ATTRIBUTION,
   MERGE_GATE_UNBLOCKS_MAIN_LABEL,
+  MergeGateBaseEvidence,
   MergeGateBaseRuns,
   MergeGateCheckAtMerge,
   MergeGateCheckRun,
@@ -103,24 +104,27 @@ const squashUnavailable = SquashCommitlintReport.make({
   verdict: SquashCommitlintUnavailable.make({ detail: "bunx commitlint could not run: spawn ENOENT" }),
 });
 
-// The merge-base commit of base...head and its check runs: green by default, so
-// a red on the head is the PR's own unless a test says otherwise.
+// The base evidence: the merge-base commit of base...head and the base tip, with
+// their check runs. By default the PR is up to date (one commit) and green, so a
+// red on the head is the PR's own unless a test says otherwise.
 const mergeBaseSha = "2c1cb448ba000000000000000000000000000000";
+const baseTipSha = "7a7a7a7a7a000000000000000000000000000000";
 const baseRunId = (id: number) => id - 1_000_000;
-const greenBase = MergeGateBaseRuns.make({
+const greenBaseRuns = MergeGateBaseRuns.make({
   sha: mergeBaseSha,
   checkRuns: A.map(fixtureRuns, (run) => MergeGateCheckRun.make({ ...run, id: baseRunId(run.id) })),
 });
-// The same checks red on the merge-base commit: the reds the PR inherited.
-const baseRedOn = (...names: ReadonlyArray<string>) =>
-  O.some(
-    MergeGateBaseRuns.make({
-      sha: mergeBaseSha,
-      checkRuns: A.map(greenBase.checkRuns, (run) =>
-        A.contains(names, run.name) ? MergeGateCheckRun.make({ ...run, conclusion: "failure" }) : run
-      ),
-    })
-  );
+const upToDate = (base: MergeGateBaseRuns) => MergeGateBaseEvidence.make({ mergeBase: base, baseTip: base });
+const greenBase = upToDate(greenBaseRuns);
+const runsRedOn = (base: MergeGateBaseRuns, names: ReadonlyArray<string>) =>
+  MergeGateBaseRuns.make({
+    ...base,
+    checkRuns: A.map(base.checkRuns, (run) =>
+      A.contains(names, run.name) ? MergeGateCheckRun.make({ ...run, conclusion: "failure" }) : run
+    ),
+  });
+// The same checks red on the one base commit: the reds the PR inherited.
+const baseRedOn = (...names: ReadonlyArray<string>) => O.some(upToDate(runsRedOn(greenBaseRuns, names)));
 const baseRunIdOf = (name: string) => baseRunId(O.getOrThrow(A.findFirst(fixtureRuns, (run) => run.name === name)).id);
 
 const read = (overrides: Partial<Parameters<typeof MergeGateRead.make>[0]> = {}) =>
@@ -454,7 +458,7 @@ describe("yeet merge-gate --relaxed decision (S11)", () => {
       MergeGateInput.make({
         read: read({
           checkRuns: withRun("Lint", { conclusion: "failure" }),
-          baseRuns: O.some(MergeGateBaseRuns.make({ sha: mergeBaseSha, checkRuns: [] })),
+          baseRuns: O.some(upToDate(MergeGateBaseRuns.make({ sha: mergeBaseSha, checkRuns: [] }))),
         }),
         options: relaxed(),
       })
@@ -587,7 +591,7 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     );
     expect(holdReason(decision)).toBe("own-red");
     expect(renderMergeGateDecision(decision)).toBe(
-      `#1459 HOLD own-red: Repo Sanity (base run ${baseRunIdOf("Repo Sanity")} green); merge-base 2c1cb448ba`
+      `#1459 HOLD own-red: Repo Sanity (base run ${baseRunIdOf("Repo Sanity")} green at merge-base 2c1cb448ba)`
     );
     // The orchestrator loop ends on a HOLD whose line names no pending word.
     expect(renderMergeGateDecision(decision)).not.toMatch(/pending|window|not run/iu);
@@ -606,13 +610,13 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     ]);
     const pendingBase = MergeGateBaseRuns.make({
       sha: mergeBaseSha,
-      checkRuns: A.map(greenBase.checkRuns, (run) =>
+      checkRuns: A.map(greenBaseRuns.checkRuns, (run) =>
         run.name === "Repo Sanity" ? MergeGateCheckRun.make({ ...run, status: "in_progress", conclusion: null }) : run
       ),
     });
     const pending = decideMergeGate(
       MergeGateInput.make({
-        read: read({ checkRuns: repoSanityRed, baseRuns: O.some(pendingBase) }),
+        read: read({ checkRuns: repoSanityRed, baseRuns: O.some(upToDate(pendingBase)) }),
         options: relaxed(),
       })
     );
@@ -621,16 +625,94 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     ]);
     const absentBase = MergeGateBaseRuns.make({
       sha: mergeBaseSha,
-      checkRuns: A.filter(greenBase.checkRuns, (run) => run.name !== "Repo Sanity"),
+      checkRuns: A.filter(greenBaseRuns.checkRuns, (run) => run.name !== "Repo Sanity"),
     });
     expect(
       decideMergeGate(
         MergeGateInput.make({
-          read: read({ checkRuns: repoSanityRed, baseRuns: O.some(absentBase) }),
+          read: read({ checkRuns: repoSanityRed, baseRuns: O.some(upToDate(absentBase)) }),
           options: relaxed(),
         })
       )._tag
     ).toBe("merge");
+  });
+
+  // Hosted CI tests the head on the base tip, so a PR behind its base is judged on both commits.
+  it("behind its base, a red is inherited only when the check is not green on the merge-base nor on the base tip", () => {
+    const tipGreen = MergeGateBaseRuns.make({ ...greenBaseRuns, sha: baseTipSha });
+    const redOnMergeBaseOnly = MergeGateBaseEvidence.make({
+      mergeBase: runsRedOn(greenBaseRuns, ["Repo Sanity"]),
+      baseTip: tipGreen,
+    });
+    const fixedOnMain = decideMergeGate(
+      MergeGateInput.make({
+        read: read({ checkRuns: repoSanityRed, baseRuns: O.some(redOnMergeBaseOnly) }),
+        options: relaxed(),
+      })
+    );
+    expect(holdReason(fixedOnMain)).toBe("own-red");
+    if (fixedOnMain._tag === "hold") {
+      expect(fixedOnMain.detail).toBe(
+        `Repo Sanity (base run ${baseRunIdOf("Repo Sanity")} green at base tip 7a7a7a7a7a)`
+      );
+    }
+    const redOnTipOnly = MergeGateBaseEvidence.make({
+      mergeBase: greenBaseRuns,
+      baseTip: runsRedOn(tipGreen, ["Repo Sanity"]),
+    });
+    const brokeLater = decideMergeGate(
+      MergeGateInput.make({
+        read: read({ checkRuns: repoSanityRed, baseRuns: O.some(redOnTipOnly) }),
+        options: relaxed(),
+      })
+    );
+    expect(holdReason(brokeLater)).toBe("own-red");
+    if (brokeLater._tag === "hold") {
+      expect(brokeLater.detail).toBe(
+        `Repo Sanity (base run ${baseRunIdOf("Repo Sanity")} green at merge-base 2c1cb448ba)`
+      );
+    }
+    const redOnBoth = MergeGateBaseEvidence.make({
+      mergeBase: runsRedOn(greenBaseRuns, ["Repo Sanity"]),
+      baseTip: runsRedOn(tipGreen, ["Repo Sanity"]),
+    });
+    const inherited = decideMergeGate(
+      MergeGateInput.make({ read: read({ checkRuns: repoSanityRed, baseRuns: O.some(redOnBoth) }), options: relaxed() })
+    );
+    expect(A.map(atMergeOf(inherited), (entry) => entry.attribution)).toEqual([
+      `inherited: run ${baseRunIdOf("Repo Sanity")} failure on merge-base 2c1cb448ba; run ${baseRunIdOf("Repo Sanity")} failure on base tip 7a7a7a7a7a`,
+    ]);
+    // A base tip still running does not open a window: the merge-base must be red too.
+    const tipPending = MergeGateBaseEvidence.make({
+      mergeBase: runsRedOn(greenBaseRuns, ["Repo Sanity"]),
+      baseTip: MergeGateBaseRuns.make({
+        sha: baseTipSha,
+        checkRuns: A.map(greenBaseRuns.checkRuns, (run) =>
+          run.name === "Repo Sanity" ? MergeGateCheckRun.make({ ...run, status: "queued", conclusion: null }) : run
+        ),
+      }),
+    });
+    expect(
+      decideMergeGate(
+        MergeGateInput.make({
+          read: read({ checkRuns: repoSanityRed, baseRuns: O.some(tipPending) }),
+          options: relaxed(),
+        })
+      )._tag
+    ).toBe("merge");
+    expect(
+      holdReason(
+        decideMergeGate(
+          MergeGateInput.make({
+            read: read({
+              checkRuns: repoSanityRed,
+              baseRuns: O.some(MergeGateBaseEvidence.make({ mergeBase: greenBaseRuns, baseTip: tipPending.baseTip })),
+            }),
+            options: relaxed(),
+          })
+        )
+      )
+    ).toBe("own-red");
   });
 
   it("merges an unblocks-main PR over every red, the PR's own included", () => {
@@ -672,7 +754,7 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
       MergeGateInput.make({ read: read({ checkRuns: repoSanityRed, baseRuns: O.none() }), options: relaxed() })
     );
     expect(holdReason(decision)).toBe("base-runs-unknown");
-    expect(renderMergeGateDecision(decision)).toContain("merge-base check runs unreadable for Repo Sanity");
+    expect(renderMergeGateDecision(decision)).toContain("base check runs unreadable for Repo Sanity");
     // Attributed reds, and green heads, never need the base.
     expect(
       decideMergeGate(
@@ -700,7 +782,9 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     );
     expect(holdReason(decision)).toBe("own-red");
     if (decision._tag === "hold") {
-      expect(decision.detail).toBe(`Repo Sanity (base run ${baseRunIdOf("Repo Sanity")} green); merge-base 2c1cb448ba`);
+      expect(decision.detail).toBe(
+        `Repo Sanity (base run ${baseRunIdOf("Repo Sanity")} green at merge-base 2c1cb448ba)`
+      );
     }
   });
 
@@ -745,6 +829,8 @@ interface ScriptedAnswer {
 interface GhScript {
   readonly additionalActiveRuns?: boolean;
   readonly baseCheckRuns?: unknown;
+  readonly baseTipCheckRuns?: unknown;
+  readonly baseTipSha?: string;
   readonly cancelFailId?: number;
   readonly checkRuns?: unknown;
   readonly commentExit?: number;
@@ -871,11 +957,21 @@ const ghAnswers = (script: GhScript): ReadonlyArray<readonly [string, ScriptedAn
   // default the base mirrors the head, so a scripted red on the head reads as inherited.
   [
     `/compare/${pullFixture.base.ref}...${headSha}`,
-    { exitCode: script.compareExit ?? 0, output: encodeJson({ merge_base_commit: { sha: mergeBaseSha } }) },
+    {
+      exitCode: script.compareExit ?? 0,
+      output: encodeJson({
+        merge_base_commit: { sha: mergeBaseSha },
+        base_commit: { sha: script.baseTipSha ?? mergeBaseSha },
+      }),
+    },
   ],
   [
     `commits/${mergeBaseSha}/check-runs`,
     { exitCode: 0, output: encodeJson([script.baseCheckRuns ?? script.checkRuns ?? checkRunsFixture]) },
+  ],
+  [
+    `commits/${script.baseTipSha ?? "none"}/check-runs`,
+    { exitCode: 0, output: encodeJson([script.baseTipCheckRuns ?? script.checkRuns ?? checkRunsFixture]) },
   ],
   ["/check-runs", { exitCode: 0, output: encodeJson([script.checkRuns ?? checkRunsFixture]) }],
   ...squashAnswers(script),
@@ -1016,10 +1112,52 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer)
             expect(result.labels).toEqual(["ready-for-heavy", MERGE_GATE_UNBLOCKS_MAIN_LABEL]);
             expect(result.attributedChecks).toEqual(["Lint", "Repo Sanity"]);
             const base = O.getOrThrow(result.baseRuns);
-            expect(base.sha).toBe(mergeBaseSha);
-            expect(base.checkRuns).toHaveLength(checkRunsFixture.check_runs.length);
+            expect(base.mergeBase.sha).toBe(mergeBaseSha);
+            expect(base.baseTip.sha).toBe(mergeBaseSha);
+            expect(base.mergeBase.checkRuns).toHaveLength(checkRunsFixture.check_runs.length);
           })
       )
+    );
+
+    it.effect("a body record stamped for an earlier head attributes nothing on this one", () =>
+      withScriptedGh(
+        {
+          ...defaultScript,
+          pull: {
+            ...pullFixture,
+            body: `<!-- yeet-inherited-reds:start -->\n## Inherited reds (S11) at abcdef1234\n\n- \`Lint\`: red on main\n<!-- yeet-inherited-reds:end -->\n`,
+          },
+        },
+        () =>
+          readMergeGate(context, pullFixture.number).pipe(
+            Effect.map((result) => expect(result.attributedChecks).toEqual([]))
+          )
+      )
+    );
+
+    it.effect("behind its base, the gate reads the base tip's runs too and only reads them once when up to date", () =>
+      Effect.gen(function* () {
+        const behind = yield* withScriptedGh(
+          {
+            ...defaultScript,
+            baseTipSha,
+            baseCheckRuns: lintRed,
+            baseTipCheckRuns: checkRunsFixture,
+            checkRuns: lintRed,
+          },
+          (calls) =>
+            Effect.gen(function* () {
+              const result = yield* readMergeGate(context, pullFixture.number);
+              expect(O.map(result.baseRuns, (base) => base.baseTip.sha)).toEqual(O.some(baseTipSha));
+              return yield* Ref.get(calls);
+            })
+        );
+        expect(A.filter(behind, Str.includes("/check-runs?per_page=100"))).toHaveLength(3);
+        const upToDateCalls = yield* withScriptedGh(defaultScript, (calls) =>
+          readMergeGate(context, pullFixture.number).pipe(Effect.andThen(Ref.get(calls)))
+        );
+        expect(A.filter(upToDateCalls, Str.includes("/check-runs?per_page=100"))).toHaveLength(2);
+      })
     );
 
     it.effect("a pull request without labels or a body reads as unlabelled and unattributed", () =>
@@ -1401,13 +1539,33 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer)
         Effect.gen(function* () {
           const failure = yield* relaxedRun(false).pipe(Effect.flip);
           expect(failure.message).toBe(
-            `#${pullFixture.number} HOLD own-red: Lint (base run ${lintRunId} green); merge-base 2c1cb448ba`
+            `#${pullFixture.number} HOLD own-red: Lint (base run ${lintRunId} green at merge-base 2c1cb448ba)`
           );
           expect(failure.exitCode).toBe(1);
           expect(yield* mergeWasSent(calls)).toBe(false);
           const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
-          expect(printed).toContain(`[yeet] #${pullFixture.number} HOLD own-red: Lint (base run ${lintRunId} green)`);
+          expect(printed).toContain(`[yeet] #${pullFixture.number} HOLD own-red: Lint (base run ${lintRunId} green`);
         })
+      )
+    );
+
+    it.effect("a red main at the merge-base that main fixed since no longer excuses the PR's red (review thread)", () =>
+      withScriptedGh(
+        {
+          ...defaultScript,
+          checkRuns: lintRed,
+          baseCheckRuns: lintRed,
+          baseTipSha,
+          baseTipCheckRuns: checkRunsFixture,
+        },
+        (calls) =>
+          Effect.gen(function* () {
+            const failure = yield* relaxedRun(false).pipe(Effect.flip);
+            expect(failure.message).toBe(
+              `#${pullFixture.number} HOLD own-red: Lint (base run ${lintRunId} green at base tip 7a7a7a7a7a)`
+            );
+            expect(yield* mergeWasSent(calls)).toBe(false);
+          })
       )
     );
 

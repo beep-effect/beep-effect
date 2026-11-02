@@ -660,38 +660,73 @@ const inheritedRedsEnd = "<!-- yeet-inherited-reds:end -->";
 const markerCount = (marker: string, body: string): number => A.length(Str.split(marker)(body)) - 1;
 
 const inheritedRedLine = /^- `([^`]+)`:/u;
+const inheritedRedsHeading = /^## Inherited reds \(S11\) at ([0-9a-f]{7,40})$/u;
 
 /**
- * Read the check names a pull request body attributes in its marked
- * "Inherited reds (S11)" section, as `yeet ready --inherited` wrote them.
+ * The marked "Inherited reds (S11)" section of a pull request body as read
+ * back: the head it was written for and the checks it attributes.
+ *
+ * **Example** (A record for one head)
+ *
+ * ```ts
+ * import { YeetInheritedRedsRecord } from "@beep/repo-cli/test/Yeet"
+ *
+ * const record = YeetInheritedRedsRecord.make({ head: "212fe39b4f", checks: ["Lint"] })
+ * console.log(record.head) // "212fe39b4f"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetInheritedRedsRecord extends S.Opaque<YeetInheritedRedsRecord, { readonly brand: unique symbol }>()(
+  S.Struct({ head: S.NonEmptyString, checks: S.Array(S.NonEmptyString) }).pipe(
+    $I.annoteSchema("YeetInheritedRedsRecord", {
+      description: "The Inherited reds (S11) section of a pull request body: its head stamp and attributed checks.",
+    })
+  )
+) {}
+
+const firstMatch = (pattern: RegExp, lines: ReadonlyArray<string>): O.Option<string> =>
+  A.head(
+    A.getSomes(A.map(lines, (line) => O.flatMap(O.fromNullishOr(pattern.exec(line)), (m) => O.fromNullishOr(m[1]))))
+  );
+
+/**
+ * Read the marked "Inherited reds (S11)" section of a pull request body, as
+ * `yeet ready --inherited` wrote it: the head stamp of its heading and the
+ * check names of its entries.
  *
  * **Details**
  *
  * Only the text between the first `yeet-inherited-reds` start marker and the
- * first end marker after it is read, one `- \`<check>\`: <attribution>` line
- * per entry; the explicit None record and any other line yield nothing. A body
- * without the section, or with malformed markers, yields an empty list: the
- * merge gate then falls back to the merge-base evidence for each red.
+ * first end marker after it is read: the `## Inherited reds (S11) at <head>`
+ * heading supplies `head`, and each `- \`<check>\`: <attribution>` line one
+ * check; the explicit None record and any other line add nothing. A body
+ * without the section, with malformed markers, or whose section has no stamped
+ * heading yields `None`. The merge gate honours the record only on the head it
+ * was written for: a check attributed on an earlier head is not attributed on
+ * a later push, which falls back to the base evidence.
  *
  * **Example** (Read the attributed checks)
  *
  * ```ts
- * import { parseYeetInheritedRedChecks, spliceYeetInheritedRedsSection, YeetReadyInheritedRed } from "@beep/repo-cli/test/Yeet"
+ * import { parseYeetInheritedRedsRecord, spliceYeetInheritedRedsSection, YeetReadyInheritedRed } from "@beep/repo-cli/test/Yeet"
  *
  * import * as O from "effect/Option"
  *
  * const body = spliceYeetInheritedRedsSection("Summary", [
  *   YeetReadyInheritedRed.make({ check: "Lint", attribution: "red on main since 2c1cb448ba" }),
  * ], "abc1234def")
- * console.log(parseYeetInheritedRedChecks(O.getOrElse(body, () => ""))) // ["Lint"]
+ * const record = parseYeetInheritedRedsRecord(O.getOrElse(body, () => ""))
+ * console.log(O.map(record, (r) => [r.head, ...r.checks])) // some(["abc1234def", "Lint"])
  * ```
  *
  * @param body - The pull request body.
- * @returns The attributed check names, in body order.
+ * @returns The record, or `None` when the body has no stamped section.
  * @category parsing
  * @since 0.0.0
  */
-export const parseYeetInheritedRedChecks = (body: string): ReadonlyArray<string> =>
+export const parseYeetInheritedRedsRecord = (body: string): O.Option<YeetInheritedRedsRecord> =>
   Str.indexOf(inheritedRedsStart)(body).pipe(
     O.flatMap((start) =>
       O.map(
@@ -699,14 +734,19 @@ export const parseYeetInheritedRedChecks = (body: string): ReadonlyArray<string>
         (end) => Str.slice(start + Str.length(inheritedRedsStart), end)(body)
       )
     ),
-    O.map((section) =>
-      A.getSomes(
-        A.map(Str.split("\n")(section), (line) =>
-          O.flatMap(O.fromNullishOr(inheritedRedLine.exec(Str.trim(line))), (match) => O.fromNullishOr(match[1]))
-        )
+    O.map((section) => A.map(Str.split("\n")(section), Str.trim)),
+    O.flatMap((lines) =>
+      O.map(firstMatch(inheritedRedsHeading, lines), (head) =>
+        YeetInheritedRedsRecord.make({
+          head,
+          checks: A.getSomes(
+            A.map(lines, (line) =>
+              O.flatMap(O.fromNullishOr(inheritedRedLine.exec(line)), (m) => O.fromNullishOr(m[1]))
+            )
+          ),
+        })
       )
-    ),
-    O.getOrElse(() => A.empty<string>())
+    )
   );
 
 /**
