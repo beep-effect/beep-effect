@@ -19,8 +19,8 @@ source/tool integrity, actual selected-task overlap and full matrix counts.
 A successful dependency seed now uploads a real artifact before the source
 changes, so the changed producer must miss despite an existing earlier artifact.
 The failed syntax seed remains forbidden from uploading. No guard is skipped,
-no verdict is inferred from the observed run, and limits remain20 minutes for
-comparison and10 minutes for owned upload.
+no verdict is inferred from the observed run, and limits remain 20 minutes for
+comparison and 10 minutes for owned upload.
 
 The older complete ordinary matrices at source `68834a997e` keep their original
 bytes, source binding and validation implementation. Do not rewrite those

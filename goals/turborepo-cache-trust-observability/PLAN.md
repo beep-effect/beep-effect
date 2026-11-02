@@ -1141,3 +1141,10 @@ All 33 supervisor tests pass from the CLI workspace after canonical root discove
 The current-source ordinary retry stops at the existing signed mutation seed
 verdict guard; its complete matrix is still unproven. Retain that failure and the
 separate source-literal-only diagnostic without weakening the assertion.
+
+
+### Frozen accepted-input ordinary matrices, 2026-11-02
+
+The [new source-bound checkpoint](research/accepted-input-ordinary-native-checkpoint-2026-11-02.json) retains complete ordinary stable and canary runs from supervisor `6fc0a6cf62` and frozen task source `930758e06b`. Both pass all four capture controls, four non-execution controls, seven mutations, ten shadows, three fresh pairs and three signed producer/replay pairs, including positive actual selected-task overlap. Whole-command wall times are 121.598 and 190.190 seconds, including admission and orchestration. The changed package-lint seed follows the accepted root deprecation ownership; no deadline, overlap, signature, source or wire guard was weakened.
+
+All earlier failures remain, including the short generic exit whose cause remains unattributed. The diagnostic-only pass is separate from these ordinary runs. Earlier `68834` receipts retain their original bytes and validator source. The new source and lint workload differ from that older experiment, so the elapsed-time reduction is not a matched R2/cache-savings result. No live protected producer/R2 execution, production signing, current-main adoption, qualification or whole-goal acceptance is established.
