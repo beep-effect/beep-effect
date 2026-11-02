@@ -70,6 +70,10 @@ describe("URL", () => {
         "https:\\\\example.com",
         "https://exa\tmple.com",
         "https://example.com/a b",
+        "https:///example.com",
+        "https:////example.com",
+        "https://\\example.com",
+        "https://example.com\\path",
       ];
       for (const [index, input] of repaired.entries()) {
         const exit = yield* Effect.exit(decodeUnknownHttpsUrl(input));
