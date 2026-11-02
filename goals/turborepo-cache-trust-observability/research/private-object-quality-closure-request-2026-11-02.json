@@ -1,0 +1,20 @@
+{
+  "previous": "c029d74cc4fb2314464baa9d7c9e0a924b4083b1f32bb989fb2a83c24a4f7949",
+  "review": {
+    "reviewer": "Codex (PR #2611, source-bound private observation storage input review)",
+    "reason": "Acknowledge only the new storage module in the generated quality-seal input closure; preserve all other settings, reviews, scope, profile, epoch and qualification state.",
+    "basis": {
+      "path": "goals/turborepo-cache-trust-observability/research/private-object-quality-closure-review-2026-11-02.md",
+      "sha256": "3a9d001296e84b134b8f9370dcdb864f7f460168ae976527c74c66b3632daee1"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
