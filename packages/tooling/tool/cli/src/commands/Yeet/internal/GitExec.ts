@@ -14,6 +14,7 @@
 
 import { Git, GitOptions } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { $RepoCliId } from "@beep/identity/packages";
 import { guardLiteralArg } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -21,6 +22,7 @@ import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   adaptGitKitError,
@@ -42,6 +44,8 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RunFoldedStdoutOptions } from "../../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter, GitKitError, RepoRunContext } from "../../../internal/repo-run/index.ts";
+
+const $I = $RepoCliId.create("commands/Yeet/internal/GitExec");
 
 const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
   onSpawnFailure: (commandLine) => YeetCommandError.new(`Failed to run ${commandLine}.`),
@@ -483,19 +487,37 @@ export const lockfileChangedSinceBase = Effect.fn("Yeet.lockfileChangedSinceBase
 /**
  * The exit a repo-run capture reported for a git mutation: its code and the text git printed.
  *
+ * **Example** (Decode a refused worktree add)
+ *
+ * ```ts
+ * import { GitKitExit } from "@beep/repo-cli/test/Yeet"
+ * import * as S from "effect/Schema"
+ *
+ * const exit = S.decodeUnknownSync(GitKitExit)({ exitCode: 128, output: "fatal: invalid reference" })
+ * console.log(exit.exitCode) // 128
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export type GitKitExit = {
-  readonly exitCode: number;
-  readonly output: string;
-};
+export class GitKitExit extends S.Opaque<GitKitExit, { readonly brand: unique symbol }>()(
+  S.Struct({
+    exitCode: S.Int,
+    output: S.String,
+  }).pipe(
+    $I.annoteSchema("GitKitExit", {
+      description: "The exit code and output a repo-run capture reported for a git mutation.",
+    })
+  )
+) {}
 
-const exitZero: Result.Result<GitKitExit, YeetCommandError> = Result.succeed({ exitCode: 0, output: "" });
+const exitZero: Result.Result<GitKitExit, YeetCommandError> = Result.succeed(
+  GitKitExit.make({ exitCode: 0, output: "" })
+);
 
 const kitExitAdapter = (failedToRun: string): GitCommandErrorAdapter<Result.Result<GitKitExit, YeetCommandError>> => ({
   onSpawnFailure: () => (cause) => Result.fail(YeetCommandError.new(failedToRun)(cause)),
-  onNonZeroExit: ({ exitCode, output }) => Result.succeed({ exitCode, output }),
+  onNonZeroExit: ({ exitCode, output }) => Result.succeed(GitKitExit.make({ exitCode, output })),
   onTruncated: O.none(),
 });
 

@@ -36,14 +36,20 @@ Refresh actual task/lane/workflow population and create the stable/canary featur
 
 ## Latest evidence
 
-The [source-bound population snapshot](./research/current-population.json) records 2,571
-executable computations across 190 workspaces. The
-[feature inventory](./research/current-feature-matrix.json) and
-[client pins](./research/current-client-pins.json) record the current review
-surface. The [completion audit](./research/current-completion-audit.json) keeps
-the remaining acceptance evidence explicit. These inventories do not qualify
-tasks or complete production observation. Re-run the census and refresh recipe
-before using this snapshot as current if any retained census-source digest differs.
+The [current source checkpoint](./research/population-current-source-checkpoint-2026-11-02.json)
+records 2,434 executable computations across 191 workspaces at accepted source
+`e274d3e619`. The [population](./research/current-population.json) has 198 reviewed
+whole-task keep-fresh dispositions and 2,236 pending computation reviews. Seven
+of the 35 feature decisions are accepted; 28 remain pending.
+
+The [feature inventory](./research/current-feature-matrix.json), its per-feature
+reports and the [shared client-pin observation](./research/current-client-pins.json)
+retain their recorded source and version scope. Refresh native pins before new
+experiments. The [completion audit](./research/current-completion-audit.json)
+keeps the remaining acceptance requirements explicit. These inventories do not
+qualify tasks or complete production observation. Re-run the census and refresh
+recipe before using the population as current if any retained source digest
+differs.
 
 ## Notes
 
