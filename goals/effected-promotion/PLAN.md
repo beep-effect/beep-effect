@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` — implementation and verification are complete, and the closing PR proposes the closeout (`proposedCloseout` in `ops/manifest.json`); the status stays active until `bun run beep goals completion refresh --slug effected-promotion` verifies that proposal. The state of each wave and PR lives in its row in the tables below: a PR edits only its own row, and this line names no wave or PR, so concurrent lanes never conflict on it (SPEC W4-v).
+Status: `active` — every phase is complete. The closing PR C (#2476) merged as `a0589d263d` from head `b55670b020`, and `bun run beep goals completion refresh --slug effected-promotion` verified the `completed-retained` proposal on 2026-11-01 (`history/completion-verified-2026-11-01.md`). `initiative.status` reads `active` because completion is derived from clone-scoped receipts, not written into the manifest (D-61). The state of each wave and PR lives in its row in the tables below: a PR edits only its own row, and this line names no wave or PR, so concurrent lanes never conflict on it (SPEC W4-v).
 
 ## Phases
 
@@ -11,8 +11,8 @@ Status: `active` — implementation and verification are complete, and the closi
 | P0 Research | complete | Map every module to a package home, sweep the repo for reuse sites, design the `@beep/md` merge. | `research/promotion-map-2026-10-20.md`; decisions D-01..D-18 in `SPEC.md`. |
 | P1 Implement | complete | Promote the waves, then run the adoption PRs (D-04). | Acceptance criteria in `SPEC.md`. |
 | P2 Verify | complete | `package-verify` per package, scratchpad check, identity registry, typos. | Verification matrix green. |
-| P3 Yeet: PR to mergeable | in-progress | One PR per wave and per adoption step, each driven to mergeable. | Each PR merge-ready; zero unresolved threads. C, the last, carries this phase. |
-| P4 Close | in-progress | Closeout reflection and packet flip. | Reflection exists; `proposedCloseout` in the final PR. C carries both. |
+| P3 Yeet: PR to mergeable | complete | One PR per wave and per adoption step, each driven to mergeable. | Each PR merge-ready; zero unresolved threads. C (#2476), the last, merged with 15 green required contexts at its accepted head. |
+| P4 Close | complete | Closeout reflection and packet flip. | Reflection `history/reflections/2026-11-01-claude.md` exists; `proposedCloseout` shipped in C and is verified (`history/completion-verified-2026-11-01.md`). |
 
 ## Waves
 
