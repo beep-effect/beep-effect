@@ -12,7 +12,6 @@
     "directory": "apps/oip-web"
   },
   "scripts": {
-    "audit": "bun run --if-present beep:audit",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage",
@@ -24,7 +23,6 @@
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "NEXT_DISABLE_PWA=1 next build --turbopack",
     "beep:check": "tsrs -p tsconfig.check.json",
     "beep:lint": "biome check .",
