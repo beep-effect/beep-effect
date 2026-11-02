@@ -69,6 +69,37 @@ with the fix, all seven pass.
   `git push` and the draft PR opened through the GitHub API (D4 cloud handoff;
   this container has no `gh` PR route). Hosted CI is the proof.
 
+## Correction: sequence-break attribution (2026-11-02)
+
+The receipt above, kept as recorded, called all 24 `sequence-break.test.ts`
+failures environment-only. That was incomplete. Root cause of the 24: the
+container lacked `gawk`, and `sequence-break-notifier.sh` exits 0 silently
+when a dependency is missing, so no delivery was ever recorded. With `gawk`
+installed in the container (no repository change), the base-commit writer
+passes 30/30. The guarded writer fails 3:
+
+- `launches the notifier from the durable PermissionRequest writer path`;
+- `launches the production detached notifier with closed hook streams and
+  forwarded identifiers`;
+- `derives self and parent desktop routes from the hook host environment`.
+
+Those writer-harness cases inherited the container's ambient
+`BEEP_AGENT_HOST=cloud`, so the new guard suppressed the launch they assert.
+They were introduced by this change, not inherited. Fix: the sequence-break
+writer harness now pins `BEEP_AGENT_HOST` to empty, naming the desktop path it
+proves. Notifier behavior and schemas are unchanged. Result: sequence-break
+30/30. The remaining 21 were caused by the missing `gawk`, an environment-only
+fault.
+
+The uid-0 permission fixtures are attributed separately and stay
+environment-only: writer `refuses indexed metadata permission errors after
+successful batch entries`, 2 in `ingest.test.ts`, 2 in
+`transcript-discovery.test.ts`, and `file-inventory.test.ts` `reports read
+when directory entries cannot be read`. That last case was among the original
+30 but was left out of the per-file split above. After the harness fix,
+`package-verify` reports 6 failed / 849 passed, and all 6 are these uid-0
+fixtures. Build, typecheck and docgen pass.
+
 ## Gaps left open
 
 - P2 still needs the `packet-projections.sh` skip, a recorded cloud
@@ -79,7 +110,10 @@ with the fix, all seven pass.
   `desktop-ntfy-1`) even though no notifier ran. A reader that treats
   `notifierRev` as the intervention state will misattribute cloud rows. That
   decision belongs to the agent-observability owner and was not changed here.
-- `sequence-break.test.ts` does not clear `BEEP_AGENT_HOST` in its writer
-  harness. Under an ambient cloud value its writer-launch cases would now be
-  suppressed. They already fail in this container for environment reasons.
-  The file was outside this task's ownership.
+- (Resolved by the correction above.) `sequence-break.test.ts` did not clear
+  `BEEP_AGENT_HOST` in its writer harness. The task was later authorized to
+  edit that harness.
+- The sequence-break notifier silently no-ops without `gawk`, and
+  `scripts/cloud/bootstrap.sh` does not install it. A cloud test run without
+  `gawk` cannot exercise the notifier suites. Reported only; changing the
+  bootstrap is outside this task's ownership.
