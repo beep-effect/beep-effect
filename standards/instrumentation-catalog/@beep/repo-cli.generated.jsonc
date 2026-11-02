@@ -2184,6 +2184,7 @@
     {"name":"Lint.circular","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Lint.collectTypeScriptFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Lint.collectTypeScriptFiles.walk","owner":"@beep/repo-cli","family":"tooling","conforms":false},
+    {"name":"Lint.deprecatedApiTargets","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Lint.deprecatedApiWorker","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Lint.deprecatedApis","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Lint.docsWorker","owner":"@beep/repo-cli","family":"tooling","conforms":true},

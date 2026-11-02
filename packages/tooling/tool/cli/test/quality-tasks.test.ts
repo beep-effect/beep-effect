@@ -708,6 +708,27 @@ const spawnedPolicyCommands = (spawned: ReadonlyArray<string>): ReadonlyArray<st
     A.filter((key) => key !== "" && !Str.startsWith("git ")(key))
   );
 
+const isTargetProbe = Str.includes("--dry=json");
+
+// The changed scope probes Turbo once before planning; the fake spawner's empty stdout is no
+// plan, so the per-package Turbo tasks stay. Steps inside a stage run abreast, so the spawned
+// plan commands are compared as a set.
+const expectPolicySpawns = (
+  spawned: ReadonlyArray<string>,
+  expected: ReadonlyArray<QualityTaskStep>,
+  full: boolean
+): void => {
+  const commands = spawnedPolicyCommands(spawned);
+  // A full-scope run never probes.
+  expect(A.length(A.filter(commands, isTargetProbe))).toBe(full ? 0 : 1);
+  expect(A.sort(A.filter(commands, P.not(isTargetProbe)), Order.String)).toEqual(
+    A.sort(
+      A.map(expected, (step) => policyCommandKey(policyStepCommand(step))),
+      Order.String
+    )
+  );
+};
+
 const cheapGatesSpawner = (
   spawned: Array<string>,
   failedCommands: ReadonlyArray<string>,
@@ -5034,24 +5055,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                       Effect.exit
                     );
                     expectPolicyGroupFailure(exit, failedLabel);
-                    // The changed scope probes Turbo once before planning; the fake spawner's empty
-                    // stdout is no plan, so the per-package Turbo tasks stay. Steps inside a stage run
-                    // abreast, so the spawned commands are compared as a set.
-                    const probes = A.filter(spawnedPolicyCommands(spawned), Str.includes("--dry=json"));
-                    expect(A.length(probes)).toBe(full ? 0 : 1);
-                    expect(
-                      A.sort(
-                        A.filter(spawnedPolicyCommands(spawned), (key) => !Str.includes("--dry=json")(key)),
-                        Order.String
-                      )
-                    ).toEqual(
-                      A.sort(
-                        A.map(expectedPolicyRun(plan, full, failedLabel), (step) =>
-                          policyCommandKey(policyStepCommand(step))
-                        ),
-                        Order.String
-                      )
-                    );
+                    expectPolicySpawns(spawned, expectedPolicyRun(plan, full, failedLabel), full);
                   }
                 }
               })

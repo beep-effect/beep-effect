@@ -73,6 +73,9 @@ const targets = LintPolicyAffectedTargets.make({
 
 const TurboTaskCache = S.Struct({ cache: S.optionalKey(S.Boolean) });
 const TurboTasks = S.Struct({ tasks: S.Record(S.String, TurboTaskCache) });
+const decodeTurboTasks = S.decodeUnknownEffect(S.fromJsonString(TurboTasks));
+const decodeJsonRecord = S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.Unknown)));
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 describe("lint policy escalation classes", () => {
   it("widens tsconfig, dependency, Turbo, lint-config and policy-implementation paths", () => {
@@ -156,9 +159,7 @@ describe("lint policy target probe", () => {
           { task: "lint:deprecated-apis", directory: "packages/c", command: "beep-cli lint deprecated-apis" },
         ],
       };
-      const parsed = yield* lintPolicyAffectedTargetsFromDryRun(
-        yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(plan)
-      );
+      const parsed = yield* lintPolicyAffectedTargetsFromDryRun(yield* encodeJson(plan));
       expect(parsed).toEqual(
         LintPolicyAffectedTargets.make({ jsdoc: ["packages/a", "packages/b"], deprecatedApis: ["packages/c"] })
       );
@@ -279,9 +280,7 @@ layer(testLayer, { timeout: "60 seconds" })("lint policy change facts", (it) => 
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const turbo = yield* fs
-        .readFileString(path.join(REPO_ROOT, "turbo.json"))
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(TurboTasks))));
+      const turbo = yield* fs.readFileString(path.join(REPO_ROOT, "turbo.json")).pipe(Effect.flatMap(decodeTurboTasks));
       const cached = (task: string): O.Option<boolean> =>
         pipe(
           R.get(turbo.tasks, `//#${task}`),
@@ -370,7 +369,7 @@ layer(testLayer, { timeout: "60 seconds" })("lint policy change facts", (it) => 
       expect(yield* prepareDocsOxlintConfig(root)).toBe(PREBUILT_DOCS_OXLINT_CONFIG);
       const derived = yield* fs
         .readFileString(path.join(root, PREBUILT_DOCS_OXLINT_CONFIG))
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.Unknown)))));
+        .pipe(Effect.flatMap(decodeJsonRecord));
       expect(derived).toEqual({
         jsPlugins: ["./packages/tooling/policy-pack/lint-rules/.prebuilt/rules/docs.index.js"],
         ignorePatterns: ["**/dist/**"],

@@ -115,6 +115,19 @@ const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
 });
 
+// The changed-scope policy plan's union: every Turbo-selected package directory in one process.
+const runDeprecatedApiLintTargets = Effect.fn("Lint.deprecatedApiTargets")(function* (
+  targets: A.NonEmptyReadonlyArray<string>,
+  scoped: boolean
+) {
+  if (scoped) {
+    return yield* failWithReportedExit("lint deprecated-apis: --target cannot be combined with --package or --full.");
+  }
+  const root = yield* findRepoRoot();
+  const resolved = yield* Effect.forEach(targets, (entry) => resolveLintPackage(root, entry));
+  return yield* runDeprecatedApiLint(root, A.dedupe(resolved));
+});
+
 const runLintDeprecatedApis = Effect.fn("Lint.deprecatedApis")(function* (options: {
   readonly package: O.Option<string>;
   readonly full: boolean;
@@ -123,12 +136,7 @@ const runLintDeprecatedApis = Effect.fn("Lint.deprecatedApis")(function* (option
 }) {
   const { package: directory, full, base, target } = options;
   if (A.isReadonlyArrayNonEmpty(target)) {
-    if (O.isSome(directory) || full) {
-      return yield* failWithReportedExit("lint deprecated-apis: --target cannot be combined with --package or --full.");
-    }
-    const root = yield* findRepoRoot();
-    const targets = yield* Effect.forEach(target, (entry) => resolveLintPackage(root, entry));
-    return yield* runDeprecatedApiLint(root, A.dedupe(targets));
+    return yield* runDeprecatedApiLintTargets(target, O.isSome(directory) || full);
   }
   if (O.isNone(directory)) {
     const ci = yield* isCi;
