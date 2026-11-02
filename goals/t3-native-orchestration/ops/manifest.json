@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "t3-native-orchestration",
+    "packetId": "goal-packet/v1:0442bd7373c1a9c86fc72b85c93f0e11da03a78898bc0558f6a59c598df41676",
+    "title": "T3-Native Orchestration",
+    "status": "active",
+    "created": "2026-11-01",
+    "updated": "2026-11-01",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/t3-native-orchestration",
+  "lifecycle": "active",
+  "mission": "Make T3 Code the only cross-session messaging route: delete beep's agent-to-agent stack and its packets, and rewrite the orchestrator, handoff, remote-worker and closeout guidance around T3's MCP tools.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/t3code-fleet-driver",
+    "graduated": "2026-11-01"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/t3-native-orchestration/README.md",
+    "goals/t3-native-orchestration/SPEC.md",
+    "goals/t3-native-orchestration/PLAN.md",
+    "goals/t3-native-orchestration/GOAL.md",
+    "goals/t3-native-orchestration/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/t3-native-orchestration/GOAL.md"
+    }
+  ],
+  "provides": ["orchestration/t3-native"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/t3-native-orchestration/GOAL.md)\" -le 4000",
+    "jq . goals/t3-native-orchestration/ops/manifest.json",
+    "rg -n \"t3-native-orchestration|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/t3-native-orchestration",
+    "git diff --check -- goals/t3-native-orchestration",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

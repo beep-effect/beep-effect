@@ -148,6 +148,7 @@ import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeY
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { BuildYeetVerdictInput, buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
 import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
@@ -278,7 +279,7 @@ export const hydrateYeetReadOnlyContext = Effect.fn("Yeet.hydrateYeetReadOnlyCon
 ): Effect.fn.Return<
   RepoRunContext,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const { repoRoot, branch } = yield* currentRepoRootAndBranch();
   return readOnlyRunContext(repoRoot, branch, options);
@@ -306,7 +307,7 @@ export const hydrateYeetRunContext = Effect.fn("Yeet.hydrateYeetRunContext")(fun
 ): Effect.fn.Return<
   RepoRunContext,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const { repoRoot, branch } = yield* currentRepoRootAndBranch();
   if (options.mode === "status") {
@@ -726,7 +727,7 @@ const shouldSkipCommitForReusablePublish = Effect.fn("Yeet.shouldSkipCommitForRe
 ): Effect.fn.Return<
   boolean,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   if (!reusablePublishMaySkipCommit(options)) return false;
 
@@ -799,6 +800,7 @@ const stageAndCommitPublishIntent = Effect.fn("Yeet.stageAndCommitPublishIntent"
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   if (publishIntent.kind === "existing-commit") {
     yield* Console.log(
@@ -838,6 +840,7 @@ const preparePublishCommit = Effect.fn("Yeet.preparePublishCommit")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   if (skipCommit) {
     yield* Console.log(
@@ -1042,6 +1045,7 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   if (!options.pr) {
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
@@ -1201,6 +1205,7 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
   | Digest.Digest
+  | Git
 > {
   const preparedHead = yield* readPublishedHead(plan.context);
   const gateResults = yield* runWithFullProofCoordinator(
@@ -1314,6 +1319,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
   | Digest.Digest
+  | Git
 > {
   const reusableSkipCommit = yield* shouldSkipCommitForReusablePublish(plan.context, options);
   if (options.reuseVerified) yield* assertReusableVerifiedState(plan.context);
@@ -1384,6 +1390,7 @@ const runMonitorMode = Effect.fn("Yeet.runMonitorMode")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   yield* runMonitorPhase(context, monitorSteps, recorder, "yeet monitor failed.").pipe(
     Effect.catch((error) => failWithRerunGuidance(context, error))
@@ -1405,6 +1412,7 @@ const printOperatorStatusSummary = Effect.fn("Yeet.printOperatorStatusSummary")(
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const snapshot = yield* collectYeetStatus(context, remote);
   yield* writeYeetStatusSnapshot(snapshot);
@@ -1428,6 +1436,7 @@ const failWithRerunGuidance = Effect.fn("Yeet.failWithRerunGuidance")(function* 
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const snapshot = yield* printOperatorStatusSummary(context, true);
   return yield* YeetCommandError.make({
@@ -1687,6 +1696,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   // The planner emits monitor steps only under `--monitor`, so every other
   // publish arrives here with an empty list. Falling through decoded the absent
@@ -1735,6 +1745,7 @@ const runPublishMonitorAndResult = Effect.fn("Yeet.runPublishMonitorAndResult")(
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   yield* runMonitorPhase(context, monitorSteps, recorder, "yeet publish monitor phase failed.").pipe(
     Effect.catch((error) => failWithRerunGuidance(context, error))
@@ -1774,6 +1785,7 @@ const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const snapshot = yield* collectYeetStatus(context, options.remote);
   yield* writeYeetStatusSnapshot(snapshot);
@@ -1842,6 +1854,7 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const report = yield* runPrCloseout(
     context,
@@ -2363,6 +2376,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
   | Digest.Digest
+  | Git
 > {
   if (options.mode === "status") {
     return yield* runStatusMode(plan.context, options);
@@ -2554,7 +2568,7 @@ export const runPlanExecutionForTesting = runPlanExecution;
  */
 const warnMergedVerifyIgnoresUncommittedWork = Effect.fn("Yeet.warnMergedVerifyIgnoresUncommittedWork")(function* (
   context: RepoRunContext
-): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git> {
   const staged = yield* collectStagedPublishPaths(context.repoRoot);
   const unstaged = yield* collectUnstagedTrackedPaths(context.repoRoot);
   const untracked = yield* collectUntrackedPaths(context.repoRoot);
@@ -2585,6 +2599,7 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
   | Digest.Digest
+  | Git
 > {
   const artifactDir = yield* artifactDirForContext(context);
   yield* warnMergedVerifyIgnoresUncommittedWork(context);
@@ -2658,6 +2673,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
   | Digest.Digest
+  | Git
 > {
   const message = yield* validateRequiredMessage(options);
   const context = yield* hydrateYeetRunContext(options);

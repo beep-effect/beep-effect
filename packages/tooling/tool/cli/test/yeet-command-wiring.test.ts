@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { YeetCommandError, yeetCommand, yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet";
 import { CommandJsonOutput, printCommandJson } from "@beep/repo-cli/test/Cli";
 import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/test/Quality";
@@ -72,10 +73,13 @@ import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-c
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
 
-const commandTestLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
+const commandTestLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
+  )
 );
 
 /**
@@ -245,7 +249,7 @@ describe("yeet merge-loop command wiring", () => {
     );
   });
 
-  it.layer(commandTestLayer)((it) => {
+  it.layer(commandTestLayer, { timeout: "30 seconds" })((it) => {
     it.effect("dispatches the top-level publish and repair planners", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -335,7 +339,10 @@ describe("yeet merge-loop command wiring", () => {
             ).toBe(true);
           }),
           { discard: true, concurrency: 1 }
-        ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+        ).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+        );
       }).pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -415,7 +422,7 @@ describe("yeet publish plan wiring", () => {
   });
 });
 
-it.layer(commandTestLayer)("yeet push-first publish plan wiring", (it) => {
+it.layer(commandTestLayer, { timeout: "30 seconds" })("yeet push-first publish plan wiring", (it) => {
   const planContext = RepoRunContext.make({
     base: "origin/main",
     branch: "feat/yeet-command-wiring",
@@ -741,7 +748,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("cheap-gates admission", (
   }
 });
 
-it.layer(commandTestLayer)("yeet monitor command routing", (it) => {
+it.layer(commandTestLayer, { timeout: "30 seconds" })("yeet monitor command routing", (it) => {
   it.each([
     [true, true, true, false, "classic"],
     [false, true, false, false, "invalid-until-event"],
@@ -780,7 +787,7 @@ describe("yeet inbox command wiring", () => {
   });
 });
 
-it.layer(commandTestLayer)("settle-timeout route legality", (it) => {
+it.layer(commandTestLayer, { timeout: "30 seconds" })("settle-timeout route legality", (it) => {
   it.each([
     { watch: false, untilMerged: false, expected: "invalid-settle-timeout" },
     { watch: true, untilMerged: false, expected: "watch" },
@@ -798,7 +805,7 @@ it.layer(commandTestLayer)("settle-timeout route legality", (it) => {
   );
 });
 
-it.layer(commandTestLayer)("monitor polling interval", (it) => {
+it.layer(commandTestLayer, { timeout: "30 seconds" })("monitor polling interval", (it) => {
   for (const flags of [[], ["--watch"], ["--detach"]])
     it.effect(`rejects an interval outside a status loop: ${flags}`, () =>
       Effect.gen(function* () {
@@ -826,7 +833,7 @@ it.layer(commandTestLayer)("monitor polling interval", (it) => {
     );
 });
 
-it.layer(commandTestLayer)("until-ready route legality", (it) => {
+it.layer(commandTestLayer, { timeout: "30 seconds" })("until-ready route legality", (it) => {
   it.each([
     { untilMerged: false, untilEvent: false, watch: false, expected: "ready-loop" },
     { untilMerged: true, untilEvent: false, watch: false, expected: "invalid-until-ready" },
@@ -907,18 +914,21 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("detached proof job comman
       )
     );
   }
-  it.layer(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_YEET_JOB_ID: "parent" })), {
-    timeout: "30 seconds",
-  })("inside a job", (it) => {
-    it.effect("rejects recursive detachment before reading git", () =>
-      runYeetCommand(["verify", "--detach"]).pipe(
-        Effect.flip,
-        Effect.tap((error) =>
-          Effect.sync(() => expect(error).toMatchObject({ message: "Cannot recursively --detach inside a proof job." }))
+  it.layer(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_YEET_JOB_ID: "parent" })), { timeout: "30 seconds" })(
+    "inside a job",
+    (it) => {
+      it.effect("rejects recursive detachment before reading git", () =>
+        runYeetCommand(["verify", "--detach"]).pipe(
+          Effect.flip,
+          Effect.tap((error) =>
+            Effect.sync(() =>
+              expect(error).toMatchObject({ message: "Cannot recursively --detach inside a proof job." })
+            )
+          )
         )
-      )
-    );
-  });
+      );
+    }
+  );
 });
 
 it.layer(commandTestLayer, { timeout: "30 seconds" })("attached monitor environment", (it) => {

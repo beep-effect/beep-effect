@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { Git } from "@beep/git/Git";
 import { ChangeClassifier, ClassifyInput, RouteError } from "@beep/repo-cli/commands/Ci";
 import {
   ChangeClassifierLive,
@@ -29,6 +30,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { ChangeAtomKind, ChangeSet } from "@beep/repo-cli/commands/Ci";
 import type { RouteReadAt } from "@beep/repo-cli/commands/Ci/RouteClassify";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
 const ROOT_MANIFEST = '{ "name": "@fixture/root", "workspaces": ["packages/*"] }';
 
@@ -138,7 +142,10 @@ const GIT_IDENTITY = [
   "commit.gpgsign=false",
 ];
 
-const TestLayer = Layer.provideMerge(ChangeClassifierLive, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
+const TestLayer = Layer.provideMerge(
+  ChangeClassifierLive,
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer)
+);
 
 it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (it) => {
   describe("totality", () => {

@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   RepoRunContext,
@@ -17,8 +18,11 @@ import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
-const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer))
+const PlatformLayer = Layer.provideMerge(
+  Git.layer,
+  NodeChildProcessSpawner.layer.pipe(
+    Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer))
+  )
 );
 
 const context = RepoRunContext.make({

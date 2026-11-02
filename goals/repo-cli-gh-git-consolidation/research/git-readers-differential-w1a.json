@@ -1,0 +1,329 @@
+{
+  "tool": "goals/repo-cli-gh-git-consolidation/ops/git-readers-differential-w1a.ts",
+  "commit": "bad248c4336fca469f6d1e586dbfdb88567b59cd",
+  "git": "git version 2.56.0",
+  "scenarios": 45,
+  "same": 28,
+  "classified": 17,
+  "unclassified": 0,
+  "gates": {
+    "unclassified": true
+  },
+  "rows": [
+    {
+      "site": "resolveGitCommit",
+      "scenario": "HEAD",
+      "verdict": "same",
+      "old": "{\"ok\":\"8cbb99534ed0b67eaf6873287f59b7895d0e24dd\"}",
+      "new": "{\"ok\":\"8cbb99534ed0b67eaf6873287f59b7895d0e24dd\"}"
+    },
+    {
+      "site": "resolveGitCommit",
+      "scenario": "branch name",
+      "verdict": "same",
+      "old": "{\"ok\":\"8da0f9dea2c1f5abaf8741c50265387f8d224502\"}",
+      "new": "{\"ok\":\"8da0f9dea2c1f5abaf8741c50265387f8d224502\"}"
+    },
+    {
+      "site": "resolveGitCommit",
+      "scenario": "full sha",
+      "verdict": "same",
+      "old": "{\"ok\":\"e1e02e33a9337d72f7a5851caffabf8f82226f39\"}",
+      "new": "{\"ok\":\"e1e02e33a9337d72f7a5851caffabf8f82226f39\"}"
+    },
+    {
+      "site": "resolveGitCommit",
+      "scenario": "unknown ref",
+      "verdict": "D-08: an unknown ref or a non-repository cwd keeps exit 128 but carries the kit's typed message, not git's stderr",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: Needed a single revision\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"unknown ref 'nope' in <tmp>/repo\"}}"
+    },
+    {
+      "site": "resolveGitCommit",
+      "scenario": "unknown object",
+      "verdict": "D-08: an unknown ref or a non-repository cwd keeps exit 128 but carries the kit's typed message, not git's stderr",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: Needed a single revision\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"unknown ref '0000000000000000000000000000000000000000' in <tmp>/repo\"}}"
+    },
+    {
+      "site": "resolveGitCommit",
+      "scenario": "option-like ref",
+      "verdict": "D-08: an option-like ref is refused before any spawn (onSpawnFailure) instead of being shielded by --end-of-options or --",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: Needed a single revision\"}}",
+      "new": "{\"failed\":{\"_tag\":\"spawn-failure\"}}"
+    },
+    {
+      "site": "resolveGitCommit",
+      "scenario": "outside a repository",
+      "verdict": "D-08: an unknown ref or a non-repository cwd keeps exit 128 but carries the kit's typed message, not git's stderr",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: not a git repository (or any parent up to mount point /)\\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"not a git repository: <tmp>/plain\"}}"
+    },
+    {
+      "site": "resolveGitMergeBase",
+      "scenario": "fork point",
+      "verdict": "same",
+      "old": "{\"ok\":\"e1e02e33a9337d72f7a5851caffabf8f82226f39\"}",
+      "new": "{\"ok\":\"e1e02e33a9337d72f7a5851caffabf8f82226f39\"}"
+    },
+    {
+      "site": "resolveGitMergeBase",
+      "scenario": "ancestor of itself",
+      "verdict": "same",
+      "old": "{\"ok\":\"e1e02e33a9337d72f7a5851caffabf8f82226f39\"}",
+      "new": "{\"ok\":\"e1e02e33a9337d72f7a5851caffabf8f82226f39\"}"
+    },
+    {
+      "site": "resolveGitMergeBase",
+      "scenario": "no common ancestor",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":1,\"output\":\"\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":1,\"output\":\"\"}}"
+    },
+    {
+      "site": "resolveGitMergeBase",
+      "scenario": "unknown ref",
+      "verdict": "D-08: an unknown ref or a non-repository cwd keeps exit 128 but carries the kit's typed message, not git's stderr",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: Not a valid object name nope\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"unknown ref 'main...nope' in <tmp>/repo\"}}"
+    },
+    {
+      "site": "resolveGitMergeBase",
+      "scenario": "option-like ref",
+      "verdict": "D-08: an option-like ref is refused before any spawn (onSpawnFailure) instead of being shielded by --end-of-options or --",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: Not a valid object name --all\"}}",
+      "new": "{\"failed\":{\"_tag\":\"spawn-failure\"}}"
+    },
+    {
+      "site": "resolveGitMergeBase",
+      "scenario": "outside a repository",
+      "verdict": "D-08: an unknown ref or a non-repository cwd keeps exit 128 but carries the kit's typed message, not git's stderr",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: not a git repository (or any parent up to mount point /)\\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"not a git repository: <tmp>/plain\"}}"
+    },
+    {
+      "site": "readGitTree",
+      "scenario": "full tree at HEAD",
+      "verdict": "same",
+      "old": "{\"ok\":[\"100644 blob 57ee2ab12d26cc5985eaaffb689c905a6d038ef2 src/exact-moved.ts\",\"100644 blob d2153a7e8e6731236e16be197ba56ab76b707d81 src/keep.ts\",\"100644 blob 9c7613b8203468a1c13e33367889567432c9c2ef src/mostly-moved.ts\",\"100644 blob 08d9cf8510cca87fd39277acc69c6e39bc70ced2 src/rewritten-moved.ts\",\"100644 blob 4115d964c3af07d63176a707f92631b5cd4bbbdd src/with other space.ts\",\"100644 blob 6dbdf2480b0c12b0de0e4ebe16fd5aa3b9da9603 sub/inner.ts\"]}",
+      "new": "{\"ok\":[\"100644 blob 57ee2ab12d26cc5985eaaffb689c905a6d038ef2 src/exact-moved.ts\",\"100644 blob d2153a7e8e6731236e16be197ba56ab76b707d81 src/keep.ts\",\"100644 blob 9c7613b8203468a1c13e33367889567432c9c2ef src/mostly-moved.ts\",\"100644 blob 08d9cf8510cca87fd39277acc69c6e39bc70ced2 src/rewritten-moved.ts\",\"100644 blob 4115d964c3af07d63176a707f92631b5cd4bbbdd src/with other space.ts\",\"100644 blob 6dbdf2480b0c12b0de0e4ebe16fd5aa3b9da9603 sub/inner.ts\"]}"
+    },
+    {
+      "site": "readGitTree",
+      "scenario": "full tree at the base",
+      "verdict": "same",
+      "old": "{\"ok\":[\"100644 blob 4c498b77f05bd350c117d23c449641c2ddb17842 docs/gone.md\",\"100644 blob 57ee2ab12d26cc5985eaaffb689c905a6d038ef2 src/exact.ts\",\"100644 blob d2153a7e8e6731236e16be197ba56ab76b707d81 src/keep.ts\",\"100644 blob fea2916ea0fd7a75d85da68ebb60230328412ed3 src/mostly.ts\",\"100644 blob f411441ac5bd42df629d5e1a74eb78647b19eaf6 src/rewritten.ts\",\"100644 blob 4115d964c3af07d63176a707f92631b5cd4bbbdd src/with space.ts\",\"100644 blob 6dbdf2480b0c12b0de0e4ebe16fd5aa3b9da9603 sub/inner.ts\"]}",
+      "new": "{\"ok\":[\"100644 blob 4c498b77f05bd350c117d23c449641c2ddb17842 docs/gone.md\",\"100644 blob 57ee2ab12d26cc5985eaaffb689c905a6d038ef2 src/exact.ts\",\"100644 blob d2153a7e8e6731236e16be197ba56ab76b707d81 src/keep.ts\",\"100644 blob fea2916ea0fd7a75d85da68ebb60230328412ed3 src/mostly.ts\",\"100644 blob f411441ac5bd42df629d5e1a74eb78647b19eaf6 src/rewritten.ts\",\"100644 blob 4115d964c3af07d63176a707f92631b5cd4bbbdd src/with space.ts\",\"100644 blob 6dbdf2480b0c12b0de0e4ebe16fd5aa3b9da9603 sub/inner.ts\"]}"
+    },
+    {
+      "site": "readGitTree",
+      "scenario": "cwd in a subdirectory",
+      "verdict": "same",
+      "old": "{\"ok\":[\"100644 blob 57ee2ab12d26cc5985eaaffb689c905a6d038ef2 src/exact-moved.ts\",\"100644 blob d2153a7e8e6731236e16be197ba56ab76b707d81 src/keep.ts\",\"100644 blob 9c7613b8203468a1c13e33367889567432c9c2ef src/mostly-moved.ts\",\"100644 blob 08d9cf8510cca87fd39277acc69c6e39bc70ced2 src/rewritten-moved.ts\",\"100644 blob 4115d964c3af07d63176a707f92631b5cd4bbbdd src/with other space.ts\",\"100644 blob 6dbdf2480b0c12b0de0e4ebe16fd5aa3b9da9603 sub/inner.ts\"]}",
+      "new": "{\"ok\":[\"100644 blob 57ee2ab12d26cc5985eaaffb689c905a6d038ef2 src/exact-moved.ts\",\"100644 blob d2153a7e8e6731236e16be197ba56ab76b707d81 src/keep.ts\",\"100644 blob 9c7613b8203468a1c13e33367889567432c9c2ef src/mostly-moved.ts\",\"100644 blob 08d9cf8510cca87fd39277acc69c6e39bc70ced2 src/rewritten-moved.ts\",\"100644 blob 4115d964c3af07d63176a707f92631b5cd4bbbdd src/with other space.ts\",\"100644 blob 6dbdf2480b0c12b0de0e4ebe16fd5aa3b9da9603 sub/inner.ts\"]}"
+    },
+    {
+      "site": "readGitTree",
+      "scenario": "unknown commit",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: not a tree object\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: not a tree object\"}}"
+    },
+    {
+      "site": "readGitTree",
+      "scenario": "outside a repository",
+      "verdict": "D-08: an unknown ref or a non-repository cwd keeps exit 128 but carries the kit's typed message, not git's stderr",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: not a git repository (or any parent up to mount point /)\\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"not a git repository: <tmp>/plain\"}}"
+    },
+    {
+      "site": "readGitRenames",
+      "scenario": "renames at and above 50%, a rewrite below, a spaced path, a deletion",
+      "verdict": "same",
+      "old": "{\"ok\":[\"src/exact.ts -> src/exact-moved.ts @100\",\"src/mostly.ts -> src/mostly-moved.ts @58\",\"src/with space.ts -> src/with other space.ts @100\"]}",
+      "new": "{\"ok\":[\"src/exact.ts -> src/exact-moved.ts @100\",\"src/mostly.ts -> src/mostly-moved.ts @58\",\"src/with space.ts -> src/with other space.ts @100\"]}"
+    },
+    {
+      "site": "readGitRenames",
+      "scenario": "scoped by pathspec",
+      "verdict": "same",
+      "old": "{\"ok\":[\"src/exact.ts -> src/exact-moved.ts @100\",\"src/with space.ts -> src/with other space.ts @100\"]}",
+      "new": "{\"ok\":[\"src/exact.ts -> src/exact-moved.ts @100\",\"src/with space.ts -> src/with other space.ts @100\"]}"
+    },
+    {
+      "site": "readGitRenames",
+      "scenario": "pathspec matching nothing",
+      "verdict": "same",
+      "old": "{\"ok\":[]}",
+      "new": "{\"ok\":[]}"
+    },
+    {
+      "site": "readGitRenames",
+      "scenario": "no changes",
+      "verdict": "same",
+      "old": "{\"ok\":[]}",
+      "new": "{\"ok\":[]}"
+    },
+    {
+      "site": "readGitRenames",
+      "scenario": "merge base into a branch tip",
+      "verdict": "same",
+      "old": "{\"ok\":[]}",
+      "new": "{\"ok\":[]}"
+    },
+    {
+      "site": "readGitRenames",
+      "scenario": "base on a diverged branch",
+      "verdict": "D-08: Git.nameStatus diffs the merge-base range (base...head) where the frozen reader diffed base head; equal whenever base is an ancestor of head",
+      "old": "{\"ok\":[\"src/exact.ts -> src/exact-moved.ts @100\",\"src/kept-elsewhere.ts -> src/keep.ts @100\",\"src/mostly.ts -> src/mostly-moved.ts @58\",\"src/with space.ts -> src/with other space.ts @100\"]}",
+      "new": "{\"ok\":[\"src/exact.ts -> src/exact-moved.ts @100\",\"src/mostly.ts -> src/mostly-moved.ts @58\",\"src/with space.ts -> src/with other space.ts @100\"]}"
+    },
+    {
+      "site": "readGitRenames",
+      "scenario": "unknown ref",
+      "verdict": "D-08: an unknown ref or a non-repository cwd keeps exit 128 but carries the kit's typed message, not git's stderr",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: bad revision 'nope'\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"unknown ref 'nope...8cbb99534ed0b67eaf6873287f59b7895d0e24dd' in <tmp>/repo\"}}"
+    },
+    {
+      "site": "readGitRenames",
+      "scenario": "outside a repository",
+      "verdict": "D-08: outside a repository git's --no-index fallback rejects the kit's base...head range with usage text (exit 129) where the frozen base head argv exited 1 (Could not access); both fail through onNonZeroExit",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":1,\"output\":\"error: Could not access 'e1e02e33a9337d72f7a5851caffabf8f82226f39'\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":129,\"output\":\"warning: Not a git repository. Use --no-index to compare two paths outside a working tree\\nusage: git diff --no-index [<options>] <path> <path> [<pathspec>...]\\n\\nDiff output format options\\n    -p, --patch           generate patch\\n    -s, --no-patch        suppress diff output\\n    -u                    generate patch\\n    -U, --unified[=<n>]   generate diffs with <n> lines context\\n    -W, --[no-]function-context\\n                          generate diffs with <n> lines context\\n    --raw                 generate the diff in raw format\\n    --patch-with-raw      synonym for '-p --raw'\\n    --patch-with-stat     synonym for '-p --stat'\\n    --numstat             machine friendly --stat\\n    --shortstat           output only the last line of --stat\\n    -X, --dirstat[=<param1>,<param2>...]\\n                          output the distribution of relative amount of changes for each sub-directory\\n    --cumulative          synonym for --dirstat=cumulative\\n    --dirstat-by-file[=<param1>,<param2>...]\\n                          synonym for --dirstat=files,<param1>,<param2>...\\n    --check               warn if changes introduce conflict markers or whitespace errors\\n    --summary             condensed summary such as creations, renames and mode changes\\n    --name-only           show only names of changed files\\n    --name-status         show only names and status of changed files\\n    --stat[=<width>[,<name-width>[,<count>]]]\\n                          generate diffstat\\n    --stat-width <width>  generate diffstat with a given width\\n    --stat-name-width <width>\\n                          generate diffstat with a given name width\\n    --stat-graph-width <width>\\n                          generate diffstat with a given graph width\\n    --stat-count <count>  generate diffstat with limited lines\\n    --[no-]compact-summary\\n                          generate compact summary in diffstat\\n    --binary              output a binary diff that can be applied\\n    --[no-]full-index     show full pre- and post-image object names on the \\\"index\\\" lines\\n    --[no-]color[=<when>] show colored diff\\n    --ws-error-highlight <kind>\\n                          highlight whitespace errors in the 'context', 'old' or 'new' lines in the diff\\n    -z                    do not munge pathnames and use NULs as output field terminators in --raw or --numstat\\n    --[no-]abbrev[=<n>]   use <n> digits to display object names\\n    --src-prefix <prefix> show the given source prefix instead of \\\"a/\\\"\\n    --dst-prefix <prefix> show the given destination prefix instead of \\\"b/\\\"\\n    --line-prefix <prefix>\\n                          prepend an additional prefix to every line of output\\n    --no-prefix           do not show any source or destination prefix\\n    --default-prefix      use default prefixes a/ and b/\\n    --inter-hunk-context <n>\\n                          show context between diff hunks up to the specified number of lines\\n    --output-indicator-new <char>\\n                          specify the character to indicate a new line instead of '+'\\n    --output-indicator-old <char>\\n                          specify the character to indicate an old line instead of '-'\\n    --output-indicator-context <char>\\n                          specify the character to indicate a context instead of ' '\\n\\nDiff rename options\\n    -B, --break-rewrites[=<n>[/<m>]]\\n                          break complete rewrite changes into pairs of delete and create\\n    -M, --find-renames[=<n>]\\n                          detect renames\\n    -D, --irreversible-delete\\n                          omit the preimage for deletes\\n    -C, --find-copies[=<n>]\\n                          detect copies\\n    --[no-]find-copies-harder\\n                          use unmodified files as source to find copies\\n    --no-renames          disable rename detection\\n    --[no-]rename-empty   use empty blobs as rename source\\n    --[no-]follow         continue listing the history of a file beyond renames\\n    -l <n>                limit to cheap rename/copy detection if the number of rename/copy targets exceeds this value\\n\\nDiff algorithm options\\n    --minimal             produce the smallest possible diff\\n    -w, --ignore-all-space\\n                          ignore whitespace when comparing lines\\n    -b, --ignore-space-change\\n                          ignore changes in amount of whitespace\\n    --ignore-space-at-eol ignore changes in whitespace at EOL\\n    --ignore-cr-at-eol    ignore carrier-return at the end of line\\n    --ignore-blank-lines  ignore changes whose lines are all blank\\n    -I, --[no-]ignore-matching-lines <regex>\\n                          ignore changes whose all lines match <regex>\\n    --[no-]indent-heuristic\\n                          heuristic to shift diff hunk boundaries for easy reading\\n    --patience            generate diff using the \\\"patience diff\\\" algorithm\\n    --histogram           generate diff using the \\\"histogram diff\\\" algorithm\\n    --diff-algorithm <algorithm>\\n                          choose a diff algorithm\\n    --anchored <text>     generate diff using the \\\"anchored diff\\\" algorithm\\n    --word-diff[=<mode>]  show word diff, using <mode> to delimit changed words\\n    --word-diff-regex <regex>\\n                          use <regex> to decide what a word is\\n    --color-words[=<regex>]\\n                          equivalent to --word-diff=color --word-diff-regex=<regex>\\n    --[no-]color-moved[=<mode>]\\n                          moved lines of code are colored differently\\n    --[no-]color-moved-ws <mode>\\n                          how white spaces are ignored in --color-moved\\n\\nOther diff options\\n    --[no-]relative[=<prefix>]\\n                          when run from subdir, exclude changes outside and show relative paths\\n    -a, --[no-]text       treat all files as text\\n    -R                    swap two inputs, reverse the diff\\n    --[no-]exit-code      exit with 1 if there were differences, 0 otherwise\\n    --[no-]quiet          disable all output of the program\\n    --[no-]ext-diff       allow an external diff helper to be executed\\n    --[no-]textconv       run external text conversion filters when comparing binary files\\n    --ignore-submodules[=<when>]\\n                          ignore changes to submodules in the diff generation\\n    --submodule[=<format>]\\n                          specify how differences in submodules are shown\\n    --ita-invisible-in-index\\n                          hide 'git add -N' entries from the index\\n    --ita-visible-in-index\\n                          treat 'git add -N' entries as real in the index\\n    -S <string>           look for differences that change the number of occurrences of the specified string\\n    -G <regex>            look for differences that change the number of occurrences of the specified regex\\n    --pickaxe-all         show all changes in the changeset with -S or -G\\n    --pickaxe-regex       treat <string> in -S as extended POSIX regular expression\\n    -O <file>             control the order in which files appear in the output\\n    --rotate-to <path>    show the change in the specified path first\\n    --skip-to <path>      skip the output to the specified path\\n    --find-object <object-id>\\n                          look for differences that change the number of occurrences of the specified object\\n    --diff-filter [(A|C|D|M|R|T|U|X|B)...[*]]\\n                          select files by diff type\\n    --max-depth <depth>   maximum tree depth to recurse\\n    --output <file>       output to a specific file\"}}"
+    },
+    {
+      "site": "collectStagedPaths",
+      "scenario": "dirty repository root",
+      "verdict": "same",
+      "old": "{\"ok\":[\"src/keep.ts\",\"sub/inner.ts\"]}",
+      "new": "{\"ok\":[\"src/keep.ts\",\"sub/inner.ts\"]}"
+    },
+    {
+      "site": "collectStagedPaths",
+      "scenario": "cwd in a subdirectory",
+      "verdict": "same",
+      "old": "{\"ok\":[\"src/keep.ts\",\"sub/inner.ts\"]}",
+      "new": "{\"ok\":[\"src/keep.ts\",\"sub/inner.ts\"]}"
+    },
+    {
+      "site": "collectStagedPaths",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":129,\"output\":\"error: unknown option `cached'\\nusage: git diff --no-index [<options>] <path> <path> [<pathspec>...]\\n\\nDiff output format options\\n    -p, --patch           generate patch\\n    -s, --no-patch        suppress diff output\\n    -u                    generate patch\\n    -U, --unified[=<n>]   generate diffs with <n> lines context\\n    -W, --[no-]function-context\\n                          generate diffs with <n> lines context\\n    --raw                 generate the diff in raw format\\n    --patch-with-raw      synonym for '-p --raw'\\n    --patch-with-stat     synonym for '-p --stat'\\n    --numstat             machine friendly --stat\\n    --shortstat           output only the last line of --stat\\n    -X, --dirstat[=<param1>,<param2>...]\\n                          output the distribution of relative amount of changes for each sub-directory\\n    --cumulative          synonym for --dirstat=cumulative\\n    --dirstat-by-file[=<param1>,<param2>...]\\n                          synonym for --dirstat=files,<param1>,<param2>...\\n    --check               warn if changes introduce conflict markers or whitespace errors\\n    --summary             condensed summary such as creations, renames and mode changes\\n    --name-only           show only names of changed files\\n    --name-status         show only names and status of changed files\\n    --stat[=<width>[,<name-width>[,<count>]]]\\n                          generate diffstat\\n    --stat-width <width>  generate diffstat with a given width\\n    --stat-name-width <width>\\n                          generate diffstat with a given name width\\n    --stat-graph-width <width>\\n                          generate diffstat with a given graph width\\n    --stat-count <count>  generate diffstat with limited lines\\n    --[no-]compact-summary\\n                          generate compact summary in diffstat\\n    --binary              output a binary diff that can be applied\\n    --[no-]full-index     show full pre- and post-image object names on the \\\"index\\\" lines\\n    --[no-]color[=<when>] show colored diff\\n    --ws-error-highlight <kind>\\n                          highlight whitespace errors in the 'context', 'old' or 'new' lines in the diff\\n    -z                    do not munge pathnames and use NULs as output field terminators in --raw or --numstat\\n    --[no-]abbrev[=<n>]   use <n> digits to display object names\\n    --src-prefix <prefix> show the given source prefix instead of \\\"a/\\\"\\n    --dst-prefix <prefix> show the given destination prefix instead of \\\"b/\\\"\\n    --line-prefix <prefix>\\n                          prepend an additional prefix to every line of output\\n    --no-prefix           do not show any source or destination prefix\\n    --default-prefix      use default prefixes a/ and b/\\n    --inter-hunk-context <n>\\n                          show context between diff hunks up to the specified number of lines\\n    --output-indicator-new <char>\\n                          specify the character to indicate a new line instead of '+'\\n    --output-indicator-old <char>\\n                          specify the character to indicate an old line instead of '-'\\n    --output-indicator-context <char>\\n                          specify the character to indicate a context instead of ' '\\n\\nDiff rename options\\n    -B, --break-rewrites[=<n>[/<m>]]\\n                          break complete rewrite changes into pairs of delete and create\\n    -M, --find-renames[=<n>]\\n                          detect renames\\n    -D, --irreversible-delete\\n                          omit the preimage for deletes\\n    -C, --find-copies[=<n>]\\n                          detect copies\\n    --[no-]find-copies-harder\\n                          use unmodified files as source to find copies\\n    --no-renames          disable rename detection\\n    --[no-]rename-empty   use empty blobs as rename source\\n    --[no-]follow         continue listing the history of a file beyond renames\\n    -l <n>                limit to cheap rename/copy detection if the number of rename/copy targets exceeds this value\\n\\nDiff algorithm options\\n    --minimal             produce the smallest possible diff\\n    -w, --ignore-all-space\\n                          ignore whitespace when comparing lines\\n    -b, --ignore-space-change\\n                          ignore changes in amount of whitespace\\n    --ignore-space-at-eol ignore changes in whitespace at EOL\\n    --ignore-cr-at-eol    ignore carrier-return at the end of line\\n    --ignore-blank-lines  ignore changes whose lines are all blank\\n    -I, --[no-]ignore-matching-lines <regex>\\n                          ignore changes whose all lines match <regex>\\n    --[no-]indent-heuristic\\n                          heuristic to shift diff hunk boundaries for easy reading\\n    --patience            generate diff using the \\\"patience diff\\\" algorithm\\n    --histogram           generate diff using the \\\"histogram diff\\\" algorithm\\n    --diff-algorithm <algorithm>\\n                          choose a diff algorithm\\n    --anchored <text>     generate diff using the \\\"anchored diff\\\" algorithm\\n    --word-diff[=<mode>]  show word diff, using <mode> to delimit changed words\\n    --word-diff-regex <regex>\\n                          use <regex> to decide what a word is\\n    --color-words[=<regex>]\\n                          equivalent to --word-diff=color --word-diff-regex=<regex>\\n    --[no-]color-moved[=<mode>]\\n                          moved lines of code are colored differently\\n    --[no-]color-moved-ws <mode>\\n                          how white spaces are ignored in --color-moved\\n\\nOther diff options\\n    --[no-]relative[=<prefix>]\\n                          when run from subdir, exclude changes outside and show relative paths\\n    -a, --[no-]text       treat all files as text\\n    -R                    swap two inputs, reverse the diff\\n    --[no-]exit-code      exit with 1 if there were differences, 0 otherwise\\n    --[no-]quiet          disable all output of the program\\n    --[no-]ext-diff       allow an external diff helper to be executed\\n    --[no-]textconv       run external text conversion filters when comparing binary files\\n    --ignore-submodules[=<when>]\\n                          ignore changes to submodules in the diff generation\\n    --submodule[=<format>]\\n                          specify how differences in submodules are shown\\n    --ita-invisible-in-index\\n                          hide 'git add -N' entries from the index\\n    --ita-visible-in-index\\n                          treat 'git add -N' entries as real in the index\\n    -S <string>           look for differences that change the number of occurrences of the specified string\\n    -G <regex>            look for differences that change the number of occurrences of the specified regex\\n    --pickaxe-all         show all changes in the changeset with -S or -G\\n    --pickaxe-regex       treat <string> in -S as extended POSIX regular expression\\n    -O <file>             control the order in which files appear in the output\\n    --rotate-to <path>    show the change in the specified path first\\n    --skip-to <path>      skip the output to the specified path\\n    --find-object <object-id>\\n                          look for differences that change the number of occurrences of the specified object\\n    --diff-filter [(A|C|D|M|R|T|U|X|B)...[*]]\\n                          select files by diff type\\n    --max-depth <depth>   maximum tree depth to recurse\\n    --output <file>       output to a specific file\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":129,\"output\":\"error: unknown option `cached'\\nusage: git diff --no-index [<options>] <path> <path> [<pathspec>...]\\n\\nDiff output format options\\n    -p, --patch           generate patch\\n    -s, --no-patch        suppress diff output\\n    -u                    generate patch\\n    -U, --unified[=<n>]   generate diffs with <n> lines context\\n    -W, --[no-]function-context\\n                          generate diffs with <n> lines context\\n    --raw                 generate the diff in raw format\\n    --patch-with-raw      synonym for '-p --raw'\\n    --patch-with-stat     synonym for '-p --stat'\\n    --numstat             machine friendly --stat\\n    --shortstat           output only the last line of --stat\\n    -X, --dirstat[=<param1>,<param2>...]\\n                          output the distribution of relative amount of changes for each sub-directory\\n    --cumulative          synonym for --dirstat=cumulative\\n    --dirstat-by-file[=<param1>,<param2>...]\\n                          synonym for --dirstat=files,<param1>,<param2>...\\n    --check               warn if changes introduce conflict markers or whitespace errors\\n    --summary             condensed summary such as creations, renames and mode changes\\n    --name-only           show only names of changed files\\n    --name-status         show only names and status of changed files\\n    --stat[=<width>[,<name-width>[,<count>]]]\\n                          generate diffstat\\n    --stat-width <width>  generate diffstat with a given width\\n    --stat-name-width <width>\\n                          generate diffstat with a given name width\\n    --stat-graph-width <width>\\n                          generate diffstat with a given graph width\\n    --stat-count <count>  generate diffstat with limited lines\\n    --[no-]compact-summary\\n                          generate compact summary in diffstat\\n    --binary              output a binary diff that can be applied\\n    --[no-]full-index     show full pre- and post-image object names on the \\\"index\\\" lines\\n    --[no-]color[=<when>] show colored diff\\n    --ws-error-highlight <kind>\\n                          highlight whitespace errors in the 'context', 'old' or 'new' lines in the diff\\n    -z                    do not munge pathnames and use NULs as output field terminators in --raw or --numstat\\n    --[no-]abbrev[=<n>]   use <n> digits to display object names\\n    --src-prefix <prefix> show the given source prefix instead of \\\"a/\\\"\\n    --dst-prefix <prefix> show the given destination prefix instead of \\\"b/\\\"\\n    --line-prefix <prefix>\\n                          prepend an additional prefix to every line of output\\n    --no-prefix           do not show any source or destination prefix\\n    --default-prefix      use default prefixes a/ and b/\\n    --inter-hunk-context <n>\\n                          show context between diff hunks up to the specified number of lines\\n    --output-indicator-new <char>\\n                          specify the character to indicate a new line instead of '+'\\n    --output-indicator-old <char>\\n                          specify the character to indicate an old line instead of '-'\\n    --output-indicator-context <char>\\n                          specify the character to indicate a context instead of ' '\\n\\nDiff rename options\\n    -B, --break-rewrites[=<n>[/<m>]]\\n                          break complete rewrite changes into pairs of delete and create\\n    -M, --find-renames[=<n>]\\n                          detect renames\\n    -D, --irreversible-delete\\n                          omit the preimage for deletes\\n    -C, --find-copies[=<n>]\\n                          detect copies\\n    --[no-]find-copies-harder\\n                          use unmodified files as source to find copies\\n    --no-renames          disable rename detection\\n    --[no-]rename-empty   use empty blobs as rename source\\n    --[no-]follow         continue listing the history of a file beyond renames\\n    -l <n>                limit to cheap rename/copy detection if the number of rename/copy targets exceeds this value\\n\\nDiff algorithm options\\n    --minimal             produce the smallest possible diff\\n    -w, --ignore-all-space\\n                          ignore whitespace when comparing lines\\n    -b, --ignore-space-change\\n                          ignore changes in amount of whitespace\\n    --ignore-space-at-eol ignore changes in whitespace at EOL\\n    --ignore-cr-at-eol    ignore carrier-return at the end of line\\n    --ignore-blank-lines  ignore changes whose lines are all blank\\n    -I, --[no-]ignore-matching-lines <regex>\\n                          ignore changes whose all lines match <regex>\\n    --[no-]indent-heuristic\\n                          heuristic to shift diff hunk boundaries for easy reading\\n    --patience            generate diff using the \\\"patience diff\\\" algorithm\\n    --histogram           generate diff using the \\\"histogram diff\\\" algorithm\\n    --diff-algorithm <algorithm>\\n                          choose a diff algorithm\\n    --anchored <text>     generate diff using the \\\"anchored diff\\\" algorithm\\n    --word-diff[=<mode>]  show word diff, using <mode> to delimit changed words\\n    --word-diff-regex <regex>\\n                          use <regex> to decide what a word is\\n    --color-words[=<regex>]\\n                          equivalent to --word-diff=color --word-diff-regex=<regex>\\n    --[no-]color-moved[=<mode>]\\n                          moved lines of code are colored differently\\n    --[no-]color-moved-ws <mode>\\n                          how white spaces are ignored in --color-moved\\n\\nOther diff options\\n    --[no-]relative[=<prefix>]\\n                          when run from subdir, exclude changes outside and show relative paths\\n    -a, --[no-]text       treat all files as text\\n    -R                    swap two inputs, reverse the diff\\n    --[no-]exit-code      exit with 1 if there were differences, 0 otherwise\\n    --[no-]quiet          disable all output of the program\\n    --[no-]ext-diff       allow an external diff helper to be executed\\n    --[no-]textconv       run external text conversion filters when comparing binary files\\n    --ignore-submodules[=<when>]\\n                          ignore changes to submodules in the diff generation\\n    --submodule[=<format>]\\n                          specify how differences in submodules are shown\\n    --ita-invisible-in-index\\n                          hide 'git add -N' entries from the index\\n    --ita-visible-in-index\\n                          treat 'git add -N' entries as real in the index\\n    -S <string>           look for differences that change the number of occurrences of the specified string\\n    -G <regex>            look for differences that change the number of occurrences of the specified regex\\n    --pickaxe-all         show all changes in the changeset with -S or -G\\n    --pickaxe-regex       treat <string> in -S as extended POSIX regular expression\\n    -O <file>             control the order in which files appear in the output\\n    --rotate-to <path>    show the change in the specified path first\\n    --skip-to <path>      skip the output to the specified path\\n    --find-object <object-id>\\n                          look for differences that change the number of occurrences of the specified object\\n    --diff-filter [(A|C|D|M|R|T|U|X|B)...[*]]\\n                          select files by diff type\\n    --max-depth <depth>   maximum tree depth to recurse\\n    --output <file>       output to a specific file\"}}"
+    },
+    {
+      "site": "collectUnstagedPaths",
+      "scenario": "dirty repository root",
+      "verdict": "same",
+      "old": "{\"ok\":[\"src/exact-moved.ts\",\"sub/inner.ts\"]}",
+      "new": "{\"ok\":[\"src/exact-moved.ts\",\"sub/inner.ts\"]}"
+    },
+    {
+      "site": "collectUnstagedPaths",
+      "scenario": "cwd in a subdirectory",
+      "verdict": "same",
+      "old": "{\"ok\":[\"src/exact-moved.ts\",\"sub/inner.ts\"]}",
+      "new": "{\"ok\":[\"src/exact-moved.ts\",\"sub/inner.ts\"]}"
+    },
+    {
+      "site": "collectUnstagedPaths",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":129,\"output\":\"warning: Not a git repository. Use --no-index to compare two paths outside a working tree\\nusage: git diff --no-index [<options>] <path> <path> [<pathspec>...]\\n\\nDiff output format options\\n    -p, --patch           generate patch\\n    -s, --no-patch        suppress diff output\\n    -u                    generate patch\\n    -U, --unified[=<n>]   generate diffs with <n> lines context\\n    -W, --[no-]function-context\\n                          generate diffs with <n> lines context\\n    --raw                 generate the diff in raw format\\n    --patch-with-raw      synonym for '-p --raw'\\n    --patch-with-stat     synonym for '-p --stat'\\n    --numstat             machine friendly --stat\\n    --shortstat           output only the last line of --stat\\n    -X, --dirstat[=<param1>,<param2>...]\\n                          output the distribution of relative amount of changes for each sub-directory\\n    --cumulative          synonym for --dirstat=cumulative\\n    --dirstat-by-file[=<param1>,<param2>...]\\n                          synonym for --dirstat=files,<param1>,<param2>...\\n    --check               warn if changes introduce conflict markers or whitespace errors\\n    --summary             condensed summary such as creations, renames and mode changes\\n    --name-only           show only names of changed files\\n    --name-status         show only names and status of changed files\\n    --stat[=<width>[,<name-width>[,<count>]]]\\n                          generate diffstat\\n    --stat-width <width>  generate diffstat with a given width\\n    --stat-name-width <width>\\n                          generate diffstat with a given name width\\n    --stat-graph-width <width>\\n                          generate diffstat with a given graph width\\n    --stat-count <count>  generate diffstat with limited lines\\n    --[no-]compact-summary\\n                          generate compact summary in diffstat\\n    --binary              output a binary diff that can be applied\\n    --[no-]full-index     show full pre- and post-image object names on the \\\"index\\\" lines\\n    --[no-]color[=<when>] show colored diff\\n    --ws-error-highlight <kind>\\n                          highlight whitespace errors in the 'context', 'old' or 'new' lines in the diff\\n    -z                    do not munge pathnames and use NULs as output field terminators in --raw or --numstat\\n    --[no-]abbrev[=<n>]   use <n> digits to display object names\\n    --src-prefix <prefix> show the given source prefix instead of \\\"a/\\\"\\n    --dst-prefix <prefix> show the given destination prefix instead of \\\"b/\\\"\\n    --line-prefix <prefix>\\n                          prepend an additional prefix to every line of output\\n    --no-prefix           do not show any source or destination prefix\\n    --default-prefix      use default prefixes a/ and b/\\n    --inter-hunk-context <n>\\n                          show context between diff hunks up to the specified number of lines\\n    --output-indicator-new <char>\\n                          specify the character to indicate a new line instead of '+'\\n    --output-indicator-old <char>\\n                          specify the character to indicate an old line instead of '-'\\n    --output-indicator-context <char>\\n                          specify the character to indicate a context instead of ' '\\n\\nDiff rename options\\n    -B, --break-rewrites[=<n>[/<m>]]\\n                          break complete rewrite changes into pairs of delete and create\\n    -M, --find-renames[=<n>]\\n                          detect renames\\n    -D, --irreversible-delete\\n                          omit the preimage for deletes\\n    -C, --find-copies[=<n>]\\n                          detect copies\\n    --[no-]find-copies-harder\\n                          use unmodified files as source to find copies\\n    --no-renames          disable rename detection\\n    --[no-]rename-empty   use empty blobs as rename source\\n    --[no-]follow         continue listing the history of a file beyond renames\\n    -l <n>                limit to cheap rename/copy detection if the number of rename/copy targets exceeds this value\\n\\nDiff algorithm options\\n    --minimal             produce the smallest possible diff\\n    -w, --ignore-all-space\\n                          ignore whitespace when comparing lines\\n    -b, --ignore-space-change\\n                          ignore changes in amount of whitespace\\n    --ignore-space-at-eol ignore changes in whitespace at EOL\\n    --ignore-cr-at-eol    ignore carrier-return at the end of line\\n    --ignore-blank-lines  ignore changes whose lines are all blank\\n    -I, --[no-]ignore-matching-lines <regex>\\n                          ignore changes whose all lines match <regex>\\n    --[no-]indent-heuristic\\n                          heuristic to shift diff hunk boundaries for easy reading\\n    --patience            generate diff using the \\\"patience diff\\\" algorithm\\n    --histogram           generate diff using the \\\"histogram diff\\\" algorithm\\n    --diff-algorithm <algorithm>\\n                          choose a diff algorithm\\n    --anchored <text>     generate diff using the \\\"anchored diff\\\" algorithm\\n    --word-diff[=<mode>]  show word diff, using <mode> to delimit changed words\\n    --word-diff-regex <regex>\\n                          use <regex> to decide what a word is\\n    --color-words[=<regex>]\\n                          equivalent to --word-diff=color --word-diff-regex=<regex>\\n    --[no-]color-moved[=<mode>]\\n                          moved lines of code are colored differently\\n    --[no-]color-moved-ws <mode>\\n                          how white spaces are ignored in --color-moved\\n\\nOther diff options\\n    --[no-]relative[=<prefix>]\\n                          when run from subdir, exclude changes outside and show relative paths\\n    -a, --[no-]text       treat all files as text\\n    -R                    swap two inputs, reverse the diff\\n    --[no-]exit-code      exit with 1 if there were differences, 0 otherwise\\n    --[no-]quiet          disable all output of the program\\n    --[no-]ext-diff       allow an external diff helper to be executed\\n    --[no-]textconv       run external text conversion filters when comparing binary files\\n    --ignore-submodules[=<when>]\\n                          ignore changes to submodules in the diff generation\\n    --submodule[=<format>]\\n                          specify how differences in submodules are shown\\n    --ita-invisible-in-index\\n                          hide 'git add -N' entries from the index\\n    --ita-visible-in-index\\n                          treat 'git add -N' entries as real in the index\\n    -S <string>           look for differences that change the number of occurrences of the specified string\\n    -G <regex>            look for differences that change the number of occurrences of the specified regex\\n    --pickaxe-all         show all changes in the changeset with -S or -G\\n    --pickaxe-regex       treat <string> in -S as extended POSIX regular expression\\n    -O <file>             control the order in which files appear in the output\\n    --rotate-to <path>    show the change in the specified path first\\n    --skip-to <path>      skip the output to the specified path\\n    --find-object <object-id>\\n                          look for differences that change the number of occurrences of the specified object\\n    --diff-filter [(A|C|D|M|R|T|U|X|B)...[*]]\\n                          select files by diff type\\n    --max-depth <depth>   maximum tree depth to recurse\\n    --output <file>       output to a specific file\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":129,\"output\":\"warning: Not a git repository. Use --no-index to compare two paths outside a working tree\\nusage: git diff --no-index [<options>] <path> <path> [<pathspec>...]\\n\\nDiff output format options\\n    -p, --patch           generate patch\\n    -s, --no-patch        suppress diff output\\n    -u                    generate patch\\n    -U, --unified[=<n>]   generate diffs with <n> lines context\\n    -W, --[no-]function-context\\n                          generate diffs with <n> lines context\\n    --raw                 generate the diff in raw format\\n    --patch-with-raw      synonym for '-p --raw'\\n    --patch-with-stat     synonym for '-p --stat'\\n    --numstat             machine friendly --stat\\n    --shortstat           output only the last line of --stat\\n    -X, --dirstat[=<param1>,<param2>...]\\n                          output the distribution of relative amount of changes for each sub-directory\\n    --cumulative          synonym for --dirstat=cumulative\\n    --dirstat-by-file[=<param1>,<param2>...]\\n                          synonym for --dirstat=files,<param1>,<param2>...\\n    --check               warn if changes introduce conflict markers or whitespace errors\\n    --summary             condensed summary such as creations, renames and mode changes\\n    --name-only           show only names of changed files\\n    --name-status         show only names and status of changed files\\n    --stat[=<width>[,<name-width>[,<count>]]]\\n                          generate diffstat\\n    --stat-width <width>  generate diffstat with a given width\\n    --stat-name-width <width>\\n                          generate diffstat with a given name width\\n    --stat-graph-width <width>\\n                          generate diffstat with a given graph width\\n    --stat-count <count>  generate diffstat with limited lines\\n    --[no-]compact-summary\\n                          generate compact summary in diffstat\\n    --binary              output a binary diff that can be applied\\n    --[no-]full-index     show full pre- and post-image object names on the \\\"index\\\" lines\\n    --[no-]color[=<when>] show colored diff\\n    --ws-error-highlight <kind>\\n                          highlight whitespace errors in the 'context', 'old' or 'new' lines in the diff\\n    -z                    do not munge pathnames and use NULs as output field terminators in --raw or --numstat\\n    --[no-]abbrev[=<n>]   use <n> digits to display object names\\n    --src-prefix <prefix> show the given source prefix instead of \\\"a/\\\"\\n    --dst-prefix <prefix> show the given destination prefix instead of \\\"b/\\\"\\n    --line-prefix <prefix>\\n                          prepend an additional prefix to every line of output\\n    --no-prefix           do not show any source or destination prefix\\n    --default-prefix      use default prefixes a/ and b/\\n    --inter-hunk-context <n>\\n                          show context between diff hunks up to the specified number of lines\\n    --output-indicator-new <char>\\n                          specify the character to indicate a new line instead of '+'\\n    --output-indicator-old <char>\\n                          specify the character to indicate an old line instead of '-'\\n    --output-indicator-context <char>\\n                          specify the character to indicate a context instead of ' '\\n\\nDiff rename options\\n    -B, --break-rewrites[=<n>[/<m>]]\\n                          break complete rewrite changes into pairs of delete and create\\n    -M, --find-renames[=<n>]\\n                          detect renames\\n    -D, --irreversible-delete\\n                          omit the preimage for deletes\\n    -C, --find-copies[=<n>]\\n                          detect copies\\n    --[no-]find-copies-harder\\n                          use unmodified files as source to find copies\\n    --no-renames          disable rename detection\\n    --[no-]rename-empty   use empty blobs as rename source\\n    --[no-]follow         continue listing the history of a file beyond renames\\n    -l <n>                limit to cheap rename/copy detection if the number of rename/copy targets exceeds this value\\n\\nDiff algorithm options\\n    --minimal             produce the smallest possible diff\\n    -w, --ignore-all-space\\n                          ignore whitespace when comparing lines\\n    -b, --ignore-space-change\\n                          ignore changes in amount of whitespace\\n    --ignore-space-at-eol ignore changes in whitespace at EOL\\n    --ignore-cr-at-eol    ignore carrier-return at the end of line\\n    --ignore-blank-lines  ignore changes whose lines are all blank\\n    -I, --[no-]ignore-matching-lines <regex>\\n                          ignore changes whose all lines match <regex>\\n    --[no-]indent-heuristic\\n                          heuristic to shift diff hunk boundaries for easy reading\\n    --patience            generate diff using the \\\"patience diff\\\" algorithm\\n    --histogram           generate diff using the \\\"histogram diff\\\" algorithm\\n    --diff-algorithm <algorithm>\\n                          choose a diff algorithm\\n    --anchored <text>     generate diff using the \\\"anchored diff\\\" algorithm\\n    --word-diff[=<mode>]  show word diff, using <mode> to delimit changed words\\n    --word-diff-regex <regex>\\n                          use <regex> to decide what a word is\\n    --color-words[=<regex>]\\n                          equivalent to --word-diff=color --word-diff-regex=<regex>\\n    --[no-]color-moved[=<mode>]\\n                          moved lines of code are colored differently\\n    --[no-]color-moved-ws <mode>\\n                          how white spaces are ignored in --color-moved\\n\\nOther diff options\\n    --[no-]relative[=<prefix>]\\n                          when run from subdir, exclude changes outside and show relative paths\\n    -a, --[no-]text       treat all files as text\\n    -R                    swap two inputs, reverse the diff\\n    --[no-]exit-code      exit with 1 if there were differences, 0 otherwise\\n    --[no-]quiet          disable all output of the program\\n    --[no-]ext-diff       allow an external diff helper to be executed\\n    --[no-]textconv       run external text conversion filters when comparing binary files\\n    --ignore-submodules[=<when>]\\n                          ignore changes to submodules in the diff generation\\n    --submodule[=<format>]\\n                          specify how differences in submodules are shown\\n    --ita-invisible-in-index\\n                          hide 'git add -N' entries from the index\\n    --ita-visible-in-index\\n                          treat 'git add -N' entries as real in the index\\n    -S <string>           look for differences that change the number of occurrences of the specified string\\n    -G <regex>            look for differences that change the number of occurrences of the specified regex\\n    --pickaxe-all         show all changes in the changeset with -S or -G\\n    --pickaxe-regex       treat <string> in -S as extended POSIX regular expression\\n    -O <file>             control the order in which files appear in the output\\n    --rotate-to <path>    show the change in the specified path first\\n    --skip-to <path>      skip the output to the specified path\\n    --find-object <object-id>\\n                          look for differences that change the number of occurrences of the specified object\\n    --diff-filter [(A|C|D|M|R|T|U|X|B)...[*]]\\n                          select files by diff type\\n    --max-depth <depth>   maximum tree depth to recurse\\n    --output <file>       output to a specific file\"}}"
+    },
+    {
+      "site": "collectUntrackedPaths",
+      "scenario": "dirty repository root",
+      "verdict": "same",
+      "old": "{\"ok\":[\".gitignore\",\"sub/untracked two.txt\",\"untracked.txt\"]}",
+      "new": "{\"ok\":[\".gitignore\",\"sub/untracked two.txt\",\"untracked.txt\"]}"
+    },
+    {
+      "site": "collectUntrackedPaths",
+      "scenario": "cwd in a subdirectory",
+      "verdict": "D-08: Git.untrackedFiles passes --full-name, so a subdirectory cwd reports repository-relative paths; every caller passes the repository root",
+      "old": "{\"ok\":[\"untracked two.txt\"]}",
+      "new": "{\"ok\":[\"sub/untracked two.txt\"]}"
+    },
+    {
+      "site": "collectUntrackedPaths",
+      "scenario": "outside a repository",
+      "verdict": "D-08: an unknown ref or a non-repository cwd keeps exit 128 but carries the kit's typed message, not git's stderr",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: not a git repository (or any parent up to mount point /)\\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"not a git repository: <tmp>/plain\"}}"
+    },
+    {
+      "site": "collectStagedPaths",
+      "scenario": "cwd in a subdirectory with diff.relative",
+      "verdict": "D-08: Git.stagedChanges passes --no-relative, so diff.relative=true no longer narrows the listing; every caller passes the repository root",
+      "old": "{\"ok\":[\"inner.ts\"]}",
+      "new": "{\"ok\":[\"src/keep.ts\",\"sub/inner.ts\"]}"
+    },
+    {
+      "site": "collectUnstagedPaths",
+      "scenario": "cwd in a subdirectory with diff.relative",
+      "verdict": "D-08: Git.unstagedChanges passes --no-relative, so diff.relative=true no longer narrows the listing; every caller passes the repository root",
+      "old": "{\"ok\":[\"inner.ts\"]}",
+      "new": "{\"ok\":[\"src/exact-moved.ts\",\"sub/inner.ts\"]}"
+    },
+    {
+      "site": "currentBranch",
+      "scenario": "on a branch (abbrev-ref)",
+      "verdict": "same",
+      "old": "{\"ok\":\"main\"}",
+      "new": "{\"ok\":\"main\"}"
+    },
+    {
+      "site": "currentBranch",
+      "scenario": "on a branch (show-current)",
+      "verdict": "same",
+      "old": "{\"ok\":\"main\"}",
+      "new": "{\"ok\":\"main\"}"
+    },
+    {
+      "site": "currentBranch",
+      "scenario": "detached HEAD (abbrev-ref)",
+      "verdict": "same",
+      "old": "{\"ok\":\"HEAD\"}",
+      "new": "{\"ok\":\"HEAD\"}"
+    },
+    {
+      "site": "currentBranch",
+      "scenario": "detached HEAD (show-current)",
+      "verdict": "same",
+      "old": "{\"ok\":\"\"}",
+      "new": "{\"ok\":\"\"}"
+    },
+    {
+      "site": "currentBranch",
+      "scenario": "unborn repository (abbrev-ref)",
+      "verdict": "D-08: an unknown ref or a non-repository cwd keeps exit 128 but carries the kit's typed message, not git's stderr",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.\\nUse '--' to separate paths from revisions, like this:\\n'git <command> [<revision>...] -- [<file>...]'\\nHEAD\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"unknown ref 'HEAD' in <tmp>/unborn\"}}"
+    },
+    {
+      "site": "currentBranch",
+      "scenario": "unborn repository (show-current)",
+      "verdict": "same",
+      "old": "{\"ok\":\"main\"}",
+      "new": "{\"ok\":\"main\"}"
+    },
+    {
+      "site": "currentBranch",
+      "scenario": "outside a repository (abbrev-ref)",
+      "verdict": "D-08: an unknown ref or a non-repository cwd keeps exit 128 but carries the kit's typed message, not git's stderr",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: not a git repository (or any parent up to mount point /)\\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"not a git repository: <tmp>/plain\"}}"
+    },
+    {
+      "site": "currentBranch",
+      "scenario": "outside a repository (show-current)",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: not a git repository (or any parent up to mount point /)\\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\"}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128,\"output\":\"fatal: not a git repository (or any parent up to mount point /)\\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\"}}"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "t3code-spill-routing",
+    "packetId": "goal-packet/v1:65e98d16396d2b644cda38c75a21ed53c7aaea96004b9d10490dab62e3eec1ba",
+    "title": "T3 Code Spill Routing",
+    "status": "active",
+    "created": "2026-11-01",
+    "updated": "2026-11-01",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/t3code-spill-routing",
+  "lifecycle": "active",
+  "mission": "Add an advisory rule to `orchestrate`: read DankStation host pressure before substantive work and, above baseline-derived thresholds, launch on the next host in spill order through T3.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/t3code-fleet-driver",
+    "graduated": "2026-11-01"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/t3code-spill-routing/README.md",
+    "goals/t3code-spill-routing/SPEC.md",
+    "goals/t3code-spill-routing/PLAN.md",
+    "goals/t3code-spill-routing/GOAL.md",
+    "goals/t3code-spill-routing/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/t3code-spill-routing/GOAL.md"
+    }
+  ],
+  "provides": ["orchestration/spill-routing"],
+  "requires": ["orchestration/t3-native", "fleet/t3-environments"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/t3code-spill-routing/GOAL.md)\" -le 4000",
+    "jq . goals/t3code-spill-routing/ops/manifest.json",
+    "rg -n \"t3code-spill-routing|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/t3code-spill-routing",
+    "git diff --check -- goals/t3code-spill-routing",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
