@@ -960,6 +960,12 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "nativeSemanticObservation": {
+        "report": "signature-key-feature-observation.json",
+        "nativeReport": "native-signature-key-controls.json",
+        "cases": 168,
+        "scope": "Provided-key UTF8 byte enforcement; absent key, local-only and signature-disabled controls. No transport, rollout or qualification acceptance."
       }
     },
     {
