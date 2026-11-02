@@ -54,15 +54,21 @@ re-entry (ruled 2026-10-14, recorded in that exploration's `DECISIONS.md`):
 
 ## Acceptance Criteria
 
-- [ ] `@beep/skill-contract` exports the certificate schemas (envelope, five outcomes,
+- [x] `@beep/skill-contract` exports the certificate schemas (envelope, five outcomes,
       reach, aggregate) with codec round-trip and property tests.
-- [ ] The QA judge settlement produces one certificate per run whose per-check
+      (`src/GateCertificate.ts`, `test/GateCertificate.test.ts`; 2026-11-02, pending review)
+- [x] The QA judge settlement produces one certificate per run whose per-check
       outcomes match the existing judge checks (behavioural parity test against the
       current `JudgeCheck` results on the same fixtures).
-- [ ] An aggregate containing any in-reach `cantTell` or `untested` check is never
-      `passed` (property test).
-- [ ] Apply-by-id refuses a stale digest and an unknown id (tests).
-- [ ] No unrelated refactors or formatting churn.
+      (`certifyQaJudgeSettlement`, `test/qa-judge-certificate.test.ts`; pending review)
+- [x] An aggregate containing any in-reach `cantTell` or `untested` check is never
+      `passed` (property test). (kernel property plus QA untested-gate property)
+- [x] Apply-by-id refuses a stale digest and an unknown id (tests). (kernel and QA tests)
+- [x] No unrelated refactors or formatting churn. (pending independent review)
+
+Ticks record local evidence in
+[`history/2026-11-02-p0-p1-evidence.md`](./history/2026-11-02-p0-p1-evidence.md).
+They do not close the goal: independent review, Yeet and merge are still owed.
 
 ## Verification Matrix
 
@@ -86,7 +92,14 @@ them and record each in the Decision Log.
 
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
-| None | N/A | N/A | N/A |
+| 2026-11-02 | New flat module `GateCertificate.ts` in `@beep/skill-contract`; no new package. | `bun run beep architecture add role` scaffolds slice `<slice> <concept> <role>` files only; this package is a flat foundation/modeling module set (`Gate.ts`, `EvidenceReceipt.ts`, ...). Searched `@beep/schema` (incl. `Conformance`) and the kernel: no existing EARL/ACT outcome or reach schema. | Delete `GateCertificate.ts`, its barrel line and test. |
+| 2026-11-02 | The envelope reuses the kernel `EvidenceReceipt(predicateType, predicate)` factory with predicate type `.../evidence/gate-certificate/v1`; no `_type` field. | One in-toto-aligned envelope vocabulary in the kernel (MAP Amendment J input 1, DECISIONS 2026-08-26 "prevents a second certificate vocabulary"). Unsigned; no DSSE. | Swap the factory call for a dedicated Statement struct. |
+| 2026-11-02 | Aggregate rule order: in-reach blocking `failed` -> `failed`; any in-reach `cantTell` -> `cantTell`; else any in-reach `untested` -> `untested`; reach not `complete` -> `cantTell`; any `passed` -> `passed`; else `inapplicable`. Advisory `failed` does not fail the aggregate. Decode rejects any stated outcome other than the settled one. | Implements "aggregate never passed with an in-reach inconclusive check" and makes non-complete reach unable to certify a pass; advisory handling matches the existing `GateSummary` blocking policy. | Edit `settleGateCertificateOutcome`; the coherence filter follows it. |
+| 2026-11-02 | Reach is certificate-level (`complete/incomplete/unknown`); each check carries `inReach: boolean`. | Amendment J forbids a nullable `conforms`; a per-check scope bit is what "in-reach check" needs. | Replace the boolean with a per-check literal. |
+| 2026-11-02 | Apply-by-id plan binds to the certificate envelope's own `EvidenceSubject` (name + digest the caller computes over the encoded bytes); stale digest is refused before ids are read; any unknown id refuses the whole plan; refusal is a value. | The kernel stays schemas-only (no hashing service); the producer owns digest computation, as for every other kernel receipt. | Change `applyGateCertificatePlan`. |
+| 2026-11-02 | QA producer: `certifyQaJudgeSettlement` in `JudgeContract.ts` maps allowed -> `passed`, denied -> `failed`, gate not run -> `untested`, reach `complete` (all five declared gates listed and in reach); `settleAgainstRound` in `JudgeCheck.ts` is now the single settlement behind `crossCheckAgainstRound` and the certificate. | Fixture parity with existing `JudgeCheck` outcomes; `untested` is the honest outcome when a flow stops early at decode. | Inline `settleAgainstRound` back into `crossCheckAgainstRound` and drop the producer. |
+| 2026-11-02 | `judge-lint`/`judge-ingest` do not write a certificate file yet; `JudgeLint.ts` and `QaJudgeGateId.ts` are unchanged. | No consumer exists in this slice; writing a file changes CLI behaviour and adds a Crypto requirement to the command for nothing that reads it. The producer is a typed value API. | A later slice writes the receipt beside `inventory.json`. |
+| 2026-11-02 | No changeset. | `@beep/skill-contract` is `private: true`; `.changeset/README.md` says private workspaces need no notes and the graph guard rejects notes naming them. The change is additive. | Add a changeset if the package becomes publishable. |
 
 ## Exception Ledger
 

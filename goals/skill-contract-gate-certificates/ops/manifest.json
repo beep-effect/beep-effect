@@ -6,7 +6,7 @@
     "title": "Skill Contract Gate Certificates",
     "status": "active",
     "created": "2026-10-14",
-    "updated": "2026-10-14",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/skill-contract-gate-certificates",
@@ -32,7 +32,8 @@
     "goals/skill-contract-gate-certificates/SPEC.md",
     "goals/skill-contract-gate-certificates/PLAN.md",
     "goals/skill-contract-gate-certificates/GOAL.md",
-    "goals/skill-contract-gate-certificates/research/SOURCES.md"
+    "goals/skill-contract-gate-certificates/research/SOURCES.md",
+    "goals/skill-contract-gate-certificates/history/2026-11-02-p0-p1-evidence.md"
   ],
   "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
@@ -50,17 +51,17 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",

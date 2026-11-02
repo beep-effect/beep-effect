@@ -32,6 +32,7 @@ import {
   evaluateCitedEventIdExists,
   evaluateDeclaredRoundCoherent,
   evaluateEvidenceCrossCheckClean,
+  RoundCrossCheckSettlement,
 } from "./JudgeContract.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
@@ -364,19 +365,47 @@ export const crossCheckAgainstRound = Effect.fn("QaJudgeCheck.crossCheckAgainstR
   inventory: QaInventory,
   eventLog: QaEventLog
 ): Effect.fn.Return<EvidenceCrossCheck, never, FileSystem.FileSystem | Path.Path> {
-  const artifactVerdict = yield* evaluateCitedArtifactExists(
+  const settlement = yield* settleAgainstRound(layout, inventory, eventLog);
+  return evidenceCrossCheckVerdictToCrossCheck(settlement.crossCheck);
+});
+
+/**
+ * Settle an inventory's citations against a round as typed gate verdicts.
+ *
+ * **Details**
+ *
+ * This is the single settlement behind {@link crossCheckAgainstRound} and
+ * the QA judge gate certificate, so both see the same verdicts.
+ *
+ * **Example** (Inspect the settlement)
+ *
+ * ```ts
+ * import { settleAgainstRound } from "@beep/repo-cli/commands/Qa/JudgeCheck"
+ *
+ * console.log(typeof settleAgainstRound) // "function"
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const settleAgainstRound = Effect.fn("QaJudgeCheck.settleAgainstRound")(function* (
+  layout: RoundLayout,
+  inventory: QaInventory,
+  eventLog: QaEventLog
+): Effect.fn.Return<RoundCrossCheckSettlement, never, FileSystem.FileSystem | Path.Path> {
+  const artifact = yield* evaluateCitedArtifactExists(
     CitedArtifactExistsInput.make({ citedPaths: citedPaths(inventory), roundRoot: layout.root })
   );
-  const eventIdVerdict = yield* evaluateCitedEventIdExists(
+  const eventId = yield* evaluateCitedEventIdExists(
     CitedEventIdExistsInput.make({
       citedEventIds: citedEventIds(inventory),
       knownEventIds: A.map(eventLog.events, (event) => event.seq),
     })
   );
-  const aggregateVerdict = yield* evaluateEvidenceCrossCheckClean(
-    EvidenceCrossCheckCleanInput.make({ artifactVerdict, eventIdVerdict })
+  const crossCheck = yield* evaluateEvidenceCrossCheckClean(
+    EvidenceCrossCheckCleanInput.make({ artifactVerdict: artifact, eventIdVerdict: eventId })
   );
-  return evidenceCrossCheckVerdictToCrossCheck(aggregateVerdict);
+  return RoundCrossCheckSettlement.make({ artifact, crossCheck, eventId });
 });
 
 /**
