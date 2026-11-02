@@ -43,6 +43,13 @@ section are extensions of the pool runbook, not a new prompt surface.
   <https://github.com/oven-sh/bun/releases/download/bun-v1.4.2/bun-linux-x64.zip>
 - bun installer (denied with HTTP 403 by the default cloud network policy on
   2026-10-01): <https://bun.sh/install>
+- MCP host scoping and cloud hook behavior (read 2026-11-02 for
+  [`history/2026-11-02-mcp-scoping-hook-evidence.md`](../history/2026-11-02-mcp-scoping-hook-evidence.md);
+  no host-conditional syntax documented): <https://code.claude.com/docs/en/mcp>,
+  <https://code.claude.com/docs/en/settings>,
+  <https://code.claude.com/docs/en/settings-reference>,
+  <https://code.claude.com/docs/en/cloud-environments>, plus installed
+  `claude` 2.1.316 `--help` and `mcp --help`
 
 ## 4. In-repo capability references
 
