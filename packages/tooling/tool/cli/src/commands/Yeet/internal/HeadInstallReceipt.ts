@@ -24,7 +24,6 @@ import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -154,6 +153,7 @@ export const HeadInstallReceiptRefusal = LiteralKit([
 export type HeadInstallReceiptRefusal = typeof HeadInstallReceiptRefusal.Type;
 
 const HeadInstallReceiptJson = JsonStringCodec(HeadInstallReceipt);
+const textEncoder = new TextEncoder();
 
 const isRootInstallConfigPath = (path: string): boolean => A.contains(ROOT_INSTALL_CONFIG_PATHS, path);
 
@@ -182,11 +182,6 @@ const foldInstallInputs: RunFoldedStdoutOptions["fold"] = (stdout) =>
     Stream.map((entry) => `${entry}\n`),
     Stream.mkString
   );
-
-const sha256Hex = Effect.fnUntraced(function* (value: string) {
-  const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value)));
-});
 
 /**
  * Read the install inputs one commit carries and the host that would install it.
@@ -220,10 +215,13 @@ export const collectHeadInstallInputs = Effect.fn("Yeet.collectHeadInstallInputs
     commitSha,
     treeSha,
     lockfileDigest,
-    manifestsDigest: yield* sha256Hex(
-      A.join(
-        A.filter(entries, (entry) => !Str.startsWith(`${LOCKFILE_PATH}\0`)(entry)),
-        "\n"
+    manifestsDigest: yield* (yield* Digest.Digest).digestHex(
+      Digest.sha256,
+      textEncoder.encode(
+        A.join(
+          A.filter(entries, (entry) => !Str.startsWith(`${LOCKFILE_PATH}\0`)(entry)),
+          "\n"
+        )
       )
     ),
     // `process.versions.bun` is absent when the CLI runs under Node.

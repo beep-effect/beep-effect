@@ -49,6 +49,26 @@ const digestBytes = Effect.fn("Yeet.ProofDigest.digestBytes")(function* (
   return Hex.encode(digest);
 });
 
+/**
+ * Hash one text with SHA-256, as lowercase hexadecimal.
+ *
+ * **Example** (Digest a stable identity text)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { proofTextDigest } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(Effect.isEffect(proofTextDigest("platform=linux"))) // true
+ * ```
+ *
+ * @param text - Text to digest.
+ * @returns Lowercase hexadecimal SHA-256 digest.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const proofTextDigest = (text: string): Effect.Effect<string, never, Digest.Digest> =>
+  digestBytes(new TextEncoder().encode(text));
+
 const digestComponents = Effect.fn("Yeet.ProofDigest.digestComponents")(function* (
   components: ReadonlyArray<string>
 ): Effect.fn.Return<string, never, Digest.Digest> {

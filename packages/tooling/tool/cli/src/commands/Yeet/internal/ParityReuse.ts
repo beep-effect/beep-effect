@@ -25,9 +25,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
-import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
-import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
@@ -45,10 +43,11 @@ import { GithubCheckLaneRunStatus } from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { CI_PARITY_POSTURE_ENV } from "./Planner.ts";
-import { proofCommandDigest } from "./ProofDigest.ts";
+import { proofCommandDigest, proofTextDigest } from "./ProofDigest.ts";
+import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { CiLocalStepPlan } from "../../Ci/CiLane.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 
@@ -215,20 +214,6 @@ export const proofEnvironmentPosture = (
     })
   );
 
-/**
- * Overlay a step's environment on the process environment, the way the child
- * process sees it (`undefined` unsets a variable).
- *
- * @param step - Planned step whose `env` overrides the process environment.
- * @returns The step's effective environment.
- * @category utilities
- * @since 0.0.0
- */
-export const effectiveStepEnvironment = (step: RepoPlanStep): Readonly<Record<string, string | undefined>> => ({
-  ...Bun.env,
-  ...step.env,
-});
-
 const stableText = (entries: ReadonlyArray<readonly [string, string]>): string =>
   A.join(
     A.map(
@@ -240,11 +225,6 @@ const stableText = (entries: ReadonlyArray<readonly [string, string]>): string =
     ),
     "\0"
   );
-
-const sha256Hex = Effect.fnUntraced(function* (value: string) {
-  const crypto = yield* Digest.Digest;
-  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value)));
-});
 
 /**
  * Identify the environment one proof step runs its lanes under.
@@ -285,7 +265,7 @@ export const collectProofEnvironment = Effect.fn("Yeet.collectProofEnvironment")
     baseSha,
     posture: proofEnvironmentPosture(env),
   };
-  const digest = yield* sha256Hex(
+  const digest = yield* proofTextDigest(
     stableText([
       ["platform", fields.platform],
       ["architecture", fields.architecture],
@@ -375,7 +355,7 @@ export const decideParityLaneReuse = Effect.fn("Yeet.decideParityLaneReuse")(fun
 /**
  * Render the log line for one parity lane decision; a lane without a twin has none.
  *
- * @param decision - Parity lane decision.
+ * @param decision - Outcome of the reuse check for one lane.
  * @returns The `[yeet] ci-parity` line, or none for a lane nothing proved.
  * @category formatting
  * @since 0.0.0

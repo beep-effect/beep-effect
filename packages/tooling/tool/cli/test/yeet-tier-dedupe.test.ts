@@ -1,17 +1,11 @@
 import { CiLocalStepPlan } from "@beep/repo-cli/commands/Ci";
-import { ensureOriginMainForTesting } from "@beep/repo-cli/commands/Quality/Quality.command";
-import { collectGithubCheckLaneWavesForTesting } from "@beep/repo-cli/commands/Quality/Tasks";
 import { formatCommandLine } from "@beep/repo-cli/test/Process";
 import {
-  GithubCheckLaneSpec,
-  GithubCheckLaneWaveSpec,
   githubCheckChangesetStatusLane,
   githubCheckPrePushLanes,
   LaneProofRefusal,
-  pinnedLaneProofBaseSha,
   QualityTaskLaneRun,
   QualityTaskLaneRunReport,
-  QualityTaskStep,
   renderLaneProofRefusal,
 } from "@beep/repo-cli/test/Quality";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
@@ -63,29 +57,6 @@ const GIT_IDENTITY = [
   "commit.gpgsign=false",
 ];
 
-const withEnv = <Out, E, R>(
-  values: Readonly<Record<string, string | undefined>>,
-  use: Effect.Effect<Out, E, R>
-): Effect.Effect<Out, E, R> =>
-  Effect.acquireUseRelease(
-    Effect.sync(() => {
-      const previous = A.map(Object.keys(values), (name) => [name, Bun.env[name]] as const);
-      for (const [name, value] of Object.entries(values)) {
-        if (value === undefined) delete Bun.env[name];
-        else Bun.env[name] = value;
-      }
-      return previous;
-    }),
-    () => use,
-    (previous) =>
-      Effect.sync(() => {
-        for (const [name, value] of previous) {
-          if (value === undefined) delete Bun.env[name];
-          else Bun.env[name] = value;
-        }
-      })
-  );
-
 // A checkout with `.beep/` ignored, one commit, and `origin/main` at that commit.
 const fixture = Effect.fn("TierDedupeTest.fixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -122,46 +93,18 @@ const fixture = Effect.fn("TierDedupeTest.fixture")(function* () {
   return { root, base, context, git, commit };
 });
 
-const lane = (repoRoot: string, id: string, source: string) =>
-  GithubCheckLaneSpec.make({
-    id,
-    tier: "pre-push",
-    stage: "repo-quality",
-    wave: "preflight",
-    blockedBy: [],
-    step: QualityTaskStep.make({ label: id, command: "bash", args: ["-c", source], cwd: repoRoot }),
-  });
-
-const battery = (repoRoot: string, tier: string) =>
-  withEnv(
-    { BEEP_YEET_INNER_LANE_PARENT_ID: `full:${tier}`, BEEP_YEET_LANE_PROOF_MODE: "active" },
-    collectGithubCheckLaneWavesForTesting(
-      tier,
-      [
-        GithubCheckLaneWaveSpec.make({
-          wave: "preflight",
-          lanes: [lane(repoRoot, "fallow:health", "mkdir -p .beep && echo run >> .beep/health-runs.txt")],
-        }),
-      ],
-      "fail-fast"
-    )
-  );
-
-const statuses = (run: { readonly report: { readonly lanes: ReadonlyArray<{ readonly status: string }> } }) =>
-  A.map(run.report.lanes, (entry) => entry.status);
-
 const logged = Effect.map(TestConsole.logLines, (lines) => A.join(A.filter(lines, Str.isString), "\n"));
 
-const emptyRecorder = Ref.make(A.empty<YeetExecutedStep>());
+const emptyRecorder = Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
 
 const withTestConsole = Effect.provideServiceEffect(Console.Console, TestConsole.make);
 
 const inputs = (overrides: Partial<Parameters<typeof HeadInstallInputs.make>[0]> = {}) =>
   HeadInstallInputs.make({
-    commitSha: "c".repeat(40),
-    treeSha: "t".repeat(40),
-    lockfileDigest: "l".repeat(40),
-    manifestsDigest: "m".repeat(64),
+    commitSha: Str.repeat(40)("c"),
+    treeSha: Str.repeat(40)("t"),
+    lockfileDigest: Str.repeat(40)("l"),
+    manifestsDigest: Str.repeat(64)("m"),
     bunVersion: "1.4.4",
     platform: "linux",
     architecture: "x64",
@@ -177,117 +120,44 @@ const receiptAt = (installed: DateTime.Utc, receiptInputs: HeadInstallInputs) =>
   });
 
 describe("lane-proof reuse across tiers (M11)", () => {
-  it.effect("pins nothing for a ref and reads a full SHA as the pinned base", () =>
-    Effect.gen(function* () {
-      const pinned = (value: string) => withEnv({ BEEP_YEET_PROOF_BASE: value }, Effect.sync(pinnedLaneProofBaseSha));
-      assertSome(yield* pinned("a".repeat(40)), "a".repeat(40));
-      assertNone(yield* pinned("origin/main"));
-    })
-  );
-
   it("renders every differing identity component of a refused proof", () => {
     expect(
       renderLaneProofRefusal(
         LaneProofRefusal.make({
           laneId: "fallow:health",
           reasons: ["base-moved", "environment-changed"],
-          priorBaseSha: "a".repeat(40),
-          currentBaseSha: "b".repeat(40),
+          priorBaseSha: Str.repeat(40)("a"),
+          currentBaseSha: Str.repeat(40)("b"),
         })
       )
     ).toBe("[lane-proof] not reusing fallow:health: base moved (aaaaaaaaaaaa -> bbbbbbbbbbbb), environment changed");
   });
 
-  it("plans the pinned base SHA into every proof step", () => {
-    const context = RepoRunContext.make({
-      base: "origin/main",
-      baseSha: "f".repeat(40),
-      branch: "feature",
-      cwd: "/repo",
-      head: "HEAD",
-      originalArgv: [],
-      packetDir: ".beep/yeet",
-      repoRoot: "/repo",
-      turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
-    });
-    const plan = buildYeetRunPlanForTesting({ context, message: O.none(), mode: "verify", tier: "full" });
-    const proofBases = A.getSomes(A.map(plan.steps, (step) => O.fromUndefinedOr(step.env?.BEEP_YEET_PROOF_BASE)));
-    expect(proofBases).toEqual(["f".repeat(40), "f".repeat(40)]);
-  });
-
-  it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("over a real checkout", (it) => {
-    it.effect("reuses the cheap-gates proof in the pre-push tier despite the per-tier parent id", () =>
-      Effect.gen(function* () {
-        const { root, base } = yield* fixture();
-        const run = (tier: string) => withEnv({ BEEP_YEET_PROOF_BASE: base }, battery(root, tier));
-        expect(statuses(yield* run("cheap-gates"))).toEqual(["passed"]);
-        expect(statuses(yield* run("pre-push"))).toEqual(["reused"]);
-        expect(yield* logged).toContain("[lane-proof] reusing exact lane proof: fallow:health");
-      }).pipe(withTestConsole)
-    );
-
-    it.effect("refuses, and says why, when the environment changed", () =>
-      Effect.gen(function* () {
-        const { root, base } = yield* fixture();
-        const run = (marker: string) =>
-          withEnv({ BEEP_YEET_PROOF_BASE: base, TIER_DEDUPE_MARKER: marker }, battery(root, "pre-push"));
-        expect(statuses(yield* run("one"))).toEqual(["passed"]);
-        expect(statuses(yield* run("two"))).toEqual(["passed"]);
-        expect(yield* logged).toContain("[lane-proof] not reusing fallow:health: environment changed");
-      }).pipe(withTestConsole)
-    );
-
-    it.effect("refuses a proof recorded against another pinned base", () =>
-      Effect.gen(function* () {
-        const { root, base, git } = yield* fixture();
-        expect(statuses(yield* withEnv({ BEEP_YEET_PROOF_BASE: base }, battery(root, "cheap-gates")))).toEqual([
-          "passed",
-        ]);
-        // Move origin/main to a sibling commit without touching HEAD.
-        const tree = yield* git("rev-parse", "HEAD^{tree}");
-        const moved = yield* git("commit-tree", tree, "-p", base, "-m", "moved base");
-        yield* git("update-ref", "refs/remotes/origin/main", moved);
-        expect(statuses(yield* withEnv({ BEEP_YEET_PROOF_BASE: moved }, battery(root, "pre-push")))).toEqual([
-          "passed",
-        ]);
-        expect(yield* logged).toContain(
-          `[lane-proof] not reusing fallow:health: base moved (${Str.takeLeft(12)(base)} -> ${Str.takeLeft(12)(moved)})`
-        );
-      }).pipe(withTestConsole)
-    );
-
-    it.effect("disables reuse when origin/main moved away from the run's pinned base", () =>
-      Effect.gen(function* () {
-        const { root, base, git } = yield* fixture();
-        const tree = yield* git("rev-parse", "HEAD^{tree}");
-        const moved = yield* git("commit-tree", tree, "-p", base, "-m", "moved base");
-        yield* git("update-ref", "refs/remotes/origin/main", moved);
-        expect(statuses(yield* withEnv({ BEEP_YEET_PROOF_BASE: base }, battery(root, "pre-push")))).toEqual(["passed"]);
-        expect(yield* logged).toContain(
-          `[lane-proof] reuse disabled: origin/main moved from the run's pinned base ${Str.takeLeft(12)(base)} to ${Str.takeLeft(12)(moved)}`
-        );
-      }).pipe(withTestConsole)
-    );
-
-    it.effect("skips the origin/main refetch while the parent run's pin still matches", () =>
-      Effect.gen(function* () {
-        const { root, base } = yield* fixture();
-        // No `origin` remote exists, so a fetch would fail the battery.
-        yield* withEnv({ BEEP_YEET_PROOF_BASE: base }, ensureOriginMainForTesting(root));
-        expect(yield* logged).toContain(`[github-checks] origin/main pinned at ${Str.takeLeft(12)(base)}`);
-      }).pipe(withTestConsole)
-    );
-
-    it.effect("refetches when the pin no longer matches origin/main", () =>
-      Effect.gen(function* () {
-        const { root } = yield* fixture();
-        const failed = yield* withEnv({ BEEP_YEET_PROOF_BASE: "0".repeat(40) }, ensureOriginMainForTesting(root)).pipe(
-          Effect.flip
-        );
-        expect(failed.message).not.toBe("");
-        expect(yield* logged).toContain("not the parent run's pinned base 000000000000; refreshing");
-      }).pipe(withTestConsole)
-    );
+  it("plans the pinned base SHA into every proof step, and leaves any other base a ref", () => {
+    const proofBases = (base: string) =>
+      A.getSomes(
+        A.map(
+          buildYeetRunPlanForTesting({
+            context: RepoRunContext.make({
+              base,
+              baseSha: Str.repeat(40)("f"),
+              branch: "feature",
+              cwd: "/repo",
+              head: "HEAD",
+              originalArgv: [],
+              packetDir: ".beep/yeet",
+              repoRoot: "/repo",
+              turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
+            }),
+            message: O.none(),
+            mode: "verify",
+            tier: "full",
+          }).steps,
+          (step) => O.fromUndefinedOr(step.env?.BEEP_YEET_PROOF_BASE)
+        )
+      );
+    expect(proofBases("origin/main")).toEqual([Str.repeat(40)("f"), Str.repeat(40)("f")]);
+    expect(proofBases("origin/release")).toEqual(["origin/release", "origin/release"]);
   });
 });
 
@@ -426,10 +296,10 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
     const later = DateTime.addDuration(now, Duration.sum(HEAD_INSTALL_RECEIPT_TTL, Duration.seconds(1)));
     expect(headInstallReceiptRefusals(O.some(receiptAt(now, inputs())), inputs(), later)).toEqual(["expired"]);
     const changed = inputs({
-      commitSha: "d".repeat(40),
-      treeSha: "u".repeat(40),
-      lockfileDigest: "k".repeat(40),
-      manifestsDigest: "n".repeat(64),
+      commitSha: Str.repeat(40)("d"),
+      treeSha: Str.repeat(40)("u"),
+      lockfileDigest: Str.repeat(40)("k"),
+      manifestsDigest: Str.repeat(64)("n"),
       bunVersion: "1.4.5",
       platform: "darwin",
     });

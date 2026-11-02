@@ -107,7 +107,6 @@ import {
   clearProofEnvironments,
   collectProofEnvironment,
   decideParityLaneReuse,
-  effectiveStepEnvironment,
   proofEnvironmentDigests,
   provenLanesForAttempt,
   readProofEnvironments,
@@ -410,6 +409,13 @@ const runPhaseStep = Effect.fn("Yeet.runPhaseStep")(function* (
     )
   );
   return timedResult;
+});
+
+// A step's environment as its child process sees it: the step's `env`
+// overrides the process environment, and `undefined` unsets a variable.
+const effectiveStepEnvironment = (step: RepoPlanStep): Readonly<Record<string, string | undefined>> => ({
+  ...Bun.env,
+  ...step.env,
 });
 
 // The base the run pinned, else the ref resolved now (plan-only contexts).

@@ -417,6 +417,9 @@ const proofLanesForTier = (context: RepoRunContext, tier: YeetProofTier): Readon
     "review-fix": A.empty<GithubCheckLaneSpec>,
   });
 
+const proofBaseForLanes = (context: RepoRunContext): string =>
+  context.base === "origin/main" && context.baseSha !== undefined ? context.baseSha : context.base;
+
 const proofStep = (context: RepoRunContext, tier: YeetProofTier, collectAll: boolean): RepoPlanStep => {
   const proof = proofDefinitionForTier(tier);
   const proofArgs = proofArgsForTier(context, tier, collectAll, proof.args);
@@ -430,8 +433,9 @@ const proofStep = (context: RepoRunContext, tier: YeetProofTier, collectAll: boo
       // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv, which Biome cannot read. Owner: @beep/repo-cli. Exit: Biome reads turbo global.* declarations, or the name joins allowedEnvVars (#1855).
       BEEP_YEET_LANE_PROOF_MODE: Bun.env.BEEP_YEET_LANE_PROOF_MODE ?? "active",
       // The pinned SHA, so every tier of the run identifies lanes against one
-      // base and the batteries skip their own `origin/main` refetch.
-      BEEP_YEET_PROOF_BASE: context.baseSha ?? context.base,
+      // base and the batteries skip their own `origin/main` refetch. Lanes
+      // read `origin/main` by name, so any other base stays a ref.
+      BEEP_YEET_PROOF_BASE: proofBaseForLanes(context),
     },
     waves: A.map(
       tier === "full"
