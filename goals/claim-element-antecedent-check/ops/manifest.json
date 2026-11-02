@@ -112,7 +112,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Final PR #2513 requires strict pre-merge readiness. Main coverage unblocker #2517 and dependency bump #2507 are integrated; v25 pins all 21 unchanged algorithm files plus lock/root manifest/Bun pin before prediction. Full positive/allowed result values match v24 except implementation digest; all 251 reports are byte-identical, 37/538 and all 34 protected/all 37 previous matches retained. All 631 pins remain exact. Historical automated review identity carries forward; no fresh or attorney review claimed. No local verify/publish queue; operative lifecycle active pending exact-head hosted readiness and merge proof.",
+  "statusNote": "Final PR #2513 requires strict pre-merge readiness. Accepted main #2535 fixes inherited package-generator expectations and #2533 fixes the shared Effect.fn helper. v26 archives 29 source/environment files before replay: all 21 algorithm files and dependency lock bytes are unchanged. Full positive/allowed result values match v25 except implementation digest; all 251 reports and the non-US smoke match exactly. 37/538 and all 34 protected/all 37 previous matches retained; all 631 pins remain exact. Historical automated review identity carries forward; no fresh or attorney review claimed. No local verify/publish queue; operative lifecycle active pending exact-head hosted readiness and merge proof.",
   "proposedCloseout": {
     "status": "completed-retained",
     "finalPullRequest": 2513

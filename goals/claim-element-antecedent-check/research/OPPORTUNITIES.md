@@ -199,8 +199,9 @@ They are redacted: no secrets, no absolute home paths, no session ids.
   after the intentional #2526 script removal, rather than duplicate its fix.
   The same main integration includes #2533's shared Effect.fn helper correction.
   Preserve the failed job log and publish the integration before compatibility
-  measurement. The 21 algorithm files remain unchanged; a new v26 freeze/replay
-  will bind the changed package-script environment without altering v25 results.
+  measurement. The 21 algorithm files remain unchanged; the v26 freeze/replay
+  binds 29 source/environment files, retains all 37 matches and verifies all 251
+  report bytes against v25 without altering its results.
 - **Prevention:** validate generated output and its literal contract expectations
   in the same script-removal change. Reproduce the failing inner assertion and
   distinguish a missing coverage artifact caused by test failure from an
