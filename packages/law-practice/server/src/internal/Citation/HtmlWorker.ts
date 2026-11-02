@@ -42,9 +42,11 @@ import {
   preflightCitationHtmlJob,
   readCitationHtmlFrames,
 } from "./HtmlWorkerProtocol.ts";
+import { CitationNativeProcessAdmission, makeCitationNativeProcessAdmission } from "./NativeAdmission.ts";
 import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 import type { CitationCleanerWork } from "./CleanerPipeline.ts";
+import type { CitationNativeProcessLease } from "./NativeAdmission.ts";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
 const NativeStorage = S.toType(CitationPythonUnicodeStorage);
@@ -104,6 +106,7 @@ const Phase = LiteralKit(["starting", "running", "stopping", "quarantined"]).pip
 interface OwnedProcess {
   readonly handle: Ref.Ref<O.Option<ChildProcessHandle>>;
   readonly phase: Ref.Ref<typeof Phase.Type>;
+  readonly quarantine: Effect.Effect<void>;
   readonly retire: Effect.Effect<boolean>;
   readonly retirement: Ref.Ref<O.Option<Fiber.Fiber<boolean>>>;
   readonly retirementLock: Semaphore.Semaphore;
@@ -146,6 +149,12 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
   const clock = yield* Clock.Clock;
   const spawner = yield* ChildProcessSpawner;
   const ownerScope = yield* Scope.Scope;
+  // Standalone private workers own a local pool. Engine composition supplies one
+  // shared service before constructing any of its builtin/native adapters.
+  const suppliedAdmission = yield* Effect.serviceOption(CitationNativeProcessAdmission);
+  const nativeAdmission = O.isSome(suppliedAdmission)
+    ? suppliedAdmission.value
+    : yield* makeCitationNativeProcessAdmission(limits).pipe(Effect.mapError(() => failure("invalid-runtime")));
   const preparation = yield* makeCitationHtmlInput(limits);
   const slots = yield* Semaphore.make(limits.concurrentOperations);
   const queueSlots = yield* Semaphore.make(limits.queuedOperations);
@@ -184,6 +193,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     const observed = yield* Fiber.await(task).pipe(Effect.interruptible, Effect.timeoutOption(limits.cleanupDeadline));
     if (O.isSome(observed) && Exit.isSuccess(observed.value) && observed.value.value) return;
     yield* Ref.set(lease.phase, "quarantined");
+    yield* lease.quarantine;
     if (O.isNone(observed)) return yield* safety("cleanupDeadline");
     return yield* failure("cleanup-unconfirmed");
   });
@@ -239,33 +249,35 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
       return yield* Effect.uninterruptibleMask((restore) =>
         Effect.gen(function* () {
           yield* ensureOpen;
-          if (!(yield* slots.takeIfAvailable(1))) {
-            if (!(yield* queueSlots.takeIfAvailable(1))) return yield* safety("queuedOperations");
-            yield* Ref.update(queued, (value) => value + 1);
-            yield* restore(
-              slots.take(1).pipe(
-                Effect.timeoutOrElse({
-                  duration: limits.queueDeadline,
-                  orElse: () => Effect.fail(safety("queueDeadline")),
-                })
-              )
-            ).pipe(
-              Effect.ensuring(
-                Effect.gen(function* () {
-                  yield* Ref.update(queued, (value) => value - 1);
-                  yield* queueSlots.release(1);
-                })
-              )
-            );
-          }
-          yield* Ref.update(active, (value) => value + 1);
-          const released = yield* Ref.make(false);
+          const claimed = yield* Ref.make(false);
+          const activate = Ref.set(claimed, true).pipe(Effect.andThen(Ref.update(active, (value) => value + 1)));
+          let nativeLease = O.none<CitationNativeProcessLease>();
           const release = Effect.gen(function* () {
-            if (!(yield* Ref.getAndSet(released, true))) {
+            if (yield* Ref.getAndSet(claimed, false)) {
+              if (O.isSome(nativeLease)) yield* nativeLease.value.release;
               yield* Ref.update(active, (value) => value - 1);
               yield* slots.release(1);
             }
           });
+          yield* Effect.gen(function* () {
+            if (yield* slots.takeIfAvailable(1)) return yield* activate;
+            yield* Effect.acquireUseRelease(
+              Effect.gen(function* () {
+                if (!(yield* queueSlots.takeIfAvailable(1))) return yield* safety("queuedOperations");
+                yield* Ref.update(queued, (value) => value + 1);
+              }),
+              () =>
+                slots.take(1).pipe(
+                  Effect.timeoutOrElse({
+                    duration: limits.queueDeadline,
+                    orElse: () => Effect.fail(safety("queueDeadline")),
+                  }),
+                  Effect.interruptible,
+                  Effect.andThen(activate)
+                ),
+              () => Ref.update(queued, (value) => value - 1).pipe(Effect.andThen(queueSlots.release(1)))
+            );
+          }).pipe(Effect.onError(() => release));
           let lease = O.none<OwnedProcess>();
           const body = Effect.gen(function* () {
             yield* ensureOpen;
@@ -290,6 +302,19 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
             const argument = yield* S.encodeEffect(NaturalJson)(limits.processMessageBytes).pipe(
               Effect.mapError(() => failure("invalid-runtime"))
             );
+            yield* nativeAdmission.acquire("clean").pipe(
+              Effect.mapError((error) =>
+                error._tag === "CitationSafetyLimitExceeded"
+                  ? error
+                  : failure(error.reason === "quarantined" ? "quarantined" : "closed")
+              ),
+              Effect.tap((permit) =>
+                Effect.sync(() => {
+                  nativeLease = O.some(permit);
+                })
+              ),
+              Effect.uninterruptible
+            );
             const resource = yield* birthLock
               .withPermit(
                 Effect.gen(function* () {
@@ -308,6 +333,9 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
                     phase,
                     retirement,
                     retirementLock,
+                    quarantine: Effect.suspend(() =>
+                      O.isSome(nativeLease) ? nativeLease.value.quarantine : Effect.void
+                    ),
                     retire: Effect.gen(function* () {
                       const child = yield* Ref.get(handle);
                       if (O.isSome(child)) {

@@ -229,6 +229,17 @@ source-event replay and remaining engine work stay open. The operator assigns
 repository-wide green checks to the Claude orchestrator; merge main regularly
 and continue implementation without treating unrelated reds as a work hold.
 
+The [shared native owner](./history/evidence/2026-11-02-shared-native-admission.md)
+now transfers process reservations to exact retirement ownership across worker
+instances. Unconfirmed cleanup quarantines the shared owner, rejects queued/new
+workers, and retains reservations through caller/Scope exit until acknowledged
+retirement. All 36 focused tests pass, including two real supervisors sharing a
+single native owner; the repeated recovery control also passes. The hosted
+Unicode replay now injects this owner into both lanes and requires empty final
+counters. Public Layer composition and the additional regex concurrency bound
+remain implementation obligations; hosted full-corpus qualification is pending
+for this changed head.
+
 The [admitted named-cleaner replay](./history/evidence/2026-11-02-admitted-named-cleaners.md)
 now matches all 600 non-HTML named/official outcomes in the original 1,155-case
 cleaner corpus, including 599 result/identity observations and the invalid-name

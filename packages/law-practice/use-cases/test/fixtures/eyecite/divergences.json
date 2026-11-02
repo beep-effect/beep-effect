@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "73e4dbed80b17cdec7f6e0fdcbcc46be9ad1c8cb10f3cde61da585eb821a22c5",
+  "planSha256": "87290bf878f326d40bd3cf5b636a249af4d6f7d9172be022b9538c574936945a",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -425,7 +425,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorker.ts",
-          "sha256": "3d60a00d88d53dafa523cbc5d4c03cd082c2aab35c2c172e0497ab716f65b6c0"
+          "sha256": "a1ff18098eeae2fa98105ea3a14ce35a00cc544ab3c89762daff0df2f07361c1"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts",
@@ -433,7 +433,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
-          "sha256": "f80789031fc8e6815fbb9b82cc7103c8668822243008887bbfbae5d75f2b183d"
+          "sha256": "50fcad9241fa783372f46bc580ae43c9f514cd434a9d4a4ff4f48d7cdaad4835"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-owned-html-worker.md",
@@ -697,7 +697,7 @@
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts",
-          "sha256": "4a2bc19c4dd7da57de28d5017c053fc133df0e80dd8723c0b97ddad11bcfead0"
+          "sha256": "e58c6a8bfeab21c30ecac0d0303ee424678c675098196824e548f79fdffb8a42"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-native-html-transport.md",
@@ -815,6 +815,22 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/logs/hosted-native-d738c948ba.log",
           "sha256": "ce2e9f00dce365699d3d9a42fa6ad162d63c1d65cbcc3d81677d278ead327800"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-shared-native-admission.md",
+          "sha256": "128781680dd2507dea5631de18c13159fe2e5c59dffbda13a750b91558d5112b"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/NativeAdmission.ts",
+          "sha256": "4d74f2cca9bf755f0c1cb3950b9eed4214daaead72a0009bec9c55c64a33d188"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationNativeAdmission.test.ts",
+          "sha256": "2a6d308f8d9ea4070959074363c4b1d7d2c6730dccbff57c2c6f574e5c6df24d"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
+          "sha256": "50fcad9241fa783372f46bc580ae43c9f514cd434a9d4a4ff4f48d7cdaad4835"
         }
       ],
       "workflowState": "audit",

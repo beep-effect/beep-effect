@@ -16,7 +16,7 @@ import * as Semaphore from "effect/Semaphore";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Admission");
 const Limits = S.toType(CitationEngineLimits);
-const Reason = LiteralKit(["invalid-policy", "closed"]).pipe(
+const Reason = LiteralKit(["invalid-policy", "closed", "quarantined"]).pipe(
   $I.annoteSchema("Reason", { description: "Redacted private admission construction or lifetime failure." })
 );
 /** @internal @category errors @since 0.0.0 */

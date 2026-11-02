@@ -19,6 +19,10 @@ import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import { makeCitationHtmlWorker } from "../src/internal/Citation/HtmlWorker.ts";
+import {
+  CitationNativeProcessAdmission,
+  makeCitationNativeProcessAdmission,
+} from "../src/internal/Citation/NativeAdmission.ts";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type * as PlatformError from "effect/PlatformError";
 import type { CitationHtmlCompletionFailure } from "../src/internal/Citation/HtmlCompletion.ts";
@@ -260,6 +264,67 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         yield* Deferred.succeed(acknowledgement, undefined);
         yield* waitFor(worker.snapshot.pipe(Effect.map((s) => s.processes === 0)));
         expect((yield* worker.snapshot).active).toBe(0);
+      }),
+    { timeout: 60_000 }
+  );
+  it.effect(
+    "shares native quarantine across separate workers until exact retirement acknowledgement",
+    () =>
+      Effect.gen(function* () {
+        const f = yield* fixture("busy");
+        const limits = (yield* defaultCitationEnginePolicy).limits;
+        const admission = yield* makeCitationNativeProcessAdmission(limits);
+        const timer = yield* manualSleep(Duration.millis(800));
+        const real = yield* ChildProcessSpawner;
+        const acknowledgement = yield* Deferred.make<void>();
+        let spawned = 0;
+        const spawner = {
+          ...real,
+          spawn: (command: Parameters<typeof real.spawn>[0]) =>
+            real.spawn(command).pipe(
+              Effect.map((handle) => {
+                spawned++;
+                return {
+                  ...handle,
+                  kill: (options: Parameters<typeof handle.kill>[0]) =>
+                    handle.kill(options).pipe(Effect.andThen(Deferred.await(acknowledgement))),
+                };
+              })
+            ),
+        };
+        const first = yield* makeCitationHtmlWorker(
+          {
+            ...limits,
+            cleanDeadline: Duration.millis(800),
+            cleanupDeadline: Duration.millis(100),
+          },
+          f
+        ).pipe(
+          Effect.provideService(CitationNativeProcessAdmission, admission),
+          Effect.provideService(ChildProcessSpawner, spawner),
+          Effect.provideService(Clock.Clock, timer.clock)
+        );
+        const second = yield* makeCitationHtmlWorker(limits, f).pipe(
+          Effect.provideService(CitationNativeProcessAdmission, admission),
+          Effect.provideService(ChildProcessSpawner, spawner)
+        );
+        const firstCall = yield* first.clean("first").pipe(Effect.forkChild);
+        yield* waitFor(f.fs.exists(f.marker));
+        const secondCall = yield* second.clean("second").pipe(Effect.forkChild);
+        yield* waitFor(admission.snapshot.pipe(Effect.map((state) => state.queued === 1)));
+        yield* timer.trigger;
+        expect(yield* Fiber.join(firstCall).pipe(Effect.flip)).toMatchObject({ limit: "cleanupDeadline" });
+        expect(yield* Fiber.join(secondCall).pipe(Effect.flip)).toMatchObject({ reason: "quarantined" });
+        expect(yield* admission.snapshot).toEqual({ active: 1, queued: 0, quarantined: 1, closed: false });
+        expect(yield* second.clean("replacement").pipe(Effect.flip)).toMatchObject({ reason: "quarantined" });
+        expect(spawned).toBe(1);
+        yield* Deferred.succeed(acknowledgement, undefined);
+        yield* waitFor(admission.snapshot.pipe(Effect.map((state) => state.active === 0)));
+        const recovered = yield* admission.acquire("clean");
+        yield* recovered.release;
+        expect(yield* admission.snapshot).toEqual({ active: 0, queued: 0, quarantined: 0, closed: false });
+        expect((yield* first.snapshot).processes).toBe(0);
+        expect((yield* second.snapshot).active).toBe(0);
       }),
     { timeout: 60_000 }
   );

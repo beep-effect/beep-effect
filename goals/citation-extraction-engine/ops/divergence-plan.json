@@ -245,7 +245,11 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-02-named-html-qualification.md",
         "goals/citation-extraction-engine/history/evidence/2026-11-02-hosted-native-qualification.md",
         "goals/citation-extraction-engine/history/evidence/logs/hosted-unicode-54d61ce7a2.log",
-        "goals/citation-extraction-engine/history/evidence/logs/hosted-native-d738c948ba.log"
+        "goals/citation-extraction-engine/history/evidence/logs/hosted-native-d738c948ba.log",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-shared-native-admission.md",
+        "packages/law-practice/server/src/internal/Citation/NativeAdmission.ts",
+        "packages/law-practice/server/test/CitationNativeAdmission.test.ts",
+        "packages/law-practice/server/test/CitationHtmlWorker.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

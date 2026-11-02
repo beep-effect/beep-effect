@@ -12,6 +12,10 @@ import * as S from "effect/Schema";
 import { CitationOperationAdmission, makeCitationOperationAdmission } from "../../src/internal/Citation/Admission.ts";
 import { makeCitationCleanerOperation } from "../../src/internal/Citation/CleanerOperation.ts";
 import { CitationCleanerRuntime } from "../../src/internal/Citation/CleanerPipeline.ts";
+import {
+  CitationNativeProcessAdmission,
+  makeCitationNativeProcessAdmission,
+} from "../../src/internal/Citation/NativeAdmission.ts";
 import { CitationPythonUnicodeStorage, makeCitationPythonHash } from "../../src/internal/Citation/PythonHash.ts";
 import {
   loadCitationUnicodeHistories,
@@ -44,8 +48,11 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
             operationDeadline: Duration.seconds(60),
           };
           const admission = yield* makeCitationOperationAdmission(limits);
+          const nativeAdmission = yield* makeCitationNativeProcessAdmission(limits);
           const replay = Effect.fn("HtmlUnicodeTest.replayLane")(function* (rows: typeof corpus.cases) {
-            const owned = yield* makeCitationUnicodePipelineHarness(true);
+            const owned = yield* makeCitationUnicodePipelineHarness(true).pipe(
+              Effect.provideService(CitationNativeProcessAdmission, nativeAdmission)
+            );
             const operation = yield* makeCitationCleanerOperation(limits).pipe(
               Effect.provideService(CitationOperationAdmission, admission),
               Effect.provideService(CitationCleanerRuntime, owned.runtime)
@@ -134,6 +141,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           expect(totals.failures).toBe(482);
           expect(totals.children).toBe(1025);
           expect(yield* admission.snapshot).toEqual({ active: 0, queued: 0, closed: false });
+          expect(yield* nativeAdmission.snapshot).toEqual({ active: 0, queued: 0, quarantined: 0, closed: false });
         }),
       { timeout: 1_200_000 }
     );
