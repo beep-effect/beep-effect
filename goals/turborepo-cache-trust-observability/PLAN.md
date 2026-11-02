@@ -1058,3 +1058,15 @@ retains the actual blocked run, source comparison, 41 passing security controls,
 the intended old-workflow negative, and the restored route/inventory replay.
 Obtain hosted component review and a real new main inspection next. This does
 not enable signing or complete any whole-goal acceptance criterion.
+
+
+### Supervisor diagnostic feedback, 2026-11-02
+
+The [safe-hint checkpoint](research/supervisor-safe-hints-checkpoint-2026-11-02.json)
+records the ordinary stable failure separately from the instrumented pass. The
+existing guard can recognize 29 fixed literal hints without quoting private
+output. Eight evidence tests, 45 runner regressions and the repo-cli quick lint
+and type check pass. Canonical inventory regeneration adds seven inherited
+completion exports and updates positions; finding totals and policy floors stay
+unchanged. No native run has yet used this implementation, and no qualification,
+protected producer or whole-goal acceptance is granted.
