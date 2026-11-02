@@ -614,3 +614,30 @@ base SPEC before this decision. Every existing acceptance and implementation
 requirement still appears in the normative SPEC; preserve the prior digest,
 refresh the working audit binding and keep all nine acceptance criteria
 unproven. Historical runtime and qualification digests are unchanged.
+
+
+## Superseded queued workflows block current heads, 2026-11-02
+
+The old Check runs for [PR2562](https://github.com/beep-effect/beep-effect/actions/runs/41458892594)
+and [PR2596](https://github.com/beep-effect/beep-effect/actions/runs/41462399317)
+remained queued after their reviewed replacement heads were pushed. The current
+runs had zero jobs and stayed pending. In contrast, PR2576's old run was already
+cancelled and its current run had 28 queued jobs with no runner assigned. These
+are different waits; absent check contexts do not establish a missing workflow
+or a successful check. Verify the PR's current head and the obsolete run's exact
+head before requesting cancellation, then observe termination and current-run
+progress. Do not create a second workflow to work around the queue. Existing
+convergence should surface and clear an obsolete queued predecessor.
+
+Shared GraphQL quota also prevented the ready transition and a metadata read
+from 14:30 until the 14:36 reset. Same-account REST supplied supported metadata
+operations, and the ready transition succeeded after reset. Review state was
+unknown during failed reads. Longer bounded polling and a shared census would
+reduce duplicate API demand; no alternate identity or quota purchase was used.
+
+Both obsolete runs reached terminal `cancelled` after the normal cancellation
+requests; their current runs advanced from pending to queued. A later force
+request for the first run raced with its completion and returned HTTP409; the
+follow-up read confirmed cancellation, so no retry was needed. The requests
+were scoped to obsolete heads and no workflow was re-dispatched. This clears
+the stale predecessor without claiming the remaining runner queue has cleared.
