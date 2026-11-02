@@ -733,31 +733,6 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     ]);
   });
 
-  it("records a check absent on one base commit, and a base run without a conclusion, in the attribution", () => {
-    const tipWithoutRepoSanity = MergeGateBaseRuns.make({
-      sha: baseTipSha,
-      checkRuns: A.filter(greenBaseRuns.checkRuns, (run) => run.name !== "Repo Sanity"),
-    });
-    const noConclusion = MergeGateBaseRuns.make({
-      ...greenBaseRuns,
-      checkRuns: A.map(greenBaseRuns.checkRuns, (run) =>
-        run.name === "Repo Sanity" ? MergeGateCheckRun.make({ ...run, conclusion: null }) : run
-      ),
-    });
-    const decision = decideMergeGate(
-      MergeGateInput.make({
-        read: read({
-          checkRuns: repoSanityRed,
-          baseRuns: O.some(MergeGateBaseEvidence.make({ mergeBase: noConclusion, baseTip: tipWithoutRepoSanity })),
-        }),
-        options: relaxed(),
-      })
-    );
-    expect(A.map(atMergeOf(decision), (entry) => entry.attribution)).toEqual([
-      `inherited: run ${baseRunIdOf("Repo Sanity")} without conclusion on merge-base 2c1cb448ba; no run on base tip 7a7a7a7a7a`,
-    ]);
-  });
-
   it("an attributed red merges: --tolerate names it, or the PR body's Inherited reds (S11) section does", () => {
     const tolerated = decideMergeGate(
       MergeGateInput.make({

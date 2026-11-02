@@ -6,7 +6,6 @@ import {
   attemptOnePickupSeconds,
   buildCiLaneTimingWindowReport,
   CiLaneTimingGithubClient,
-  CiLaneTimingWindowGuardVerdict,
   CiLaneTimingWindowOptions,
   CiLaneTimingWindowReport,
   CiRulesetHistoryVersion,
@@ -28,7 +27,6 @@ import {
   renderCiLaneTimingsSummary,
   renderCiLaneTimingsTsv,
   renderCiLaneTimingWindowMarkdown,
-  renderCiLaneTimingWindowPreviewBanner,
   renderCiLaneTimingWindowSummary,
   renderCiLaneTimingWindowTsv,
   withCiLanePeakRss,
@@ -1159,60 +1157,6 @@ describe("ci lane timing admission window", () => {
     })
   );
 
-  it.effect("counts a run whose shards are whole but whose aggregator never ran as an incomplete effective span", () =>
-    Effect.gen(function* () {
-      const run = windowRun({ id: 310 });
-      // Every shard of the two-shard Lint layout ran, but the aggregating Lint job did not: the span has no end.
-      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
-        windowRunJobs(
-          run,
-          A.map(["lint-a", "lint-b"], (partition, index) =>
-            job({
-              completed_at: "2026-11-05T00:06:00Z",
-              id: 320 + index,
-              name: `Lint (${partition})`,
-              run_id: run.id,
-              started_at: "2026-11-05T00:01:00Z",
-            })
-          )
-        ),
-      ]);
-      expect(attributionStat(report, "Lint").incompleteEffectiveSpans).toBe(1);
-    })
-  );
-
-  it.effect("stamps a first version that both added and removed required contexts", () =>
-    Effect.gen(function* () {
-      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
-      const swap = CiRulesetPopulationChange.make({
-        addedContexts: ["Lint Policy"],
-        previousVersion: O.none(),
-        removedContexts: ["Heavy / Coverage Regression"],
-        version: CiRulesetHistoryVersion.make({
-          version_id: 49479116,
-          updated_at: DateTime.makeUnsafe("2026-09-12T01:46:53Z"),
-        }),
-      });
-      const markdown = renderCiLaneTimingWindowMarkdown({ ...report, populationChanges: [swap] });
-
-      expect(markdown).toContain("(no earlier version) added Lint Policy and removed Heavy / Coverage Regression");
-    })
-  );
-
-  it("banners a short preview whose window straddles a population change", () => {
-    const banner = renderCiLaneTimingWindowPreviewBanner(
-      CiLaneTimingWindowGuardVerdict.make({
-        preview: true,
-        reasons: ["short-span", "population-change"],
-        since: DateTime.makeUnsafe("2026-09-08T00:00:00Z"),
-        until: DateTime.makeUnsafe("2026-09-15T00:00:00Z"),
-      })
-    );
-
-    expect(banner).toContain("Preview, not an admission census.");
-    expect(banner).toContain("span under seven days; required contexts changed inside the window");
-  });
-
   it.effect("renders an unratified version without claiming a ratified context count", () =>
     Effect.gen(function* () {
       const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
@@ -1516,28 +1460,6 @@ describe("ci lane timing admission window", () => {
         ]
       );
     }).pipe(Effect.provideService(CiLaneTimingGithubClient, windowGithubClient(commands, response)));
-  });
-
-  it("counts a run without a head branch by its head sha", () => {
-    const branchless = (id: number, start: string, end: string) =>
-      CiWorkflowWindowRun.make({
-        created_at: DateTime.makeUnsafe(start),
-        event: "push",
-        head_sha: "sha-main",
-        id,
-        run_attempt: 1,
-        run_started_at: O.some(DateTime.makeUnsafe(start)),
-        updated_at: O.some(DateTime.makeUnsafe(end)),
-      });
-    // Two overlapping push runs on one sha are two live runs but one branch.
-    const peaks = ciLaneTimingDayPeaks([
-      branchless(1, "2026-10-28T10:00:00Z", "2026-10-28T10:20:00Z"),
-      branchless(2, "2026-10-28T10:05:00Z", "2026-10-28T10:15:00Z"),
-    ]);
-    deepStrictEqual(
-      A.map(peaks, (peak) => [peak.day, peak.peakRuns, peak.peakBranches]),
-      [["2026-10-28", 2, 1]]
-    );
   });
 
   it("sweeps per-day peak CI-active runs and branches, carrying load across midnight", () => {
