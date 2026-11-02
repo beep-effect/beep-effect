@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T21:10:37.134Z",
+  "generatedAt": "2026-11-02T21:36:24.101Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -136339,8 +136339,8 @@
           "exportKind": "class",
           "filePath": "src/Resilience.ts",
           "repoPath": "packages/drivers/github/src/Resilience.ts",
-          "line": 206,
-          "anchor": "packages-drivers-github-src-resilience-ts-206-retrypolicy",
+          "line": 211,
+          "anchor": "packages-drivers-github-src-resilience-ts-211-retrypolicy",
           "currentTags": [
             "@public",
             "@category",
