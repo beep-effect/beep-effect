@@ -12,7 +12,6 @@
     "directory": "apps/storybook"
   },
   "scripts": {
-    "audit": "bun run --if-present beep:audit",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "lint": "bun run beep:lint",
@@ -22,7 +21,6 @@
     "lint:laws": "beep-cli lint laws --package .",
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "bun run storybook:build",
     "beep:check": "tsrs -p tsconfig.check.json && tsrs -p tsconfig.stories.json --noEmit",
     "beep:lint": "sh -c 'biome check package.json postcss.config.mjs tsconfig.json tsconfig.stories.json vitest.config.ts vitest.storybook.config.ts vitest.storybook.setup.ts .storybook/ scripts/ \"$(git rev-parse --show-toplevel)\"/packages/foundation/ui-system/*/stories/'",

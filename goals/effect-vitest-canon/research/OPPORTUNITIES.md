@@ -7148,3 +7148,15 @@ the launch line remained in the log with no terminal receipt. The original
 source hashes and log are retained; this attempt is unqualified. A process
 disappearing is not an exit-zero result. Long proofs should use durable Yeet
 jobs where supported, with the terminal job record checked after continuation.
+
+### 2026-11-02 — `ci lane-timings --window` refuses the closeout census
+
+Writing the P3 timing report needed the Coverage Regression p95 over a week of
+`main` runs. `bun run beep ci lane-timings --window --workflow check.yml --event
+push --branch main --since 2026-10-26T00:00:00Z --until 2026-11-02T00:00:00Z
+--markdown` exited 1 with `Ruleset 10240248 version 54940515 is not a ratified
+admission population.` The census is gated on an admission ratification that a
+packet timing report does not need. The report was built instead from `gh api`
+reads of the workflow runs and their jobs (section 5 of
+`history/timings-report.md`). A `--no-admission` or plain duration mode on the
+window census, or a documented ratification step, would have saved the detour.

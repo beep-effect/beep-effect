@@ -31,12 +31,17 @@ Use this command for execution-capable sessions:
 
 ## Current phase
 
-P0-P3 extraction work shipped in #2017 (`ab6000add2`); #2019 and #2021
-fixed its Docgen, Lint Policy and JSDoc failures. The implementation repair
-shipped in #2315 (`559dcb6d2e`). Documentation PR #2325 also merged, but its
-readiness verdict was not retained before merge. P4 closeout verification
-continues in documentation-only PR #2334, with other merges held by the operator.
-Achievement requires verified readiness and merge evidence.
+Every phase is complete. P0-P3 extraction work shipped in #2017 (`ab6000add2`);
+#2019 and #2021 fixed its Docgen, Lint Policy and JSDoc failures. The
+implementation repair shipped in #2315 (`559dcb6d2e`). Documentation PR #2325
+merged without a retained readiness verdict, so final closeout PR #2334
+re-established readiness while open and merged as `c181da2326` on 2026-10-28
+with the until-ready verdict retained. `goals completion refresh` verified the
+`completed-retained` proposal in the closeout clone the same minute and in the
+primary clone on 2026-11-02 (`history/completion-verified-2026-11-02.md`).
+`initiative.status` stays `active` in the manifest because completion is
+derived from clone-scoped receipts; `goals explain` reports `completed-retained
+(verified via #2334)` in a clone that holds the receipt.
 
 The 2026-10-28 acceptance audit found the claim factory lacked the logical-key
 function required by `SPEC.md`. The #2315 implementation repair supplies it,
@@ -64,9 +69,14 @@ implementation.
   normal monitor could only record a negative post-merge verdict. See
   [`history/2026-10-28-readiness-retention.md`](history/2026-10-28-readiness-retention.md).
 - Final closeout PR [#2334](https://github.com/beep-effect/beep-effect/pull/2334)
-  must supply passing accepted-head hosted checks and a retained Yeet readiness
-  verdict before its owner merges it. Until completion refresh verifies that merge,
-  `initiative.status` stays `active`; a proposal is not achievement.
+  merged as `c181da23267cf626ec2bbfeb5400818f67fe5972` from accepted head
+  `1162eb20d677d07d6c9aca53b9e5ee9c30f984e9`: 15 of 15 required contexts green,
+  zero review threads, review window elapsed, and the until-ready verdict
+  retained at the declared path before merge.
+- Completion verified: [`history/completion-verified-2026-11-02.md`](./history/completion-verified-2026-11-02.md),
+  the verified receipt for #2334 (hosted required checks and the exact-head Yeet
+  verdict) and where it lives.
+- Closeout-verification reflection: [`history/reflections/2026-11-02-claude.md`](./history/reflections/2026-11-02-claude.md).
 
 ## Local proof disposition
 

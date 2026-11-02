@@ -1,0 +1,22 @@
+{
+  "previous": "261a6c13cbe500586b80a58e23eb06fbe2c2910f1a98cec4348d0deb9f625674",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (skill-contract-gate-certificates, claude/skill-contract-gate-certs-oodgzh)",
+    "reason": "Re-record the root subject on main's baseline after the second origin/main merge into #2490 (14a4596d): the policy fingerprint still adds GateCertificate.ts to //#lint:policy-fingerprint:quality inputs; one declared input path only, no new computations, no qualification granted.",
+    "basis": {
+      "path": "goals/skill-contract-gate-certificates/research/cache-baseline-review-2026-11-02-main-merge-2.md",
+      "sha256": "6517656a19a2ea4fde42232c21d2f3d4497f87f4a73095a0c921ea3aa65a359c"
+    }
+  },
+  "subjects": [
+    "//"
+  ],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
