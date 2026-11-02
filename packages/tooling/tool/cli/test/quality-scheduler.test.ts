@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { qualityCommand, renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
   AdmissionAttemptTerminationJournal,
@@ -134,7 +135,11 @@ const encodeAdmissionJournalEventJsonEffect = S.encodeEffect(S.fromJsonString(Ad
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
-const SchedulerCommandLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const SchedulerCommandLayer = Layer.mergeAll(
+  NodeServices.layer,
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  Git.layer.pipe(Layer.provide(NodeServices.layer))
+);
 const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
 
 const DEAD_PID = 2_147_483_647;

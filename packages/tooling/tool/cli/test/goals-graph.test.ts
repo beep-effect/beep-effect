@@ -8,9 +8,11 @@ import {
   canonicalJsonTextPretty,
   compileCapabilityProjection,
   evaluateCapabilityGraph,
+  GoalCloseoutView,
   GoalExplainReport,
   GoalFrontierReport,
   GoalManifest,
+  GoalProposedCloseout,
   GoalStatus,
   GraphCapabilityEdge,
   goalsCommand,
@@ -415,6 +417,48 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
         strictEqual(
           Str.includes("requirements: none")(renderExplainHuman(explain(projection, answers, "pkt-c"))),
           true
+        );
+      })
+    );
+
+    it.effect("explain renders the derived closeout status when a view is attached", () =>
+      Effect.gen(function* () {
+        const { projection, answers } = yield* differential([
+          { id: "pkt-a", status: "active", provides: ["cap/a"], requires: [] },
+        ]);
+        const base = explain(projection, answers, "pkt-a");
+        strictEqual(Str.includes("closeout:")(renderExplainHuman(base)), false);
+        const proposedCloseout = GoalProposedCloseout.make({ status: "completed-retained", finalPullRequest: 2320 });
+        const verified = GoalExplainReport.make({
+          ...base,
+          closeout: GoalCloseoutView.make({
+            packet: "pkt-a",
+            operativeStatus: "completed-retained",
+            proposedCloseout,
+            verification: "verified",
+          }),
+        });
+        assertTrue(Str.includes("  closeout: completed-retained (verified via #2320)")(renderExplainHuman(verified)));
+        deepStrictEqual(
+          yield* Effect.flatMap(
+            S.encodeUnknownEffect(GoalExplainReport)(verified),
+            S.decodeUnknownEffect(GoalExplainReport)
+          ),
+          verified
+        );
+        const unverified = GoalExplainReport.make({
+          ...base,
+          closeout: GoalCloseoutView.make({
+            packet: "pkt-a",
+            operativeStatus: "active",
+            proposedCloseout,
+            verification: "unverified",
+          }),
+        });
+        assertTrue(
+          Str.includes("  closeout: completed-retained (proposed via #2320, unverified)")(
+            renderExplainHuman(unverified)
+          )
         );
       })
     );

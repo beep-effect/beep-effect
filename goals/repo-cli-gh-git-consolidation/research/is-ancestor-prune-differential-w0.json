@@ -1,0 +1,161 @@
+{
+  "tool": "goals/repo-cli-gh-git-consolidation/ops/is-ancestor-prune-differential.ts",
+  "commit": "186214ce22d8e9ed4fbb3af3a70e829f3fa8facb",
+  "git": "git version 2.56.0",
+  "scenarios": 21,
+  "same": 18,
+  "classified": 3,
+  "unclassified": 0,
+  "gates": {
+    "unclassified": true
+  },
+  "rows": [
+    {
+      "site": "isAncestor",
+      "scenario": "fork point into branch",
+      "verdict": "same",
+      "old": "\"ancestor\"",
+      "new": "\"ancestor\""
+    },
+    {
+      "site": "ancestorOf",
+      "scenario": "fork point into branch",
+      "verdict": "same",
+      "old": "true",
+      "new": "true"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "fork point into main",
+      "verdict": "same",
+      "old": "\"ancestor\"",
+      "new": "\"ancestor\""
+    },
+    {
+      "site": "ancestorOf",
+      "scenario": "fork point into main",
+      "verdict": "same",
+      "old": "true",
+      "new": "true"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "commit into itself",
+      "verdict": "same",
+      "old": "\"ancestor\"",
+      "new": "\"ancestor\""
+    },
+    {
+      "site": "ancestorOf",
+      "scenario": "commit into itself",
+      "verdict": "same",
+      "old": "true",
+      "new": "true"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "branch tip into main",
+      "verdict": "same",
+      "old": "\"not-ancestor\"",
+      "new": "\"not-ancestor\""
+    },
+    {
+      "site": "ancestorOf",
+      "scenario": "branch tip into main",
+      "verdict": "same",
+      "old": "false",
+      "new": "false"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "main tip into branch",
+      "verdict": "same",
+      "old": "\"not-ancestor\"",
+      "new": "\"not-ancestor\""
+    },
+    {
+      "site": "ancestorOf",
+      "scenario": "main tip into branch",
+      "verdict": "same",
+      "old": "false",
+      "new": "false"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "unknown object",
+      "verdict": "D-07: an unknown object is a typed UnknownRefError, not a bare exit 128",
+      "old": "\"other(128)\"",
+      "new": "\"unknown-object\""
+    },
+    {
+      "site": "ancestorOf",
+      "scenario": "unknown object",
+      "verdict": "same",
+      "old": "false",
+      "new": "false"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "shallow clone missing history",
+      "verdict": "D-07: an unknown object is a typed UnknownRefError, not a bare exit 128",
+      "old": "\"other(128)\"",
+      "new": "\"unknown-object\""
+    },
+    {
+      "site": "ancestorOf",
+      "scenario": "shallow clone missing history",
+      "verdict": "same",
+      "old": "false",
+      "new": "false"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "outside a repository",
+      "verdict": "D-07: a non-repository cwd is a typed NotARepositoryError, not a bare exit 128",
+      "old": "\"other(128)\"",
+      "new": "\"not-a-repository\""
+    },
+    {
+      "site": "ancestorOf",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "false",
+      "new": "false"
+    },
+    {
+      "site": "worktreeRemove",
+      "scenario": "registered linked worktree",
+      "verdict": "same",
+      "old": "true",
+      "new": "true"
+    },
+    {
+      "site": "worktreeRemove",
+      "scenario": "path that is not a worktree",
+      "verdict": "same",
+      "old": "false",
+      "new": "false"
+    },
+    {
+      "site": "worktreePrune",
+      "scenario": "registration whose directory is gone",
+      "verdict": "same",
+      "old": "{\"ok\":true,\"stillListed\":false}",
+      "new": "{\"ok\":true,\"stillListed\":false}"
+    },
+    {
+      "site": "worktreePrune",
+      "scenario": "nothing to prune",
+      "verdict": "same",
+      "old": "true",
+      "new": "true"
+    },
+    {
+      "site": "worktreePrune",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "false",
+      "new": "false"
+    }
+  ]
+}
