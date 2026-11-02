@@ -692,3 +692,11 @@ from the earlier published source and preserve that proof through immutable Git.
 - Friction: changing the extracted `invoke` function added globals missing from five sibling loaders. Actual loader regressions reproduced `NameError: capture` and the Cargo applicability source-adaptation assertion.
 - Correction: preserve the exact historical helper contract, name the streaming selection helper separately, and exercise all five real AST-loading preludes with process/stream/deadline controls. Keep historical report source pins immutable.
 - Prevention: search both path references and extracted-symbol consumers before changing an evidence helper; run the sibling compatibility regression with the selection replay.
+
+
+### Preserve selection evidence envelopes (2026-11-02)
+
+- Work: PR #2617 source-binding report regeneration.
+- Friction: copying the regenerated payload dropped the earlier report's schema version and observation timestamp.
+- Correction: restore the version and actual capture completion time, refresh the checkpoint digest, and make the exporter emit both fields. The driver and observation payload remain unchanged; no fresh native execution is claimed.
+- Prevention: check the evidence envelope together with payload/source hashes before publishing a regenerated report.

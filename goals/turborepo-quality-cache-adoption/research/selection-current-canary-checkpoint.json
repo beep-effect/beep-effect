@@ -100,7 +100,7 @@
   "reviewRepair": {
     "threads": ["PRRT_kwDOPbO_N86yzv9q", "PRRT_kwDOPbO_N86yzv96"],
     "report": "research/selection-review-source-controls.json",
-    "sha256": "87f8788d6b1dc7ca92149b97f6072afea2e71853c8594c1ce271f93661865c7a",
+    "sha256": "5c33f6b7095059acb84963108065730292e5d7166f64313e8b5458dd6d3eda93",
     "symlinkCases": 44,
     "beforePathFailureReproduced": true,
     "canonicalAliasSourceBindingsAndSemanticsEqual": true,
@@ -132,5 +132,15 @@
     "currentSelectionStreamingRouteGuard": 1,
     "historicalInvokeDefinitionByteIdentical": true,
     "scope": "Helper compatibility only; the five historical feature observations keep their original source pins. No real task or feature qualification."
+  },
+  "sourceEnvelopeReview": {
+    "thread": "PRRT_kwDOPbO_N86y04zV",
+    "priorCommit": "02eb70282ba747959c2fabd992c2a02e9a184ca1",
+    "priorReportSha256": "87f8788d6b1dc7ca92149b97f6072afea2e71853c8594c1ce271f93661865c7a",
+    "observationRecordedAt": "2026-11-02T19:16:29.412512+00:00",
+    "schemaVersionRestored": "cache-selection-source-binding-controls/v1",
+    "observationPayloadUnchanged": true,
+    "nativeDriverUnchanged": true,
+    "newNativeExecutionClaimed": false
   }
 }

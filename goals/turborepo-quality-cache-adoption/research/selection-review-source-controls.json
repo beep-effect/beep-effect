@@ -34,5 +34,7 @@
       "diagnosticSha256": "c08be2f1d566dc2aa357e42f6f66ed0f9087bcf10155e6a04e9177d8ce9f6606"
     }
   ],
-  "mutatedOwnedSourcesRestoredByteIdentical": true
+  "mutatedOwnedSourcesRestoredByteIdentical": true,
+  "schemaVersion": "cache-selection-source-binding-controls/v1",
+  "recordedAt": "2026-11-02T19:16:29.412512+00:00"
 }
