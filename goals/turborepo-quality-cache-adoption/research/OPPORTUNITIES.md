@@ -1,5 +1,17 @@
 # Friction and opportunities
 
+## Global-input exclusion control, 2026-11-02
+
+The first native configuration experiment expected a child task to reuse after
+a synthetic shared file changed under the `globalConfiguration` layout. The
+pinned stable client recomputed it instead. The driver stopped at that assertion
+and wrote no passing report; original source and bounded logs are retained.
+Inspect the resolved task inputs before changing the expected result. Capturing
+the native run summary before assertions would have made this distinction
+visible in the first failure. No repository input exclusion or cache setting
+was changed.
+
+
 Record friction as it occurs: work, minimum command/error/file evidence,
 impact, prevention and owner/disposition.
 Redact secrets, use portable paths, omit machine/session IDs and keep raw logs
@@ -584,3 +596,21 @@ source-binding representation with named `path` and `sha256` fields rather than
 filenames as property names. Preserve the failed hook and original report,
 re-execute the same cases against the revised driver, and keep scanner rules
 unchanged. Checksums are provenance metadata, not credentials.
+
+
+## Feature review counter missed an accepted status, 2026-11-02
+
+Before the global configuration decision, the existing cargo integrity test
+failed because its status mapping omitted `accepted-retain-current-default`,
+which was already present in the accepted feature matrix. The failure is
+inherited from main. Extend that explicit mapping for the existing default
+status and this retained enabled setting; keep exact count and known-status
+assertions. A shared status domain would prevent later feature decisions from
+leaving this integrity check stale. No runtime or cache policy changes.
+
+The full seven-case integrity suite also detected a stale SPEC digest in the
+current working completion audit. It was already stale against the accepted
+base SPEC before this decision. Every existing acceptance and implementation
+requirement still appears in the normative SPEC; preserve the prior digest,
+refresh the working audit binding and keep all nine acceptance criteria
+unproven. Historical runtime and qualification digests are unchanged.
