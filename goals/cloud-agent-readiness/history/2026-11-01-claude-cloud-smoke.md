@@ -26,7 +26,7 @@ Saved setup script:
 ```bash
 #!/bin/bash
 set -euo pipefail
-cd /home/user/beep-effect
+cd "$HOME/beep-effect"
 BEEP_CLOUD_VENDOR=claude BEEP_CLOUD_SKIP_OP=1 bash scripts/cloud/bootstrap.sh
 ```
 

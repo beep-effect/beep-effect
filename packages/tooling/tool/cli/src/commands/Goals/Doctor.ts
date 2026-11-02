@@ -612,9 +612,14 @@ const statusConsistencyFindings = (
     );
   }
 
+  // A proposed closeout keeps its declared status active or paused by design:
+  // `goals set-status` refuses to flip it and completion is derived from the
+  // clone-scoped receipts, which the completion-gate findings already report.
+  // Asking such a packet to change its status would be a contradiction.
   const phases = goalManifestPhases(manifest);
   if (
     GoalStatus.is.active(status) &&
+    manifest.proposedCloseout === undefined &&
     A.isReadonlyArrayNonEmpty(phases) &&
     A.every(phases, (phase) => GoalPhaseStatus.is.complete(phase.status))
   ) {
