@@ -1128,3 +1128,14 @@ Generated identity and documentation inventories are reconciled through their
 own writers. Historical native observations retain their actual source/input
 pins; none is relabeled current after this input-policy change. Current hosted
 proof, protected inspection/publication and all whole-goal criteria remain open.
+
+
+### Private-object policy and coverage repair, 2026-11-02
+
+The [repair checkpoint](research/private-object-policy-coverage-repair-2026-11-02.json)
+records the introduced policy and coverage failures on PR #2611. Three encoders
+are hoisted. New approval, storage, credential, HTTP-status and archive-bound
+controls pass in the 90-test focused Bun/Istanbul replay. Workflow functions,
+statements and branches reach 100%; storage branches reach 80.43%, with all
+production source and coverage floors unchanged. Fresh exact-head hosted checks
+and accepted-main integration remain required; this is no rollout or qualification.

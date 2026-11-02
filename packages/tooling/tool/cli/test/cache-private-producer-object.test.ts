@@ -1,7 +1,7 @@
 import { Git } from "@beep/git/Git";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubContent } from "@beep/github/GitHubContent";
-import { CacheProducerEnvelope, CacheQualificationLive } from "@beep/repo-cli/commands/Cache";
+import { CacheConformanceTarget, CacheProducerEnvelope, CacheQualificationLive } from "@beep/repo-cli/commands/Cache";
 import {
   buildCacheHostedProducerCompleteReport,
   CacheHostedProducerApproval,
@@ -10,6 +10,7 @@ import {
   CacheProducerExecutionProfile,
   CacheProducerObservation,
   downloadCacheProducerPrivateObservation,
+  loadCacheProducerStorageRuntime,
   makeCacheCommandForTesting,
   readCacheProducerPrivateObservation,
   removeCacheProducerPrivateObservation,
@@ -33,11 +34,19 @@ import { dual } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { preparePublishedProducerObservation } from "./helpers/cache-hosted-publication-fixture.ts";
-import { makeIssuedProducerObservationFixture as issuedFixture } from "./helpers/cache-producer-execution-fixture.ts";
+import {
+  makeProducerExecutionFixture as executionFixture,
+  makeIssuedProducerObservationFixture as issuedFixture,
+} from "./helpers/cache-producer-execution-fixture.ts";
+
+const encodeObservation = S.encodeEffect(S.fromJsonString(CacheProducerObservation));
+const encodeProfile = S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile));
+const encodeApproval = S.encodeEffect(S.fromJsonString(CacheHostedProducerApproval));
 
 function controlledFetch(
   handler: (
@@ -64,7 +73,7 @@ const publishedFixture = Effect.fn("PrivateProducerObjectTest.publish")(function
   const fixture = {
     ...issued,
     observation,
-    text: yield* S.encodeEffect(S.fromJsonString(CacheProducerObservation))(observation),
+    text: yield* encodeObservation(observation),
   };
   const published = yield* preparePublishedProducerObservation(
     fixture.directory,
@@ -169,7 +178,7 @@ it.layer(
     })
   );
 
-  it.effect.each([403, 404, 429, 503])(
+  it.effect.each([201, 403, 404, 429, 503])(
     "classifies one refused PUT status %s without exposing the response body",
     (status) =>
       Effect.gen(function* () {
@@ -195,6 +204,55 @@ it.layer(
         expect(error.message).not.toContain("synthetic-private-remote-body");
         expect(requests).toBe(1);
       })
+  );
+
+  it.effect("rejects unapproved and storage-less profiles before reading storage credentials", () =>
+    Effect.gen(function* () {
+      const unapproved = yield* executionFixture(false);
+      const approvalError = yield* loadCacheProducerStorageRuntime(unapproved.directory).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord({})),
+        Effect.flip
+      );
+      expect(approvalError.message).toBe("The producer store has no independently approved upload.");
+      const fixture = yield* executionFixture();
+      const profile = CacheProducerExecutionProfile.make({
+        ...fixture.profile,
+        target: CacheConformanceTarget.make({ ...fixture.profile.target, storage: O.none() }),
+      });
+      yield* fixture.fs.writeFileString(fixture.file, yield* encodeProfile(profile));
+      const storageError = yield* loadCacheProducerStorageRuntime(fixture.directory).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord({})),
+        Effect.flip
+      );
+      expect(storageError.message).toBe("Producer upload requires approved storage and an owned adapter capability.");
+    })
+  );
+
+  it.effect("fails closed when approved storage credentials are absent", () =>
+    Effect.gen(function* () {
+      const fixture = yield* executionFixture();
+      const error = yield* loadCacheProducerStorageRuntime(fixture.directory).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord({})),
+        Effect.flip
+      );
+      expect(error.message).toBe("Approved producer storage capabilities are required.");
+    })
+  );
+
+  it.effect.each([0, 1024 * 1024 + 1])("rejects archive size %s before publication or credential access", (size) =>
+    Effect.gen(function* () {
+      const fixture = yield* publishedFixture();
+      const error = yield* downloadCacheProducerPrivateObservation(
+        fixture.directory,
+        fixture.published.reference,
+        new Uint8Array(size)
+      ).pipe(
+        Effect.provideContext(fixture.metadata),
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord({})),
+        Effect.flip
+      );
+      expect(error.message).toBe("Private producer object GET failed (payload-rejected).");
+    })
   );
 
   it.effect("does not retry or expose raw transport errors after an ambiguous write", () =>
@@ -619,10 +677,7 @@ it.layer(
                 ...fixture.profile,
                 adapterExecutable: "/fixture/changed-adapter",
               });
-              yield* fixture.fs.writeFileString(
-                fixture.file,
-                yield* S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile))(profile)
-              );
+              yield* fixture.fs.writeFileString(fixture.file, yield* encodeProfile(profile));
             })
           ),
           Match.orElse(() =>
@@ -633,7 +688,7 @@ it.layer(
               });
               yield* fixture.fs.writeFileString(
                 fixture.path.join(fixture.directory, "publication.json"),
-                yield* S.encodeEffect(S.fromJsonString(CacheHostedProducerApproval))(approval)
+                yield* encodeApproval(approval)
               );
             })
           )

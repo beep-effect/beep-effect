@@ -1750,3 +1750,15 @@ omissions. Failed hosted receipts remain separate from passing local controls.
 - Friction: independently reviewed root baselines and generated identity/documentation inventories conflict when shared changes merge.
 - Correction: retain the exact accepted-main baseline, re-acknowledge only this branch's storage input through root-scoped CAS, and regenerate derived inventories. Preserve immutable native observations rather than reusing their older input policy as current proof.
 - Prevention: batch accepted upstream changes into one repair wave and verify non-root reviews, global configuration and qualification bytes after the canonical writers.
+
+
+### 2026-11-02 — private-object policy and coverage wave
+
+Hosted PR #2611 found three inline schema-compilation errors and insufficient
+coverage in the private-object component. Hoist the existing encoders and add
+real refusal controls for approval, storage, credentials, archive bounds and an
+unexpected successful HTTP status. Exercise the existing optional-runtime default
+in the supervised workflow test. Focused Bun/Istanbul restores workflow coverage
+to 100% and raises the new storage file to 37/46 covered branches (80.43%).
+Keep the original red receipts and all baseline floors. Run the root policy
+scanner on touched test files: package lint alone does not include that rule.
