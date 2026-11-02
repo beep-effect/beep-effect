@@ -35,10 +35,13 @@ export * from "../commands/Yeet/internal/GateStaleness.ts";
 export * from "../commands/Yeet/internal/GhCall.ts";
 export * from "../commands/Yeet/internal/GhOps.ts";
 export {
+  captureGitKitExit,
   currentCommitSha,
   currentYeetBranch,
   lockfileChangedSinceBase,
   optionFromNonEmpty,
+  PATIENT_GIT_OPTIONS,
+  patientGit,
   refreshBaseRef,
   runGitFoldedStdout,
   safeOriginBranchFromBaseForTesting,
