@@ -63,6 +63,7 @@ export {
 export {
   AppCredentials,
   AppIdentity,
+  assertPermissions,
   BotIdentity,
   GitHubApp,
   GitHubAppError,
@@ -70,6 +71,8 @@ export {
   type GitHubAppShape,
   Installation,
   InstallationToken,
+  PermissionName,
+  RepositoryName,
   TokenRequest,
 } from "./GitHubApp.ts";
 export {
