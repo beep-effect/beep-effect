@@ -498,6 +498,12 @@ describe("FsUtils", () => {
           const error = yield* utils.globFiles("**/*.ts", { cwd: "/repo", ignore: ["locked/**"] }).pipe(Effect.flip);
           expect(error._tag).toBe("DomainError");
           expect(error.message).toBe('Glob failed for pattern "**/*.ts"');
+          // globFiles maps every failure to the same message, so pin the walker's unreadable
+          // branch: any other DomainError (e.g. a missing cwd) must not satisfy this case.
+          expect(error.cause).toMatchObject({
+            _tag: "GlobExpansionError",
+            cause: { _tag: "DescendError", reason: "unreadableDirectory", path: "locked" },
+          });
         })
       );
     });
@@ -529,6 +535,10 @@ describe("FsUtils", () => {
           // CAP_DAC_OVERRIDE) reads a mode-000 directory. When the probe read succeeds this
           // case cannot qualify, so it is reported as skipped, never as passed; the injected
           // fault cases above still cover the error branch.
+          // Expected log noise: vitest's ctx.skip throws, so inside Effect.sync it travels the
+          // Effect defect channel and @effect/vitest logs one "ERROR ... test is skipped; abort
+          // execution" line before rethrowing. The reported outcome is still SKIP (the rethrown
+          // value keeps vitest's skip identity); the line is not a failure.
           const probe = yield* Effect.result(fs.readDirectory(`${tmpDir}/locked`));
           if (Result.isSuccess(probe)) {
             yield* fs.chmod(`${tmpDir}/locked`, 0o755);

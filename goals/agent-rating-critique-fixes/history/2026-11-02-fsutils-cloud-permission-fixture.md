@@ -70,6 +70,28 @@ cause is the process identity, not the package.
   `ok docgen 22.4s`, **`skip audit`** (no reason printed). The audit was
   skipped, so this is not an audit pass. The command runs no unit tests.
 
+## Review follow-up (independent review 6578002054, parent 6578099499)
+
+- **Cause pinned.** `globFiles` maps every failure to the same `DomainError`
+  message, so `_tag` and `message` alone would also pass on an unrelated
+  failure such as a missing `cwd`. Before pinning, a throwaway probe (deleted
+  afterwards) confirmed the runtime shape: `error.cause` is
+  `GlobExpansionError`, whose `cause` is `DescendError` with
+  `reason: "unreadableDirectory"` and `path: "locked"`. The injected
+  `PermissionDenied` case now asserts that shape with `toMatchObject`.
+- **Expected ERROR line documented.** vitest's `ctx.skip` throws. Inside
+  `Effect.sync` that becomes an Effect defect, and `@effect/vitest` logs it
+  (`ERROR ... test is skipped; abort execution`) before rethrowing. The
+  reported outcome stays SKIP, because the rethrown value keeps vitest's skip
+  identity. The test comment now says so. No logger suppression or
+  test-runner change was made here.
+- **Re-run as root at the new head:** `test/FsUtils.test.ts` 32 passed,
+  1 skipped (33), exit 0. The skip-ERROR line appears exactly once. `biome
+  check` and the `tsrs` test typecheck are clean.
+- **Parent's evidence, kept separate:** the parent's non-root run at
+  `ba34699f` passed all 33 `FsUtils` tests and all 242 package tests with no
+  skips (6578013654). That is the parent's run, not this session's.
+
 ## Decisions
 
 | Decision | Reason | Reversal |
@@ -89,9 +111,18 @@ cause is the process identity, not the package.
   - Attribution: test-runner / `@effect/vitest` defect logging. Confidence
     medium.
   - Workaround: accepted. The outcome is reported correctly as skipped.
-  - Prevention: a test-runner helper for an effectful skip that does not log
-    as an error.
+  - Prevention: a test-runner helper for an effectful skip, or a synchronous
+    capability gate used with `it.effect.skipIf`, so a skip never travels the
+    defect channel. This is a separate small PR, not this one. The mechanism
+    is `@effect/vitest`'s `runPromise` logging each failure cause before
+    rethrowing (per review 6578002054).
   - Owner: unresolved (test-runner).
+- **`console.log` from a throwaway probe test did not appear in the vitest
+  output.** I did not establish why: the runner may capture it.
+  - Workaround: the probe wrote its result to a scratch file.
+  - Impact: one extra probe run.
+  - Prevention: probe through an assertion message or a file.
+  - Owner: author lesson.
 - **First edit missed the existing text.** I assumed `MemoryFileSystem.layerWith()`
   where the file uses `MemoryFileSystem.layer`, and the edit failed with no
   change. Impact: one retry. Prevention: read the exact line before editing.
