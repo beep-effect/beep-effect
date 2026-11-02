@@ -439,7 +439,8 @@ describe("beep session", () => {
             )
           );
           const output = yield* captureOutput(withCwd(clone, runSession(["open"])));
-          expect(output).toContain("[session:goal] proposed: operative=active; proposed=completed-retained via #1429");
+          // No receipt in this clone: the derived status names the proposal and says it is unverified.
+          expect(output).toContain("[session:goal] proposed: completed-retained (proposed via #1429, unverified)");
           expect(output).toContain("no live sessions recorded");
         })
       )

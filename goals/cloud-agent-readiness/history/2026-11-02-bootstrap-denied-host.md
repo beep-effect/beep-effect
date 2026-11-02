@@ -125,10 +125,10 @@ The real `/usr/local/bin` links still carry their session-start timestamps.
   then lint ok, check ok, exit `0`.
 - `bun run beep quality package-verify @beep/repo-cli` (full): exit `1` at
   docgen. Example typechecking ended with `Failed to run 'tsc'` (a
-  `PlatformError` from `ChildProcess.exitCode`). Docgen reads only `src/`
-  JSDoc, and this change touches no `src/` file, so the failure was not
-  introduced here. Whether it is inherited from `main` or caused by this VM
-  was not proven. Hosted Docgen is the proof.
+  `PlatformError` from `ChildProcess.exitCode`). Its attribution is
+  unproven: no base-versus-head comparison was run, so introduced, inherited
+  from `main` and environment-only all remain open. (Touching no `src/` file
+  does not by itself rule out "introduced".) Hosted Docgen is the proof.
 - ShellCheck 0.11.0 (`uvx --from shellcheck-py`, user cache only, no
   privileged install). On base `7ae3f014` and on head, both scripts give exit
   `1` with one finding: SC1091 (info) at the unchanged

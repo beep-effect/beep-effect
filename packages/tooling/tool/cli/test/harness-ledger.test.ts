@@ -1,4 +1,5 @@
 import {
+  AI_METRICS_LOCAL_INSECURE_HASH_SALT,
   AiMetricsConfigSnapshotInput,
   contextSurfaceId,
   deriveHarnessHash,
@@ -1430,13 +1431,17 @@ const twoRegimeFixture = Effect.fn("test.twoRegimeFixture")(function* () {
     "2026-10-09",
     O.some(PROJECTION_SALT)
   );
-  yield* hookedTranscript(
-    stateDir,
-    path.join(root, `${PREVIOUS_SESSION}.jsonl`),
-    PREVIOUS_SESSION,
-    "2026-09-20",
-    O.none()
-  );
+  const nested = path.join(root, "historical");
+  yield* fs.makeDirectory(nested);
+  const previousFile = path.join(root, `${PREVIOUS_SESSION}.jsonl`);
+  yield* fs.writeFileString(previousFile, "");
+  const previousAlias = path.join(nested, "alias.jsonl");
+  yield* fs.symlink(previousFile, previousAlias);
+  yield* fs.symlink(nested, path.join(root, "a-alias"));
+  yield* fs.symlink(root, path.join(nested, "loop"));
+  // The canonical file wins representative selection; this retained alias is
+  // the historical hook identity and must still be rehashed after cutover.
+  yield* hookedTranscript(stateDir, previousAlias, PREVIOUS_SESSION, "2026-09-20", O.none());
   return { root, stateDir };
 });
 
@@ -1507,10 +1512,11 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service without a na
 });
 
 layer(ProjectedLayer, { timeout: "30 seconds" })("harness-ledger service under a namespace projection", (it) => {
-  it.effect("reconcile joins hook rows under both salts and reports the regimes apart", () =>
+  it.effect("reconcile joins a non-selected historical alias once across directory aliases and cycles", () =>
     Effect.gen(function* () {
       const { root, stateDir } = yield* twoRegimeFixture();
       const report = yield* (yield* HarnessLedgerService).reconcile(stateDir, root, "claude-code");
+      expect(report.transcriptFiles).toBe(2);
       expect(report.namespaceProjection).toBe("present");
       assertSome(report.namespaceCutover, DateTime.makeUnsafe(PROJECTION_CUTOVER));
       expect(report.transcriptToolEvents).toBe(2);
@@ -1533,6 +1539,56 @@ layer(ProjectedLayer, { timeout: "30 seconds" })("harness-ledger service under a
       expect(report.windowFull).toBe(false);
       assertSome(report.namespaceCutover, DateTime.makeUnsafe(PROJECTION_CUTOVER));
       assertSome(report.windowEnd, DateTime.makeUnsafe("2026-10-09T08:05:00.000Z"));
+    })
+  );
+});
+
+const EqualNamespaceLayer = Layer.unwrap(
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const dir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-equal-namespace-" });
+    const file = path.join(dir, "namespace-projection.json");
+    yield* fs.writeFileString(
+      file,
+      yield* encodeUnknownJson({
+        version: 1,
+        cutoverUtc: PROJECTION_CUTOVER,
+        hashSalt: AI_METRICS_LOCAL_INSECURE_HASH_SALT,
+        previousRegime: "library-default",
+      })
+    );
+    return HarnessLedgerServiceLive.pipe(
+      Layer.provideMerge(NodeServices.layer),
+      Layer.provideMerge(
+        ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }))
+      )
+    );
+  })
+).pipe(Layer.provide(NodeServices.layer));
+
+layer(EqualNamespaceLayer, { timeout: "30 seconds" })("harness-ledger service with equal effective salts", (it) => {
+  it.effect("reconcile counts one hook once when the projection explicitly names the library default", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "harness-reconcile-equal-salt-" });
+      const stateDir = yield* makeHookStateDir("harness-reconcile-equal-salt-hooks-");
+      yield* hookedTranscript(
+        stateDir,
+        path.join(root, `${CURRENT_SESSION}.jsonl`),
+        CURRENT_SESSION,
+        "2026-10-09",
+        O.none()
+      );
+      const report = yield* (yield* HarnessLedgerService).reconcile(stateDir, root, "claude-code");
+      expect(report.transcriptFiles).toBe(1);
+      expect(report.transcriptToolEvents).toBe(1);
+      expect(report.hookedToolEvents).toBe(1);
+      expect(report.hookedToolEventsByRegime).toEqual({ current: 1, previous: 0 });
+      expect(report.sessionsWithoutHooks).toBe(0);
+      assertSome(report.ratio, 1);
+      expect(report.qualifiedForNonUse).toBe(false);
     })
   );
 });

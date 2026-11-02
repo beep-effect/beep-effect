@@ -58,6 +58,7 @@ import {
   GoalNonRequiredRed,
   GoalRequiredCheckFact,
   GoalRequiredCheckSnapshot,
+  goalCloseoutVerification,
   goalPullRequestRefs,
 } from "./Goals.schemas.ts";
 import { listGoalPackets, parseGoalManifestText } from "./Inventory.ts";
@@ -1137,6 +1138,77 @@ export const readGoalLifecycle = Effect.fn("Goals.Completion.readLifecycle")(fun
 });
 
 /**
+ * Builds the operator-facing closeout view of one packet from a manifest and an optional receipt.
+ *
+ * **Details**
+ *
+ * Pure over its inputs: the lifecycle comes from {@link projectGoalLifecycle},
+ * and `verification` records whether that projection adopted the proposal. A
+ * manifest without a `proposedCloseout` has no view. Readers that hold the
+ * clone-scoped receipt ({@link readGoalCloseoutView}) feed it here; tests feed
+ * fixtures directly.
+ *
+ * **Example** (Inspect the view builder)
+ *
+ * ```ts
+ * import { goalCloseoutView } from "@beep/repo-cli/commands/Goals/Completion"
+ * console.log(typeof goalCloseoutView)
+ * ```
+ *
+ * @param slug - The packet directory name.
+ * @param manifest - The decoded manifest.
+ * @param receipt - The newest matching clone receipt, when one exists.
+ * @returns The view, or none when the manifest proposes no closeout.
+ * @category projections
+ * @since 0.0.0
+ */
+export const goalCloseoutView = Effect.fn("Goals.Completion.closeoutView")(function* (
+  slug: string,
+  manifest: GoalManifest,
+  receipt: O.Option<GoalCompletionReceipt>
+) {
+  const proposal = manifest.proposedCloseout;
+  if (proposal === undefined) return O.none<GoalCloseoutView>();
+  const operativeStatus = yield* projectGoalLifecycle(manifest, receipt).pipe(
+    Effect.orElseSucceed(() => manifest.initiative.status)
+  );
+  return O.some(
+    GoalCloseoutView.make({
+      packet: slug,
+      proposedCloseout: proposal,
+      operativeStatus,
+      verification: goalCloseoutVerification(proposal, operativeStatus),
+    })
+  );
+});
+
+/**
+ * Reads one packet's closeout view against this clone's completion receipts.
+ *
+ * **Example** (Inspect the single-packet reader)
+ *
+ * ```ts
+ * import { readGoalCloseoutView } from "@beep/repo-cli/commands/Goals/Completion"
+ * console.log(typeof readGoalCloseoutView)
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const readGoalCloseoutView = Effect.fn("Goals.Completion.readCloseoutView")(function* (
+  root: string,
+  slug: string,
+  manifest: GoalManifest
+) {
+  if (manifest.proposedCloseout === undefined) return O.none<GoalCloseoutView>();
+  const final = A.findFirst(goalPullRequestRefs(manifest), (ref) => ref.role === "final");
+  const receipt = O.isNone(final)
+    ? O.none<GoalCompletionReceipt>()
+    : yield* storedGoalCompletion(root, slug, manifest, final.value).pipe(Effect.orElseSucceed(O.none));
+  return yield* goalCloseoutView(slug, manifest, receipt);
+});
+
+/**
  * Collects this checkout's prospective closeouts for session resume views.
  *
  * **Example** (Inspect the read-only session query)
@@ -1157,14 +1229,8 @@ export const readGoalCloseoutViews = Effect.fn("Goals.Completion.closeoutViews")
       const parsed = O.flatMap(O.fromUndefinedOr(record.manifestText), parseGoalManifestText);
       if (O.isNone(parsed)) return O.none<GoalCloseoutView>();
       const manifest = yield* S.decodeUnknownEffect(GoalManifest)(parsed.value).pipe(Effect.option);
-      if (O.isNone(manifest) || manifest.value.proposedCloseout === undefined) return O.none<GoalCloseoutView>();
-      return O.some(
-        GoalCloseoutView.make({
-          packet: record.slug,
-          proposedCloseout: manifest.value.proposedCloseout,
-          operativeStatus: yield* readGoalLifecycle(root, record.slug, manifest.value),
-        })
-      );
+      if (O.isNone(manifest)) return O.none<GoalCloseoutView>();
+      return yield* readGoalCloseoutView(root, record.slug, manifest.value);
     }),
     { concurrency: 1 }
   );
