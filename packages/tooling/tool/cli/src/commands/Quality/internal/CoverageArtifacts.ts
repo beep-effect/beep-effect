@@ -590,7 +590,7 @@ export const writeCoverageProducerArtifact = Effect.fn("CoverageArtifacts.writeP
     identity: options.identity,
     partitionId: options.partitionId,
     rawFormat: "istanbul",
-    coverageLibraryVersion: "1.0.2",
+    coverageLibraryVersion: "2.1.0",
     producerRuntime: "bun",
     producerRuntimeVersion: runtimeVersion.value,
     packages,

@@ -236,6 +236,10 @@ them and record each in the Decision Log.
 
 ## Decision Log
 
+### 2026-11-02 — recover readiness after the third premature final merge
+
+PR #2577 merged before a positive owner readiness verdict was retained; its canonical completion remains unknown. Final PR #2609 supersedes the earlier prospective final declarations. The incident report retains the failure and draft-first publication control; the native ready transition then requests review, and any repair push restarts the ordinary review window. Preserve the original labels, every prior result, the v27 freeze and all 37 passing claims. Require current-head hosted proof, resolved threads, terminal readiness and a genuine positive head-bound monitor verdict archived before a strict merge. Keep the raw lifecycle active with a proposed completed-retained declaration until the canonical receipt verifies completion. No S11/forced window, completion-verifier change, fresh benchmark or attorney authority is inferred. Reversal: supersede the final declaration in a separately qualified recovery while retaining every historical receipt.
+
 ### 2026-11-02 — retain the second premature final merge and qualify accepted main
 
 PR #2513 merged at 12:29:09 UTC before a successful terminal readiness record was retained. Its job later reports terminated without a verdict, and the canonical refresh is unknown rather than verified. Retain that result and bind prospective draft final #2577 to its canonical branch evidence path; do not weaken Completion.ts or infer passing proof from merge state. Accepted main includes #2568 coverage repair and subsequent CI fixes. Only package.json differs from the 29-file v26 freeze, adding schema-catalog lint scripts. Archive v27 before predictions and retain both complete replays: 37/538, no lost passes, full values identical except the digest, and 251 identical report bytes. No reference change or fresh/attorney review is claimed. Reversal: retain all receipts and measurements and supersede the prospective declaration in another explicitly qualified final; do not relabel historical failures.

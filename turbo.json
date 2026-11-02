@@ -3366,6 +3366,7 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.schemas.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts",

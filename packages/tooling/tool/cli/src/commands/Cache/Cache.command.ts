@@ -64,7 +64,12 @@ import { runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
 import { CachePilotReceipt, CachePilotRequest } from "./Cache.pilot.schemas.ts";
 import { CacheSignedPilotReceipt, CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
 import { runCachePilotExperiment } from "./Cache.pilot.ts";
-import { readCacheProducerProvisioning } from "./Cache.producer.ts";
+import {
+  assertCacheProducerPrivateLocation,
+  inspectCacheProducerDirectory,
+  readCacheProducerExecutionProfile,
+  readCacheProducerProvisioning,
+} from "./Cache.producer.ts";
 import { verifyCacheIdentityLintProfile, writeCacheIdentityLintProfile } from "./Cache.profile.ts";
 import { CacheProtocolExecution, CacheProtocolRequest } from "./Cache.protocol.runner.schemas.ts";
 import { runCacheProtocolExperiment } from "./Cache.protocol.runner.ts";
@@ -90,9 +95,23 @@ import {
   CacheWarmReceiptJson,
 } from "./Cache.schemas.ts";
 import { CacheQualificationLive, CacheQualificationService } from "./Cache.service.ts";
-import { CacheHostedProducerCompleteReport, CacheHostedProducerRunReference } from "./Cache.workflow.github.schemas.ts";
-import { buildCacheHostedProducerCompleteReport, CacheHostedProducerVerifierLive } from "./Cache.workflow.github.ts";
+import {
+  CacheHostedProducerCompleteReport,
+  CacheHostedProducerReference,
+  CacheHostedProducerRunReference,
+} from "./Cache.workflow.github.schemas.ts";
+import {
+  buildCacheHostedProducerCompleteReport,
+  CacheHostedProducerVerifierLive,
+  layerCacheHostedProducerMetadata,
+} from "./Cache.workflow.github.ts";
 import { CacheProducerObservation, CacheProducerWorkflow } from "./Cache.workflow.schemas.ts";
+import {
+  downloadCacheProducerPrivateObservation,
+  readCacheProducerPrivateObservation,
+  removeCacheProducerPrivateObservation,
+  uploadCacheProducerPrivateObservation,
+} from "./Cache.workflow.storage.ts";
 import {
   initializeCacheProducerExecution,
   inspectCacheProducerWorkflow,
@@ -888,6 +907,14 @@ const cacheAcceptCommand = Command.make(
   Command.withDescription("Retain authenticated policy-complete reports and emit a reference without promoting a tuple")
 );
 
+const readHostedProducerRun = Effect.fn("Cache.readHostedProducerRun")(function* () {
+  const reference = yield* Config.all({
+    runId: Config.schema(CacheHostedProducerRunReference.fields.runId, "GITHUB_RUN_ID"),
+    attempt: Config.schema(CacheHostedProducerRunReference.fields.attempt, "GITHUB_RUN_ATTEMPT"),
+  }).pipe(CacheCommandError.mapError("Hosted publication requires valid GITHUB_RUN_ID and GITHUB_RUN_ATTEMPT."));
+  return CacheHostedProducerRunReference.make(reference);
+});
+
 const cacheProducerRunCommand = Command.make(
   "producer-run",
   {
@@ -914,13 +941,7 @@ const cacheProducerRunCommand = Command.make(
             return yield* CacheCommandError.new(
               "Hosted publication requires --output and a distinct cache-producer.json path."
             );
-          const reference = yield* Config.all({
-            runId: Config.schema(CacheHostedProducerRunReference.fields.runId, "GITHUB_RUN_ID"),
-            attempt: Config.schema(CacheHostedProducerRunReference.fields.attempt, "GITHUB_RUN_ATTEMPT"),
-          }).pipe(
-            CacheCommandError.mapError("Hosted publication requires valid GITHUB_RUN_ID and GITHUB_RUN_ATTEMPT.")
-          );
-          return Tuple.make(file, CacheHostedProducerRunReference.make(reference));
+          return Tuple.make(file, yield* readHostedProducerRun());
         }, Effect.asSome),
       });
       const directory = yield* Config.String("BEEP_CACHE_PRODUCER_STORE").pipe(
@@ -968,6 +989,112 @@ const cacheProducerRunCommand = Command.make(
   ),
   Command.provide(MemoryStatsLive),
   Command.provide(FetchHttpClient.layer)
+);
+
+const cacheProducerPublishCommand = Command.make(
+  "producer-publish",
+  { observation: Flag.File("observation") },
+  ({ observation }) =>
+    Effect.gen(function* () {
+      const directory = yield* Config.String("BEEP_CACHE_PRODUCER_STORE").pipe(
+        Effect.mapError(() => CacheCommandError.new("An independently provisioned producer store is required."))
+      );
+      const run = yield* readHostedProducerRun();
+      const issued = yield* readCacheProducerPrivateObservation(observation);
+      yield* uploadCacheProducerPrivateObservation(directory, run, issued);
+      yield* Console.log(
+        "Private producer observation uploaded; publish only the existing digest report for this run and attempt."
+      );
+    }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription(
+    "Upload a saved issued observation without rerunning its native matrices or printing private data"
+  )
+);
+
+const readProducerObjectInputs = Effect.fn("Cache.readProducerObjectInputs")(function* (
+  referenceFile: string,
+  archiveFile: string
+) {
+  const path = yield* Path.Path;
+  const directory = yield* Config.String("BEEP_CACHE_PRODUCER_STORE").pipe(
+    Effect.mapError(() => CacheCommandError.new("An independently provisioned producer store is required."))
+  );
+  yield* readCacheProducerExecutionProfile(directory);
+  const reference = CacheHostedProducerReference.make(
+    yield* readCacheRequest(referenceFile, CacheHostedProducerReference, 16 * 1024)
+  );
+  const archive = yield* readContainedFileBytesNoFollow(process.cwd(), archiveFile, 1024 * 1024).pipe(
+    CacheCommandError.mapError("Cannot read the bounded contained producer archive.")
+  );
+  const bytes = yield* archive.contents.pipe(
+    Effect.fromOption(() => CacheCommandError.new("Producer archive must be a contained regular file."))
+  );
+  const metadata = yield* Layer.build(layerCacheHostedProducerMetadata(directory));
+  return { directory: path.resolve(directory), reference, bytes, metadata };
+}, CacheCommandError.mapError("Cannot prepare authenticated producer object inputs."));
+
+const cacheProducerFetchCommand = Command.make(
+  "producer-fetch",
+  {
+    reference: Flag.File("reference"),
+    archive: Flag.File("archive"),
+    output: Flag.Path("output", { pathType: "file" }),
+  },
+  ({ reference, archive, output }) =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const selected = path.resolve(output);
+      yield* assertCacheProducerPrivateLocation(process.cwd(), path.dirname(selected));
+      yield* inspectCacheProducerDirectory(path.dirname(selected));
+      if (yield* fs.exists(selected))
+        return yield* CacheCommandError.new("Private producer output must be a new file.");
+      const input = yield* readProducerObjectInputs(reference, archive);
+      const observation = yield* downloadCacheProducerPrivateObservation(
+        input.directory,
+        input.reference,
+        input.bytes
+      ).pipe(Effect.provideContext(input.metadata));
+      yield* writeEncoded(
+        observation,
+        JsonStringCodec(CacheProducerObservation),
+        O.some(selected),
+        false,
+        O.some(cacheProducerObservationMaxBytes),
+        O.some(fs)
+      );
+      yield* Console.log("Authenticated private producer observation saved; qualification remains separate.");
+    }).pipe(
+      Effect.scoped,
+      CacheCommandError.mapError("Cannot complete the private producer object command."),
+      renderCacheFailure
+    )
+).pipe(
+  Command.withDescription(
+    "Authenticate a digest publication and save its private complete observation without printing it"
+  )
+);
+
+const cacheProducerCleanupCommand = Command.make(
+  "producer-cleanup",
+  { reference: Flag.File("reference"), archive: Flag.File("archive") },
+  ({ reference, archive }) =>
+    Effect.gen(function* () {
+      const input = yield* readProducerObjectInputs(reference, archive);
+      yield* removeCacheProducerPrivateObservation(input.directory, input.reference, input.bytes).pipe(
+        Effect.provideContext(input.metadata)
+      );
+      yield* Console.log("Exact authenticated private producer observation removed.");
+    }).pipe(
+      Effect.scoped,
+      CacheCommandError.mapError("Cannot complete the private producer object command."),
+      renderCacheFailure
+    )
+).pipe(
+  Command.withDescription(
+    "Delete the exact private observation selected by authenticated publication; never cache artifacts"
+  )
 );
 
 const provisionCacheProducer = Effect.fn("Cache.provisionProducer")(function* (requireMaterial: typeof S.Boolean.Type) {
@@ -1238,7 +1365,7 @@ const cacheRemoteReadsCommand = Command.make(
 
 const cacheCommandDefinition = Command.make("cache", {}, () =>
   Console.log(
-    "cache commands: census, audit, baseline, fingerprint, profile, activation, transition, dependencies, pilot, pilot-signed, producer-run, producer-inspect, producer-provision, producer-install, accept, protocol-run, protocol-review, conformance-corpus, conformance-run, conformance-native, conformance-lab, conformance-compare, warm, probe, dashboard, execute"
+    "cache commands: census, audit, baseline, fingerprint, profile, activation, transition, dependencies, pilot, pilot-signed, producer-run, producer-publish, producer-fetch, producer-cleanup, producer-inspect, producer-provision, producer-install, accept, protocol-run, protocol-review, conformance-corpus, conformance-run, conformance-native, conformance-lab, conformance-compare, warm, probe, dashboard, execute"
   )
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
@@ -1256,6 +1383,9 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
     cachePilotCommand,
     cacheSignedPilotCommand,
     cacheProducerRunCommand,
+    cacheProducerPublishCommand,
+    cacheProducerFetchCommand,
+    cacheProducerCleanupCommand,
     cacheProducerInspectCommand,
     cacheProducerProvisionCommand,
     cacheProducerInstallCommand,
