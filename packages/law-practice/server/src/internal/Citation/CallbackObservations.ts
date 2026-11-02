@@ -10,7 +10,7 @@ import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/serve
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CitationCallbackFailure, CitationCallbackResource } from "./CallbackResource.ts";
+import { CitationCallbackFailure, CitationCallbackResource, CitationCallbackResult } from "./CallbackResource.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CallbackObservations");
 /**
@@ -62,7 +62,7 @@ export const issueCitationDefaultNone = Effect.fn("Citation.issueDefaultNone")(f
   observation: CitationDefaultObservation
 ) {
   const json = yield* S.encodeEffect(Json)(observation).pipe(Effect.mapError(invalid));
-  const result = { resource: CitationCallbackResource.cases.None.make({}) };
+  const result = CitationCallbackResult.make({ resource: CitationCallbackResource.cases.None.make({}) });
   issued.set(result, json);
   return result;
 });

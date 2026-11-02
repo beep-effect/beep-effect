@@ -18,6 +18,7 @@ import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
 import { CitationDefaultObservation, issueCitationDefaultNone } from "./CallbackObservations.ts";
+import { CitationCallbackResult } from "./CallbackResource.ts";
 import {
   CitationCallbackDictionary,
   CitationCallbackFailure,
@@ -107,7 +108,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
   ) {
     const count = yield* unique(fulls);
     return count === 1
-      ? { resource: A.getUnsafe(fulls, 0).resource }
+      ? CitationCallbackResult.make({ resource: A.getUnsafe(fulls, 0).resource })
       : yield* rejectedCandidates(mentionId, fulls, count);
   });
   const partyMatches = (citation: Citation, guess: string) =>
@@ -157,7 +158,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
             candidates = A.append(candidates, entry);
         }
         const count = yield* unique(candidates);
-        if (count === 1) return { resource: A.getUnsafe(candidates, 0).resource };
+        if (count === 1) return CitationCallbackResult.make({ resource: A.getUnsafe(candidates, 0).resource });
         if (O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)) {
           candidates = yield* byParty(
             candidates,
@@ -216,7 +217,9 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         const bad = yield* hasInvalidCitationPinCite({ fullCitation: prior, idCitation: citation }).pipe(
           Effect.mapError(() => CitationCallbackFailure.make({ reason: "callback-failed" }))
         );
-        return bad ? yield* unresolved(input.mention.id, "invalid-pin-cite") : { resource: input.last };
+        return bad
+          ? yield* unresolved(input.mention.id, "invalid-pin-cite")
+          : CitationCallbackResult.make({ resource: input.last });
       },
       Effect.provideService(Digest.Digest, crypto)
     ),

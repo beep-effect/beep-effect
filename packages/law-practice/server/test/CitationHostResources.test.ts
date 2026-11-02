@@ -20,6 +20,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { CitationCallbackResult } from "../src/internal/Citation/CallbackResource.ts";
 import {
   CitationCallbackRuntimeIndexFactory,
   makeCitationCallbackRuntimeIndexFactory,
@@ -421,13 +422,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
           id: Effect.fn("DispatchDecisionTest.id")(function* (input) {
             if (indexOf(input.mention.id) === 1 && (row.action === "clear-new" || row.action === "clear-same")) {
               yield* owner.clear;
-              return {
+              return CitationCallbackResult.make({
                 resource: yield* owner.hostResource(A.getUnsafe(host.states, row.action === "clear-new" ? 1 : 0)),
-              };
+              });
             }
             if (row.action === "presentation-change") {
               A.getUnsafe(host.states, 0).token = "changed";
-              return { resource: yield* owner.hostResource(A.getUnsafe(host.states, 0)) };
+              return CitationCallbackResult.make({ resource: yield* owner.hostResource(A.getUnsafe(host.states, 0)) });
             }
             return yield* defaults.id(input);
           }),

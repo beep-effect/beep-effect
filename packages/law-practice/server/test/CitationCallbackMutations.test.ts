@@ -31,6 +31,7 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { CitationCallbackResult } from "../src/internal/Citation/CallbackResource.ts";
 import {
   CitationCallbackDictionary,
   CitationCallbackFailure,
@@ -56,6 +57,7 @@ import {
   normalizeCallbackFixtureResource as resource,
 } from "./CitationCallbackSession.fixtures.ts";
 import type {
+  CitationCallbackEntry,
   CitationCallbackGroup,
   CitationCallbackResource,
   CitationFullsCallbackInput,
@@ -211,7 +213,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
                   () => -1
                 ),
               });
-        const groupView = (groups: ReadonlyArray<CitationCallbackGroup>) =>
+        const groupView = (groups: ReadonlyArray<CitationCallbackGroup | CitationCallbackEntry>) =>
           A.map(groups, (group) => ({
             resource: presentation(group.resource),
             listSlot: group.listSlot,
@@ -385,7 +387,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
               });
               retained = O.some(dictionary);
             } else events = A.append(events, common);
-            return { resource: result };
+            return CitationCallbackResult.make({ resource: result });
           }),
         });
         const result = yield* runPreparedCitationCallbackSession(prepared).pipe(

@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -9,6 +10,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
@@ -51,7 +53,9 @@ const CorpusJson = S.fromJsonString(
 );
 
 const fail = () => CitationCleanerFailure.make({ reason: "callback-failed" });
-it.layer(BunServices.layer, { excludeTestServices: true })("captured builtin cleaner invocation", (it) => {
+const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);
+
+it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner invocation", (it) => {
   it.effect(
     "replays all pinned input kinds without coercion and retires every native child",
     () =>

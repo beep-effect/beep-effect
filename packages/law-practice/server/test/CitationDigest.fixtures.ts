@@ -19,5 +19,7 @@ export const makeTestCitationDigest = (
 ): typeof Digest.Digest.Service =>
   Digest.Digest.of({
     digest,
-    digestHex: (algorithm, bytes) => Effect.map(digest(algorithm, bytes), Hex.encode),
+    digestHex: Effect.fn("CitationTest.digestHex")((algorithm, bytes) =>
+      Effect.map(digest(algorithm, bytes), Hex.encode)
+    ),
   });

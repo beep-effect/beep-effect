@@ -36,9 +36,10 @@ import {
   CitationCallbackFailure,
   CitationCallbackResource,
   CitationCallbackResourceOrigin,
+  CitationCallbackResult,
 } from "./CallbackResource.ts";
 
-export { CitationCallbackFailure, CitationCallbackResource } from "./CallbackResource.ts";
+export { CitationCallbackFailure, CitationCallbackResource, CitationCallbackResult } from "./CallbackResource.ts";
 
 import { CitationAuthorityIdentityInput } from "./AuthorityIdentity.ts";
 import { CitationDefaultObservation, readCitationDefaultObservation } from "./CallbackObservations.ts";
@@ -61,25 +62,19 @@ const $I = $LawPracticeServerId.create("internal/Citation/CallbackSession");
  * @category models
  * @since 0.0.0
  */
-export const CitationCallbackFull = S.Struct({
-  pairSlot: S.Natural,
-  citation: CitationGroupMember,
-  resource: CitationCallbackResource,
-}).pipe(
-  $I.annoteSchema("CitationCallbackFull", {
-    description:
-      "Immutable registered pair node with operation-local identity, explicit semantic reference and falsy resource values.",
-  })
-);
+export class CitationCallbackFull extends S.Opaque<CitationCallbackFull, { readonly brand: unique symbol }>()(
+  S.Struct({
+    pairSlot: S.Natural,
+    citation: CitationGroupMember,
+    resource: CitationCallbackResource,
+  }).pipe(
+    $I.annoteSchema("CitationCallbackFull", {
+      description:
+        "Immutable registered pair node with operation-local identity, explicit semantic reference and falsy resource values.",
+    })
+  )
+) {}
 const CitationCallbackFullJson = S.fromJsonString(CitationCallbackFull);
-
-/**
- * Schema-derived prior-full entry.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export type CitationCallbackFull = typeof CitationCallbackFull.Type;
 /**
  * Callback-visible resource groups before final document projection.
  * Empty groups and explicit mutation are retained at this private stage.
@@ -87,23 +82,18 @@ export type CitationCallbackFull = typeof CitationCallbackFull.Type;
  * @category models
  * @since 0.0.0
  */
-export const CitationCallbackGroup = S.Struct({
-  resource: CitationCallbackResource,
-  members: S.Array(CitationGroupMember),
-  listSlot: S.Natural,
-}).pipe(
-  $I.annoteSchema("CitationCallbackGroup", {
-    description:
-      "Private dictionary snapshot preserving first key presentation, member order and operation-local list identity.",
-  })
-);
-/**
- * Schema-derived callback group.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export type CitationCallbackGroup = typeof CitationCallbackGroup.Type;
+export class CitationCallbackGroup extends S.Opaque<CitationCallbackGroup, { readonly brand: unique symbol }>()(
+  S.Struct({
+    resource: CitationCallbackResource,
+    members: S.Array(CitationGroupMember),
+    listSlot: S.Natural,
+  }).pipe(
+    $I.annoteSchema("CitationCallbackGroup", {
+      description:
+        "Private dictionary snapshot preserving first key presentation, member order and operation-local list identity.",
+    })
+  )
+) {}
 /**
  * Exact insertion entry selected by a dispatcher append. The stored key may
  * differ from the callback result; later mutations may remove this entry.
@@ -111,22 +101,20 @@ export type CitationCallbackGroup = typeof CitationCallbackGroup.Type;
  * @category models
  * @since 0.0.0
  */
-export const CitationCallbackAssignment = S.Struct({
-  entrySlot: S.Natural,
-  resource: CitationCallbackResource,
-  listSlot: S.Natural,
-}).pipe(
-  $I.annoteSchema("CitationCallbackAssignment", {
-    description: "Captured append destination; no repeated lookup or claim of final membership.",
-  })
-);
-/**
- * Schema-derived append destination.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export type CitationCallbackAssignment = typeof CitationCallbackAssignment.Type;
+export class CitationCallbackAssignment extends S.Opaque<
+  CitationCallbackAssignment,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    entrySlot: S.Natural,
+    resource: CitationCallbackResource,
+    listSlot: S.Natural,
+  }).pipe(
+    $I.annoteSchema("CitationCallbackAssignment", {
+      description: "Captured append destination; no repeated lookup or claim of final membership.",
+    })
+  )
+) {}
 /**
  * One actual dispatcher result and optional successful append destination.
  * An unlisted falsy resource remains a result; decisions are not memberships.
@@ -134,127 +122,70 @@ export type CitationCallbackAssignment = typeof CitationCallbackAssignment.Type;
  * @category models
  * @since 0.0.0
  */
-export const CitationCallbackDecision = S.Struct({
-  mentionId: CitationMentionId,
-  callback: S.Literals(["full", "shortCase", "supra", "reference", "id", "unknown"]),
-  resource: CitationCallbackResource,
-  assignment: S.OptionFromNullOr(CitationCallbackAssignment),
-  observation: S.OptionFromNullOr(CitationDefaultObservation),
-}).pipe(
-  $I.annoteSchema("CitationCallbackDecision", {
-    description: "Source-order callback result and actual append history, independent of final dictionary contents.",
-  })
-);
-/**
- * Schema-derived dispatch decision.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export type CitationCallbackDecision = typeof CitationCallbackDecision.Type;
+export class CitationCallbackDecision extends S.Opaque<CitationCallbackDecision, { readonly brand: unique symbol }>()(
+  S.Struct({
+    mentionId: CitationMentionId,
+    callback: S.Literals(["full", "shortCase", "supra", "reference", "id", "unknown"]),
+    resource: CitationCallbackResource,
+    assignment: S.OptionFromNullOr(CitationCallbackAssignment),
+    observation: S.OptionFromNullOr(CitationDefaultObservation),
+  }).pipe(
+    $I.annoteSchema("CitationCallbackDecision", {
+      description: "Source-order callback result and actual append history, independent of final dictionary contents.",
+    })
+  )
+) {}
 /**
  * Final dictionary entry with identity separate from its key and list.
  * @internal
  * @category models
  * @since 0.0.0
  */
-export const CitationCallbackEntry = S.Struct({ ...CitationCallbackGroup.fields, entrySlot: S.Natural }).pipe(
-  $I.annoteSchema("CitationCallbackEntry", {
-    description: "Identity-bearing final insertion entry, including repeated resource-object keys.",
-  })
-);
+export class CitationCallbackEntry extends S.Opaque<CitationCallbackEntry, { readonly brand: unique symbol }>()(
+  S.Struct({ ...CitationCallbackGroup.fields, entrySlot: S.Natural }).pipe(
+    $I.annoteSchema("CitationCallbackEntry", {
+      description: "Identity-bearing final insertion entry, including repeated resource-object keys.",
+    })
+  )
+) {}
 const CitationCallbackEntryTypes = S.toType(CitationCallbackEntry).pipe(S.Array);
-
-/**
- * Schema-derived final insertion entry.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export type CitationCallbackEntry = typeof CitationCallbackEntry.Type;
 /**
  * Prior-full callback input; schema views come from the shared operation owner.
  * @internal
  * @category models
  * @since 0.0.0
  */
-export const CitationFullsCallbackInput = S.Struct({
-  mention: CitationMention,
-  fulls: S.Array(CitationCallbackFull),
-}).pipe(
-  $I.annoteSchema("CitationFullsCallbackInput", {
-    description: "Current genuine mention and ordered prior-full state supplied to a captured callback.",
-  })
-);
-/**
- * Schema-derived callback input.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export type CitationFullsCallbackInput = typeof CitationFullsCallbackInput.Type;
-/**
- * Context callback result; prior-full state lives in the captured owner.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export const CitationFullsCallbackOutput = S.Struct({
-  resource: CitationCallbackResource,
-}).pipe(
-  $I.annoteSchema("CitationFullsCallbackOutput", {
-    description: "Context callback result; prior-full mutations use the captured operation owner.",
-  })
-);
-/**
- * Schema-derived callback transition.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export type CitationFullsCallbackOutput = typeof CitationFullsCallbackOutput.Type;
+export class CitationFullsCallbackInput extends S.Opaque<
+  CitationFullsCallbackInput,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    mention: CitationMention,
+    fulls: S.Array(CitationCallbackFull),
+  }).pipe(
+    $I.annoteSchema("CitationFullsCallbackInput", {
+      description: "Current genuine mention and ordered prior-full state supplied to a captured callback.",
+    })
+  )
+) {}
 /**
  * Id. callbacks see the actual last result and dictionary before append.
  * @internal
  * @category models
  * @since 0.0.0
  */
-export const CitationIdCallbackInput = S.Struct({
-  mention: CitationMention,
-  last: CitationCallbackResource,
-  groups: S.Array(CitationCallbackGroup),
-}).pipe(
-  $I.annoteSchema("CitationIdCallbackInput", {
-    description: "Current Id. occurrence, actual prior result including falsy values, and pre-append resource groups.",
-  })
-);
-/**
- * Schema-derived Id. callback input.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export type CitationIdCallbackInput = typeof CitationIdCallbackInput.Type;
-/**
- * Id. callback result; mutations use the operation-owned dictionary service.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export const CitationIdCallbackOutput = S.Struct({
-  resource: CitationCallbackResource,
-}).pipe(
-  $I.annoteSchema("CitationIdCallbackOutput", {
-    description: "Current Id. result; dictionary mutation uses the captured operation-owned service.",
-  })
-);
-/**
- * Schema-derived Id. transition.
- * @internal
- * @category models
- * @since 0.0.0
- */
-export type CitationIdCallbackOutput = typeof CitationIdCallbackOutput.Type;
+export class CitationIdCallbackInput extends S.Opaque<CitationIdCallbackInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    mention: CitationMention,
+    last: CitationCallbackResource,
+    groups: S.Array(CitationCallbackGroup),
+  }).pipe(
+    $I.annoteSchema("CitationIdCallbackInput", {
+      description:
+        "Current Id. occurrence, actual prior result including falsy values, and pre-append resource groups.",
+    })
+  )
+) {}
 /**
  * Per-operation work accounting shared by dispatch and captured defaults.
  * @internal
@@ -306,14 +237,14 @@ export class CitationResolutionCallbacks extends Context.Service<
     readonly full: (mention: CitationMention) => Effect.Effect<CitationCallbackResource, CitationCallbackFailure>;
     readonly shortCase: (
       input: CitationFullsCallbackInput
-    ) => Effect.Effect<CitationFullsCallbackOutput, CitationCallbackFailure>;
+    ) => Effect.Effect<CitationCallbackResult, CitationCallbackFailure>;
     readonly supra: (
       input: CitationFullsCallbackInput
-    ) => Effect.Effect<CitationFullsCallbackOutput, CitationCallbackFailure>;
+    ) => Effect.Effect<CitationCallbackResult, CitationCallbackFailure>;
     readonly reference: (
       input: CitationFullsCallbackInput
-    ) => Effect.Effect<CitationFullsCallbackOutput, CitationCallbackFailure>;
-    readonly id: (input: CitationIdCallbackInput) => Effect.Effect<CitationIdCallbackOutput, CitationCallbackFailure>;
+    ) => Effect.Effect<CitationCallbackResult, CitationCallbackFailure>;
+    readonly id: (input: CitationIdCallbackInput) => Effect.Effect<CitationCallbackResult, CitationCallbackFailure>;
   }
 >()($I`CitationResolutionCallbacks`) {}
 const SessionState = S.Struct({
@@ -429,8 +360,7 @@ export const readCapturedCitationSession = Effect.fn("Citation.readCapturedSessi
   );
 });
 const ResourceJson = S.fromJsonString(CitationCallbackResource);
-const FullsJson = S.fromJsonString(CitationFullsCallbackOutput);
-const IdJson = S.fromJsonString(CitationIdCallbackOutput);
+const CallbackResultJson = S.fromJsonString(CitationCallbackResult);
 const isFull = S.is(FullCitation);
 const invalid = () => CitationCallbackFailure.make({ reason: "invalid-input" });
 const callbackFailed = (error: CitationCallbackFailure) => CitationCallbackFailure.make({ reason: error.reason });
@@ -1102,7 +1032,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
                 listOf(entry.slot).pipe(
                   Effect.flatMap((members) =>
                     currentResource(entry.resource).pipe(
-                      Effect.map((resource) => ({ resource, listSlot: entry.slot, members }))
+                      Effect.map((resource) => CitationCallbackGroup.make({ resource, listSlot: entry.slot, members }))
                     )
                   )
                 ),
@@ -1120,7 +1050,9 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       api.read.pipe(
         Effect.flatMap((groups) =>
           S.decodeEffect(CitationCallbackEntryTypes)(
-            A.map(groups, (group, index) => ({ ...group, entrySlot: A.getUnsafe(entries, index).entrySlot }))
+            A.map(groups, (group, index) =>
+              CitationCallbackEntry.make({ ...group, entrySlot: A.getUnsafe(entries, index).entrySlot })
+            )
           ).pipe(Effect.mapError(invalid))
         )
       )
@@ -1168,11 +1100,11 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       const located = yield* getLocated(resource);
       const members = yield* listOf(yield* slotOf(located.handle));
       yield* write(located.handle, A.append(members, CitationGroupMember.cases.Mention.make({ mentionId: id })));
-      return {
+      return CitationCallbackAssignment.make({
         entrySlot: located.entry.entrySlot,
         resource: yield* currentResource(located.entry.resource),
         listSlot: located.entry.slot,
-      };
+      });
     }),
   });
   return CitationCallbackDictionary.of({
@@ -1299,11 +1231,11 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
           } else if (mention.citation.type === "id") {
             const groups = yield* dictionary.read;
             const result = yield* callbacks
-              .id({ mention, last: yield* dictionary.currentResource(last), groups })
+              .id(CitationIdCallbackInput.make({ mention, last: yield* dictionary.currentResource(last), groups }))
               .pipe(Effect.mapError(callbackFailed));
             observation = yield* readCitationDefaultObservation(result, mention.id);
-            const snapshot = yield* S.decodeEffect(IdJson)(
-              yield* S.encodeEffect(IdJson)(result).pipe(Effect.mapError(invalid))
+            const snapshot = yield* S.decodeEffect(CallbackResultJson)(
+              yield* S.encodeEffect(CallbackResultJson)(result).pipe(Effect.mapError(invalid))
             ).pipe(Effect.mapError(invalid));
             last = snapshot.resource;
           } else if (mention.citation.type === "unknown") last = CitationCallbackResource.cases.None.make({});
@@ -1314,12 +1246,12 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
                 : mention.citation.type === "supra"
                   ? callbacks.supra
                   : callbacks.reference;
-            const result = yield* callback({ mention, fulls: yield* dictionary.readFulls }).pipe(
-              Effect.mapError(callbackFailed)
-            );
+            const result = yield* callback(
+              CitationFullsCallbackInput.make({ mention, fulls: yield* dictionary.readFulls })
+            ).pipe(Effect.mapError(callbackFailed));
             observation = yield* readCitationDefaultObservation(result, mention.id);
-            const snapshot = yield* S.decodeEffect(FullsJson)(
-              yield* S.encodeEffect(FullsJson)(result).pipe(Effect.mapError(invalid))
+            const snapshot = yield* S.decodeEffect(CallbackResultJson)(
+              yield* S.encodeEffect(CallbackResultJson)(result).pipe(Effect.mapError(invalid))
             ).pipe(Effect.mapError(invalid));
             last = snapshot.resource;
           }
@@ -1331,17 +1263,20 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
           const assignment = (yield* dictionary.isTruthy(last))
             ? O.some(yield* dictionary.appendCurrent(last, mention.id))
             : O.none<CitationCallbackAssignment>();
-          decisions = A.append(decisions, {
-            mentionId: mention.id,
-            callback: isFull(mention.citation)
-              ? "full"
-              : mention.citation.type === "shortFormCase"
-                ? "shortCase"
-                : mention.citation.type,
-            resource: last,
-            assignment,
-            observation: last._tag === "None" ? observation : O.none(),
-          });
+          decisions = A.append(
+            decisions,
+            CitationCallbackDecision.make({
+              mentionId: mention.id,
+              callback: isFull(mention.citation)
+                ? "full"
+                : mention.citation.type === "shortFormCase"
+                  ? "shortCase"
+                  : mention.citation.type,
+              resource: last,
+              assignment,
+              observation: last._tag === "None" ? observation : O.none(),
+            })
+          );
           const finalGroups = yield* dictionary.read;
           if (
             A.reduce(finalGroups, 0, (count, group) => count + A.length(group.members)) >

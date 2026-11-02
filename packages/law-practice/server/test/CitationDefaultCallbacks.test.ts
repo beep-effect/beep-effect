@@ -24,6 +24,7 @@ import {
 import {
   CitationCallbackDictionary,
   CitationCallbackFailure,
+  CitationFullsCallbackInput,
   CitationResolutionCallbacks,
   CitationResolutionWork,
   makeCitationCallbackDictionary,
@@ -313,7 +314,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
       );
       yield* owner.start;
       const mention = A.getUnsafe(prepared.mentions, 1);
-      const result = yield* callbacks.shortCase({ mention, fulls: [] });
+      const result = yield* callbacks.shortCase(CitationFullsCallbackInput.make({ mention, fulls: [] }));
       const evidence = yield* readCitationDefaultObservation(result, mention.id);
       expect(O.isSome(evidence)).toBe(true);
       if (O.isSome(evidence))

@@ -76,8 +76,10 @@ const owned = (
             Effect.flatMap((value) =>
               typeof value === "string" ? worker.stage(value, work) : worker.stageBytes(value, work)
             ),
-            Effect.map(({ text, charges }) => CitationCleanerProduced.make({ value: own(text), charges })),
-            Effect.mapError((error) => (error._tag === "CitationSafetyLimitExceeded" ? error : fail()))
+            Effect.mapBoth({
+              onSuccess: ({ text, charges }) => CitationCleanerProduced.make({ value: own(text), charges }),
+              onFailure: (error) => (error._tag === "CitationSafetyLimitExceeded" ? error : fail()),
+            })
           )
     ),
   });

@@ -65,6 +65,20 @@ export const CitationCallbackResourceOrigin = S.TaggedUnion({
  * @since 0.0.0
  */
 export type CitationCallbackResourceOrigin = typeof CitationCallbackResourceOrigin.Type;
+
+/**
+ * Resource returned by a contextual callback before dispatcher append.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class CitationCallbackResult extends S.Opaque<CitationCallbackResult, { readonly brand: unique symbol }>()(
+  S.Struct({ resource: CitationCallbackResource }).pipe(
+    $I.annoteSchema("CitationCallbackResult", {
+      description: "Shared contextual callback result; prior-full and Id. inputs retain separate contracts.",
+    })
+  )
+) {}
 const Reason = LiteralKit([
   "invalid-input",
   "evidence-failed",

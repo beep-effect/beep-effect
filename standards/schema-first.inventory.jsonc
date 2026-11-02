@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-01",
+  "generatedOn": "2026-11-02",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -1350,14 +1350,6 @@
       "reason": "Mixed React render configuration: id is data, while each Step carries ReactNode content and Popover component-prop values consumed directly by TourProvider."
     },
     {
-      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
-      "symbol": "Parenthetical",
-      "kind": "unbranded-schema-class",
-      "status": "exception",
-      "owner": "@beep/law-practice-domain",
-      "reason": "D4 structural-brand exception (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Recursive citation union: members are typed by hand-written namespace Types used in S.suspend, which must stay structurally equal to the classes. Follow-up: brand nominally once the blocker above is removed."
-    },
-    {
       "file": "packages/law-practice/domain/src/values/PatentMetadata/PatentMetadata.model.ts",
       "symbol": "extractPatentFigures",
       "kind": "schema-policy-advisory",
@@ -1418,12 +1410,24 @@
       "reason": "Pure parser over in-memory content plus schema-backed PatentSectionKind values; it returns the schema-backed PatentSections model and the transient option bag is never decoded or persisted."
     },
     {
-      "file": "packages/law-practice/domain/src/values/PinciteInfo/PinciteInfo.model.ts",
-      "symbol": "PinciteInfo",
-      "kind": "unbranded-schema-class",
-      "status": "exception",
+      "file": "packages/law-practice/domain/test/CitationIdentity.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 17,
       "owner": "@beep/law-practice-domain",
-      "reason": "D4 structural-brand exception (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Self-recursive pincite: S.suspend is typed by the hand-written PinciteInfo.Type, which must stay structurally equal to the class. Follow-up: brand nominally once the blocker above is removed."
+      "reason": "Schema-heavy test file has 6 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/domain/test/SourceRefQuote.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 12,
+      "owner": "@beep/law-practice-domain",
+      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
     },
     {
       "file": "packages/law-practice/server/test/CandorRecord.test.ts",
@@ -1434,6 +1438,236 @@
       "line": 42,
       "owner": "@beep/law-practice-server",
       "reason": "In-memory repository proof decodes fixed fixture wires to assert append/read-back, filing scope isolation and id ordering; schema-derived Arbitrary round-trips for PatentCitationEvent, CandorDisposition and IdsSubmissionFact live in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationAuthorityIdentity.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 24,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 9 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCallbackMutations.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 141,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 14 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 92,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 13 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCallbackSession.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 298,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 12 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCaseResourceHash.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 45,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCleanerPipeline.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 304,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationCleanerValues.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 56,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 80,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationDocumentPersistence.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 89,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 15 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationHostResources.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 215,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 18 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationHtmlBytes.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 56,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 5 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationHtmlCompletion.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 46,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationHtmlInput.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 60,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationLiteralCleaners.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 42,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 8 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationMentionIdentity.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 34,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationMixedResourceObjects.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 82,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 7 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationModelMutation.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 96,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 18 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationPriorFulls.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 76,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationPythonHash.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 41,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationResolve.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 34,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationResolverText.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 42,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 5 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationResourceObjects.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 89,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 7 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 60,
+      "owner": "@beep/law-practice-server",
+      "reason": "Schema-heavy test file has 7 Schema codec assertions but no schema-derived property coverage."
     },
     {
       "file": "packages/law-practice/server/test/ClaimElement.reference.test.ts",
@@ -1502,6 +1736,36 @@
       "line": 42,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Deterministic policy fixtures decode exact anchored event and disposition wires so lineage, source-resolution, supersession, and fail-closed semantics remain observable; schema-derived round-trip coverage for these law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CitationEngineLimits.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 22,
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Schema-heavy test file has 15 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CitationOracleAssertions.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 56,
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Schema-heavy test file has 7 Schema codec assertions but no schema-derived property coverage."
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CitationOracleOperations.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 50,
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Schema-heavy test file has 5 Schema codec assertions but no schema-derived property coverage."
     },
     {
       "file": "packages/law-practice/use-cases/test/ClaimSelfCheck.test.ts",

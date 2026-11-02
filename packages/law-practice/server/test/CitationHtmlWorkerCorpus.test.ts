@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -9,6 +10,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -45,7 +47,9 @@ const runtime = Effect.gen(function* () {
     workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
   };
 });
-it.layer(BunServices.layer, { excludeTestServices: true })("HTML worker qualification", (it) => {
+const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);
+
+it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification", (it) => {
   it.effect(
     "preserves every frozen native outcome through the owned process boundary",
     () =>

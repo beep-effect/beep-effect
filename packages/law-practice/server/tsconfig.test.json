@@ -11,11 +11,6 @@
     "outDir": "dist-test",
     "rootDir": ".",
     "sourceMap": false,
-    "types": ["node", "bun-types"],
-    "paths": {
-      "@beep/law-practice-server/_test/Citation/*": [
-        "./src/internal/Citation/*.ts"
-      ]
-    }
+    "types": ["node", "bun-types"]
   }
 }

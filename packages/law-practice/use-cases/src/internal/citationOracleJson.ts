@@ -59,6 +59,22 @@ export const CitationOracleJson = <Value, Encoded>(schema: S.Codec<Value, Encode
   );
 };
 
+class TokenizerExtractorsArtifact extends S.Opaque<TokenizerExtractorsArtifact, { readonly brand: unique symbol }>()(
+  S.Struct({ kind: S.tag("tokenizer-extractors"), payload: S.JsonObject.pipe(S.Array, CitationOracleJson) }).pipe(
+    $I.annoteSchema("TokenizerExtractorsArtifact", {
+      description: "Pinned tokenizer extractors retaining the exact source JSON payload bytes.",
+    })
+  )
+) {}
+
+class ModelValueArtifact extends S.Opaque<ModelValueArtifact, { readonly brand: unique symbol }>()(
+  S.Struct({ kind: S.tag("model-value"), payload: S.JsonObject.pipe(CitationOracleJson) }).pipe(
+    $I.annoteSchema("ModelValueArtifact", {
+      description: "Pinned model or vocabulary object retaining the exact source JSON payload bytes.",
+    })
+  )
+) {}
+
 /**
  * Content-addressed shared tokenizer configuration or immutable vocabulary data.
  *
@@ -74,10 +90,7 @@ export const CitationOracleJson = <Value, Encoded>(schema: S.Codec<Value, Encode
  * @category testing
  * @since 0.0.0
  */
-export const CitationOracleArtifact = S.Union([
-  S.Struct({ kind: S.tag("tokenizer-extractors"), payload: S.JsonObject.pipe(S.Array, CitationOracleJson) }),
-  S.Struct({ kind: S.tag("model-value"), payload: S.JsonObject.pipe(CitationOracleJson) }),
-]).pipe(
+export const CitationOracleArtifact = S.Union([TokenizerExtractorsArtifact, ModelValueArtifact]).pipe(
   S.toTaggedUnion("kind"),
   $I.annoteSchema("CitationOracleArtifact", {
     description:

@@ -19,6 +19,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { CitationCallbackResult } from "../src/internal/Citation/CallbackResource.ts";
 import {
   CitationCallbackDictionary,
   CitationCallbackFailure,
@@ -41,6 +42,7 @@ import {
 } from "./CitationCallbackSession.fixtures.ts";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import type {
+  CitationCallbackEntry,
   CitationCallbackGroup,
   CitationFullsCallbackInput,
   CitationIdCallbackInput,
@@ -54,10 +56,14 @@ const staleId = () => CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
 const fail = () => CitationCallbackFailure.make({ reason: "callback-failed" });
 const emptyCallbacks = CitationResolutionCallbacks.of({
   full: Effect.fn("CallbackTest.emptyFull")(() => Effect.succeed(none())),
-  shortCase: Effect.fn("CallbackTest.emptyShort")(() => Effect.succeed({ resource: none() })),
-  supra: Effect.fn("CallbackTest.emptySupra")(() => Effect.succeed({ resource: none() })),
-  reference: Effect.fn("CallbackTest.emptyReference")(() => Effect.succeed({ resource: none() })),
-  id: Effect.fn("CallbackTest.emptyId")(() => Effect.succeed({ resource: none() })),
+  shortCase: Effect.fn("CallbackTest.emptyShort")(() =>
+    Effect.succeed(CitationCallbackResult.make({ resource: none() }))
+  ),
+  supra: Effect.fn("CallbackTest.emptySupra")(() => Effect.succeed(CitationCallbackResult.make({ resource: none() }))),
+  reference: Effect.fn("CallbackTest.emptyReference")(() =>
+    Effect.succeed(CitationCallbackResult.make({ resource: none() }))
+  ),
+  id: Effect.fn("CallbackTest.emptyId")(() => Effect.succeed(CitationCallbackResult.make({ resource: none() }))),
 });
 const controls = () =>
   context(
@@ -81,7 +87,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
         id: Effect.fn("CallbackTest.count")(() =>
           Effect.sync(() => {
             calls += 1;
-            return { resource: none() };
+            return CitationCallbackResult.make({ resource: none() });
           })
         ),
       });
@@ -122,7 +128,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
         ...emptyCallbacks,
         id: Effect.fn("CallbackTest.invalid")(function* () {
           yield* dictionary.allocate([member(CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`))]);
-          return { resource: none() };
+          return CitationCallbackResult.make({ resource: none() });
         }),
       });
       const rejected = yield* Effect.flip(
@@ -399,7 +405,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
               O.map(HashMap.get(byId, id), (entry) => entry.index),
               () => -1
             );
-          const groupValue = (group: CitationCallbackGroup): S.Json => ({
+          const groupValue = (group: CitationCallbackGroup | CitationCallbackEntry): S.Json => ({
             resource: presentation(group.resource),
             members: A.map(group.members, (reference) =>
               reference._tag === "Mention" ? indexOf(reference.mentionId) : -1
@@ -434,9 +440,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
               if (action === "raise") return yield* fail();
               if (action === "clear-fulls") {
                 yield* dictionary.writeFulls([]);
-                return { resource: none() };
+                return CitationCallbackResult.make({ resource: none() });
               }
-              if (action !== "default") return { resource: yield* resource(action) };
+              if (action !== "default") return CitationCallbackResult.make({ resource: yield* resource(action) });
               if (slot === "shortcase") return yield* defaults.shortCase(arg);
               if (slot === "supra") return yield* defaults.supra(arg);
               return yield* defaults.reference(arg);
@@ -471,7 +477,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
                   last: presentation(arg.last),
                   groups: A.map(arg.groups, groupValue),
                 });
-                if (action !== "default") return { resource: yield* resource(action) };
+                if (action !== "default") return CitationCallbackResult.make({ resource: yield* resource(action) });
                 return yield* defaults.id(arg);
               },
               Effect.provideService(Digest.Digest, crypto),
