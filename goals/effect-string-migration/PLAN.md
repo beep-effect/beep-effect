@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `complete`
 
 ## Phases
 
@@ -11,7 +11,7 @@ Status: `in-progress`
 | P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
 | P1 Implement | complete | Migrate the census sites wave by wave, then arm the rule. | Acceptance criteria are met. |
 | P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | #2324 merged as `fb680fac7e` from head `4f072259da` with 15 of 15 required contexts green, zero unresolved threads and an elapsed review window; `goals completion refresh` verified the proposal (`history/completion-verified-2026-11-02.md`). |
 | P4 Close | complete | Write the closeout reflection and propose closure. | Evidence and reflection are current; the typed proposal retains active lifecycle until completion evidence verifies. |
 
 ## Waves
@@ -52,11 +52,14 @@ base. Callback replacers use `replaceWith`/`replaceAllWith` from
 `@beep/utils/Str`, except in packages `@beep/utils` depends on (such as
 `@beep/identity`), which rewrite the call without it.
 
-## Current requalification
+## Requalification (done)
 
-The 2026-10-28 completion refresh rejects the historical #2027 proposal. Keep
-its failed merge-time evidence intact. The `chore/effect-string-closeout` lane
-must:
+The 2026-10-28 completion refresh rejected the historical #2027 proposal; its
+failed merge-time evidence is kept intact. The `chore/effect-string-closeout`
+lane completed every step below. #2324 merged on 2026-10-28T20:36:27Z and the
+`completed-retained` proposal verified the same minute in clone `beep-effect2`;
+the primary clone re-derived the receipt on 2026-11-02
+(`history/completion-verified-2026-11-02.md`). The lane had to:
 
 1. Full Check and the root configuration program passed most recently at
    `bf0990a3c1`: 337

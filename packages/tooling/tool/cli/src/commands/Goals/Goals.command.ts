@@ -39,7 +39,7 @@ export const goalsCommand = Command.make("goals", {}, () =>
     "Goals commands:",
     "- bun run beep goals doctor [--online] [--write-baseline]",
     "- bun run beep goals completion refresh [--slug <slug>]",
-    "- bun run beep goals index [--write | --check]",
+    "- bun run beep goals index [--write | --check | --json]",
     "- bun run beep goals next [--json]",
     "- bun run beep goals explain <slug> [--json]",
     "- bun run beep goals catalog [--json]",

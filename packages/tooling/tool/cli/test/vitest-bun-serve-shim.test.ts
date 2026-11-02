@@ -39,6 +39,20 @@ const nativeFileSystem = Effect.promise(() => vi.importActual<ShimFileSystemBoun
   Effect.map((module) => module.default)
 );
 
+// A plain TCP listener stands in for a process outside the test run (an IDE helper, a dev server).
+interface ForeignNetBoundary {
+  readonly default: {
+    readonly createServer: (onSocket: (socket: { readonly end: (data: string) => void }) => void) => {
+      readonly once: (event: "error", listener: (error: Error) => void) => void;
+      readonly listen: (port: number, hostname: string, onListening: () => void) => void;
+      readonly close: (onClosed: () => void) => void;
+    };
+  };
+}
+const foreignNet = Effect.promise(() => vi.importActual<ForeignNetBoundary>("node:net")).pipe(
+  Effect.map((module) => module.default)
+);
+
 const shimLockDirectory: unknown = Reflect.get(Bun, "shimPortLockDirectory");
 const lockDirectory = P.isString(shimLockDirectory) ? shimLockDirectory : "";
 const shimActive = lockDirectory !== "";
@@ -142,6 +156,29 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
         assert.deepStrictEqual(replies, names);
       }).pipe(Effect.ensuring(Effect.forEach(servers, stop, { discard: true })));
     })
+  );
+
+  // A listener outside every shim process holds no lock file. The shim reads the kernel's listening
+  // sockets so it never hands out that port and loses the bind after `serve` returned.
+  it.effect.skipIf(!shimActive || process.platform !== "linux")(
+    "skips a port another process is already listening on",
+    () =>
+      Effect.gen(function* () {
+        const net = yield* foreignNet;
+        const occupied = followingPort(yield* servedPort("before-foreign-listener"));
+        const foreign = net.createServer((socket) => socket.end("HTTP/1.1 404 Not Found\r\n\r\nforeign"));
+        yield* Effect.callback<void, Error>((resume) => {
+          foreign.once("error", (error) => resume(Effect.fail(error)));
+          foreign.listen(occupied, "127.0.0.1", () => resume(Effect.void));
+        });
+        yield* Effect.gen(function* () {
+          const server = yield* serveText("shim-owned");
+          yield* Effect.gen(function* () {
+            assert.notStrictEqual(portOf(server), occupied);
+            assert.strictEqual(yield* fetchText(portOf(server)), "shim-owned");
+          }).pipe(Effect.ensuring(stop(server)));
+        }).pipe(Effect.ensuring(Effect.callback<void>((resume) => foreign.close(() => resume(Effect.void)))));
+      })
   );
 
   it.effect.skipIf(!shimActive)("does not displace another reclaimer after reading an abandoned reservation", () =>
