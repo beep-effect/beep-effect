@@ -1,5 +1,5 @@
 {
-  "previous": "261a6c13cbe500586b80a58e23eb06fbe2c2910f1a98cec4348d0deb9f625674",
+  "previous": "fb66163dc4f064bcb55dfc24680e8f00fd58231eb49865567283fc3f633406be",
   "review": {
     "reviewer": "Claude Fable 5.1 (perf-lane-dedupe)",
     "reason": "Re-record the legacy cache posture of the root subject after turbo.json gained the cached //#lint:schema-catalog task and its generated fingerprint seal, and the root manifest gained the two matching scripts; every other root task drifts only through the root scripts digest. No command, input, output, cache flag or env key of existing tasks changed; no qualification is granted.",
