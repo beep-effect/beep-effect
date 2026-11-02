@@ -31,6 +31,11 @@ on:
           - INT
           - KILL
         default: INT
+      replay_hold_minutes:
+        description: KILL mode only. Once a replay is accepted, keep that session open this many minutes (0 to 15) with Runner.Worker removed, and record whether GitHub offers it any job
+        required: false
+        type: string
+        default: "0"
 
 permissions: {}
 
@@ -669,6 +674,7 @@ jobs:
         env:
           REPLAY_RECIPIENT_KEY: ${{ inputs.replay_recipient_key }}
           REPLAY_STOP_SIGNAL: ${{ inputs.replay_stop_signal }}
+          REPLAY_HOLD_MINUTES: ${{ inputs.replay_hold_minutes }}
         run: |
           set -euo pipefail
           probe_dir=/run/rtb-replay
@@ -677,6 +683,11 @@ jobs:
             INT | KILL) printf '%s\n' "${REPLAY_STOP_SIGNAL:-INT}" | sudo tee "${probe_dir}/stop-signal" > /dev/null ;;
             *) echo "Probe N: replay_stop_signal must be INT or KILL"; exit 1 ;;
           esac
+          if [[ ! "${REPLAY_HOLD_MINUTES:-0}" =~ ^[0-9]{1,2}$ ]] || (( ${REPLAY_HOLD_MINUTES:-0} > 15 )); then
+            echo "Probe N: replay_hold_minutes must be 0 to 15"
+            exit 1
+          fi
+          printf '%s\n' "$(( ${REPLAY_HOLD_MINUTES:-0} * 60 ))" | sudo tee "${probe_dir}/hold-seconds" > /dev/null
           if [[ -z "${REPLAY_RECIPIENT_KEY}" ]]; then
             echo "Probe N: replay_recipient_key is required"
             exit 1
@@ -771,16 +782,42 @@ jobs:
 
           # One replay attempt; sets verdict. Acceptance is only the line the
           # runner prints after the server grants a session.
+          # Hold an accepted session open with no worker binary, so a job
+          # GitHub offers it is recorded by name and can never execute.
+          hold_session() {
+            local replay="$1" hold="$2" t=0 job last
+            con "HOLD-START $(date -u +%FT%TZ) up to ${hold}s with Runner.Worker removed"
+            hold_end="hold elapsed with no job offered"
+            while (( t < hold )); do
+              if grep -q 'Running job: ' "${dir}/listener.log"; then
+                pkill -KILL -f "${scratch}/bin/Runner" || true
+                job="$(grep -m1 'Running job: ' "${dir}/listener.log" | tr -d '\r' | sed -E 's/^.*Running job: //' | tr -cd 'A-Za-z0-9 ._()/:-' | cut -c1-120)"
+                hold_end="job offered (${job})"
+                break
+              fi
+              if ! kill -0 "${replay}" 2>/dev/null; then
+                last="$(grep -v '^[[:space:]]*$' "${dir}/listener.log" | tail -1 | tr -d '\r' | cut -c1-160)"
+                last="${last//${jit}/[redacted]}"
+                hold_end="listener exited (${last})"
+                break
+              fi
+              sleep 1
+              t=$(( t + 1 ))
+            done
+            con "HOLD-END $(date -u +%FT%TZ) ${hold_end}"
+          }
+
           replay_once() {
-            local budget="$1" replay line first
+            local budget="$1" hold="${2:-0}" replay line first
             rm -f -- "${scratch}/.runner" "${scratch}/.credentials" "${scratch}/.credentials_rsaparams"
             : > "${dir}/listener.log"
-            (cd "${scratch}" && RUNNER_ALLOW_RUNASROOT=1 exec timeout "${budget}" "${scratch}/bin/Runner.Listener" run \
+            (cd "${scratch}" && RUNNER_ALLOW_RUNASROOT=1 exec timeout "$(( budget + hold ))" "${scratch}/bin/Runner.Listener" run \
               --jitconfig "${jit}" > "${dir}/listener.log" 2>&1) &
             replay=$!
             verdict=""
             for _ in $(seq 1 $(( budget + 5 ))); do
               if grep -Eq 'Listening for Jobs' "${dir}/listener.log"; then
+                (( hold > 0 )) && hold_session "${replay}" "${hold}"
                 pkill -KILL -f "${scratch}/bin/Runner" || true
                 verdict="accepted"; break
               fi
@@ -821,10 +858,15 @@ jobs:
           if [[ "${stop_mode}" == SIGKILL ]]; then
             # Walk the window between the dead listener and the deletion of its
             # registration (the job's timeout or GitHub's lost-runner sweep).
+            hold_seconds="$(cat "${dir}/hold-seconds" 2>/dev/null || echo 0)"
+            if (( hold_seconds > 0 )); then
+              rm -f -- "${scratch}/bin/Runner.Worker"
+              note "Runner.Worker removed from the replay copy; accepted sessions are held ${hold_seconds}s"
+            fi
             attempts=0
             while (( attempts < 28 )); do
               attempts=$(( attempts + 1 ))
-              replay_once 45
+              replay_once 45 "${hold_seconds}"
               con "ATTEMPT ${attempts} $(date -u +%FT%TZ) ${verdict}"
               case "${verdict}" in
                 accepted | rejected*) break ;;
