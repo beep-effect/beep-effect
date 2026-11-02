@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "t3code-harness-mcp",
+    "packetId": "goal-packet/v1:21ed511c85502baa0f65d12ba1c90f32ab306b0bdc101d6ffa4f128ce8f39a46",
+    "title": "T3 Code Harness MCP",
+    "status": "active",
+    "created": "2026-11-01",
+    "updated": "2026-11-01",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/t3code-harness-mcp",
+  "lifecycle": "active",
+  "mission": "Register `t3-hub` (the DankStation T3 environment, Full-access OAuth) in every harness that runs outside T3 on every live host, prove T3-launched sessions do not double-load it, and remind before the 30-day grants and links expire.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/t3code-fleet-driver",
+    "graduated": "2026-11-01"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/t3code-harness-mcp/README.md",
+    "goals/t3code-harness-mcp/SPEC.md",
+    "goals/t3code-harness-mcp/PLAN.md",
+    "goals/t3code-harness-mcp/GOAL.md",
+    "goals/t3code-harness-mcp/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/t3code-harness-mcp/GOAL.md"
+    }
+  ],
+  "provides": ["fleet/t3-harness-mcp"],
+  "requires": ["fleet/t3-environments"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/t3code-harness-mcp/GOAL.md)\" -le 4000",
+    "jq . goals/t3code-harness-mcp/ops/manifest.json",
+    "rg -n \"t3code-harness-mcp|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/t3code-harness-mcp",
+    "git diff --check -- goals/t3code-harness-mcp",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
