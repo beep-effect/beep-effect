@@ -1,3 +1,4 @@
+import { StatusEntry } from "@beep/git/Git";
 import {
   buildContestedIndex,
   classifyFleetLiveness,
@@ -9,8 +10,8 @@ import {
   linkReferences,
   parseMergeTreeConflictNames,
   parseProcStatStartTime,
-  parseStatusPorcelainZ,
   rankContestedPaths,
+  statusFactsFromEntries,
   transcriptProjectDirName,
 } from "@beep/repo-cli/commands/Worktree";
 import { A, O } from "@beep/utils";
@@ -131,34 +132,40 @@ describe("classifyFleetLiveness", () => {
   });
 });
 
-describe("parseStatusPorcelainZ", () => {
+describe("statusFactsFromEntries", () => {
+  const entry = (x: StatusEntry["x"], y: StatusEntry["y"], path: string, origPath?: string) =>
+    StatusEntry.make({ x, y, path, ...(origPath === undefined ? {} : { origPath }) });
+
   it("counts a rename as one entry and keeps both of its paths", () => {
-    expect(parseStatusPorcelainZ("R  new.ts\0old.ts\0")).toEqual({
+    expect(statusFactsFromEntries([entry("R", " ", "new.ts", "old.ts")])).toEqual({
       entryCount: 1,
       paths: ["new.ts", "old.ts"],
     });
   });
 
   it("counts a copy as one entry and keeps both of its paths", () => {
-    expect(parseStatusPorcelainZ("C  copy.ts\0source.ts\0")).toEqual({
+    expect(statusFactsFromEntries([entry("C", " ", "copy.ts", "source.ts")])).toEqual({
       entryCount: 1,
       paths: ["copy.ts", "source.ts"],
     });
   });
 
-  it("keeps spaces in untracked paths, because -z records are never C-quoted", () => {
-    expect(parseStatusPorcelainZ("?? a b.txt\0")).toEqual({ entryCount: 1, paths: ["a b.txt"] });
+  it("keeps spaces in untracked paths", () => {
+    expect(statusFactsFromEntries([entry("?", "?", "a b.txt")])).toEqual({ entryCount: 1, paths: ["a b.txt"] });
   });
 
   it("reads an empty status as zero entries", () => {
-    expect(parseStatusPorcelainZ("")).toEqual({ entryCount: 0, paths: [] });
+    expect(statusFactsFromEntries([])).toEqual({ entryCount: 0, paths: [] });
   });
 
-  it("resumes normal records after a rename's origin field", () => {
-    expect(parseStatusPorcelainZ("R  new.ts\0old.ts\0?? fresh.ts\0 M tracked.ts\0")).toEqual({
-      entryCount: 3,
-      paths: ["new.ts", "old.ts", "fresh.ts", "tracked.ts"],
-    });
+  it("resumes normal entries after a rename's origin path", () => {
+    expect(
+      statusFactsFromEntries([
+        entry("R", " ", "new.ts", "old.ts"),
+        entry("?", "?", "fresh.ts"),
+        entry(" ", "M", "tracked.ts"),
+      ])
+    ).toEqual({ entryCount: 3, paths: ["new.ts", "old.ts", "fresh.ts", "tracked.ts"] });
   });
 });
 

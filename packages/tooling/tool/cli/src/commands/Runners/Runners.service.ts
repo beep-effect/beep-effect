@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
@@ -26,6 +28,7 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { formatCommandLine, runCaptured } from "../../internal/process/StepExec.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { RunnersCommandError } from "./Runners.errors.ts";
 import {
   AwsConsoleOutputResponse,
@@ -301,23 +304,21 @@ const assertRevisionPushed = Effect.fn("Runners.assertRevisionPushed")(function*
   }
 });
 
+// `Git.revParse("HEAD")` folded onto the capture's two wordings: git never ran, or git refused (SPEC D-10).
 const runGitRevision = Effect.fn("Runners.gitRevision")(function* (
   repoRoot: string
-): Effect.fn.Return<string, RunnersCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* runCaptured({
-    command: "git",
-    args: ["rev-parse", "HEAD"],
-    cwd: repoRoot,
-    source: "all",
-    trim: true,
-  }).pipe(RunnersCommandError.mapError("Failed to inspect the current Git revision."));
-  if (result.exitCode !== 0 || Str.isEmpty(result.output)) {
-    return yield* RunnersCommandError.make({
-      message: "Failed to resolve the current Git revision.",
-      exitCode: result.exitCode,
-    });
-  }
-  return result.output;
+): Effect.fn.Return<string, RunnersCommandError, Git> {
+  const git = yield* Git;
+  return yield* git.revParse(repoRoot, "HEAD").pipe(
+    Effect.mapError(
+      adaptGitKitError(GitCommand.revParse("HEAD"), {
+        onSpawnFailure: () => RunnersCommandError.new("Failed to inspect the current Git revision."),
+        onNonZeroExit: ({ exitCode }) =>
+          RunnersCommandError.make({ message: "Failed to resolve the current Git revision.", exitCode }),
+        onTruncated: O.none(),
+      })
+    )
+  );
 });
 
 const assertBakeInputsClean = Effect.fn("Runners.assertBakeInputsClean")(function* (
@@ -356,7 +357,7 @@ const assertBakeInputsClean = Effect.fn("Runners.assertBakeInputsClean")(functio
 const loadLocalInputs = Effect.fn("Runners.loadLocalInputs")(function* (): Effect.fn.Return<
   BakeLocalInputs,
   RunnersCommandError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -886,7 +887,7 @@ const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, repor
 
 const makeRunnersService = Effect.fn("RunnersService.make")(function* () {
   const context = yield* Effect.context<
-    FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+    FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
   >();
   return RunnersService.of({
     plan: makePlan().pipe(Effect.provide(context)),

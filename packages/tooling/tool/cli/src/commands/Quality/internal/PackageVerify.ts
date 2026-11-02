@@ -6,6 +6,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, normalizePath } from "@beep/schema";
@@ -26,6 +28,7 @@ import { manifestParser } from "../../../internal/ManifestRead.ts";
 import { QualityTaskStep, runCaptured } from "../../../internal/process/index.ts";
 import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
+import { adaptGitKitError } from "../../../internal/repo-run/GitExec.ts";
 import { renderDocgenIssueText } from "../../Docgen/internal/Local.ts";
 import {
   analyzePackageDocumentation,
@@ -38,6 +41,7 @@ import type { FsUtils } from "@beep/repo-utils";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/PackageVerify");
 
@@ -226,9 +230,6 @@ const byWorkspacePathLengthDescending = Order.flip(
 
 const commandText = (command: string, args: ReadonlyArray<string>): string => A.join([command, ...args], " ");
 
-const linesFromText = (text: string): ReadonlyArray<string> =>
-  pipe(Str.split(/\r?\n/)(text), A.map(Str.trim), A.filter(Str.isNonEmpty));
-
 const normalizedRootPath = (root: string): string => {
   const normalized = normalizePath(root);
   return Str.endsWith("/")(normalized) ? Str.slice(0, -1)(normalized) : normalized;
@@ -371,39 +372,24 @@ export const changedPackageNamesForPaths: {
 const fail = (message: string): Effect.Effect<never, QualityScriptCommandError> =>
   Effect.fail(QualityScriptCommandError.make({ message, exitCode: 2 }));
 
-const runGitLines = Effect.fn("PackageVerify.runGitLines")(function* (
-  repoRoot: string,
-  args: ReadonlyArray<string>
-): Effect.fn.Return<
-  ReadonlyArray<string>,
-  QualityScriptCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const result = yield* runCaptured({
-    command: "git",
-    args,
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(
-    QualityScriptCommandError.mapError(`Failed to spawn git ${A.join(args, " ")}.`, {
-      command: commandText("git", args),
-    })
-  );
-  if (result.exitCode !== 0) {
-    return yield* QualityScriptCommandError.new(`git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`, {
-      command: commandText("git", args),
-      exitCode: result.exitCode,
-    })(`git ${A.join(args, " ")} failed`);
-  }
-
-  return linesFromText(result.output);
-});
+// The wording of the bounded line capture the `HEAD` read ran before W2 (SPEC D-10); the kit's
+// command line stands in for the frozen argv.
+const packageVerifyGitErrorAdapter: GitCommandErrorAdapter<QualityScriptCommandError> = {
+  onSpawnFailure: (commandLine) =>
+    QualityScriptCommandError.new(`Failed to spawn ${commandLine}.`, { command: commandLine }),
+  onNonZeroExit: ({ commandLine, exitCode }) =>
+    QualityScriptCommandError.new(`${commandLine} failed with exit code ${exitCode}.`, {
+      command: commandLine,
+      exitCode,
+    })(`${commandLine} failed`),
+  onTruncated: O.none(),
+};
 
 const collectPackageVerifyChangedFiles = Effect.fn("PackageVerify.collectPackageVerifyChangedFiles")(function* (
   repoRoot: string
 ) {
   const files = yield* collectDirtyWorktreeFiles(repoRoot, {
-    diffArgs: [`--diff-filter=${PACKAGE_TARGET_DIFF_FILTER}`],
+    diffFilter: PACKAGE_TARGET_DIFF_FILTER,
     pathspecs: A.empty(),
     onProbeFailure: "ignore",
   }).pipe(QualityScriptCommandError.mapError("Failed to resolve package-verify dirty worktree files."));
@@ -754,7 +740,12 @@ const runPackageVerifyAtRoot = Effect.fn("PackageVerify.runPackageVerifyAtRoot")
 ): Effect.fn.Return<
   PackageVerifyReport,
   QualityScriptCommandError,
-  FsUtils | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  | FsUtils
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git
 > {
   const workspaces = yield* collectWorkspaces(repoRoot);
   const changedFiles = O.isSome(packageName) ? A.empty<string>() : yield* collectPackageVerifyChangedFiles(repoRoot);
@@ -766,11 +757,10 @@ const runPackageVerifyAtRoot = Effect.fn("PackageVerify.runPackageVerifyAtRoot")
       concurrency: quick ? PACKAGE_VERIFY_STEP_CONCURRENCY : 1,
     }
   );
-  const headLines = yield* runGitLines(repoRoot, ["rev-parse", "HEAD"]);
-  const headSha = yield* O.match(A.head(headLines), {
-    onNone: () => fail("pkg-verify: git rev-parse HEAD returned no commit SHA."),
-    onSome: Effect.succeed,
-  });
+  const git = yield* Git;
+  const headSha = yield* git
+    .revParse(repoRoot, "HEAD")
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse("HEAD"), packageVerifyGitErrorAdapter)));
 
   return PackageVerifyReport.make({
     headSha,
@@ -810,7 +800,12 @@ export const runPackageVerify = Effect.fn("PackageVerify.runPackageVerify")(func
 }): Effect.fn.Return<
   PackageVerifyReport,
   QualityScriptCommandError,
-  FsUtils | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  | FsUtils
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git
 > {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot(path.resolve(process.cwd())).pipe(
@@ -955,6 +950,7 @@ export const runPackageVerifyCli = Effect.fn("PackageVerify.runPackageVerifyCli"
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   if (A.length(packageArgs) > 1) {
     return yield* fail(`pkg-verify: expected at most one package argument, received ${A.length(packageArgs)}.`);

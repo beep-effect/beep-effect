@@ -40,6 +40,8 @@ are fixed, never before.
 
 ## Current Blockers
 
+- **Current pre-merge evidence hold (2026-11-02):** #2513 merged before a retained successful readiness record. Its canonical refresh is unknown and its job terminated without a verdict. Accepted coverage repairs now pass the hosted comparison; v27 replays retain all 37 matches and every prior result. [Final #2577](https://github.com/beep-effect/beep-effect/pull/2577) is ready for review and must earn actual pre-merge readiness and merge proof under the strict owner hold. Accepted main #2580 fixes the inherited repo-utils effect-vitest failure; the 29-file v27 freeze remains exact. Historical holds below are preserved.
+
 No remaining attendance dependency. [The post-merge report](history/2026-11-01-post-merge-evaluation.md) records v24 at 37/538, all 34 protected/all 37 prior matches retained, the exact historical byte restoration, current package proofs and bounded review uncertainty. Implementation PR #2411 merged under S11; its pending/cancelled jobs are not claimed green. [Strict final PR #2513](https://github.com/beep-effect/beep-effect/pull/2513) carries the new measurement and closeout reflection, while canonical current-head readiness and merge evidence remain required for operative completed-retained status. Historical holds below remain evidence.
 
 ## Historical checkpoints and superseded holds

@@ -28,7 +28,7 @@ import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runGitLines } from "../../internal/repo-run/ChangedFiles.ts";
+import { collectBaseRangeChangedFiles } from "../../internal/repo-run/ChangedFiles.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import {
   CiChangeProfile,
@@ -40,6 +40,7 @@ import {
   ciOperationalPatterns,
 } from "./CiOperational.schemas.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Scope from "effect/Scope";
 
@@ -113,7 +114,7 @@ export const CiOperationalLive = Layer.effect(
     const path = yield* Path.Path;
     const outputs = yield* ActionOutputs;
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-    const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
+    const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git>();
     const append = (target: string, body: string) => fs.writeFileString(target, body, { flag: "a" });
     const patterns = Effect.fn("Ci.patterns")(
       function* (write: boolean) {
@@ -135,7 +136,7 @@ export const CiOperationalLive = Layer.effect(
         const event = yield* text("GITHUB_EVENT_NAME");
         const paths =
           event === "pull_request"
-            ? yield* runGitLines(path.resolve("."), ["diff", "--name-only", `${base}...HEAD`]).pipe(
+            ? yield* collectBaseRangeChangedFiles(path.resolve("."), { base, head: "HEAD", pathspecs: [] }).pipe(
                 Effect.provide(context)
               )
             : [];
