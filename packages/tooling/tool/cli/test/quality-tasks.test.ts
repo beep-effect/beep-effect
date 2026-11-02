@@ -4018,6 +4018,22 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         admission: O.none(),
         notes: [],
       });
+      // A saturated host degrades to the `current` widths, never below them.
+      const saturated = O.some(QualityAdmissionLoad.make({ activeTokens: 9, capacityTokens: 9 }));
+      expect(resolveQualityConcurrencyPlan(workstationDetection, {}, saturated)).toMatchObject({
+        rootTurbo: 3,
+        policyLint: 4,
+        cheapGates: 4,
+        prePushLanes: 1,
+        oxlintThreads: 4,
+      });
+      expect(resolveQualityConcurrencyPlan(currentDetection, {}, saturated)).toMatchObject({
+        rootTurbo: 3,
+        policyLint: 4,
+        cheapGates: 4,
+        prePushLanes: 1,
+        oxlintThreads: 4,
+      });
       expect(
         resolveQualityConcurrencyPlan(
           workstationDetection,

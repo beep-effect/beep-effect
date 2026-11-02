@@ -234,9 +234,9 @@ const overrideOutcome = (
  * **Details**
  *
  * The width keeps the fraction of the host's token capacity other runs leave
- * free, rounded up and never below one, so an idle host runs the profile width
- * and a host whose admission capacity is fully leased (or under the hard
- * memory floor, capacity zero) runs serially.
+ * free, rounded up and never below one; {@link resolveQualityConcurrencyPlan}
+ * then floors the result at the `current` profile's width, so an idle host
+ * runs the profile width and a fully leased host runs the pre-profile widths.
  *
  * **Example** (Half the capacity is leased elsewhere)
  *
@@ -274,7 +274,8 @@ export const scaleQualityWidthByAdmission: {
  * for the policy lint phases and `BEEP_QUALITY_CHEAP_GATE_CONCURRENCY` for the
  * cheap-gate lanes over the one-to-sixteen local domain (a malformed value
  * warns in `notes` and clamps to one lane, as before), then scales every width
- * that no override pinned by the admission tokens other runs hold.
+ * that no override pinned by the admission tokens other runs hold, never
+ * below the `current` profile's width (the value every local run used before).
  *
  * **Example** (Workstation plan on an idle host)
  *
@@ -352,10 +353,17 @@ const resolveQualityConcurrencyPlanInternal = (
         "an integer from 1 to 16",
         O.some(1)
       );
-  const scale = (width: number): number =>
+  // Admission tokens measure memory contention between heavy proofs; a saturated
+  // host degrades a wide profile to the `current` widths every local run used
+  // before concurrency was profile-derived, never below them.
+  const floor = qualityProfileConfigForTesting(QualityHardwareProfile.Enum.current);
+  const scale = (width: number, floorWidth: number): number =>
     hosted
       ? width
-      : O.match(admission, { onNone: () => width, onSome: (load) => scaleQualityWidthByAdmission(width, load) });
+      : O.match(admission, {
+          onNone: () => width,
+          onSome: (load) => Math.max(Math.min(width, floorWidth), scaleQualityWidthByAdmission(width, load)),
+        });
   const admissionNote = pipe(
     admission,
     O.filter(() => !hosted),
@@ -367,11 +375,11 @@ const resolveQualityConcurrencyPlanInternal = (
   );
   return QualityConcurrencyPlan.make({
     profile: config.profile,
-    rootTurbo: scale(config.turboConcurrency),
-    policyLint: O.getOrElse(policyLint.width, () => scale(config.policyLintConcurrency)),
-    cheapGates: O.getOrElse(cheapGates.width, () => scale(config.cheapGateConcurrency)),
-    prePushLanes: scale(config.prePushLaneConcurrency),
-    oxlintThreads: scale(config.oxlintThreads),
+    rootTurbo: scale(config.turboConcurrency, floor.turboConcurrency),
+    policyLint: O.getOrElse(policyLint.width, () => scale(config.policyLintConcurrency, floor.policyLintConcurrency)),
+    cheapGates: O.getOrElse(cheapGates.width, () => scale(config.cheapGateConcurrency, floor.cheapGateConcurrency)),
+    prePushLanes: scale(config.prePushLaneConcurrency, floor.prePushLaneConcurrency),
+    oxlintThreads: scale(config.oxlintThreads, floor.oxlintThreads),
     admission: hosted ? O.none() : admission,
     notes: A.getSomes([policyLint.note, cheapGates.note, admissionNote]),
   });

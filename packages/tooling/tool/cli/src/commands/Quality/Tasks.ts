@@ -4095,6 +4095,7 @@ const runQualityTaskInternal = Effect.fn("QualityTasks.runQualityTask")(function
  * ```
  *
  * @param invocation - Parsed quality task invocation.
+ * @returns The task run under the live concurrency plan.
  * @category use-cases
  * @since 0.0.0
  */
