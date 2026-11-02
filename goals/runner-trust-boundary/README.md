@@ -124,7 +124,8 @@ confirmed for that stop; P8 is stopped for an operator decision (options in
 
 The operator chose to measure the exposure first. In run `41452707373` the
 replayed session was held for 12 minutes and GitHub offered it no job: a
-decoy and eleven real heavy jobs went to other runners, and the session ended
+decoy and the one real heavy job that started during the hold went to other
+runners, and the session ended
 when the original job was cancelled. The remediation choice stays with the
 operator.
 
