@@ -173,8 +173,9 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
   groupRoute({ name: "labs", description: "Inspect lab apps under apps/labs" }, ["fs-utils", "ts-morph"])(() =>
     import("../../commands/Labs/index.ts").then((module) => module.labsCommand)
   ),
-  groupRoute({ name: "lint", description: "Repository lint policy checks" }, ["fs-utils", "ts-morph"])(() =>
-    import("../../commands/Lint/index.ts").then((module) => module.lintCommand)
+  // `lint deprecated-apis` resolves the admission-aware concurrency plan (memory-stats).
+  groupRoute({ name: "lint", description: "Repository lint policy checks" }, ["fs-utils", "ts-morph", "memory-stats"])(
+    () => import("../../commands/Lint/index.ts").then((module) => module.lintCommand)
   ),
   // `lawsCommand` and `researchCommand` are exported with their requirements cast away, so
   // their keys are set by hand: Laws reads TSMorphService, Research only the platform base.

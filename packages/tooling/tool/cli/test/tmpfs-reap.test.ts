@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { Git } from "@beep/git/Git";
 import {
   resolveBeepCacheRoot,
   runRepoCommandCapture,
@@ -26,6 +27,9 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+
+// `Git` rides beside the platform services: the worktree removals take it from the context (W1b).
+const platformLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 
 const temporaryDirectory = FileSystem.FileSystem.use((fs) =>
   Effect.acquireRelease(fs.makeTempDirectory({ prefix: "tmpfs-reap-test-" }), (root) =>
@@ -300,7 +304,7 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
 });
 
 describe("tmpfs reap", () => {
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: false, timeout: "30 seconds" })((it) => {
+  it.layer(platformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     it.effect("resolves the persistent cache root through every configuration fallback", () =>
       Effect.flatMap(temporaryDirectory, (root) =>
         Effect.gen(function* () {
@@ -1630,7 +1634,7 @@ describe("tmpfs reap", () => {
         )
     );
   });
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), {
+  it.layer(platformLayer, {
     concurrent: false,
     timeout: "30 seconds",
     excludeTestServices: true,
