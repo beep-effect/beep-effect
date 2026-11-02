@@ -7,9 +7,11 @@ import * as S from "effect/Schema";
 import * as Protobuf from "protobufjs";
 
 // Selective OTLP proto v1.9.0 wire shape. Recursive AnyValue bodies stay opaque.
+// AnyValue keeps the upstream `oneof`: it gives `false`, `0` and "" explicit
+// presence, which protobufjs 8 otherwise drops on encode and decode.
 const wireSchema = `syntax = "proto3";
-message AnyValue { string string_value = 1; bool bool_value = 2; int64 int_value = 3; double double_value = 4;
-  bytes array_value = 5; bytes kvlist_value = 6; bytes bytes_value = 7; }
+message AnyValue { oneof value { string string_value = 1; bool bool_value = 2; int64 int_value = 3;
+  double double_value = 4; bytes array_value = 5; bytes kvlist_value = 6; bytes bytes_value = 7; } }
 message KeyValue { string key = 1; AnyValue value = 2; }
 message Resource { repeated KeyValue attributes = 1; }
 message Status { int32 code = 3; }
