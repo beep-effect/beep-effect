@@ -76,3 +76,33 @@ export const updateCatalogEntry: {
 } = dual(3, (filePath: string, dependencyName: string, options: UpdateCatalogEntryOptions) =>
   updateField(filePath, ["catalog", dependencyName], options.versionSpecifier)
 );
+
+/**
+ * Update one key of the root package.json `config.effectSource` pin.
+ *
+ * Byte-preserving: only the field value changes. Returns `true` when the file
+ * was modified, `false` when already correct.
+ *
+ * **Example** (Pin the Effect source version)
+ *
+ * ```ts
+ * import { updateEffectSourceField } from "@beep/repo-cli/test/VersionSync"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = updateEffectSourceField("/repo/package.json", "version", "4.1.1")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param filePath - Absolute path of the root package.json.
+ * @param key - The `config.effectSource` key (`version` or `commit`).
+ * @param value - The new value.
+ * @returns Whether the file changed.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const updateEffectSourceField: {
+  (filePath: string, key: string, value: string): Effect.Effect<boolean, VersionSyncError, FileSystem.FileSystem>;
+  (key: string, value: string): (filePath: string) => Effect.Effect<boolean, VersionSyncError, FileSystem.FileSystem>;
+} = dual(3, (filePath: string, key: string, value: string) =>
+  updateField(filePath, ["config", "effectSource", key], value)
+);

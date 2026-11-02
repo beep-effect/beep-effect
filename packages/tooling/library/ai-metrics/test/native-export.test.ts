@@ -15,7 +15,7 @@ import * as Protobuf from "protobufjs";
 
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
 const wire = Protobuf.parse(`syntax="proto3";
-message Value { string string_value=1; bool bool_value=2; int64 int_value=3; }
+message Value { oneof value { string string_value=1; bool bool_value=2; int64 int_value=3; } }
 message Attribute { string key=1; Value value=2; }
 message Resource { repeated Attribute attributes=1; }
 message Span { bytes trace_id=1; bytes span_id=2; bytes parent_span_id=4; string name=5; int32 kind=6; fixed64 start_time_unix_nano=7; fixed64 end_time_unix_nano=8; repeated Attribute attributes=9; }
