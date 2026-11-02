@@ -39,7 +39,8 @@ const cases = A.make(
     owner: Models.ConfigListEntry,
   },
   { name: "WorktreeEntry", root: Root.WorktreeEntry, facade: Facade.WorktreeEntry, owner: Models.WorktreeEntry },
-  { name: "LsFilesEntry", root: Root.LsFilesEntry, facade: Facade.LsFilesEntry, owner: Models.LsFilesEntry }
+  { name: "LsFilesEntry", root: Root.LsFilesEntry, facade: Facade.LsFilesEntry, owner: Models.LsFilesEntry },
+  { name: "GitOptions", root: Root.GitOptions, facade: Facade.GitOptions, owner: Models.GitOptions }
 );
 
 describe.each(cases)("$name model import compatibility", ({ name, root, facade, owner }) => {
