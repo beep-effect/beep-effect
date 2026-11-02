@@ -292,7 +292,7 @@ lens rows (1,120 resource, 1,112 flake, 1,131 property, 1,119 observability;
 | P0.5 | complete | MemoryFileSystem promotion | Node/Bun/Memory conformance and test-utils proof green; PR1047 merged by Benjamin after acceptance at 0fce23f. |
 | P0f | complete | Adversarial review | Three Grok rounds; no open blockers; majors fixed or waived. |
 | P0g | complete | Initial PR and ratification | PR1067 merged; Benjamin ratified continuation on 2026-09-11. |
-| P1 | complete | Inventory | All four lenses cover every file; timing evidence; Benjamin acknowledges before P2. Closed 2026-11-02 with the register at 0 open rows. |
+| P1 | complete | Inventory | Four-lens human inventory recorded for the 1,122-file 2026-09-11 census (4,526 rows, see above); timing evidence in `history/timings-report.md`. Closed 2026-11-02 on the #1875 ruling: the current 3,104-file scope is covered by the detector register (0 open rows), and no current-scope four-lens receipt exists or is claimed. |
 | P2 | complete | Remediation waves | Each topological wave passes package proof and shrinks baseline exactly. Waves 1–21 on #1875 (#1908 to #2463) closed 2026-11-02. |
 | P3 | in-progress | Close | Baseline empty of open rows (D4 as amended 2026-11-02); hosted proof; reflection and `proposedCloseout` in the final PR; `goals completion refresh` flips the status after merge. |
 
