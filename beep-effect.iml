@@ -284,6 +284,7 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/lint-policy-oxlint-type-aware" />
       <excludeFolder url="file://$MODULE_DIR$/goals/literal-kit-subset-algebra" />
       <excludeFolder url="file://$MODULE_DIR$/goals/observability-kernel-catalog" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/beep-effect-web-alchemy" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />
