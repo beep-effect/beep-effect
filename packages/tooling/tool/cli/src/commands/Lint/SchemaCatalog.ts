@@ -12,6 +12,7 @@ import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/sc
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import * as Console from "effect/Console";
+import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
@@ -20,12 +21,14 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
+import { resolveShardScope, shardScopeIncludes, stageGeneratedFiles } from "../../internal/cli/ShardScope.ts";
 import { literalMemberEquals, makeSchemaFirstOwnerResolver, SchemaFirstIncludedGlobs } from "./SchemaFirst.ts";
 import type {
   CallExpression,
@@ -232,6 +235,13 @@ export class SchemaCatalogShard extends S.Opaque<SchemaCatalogShard, { readonly 
 /**
  * CLI options for schema catalog generation.
  *
+ * **Details**
+ *
+ * `paths` scopes the run to the shards of the packages owning those paths
+ * (the pre-commit hook passes the staged files); an empty list means the
+ * whole repository. `stage` adds every rewritten or removed shard to the git
+ * index after a write.
+ *
  * **Example** (Validate check-write options)
  *
  * ```ts
@@ -248,6 +258,14 @@ export class SchemaCatalogShard extends S.Opaque<SchemaCatalogShard, { readonly 
 export class SchemaCatalogOptions extends S.Opaque<SchemaCatalogOptions, { readonly brand: unique symbol }>()(
   S.Struct({
     write: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
+    paths: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<string>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<string>()))
+    ),
+    stage: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultKey(Effect.succeed(false))
     ),
@@ -279,6 +297,9 @@ export class SchemaCatalogSummary extends S.Opaque<SchemaCatalogSummary, { reado
     entries: S.Finite,
     shards: S.Finite,
     wroteCatalog: S.Boolean,
+    changed: S.Array(S.String).annotateKey({
+      description: "Repo-relative shard paths a write run rewrote or removed.",
+    }),
   }).pipe(
     $I.annoteSchema("SchemaCatalogSummary", {
       description: "Summary emitted after a schema catalog run.",
@@ -705,6 +726,13 @@ const collectCatalogEntriesFromSourceFile = (
 /**
  * Generate the static schema catalog document from the schema-first scan scope.
  *
+ * **Details**
+ *
+ * `includes` narrows the scan to the files it accepts, out of the files the
+ * schema-first globs match. A scoped run passes the owning packages' filter
+ * (`shardScopeIncludes`), so the document holds exactly the entries the full
+ * scan attributes to them. Omitted, every matched file is read.
+ *
  * **Example** (Wrap document generator Effect)
  *
  * ```ts
@@ -717,7 +745,9 @@ const collectCatalogEntriesFromSourceFile = (
  * @category use-cases
  * @since 0.0.0
  */
-export const generateSchemaCatalogDocument = Effect.fn("SchemaCatalog.generateDocument")(function* () {
+export const generateSchemaCatalogDocument = Effect.fn("SchemaCatalog.generateDocument")(function* (
+  includes: (absolutePath: string) => boolean = () => true
+) {
   return yield* Effect.gen(function* () {
     const path = yield* Path.Path;
     const fsUtils = yield* FsUtils;
@@ -726,13 +756,16 @@ export const generateSchemaCatalogDocument = Effect.fn("SchemaCatalog.generateDo
     // Enumerate through FsUtils so the scan is anchored at the repo root even
     // when the command runs from a workspace subdirectory (ts-morph resolves
     // relative globs against the process cwd).
-    const sourcePaths = yield* fsUtils.globFiles(
-      SchemaFirstIncludedGlobs,
-      GlobOptions.make({
-        absolute: true,
-        cwd: repoRoot,
-        ignore: "**/docs/**",
-      })
+    const sourcePaths = A.filter(
+      yield* fsUtils.globFiles(
+        SchemaFirstIncludedGlobs,
+        GlobOptions.make({
+          absolute: true,
+          cwd: repoRoot,
+          ignore: "**/docs/**",
+        })
+      ),
+      includes
     );
     const project = new Project({
       skipAddingFilesFromTsConfig: true,
@@ -914,37 +947,107 @@ const syncShard = Effect.fn("SchemaCatalog.syncShard")(function* (
   const absolute = path.join(repoRoot, shard.path);
   const current = (yield* fs.exists(absolute)) ? O.some(yield* fs.readFileString(absolute)) : O.none<string>();
   if (O.contains(current, shard.content)) {
-    return O.none<string>();
+    return O.none<ShardDrift>();
   }
   if (!write) {
-    return O.some(`[schema-catalog] ${O.isSome(current) ? "stale" : "missing"} ${shard.path}`);
+    return O.some(drift(shard.path, O.isSome(current) ? "stale" : "missing"));
   }
   yield* fs.makeDirectory(path.dirname(absolute), { recursive: true });
   yield* fs.writeFileString(absolute, shard.content);
-  return O.some(`[schema-catalog] wrote ${shard.path}`);
+  return O.some(drift(shard.path, "wrote"));
 });
 
 const retireFile = Effect.fn("SchemaCatalog.retireFile")(function* (write: boolean, repoRoot: string, file: string) {
   if (!write) {
-    return O.some(`[schema-catalog] orphaned ${file}`);
+    return O.some(drift(file, "orphaned"));
   }
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs.remove(path.join(repoRoot, file));
-  return O.some(`[schema-catalog] removed ${file}`);
+  return O.some(drift(file, "removed"));
 });
 
-const reportDrift = Effect.fn("SchemaCatalog.reportDrift")(function* (write: boolean, drift: ReadonlyArray<string>) {
-  if (!write && A.isReadonlyArrayNonEmpty(drift)) {
-    yield* Effect.forEach(drift, (line) => Console.error(line), { discard: true });
+type ShardDrift = { readonly path: string; readonly line: string };
+
+const drift = (path: string, status: string): ShardDrift => ({ path, line: `[schema-catalog] ${status} ${path}` });
+
+const reportDrift = Effect.fn("SchemaCatalog.reportDrift")(function* (
+  write: boolean,
+  drifted: ReadonlyArray<ShardDrift>,
+  scopeLabel: string
+) {
+  const lines = A.map(drifted, (entry) => entry.line);
+  if (!write && A.isReadonlyArrayNonEmpty(lines)) {
+    yield* Effect.forEach(lines, (line) => Console.error(line), { discard: true });
     return yield* failWithReportedExit(
-      `schema-catalog: ${A.length(drift)} shard(s) under ${SCHEMA_CATALOG_DIR} are stale, missing or orphaned; run ${SCHEMA_CATALOG_GENERATED_BY}.`
+      `schema-catalog: ${A.length(lines)} shard(s) under ${SCHEMA_CATALOG_DIR} are stale, missing or orphaned; run ${SCHEMA_CATALOG_GENERATED_BY}.`
     );
   }
-  yield* Effect.forEach(drift, (line) => Console.log(line), { discard: true });
-  yield* Console.log(
-    write ? `[schema-catalog] wrote ${SCHEMA_CATALOG_DIR}` : `[schema-catalog] ${SCHEMA_CATALOG_DIR} is current`
+  yield* Effect.forEach(lines, (line) => Console.log(line), { discard: true });
+  yield* Console.log(write ? `[schema-catalog] wrote ${scopeLabel}` : `[schema-catalog] ${scopeLabel} is current`);
+});
+
+// Shared tail of the full and scoped runs: stage what a write changed, then summarize.
+const finishSchemaCatalogRun = Effect.fn("SchemaCatalog.finishRun")(function* (
+  options: SchemaCatalogOptions,
+  repoRoot: string,
+  document: SchemaCatalogDocument,
+  shards: ReadonlyArray<{ readonly path: string; readonly content: string }>,
+  drifted: ReadonlyArray<ShardDrift>
+) {
+  const changed = options.write ? A.map(drifted, (entry) => entry.path) : A.empty<string>();
+  if (options.stage) {
+    yield* stageGeneratedFiles(repoRoot, changed);
+  }
+  const summary = SchemaCatalogSummary.make({
+    entries: A.length(document.entries),
+    shards: A.length(shards),
+    wroteCatalog: options.write,
+    changed,
+  });
+  yield* Console.log(`[schema-catalog] entries=${summary.entries} shards=${summary.shards}`);
+  return summary;
+});
+
+/**
+ * Regenerate only the shards owned by the packages that own `paths`.
+ *
+ * **Details**
+ *
+ * The scan reads just those packages' sources, so the run costs seconds, not
+ * the half minute of a repository-wide scan, and the resulting shard text is
+ * the same the full scan would write because entries never cross packages.
+ * Orphan retirement outside the scope and the retired single-file catalog are
+ * left to the full run; an in-scope owner that lost its last schema has its
+ * shard removed.
+ */
+const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
+  options: SchemaCatalogOptions,
+  repoRoot: string
+) {
+  const ownerResolver = yield* makeSchemaFirstOwnerResolver(repoRoot);
+  const scope = yield* resolveShardScope(repoRoot, options.paths, ownerResolver);
+  const owners = A.map(scope.owners, (owner) => owner.owner);
+  if (A.isReadonlyArrayEmpty(owners)) {
+    yield* Console.log(`[schema-catalog] no owning package for the given paths; nothing to regenerate`);
+    return SchemaCatalogSummary.make({ entries: 0, shards: 0, wroteCatalog: options.write, changed: [] });
+  }
+  const document = yield* generateSchemaCatalogDocument(shardScopeIncludes(scope, ownerResolver));
+  const shards = A.filter(yield* generateSchemaCatalogShards(document), (shard) =>
+    A.some(owners, (owner) => shard.path === schemaCatalogShardPath(owner))
   );
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const emptied = yield* Effect.filter(
+    A.filter(A.map(owners, schemaCatalogShardPath), (file) => !A.some(shards, (shard) => shard.path === file)),
+    (file) => fs.exists(path.join(repoRoot, file))
+  );
+  const drifted = A.getSomes([
+    ...(yield* Effect.forEach(shards, (shard) => syncShard(options.write, repoRoot, shard))),
+    ...(yield* Effect.forEach(emptied, (file) => retireFile(options.write, repoRoot, file))),
+  ]);
+  yield* reportDrift(options.write, drifted, A.join(owners, ", "));
+  return yield* finishSchemaCatalogRun(options, repoRoot, document, shards, drifted);
 });
 
 /**
@@ -955,7 +1058,9 @@ const reportDrift = Effect.fn("SchemaCatalog.reportDrift")(function* (write: boo
  * Write mode rewrites only shards whose text changed and deletes shards no
  * package owns any more, including the retired single-file catalog. Check
  * mode reports every stale, missing or orphaned shard and fails when any
- * exists.
+ * exists. With `paths`, only the shards of the packages owning those paths
+ * are generated and compared; with `stage`, a write run adds the shards it
+ * changed to the git index.
  *
  * **Example** (Wrap catalog runner Effect)
  *
@@ -972,23 +1077,19 @@ const reportDrift = Effect.fn("SchemaCatalog.reportDrift")(function* (write: boo
 export const runSchemaCatalog = Effect.fn("SchemaCatalog.run")(function* (options: SchemaCatalogOptions) {
   return yield* Effect.gen(function* () {
     const repoRoot = yield* findRepoRoot();
+    if (A.isReadonlyArrayNonEmpty(options.paths)) {
+      return yield* runScopedSchemaCatalog(options, repoRoot);
+    }
     const document = yield* generateSchemaCatalogDocument();
     const shards = yield* generateSchemaCatalogShards(document);
     const expected = A.map(shards, (shard) => shard.path);
     const orphans = A.filter(yield* existingCatalogFiles(repoRoot), (file) => !A.contains(expected, file));
-    const drift = A.getSomes([
+    const drifted = A.getSomes([
       ...(yield* Effect.forEach(shards, (shard) => syncShard(options.write, repoRoot, shard))),
       ...(yield* Effect.forEach(orphans, (file) => retireFile(options.write, repoRoot, file))),
     ]);
-    yield* reportDrift(options.write, drift);
-
-    const summary = SchemaCatalogSummary.make({
-      entries: A.length(document.entries),
-      shards: A.length(shards),
-      wroteCatalog: options.write,
-    });
-    yield* Console.log(`[schema-catalog] entries=${summary.entries} shards=${summary.shards}`);
-    return summary;
+    yield* reportDrift(options.write, drifted, SCHEMA_CATALOG_DIR);
+    return yield* finishSchemaCatalogRun(options, repoRoot, document, shards, drifted);
   }).pipe(Effect.withSpan("SchemaCatalog.run"));
 });
 
@@ -1015,8 +1116,18 @@ export const lintSchemaCatalogCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription(`Refresh the per-package shards under ${SCHEMA_CATALOG_DIR}`)
     ),
+    stage: Flag.Boolean("stage").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("After --write, add every rewritten or removed shard to the git index (pre-commit hook)")
+    ),
+    paths: Argument.String("paths").pipe(
+      Argument.variadic,
+      Argument.withDescription(
+        "Source paths whose owning packages' shards are regenerated; omit to scan the whole repository"
+      )
+    ),
   },
-  Effect.fn(function* ({ write }) {
-    yield* runSchemaCatalog(SchemaCatalogOptions.make({ write }));
+  Effect.fn(function* ({ write, stage, paths }) {
+    yield* runSchemaCatalog(SchemaCatalogOptions.make({ write, stage, paths: A.filter(paths, P.isString) }));
   })
 ).pipe(Command.withDescription(`Verify or refresh the per-package shards under ${SCHEMA_CATALOG_DIR}`));

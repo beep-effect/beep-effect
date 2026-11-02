@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (profile-derived quality concurrency, claude/perf-quality-concurrency-d42a27)",
-      "reason": "Record Quality.plan.ts, ProcessAttachment.ts and ProcessTable.ts added to the goals-doctor, knowledge and lint-deprecated-apis policy-fingerprint seal inputs; commands, outputs and cache settings are unchanged and no qualification is granted.",
+      "reason": "Record Quality.plan.ts, ProcessAttachment.ts and ProcessTable.ts added to the goals-doctor, knowledge and lint-deprecated-apis seal inputs, and ShardScope.ts added to the lint-schema-catalog seal (stale on main since #2563); commands, outputs and cache settings are unchanged and no qualification is granted.",
       "basis": {
         "path": "docs/reports/quality-concurrency-cache-review-2026-11-02.md",
-        "sha256": "297f18dbaa66bc2d5cb13879b466b65d8f97cfa14d2dd88abbc9feb9387a6303"
+        "sha256": "c3f3eab8d5e5d2e54c63de644838baeb6c91312b071b5f1e2b027bbb335fafd9"
       }
     },
     "@beep/acp": {
@@ -3613,6 +3613,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/CheckOutcome.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
@@ -4264,6 +4265,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/CheckOutcome.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
@@ -6120,6 +6122,7 @@
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/OptionRecord.ts",
+            "packages/tooling/tool/cli/src/internal/cli/ShardScope.ts",
             "packages/tooling/tool/cli/src/internal/cli/Timing.ts",
             "packages/tooling/tool/cli/src/internal/quality/SchemaFirstPolicyFinding.ts",
             "packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts",
@@ -121737,7 +121740,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "7c3708a8cbfa4841a9c5f5c5130347d2794992858e5cfbaed45aa0b821a88eeb"
+        "sha256": "0b42ac96273cbf1060421b7e501d4e427d8455ebc73182b16da2d4360e202d5d"
       }
     ]
   }

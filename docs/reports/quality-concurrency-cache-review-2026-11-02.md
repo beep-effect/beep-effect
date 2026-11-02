@@ -38,3 +38,22 @@ and the fingerprint regenerated with `bun run beep lint policy-fingerprint
 configuration-drift tasks for the same five added input paths in the table
 above; nothing else drifted. The re-recorded request binds `previous` to
 main's baseline bytes.
+
+## Main merge (2026-11-02, origin/main 226c252e34)
+
+Merging `origin/main` brought #2563 (pre-commit catalog-shard hook), #2580,
+#2546 and others. The baseline was taken from `main` and the fingerprint
+regenerated with `bun run beep lint policy-fingerprint --write`. The audit
+reported the same three seal tasks for the same added input paths, plus one
+more:
+
+| seal task | added input | source |
+| --- | --- | --- |
+| `//#lint:policy-fingerprint:lint-schema-catalog` | `packages/tooling/tool/cli/src/internal/cli/ShardScope.ts` | inherited from #2563 |
+
+#2563 made `commands/Lint/SchemaCatalog.ts` import `internal/cli/ShardScope.ts`
+but did not regenerate the seal, so `main`'s `turbo.json` and
+`standards/policy-tools.fingerprint.json` omit that path. This branch does not
+touch either file; regenerating the fingerprint on the merged tree adds the
+path, and this stamp records it under the same root subject `//`. Commands,
+outputs and cache settings are unchanged, and no qualification is granted.
