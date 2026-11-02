@@ -16,9 +16,13 @@ source is still an input when the command scans it. Authored documentation and
 tracked generated source must remain inputs when consumed. Apply exclusions to
 the relevant task, rather than globally hiding outputs from tasks that read them.
 
-Bun loads package-local `.env` and `.env.*` files. Cached executable package
-tasks include those files, even though Git ignores them. Transit nodes retain
-default Git-visible package inputs.
+Bun loads package-local `.env` and `.env.*` files. Only the tasks whose
+command consumes them hash them: `test`, `test:property`, `doctest`,
+`lint:jsdoc`, `lint:deprecated-apis`, and the `build` overrides of the Vite and
+Next apps. `lint`, `check` and `build` dropped `.env`/`.env.*` on 2026-11-02
+(quality audit R8): Biome and tsrs read no dotenv file, and the `.env` globs are
+package-relative, so the only invalidation they bought was a package-local
+dotenv edit. Transit nodes retain default Git-visible package inputs.
 
 The Vitest instrumentation runtime tests create temporary `.runtime-*`
 directories inside their fixture tree. The root Git ignore excludes only those
@@ -49,15 +53,15 @@ match the actual task implementation were discarded.
 
 | Task | Cache boundary |
 | --- | --- |
-| `doctest` | Source, tests, shared Vitest files and the utils dependency graph; no file outputs required. |
+| `doctest` | Source, tests, shared Vitest files and the utils dependency graph; no file outputs required. Every nested `node_modules` is excluded (`!**/node_modules/**`): fixture packages under `test/fixtures/*` carry Vitest result caches in `node_modules/.vite/vitest/**` that each run rewrites, which made `@beep/repo-cli#doctest` miss on every rerun (audit G4, 2026-11-02). |
 | `lint:deprecated-apis` | Explicit source globs must follow the dedicated type-aware Oxlint profile's output exclusions; policy fingerprint and transit carry implementation dependencies. |
 | `lint:jsdoc` | Explicit source globs exclude artifacts ignored by the JSDoc scanner; policy fingerprint carries implementation changes. |
 | `lint:laws` | Law inputs retain authored source and policy files; generated declarations and reports are excluded when the scanner excludes them. |
-| `build` | Defaults retain package source and configuration; the workspace tsgo wrapper is an explicit input. Declared outputs restore build products. App exceptions are below. |
+| `build` | Defaults retain package source and configuration; the workspace tsgo wrapper is an explicit input. Declared outputs restore build products. No dotenv inputs: `tsrs` reads none, and the Vite/Next apps declare `.env*` in their overrides (below). |
 | `@beep/api-docs#build` | TypeScript validation emits no files; `outputs: []` is intentional. |
-| `lint` | Defaults plus shared Biome/rule configuration; Storybook also scans sibling stories. |
+| `lint` | Defaults plus shared Biome/rule configuration; Storybook also scans sibling stories. No dotenv inputs. |
 | `lint:fix` | Uncached mutation. |
-| `check` | Package inputs, the workspace tsgo wrapper and upstream builds; existing app-specific external inputs retained. |
+| `check` | Package inputs, the workspace tsgo wrapper and upstream builds; existing app-specific external inputs retained. No dotenv inputs. |
 | `test` | Defaults, shared Vitest files and aliases, package dependency transit and shared utils transit; fast-check seed/count are hashed. |
 | `test:property` | Same test boundary with explicit fast-check settings. |
 | `package-test-typecheck` | Uncached diagnostics/receipt task; outputs declare the package result receipt. |
@@ -111,15 +115,18 @@ maintained representation of the scanner's workspace discovery.
 | `lint:judge-rubric` | Precise rubric input and policy implementation dependency retained. |
 | `lint:circular`, `lint:ecosystem-polarity`, `lint:reflection-artifacts` | Keep precise source/reflection globs; do not exclude legitimate nested source by directory name. |
 | `lint:effect-imports-markdown` | Retain authored Markdown consumed by the scanner, including internal docs it actually reads. |
-| `lint:markdown-fences` | Remains uncached: it compiles every guidance TypeScript fence against the workspace's TypeScript sources and the root tsconfig, so any source edit can change a verdict. |
+| `lint:markdown-fences`, `lint:retired-effect-paths`, `lint:retired-iri-authorities`, `lint:schema-tag-idioms` | Cached since 2026-11-02 (audit G10). Each lists tracked files with `git ls-files`, reads their working-tree bytes, and reads nothing else: no clock, no network, no `.beep` state. `lint:markdown-fences` also spawns the repository's `tsrs` against the root `tsconfig.json`; its inputs already cover every TypeScript source and tsconfig, and the compiler's identity rides on the root dependency hash. The git listing is the one place the scanner and the hash diverge (a file staged without a byte change is not re-hashed), which `lint:effect-imports` and `lint:opaque-roundtrips` already accept. |
 | `goals:index-check` | Retain goal inputs and implementation dependency. |
-| `knowledge:semantic-delta`, `knowledge:refs-check`, `goals:doctor`, `changeset:status` | Remain uncached; Git state and reference/packet checks are not qualified for result replay. |
+| `knowledge:semantic-delta`, `knowledge:refs-check`, `goals:doctor`, `changeset:status` | Remain uncached; Git state and reference/packet checks are not qualified for result replay. `goals:doctor` in particular runs `git log --since=<days>` and `git log -n 4000`: its staleness and completion-gate advisories depend on the clock and on git history, neither of which is a Turbo input (audit G10 verdict, 2026-11-02). |
 | `lint:deprecated-imports` | One root Biome pass for the project-domain `noDeprecatedImports` rule (off in the per-package `lint` task so `biome check .` stops scanning the whole repo per package). Inputs: every source file under apps/packages/infra, their manifests, `biome.jsonc` and `bun.lock` (deprecations come from dependency declarations). |
-| `lint:oxlint`, `lint:shadcn`, `lint:jsdoc-module-tags`, `lint:typos` | Remain uncached; preserve each scanner/report contract. `lint:shadcn` also reads the theme stylesheets, `components.json`, tsconfig paths, and package exports. |
+| `lint:oxlint`, `lint:shadcn`, `lint:typos` | Remain uncached; preserve each scanner/report contract. `lint:shadcn` also reads the theme stylesheets, `components.json`, tsconfig paths, and package exports. |
+| `lint:jsdoc-module-tags` | Cached since 2026-11-02 (audit G10): it lists tracked files with `git ls-files`, keeps `.patterns`, `apps`, `packages` and `tooling` sources by extension, and greps each for `@module`. The inputs mirror that scan and exclude generated artifact trees. |
+| `lint:holds` | Cached since 2026-11-02 (audit G10). The check path reads the ledger (`hold-ledger/**`), the root manifest, `osv-scanner.toml`, `syncpack.config.ts` and the workspace manifests the ledger anchors name; the clock is read only by `holds update` and the probe writer, and installed `node_modules` manifests only by the probe. |
 | `jsdoc:inventory:check` | Cached since 2026-10-06: the inventory is a pure function of workspace manifests, `docgen.json`, `tsdoc.json` and the TypeScript sources of every workspace, so the inputs cover `{packages,apps,infra}` plus the `scratchpad` (srcDir `.`, minus its docgen excludes; `.ts` and `.tsx`) and `tools` workspaces; artifact directories are excluded. The scan counts tracked and untracked-but-not-ignored files (`git ls-files --cached --others --exclude-standard`), the same set Turbo hashes, so `git add` of an unchanged file cannot reuse an inventory that never counted it. The declared `.beep/ci/jsdoc-documentation.inventory.*` outputs restore on a hit; that restore is how the cheap-gates ratchet hands its inventory to the pre-push `quality:jsdoc-ratchet` lane, keyed by content hash rather than a file path. It was the single largest cost of a warm `bun run lint` (about 250 s) and of cheap-gates (`quality:jsdoc-ratchet:regenerated`, p50 344 s, until perf audit M7). |
 | `jsdoc:ratchet:check` | Depends on `jsdoc:inventory:check` and the fingerprint; inputs are the committed totals baseline and every `{packages,apps}/**/src/**` TypeScript file, fixture trees included, because the zero-legacy gate reads every tracked or untracked-but-not-ignored `src` file (`isPackageSourceFile`). The cheap-gates `quality:jsdoc-ratchet:regenerated` lane runs this task. Turbo skips it when the inventory task is red. |
 | `lint:tsconfig-overlay` | Every `tsconfig*.json` under `apps`, `infra` and `packages` (overlays, owners and build configs), artifact directories excluded. |
 | `lint:package-test-typecheck` | Workspace manifests, `tsconfig*.json`, test sources under `test/` and the committed blind-spot baseline. |
+| `lint:schema-catalog` | The schema-first source globs (`SchemaFirstIncludedGlobs`, `docs` trees excluded), every workspace manifest the owner resolver reads, the root `tsconfig.json`, and the committed per-package shards under `standards/schema-catalog/` plus the retired single-file catalog path. Added 2026-11-02 so the cheap-gates lane restores from cache instead of re-walking the tree (~25 s). The hosted Repo Sanity lane still calls the CLI directly. |
 | `lint:effect-vitest` | Exactly the scanner's D9 globs (`EffectVitestSourceFileGlobs`: `*.test`/`*.spec` files and `test/**/*.ts` under `apps`, `packages`, `infra`, fixtures included, `node_modules` excluded) plus the committed inventory and primitives graph the pin checks read; a tripwire pins the inputs to those constants. Check mode writes nothing. |
 | `fallow:audit:check`, `fallow:health:check`, `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`, `fallow:security:advisory`, `fallow:fix-preview:advisory`, `fallow:dead-code:check`, `fallow:boundaries:config-check` | Remain uncached with their baseline/environment/report contracts. |
 | `repo-sanity:bun-audit` | Remains uncached because vulnerability data can change independently of source. |
@@ -145,7 +152,9 @@ zero seconds. Three decisions follow:
 - The overlay, test-typecheck, effect-vitest and JSDoc ratchet checks moved from
   repo-cli subprocess steps into cached root Turbo tasks inside the medium and
   state phases. `quality:test-tsgo` stays a repo-cli step because its Turbo task
-  (`package-test-typecheck`) is uncached by tripwire ruling. The root documentation
+  (`package-test-typecheck`) is uncached by tripwire ruling, and since 2026-11-02 the
+  lint-policy plan is its only owner: root `bun run check` no longer runs it a second
+  time. The root documentation
   program (`lint:jsdoc`) runs oxlint with `.oxlintrc.docs.json` and no persistent result cache.
   Turbo owns package and non-workspace documentation caching: inputs include the docs config,
   `tsdoc.json` and `@beep/lint-rules` source. The documentation input digest includes the
@@ -159,6 +168,10 @@ zero seconds. Three decisions follow:
 - `apps/professional-desktop`: build hashes `.env*` and the Vite-exposed
   `TAURI_*` family. Check extends inherited inputs before adding sibling stories
   and the external drizzle path.
+- `apps/todox`, `apps/beep-effect-web`, `apps/labs/trustgraph-workbench`,
+  `apps/labs/semantica`, `apps/labs/lejeune-bolt-workbench`: `next build` and
+  `vite build` load `.env*` themselves, so each build override declares `.env*`
+  now that the root `build` task no longer does.
 - `apps/storybook`: lint includes the sibling stories it scans; existing check
   dependencies and uncached dev port passthrough remain. Dev-only HMR port
   settings do not affect the static build.
@@ -217,8 +230,14 @@ conceal files the scanner still checks.
 ## Extra work after a cached root check
 
 `bun run check` first runs Turbo's package check/build graph. An unscoped
-invocation then runs `quality:test-tsgo` and `quality:tsgo-smoke` as separate
-CLI steps. The graph's `FULL TURBO` result does not cover those steps.
+invocation then runs `quality:tsgo-smoke` as a separate CLI step. The graph's
+`FULL TURBO` result does not cover that step. The repo-wide test-typecheck
+step (`quality:test-tsgo`) runs once, at the end of the lint-policy plan
+(`bun run lint`, `bun run beep lint policy`, the `quality:lint-policy` pre-push
+lane and hosted Lint Policy); a check-only session that wants it runs
+`bun run beep quality test-tsgo` directly. Until 2026-11-02 root check ran it
+too, so `audit packages` and a check-then-lint session walked the test files
+twice against an uncached task.
 
 The test-typecheck step discovers packages whose normal check does not cover
 all tests, skips covered packages, and dispatches `package-test-typecheck` for

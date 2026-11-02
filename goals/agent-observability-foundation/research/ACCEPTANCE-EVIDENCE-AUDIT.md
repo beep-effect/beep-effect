@@ -1,6 +1,31 @@
 # Acceptance evidence audit
 
-## Current source refresh — October 31
+## Current qualification — November 2 UTC
+
+The [post-merge qualification](POST-MERGE-QUALIFICATION.md) is the current delivery status. PR2364 merged with an unsatisfied canonical completion result; the original merge-time receipt is preserved. A follow-up final PR must earn its own readiness and merge-time evidence. The assessments below remain scoped historical support.
+
+The integrated source is supported by fresh Node22.23.4 results: **870 AI-metrics tests, 40 Phoenix tests (integration directory excluded), 73 managed-provider tests and all 44 HarnessLedger tests**, with 249 selected tracked package/source/test/configuration/lockfile inputs stable. Fresh root preparation binds exactly 84 canonical inputs; nineteen pin refusals and ten verifier controls pass. Independent Astra accepted the same-root disposable/live pair with **90/89 stage inputs**, all exact event/attempt/visibility bindings, private metadata and rollback. The [package receipt](../ops/history/integrated-package-proof-20261102.json), [root receipt](../ops/history/integrated-root-preparation-20261102.json) and [stage receipt](../ops/history/integrated-declared-stages-20261102.json) preserve execution and derivative hashes. The earlier 855/40/73,82-input and104-binding checkpoint is historical support. All thirteen criteria remain supported at the stated domain scopes; final hosted checks, review, qualified merge and canonical completion are still required.
+
+After shared main repair2535, the [script-only applicability review](../ops/history/integrated-audit-script-applicability-20261102.json) independently verified245 identical selected inputs and four manifests with only uninvoked audit/lint keys changed. Original execution provenance remains unchanged; at that recorded comparison head all84/90/89 source bindings matched its Git. This is a limited applicability bridge, not a fresh test execution or final hosted proof.
+
+The later explicit-pin repair removes obsolete execution defaults and requires both reviewed flags before proof I/O. Six new boundary tests and22 refusal controls pass. Its [independently accepted applicability bridge](../ops/history/explicit-pin-proof-applicability-20261102.json) records84/84 root inputs exact,88/90 disposable and87/89 live inputs exact, with only the two proof helpers changed. Successful explicit-pin paths remain equivalent; the original stage maps are preserved and are not represented as fresh current-helper executions.
+
+| AC | Current support and retained boundary |
+| --- | --- |
+| 1–2 | Current typed inventory/identity tests and positive root probe; capability, launch and event populations stay separate. Global Codex identity remains protected. Seven real-harness populations remain Unknown. |
+| 3 | Current discovery/page/sweep suites cover fair N+1 traversal, incomplete and unreadable children, interrupted page re-offer and per-attempt scheduling, alongside retained rotation/copy/partial-line fixtures. Unseen rewrites are not universally detected. |
+| 4–6 | Actual encoder/HTTP/crash/ledger suites plus fresh exact event/attempt/visibility checks support event time, bounded metadata and exclusive states. Historical replay/epoch experiments retain their original execution scope. |
+| 7 | Current provider/cache export tests and historical pinned-backend usage/UI reconciliation retain their distinct scopes. The fresh two-record route does not repeat the aggregate/UI experiment. |
+| 8–10 | All 25 retained Dankserver source bindings still match. Fresh template, private maintenance, queue/health and local alert proofs support the qualified arrangement; elapsed-age expiry and production backup readiness are not newly qualified. |
+| 11 | Orchestrator rechecked masked/inactive historical service and timer. Independent artifact review confirms distinct owned canary resources and no hold-release claim. |
+| 12 | Fresh same-root disposable then live pair independently binds expected IDs to native/local/backend/visibility sets with privacy and rollback. Real enrollment is unqualified. |
+| 13 | Current ownership/compatibility tests and fresh rollback retain queues, journals, backend evidence and historical IDs/archives. Off-device recovery and production generation management remain deployment obligations. |
+
+## Main integration — November 2, d240a7da
+
+The shared main repairs are integrated and published. The [current comparison](../ops/history/shared-main-applicability-20261102.json) retains 244 exact selected package inputs, the same four uninvoked script-only manifest changes, and one additional test-file delta: main added HarnessLedger diagnostic cases without changing the original tests. The recorded 44-test execution does not include those additions. Final-head hosted tests must verify the integrated tree; no local rerun is claimed. Preparation remains 84/84 exact; stages remain 88/90 and 87/89 exact with only the already reviewed explicit-pin guard changes. Original executions, hashes and limitations remain unchanged. No production enrollment or recovery-hold release occurred.
+
+## Historical source refresh — October 31
 
 The October 29 assessments below retain their historical execution scope. The
 latest completed route qualification is now

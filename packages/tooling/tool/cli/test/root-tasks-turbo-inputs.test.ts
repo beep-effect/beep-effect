@@ -79,12 +79,14 @@ const fixtureArbitrary = Arbitrary.all([Arbitrary.schema(TaskSummary), Arbitrary
 
 // One direct read per §2.2 row, including expanded Fallow rows. These are independent
 // probes, not strings derived from the input globs whose behavior we are testing.
+// `goals:doctor` reads `git log --since` (clock and git history). The five tracked-file
+// law scans and `lint:holds` cache since 2026-11-02 (quality audit G10): their check
+// paths read declared files only (listed through `git ls-files`), no clock, no network.
 const nonReusableTasks: ReadonlyArray<string> = [
   "knowledge:semantic-delta",
   "knowledge:refs-check",
   "lint:oxlint",
   "lint:shadcn",
-  "lint:jsdoc-module-tags",
   "goals:doctor",
   "lint:typos",
   "fallow:audit:check",
@@ -98,11 +100,6 @@ const nonReusableTasks: ReadonlyArray<string> = [
   "fallow:dead-code:check",
   "repo-sanity:bun-audit",
   "fallow:boundaries:config-check",
-  "lint:markdown-fences",
-  "lint:retired-effect-paths",
-  "lint:retired-iri-authorities",
-  "lint:schema-tag-idioms",
-  "lint:holds",
 ];
 
 const directInputs: Readonly<Record<string, string>> = {
@@ -113,6 +110,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "knowledge:semantic-delta": "docs/c3-probe.md",
   "knowledge:refs-check": "docs/c3-probe.md",
   "lint:schema-first": "standards/schema-first.inventory.jsonc",
+  "lint:schema-catalog": "standards/schema-catalog/@fixture/member.generated.jsonc",
   "lint:identity-registry": "tools/fixture/c3-probe.ts",
   "lint:circular": "packages/foundation/fixture/src/c3-probe.ts",
   "lint:effect-imports": "apps/fixture/c3-probe.mts",
@@ -389,9 +387,12 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
       "ignores generated job artifacts in qualified root input boundaries",
       Effect.fnUntraced(function* () {
         const { root, tasks, binary } = yield* fixture();
+        // `lint:schema-catalog` shares the schema-first scanner's globs (same owner
+        // resolver, same source walk), so it carries the same artifact exposure.
         const scannerOwnedInputs = [
           "//#lint:allowlist",
           "//#lint:schema-first",
+          "//#lint:schema-catalog",
           "//#lint:effect-imports",
           "//#lint:tsgo-rules",
         ];

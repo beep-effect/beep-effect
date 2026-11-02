@@ -1,5 +1,5 @@
 {
-  "previous": "fb66163dc4f064bcb55dfc24680e8f00fd58231eb49865567283fc3f633406be",
+  "previous": "9231f1d4d4d5186945f70b1bf6e2f560f5a7e14dd1c9e2b86d108567e7e5c8d5",
   "review": {
     "reviewer": "Claude Opus 5.5 (perf-jsdoc-ratchet-turbo)",
     "reason": "Re-record the legacy cache posture of the root subject after //#jsdoc:inventory:check widened its scratchpad input glob to .tsx, matching the files its scanner reads. No command, output, dependency, cache flag or env key changed; no qualification is granted.",

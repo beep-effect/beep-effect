@@ -202,11 +202,11 @@ const cheapWrapperRow = (
  * A1 did not yet carry an inner-lane duration, the row names the aggregate or
  * related wrapper used as the P50 proxy. First-red shares use the 832
  * attempts whose first actionable failure was reconstructable. Every pointer
- * except the `/hosted/laneRows` sentinel of `quality:storybook` and
- * `quality:shadcn-lint` is fixture-verified, including which A1 row it
- * resolves to (see {@link DEFAULT_GATE_ORDER_COST_SOURCES}); storybook's 584 s
- * is one external main run, and shadcn-lint's 20 s is a conservative estimate
- * from a local run until its hosted job has history.
+ * except the `/hosted/laneRows` sentinel of `quality:storybook` is
+ * fixture-verified, including which A1 row it resolves to (see
+ * {@link DEFAULT_GATE_ORDER_COST_SOURCES}); storybook's 584 s is one external
+ * main run. `quality:cache-policy` (cheap-gates only) and `quality:shadcn-lint`
+ * (folded into `quality:lint-policy`) left the pre-push plan on 2026-11-02.
  *
  * **Gotchas**
  *
@@ -243,22 +243,6 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
     postdatesA1Window(repoSanityRow("repo-sanity:config-typecheck", 0)),
     postdatesA1Window(repoSanityRow("repo-sanity:goals-ops-typecheck", 0)),
     repoSanityRow("repo-sanity:bun-audit", 13 / 832, O.some(17)),
-    // Joined the repo-sanity group after the A1 window (#1068); seeded under the
-    // ruling 76 seeding rule so it no longer runs after every seeded lane.
-    GateOrderSeedRow.make({
-      laneId: "quality:cache-policy",
-      costP50Seconds: 183,
-      durationPointer: hostedDurationPointer(7),
-      durationBasis:
-        "A1 hosted Repo Sanity aggregate P50 proxy; the lane joined the group on 2026-09-10 (#1068), after the A1 window.",
-      redProbability: 0,
-      firstRedPointer: NO_EXACT_FIRST_RED_POINTER,
-      firstRedBasis: POSTDATES_A1_FIRST_RED_BASIS,
-      precision: "precise",
-      precisionBasis: PRECISE_BASIS,
-      laneClass: "policy-preflight",
-      laneClassBasis: POLICY_PREFLIGHT_BASIS,
-    }),
     seedRow(
       "quality:build",
       14.348,
@@ -283,26 +267,6 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       O.some(11),
       "precise",
       "Terminal reds occur after the established environment-only TS2589 quarantine."
-    ),
-    // The Shadcn Lint context landed 2026-10-01 with no hosted history, so A1 has no
-    // row for it. 20 s is a conservative hosted P50: the oxlint walk over apps and
-    // packages takes about 4 s wall on the 64-core workstation, and the 4-vCPU hosted
-    // runner plus Turbo start-up is budgeted at five times that. Reseed from the
-    // hosted job's own P50 once it has a green history.
-    // taskIds: //#lint:shadcn.
-    postdatesA1Window(
-      seedRow(
-        "quality:shadcn-lint",
-        20,
-        "/hosted/laneRows",
-        "Conservative hosted P50 for the Shadcn Lint context (added 2026-10-01): about 4 s local oxlint wall time scaled for a 4-vCPU runner plus Turbo start-up; A1 recorded no row for this non-required context.",
-        0,
-        O.none(),
-        "precise",
-        PRECISE_BASIS,
-        "policy-preflight",
-        POLICY_PREFLIGHT_BASIS
-      )
     ),
     // taskIds: //#jsdoc:inventory:check; CLI compare follows a fresh inventory.
     hostedRow("quality:jsdoc-ratchet", 82, 16, 0),
@@ -482,12 +446,10 @@ export const DEFAULT_GATE_ORDER_COST_SOURCES: ReadonlyArray<GateOrderCostSource>
   proxyRowCost("repo-sanity:config-typecheck", "Repo Sanity"),
   proxyRowCost("repo-sanity:goals-ops-typecheck", "Repo Sanity"),
   proxyRowCost("repo-sanity:bun-audit", "Repo Sanity"),
-  proxyRowCost("quality:cache-policy", "Repo Sanity"),
   proxyRowCost("quality:build", "feedback:01-build"),
   laneRowCost("quality:lint", "Lint"),
   laneRowCost("quality:lint-policy", "Heavy / Lint Policy"),
   laneRowCost("quality:check", "Heavy / Check"),
-  costSource("quality:shadcn-lint", "external-run", O.none()),
   proxyRowCost("quality:jsdoc-ratchet", "Heavy / Doctest"),
   laneRowCost("quality:docgen", "Heavy / Docgen"),
   laneRowCost("quality:doctest", "Heavy / Doctest"),
