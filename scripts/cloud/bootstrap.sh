@@ -377,8 +377,9 @@ install_publish_tool() {
     discard_staged "${tool}"
     return 0
   fi
-  # -T: the target is the exact file path. A directory (or a link to one) at
-  # that path is refused instead of receiving the staged file inside it.
+  # -T: the target is the exact file path. A directory at that path is refused
+  # instead of receiving the staged file inside it; a symlink there (even one to
+  # a directory) is itself replaced, and its referent is left untouched.
   if ! mv -fT -- "${publish_staged}" "${dest}/${tool}"; then
     warn "${tool}: rename into ${dest} failed; previous binary, if any, kept."
     discard_staged "${tool}"

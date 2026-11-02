@@ -134,6 +134,7 @@ here, because it is not installed in the container.
 | Fable N1/N2, Grok link gap | Duplicates of the rows above. Grok's temp-global-directory setting was **not** added: the `sudo`/`ln` fixture route reaches the same branch without a new production setting. |
 | A3 (version-token shape) | Limit accepted unchanged; no live qualification claimed. |
 | A4 (runbook) | Still open, held by #2536; the proposed text is on #2582. |
+| A4 (runbook), current disposition | **Fixed** in `f2446cc2` after #2536 merged (`a0b0944b`); see the A4 update below. The row above records the state when this wave was written and is kept as is. |
 
 | Scripts | Result (same 28-test file, root runner) |
 | --- | --- |
