@@ -2818,6 +2818,7 @@
         "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
         "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
         "packages/tooling/tool/cli/src/internal/cli/OptionRecord.ts",
+        "packages/tooling/tool/cli/src/internal/cli/ShardScope.ts",
         "packages/tooling/tool/cli/src/internal/cli/Timing.ts",
         "packages/tooling/tool/cli/src/internal/quality/SchemaFirstPolicyFinding.ts",
         "packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts",

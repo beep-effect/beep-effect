@@ -1,5 +1,5 @@
 {
-  "previous": "fb66163dc4f064bcb55dfc24680e8f00fd58231eb49865567283fc3f633406be",
+  "previous": "2f26ed82be3123843852ed3afb43e66b3986df3582e166901230c789618b12c8",
   "review": {
     "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W3 kit, feat/gh-git-w3-github-kit)",
     "reason": "Record the W3 kit root re-seal: GitHubApp.ts imports TokenPermissions.ts for assertPermissions, so that module enters the goals-doctor, knowledge and quality policy closures; no manifest or dependency changes; no qualification is granted.",
