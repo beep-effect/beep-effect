@@ -482,3 +482,7 @@ separate. No computation, current-canary command or production profile is promot
   namespace and mount only synthetic work plus read-only executable dependencies.
   Explicit invalid bases fail; unknown implicit bases conservatively select all.
   No Beep task, protected workflow, remote cache or production speedup is proven.
+
+### 2026-11-02 current population and publish identity
+
+The current census was executed at accepted `68834a997e97a0504df6feee6f57d083b3258c1b`; its438 source bindings and raw digest are retained in [the source checkpoint](population-refresh-checkpoint-2026-11-02.json). The [prior population](population-before-refresh-2026-11-02.json) preserves all199 historical reviews byte-identically. The [current literal-source review](current-fresh-disposition-review-2026-11-02.json) covers198 whole commands that must execute; it grants no pure-task reuse. The [preservation controls](population-preservation-controls-2026-11-02.json) apply only to report retention. Accepted [#2478](https://github.com/beep-effect/beep-effect/commit/f69e6dd06759639279eed885665a5c564528bd7c) supplies the owned-commit resolution behavior adopted by the SPEC amendment; no new implementation or retroactive proof is asserted.
