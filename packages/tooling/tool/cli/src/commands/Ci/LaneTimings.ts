@@ -38,6 +38,8 @@
  * @since 0.0.0
  */
 
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
@@ -52,17 +54,25 @@ import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { detectGithubJobShapeClass, GithubJobRecord, GithubJobStepRecord } from "../../internal/github/index.ts";
-import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
+import {
+  detectGithubJobShapeClass,
+  GithubClientRequest,
+  GithubJobRecord,
+  GithubJobStepRecord,
+  layerGithubClientFor,
+  layerGithubRepoFor,
+  selectGithubIdentity,
+} from "../../internal/github/index.ts";
 import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import { CiCommandError } from "./Ci.errors.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type { GitHubError } from "@beep/github/GitHubError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as SchemaAST from "effect/SchemaAST";
 
@@ -780,25 +790,18 @@ class CiWorkflowRunsPage extends S.Opaque<CiWorkflowRunsPage, { readonly brand: 
   )
 ) {}
 
-const decodeCiWorkflowRunsPage = S.decodeUnknownEffect(S.fromJsonString(CiWorkflowRunsPage));
-
-const CI_WORKFLOW_RUNS_JQ =
-  "{total_count,workflow_runs:[.workflow_runs[]|{created_at,event,head_branch,head_sha,id,run_attempt,run_started_at,updated_at}]}";
-const CI_LEGACY_WORKFLOW_JOBS_JQ =
-  "{total_count,jobs:[.jobs[]|{completed_at,conclusion,created_at,id,labels,name,run_attempt,run_id,runner_name,started_at,status,steps}]}";
-const CI_WINDOW_WORKFLOW_JOBS_JQ =
-  "{total_count,jobs:[.jobs[]|{completed_at,conclusion,created_at,id,name,run_attempt,run_id,started_at,status}]}";
-const CI_BRANCH_RULES_JQ = "[.[]|{ruleset_id,type}+(if .parameters==null then {} else {parameters} end)]";
+const decodeCiWorkflowRunsPage = S.decodeUnknownEffect(CiWorkflowRunsPage);
+const decodeCiWorkflowJobsValue = S.decodeUnknownEffect(CiWorkflowJobsPage);
 
 /**
- * Number of retries after the first attempt, so a transient `gh api` failure is
- * attempted five times in total before it becomes a {@link CiCommandError}.
+ * Number of retries after the first attempt, so a transient GitHub API failure
+ * is attempted five times in total before it becomes a {@link CiCommandError}.
  */
 const GH_API_TRANSIENT_RETRY_COUNT = 4;
 
 const GhApiTransientKind = LiteralKit(["transport", "secondary-rate-limit"]).pipe(
   $I.annoteSchema("GhApiTransientKind", {
-    description: "Which transient class a failed gh api exit belongs to; each class has its own backoff base.",
+    description: "Which transient class a failed GitHub API read belongs to; each class has its own backoff base.",
   })
 );
 type GhApiTransientKind = typeof GhApiTransientKind.Type;
@@ -818,18 +821,20 @@ const GH_API_TRANSIENT_BASE_DELAY: Record<GhApiTransientKind, Duration.Duration>
 };
 
 /**
- * Output fragments that mark a failed `gh api` exit as a transport-class
- * transient failure: `bad record MAC`, connection resets, unexpected EOF, and
- * timeouts (observed once per several thousand paginated GETs under a fan-out
- * of eight) plus the 502/503/504 gateway statuses. Every other non-zero exit,
- * including 4xx and other 5xx API errors, fails immediately.
+ * What marks a failed read as a transport-class transient failure: the 502,
+ * 503 and 504 gateway statuses, a failure with no status at all, or a reason
+ * naming a broken connection (`bad record MAC`, a connection reset, an
+ * unexpected EOF, a timeout; octokit reports a request that never reached
+ * GitHub as a status-500 failure whose reason is the network error). Every other
+ * failure, including 4xx and a 5xx GitHub itself answered, fails immediately.
+ * Observed once per several thousand paginated GETs under a fan-out of eight.
  */
-const GH_API_TRANSPORT_OUTPUT_PATTERNS: ReadonlyArray<RegExp> = [
+const GH_API_TRANSPORT_STATUSES: ReadonlyArray<number> = [502, 503, 504];
+const GH_API_TRANSPORT_REASON_PATTERNS: ReadonlyArray<RegExp> = [
   /bad record MAC/iu,
   /connection reset/iu,
   /unexpected EOF/iu,
   /\btimed out\b|\btimeout\b/iu,
-  /\(HTTP 50[234]\)/u,
 ];
 
 /**
@@ -838,22 +843,57 @@ const GH_API_TRANSPORT_OUTPUT_PATTERNS: ReadonlyArray<RegExp> = [
  * other status is not a rate limit.
  */
 const GH_API_SECONDARY_RATE_LIMIT_PATTERN = /secondary rate limit/iu;
-const GH_API_RATE_LIMIT_STATUS_PATTERN = /\(HTTP (?:403|429)\)/u;
+const GH_API_RATE_LIMIT_STATUSES: ReadonlyArray<number> = [403, 429];
 
-const classifyGhApiTransientOutput = (output: string): O.Option<GhApiTransientKind> =>
-  GH_API_SECONDARY_RATE_LIMIT_PATTERN.test(output) && GH_API_RATE_LIMIT_STATUS_PATTERN.test(output)
+const hasStatusIn = (error: GitHubError, statuses: ReadonlyArray<number>): boolean =>
+  O.exists(O.fromUndefinedOr(error.status), (status) => A.contains(statuses, status));
+
+const isTransportFailure = (error: GitHubError): boolean =>
+  error.status === undefined ||
+  hasStatusIn(error, GH_API_TRANSPORT_STATUSES) ||
+  A.some(GH_API_TRANSPORT_REASON_PATTERNS, (pattern) => pattern.test(error.reason));
+
+// The kit's own retry is off for these reads (`retry: "off"`), so this table is the only one.
+const classifyGithubApiTransient = (error: GitHubError): O.Option<GhApiTransientKind> =>
+  hasStatusIn(error, GH_API_RATE_LIMIT_STATUSES) && GH_API_SECONDARY_RATE_LIMIT_PATTERN.test(error.reason)
     ? O.some("secondary-rate-limit")
-    : A.some(GH_API_TRANSPORT_OUTPUT_PATTERNS, (pattern) => pattern.test(output))
+    : isTransportFailure(error)
       ? O.some("transport")
       : O.none();
+
+/**
+ * The ` (HTTP <status>)` a failed GitHub API call reports, or nothing when the call never got a status.
+ *
+ * **Example** (Name the status of a refused read)
+ *
+ * ```ts
+ * import { githubStatusSuffix } from "@beep/repo-cli/commands/Ci"
+ * import { GitHubError } from "@beep/github/GitHubError"
+ *
+ * console.log(githubStatusSuffix(GitHubError.notFound("GET /repos/{owner}/{repo}", "repository"))) // " (HTTP 404)"
+ * ```
+ *
+ * @param error - The failed call.
+ * @returns The status suffix the Ci failure messages carry.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const githubStatusSuffix = (error: GitHubError): string =>
+  O.match(O.fromUndefinedOr(error.status), {
+    onNone: () => "",
+    onSome: (status) => ` (HTTP ${status})`,
+  });
+
+const githubApiFailure = (endpoint: string, error: GitHubError): string =>
+  `GitHub API ${endpoint} failed${githubStatusSuffix(error)}: ${error.reason}`;
 
 class CiGhApiTransientExit extends S.TaggedError<CiGhApiTransientExit, { readonly brand: unique symbol }>(
   $I`CiGhApiTransientExit`
 )(
   "CiGhApiTransientExit",
-  { endpoint: S.String, exitCode: S.Finite, kind: GhApiTransientKind, output: S.String },
+  { endpoint: S.String, kind: GhApiTransientKind, failure: S.String },
   $I.annoteError<CiGhApiTransientExit>("CiGhApiTransientExit", {
-    description: "A non-zero gh api exit whose output matches a transient transport or rate-limit failure.",
+    description: "A failed GitHub API read classified as a transient transport or secondary-rate-limit failure.",
   })
 ) {}
 
@@ -877,67 +917,54 @@ const ghApiTransientRetrySchedule: Schedule.Schedule<Duration.Duration, CiComman
   );
 
 const ghApiJsonAttempt = Effect.fn("Ci.laneTimingsGhApiAttempt")(function* (
-  repoRoot: string,
-  endpoint: string,
-  args: ReadonlyArray<string>
-): Effect.fn.Return<
-  string,
-  CiCommandError | CiGhApiTransientExit,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const result = yield* runRepoCommandCapture("gh", args, repoRoot).pipe(
-    CiCommandError.mapError(`Failed to run gh api ${endpoint}.`)
+  endpoint: string
+): Effect.fn.Return<unknown, CiCommandError | CiGhApiTransientExit, GitHubClient | Repo> {
+  const client = yield* GitHubClient;
+  const { owner, repo } = yield* Repo;
+  return yield* client.requestDecoded(`GET /${endpoint}`, { owner, repo }, S.Unknown).pipe(
+    Effect.mapError((error) =>
+      O.match(classifyGithubApiTransient(error), {
+        onNone: () => CiCommandError.make({ message: githubApiFailure(endpoint, error) }),
+        onSome: (kind) => CiGhApiTransientExit.make({ endpoint, kind, failure: githubApiFailure(endpoint, error) }),
+      })
+    )
   );
-  if (result.truncated) {
-    return yield* CiCommandError.make({ message: `gh api ${endpoint} returned a truncated response.` });
-  }
-  if (result.exitCode !== 0) {
-    return yield* O.match(classifyGhApiTransientOutput(result.output), {
-      onNone: () => CiCommandError.make({ message: `gh api ${endpoint} exited ${result.exitCode}: ${result.output}` }),
-      onSome: (kind) => CiGhApiTransientExit.make({ endpoint, exitCode: result.exitCode, kind, output: result.output }),
-    });
-  }
-  return result.output;
 });
 
 /**
- * Run `gh api <endpoint>` with an optional `--jq` projection, retrying
- * transient transport and secondary-rate-limit exits.
+ * Read one GitHub REST endpoint as JSON, retrying transient transport and
+ * secondary-rate-limit failures.
  *
  * **Details**
  *
- * Transport blips retry from 250ms and secondary rate limits from one minute,
- * doubling with upward jitter, five attempts in total. Any other non-zero
- * exit and any truncated capture fail at once as a {@link CiCommandError}.
+ * `{owner}` and `{repo}` in the endpoint resolve from the `Repo` service; a
+ * query string stays part of the endpoint. The read goes through the
+ * `@beep/github` `GitHubClient` with the kit's own retry turned off, so the
+ * decision table here is the only one: a 502/503/504, a failure with no status,
+ * or a broken-connection reason retries from 250ms; a 403/429 carrying GitHub's
+ * secondary rate limit message retries from one minute; both double with
+ * upward jitter, five attempts in total. Any other failure fails at once as a
+ * {@link CiCommandError}.
  *
  * **Example** (Build a run lookup)
  *
  * ```ts
  * import { ghApiJson } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect";
- * import * as O from "effect/Option"
  *
- * const program = ghApiJson(".", "repos/{owner}/{repo}/actions/runs/1", O.some("{id}"))
+ * const program = ghApiJson("repos/{owner}/{repo}/actions/runs/1")
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @param repoRoot - Checkout `gh` runs in; it resolves `{owner}/{repo}` from it.
- * @param endpoint - REST endpoint path.
- * @param jqProjection - Optional `--jq` filter applied by `gh`.
- * @returns The captured stdout.
+ * @param endpoint - REST endpoint path, without the leading slash.
+ * @returns The decoded JSON body.
  * @category use-cases
  * @since 0.0.0
  */
 export const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
-  repoRoot: string,
-  endpoint: string,
-  jqProjection: O.Option<string>
-): Effect.fn.Return<string, CiCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const args = A.appendAll(
-    ["api", endpoint],
-    A.flatMap(O.toArray(jqProjection), (projection) => ["--jq", projection])
-  );
-  return yield* ghApiJsonAttempt(repoRoot, endpoint, args).pipe(
+  endpoint: string
+): Effect.fn.Return<unknown, CiCommandError, GitHubClient | Repo> {
+  return yield* ghApiJsonAttempt(endpoint).pipe(
     Effect.retry({
       schedule: ghApiTransientRetrySchedule,
       times: GH_API_TRANSIENT_RETRY_COUNT,
@@ -945,45 +972,109 @@ export const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
     }),
     Effect.catchTag("CiGhApiTransientExit", (exit) =>
       CiCommandError.make({
-        message: `gh api ${endpoint} exited ${exit.exitCode} on every one of ${GH_API_TRANSIENT_RETRY_COUNT + 1} attempts (${exit.kind}): ${exit.output}`,
+        message: `${exit.failure} on every one of ${GH_API_TRANSIENT_RETRY_COUNT + 1} attempts (${exit.kind})`,
       })
     )
   );
 });
 
+/**
+ * The GitHub client and repository the Ci commands read through, resolved from `cwd`.
+ *
+ * **Details**
+ *
+ * The client speaks as the identity `selectGithubIdentity` picks
+ * (`BEEP_GH_TOKEN_REF`, the App triple, else `gh auth token`, which under
+ * Actions reads the workflow's `GH_TOKEN`), with the kit's retry off because
+ * {@link ghApiJson} owns the transient decision table. The repository is
+ * `GH_REPO` or the checkout's `origin`, the two places `gh` resolved
+ * `{owner}/{repo}` from. Identity failures become {@link CiCommandError}.
+ *
+ * **Example** (Build the Ci GitHub layer)
+ *
+ * ```ts
+ * import { layerCiGithub } from "@beep/repo-cli/commands/Ci"
+ * import * as Layer from "effect/Layer";
+ *
+ * console.log(Layer.isLayer(layerCiGithub(".")))
+ * ```
+ *
+ * @param cwd - The checkout whose identity and remote are used.
+ * @returns A layer providing `GitHubClient` and `Repo`.
+ * @category layers
+ * @since 0.0.0
+ */
+export const layerCiGithub = (
+  cwd: string
+): Layer.Layer<GitHubClient | Repo, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> =>
+  O.none<string>().pipe(
+    selectGithubIdentity,
+    Effect.map((identity) =>
+      Layer.mergeAll(
+        layerGithubClientFor(GithubClientRequest.make({ identity, cwd }), { retry: "off" }),
+        layerGithubRepoFor(cwd)
+      )
+    ),
+    Layer.unwrap,
+    Layer.catchTag("GithubIdentityError", (error) =>
+      Layer.effectContext<GitHubClient | Repo, CiCommandError, never>(
+        CiCommandError.make({ message: error.message }).pipe(Effect.fail)
+      )
+    )
+  );
+
+/**
+ * Run a program with {@link layerCiGithub} built for its own scope.
+ *
+ * **Example** (Provide the client to a read)
+ *
+ * ```ts
+ * import { ghApiJson, withCiGithub } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect";
+ *
+ * console.log(Effect.isEffect(ghApiJson("repos/{owner}/{repo}").pipe(withCiGithub("."))))
+ * ```
+ *
+ * @param cwd - The checkout whose identity and remote are used.
+ * @returns A function providing `GitHubClient` and `Repo` to a program.
+ * @category layers
+ * @since 0.0.0
+ */
+export const withCiGithub =
+  (cwd: string) =>
+  <A, E, R>(
+    program: Effect.Effect<A, E, R>
+  ): Effect.Effect<A, E | CiCommandError, Exclude<R, GitHubClient | Repo> | ChildProcessSpawner.ChildProcessSpawner> =>
+    Effect.flatMap(Layer.build(layerCiGithub(cwd)), (context) => Effect.provideContext(program, context)).pipe(
+      Effect.scoped
+    );
+
 type CiWorkflowJobsPageFetcher<Requirements> = (
-  repoRoot: string,
   runId: number,
   perPage: number,
   pageNumber: number
-) => Effect.Effect<string, CiCommandError, Requirements>;
+) => Effect.Effect<unknown, CiCommandError, Requirements>;
 
 const ciWorkflowJobsEndpoint = (runId: number, perPage: number, pageNumber: number): string =>
   `repos/{owner}/{repo}/actions/runs/${runId}/jobs?filter=all&per_page=${perPage}&page=${pageNumber}`;
 
 const fetchLegacyCiWorkflowJobsPage = Effect.fn("Ci.fetchLegacyCiWorkflowJobsPage")(function* (
-  repoRoot: string,
   runId: number,
   perPage: number,
   pageNumber: number
-): Effect.fn.Return<string, CiCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* ghApiJson(
-    repoRoot,
-    ciWorkflowJobsEndpoint(runId, perPage, pageNumber),
-    O.some(CI_LEGACY_WORKFLOW_JOBS_JQ)
-  );
+): Effect.fn.Return<unknown, CiCommandError, GitHubClient | Repo> {
+  return yield* ghApiJson(ciWorkflowJobsEndpoint(runId, perPage, pageNumber));
 });
 
 const collectCiWorkflowJobPages = Effect.fn("Ci.collectCiWorkflowJobPages")(function* <Requirements>(
   fetchPage: CiWorkflowJobsPageFetcher<Requirements>,
-  repoRoot: string,
   runId: number,
   perPage: number,
   pageNumber = 1,
   collected: ReadonlyArray<CiWorkflowJob> = A.empty()
 ): Effect.fn.Return<ReadonlyArray<CiWorkflowJob>, CiCommandError, Requirements> {
-  const json = yield* fetchPage(repoRoot, runId, perPage, pageNumber);
-  const page = yield* decodeCiWorkflowJobsPage(json).pipe(
+  const json = yield* fetchPage(runId, perPage, pageNumber);
+  const page = yield* decodeCiWorkflowJobsValue(json).pipe(
     CiCommandError.mapError(`Failed to decode jobs page ${pageNumber} for run ${runId}.`)
   );
   const jobs = A.appendAll(collected, page.jobs);
@@ -995,7 +1086,7 @@ const collectCiWorkflowJobPages = Effect.fn("Ci.collectCiWorkflowJobPages")(func
       CiCommandError.make({
         message: `Jobs pagination for run ${runId} ended after ${A.length(jobs)} of ${page.total_count} jobs.`,
       }),
-    onNonEmpty: () => collectCiWorkflowJobPages(fetchPage, repoRoot, runId, perPage, pageNumber + 1, jobs),
+    onNonEmpty: () => collectCiWorkflowJobPages(fetchPage, runId, perPage, pageNumber + 1, jobs),
   });
 });
 
@@ -1024,39 +1115,29 @@ const collectCiWorkflowJobPages = Effect.fn("Ci.collectCiWorkflowJobPages")(func
  * import { collectCiLaneTimings } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect"
  *
- * const collected = collectCiLaneTimings(".", 5).pipe(Effect.map((report) => report.jobCount))
+ * const collected = collectCiLaneTimings(5).pipe(Effect.map((report) => report.jobCount))
  * console.log(Effect.isEffect(collected))
  * ```
  *
- * @param repoRoot - Repository root the `gh` calls run in.
  * @param runLimit - How many recent workflow runs to read jobs for.
  * @returns The aggregate report over every job that could be collected.
  * @category use-cases
  * @since 0.0.0
  */
 export const collectCiLaneTimings = Effect.fn("Ci.collectCiLaneTimings")(function* (
-  repoRoot: string,
   runLimit: number
-): Effect.fn.Return<
-  CiLaneTimingsReport,
-  CiCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
+): Effect.fn.Return<CiLaneTimingsReport, CiCommandError, GitHubClient | Repo> {
   if (runLimit < 1 || runLimit > 100) {
     return yield* CiCommandError.make({ message: `--runs must be between 1 and 100; received ${runLimit}.` });
   }
-  const runsJson = yield* ghApiJson(
-    repoRoot,
-    `repos/{owner}/{repo}/actions/runs?per_page=${runLimit}`,
-    O.some(CI_WORKFLOW_RUNS_JQ)
-  );
+  const runsJson = yield* ghApiJson(`repos/{owner}/{repo}/actions/runs?per_page=${runLimit}`);
   const runs = yield* decodeCiWorkflowRunsPage(runsJson).pipe(
     Effect.map((page) => page.workflow_runs),
     CiCommandError.mapError("Failed to decode the workflow-runs response.")
   );
   const jobPages = yield* Effect.forEach(
     runs,
-    (run) => collectCiWorkflowJobPages(fetchLegacyCiWorkflowJobsPage, repoRoot, run.id, 100),
+    (run) => collectCiWorkflowJobPages(fetchLegacyCiWorkflowJobsPage, run.id, 100),
     { concurrency: 4 }
   );
   return ciLaneTimingsReport(A.map(A.flatten(jobPages), ciLaneTimingRow));
@@ -1896,7 +1977,7 @@ class CiBranchRuleParameters extends S.Opaque<CiBranchRuleParameters, { readonly
 
 class CiBranchRule extends S.Opaque<CiBranchRule, { readonly brand: unique symbol }>()(
   S.Struct({
-    parameters: S.OptionFromOptionalKey(CiBranchRuleParameters),
+    parameters: S.OptionFromOptionalNullOr(CiBranchRuleParameters),
     ruleset_id: S.Finite,
     type: S.String,
   }).pipe(
@@ -1908,11 +1989,11 @@ class CiBranchRule extends S.Opaque<CiBranchRule, { readonly brand: unique symbo
 
 class CiRulesetSnapshotRule extends S.Opaque<CiRulesetSnapshotRule, { readonly brand: unique symbol }>()(
   S.Struct({
-    type: S.tag("required_status_checks"),
-    parameters: CiBranchRuleParameters,
+    type: S.String,
+    parameters: S.OptionFromOptionalNullOr(S.Unknown),
   }).pipe(
     $I.annoteSchema("CiRulesetSnapshotRule", {
-      description: "Required-status-check rule selected from a historical ruleset snapshot.",
+      description: "One rule of a historical ruleset snapshot; required-status-check rules are decoded further.",
     })
   )
 ) {}
@@ -1920,7 +2001,7 @@ class CiRulesetSnapshotRule extends S.Opaque<CiRulesetSnapshotRule, { readonly b
 class CiRulesetSnapshotState extends S.Opaque<CiRulesetSnapshotState, { readonly brand: unique symbol }>()(
   S.Struct({ rules: S.Array(CiRulesetSnapshotRule) }).pipe(
     $I.annoteSchema("CiRulesetSnapshotState", {
-      description: "Historical ruleset state projected to required-status-check rules.",
+      description: "Historical ruleset state with every rule's type and parameters.",
     })
   )
 ) {}
@@ -1933,11 +2014,12 @@ class CiRulesetSnapshot extends S.Opaque<CiRulesetSnapshot, { readonly brand: un
   )
 ) {}
 
-const decodeCiRulesetHistory = S.decodeUnknownEffect(S.fromJsonString(S.Array(CiRulesetHistoryVersion)));
-const decodeCiRulesetSnapshot = S.decodeUnknownEffect(S.fromJsonString(CiRulesetSnapshot));
+const decodeCiRulesetHistory = S.decodeUnknownEffect(S.Array(CiRulesetHistoryVersion));
+const decodeCiRulesetSnapshot = S.decodeUnknownEffect(CiRulesetSnapshot);
+const decodeCiBranchRuleParameters = S.decodeUnknownEffect(CiBranchRuleParameters);
 
-const decodeCiWorkflowWindowRunsPage = S.decodeUnknownEffect(S.fromJsonString(CiWorkflowWindowRunsPage));
-const decodeCiBranchRules = S.decodeUnknownEffect(S.fromJsonString(S.Array(CiBranchRule)));
+const decodeCiWorkflowWindowRunsPage = S.decodeUnknownEffect(CiWorkflowWindowRunsPage);
+const decodeCiBranchRules = S.decodeUnknownEffect(S.Array(CiBranchRule));
 
 /**
  * GitHub JSON boundary used by the bounded lane-timing collector.
@@ -1955,11 +2037,7 @@ const decodeCiBranchRules = S.decodeUnknownEffect(S.fromJsonString(S.Array(CiBra
  * @since 0.0.0
  */
 export interface CiLaneTimingGithubClientShape {
-  readonly getJson: (
-    repoRoot: string,
-    endpoint: string,
-    jqProjection: O.Option<string>
-  ) => Effect.Effect<string, CiCommandError>;
+  readonly getJson: (endpoint: string) => Effect.Effect<unknown, CiCommandError>;
 }
 
 /**
@@ -1983,10 +2061,10 @@ export class CiLaneTimingGithubClient extends Context.Service<
 >()($I`CiLaneTimingGithubClient`) {}
 
 const makeCiLaneTimingGithubClient = Effect.fn("CiLaneTimingGithubClient.make")(function* () {
-  const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
+  const context = yield* Effect.context<GitHubClient | Repo>();
   return CiLaneTimingGithubClient.of({
-    getJson: Effect.fn("CiLaneTimingGithubClient.getJson")((repoRoot, endpoint, jqProjection) =>
-      ghApiJson(repoRoot, endpoint, jqProjection).pipe(Effect.provide(context))
+    getJson: Effect.fn("CiLaneTimingGithubClient.getJson")((endpoint) =>
+      ghApiJson(endpoint).pipe(Effect.provideContext(context))
     ),
   });
 });
@@ -2054,7 +2132,6 @@ const windowSpanIsSplittable = (options: CiLaneTimingWindowOptions): boolean =>
   Duration.toMillis(CI_WORKFLOW_RUNS_MIN_SPLIT_SPAN);
 
 const collectCiWorkflowWindowRunPages = Effect.fn("Ci.collectCiWorkflowWindowRunPages")(function* (
-  repoRoot: string,
   options: CiLaneTimingWindowOptions,
   event: typeof CiLaneTimingWindowRunEvent.Type,
   pageNumber: number,
@@ -2063,7 +2140,7 @@ const collectCiWorkflowWindowRunPages = Effect.fn("Ci.collectCiWorkflowWindowRun
 ): Effect.fn.Return<ReadonlyArray<CiWorkflowWindowRun>, CiCommandError, CiLaneTimingGithubClient> {
   const github = yield* CiLaneTimingGithubClient;
   const endpoint = workflowRunsEndpoint(options, event, pageNumber);
-  const json = yield* github.getJson(repoRoot, endpoint, O.some(CI_WORKFLOW_RUNS_JQ));
+  const json = yield* github.getJson(endpoint);
   const page = yield* decodeCiWorkflowWindowRunsPage(json).pipe(
     CiCommandError.mapError(`Failed to decode ${event} workflow-runs page ${pageNumber}.`)
   );
@@ -2078,7 +2155,7 @@ const collectCiWorkflowWindowRunPages = Effect.fn("Ci.collectCiWorkflowWindowRun
       CiLaneTimingWindowOptions.make({ ...options, since: midpoint }),
     ];
     const collectedHalves = yield* Effect.forEach(halves, (half) =>
-      collectCiWorkflowWindowRunPages(repoRoot, half, event, 1, 0, A.empty())
+      collectCiWorkflowWindowRunPages(half, event, 1, 0, A.empty())
     );
     return A.appendAll(collected, A.flatten(collectedHalves));
   }
@@ -2095,18 +2172,16 @@ const collectCiWorkflowWindowRunPages = Effect.fn("Ci.collectCiWorkflowWindowRun
       CiCommandError.make({
         message: `${event} workflow-runs pagination ended after ${nextFetchedCount} of ${page.total_count} runs.`,
       }),
-    onNonEmpty: () =>
-      collectCiWorkflowWindowRunPages(repoRoot, options, event, pageNumber + 1, nextFetchedCount, nextCollected),
+    onNonEmpty: () => collectCiWorkflowWindowRunPages(options, event, pageNumber + 1, nextFetchedCount, nextCollected),
   });
 });
 
 const collectCiWorkflowWindowRuns = Effect.fn("Ci.collectCiWorkflowWindowRuns")(function* (
-  repoRoot: string,
   options: CiLaneTimingWindowOptions
 ): Effect.fn.Return<ReadonlyArray<CiWorkflowWindowRun>, CiCommandError, CiLaneTimingGithubClient> {
   const eventRuns = yield* Effect.forEach(
     windowEventsFor(options.event),
-    (event) => collectCiWorkflowWindowRunPages(repoRoot, options, event, 1, 0, A.empty()),
+    (event) => collectCiWorkflowWindowRunPages(options, event, 1, 0, A.empty()),
     { concurrency: 2 }
   );
   const indexed = A.reduce(A.flatten(eventRuns), HashMap.empty<number, CiWorkflowWindowRun>(), (runs, run) =>
@@ -2116,17 +2191,12 @@ const collectCiWorkflowWindowRuns = Effect.fn("Ci.collectCiWorkflowWindowRuns")(
 });
 
 const fetchCiWorkflowWindowJobsPage = Effect.fn("Ci.fetchCiWorkflowWindowJobsPage")(function* (
-  repoRoot: string,
   runId: number,
   perPage: number,
   pageNumber: number
-): Effect.fn.Return<string, CiCommandError, CiLaneTimingGithubClient> {
+): Effect.fn.Return<unknown, CiCommandError, CiLaneTimingGithubClient> {
   const github = yield* CiLaneTimingGithubClient;
-  return yield* github.getJson(
-    repoRoot,
-    ciWorkflowJobsEndpoint(runId, perPage, pageNumber),
-    O.some(CI_WINDOW_WORKFLOW_JOBS_JQ)
-  );
+  return yield* github.getJson(ciWorkflowJobsEndpoint(runId, perPage, pageNumber));
 });
 
 /**
@@ -2148,36 +2218,35 @@ const fetchCiWorkflowWindowJobsPage = Effect.fn("Ci.fetchCiWorkflowWindowJobsPag
  * import { collectRequiredContexts } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(collectRequiredContexts(".")))
+ * console.log(Effect.isEffect(collectRequiredContexts()))
  * ```
  *
- * @param repoRoot - Repository root from which the captured `gh api` calls run.
  * @param version - Historical ruleset version to snapshot; `O.none()` reads the live rules.
  * @returns The ruleset's required contexts in API order, not yet normalized.
  * @category use-cases
  * @since 0.0.0
  */
 export const collectRequiredContexts = Effect.fn("Ci.collectRequiredContexts")(function* (
-  repoRoot: string,
   version: O.Option<CiRulesetHistoryVersion> = O.none()
 ): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, CiLaneTimingGithubClient> {
   const github = yield* CiLaneTimingGithubClient;
   if (O.isSome(version)) {
     const endpoint = `repos/{owner}/{repo}/rulesets/${CI_LANE_TIMING_RULESET_ID}/history/${version.value.version_id}`;
-    const json = yield* github.getJson(
-      repoRoot,
-      endpoint,
-      O.some('{state:{rules:[.state.rules[]|select(.type=="required_status_checks")]}}')
-    );
-    const snapshot = yield* decodeCiRulesetSnapshot(json).pipe(
+    const json = yield* github.getJson(endpoint);
+    // Only required-status-check rules count, and each must carry its parameters.
+    const parameters = yield* decodeCiRulesetSnapshot(json).pipe(
+      Effect.flatMap((snapshot) =>
+        Effect.forEach(
+          A.filter(snapshot.state.rules, (rule) => Str.equivalence(rule.type, "required_status_checks")),
+          (rule) => decodeCiBranchRuleParameters(O.getOrUndefined(rule.parameters))
+        )
+      ),
       CiCommandError.mapError(`Failed to decode the ruleset snapshot returned by ${endpoint}.`)
     );
-    return A.flatMap(snapshot.state.rules, (rule) =>
-      A.map(rule.parameters.required_status_checks, (check) => check.context)
-    );
+    return A.flatMap(parameters, (rule) => A.map(rule.required_status_checks, (check) => check.context));
   }
   const endpoint = "repos/{owner}/{repo}/rules/branches/main";
-  const json = yield* github.getJson(repoRoot, endpoint, O.some(CI_BRANCH_RULES_JQ));
+  const json = yield* github.getJson(endpoint);
   const rules = yield* decodeCiBranchRules(json).pipe(
     CiCommandError.mapError(`Failed to decode the effective rules returned by ${endpoint}.`)
   );
@@ -2228,13 +2297,12 @@ const ciRulesetHistoryEndpoint = (pageNumber: number): string =>
 // predates the first page must still be reachable: keep paging until a short
 // page proves the history is exhausted, independent of the page ordering.
 const collectCiRulesetHistory = Effect.fn("Ci.collectCiRulesetHistory")(function* (
-  repoRoot: string,
   pageNumber = 1,
   collected: ReadonlyArray<CiRulesetHistoryVersion> = A.empty()
 ): Effect.fn.Return<ReadonlyArray<CiRulesetHistoryVersion>, CiCommandError, CiLaneTimingGithubClient> {
   const github = yield* CiLaneTimingGithubClient;
   const endpoint = ciRulesetHistoryEndpoint(pageNumber);
-  const json = yield* github.getJson(repoRoot, endpoint, O.some("[.[]|{version_id,updated_at}]"));
+  const json = yield* github.getJson(endpoint);
   const page = yield* decodeCiRulesetHistory(json).pipe(
     CiCommandError.mapError(`Failed to decode the ruleset history returned by ${endpoint}.`)
   );
@@ -2242,7 +2310,7 @@ const collectCiRulesetHistory = Effect.fn("Ci.collectCiRulesetHistory")(function
   if (A.length(page) < CI_RULESET_HISTORY_PAGE_SIZE) {
     return history;
   }
-  return yield* collectCiRulesetHistory(repoRoot, pageNumber + 1, history);
+  return yield* collectCiRulesetHistory(pageNumber + 1, history);
 });
 
 const rulesetHistoryOrder = Order.mapInput(Order.Number, (entry: CiRulesetHistoryVersion) =>
@@ -2262,11 +2330,8 @@ const isEffectiveAtOrBefore =
 const sortedContexts = (contexts: HashSet.HashSet<string>): ReadonlyArray<string> =>
   A.sort(A.fromIterable(contexts), Order.String);
 
-const rulesetVersionPopulation = Effect.fn("Ci.rulesetVersionPopulation")(function* (
-  repoRoot: string,
-  version: CiRulesetHistoryVersion
-) {
-  const contexts = yield* collectRequiredContexts(repoRoot, O.some(version));
+const rulesetVersionPopulation = Effect.fn("Ci.rulesetVersionPopulation")(function* (version: CiRulesetHistoryVersion) {
+  const contexts = yield* collectRequiredContexts(O.some(version));
   return CiRulesetVersionPopulation.make({
     requiredContextSet: HashSet.fromIterable(A.map(contexts, normalizeRequiredLaneName)),
     version,
@@ -2294,18 +2359,15 @@ const rulesetPopulationChange = (
 // governs the whole window, so it is the starting population, not a change. The last snapshot is the window-end
 // population the census measures; each in-window snapshot is diffed against
 // the one before it so a mid-window change can be named, not just detected.
-const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function* (
-  repoRoot: string,
-  options: CiLaneTimingWindowOptions
-) {
-  const history = A.sort(yield* collectCiRulesetHistory(repoRoot), rulesetHistoryOrder);
+const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function* (options: CiLaneTimingWindowOptions) {
+  const history = A.sort(yield* collectCiRulesetHistory(), rulesetHistoryOrder);
   const baseline = A.last(A.filter(history, isEffectiveAtOrBefore(options.since)));
   const inWindow = A.filter(
     history,
     (entry) => !isEffectiveAtOrBefore(options.since)(entry) && isEffectiveBefore(options.until)(entry)
   );
   const populations = yield* Effect.forEach(A.appendAll(O.toArray(baseline), inWindow), (version) =>
-    rulesetVersionPopulation(repoRoot, version)
+    rulesetVersionPopulation(version)
   );
   const windowEnd = yield* O.match(A.last(populations), {
     onNone: () =>
@@ -2758,22 +2820,21 @@ export const buildCiLaneTimingWindowReport = Effect.fn("Ci.buildCiLaneTimingWind
 });
 
 const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWindowWithClient")(function* (
-  repoRoot: string,
   options: CiLaneTimingWindowOptions,
   preview: boolean
 ): Effect.fn.Return<CiLaneTimingWindowReport, CiCommandError, CiLaneTimingGithubClient> {
   if (DateTime.toEpochMillis(options.since) >= DateTime.toEpochMillis(options.until)) {
     return yield* CiCommandError.make({ message: "--since must be earlier than --until." });
   }
-  const { changes, requiredContextSet, version } = yield* resolveWindowPopulation(repoRoot, options);
+  const { changes, requiredContextSet, version } = yield* resolveWindowPopulation(options);
   yield* assertRequiredContextCount(requiredContextSet, O.some(version));
   yield* refuseCiLaneTimingWindowPopulationChange(options, changes, preview);
-  const runs = yield* collectCiWorkflowWindowRuns(repoRoot, options);
+  const runs = yield* collectCiWorkflowWindowRuns(options);
   const rows = yield* pipe(
     Stream.fromIterable(runs),
     Stream.mapEffect(
       Effect.fnUntraced(function* (run) {
-        const jobs = yield* collectCiWorkflowJobPages(fetchCiWorkflowWindowJobsPage, repoRoot, run.id, 100);
+        const jobs = yield* collectCiWorkflowJobPages(fetchCiWorkflowWindowJobsPage, run.id, 100);
         return CiWorkflowWindowRunJobs.make({ jobs, run });
       }),
       { concurrency: CI_LANE_TIMING_JOB_FETCH_CONCURRENCY, unordered: false }
@@ -2822,10 +2883,9 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
  *   until: DateTime.makeUnsafe("2026-09-11T00:00:00Z"),
  *   workflow: "check.yml",
  * })
- * console.log(Effect.isEffect(collectCiLaneTimingWindow(".", options)))
+ * console.log(Effect.isEffect(collectCiLaneTimingWindow(options)))
  * ```
  *
- * @param repoRoot - Repository root from which the captured `gh api` calls run.
  * @param options - Validated workflow, event, interval, branch, and head filters.
  * @param preview - Whether the operator accepted a preview, which admits a mid-window population change.
  * @returns The derived report after complete pagination and fail-closed ruleset validation.
@@ -2833,11 +2893,10 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
  * @since 0.0.0
  */
 export const collectCiLaneTimingWindow = Effect.fn("Ci.collectCiLaneTimingWindow")(function* (
-  repoRoot: string,
   options: CiLaneTimingWindowOptions,
   preview = false
 ): Effect.fn.Return<CiLaneTimingWindowReport, CiCommandError, CiLaneTimingGithubClient> {
-  return yield* collectCiLaneTimingWindowWithClient(repoRoot, options, preview);
+  return yield* collectCiLaneTimingWindowWithClient(options, preview);
 });
 
 const roundedDuration = (seconds: number): string => {
@@ -3774,7 +3833,7 @@ export const ciLaneTimingsCommand = Command.make(
   }) {
     const repoRoot = yield* findRepoRoot().pipe(Effect.orElseSucceed(() => process.cwd()));
     if (!window) {
-      const report = yield* collectCiLaneTimings(repoRoot, runs);
+      const report = yield* collectCiLaneTimings(runs).pipe(withCiGithub(repoRoot));
       yield* Console.log(tsv ? renderCiLaneTimingsTsv(report.rows) : renderCiLaneTimingsSummary(report));
       return;
     }
@@ -3787,9 +3846,11 @@ export const ciLaneTimingsCommand = Command.make(
       ...O.getSomesStruct({ branch, headSha, since, until }),
     });
     const boundsVerdict = yield* guardCiLaneTimingWindowBounds(options, preview);
-    const githubClient = yield* makeCiLaneTimingGithubClient();
-    const windowReport = yield* collectCiLaneTimingWindow(repoRoot, options, preview).pipe(
-      Effect.provideService(CiLaneTimingGithubClient, githubClient)
+    const windowReport = yield* makeCiLaneTimingGithubClient().pipe(
+      Effect.flatMap((githubClient) =>
+        collectCiLaneTimingWindow(options, preview).pipe(Effect.provideService(CiLaneTimingGithubClient, githubClient))
+      ),
+      withCiGithub(repoRoot)
     );
     const verdict = withCiLaneTimingWindowPopulation(boundsVerdict, windowReport);
     yield* Console.log(

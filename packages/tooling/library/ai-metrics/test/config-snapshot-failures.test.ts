@@ -1,3 +1,4 @@
+import { Git, GitCommandError, NotARepositoryError } from "@beep/git/Git";
 import {
   AiMetricsConfigSnapshotBudget,
   AiMetricsConfigSnapshotInput,
@@ -10,12 +11,15 @@ import { expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+
+// `Git` rides over the platform spawner: the snapshot reads the index through the kit (W2b).
+const GitNodeServices = Layer.provideMerge(Git.layer, NodeServices.layer);
 
 const denied = PlatformError.systemError({
   _tag: "PermissionDenied",
@@ -24,7 +28,7 @@ const denied = PlatformError.systemError({
   description: "Synthetic permission denial",
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("config snapshot failure boundaries", (it) => {
+it.layer(GitNodeServices, { timeout: "30 seconds" })("config snapshot failure boundaries", (it) => {
   it.effect("keeps the previous latest pointer when any artifact publication step fails", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -129,37 +133,34 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("config snapshot failure
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped();
-      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const init = yield* ChildProcess.make("git", ["init", "--quiet"], { cwd: root });
       expect(yield* init.exitCode).toBe(0);
-      for (const mode of ["launch", "output", "exit"]) {
-        let launches = 0;
-        const service: ChildProcessSpawner.ChildProcessSpawner["Service"] = {
-          ...spawner,
-          spawn: (command) => {
-            launches += 1;
-            if (launches !== 2) return spawner.spawn(command);
-            if (mode === "launch") return Effect.fail(denied);
-            return Effect.map(spawner.spawn(command), (handle) =>
-              mode === "output"
-                ? { ...handle, stdout: Stream.fail(denied) }
-                : { ...handle, exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(1)) }
-            );
-          },
-        };
+      // The index read runs through `Git.lsFiles` (W2b): git never ran, its output overran the
+      // kit's bound, or git reported an exit code.
+      const failed = (fields: { readonly kind: "failed" | "truncated"; readonly exitCode?: number }) =>
+        GitCommandError.make({ ...fields, args: ["ls-files", "--stage", "-z"], cwd: root, stderr: "" });
+      const cases = [
+        { error: failed({ kind: "failed" }), message: "Cannot start Git index enumeration." },
+        { error: failed({ kind: "truncated" }), message: "Cannot read Git snapshot index." },
+        { error: failed({ kind: "failed", exitCode: 1 }), message: "Git index enumeration failed." },
+      ];
+      for (const { error, message } of cases) {
         const failure = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot: root })).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, service),
+          Effect.provideService(Git, Git.makeTest({ lsFiles: () => Effect.fail(error) })),
           Effect.flip
         );
-        expect(failure.message).toBe(
-          mode === "launch"
-            ? "Cannot start Git index enumeration."
-            : mode === "output"
-              ? "Cannot read Git snapshot index."
-              : "Git index enumeration failed."
-        );
-        expect(failure.cause).toBe(mode === "exit" ? 1 : denied);
+        expect(failure.message).toBe(message);
+        expect(failure.cause).toBe(error.exitCode ?? error);
       }
+      const typed = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot: root })).pipe(
+        Effect.provideService(
+          Git,
+          Git.makeTest({ lsFiles: () => Effect.fail(NotARepositoryError.make({ cwd: root })) })
+        ),
+        Effect.flip
+      );
+      expect(typed.message).toBe("Git index enumeration failed.");
+      expect(typed.cause).toBe(128);
     })
   );
 

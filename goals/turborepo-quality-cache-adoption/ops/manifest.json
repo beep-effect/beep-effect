@@ -114,7 +114,8 @@
     "research/selection-current-driver-controls.json",
     "research/selection-current-canary-checkpoint.json",
     "research/selection-review-source-controls.json",
-    "research/selection-sibling-driver-compatibility.json"
+    "research/selection-sibling-driver-compatibility.json",
+    "research/codegen-readonly-drift-checkpoint-2026-11-02.json"
   ],
   "agentLaunchers": [
     {

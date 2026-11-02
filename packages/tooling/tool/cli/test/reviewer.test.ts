@@ -1,7 +1,12 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { GitHubApp } from "@beep/github/GitHubApp";
+import { GitHubClient } from "@beep/github/GitHubClient";
 import {
   GitHubAppAuth,
   isReviewerSummary,
+  loadReviewerCredentials,
   makeGitHubAppAuth,
+  mintReviewerToken,
   Reviewer,
   ReviewerAnnotation,
   ReviewerCredentials,
@@ -20,26 +25,26 @@ import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as HttpClient from "effect/http/HttpClient";
-import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
-import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { githubFetch, reply } from "./support/GithubFetch.ts";
 
 const Json = S.fromJsonString(S.Unknown);
 const encodeJson = S.encodeEffect(Json);
 const decodeJson = S.decodeUnknownEffect(Json);
 const decodeObject = S.Record(S.String, S.Unknown).pipe(S.decodeUnknownEffect);
+const decodeClaims = S.Struct({ iat: S.Int, exp: S.Int, iss: S.String }).pipe(S.decodeUnknownEffect);
 const Requests = S.Struct({
   output: S.Struct({ annotations: S.Unknown.pipe(S.Array, S.optionalKey) }).pipe(S.optionalKey),
   event: S.optionalKey(S.String),
@@ -64,8 +69,8 @@ const check = (id: number, app = 42, status = "in_progress", conclusion: string 
 });
 const completionFixture = (state: string) => ({
   pull: {
-    head: { sha: state === "stale" ? Str.repeat(40)("c") : sha },
-    base: { sha: state === "base-moved" ? Str.repeat(40)("d") : baseSha },
+    head: { ref: "feature", sha: state === "stale" ? Str.repeat(40)("c") : sha },
+    base: { ref: "main", sha: state === "base-moved" ? Str.repeat(40)("d") : baseSha },
   },
   run:
     state === "unassociated"
@@ -95,44 +100,56 @@ const result = (p0 = 0, p1 = 0) =>
     conclusion: "auto",
     annotations: [],
   });
-const auth = Layer.succeed(
-  GitHubAppAuth,
-  GitHubAppAuth.of({ appId: 42, token: Effect.succeed(Redacted.make("opaque-token-of-arbitrary-length")) })
-);
+const auth = Layer.succeed(GitHubAppAuth, GitHubAppAuth.of({ appId: 42 }));
+// The full pull-request payload the kit's `PullRequest` projection decodes.
+const pull = ({
+  number = 7,
+  state = "open",
+  head = sha,
+  base = baseSha,
+  changed_files = 2,
+}: {
+  number?: number;
+  state?: string;
+  head?: string;
+  base?: string;
+  changed_files?: number;
+} = {}) => ({
+  number,
+  node_id: `PR_${number}`,
+  html_url: `https://github.com/beep-effect/beep-effect/pull/${number}`,
+  title: "Fixture",
+  state,
+  draft: false,
+  merged: false,
+  merged_at: null,
+  head: { ref: "feature", sha: head },
+  base: { ref: "main", sha: base },
+  changed_files,
+});
+const changedFile = (filename: string) => ({ filename, status: "modified", additions: 1, deletions: 0 });
 
-// Every response passes through Effect's HttpClient seam; no network or real credentials.
-const client = (handler: (method: string, url: URL, body: unknown) => unknown) =>
-  HttpClient.make((request, url) =>
-    Effect.gen(function* () {
-      const body =
-        request.body._tag === "Uint8Array" ? yield* decodeJson(new TextDecoder().decode(request.body.body)) : undefined;
-      const output = handler(request.method, url, body);
-      return HttpClientResponse.fromWeb(
-        request,
-        new Response(yield* encodeJson(output), { status: 200, headers: { "content-type": "application/json" } })
-      );
-    }).pipe(Effect.orDie)
-  );
-class MockClient extends Context.Service<MockClient, Ref.Ref<HttpClient.HttpClient>>()(
-  "@beep/repo-cli/test/reviewer.test/MockClient"
-) {}
-const MockClientLive = Layer.effect(MockClient, Ref.make(client(() => ({}))));
-const HttpProxy = Layer.effect(
-  HttpClient.HttpClient,
-  Effect.gen(function* () {
-    const current = yield* MockClient;
-    return HttpClient.make((request) => Ref.get(current).pipe(Effect.flatMap((http) => http.execute(request))));
-  })
-);
+// Every response passes through the `@beep/github` transport's `fetch` seam; no network or real credentials.
+type Handler = (method: string, url: URL, body: unknown) => unknown;
+const current: { handler: Handler } = { handler: () => ({}) };
+const transport = githubFetch((call) => current.handler(call.method, call.url, call.body));
 const HttpTestLayer = ReviewerLive.pipe(
   Layer.provide(auth),
-  Layer.provide(HttpProxy),
-  Layer.provideMerge(MockClientLive)
+  Layer.provide(
+    GitHubClient.layerFromToken({
+      token: Redacted.make("opaque-token-of-arbitrary-length"),
+      retry: "off",
+      fetch: transport.fetch,
+    })
+  )
 );
+const client = (handler: Handler): Handler => handler;
 const usingHttp =
-  (http: HttpClient.HttpClient) =>
+  (handler: Handler) =>
   <A, E, R>(program: Effect.Effect<A, E, R>) =>
-    MockClient.use((current) => Ref.set(current, http).pipe(Effect.andThen(program)));
+    Effect.sync(() => {
+      current.handler = handler;
+    }).pipe(Effect.andThen(program));
 
 describe("reviewer conclusions and identity", () => {
   it.prop(
@@ -236,39 +253,28 @@ describe("reviewer conclusions and identity", () => {
 it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (it) => {
   it.effect("classifies L0 with App-authenticated HTTP and refuses truncated or changing heads", () =>
     Effect.gen(function* () {
-      const files = [{ filename: "docs/app.md" }, { filename: "README.md" }];
+      const files = [changedFile("docs/app.md"), changedFile("README.md")];
       const http = client((_method, url) =>
-        Str.endsWith("/files")(url.pathname)
-          ? files
-          : Str.endsWith("/pulls")(url.pathname)
-            ? [{ number: 7, state: "open", head: { sha } }]
-            : { head: { sha }, base: { sha: baseSha }, changed_files: 2 }
+        Str.endsWith("/files")(url.pathname) ? files : Str.endsWith("/pulls")(url.pathname) ? [pull()] : pull()
       );
       assertSome(yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(usingHttp(http)), baseSha);
       const sharedHead = client((_method, url) =>
         Str.endsWith("/files")(url.pathname)
           ? files
           : Str.endsWith("/pulls")(url.pathname)
-            ? [
-                { number: 7, state: "open", head: { sha } },
-                { number: 8, state: "open", head: { sha } },
-              ]
-            : { head: { sha }, base: { sha: baseSha }, changed_files: 2 }
+            ? [pull(), pull({ number: 8 })]
+            : pull()
       );
       assertNone(yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(usingHttp(sharedHead)));
       const missingAssociation = client((_method, url) =>
-        Str.endsWith("/files")(url.pathname)
-          ? files
-          : Str.endsWith("/pulls")(url.pathname)
-            ? []
-            : { head: { sha }, base: { sha: baseSha }, changed_files: 2 }
+        Str.endsWith("/files")(url.pathname) ? files : Str.endsWith("/pulls")(url.pathname) ? [] : pull()
       );
       assertNone(yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(usingHttp(missingAssociation)));
       let reads = 0;
       const moved = client((_method, url) => {
         if (Str.endsWith("/files")(url.pathname)) return files;
         reads += 1;
-        return { head: { sha: reads === 1 ? sha : Str.repeat(40)("c") }, base: { sha: baseSha }, changed_files: 2 };
+        return pull({ head: reads === 1 ? sha : Str.repeat(40)("c") });
       });
       const outcome = yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(
         usingHttp(moved),
@@ -279,12 +285,12 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
       const movedBase = client((_method, url) => {
         if (Str.endsWith("/files")(url.pathname)) return files;
         baseReads += 1;
-        return { head: { sha }, base: { sha: baseReads === 1 ? baseSha : Str.repeat(40)("d") }, changed_files: 2 };
+        return pull({ base: baseReads === 1 ? baseSha : Str.repeat(40)("d") });
       });
       expect(
         (yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(usingHttp(movedBase), Effect.result))._tag
       ).toBe("Failure");
-      const truncated = client(() => ({ head: { sha }, base: { sha: baseSha }, changed_files: 3000 }));
+      const truncated = client(() => pull({ changed_files: 3000 }));
       expect(
         (yield* Reviewer.use((reviewer) => reviewer.docsOnly(7, sha)).pipe(usingHttp(truncated), Effect.result))._tag
       ).toBe("Failure");
@@ -294,7 +300,7 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
     Effect.gen(function* () {
       let creates = 0;
       const http = client((method, url) => {
-        if (Str.endsWith("/pulls/7")(url.pathname)) return { head: { sha }, base: { sha: baseSha } };
+        if (Str.endsWith("/pulls/7")(url.pathname)) return pull();
         if (method === "POST") {
           creates += 1;
           return { id: 44 };
@@ -306,7 +312,7 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
       expect(creates).toBe(0);
       let postedBody: unknown;
       const otherPr = client((method, url, body) => {
-        if (Str.endsWith("/pulls/7")(url.pathname)) return { head: { sha }, base: { sha: baseSha } };
+        if (Str.endsWith("/pulls/7")(url.pathname)) return pull();
         if (method === "POST") {
           postedBody = body;
           return { id: 44 };
@@ -316,7 +322,7 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
       expect(yield* Reviewer.use((reviewer) => reviewer.start(7, sha)).pipe(usingHttp(otherPr))).toBe(44);
       expect((yield* decodeObject(postedBody)).external_id).toBe(reviewerCheckExternalId(7, sha, baseSha));
       const changedSinceClassification = client((_method, url) => {
-        if (Str.endsWith("/pulls/7")(url.pathname)) return { head: { sha }, base: { sha: Str.repeat(40)("d") } };
+        if (Str.endsWith("/pulls/7")(url.pathname)) return pull({ base: Str.repeat(40)("d") });
         return { total_count: 0, check_runs: [] };
       });
       expect(
@@ -332,7 +338,7 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
       let pages = 0;
       let creates = 0;
       const http = client((method, url) => {
-        if (Str.endsWith("/pulls/7")(url.pathname)) return { head: { sha }, base: { sha: baseSha } };
+        if (Str.endsWith("/pulls/7")(url.pathname)) return pull();
         if (method === "POST") {
           creates += 1;
           return { id: 44 };
@@ -397,7 +403,7 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
     Effect.gen(function* () {
       const bodies: Array<unknown> = [];
       const http = client((method, url, body) => {
-        if (Str.endsWith("/pulls/7")(url.pathname)) return { head: { sha }, base: { sha: baseSha } };
+        if (Str.endsWith("/pulls/7")(url.pathname)) return pull();
         if (method === "GET") return check(2);
         bodies.push(body);
         return { id: 2 };
@@ -424,10 +430,10 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
     Effect.gen(function* () {
       for (const state of ["cancelled", "success", "stale", "base-moved", "unassociated"]) {
         let writes = 0;
-        const { pull, run } = completionFixture(state);
+        const { pull: completion, run } = completionFixture(state);
         const http = client((method, url) => {
           if (method !== "GET") writes += 1;
-          return Str.endsWith("/pulls/7")(url.pathname) ? pull : run;
+          return Str.endsWith("/pulls/7")(url.pathname) ? { ...pull(), ...completion } : run;
         });
         const outcome = yield* Reviewer.use((reviewer) => reviewer.complete(2, result())).pipe(
           usingHttp(http),
@@ -443,7 +449,7 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
       let cancelled = false;
       let completions = 0;
       const http = client((method, url) => {
-        if (Str.endsWith("/pulls/7")(url.pathname)) return { head: { sha }, base: { sha: baseSha } };
+        if (Str.endsWith("/pulls/7")(url.pathname)) return pull();
         if (method === "GET")
           return check(2, 42, cancelled ? "completed" : "in_progress", cancelled ? "cancelled" : null);
         if (cancelled) completions += 1;
@@ -485,11 +491,11 @@ it.layer(HttpTestLayer, { timeout: "30 seconds" })("reviewer HTTP operations", (
     Effect.gen(function* () {
       const bodies: Array<unknown> = [];
       const http = client((method) => {
-        if (method === "GET") return { head: { sha }, base: { sha: baseSha } };
+        if (method === "GET") return pull();
         return (body: unknown) => body;
       });
       const posting = client((method, _url, body) => {
-        if (method === "GET") return { head: { sha }, base: { sha: baseSha } };
+        if (method === "GET") return pull();
         bodies.push(body);
         return { id: 55 };
       });
@@ -593,109 +599,247 @@ describe("lossless required check update", () => {
   );
 });
 
-class TokenFixture extends Context.Service<
-  TokenFixture,
-  {
-    readonly publicKey: CryptoKey;
-    readonly requestBodies: Array<unknown>;
-    readonly jwts: Array<string>;
-    readonly exchanges: () => number;
-  }
->()("@beep/repo-cli/test/reviewer.test/TokenFixture") {}
-const TokenTestLayer = Layer.unwrap(
-  Effect.gen(function* () {
-    // Generated in memory for this test; neither private key nor installation token is persisted.
-    const pair = yield* Effect.promise(() =>
-      crypto.subtle.generateKey(
-        {
-          name: "RSASSA-PKCS1-v1_5",
-          modulusLength: 2048,
-          publicExponent: new Uint8Array([1, 0, 1]),
-          hash: "SHA-256",
-        },
-        true,
-        ["sign", "verify"]
-      )
-    );
-    const der = yield* Effect.promise(() => crypto.subtle.exportKey("pkcs8", pair.privateKey));
-    // WebCrypto exports PKCS#8. Extract its RSA OCTET STRING to exercise GitHub's PKCS#1 PEM.
-    const bytes = new Uint8Array(der);
-    const contentOffset = (offset: number) =>
-      offset +
-      (bytes[offset + 1] === undefined || (bytes[offset + 1] ?? 0) < 128 ? 2 : 2 + ((bytes[offset + 1] ?? 0) & 127));
-    const contentLength = (offset: number) => {
-      const first = bytes[offset + 1] ?? 0;
-      return first < 128
-        ? first
-        : A.reduce(A.fromIterable(bytes.slice(offset + 2, offset + 2 + (first & 127))), 0, (n, byte) => n * 256 + byte);
-    };
-    let offset = contentOffset(0);
-    offset = contentOffset(offset) + contentLength(offset); // version
-    offset = contentOffset(offset) + contentLength(offset); // algorithm
-    expect(bytes[offset]).toBe(4); // PrivateKey OCTET STRING
-    const pkcs1 = bytes.slice(contentOffset(offset), contentOffset(offset) + contentLength(offset));
-    const pem = `-----BEGIN RSA PRIVATE KEY-----\n${Buffer.from(pkcs1).toString("base64")}\n-----END RSA PRIVATE KEY-----`; // gitleaks:allow -- format marker only; key generated in memory. nosemgrep: semgrep.beep-hardcoded-private-key
-    let exchanges = 0;
-    const requestBodies: Array<unknown> = [];
-    const jwts: Array<string> = [];
-    const http = HttpClient.make((request) =>
-      Effect.gen(function* () {
-        exchanges += 1;
-        jwts.push(request.headers.authorization ?? "");
-        if (request.body._tag === "Uint8Array")
-          requestBodies.push(yield* decodeJson(new TextDecoder().decode(request.body.body)));
-        const now = yield* Clock.currentTimeMillis;
-        const body = yield* encodeJson({
-          token: `opaque-${exchanges}`,
-          expires_at: DateTime.formatIso(DateTime.makeUnsafe(now + 3_600_000)),
-        });
-        return HttpClientResponse.fromWeb(request, new Response(body, { status: 201 }));
-      }).pipe(Effect.orDie)
-    );
-    const credentials = ReviewerCredentials.make({
-      appId: 42,
-      clientId: "Iv.test-client",
-      installationId: 77,
-      privateKey: Redacted.make(pem),
-    });
-    return Layer.merge(
-      makeGitHubAppAuth(credentials).pipe(Layer.provide(Layer.succeed(HttpClient.HttpClient, http))),
-      Layer.succeed(TokenFixture, { publicKey: pair.publicKey, requestBodies, jwts, exchanges: () => exchanges })
-    );
-  })
-);
+// Generated in memory for this suite; neither private key nor installation token is persisted.
+const reviewerKey = Effect.gen(function* () {
+  const pair = yield* Effect.promise(() =>
+    crypto.subtle.generateKey(
+      {
+        name: "RSASSA-PKCS1-v1_5",
+        modulusLength: 2048,
+        publicExponent: new Uint8Array([1, 0, 1]),
+        hash: "SHA-256",
+      },
+      true,
+      ["sign", "verify"]
+    )
+  );
+  const der = yield* Effect.promise(() => crypto.subtle.exportKey("pkcs8", pair.privateKey));
+  // WebCrypto exports PKCS#8. Extract its RSA OCTET STRING to exercise GitHub's PKCS#1 PEM.
+  const bytes = new Uint8Array(der);
+  const contentOffset = (offset: number) =>
+    offset +
+    (bytes[offset + 1] === undefined || (bytes[offset + 1] ?? 0) < 128 ? 2 : 2 + ((bytes[offset + 1] ?? 0) & 127));
+  const contentLength = (offset: number) => {
+    const first = bytes[offset + 1] ?? 0;
+    return first < 128
+      ? first
+      : A.reduce(A.fromIterable(bytes.slice(offset + 2, offset + 2 + (first & 127))), 0, (n, byte) => n * 256 + byte);
+  };
+  let offset = contentOffset(0);
+  offset = contentOffset(offset) + contentLength(offset); // version
+  offset = contentOffset(offset) + contentLength(offset); // algorithm
+  expect(bytes[offset]).toBe(4); // PrivateKey OCTET STRING
+  const pkcs1 = bytes.slice(contentOffset(offset), contentOffset(offset) + contentLength(offset));
+  const pem = `-----BEGIN RSA PRIVATE KEY-----\n${Buffer.from(pkcs1).toString("base64")}\n-----END RSA PRIVATE KEY-----`; // gitleaks:allow -- format marker only; key generated in memory. nosemgrep: semgrep.beep-hardcoded-private-key
+  return { publicKey: pair.publicKey, pem };
+});
 
-it.layer(TokenTestLayer, { timeout: "30 seconds" })("installation token cache", (it) => {
-  it.effect("signs RS256 in memory, scopes tokens, shares refresh, and expires five minutes early", () =>
+const grantedAll = { checks: "write", pull_requests: "write", issues: "write", contents: "read", metadata: "read" };
+
+// A fake GitHub App API: mints `opaque-<n>` tokens an hour past `clock.now`, records revocations,
+// and answers every other call with the bearer it carried.
+const appApi = (granted: Record<string, string>) => {
+  const clock = { now: 0 };
+  const revoked: Array<string> = [];
+  let exchanges = 0;
+  const api = githubFetch((call) => {
+    if (call.method === "POST" && Str.endsWith("/access_tokens")(call.url.pathname)) {
+      exchanges += 1;
+      return reply(201)({
+        token: `opaque-${exchanges}`,
+        expires_at: DateTime.formatIso(DateTime.makeUnsafe(clock.now + 3_600_000)),
+        permissions: granted,
+      });
+    }
+    if (call.method === "DELETE" && call.url.pathname === "/installation/token") {
+      revoked.push(call.authorization);
+      return reply(204)();
+    }
+    return { bearer: call.authorization };
+  });
+  return { ...api, clock, revoked, exchanges: () => exchanges };
+};
+
+const reviewerCredentials = (pem: string) =>
+  ReviewerCredentials.make({
+    appId: 42,
+    clientId: "Iv.test-client",
+    installationId: 77,
+    privateKey: Redacted.make(pem),
+  });
+
+const Bearer = S.Struct({ bearer: S.String });
+const readBearer = GitHubClient.use((client) =>
+  client.requestDecoded("GET /repos/{owner}/{repo}", { owner: "beep-effect", repo: "beep-effect" }, Bearer)
+).pipe(Effect.map((answer) => answer.bearer));
+
+describe("installation token client", () => {
+  it.effect("signs RS256 in memory, scopes and checks tokens, shares refresh, and re-mints five minutes early", () =>
     Effect.gen(function* () {
-      const fixture = yield* TokenFixture;
-      const { jwts, requestBodies } = fixture;
-      const service = yield* GitHubAppAuth;
-      const first = yield* service.token;
-      expect(Redacted.value(first)).toBe("opaque-1");
-      // A single test owns this layer clock; assert the absolute refresh boundary.
-      yield* TestClock.setTime(Duration.minutes(54).pipe(Duration.toMillis));
-      expect(Redacted.value(yield* service.token)).toBe("opaque-1");
-      yield* TestClock.setTime(Duration.minutes(55).pipe(Duration.toMillis));
-      const tokens = yield* Effect.all([service.token, service.token], { concurrency: 2 });
-      expect(A.map(tokens, Redacted.value)).toEqual(["opaque-2", "opaque-2"]);
-      expect(fixture.exchanges()).toBe(2);
-      expect(requestBodies[0]).toMatchObject({ repositories: ["beep-effect"], permissions: { checks: "write" } });
-      const jwt = Str.split(".")(Str.slice(7)(jwts[0] ?? ""));
-      const claims = yield* decodeJson(Buffer.from(jwt[1] ?? "", "base64url").toString()).pipe(
-        Effect.flatMap(decodeObject)
+      const key = yield* reviewerKey;
+      const api = appApi(grantedAll);
+      const context = yield* Layer.build(
+        makeGitHubAppAuth(reviewerCredentials(key.pem), { fetch: api.fetch, retry: "off" })
       );
-      expect(claims).toEqual({ iat: -60, exp: 540, iss: "Iv.test-client" });
+      expect(Context.get(context, GitHubAppAuth).appId).toBe(42);
+      // The permission-check token is minted first and handed back; the client mints its own.
+      expect(api.exchanges()).toBe(2);
+      expect(api.revoked).toEqual(["token opaque-1"]);
+      const bearer = readBearer.pipe(Effect.provideContext(context));
+      expect(yield* bearer).toBe("token opaque-2");
+      // A single test owns this clock; assert the absolute refresh boundary.
+      api.clock.now = Duration.toMillis(Duration.minutes(54));
+      yield* TestClock.setTime(api.clock.now);
+      expect(yield* bearer).toBe("token opaque-2");
+      api.clock.now = Duration.toMillis(Duration.minutes(55));
+      yield* TestClock.setTime(api.clock.now);
+      expect(yield* Effect.all([bearer, bearer], { concurrency: 2 })).toEqual(["token opaque-3", "token opaque-3"]);
+      expect(api.exchanges()).toBe(3);
+      expect(api.revoked).toEqual(["token opaque-1", "token opaque-2"]);
+      const mints = A.filter(api.calls, (call) => Str.endsWith("/access_tokens")(call.url.pathname));
+      expect(A.map(mints, (call) => call.url.pathname)).toEqual(A.replicate("/app/installations/77/access_tokens", 3));
+      for (const mint of mints) {
+        expect(mint.body).toEqual({
+          permissions: grantedAll,
+          repositories: ["beep-effect"],
+        });
+      }
+      const jwt = Str.split(".")(Str.slice(7)(O.getOrThrow(A.head(mints)).authorization));
+      const claims = yield* decodeJson(Buffer.from(jwt[1] ?? "", "base64url").toString()).pipe(
+        Effect.flatMap(decodeClaims)
+      );
+      expect(claims.iss).toBe("Iv.test-client");
+      expect(claims.exp - claims.iat).toBe(600);
       expect(
         yield* Effect.promise(() =>
           crypto.subtle.verify(
             "RSASSA-PKCS1-v1_5",
-            fixture.publicKey,
+            key.publicKey,
             Buffer.from(jwt[2] ?? "", "base64url"),
             new TextEncoder().encode(`${jwt[0]}.${jwt[1]}`)
           )
         )
       ).toBe(true);
+    })
+  );
+
+  it.effect("fails closed and revokes a token granted below the reviewer permissions", () =>
+    Effect.gen(function* () {
+      const key = yield* reviewerKey;
+      const api = appApi({ ...grantedAll, checks: "read" });
+      const error = yield* Layer.build(
+        makeGitHubAppAuth(reviewerCredentials(key.pem), { fetch: api.fetch, retry: "off" })
+      ).pipe(Effect.flip);
+      expect(error).toMatchObject({ operation: "token", message: "Reviewer installation token exchange failed." });
+      expect(api.exchanges()).toBe(1);
+      expect(api.revoked).toEqual(["token opaque-1"]);
+    })
+  );
+
+  it.effect("reports an unusable signing key as a jwt failure without any exchange", () =>
+    Effect.gen(function* () {
+      const api = appApi(grantedAll);
+      const error = yield* Layer.build(
+        makeGitHubAppAuth(reviewerCredentials("not a key"), { fetch: api.fetch, retry: "off" })
+      ).pipe(Effect.flip);
+      expect(error).toMatchObject({ operation: "jwt", message: "Reviewer installation token exchange failed." });
+      expect(api.calls).toEqual([]);
+    })
+  );
+
+  it.effect("mints one checked token for the token command without revoking it", () =>
+    Effect.gen(function* () {
+      const key = yield* reviewerKey;
+      const api = appApi(grantedAll);
+      const app = yield* Layer.build(GitHubApp.layerWith({ fetch: api.fetch, retry: "off" }));
+      const minted = yield* mintReviewerToken(reviewerCredentials(key.pem)).pipe(Effect.provideContext(app));
+      expect(Redacted.value(minted.token)).toBe("opaque-1");
+      expect(api.revoked).toEqual([]);
+    })
+  );
+});
+
+// The op reads run through `@beep/commands` `Run`; a scripted spawner answers them by reference.
+const reviewerSecrets: Record<string, string> = {
+  app_id: "42",
+  client_id: "Iv.test-client",
+  installation_id: "77",
+  private_key: "PEM\n",
+};
+const opReference = (field: string) => `op://BEEP_SECRETS/beep-reviewer GitHub App/${field}`;
+// The argv each lane reads a field with: the local `op` shim, or `op` on the SSH host.
+const readLines = (field: string) => [
+  `op read ${opReference(field)}`,
+  `ssh -o BatchMode=yes -- dankstation op read '${opReference(field)}'`,
+];
+const opScript = (refused: ReadonlyArray<string>) =>
+  ScriptedSpawner.make((command, args) => {
+    const line = A.join([command, ...args], " ");
+    const field = A.findFirst(R.keys(reviewerSecrets), (name) => A.contains(readLines(name), line));
+    return O.match(
+      O.filter(field, (name) => !A.contains(refused, name)),
+      {
+        onNone: () =>
+          Str.endsWith("op-doctor")(line) ? { exit: 0 } : { exit: 1, stderr: "[ERROR] could not read secret" },
+        onSome: (name) => ({ stdout: reviewerSecrets[name] ?? "" }),
+      }
+    );
+  });
+const loadWith = (spawner: ScriptedSpawner, env: Record<string, string> = {}) =>
+  Effect.flatMap(Layer.build(spawner.layer), (context) =>
+    loadReviewerCredentials.pipe(
+      Effect.provideContext(context),
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env))
+    )
+  );
+
+describe("reviewer credentials", () => {
+  it.effect("reads every field through op when no environment variable carries it", () =>
+    Effect.gen(function* () {
+      const spawner = opScript([]);
+      const credentials = yield* loadWith(spawner, { BEEP_REVIEWER_APP_ID: "42" });
+      expect(credentials.clientId).toBe("Iv.test-client");
+      expect(credentials.installationId).toBe(77);
+      expect(Redacted.value(credentials.privateKey)).toBe("PEM");
+      expect(A.map(spawner.spawns, (spawn) => [spawn.command, ...spawn.args])).toEqual([
+        ["op", "read", opReference("client_id")],
+        ["op", "read", opReference("installation_id")],
+        ["op", "read", opReference("private_key")],
+      ]);
+    })
+  );
+
+  it.effect("reads through ssh on the configured host", () =>
+    Effect.gen(function* () {
+      const spawner = opScript([]);
+      yield* loadWith(spawner, { BEEP_REVIEWER_OP_SSH: "dankstation" });
+      expect(spawner.spawns[0]?.args).toEqual([
+        "-o",
+        "BatchMode=yes",
+        "--",
+        "dankstation",
+        `op read '${opReference("app_id")}'`,
+      ]);
+    })
+  );
+
+  it.effect("runs op-doctor once and stops the secret path on a refused read", () =>
+    Effect.gen(function* () {
+      const spawner = opScript(["client_id"]);
+      const error = yield* loadWith(spawner).pipe(Effect.flip);
+      expect(error.message).toBe("op op read field client_id failed; op-doctor ran once. Secret path stopped.");
+      expect(A.map(spawner.spawns, (spawn) => spawn.command)).toEqual(["op", "op", "op-doctor"]);
+      const remote = opScript(["app_id"]);
+      const remoteError = yield* loadWith(remote, { BEEP_REVIEWER_OP_SSH: "dankstation" }).pipe(Effect.flip);
+      expect(remoteError.message).toBe("ssh op read field app_id failed; op-doctor ran once. Secret path stopped.");
+      expect(remote.spawns[1]?.args).toEqual(["-o", "BatchMode=yes", "--", "dankstation", "op-doctor"]);
+    })
+  );
+
+  it.effect("refuses credentials that do not decode", () =>
+    Effect.gen(function* () {
+      const error = yield* loadWith(opScript([]), { BEEP_REVIEWER_APP_ID: "not-a-number" }).pipe(Effect.flip);
+      expect(error.message).toBe("Reviewer credentials could not be resolved or validated.");
     })
   );
 });

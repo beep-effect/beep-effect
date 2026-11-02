@@ -1,0 +1,476 @@
+{
+  "tool": "goals/repo-cli-gh-git-consolidation/ops/yeet-remainder-differential-w2b.ts",
+  "commit": "4b15eaa7d76306cc5308f594bfe87c5fe4208965",
+  "git": "git version 2.56.0",
+  "scenarios": 66,
+  "same": 55,
+  "classified": 11,
+  "unclassified": 0,
+  "gates": {
+    "unclassified": true
+  },
+  "rows": [
+    {
+      "site": "settle.changedPathsStrict",
+      "scenario": "feature branch with a rename and a café path",
+      "verdict": "same",
+      "old": "{\"ok\":[\"goals/alpha/README.md\",\"src/café.ts\",\"src/new name.ts\",\"src/old name.ts\"]}",
+      "new": "{\"ok\":[\"goals/alpha/README.md\",\"src/café.ts\",\"src/new name.ts\",\"src/old name.ts\"]}"
+    },
+    {
+      "site": "settle.changedPathsStrict",
+      "scenario": "no change against itself",
+      "verdict": "same",
+      "old": "{\"ok\":[]}",
+      "new": "{\"ok\":[]}"
+    },
+    {
+      "site": "settle.changedPathsStrict",
+      "scenario": "unknown base",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}"
+    },
+    {
+      "site": "settle.changedPathsStrict",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":129}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":129}}"
+    },
+    {
+      "site": "proofShadow.worktreePaths",
+      "scenario": "clean tree",
+      "verdict": "same",
+      "old": "{\"ok\":[]}",
+      "new": "{\"ok\":[]}"
+    },
+    {
+      "site": "proofShadow.worktreePaths",
+      "scenario": "dirty tree",
+      "verdict": "same",
+      "old": "{\"ok\":[\"README.md\",\"src/moved name.ts\",\"src/old name.ts\",\"untracked dir/with space.ts\"]}",
+      "new": "{\"ok\":[\"README.md\",\"src/moved name.ts\",\"src/old name.ts\",\"untracked dir/with space.ts\"]}"
+    },
+    {
+      "site": "proofShadow.worktreePaths",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}"
+    },
+    {
+      "site": "sweep.head",
+      "scenario": "on a branch",
+      "verdict": "same",
+      "old": "{\"reliable\":true,\"exitCode\":0,\"output\":\"main\"}",
+      "new": "{\"reliable\":true,\"exitCode\":0,\"output\":\"main\"}"
+    },
+    {
+      "site": "sweep.head",
+      "scenario": "detached HEAD",
+      "verdict": "same",
+      "old": "{\"reliable\":true,\"exitCode\":0,\"output\":\"HEAD\"}",
+      "new": "{\"reliable\":true,\"exitCode\":0,\"output\":\"HEAD\"}"
+    },
+    {
+      "site": "sweep.head",
+      "scenario": "outside a repository",
+      "verdict": "D-11: an unknown ref or a non-repository cwd keeps exit 128 but the kit's typed message replaces git's stderr",
+      "old": "{\"reliable\":false,\"exitCode\":128,\"output\":\"fatal: not a git repository (or any parent up to mount point /)\\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\"}",
+      "new": "{\"reliable\":false,\"exitCode\":128,\"output\":\"not a git repository: <tmp>/plain\"}"
+    },
+    {
+      "site": "sweep.status",
+      "scenario": "clean tree",
+      "verdict": "same",
+      "old": "{\"reliable\":true,\"exitCode\":0,\"nonEmpty\":false}",
+      "new": "{\"reliable\":true,\"exitCode\":0,\"nonEmpty\":false}"
+    },
+    {
+      "site": "sweep.status",
+      "scenario": "dirty tree",
+      "verdict": "same",
+      "old": "{\"reliable\":true,\"exitCode\":0,\"nonEmpty\":true}",
+      "new": "{\"reliable\":true,\"exitCode\":0,\"nonEmpty\":true}"
+    },
+    {
+      "site": "sweep.status",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"reliable\":false,\"exitCode\":128,\"nonEmpty\":true}",
+      "new": "{\"reliable\":false,\"exitCode\":128,\"nonEmpty\":true}"
+    },
+    {
+      "site": "sweep.toplevel",
+      "scenario": "main worktree",
+      "verdict": "same",
+      "old": "{\"reliable\":true,\"exitCode\":0,\"output\":\"<tmp>/seed with space\"}",
+      "new": "{\"reliable\":true,\"exitCode\":0,\"output\":\"<tmp>/seed with space\"}"
+    },
+    {
+      "site": "sweep.worktreeList",
+      "scenario": "main worktree",
+      "verdict": "same",
+      "old": "[{\"path\":\"<tmp>/seed with space\",\"branch\":\"main\"},{\"path\":\"<tmp>/detached\",\"branch\":null},{\"path\":\"<tmp>/lane\",\"branch\":\"feature\"}]",
+      "new": "[{\"path\":\"<tmp>/seed with space\",\"branch\":\"main\"},{\"path\":\"<tmp>/detached\",\"branch\":null},{\"path\":\"<tmp>/lane\",\"branch\":\"feature\"}]"
+    },
+    {
+      "site": "sweep.toplevel",
+      "scenario": "linked worktree",
+      "verdict": "same",
+      "old": "{\"reliable\":true,\"exitCode\":0,\"output\":\"<tmp>/lane\"}",
+      "new": "{\"reliable\":true,\"exitCode\":0,\"output\":\"<tmp>/lane\"}"
+    },
+    {
+      "site": "sweep.worktreeList",
+      "scenario": "linked worktree",
+      "verdict": "same",
+      "old": "[{\"path\":\"<tmp>/seed with space\",\"branch\":\"main\"},{\"path\":\"<tmp>/detached\",\"branch\":null},{\"path\":\"<tmp>/lane\",\"branch\":\"feature\"}]",
+      "new": "[{\"path\":\"<tmp>/seed with space\",\"branch\":\"main\"},{\"path\":\"<tmp>/detached\",\"branch\":null},{\"path\":\"<tmp>/lane\",\"branch\":\"feature\"}]"
+    },
+    {
+      "site": "sweep.toplevel",
+      "scenario": "outside a repository",
+      "verdict": "D-11: an unknown ref or a non-repository cwd keeps exit 128 but the kit's typed message replaces git's stderr",
+      "old": "{\"reliable\":false,\"exitCode\":128,\"output\":\"fatal: not a git repository (or any parent up to mount point /)\\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\"}",
+      "new": "{\"reliable\":false,\"exitCode\":128,\"output\":\"not a git repository: <tmp>/plain\"}"
+    },
+    {
+      "site": "sweep.worktreeList",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "[]",
+      "new": "[]"
+    },
+    {
+      "site": "sweep.observeSha",
+      "scenario": "local branch present",
+      "verdict": "same",
+      "old": "{\"reliable\":true,\"exitCode\":0,\"output\":\"bad817b5f6a16da0871a229f6bf4747a8d7fbcb2\"}",
+      "new": "{\"reliable\":true,\"exitCode\":0,\"output\":\"bad817b5f6a16da0871a229f6bf4747a8d7fbcb2\"}"
+    },
+    {
+      "site": "sweep.observeSha",
+      "scenario": "upstream set (remote-tracking ref present)",
+      "verdict": "same",
+      "old": "{\"reliable\":true,\"exitCode\":0,\"output\":\"bad817b5f6a16da0871a229f6bf4747a8d7fbcb2\"}",
+      "new": "{\"reliable\":true,\"exitCode\":0,\"output\":\"bad817b5f6a16da0871a229f6bf4747a8d7fbcb2\"}"
+    },
+    {
+      "site": "sweep.observeSha",
+      "scenario": "upstream unset (remote-tracking ref missing)",
+      "verdict": "D-11: an unknown ref under --quiet is the kit's typed UnknownRefError (exit 128) where git exited 1 silently; observeSha reads None either way",
+      "old": "{\"reliable\":false,\"exitCode\":1,\"output\":\"\"}",
+      "new": "{\"reliable\":false,\"exitCode\":128,\"output\":\"unknown ref 'refs/remotes/origin/feature' in <tmp>/seed with space\"}"
+    },
+    {
+      "site": "sweep.observeSha",
+      "scenario": "outside a repository",
+      "verdict": "D-11: an unknown ref or a non-repository cwd keeps exit 128 but the kit's typed message replaces git's stderr",
+      "old": "{\"reliable\":false,\"exitCode\":128,\"output\":\"fatal: not a git repository (or any parent up to mount point /)\\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\"}",
+      "new": "{\"reliable\":false,\"exitCode\":128,\"output\":\"not a git repository: <tmp>/plain\"}"
+    },
+    {
+      "site": "sweep.lockfileDiff",
+      "scenario": "lockfile changed",
+      "verdict": "same",
+      "old": "{\"reliable\":true,\"exitCode\":0,\"nonEmpty\":true}",
+      "new": "{\"reliable\":true,\"exitCode\":0,\"nonEmpty\":true}"
+    },
+    {
+      "site": "sweep.lockfileDiff",
+      "scenario": "lockfile unchanged",
+      "verdict": "same",
+      "old": "{\"reliable\":true,\"exitCode\":0,\"nonEmpty\":false}",
+      "new": "{\"reliable\":true,\"exitCode\":0,\"nonEmpty\":false}"
+    },
+    {
+      "site": "sweep.lockfileDiff",
+      "scenario": "unknown base",
+      "verdict": "same",
+      "old": "{\"reliable\":false,\"exitCode\":128,\"nonEmpty\":true}",
+      "new": "{\"reliable\":false,\"exitCode\":128,\"nonEmpty\":true}"
+    },
+    {
+      "site": "sweep.probeAdapter",
+      "scenario": "spawn failure (cwd does not exist)",
+      "verdict": "same",
+      "old": "{\"reliable\":false,\"exitCode\":1}",
+      "new": "{\"reliable\":false,\"exitCode\":1}"
+    },
+    {
+      "site": "sweep.branchDelete",
+      "scenario": "merged branch -d",
+      "verdict": "D-11: a kit mutation surfaces no zero-exit transcript, so the sweep step's executed detail is empty",
+      "old": "{\"executed\":true,\"exitCode\":0,\"detail\":\"Deleted branch merged (was 049fabc).\"}",
+      "new": "{\"executed\":true,\"exitCode\":0,\"detail\":\"\"}"
+    },
+    {
+      "site": "sweep.branchDelete",
+      "scenario": "branch merged only to its upstream -d",
+      "verdict": "D-11: a kit mutation surfaces no zero-exit transcript, so the sweep step's executed detail is empty",
+      "old": "{\"executed\":true,\"exitCode\":0,\"detail\":\"warning: deleting branch 'unmerged' that has been merged to\\n         'refs/remotes/origin/feature', but not yet merged to HEAD\\nDeleted branch unmerged (was bad817b).\"}",
+      "new": "{\"executed\":true,\"exitCode\":0,\"detail\":\"\"}"
+    },
+    {
+      "site": "sweep.branchDelete",
+      "scenario": "unpushed branch -d refused",
+      "verdict": "same",
+      "old": "{\"executed\":false,\"exitCode\":1,\"detail\":\"error: the branch 'unpushed' is not fully merged\\nhint: If you are sure you want to delete it, run 'git branch -D unpushed'\\nhint: Disable this message with \\\"git config set advice.forceDeleteBranch false\\\"\"}",
+      "new": "{\"executed\":false,\"exitCode\":1,\"detail\":\"error: the branch 'unpushed' is not fully merged\\nhint: If you are sure you want to delete it, run 'git branch -D unpushed'\\nhint: Disable this message with \\\"git config set advice.forceDeleteBranch false\\\"\"}"
+    },
+    {
+      "site": "sweep.branchDelete",
+      "scenario": "unpushed branch -D",
+      "verdict": "D-11: a kit mutation surfaces no zero-exit transcript, so the sweep step's executed detail is empty",
+      "old": "{\"executed\":true,\"exitCode\":0,\"detail\":\"Deleted branch unpushed (was 71f0052).\"}",
+      "new": "{\"executed\":true,\"exitCode\":0,\"detail\":\"\"}"
+    },
+    {
+      "site": "sweep.fetchMain",
+      "scenario": "fetch origin main:main off main",
+      "verdict": "D-11: a kit mutation surfaces no zero-exit transcript, so the sweep step's executed detail is empty",
+      "old": "{\"executed\":true,\"exitCode\":0,\"detail\":\"From <tmp>/origin\\n   049fabc..1d687b5  main       -> main\"}",
+      "new": "{\"executed\":true,\"exitCode\":0,\"detail\":\"\"}"
+    },
+    {
+      "site": "sweep.checkout",
+      "scenario": "switch to main",
+      "verdict": "D-11: a kit mutation surfaces no zero-exit transcript, so the sweep step's executed detail is empty",
+      "old": "{\"executed\":true,\"exitCode\":0,\"detail\":\"Switched to branch 'main'\\nYour branch is up to date with 'origin/main'.\"}",
+      "new": "{\"executed\":true,\"exitCode\":0,\"detail\":\"\"}"
+    },
+    {
+      "site": "sweep.checkout",
+      "scenario": "unknown branch",
+      "verdict": "same",
+      "old": "{\"executed\":false}",
+      "new": "{\"executed\":false}"
+    },
+    {
+      "site": "retire.commonDir",
+      "scenario": "linked worktree",
+      "verdict": "same",
+      "old": "{\"ok\":\"<tmp>/seed with space/.git\"}",
+      "new": "{\"ok\":\"<tmp>/seed with space/.git\"}"
+    },
+    {
+      "site": "retire.currentBranch",
+      "scenario": "linked worktree",
+      "verdict": "same",
+      "old": "{\"ok\":\"feature\"}",
+      "new": "{\"ok\":\"feature\"}"
+    },
+    {
+      "site": "retire.commonDir",
+      "scenario": "main worktree",
+      "verdict": "same",
+      "old": "{\"ok\":\"<tmp>/seed with space/.git\"}",
+      "new": "{\"ok\":\"<tmp>/seed with space/.git\"}"
+    },
+    {
+      "site": "retire.currentBranch",
+      "scenario": "main worktree",
+      "verdict": "same",
+      "old": "{\"ok\":\"main\"}",
+      "new": "{\"ok\":\"main\"}"
+    },
+    {
+      "site": "retire.commonDir",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"no-exit\"}}",
+      "new": "{\"failed\":{\"_tag\":\"no-exit\"}}"
+    },
+    {
+      "site": "retire.currentBranch",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"no-exit\"}}",
+      "new": "{\"failed\":{\"_tag\":\"no-exit\"}}"
+    },
+    {
+      "site": "retire.currentBranch",
+      "scenario": "detached HEAD",
+      "verdict": "same",
+      "old": "{\"ok\":\"\"}",
+      "new": "{\"ok\":\"\"}"
+    },
+    {
+      "site": "retire.branchPaths",
+      "scenario": "merged branch touching goals/",
+      "verdict": "same",
+      "old": "{\"ok\":[\"goals/alpha/README.md\"]}",
+      "new": "{\"ok\":[\"goals/alpha/README.md\"]}"
+    },
+    {
+      "site": "retire.branchPaths",
+      "scenario": "unmerged branch on main itself",
+      "verdict": "same",
+      "old": "{\"ok\":[]}",
+      "new": "{\"ok\":[]}"
+    },
+    {
+      "site": "retire.showManifest",
+      "scenario": "manifest present",
+      "verdict": "D-11: Git.show returns the blob verbatim (trailing newline kept) where the capture trimmed it; the manifest decoder ignores the whitespace",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"{\\\"lifecycle\\\":\\\"active\\\"}\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"{\\\"lifecycle\\\":\\\"active\\\"}\\n\"}}"
+    },
+    {
+      "site": "retire.showManifest",
+      "scenario": "manifest missing",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "mergedPreview.worktreeAdd",
+      "scenario": "fresh path",
+      "verdict": "same",
+      "old": "{\"exitCode\":0,\"failed\":false,\"output\":\"\"}",
+      "new": "{\"exitCode\":0,\"failed\":false,\"output\":\"\"}"
+    },
+    {
+      "site": "mergedPreview.worktreeAdd",
+      "scenario": "path already exists",
+      "verdict": "same",
+      "old": "{\"exitCode\":128,\"failed\":true,\"output\":\"Preparing worktree (detached HEAD 1d687b5)\\nfatal: '<target>' already exists\"}",
+      "new": "{\"exitCode\":128,\"failed\":true,\"output\":\"Preparing worktree (detached HEAD 1d687b5)\\nfatal: '<target>' already exists\"}"
+    },
+    {
+      "site": "readyGate.reviewerRequest",
+      "scenario": "push accepted",
+      "verdict": "same",
+      "old": "{}",
+      "new": "{}"
+    },
+    {
+      "site": "readyGate.reviewerRequest",
+      "scenario": "push rejected as a non-fast-forward",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":1}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":1}}"
+    },
+    {
+      "site": "pullRequest.remoteUrl",
+      "scenario": "origin present",
+      "verdict": "same",
+      "old": "{\"ok\":\"<tmp>/origin.git\"}",
+      "new": "{\"ok\":\"<tmp>/origin.git\"}"
+    },
+    {
+      "site": "pullRequest.remoteUrl",
+      "scenario": "no origin remote",
+      "verdict": "D-11: a missing origin reads as no URL (the owner match fails) where get-url failed with exit 2",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":2}}",
+      "new": "{\"ok\":\"\"}"
+    },
+    {
+      "site": "pullRequest.mergeBase",
+      "scenario": "known base",
+      "verdict": "same",
+      "old": "{\"ok\":\"049fabc1e707e7201574eadb8d414d9dd72c3838\"}",
+      "new": "{\"ok\":\"049fabc1e707e7201574eadb8d414d9dd72c3838\"}"
+    },
+    {
+      "site": "pullRequest.changedPaths",
+      "scenario": "known base",
+      "verdict": "same",
+      "old": "{\"ok\":[\"goals/alpha/README.md\",\"src/café.ts\",\"src/new name.ts\"]}",
+      "new": "{\"ok\":[\"goals/alpha/README.md\",\"src/café.ts\",\"src/new name.ts\"]}"
+    },
+    {
+      "site": "pullRequest.mergeBase",
+      "scenario": "unknown base",
+      "verdict": "same",
+      "old": "{\"ok\":\"\"}",
+      "new": "{\"ok\":\"\"}"
+    },
+    {
+      "site": "pullRequest.changedPaths",
+      "scenario": "unknown base",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}"
+    },
+    {
+      "site": "status.worktree",
+      "scenario": "dirty tree",
+      "verdict": "same",
+      "old": "{\"ok\":[[\"src/moved name.ts\"],[\"README.md\"],[\"untracked dir/with space.ts\"]]}",
+      "new": "{\"ok\":[[\"src/moved name.ts\"],[\"README.md\"],[\"untracked dir/with space.ts\"]]}"
+    },
+    {
+      "site": "status.worktree",
+      "scenario": "clean tree",
+      "verdict": "same",
+      "old": "{\"ok\":[[],[],[]]}",
+      "new": "{\"ok\":[[],[],[]]}"
+    },
+    {
+      "site": "status.worktree",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":129}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":129}}"
+    },
+    {
+      "site": "library.repoCommit",
+      "scenario": "repository",
+      "verdict": "same",
+      "old": "\"1d687b5db5530e70297f6b5404bceb5944c859dc\"",
+      "new": "\"1d687b5db5530e70297f6b5404bceb5944c859dc\""
+    },
+    {
+      "site": "library.repoCommit",
+      "scenario": "repository subdirectory",
+      "verdict": "same",
+      "old": "\"1d687b5db5530e70297f6b5404bceb5944c859dc\"",
+      "new": "\"1d687b5db5530e70297f6b5404bceb5944c859dc\""
+    },
+    {
+      "site": "library.repoCommit",
+      "scenario": "unborn repository",
+      "verdict": "same",
+      "old": "\"\"",
+      "new": "\"\""
+    },
+    {
+      "site": "library.repoCommit",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "\"\"",
+      "new": "\"\""
+    },
+    {
+      "site": "library.repoCommit",
+      "scenario": "input root that does not exist",
+      "verdict": "same",
+      "old": "\"\"",
+      "new": "\"\""
+    },
+    {
+      "site": "configSnapshot.lsFiles",
+      "scenario": "repository with a space in a path",
+      "verdict": "same",
+      "old": "[\"README.md\",\"bun.lock\",\"goals/alpha/ops/manifest.json\",\"src/old name.ts\"]",
+      "new": "[\"README.md\",\"bun.lock\",\"goals/alpha/ops/manifest.json\",\"src/old name.ts\"]"
+    },
+    {
+      "site": "configSnapshot.lsFiles",
+      "scenario": "subdirectory",
+      "verdict": "same",
+      "old": "[\"old name.ts\"]",
+      "new": "[\"old name.ts\"]"
+    },
+    {
+      "site": "configSnapshot.lsFiles",
+      "scenario": "index with an unmerged path",
+      "verdict": "same",
+      "old": "[\"README.md\",\"README.md\",\"README.md\",\"bun.lock\",\"goals/alpha/ops/manifest.json\",\"src/old name.ts\"]",
+      "new": "[\"README.md\",\"README.md\",\"README.md\",\"bun.lock\",\"goals/alpha/ops/manifest.json\",\"src/old name.ts\"]"
+    }
+  ]
+}
