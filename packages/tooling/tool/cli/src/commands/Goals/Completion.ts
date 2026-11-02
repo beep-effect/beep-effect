@@ -1,5 +1,5 @@
 /**
- * Read-only goal completion verification and explicit clone-scoped receipt refresh.
+ * Read-only goal completion verification and explicit workstation-scoped receipt refresh.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -44,6 +44,10 @@ import {
   readGoalMergeTimeEvidence,
 } from "./CompletionEvidence.ts";
 import {
+  goalCompletionReceiptStore,
+  GoalCompletionReceiptJson as ReceiptJson,
+} from "./CompletionReceiptStore.service.ts";
+import {
   GoalAcceptanceEvidenceRef,
   GoalCheckConclusion,
   GoalCloseoutView,
@@ -58,6 +62,8 @@ import {
 } from "./Goals.schemas.ts";
 import { listGoalPackets, parseGoalManifestText } from "./Inventory.ts";
 import { canonicalJsonText, sha256Hex } from "./PacketCore/PacketDigest.ts";
+import type * as FileSystem from "effect/FileSystem";
+import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
 import type { GoalCompletionEvidenceVerdict, GoalCompletionOutcome, GoalPullRequestRef } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 
@@ -285,7 +291,7 @@ const TimelinePages = S.Struct({ event: S.String, created_at: S.optionalKey(S.Da
   S.Array,
   S.Array
 );
-const ReceiptJson = JsonStringCodec(GoalCompletionReceipt);
+const equivalentReceipt = S.toEquivalence(GoalCompletionReceipt);
 /**
  * Digests the decoded completion declaration, initiative identity and packet identity canonically.
  *
@@ -917,8 +923,55 @@ const receiptLocation = Effect.fn("Goals.Completion.receiptLocation")(function* 
   return { ledgerRoot, file: path.join(ledgerRoot, ".beep", "goals", "completion-receipts.ndjson") };
 });
 
+const readReceiptRepository = Effect.fn("Goals.Completion.receiptRepository")(function* (root: string) {
+  const remote = yield* readGoalCompletionGit(root, ["remote", "get-url", "origin"]).pipe(Effect.option);
+  return O.flatMap(remote, (text) =>
+    O.flatMap(Str.match(/github\.com[:/]([^/\s]+\/[^/\s]+?)(?:\.git)?\s*$/u)(text), (match) => A.get(match, 1))
+  );
+});
+
+const readLegacyReceipts = Effect.fn("Goals.Completion.legacyReceipts")(function* (root: string) {
+  const location = yield* receiptLocation(root);
+  const read = yield* readContainedFileStringNoFollow(location.ledgerRoot, location.file);
+  const text = O.getOrElse(read.contents, () => "");
+  const lines = Str.split(text, "\n");
+  const complete = Str.endsWith("\n")(text) ? lines : A.dropRight(lines, 1);
+  return A.getSomes(A.map(complete, ReceiptJson.decodeOption));
+});
+
+const readSharedReceipts = Effect.fn("Goals.Completion.sharedReceipts")(
+  function* (repository: O.Option<string>) {
+    if (O.isNone(repository)) return A.empty<GoalCompletionReceipt>();
+    const store = yield* goalCompletionReceiptStore();
+    return yield* store.list(repository.value);
+  },
+  Effect.catchTag("YeetCommandError", (error) =>
+    Effect.logWarning(`[goals:completion] shared receipt store unreadable: ${error.message}`).pipe(
+      Effect.as(A.empty<GoalCompletionReceipt>())
+    )
+  )
+);
+
+const newestReceipt = (receipts: ReadonlyArray<GoalCompletionReceipt>): O.Option<GoalCompletionReceipt> =>
+  A.reduce(receipts, O.none<GoalCompletionReceipt>(), (found, receipt) =>
+    O.isNone(found) || DateTime.isGreaterThan(receipt.verifiedAt, found.value.verifiedAt) ? O.some(receipt) : found
+  );
+
 /**
  * Reads the latest matching receipt; changed declarations cannot reuse an older verdict.
+ *
+ * **Details**
+ *
+ * Reads the union of the workstation store shared by every clone of the
+ * repository and the owning clone's legacy
+ * `.beep/goals/completion-receipts.ndjson`, dropping identical rows. Only
+ * rows for this packet, declaration digest, final PR and `origin` repository
+ * match. The newest definite match wins, else the newest match, except that
+ * a verified receipt is sticky: when that pick is `unknown` and a matching
+ * `verified` receipt exists, the newest `verified` one is selected instead,
+ * so a degraded refresh can never regress a goal another clone verified.
+ * A newer definite `unknown` still replaces an older `unsatisfied` receipt.
+ * An unreadable shared store degrades to the legacy rows with a warning.
  *
  * **Example** (Inspect the receipt reader)
  *
@@ -937,16 +990,10 @@ export const storedGoalCompletion = Effect.fn("Goals.Completion.stored")(functio
   final: GoalPullRequestRef
 ) {
   const digest = yield* goalCompletionDeclarationDigest(manifest);
-  const location = yield* receiptLocation(root);
-  const read = yield* readContainedFileStringNoFollow(location.ledgerRoot, location.file);
-  const text = O.getOrElse(read.contents, () => "");
-  const lines = Str.split(text, "\n");
-  const complete = Str.endsWith("\n")(text) ? lines : A.dropRight(lines, 1);
-  const receipts = A.getSomes(A.map(complete, ReceiptJson.decodeOption));
-  const remote = yield* readGoalCompletionGit(root, ["remote", "get-url", "origin"]).pipe(Effect.option);
-  const repository = O.flatMap(remote, (text) =>
-    O.flatMap(Str.match(/github\.com[:/]([^/\s]+\/[^/\s]+?)(?:\.git)?\s*$/u)(text), (match) => A.get(match, 1))
-  );
+  const legacy = yield* readLegacyReceipts(root);
+  const repository = yield* readReceiptRepository(root);
+  const shared = yield* readSharedReceipts(repository);
+  const receipts = A.dedupeWith(A.appendAll(shared, legacy), equivalentReceipt);
   const matching = A.filter(
     receipts,
     (receipt) =>
@@ -967,9 +1014,12 @@ export const storedGoalCompletion = Effect.fn("Goals.Completion.stored")(functio
         ))
   );
   const candidates = A.isReadonlyArrayNonEmpty(definite) ? definite : matching;
-  const newest = A.reduce(candidates, O.none<GoalCompletionReceipt>(), (found, receipt) =>
-    O.isNone(found) || DateTime.isGreaterThan(receipt.verifiedAt, found.value.verifiedAt) ? O.some(receipt) : found
-  );
+  const verified = A.filter(candidates, (receipt) => receipt.outcome === "verified");
+  const picked = newestReceipt(candidates);
+  const newest =
+    O.exists(picked, (receipt) => receipt.outcome === "unknown") && A.isReadonlyArrayNonEmpty(verified)
+      ? newestReceipt(verified)
+      : picked;
   if (O.isNone(newest)) return newest;
   const receipt = newest.value;
   return O.some(
@@ -1061,7 +1111,7 @@ export const projectGoalLifecycle = Effect.fn("Goals.Completion.projectLifecycle
 });
 
 /**
- * Reads clone-scoped completion facts for lifecycle views without network writes.
+ * Reads stored completion facts for lifecycle views without network writes.
  *
  * **Example** (Inspect the lifecycle reader)
  *
@@ -1133,7 +1183,9 @@ const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
   root: string,
   record: GoalPacketRecord,
   explicit: boolean,
-  location: { readonly ledgerRoot: string; readonly file: string },
+  write: (
+    receipt: GoalCompletionReceipt
+  ) => Effect.Effect<void, YeetCommandError | FsGuardError | S.SchemaError, FileSystem.FileSystem | Path.Path>,
   readinessJob: O.Option<string>
 ) {
   const decoded = readRefreshManifest(record);
@@ -1155,7 +1207,7 @@ const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
     );
     return;
   }
-  yield* appendContainedFileString(location.ledgerRoot, location.file, `${yield* ReceiptJson.encode(receipt)}\n`);
+  yield* write(receipt);
   yield* Console.log(`[goals:completion] ${record.slug} #${final.value.number}: ${receipt.outcome}`);
 });
 const refresh = Effect.fn("Goals.Completion.refresh")(function* (
@@ -1171,13 +1223,26 @@ const refresh = Effect.fn("Goals.Completion.refresh")(function* (
   const root = yield* findRepoRoot();
   const records = yield* listGoalPackets(root);
   const location = yield* receiptLocation(root);
+  const repository = yield* readReceiptRepository(root);
+  // The workstation store is shared by every clone of the repository; without
+  // a resolvable github.com origin the owning clone's legacy file still records it.
+  const store = O.isSome(repository) ? O.some(yield* goalCompletionReceiptStore()) : O.none();
+  const write = (receipt: GoalCompletionReceipt) =>
+    O.match(store, {
+      onSome: (shared) => shared.append(receipt),
+      onNone: () =>
+        ReceiptJson.encode(receipt).pipe(
+          Effect.flatMap((text) => appendContainedFileString(location.ledgerRoot, location.file, `${text}\n`)),
+          Effect.asVoid
+        ),
+    });
   if (O.exists(slug, (value) => !A.some(records, (record) => record.slug === value)))
     return yield* YeetCommandError.make({ message: "Requested goal packet does not exist" });
   const selected = O.match(slug, {
     onNone: () => records,
     onSome: (value) => A.filter(records, (record) => record.slug === value),
   });
-  yield* Effect.forEach(selected, (record) => refreshRecord(root, record, O.isSome(slug), location, readinessJob));
+  yield* Effect.forEach(selected, (record) => refreshRecord(root, record, O.isSome(slug), write, readinessJob));
 });
 /**
  * Explicit sole writer for derived completion receipts; doctor never calls this command.
@@ -1206,6 +1271,6 @@ export const goalsCompletionCommand = Command.make("completion").pipe(
         ),
       },
       ({ slug, readinessJob }) => refresh(slug, readinessJob)
-    ).pipe(Command.withDescription("Explicitly observe GitHub and append clone-scoped goal completion receipts")),
+    ).pipe(Command.withDescription("Explicitly observe GitHub and append workstation-scoped goal completion receipts")),
   ])
 );

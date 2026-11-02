@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R3b, refactor/jsonc-parser-out)",
-      "reason": "Record the R3b manifest edits: @beep/repo-configs drops the npm jsonc-parser dependency and adds the @beep/jsonc workspace dependency (its closure gains exactly @beep/jsonc), and the root gains the @beep/jsonc devDependency for the schema-opaque-default codemod while the policy-fingerprint shared seal gains @beep/jsonc internal/lines.ts; measured in the review; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (shared goal completion receipts, feat/shared-completion-receipts)",
+      "reason": "Record the three repo-cli source paths (CompletionReceiptStore.service.ts, internal/state/JsonLinesStore.ts, internal/state/WorkstationState.ts) added to four //#lint:policy-fingerprint seal task inputs; commands, outputs and cache settings are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r3b.md",
-        "sha256": "f8f10829ea0992890189d85c24269f41d3e2ea276c2fff69e64596e991390dda"
+        "path": "goals/repository-simplification-residue/research/cache-baseline-review-shared-completion-receipts.md",
+        "sha256": "1051b9ae2b09046f64f6cfe0f940e4450cb979ebc9b6bb14394e1519143f56a1"
       }
     },
     "@beep/acp": {
@@ -3541,6 +3541,7 @@
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.service.ts",
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.ts",
+            "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
@@ -3638,6 +3639,8 @@
             "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
+            "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
+            "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
             "packages/tooling/tool/cli/src/internal/stats/NearestRank.ts"
           ],
           "env": [],
@@ -3924,6 +3927,7 @@
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.service.ts",
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.ts",
+            "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Graph.mermaid.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
@@ -4019,6 +4023,8 @@
             "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
+            "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
+            "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
             "packages/tooling/tool/cli/src/internal/stats/NearestRank.ts"
           ],
           "env": [],
@@ -4425,6 +4431,7 @@
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.service.ts",
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.ts",
+            "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
@@ -4591,6 +4598,8 @@
             "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
             "packages/tooling/tool/cli/src/internal/schema/TextCodec.ts",
+            "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
+            "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
             "packages/tooling/tool/cli/src/internal/stats/NearestRank.ts"
           ],
           "env": [],
@@ -6403,6 +6412,7 @@
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.service.ts",
             "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.ts",
+            "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Graph.mermaid.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
@@ -6507,6 +6517,8 @@
             "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
+            "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
+            "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
             "packages/tooling/tool/cli/src/internal/stats/NearestRank.ts"
           ],
           "env": [],
@@ -135936,7 +135948,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "7e01da8bc1c30562eef3e90719642c0928339c968e4badfe9f3096e515ace51a"
+        "sha256": "b32d8fa8c9132927f36eabe1912891e47a813bc353564a0db29e216c406be0cc"
       }
     ]
   }

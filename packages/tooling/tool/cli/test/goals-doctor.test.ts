@@ -21,6 +21,7 @@ import {
   GraphPacketRow,
   goalCompletionDeclarationDigest,
   goalsCommand,
+  layerGoalCompletionReceiptStoreMemory,
   PacketEventStoreLive,
 } from "@beep/repo-cli/test/Goals";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
@@ -56,6 +57,7 @@ const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Resu
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
+  layerGoalCompletionReceiptStoreMemory,
   NodeCrypto.layer,
   PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
   FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),

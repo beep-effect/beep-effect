@@ -1,0 +1,20 @@
+{
+  "previous": "5eae400b284cf6d5cf2b900349bd3debdd3358773f7ba3a91f58e77e37b10e6d",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (shared goal completion receipts, feat/shared-completion-receipts)",
+    "reason": "Record the three repo-cli source paths (CompletionReceiptStore.service.ts, internal/state/JsonLinesStore.ts, internal/state/WorkstationState.ts) added to four //#lint:policy-fingerprint seal task inputs; commands, outputs and cache settings are unchanged and no qualification is granted.",
+    "basis": {
+      "path": "goals/repository-simplification-residue/research/cache-baseline-review-shared-completion-receipts.md",
+      "sha256": "1051b9ae2b09046f64f6cfe0f940e4450cb979ebc9b6bb14394e1519143f56a1"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}
