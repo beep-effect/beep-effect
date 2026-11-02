@@ -4190,8 +4190,6 @@
         "!.fallow/**",
         "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
         "$TURBO_ROOT$/tools/tsgo-shim/package.json",
-        ".env",
-        ".env.*",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json"
@@ -4233,9 +4231,7 @@
         "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/configs/**",
         "!$TURBO_ROOT$/tsconfig*.json",
         "!.beep/**",
-        "!.fallow/**",
-        ".env",
-        ".env.*"
+        "!.fallow/**"
       ]
     },
     "lint:fix": {
@@ -4256,8 +4252,6 @@
         "!.fallow/**",
         "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
         "$TURBO_ROOT$/tools/tsgo-shim/package.json",
-        ".env",
-        ".env.*",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json"
