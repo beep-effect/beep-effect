@@ -48,7 +48,24 @@ so the fixture cannot fail as designed. The first run, without
 on record here. It is not a pass, and the fixture was not skipped, weakened or
 changed. Both measurements above were taken with that test failing, so they
 lack whatever coverage its error path adds. A non-root run is the parent's
-separate proof.
+separate proof (see "Non-root proof (parent)" below).
+
+## Non-root proof (parent, separately attributed)
+
+The parent ran the same head `f7bfe8db` as a non-root user. That evidence is
+the parent's, not this session's, and does not replace the cloud failure
+above. Results:
+
+- All 239 package tests passed, including the `FsUtils` permission fixture
+  that fails under uid 0.
+- Focused Node/V8 coverage matched this note: lines 82.02%, statements
+  81.51%, branches 65.07%, functions 65.80%.
+- The default `package-verify` exited 0 with docgen ok. Its audit was
+  explicitly **skipped**, so it is not an audit pass.
+
+This is source-bound evidence for `f7bfe8db`, not a full-repository receipt.
+The uid-0 failure therefore comes from the cloud environment's root user, not
+from the package.
 
 ## What the tests cover
 
@@ -70,21 +87,31 @@ tests assert its documented contract with synthetic export maps:
 - Only `.ts`/`.tsx` file-stem wildcards lose their extension. Directory-shaped,
   partial-segment and `.js` stars pass through or are rejected.
 
-All 15 tests passed on their first run. One statement is still uncovered: the
+All 15 tests passed on their first run.
+
+A review follow-up added one failure-path test: `buildCanonicalAliasTargets`
+with a wildcard root export (`./src/*.ts`, or `./src/*` in the data-last form)
+throws `Schema validation failed`. `CanonicalAliasTargets.make` validates, and
+`RootAliasTarget` rejects `*`. That error is reachable from a malformed
+manifest through `TsconfigSync.plan.ts`. No source change was made. One statement is still uncovered: the
 `lastSlash < 0` fallback in `buildCanonicalAliasTargets`. It appears
 unreachable, because the built root target always contains `/`. This is an
 observation, not a bug report, so no source change was made.
 
 ## Checks run
 
-- The new test file: 15 passed.
+- The new test file: 15 passed at `f7bfe8db`; 16 passed after the
+  failure-path test was added.
+- Package suite, cloud (uid 0) at `f7bfe8db`: 238 passed, **1 failed** (the
+  fixture above). That is not a pass.
 - `biome check`: formatting fixed once, then the package's `biome check .` was
   clean.
 - `bun run lint:laws` for the package: 0 findings, including
   `package-test-imports`.
 - `tsrs -p tsconfig.test.json --noEmit`: clean.
-- Default `bun run beep quality package-verify @beep/repo-utils`: the result
-  is reported on the PR.
+- Default `bun run beep quality package-verify @beep/repo-utils`, cloud run:
+  exit 0, docgen ok, audit **skipped** (no reason printed). This is not an
+  audit pass, and the command runs no unit tests.
 
 ## Decisions
 

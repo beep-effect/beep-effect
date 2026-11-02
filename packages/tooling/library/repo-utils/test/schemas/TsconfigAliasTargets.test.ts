@@ -117,6 +117,11 @@ describe("buildCanonicalAliasTargets", () => {
     expect(targets.rootAliasTarget).toBe("./packages/flat/index.ts");
     expect(targets.wildcardAliasTarget).toBe("./packages/flat/*");
   });
+
+  it("rejects a wildcard root export, since a root alias target must not contain *", () => {
+    expect(() => buildCanonicalAliasTargets("packages/x", "./src/*.ts")).toThrow("Schema validation failed");
+    expect(() => buildCanonicalAliasTargets("./src/*")("packages/x")).toThrow("Schema validation failed");
+  });
 });
 
 describe("deriveWildcardAliasTargetFromExport and isFileStemWildcardExportTarget", () => {
