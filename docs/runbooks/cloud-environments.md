@@ -33,8 +33,8 @@ SessionStart hook in `.claude/settings.json` is inert on workstations.
 
 | | Claude cloud (Pro/Max) | Codex cloud (Plus/Pro) | Cursor Cloud Agent |
 | --- | --- | --- | --- |
-| Where configured | Environment dialog at claude.ai/code | Settings → Codex Cloud → Environments | `.cursor/environment.json` (committed) |
-| Scope | Personal per account; UI only, no API | Per ChatGPT account; UI only, no API | Repo-wide |
+| Where configured | Environment dialog at claude.ai/code | Settings → Codex Cloud → Environments | Saved personal/team config, else `.cursor/environment.json` (committed) |
+| Scope | Personal per account; UI only, no API | Per ChatGPT account; UI only, no API | Repo-wide default; saved personal/team configs take precedence |
 | Base image | Ubuntu 24.04, Node 20–22, bun present | codex-universal: Node 22, no bun | Ubuntu 24.04 |
 | Setup script | Cached when it finishes in ~5 min | Cached container, 12 h; maintenance script on resume | `install` in `environment.json` |
 | Agent-phase network | Trusted allowlist by default | Off by default | Sandbox allowlist |
@@ -42,7 +42,9 @@ SessionStart hook in `.claude/settings.json` is inert on workstations.
 | VM | 4 vCPU, 30 GB disk | Plus VMs are half-size | Default |
 | Hooks the VM runs | Repo `.claude/settings.json` (one-repo sessions) | `.codex/hooks.json` | `.cursor/hooks.json` (command hooks only) |
 
-Facts verified 2026-10-05 against the vendor docs linked under Sources.
+Facts verified 2026-10-05 against the vendor docs linked under Sources;
+Claude setup re-smoked in a fresh session and Cursor precedence rechecked
+2026-11-01/02.
 
 ## Claude cloud: per-account setup
 
@@ -63,18 +65,40 @@ nothing here can be shared or exported.
    downloads.1password.com
    ```
 
-3. **Setup script**:
+3. **Setup script**. The dashboard setup script does not start inside the
+   clone, so `cd` into it explicitly before calling the shared bootstrap; a bare
+   relative `bash scripts/cloud/bootstrap.sh` exits 127 because the path does
+   not resolve. The clone sits directly under the container home, so `$HOME` reaches it:
 
    ```bash
-   bash scripts/cloud/bootstrap.sh
+   #!/bin/bash
+   set -euo pipefail
+   cd "$HOME/beep-effect"
+   BEEP_CLOUD_VENDOR=claude BEEP_CLOUD_SKIP_OP=1 bash scripts/cloud/bootstrap.sh
    ```
+
+   `BEEP_CLOUD_SKIP_OP=1` skips the optional 1Password CLI download. Claude
+   cloud lanes are secret-free (no service-account token ever reaches the VM),
+   so `op` has nothing to do there. Drop the variable only on an environment
+   that deliberately needs the `op` binary.
 
 4. **Environment variables** (`.env` format):
 
    ```text
+   BEEP_AGENT_HOST=cloud
+   BEEP_CLOUD_SKIP_OP=1
    BASH_DEFAULT_TIMEOUT_MS=600000
    BASH_MAX_TIMEOUT_MS=1800000
    ```
+
+   The setup-script prefix covers only the setup run. The repo SessionStart
+   hook in `.claude/settings.json` calls the same bootstrap at every session
+   start and resume, and it sees only the environment variables, so set
+   `BEEP_CLOUD_SKIP_OP=1` here too or SessionStart retries the optional `op`
+   fetch. `BEEP_AGENT_HOST=cloud` is the explicit host marker hooks and docs key
+   off (packet decision D3). The two timeouts lift the Bash tool's default to
+   10 minutes and its ceiling to 30 minutes, so long installs and package
+   proofs are not cut off.
 
    Add the read-only Turbo remote-cache quad (`TURBO_API`, `TURBO_TEAM`,
    `TURBO_TOKEN`, `TURBO_CACHE`) from the `BEEP_SECRETS` item when the lane
@@ -94,6 +118,14 @@ nothing here can be shared or exported.
    claude --cloud "Run bun run beep quality package-verify @beep/types --quick and report the result"
    ```
 
+   A passing smoke has three parts: the setup script finished without a
+   `setup-script-failed` notice (the bootstrap stamps under `node_modules/`
+   predate the session and SessionStart logs `skipping install`), `bun run beep
+   --help` exits 0, and the package proof exits 0. A setup failure that
+   SessionStart later repaired still counts as a failed setup script: fix the
+   dashboard entry. Evidence:
+   [`2026-11-01-claude-cloud-smoke`](../../goals/cloud-agent-readiness/history/2026-11-01-claude-cloud-smoke.md).
+
 Known gotchas:
 
 - Bun has documented fetch problems behind the Claude security proxy. The
@@ -107,6 +139,16 @@ Known gotchas:
   committed under the repo's `.claude/`.
 - SessionStart hooks run on every start and resume; the bootstrap's lockfile
   stamp keeps that cheap.
+- `.mcp.json` servers that need `op`, a workstation binary or a non-allowlisted
+  host fail to connect in the VM (observed: `beep-m365-outbox` without `op`;
+  `phoenix-docs` and `stately` refused by the proxy). They are optional; the
+  session continues without them and nothing in the bootstrap or package proof
+  depends on them.
+- Publishing follows the packet's D4 handoff: commit, push the assigned branch,
+  open a draft PR through the session's GitHub integration with the proof
+  output in the body, and request `ready-for-heavy` plus the Yeet closeout
+  there. `monitor --until-ready`, the label and `sweep --retire` stay
+  operator-side.
 
 ## Codex cloud: per-account setup
 
@@ -151,10 +193,19 @@ so record each id when you create it.
 
 ## Cursor Cloud Agent
 
-Already wired: [`.cursor/environment.json`](../../.cursor/environment.json)
+The repo default is committed: [`.cursor/environment.json`](../../.cursor/environment.json)
 points `install` at [`.cursor/install.sh`](../../.cursor/install.sh), which is a
 thin caller of the shared bootstrap. Sandbox and hook behaviour is documented in
-[agent-pools](./agent-pools.md). Nothing per account is needed.
+[agent-pools](./agent-pools.md).
+
+The committed file is not the whole story. Cursor's setup docs (checked
+2026-11-01) give saved personal and team environment configurations precedence
+over `.cursor/environment.json`, so check the Cursor dashboard on each account
+and team for a saved configuration for this repo before relying on the
+committed one. A saved config that does not call the shared bootstrap silently
+replaces it. This note corrects the earlier claim that nothing per account is
+needed; it does not qualify Cursor Cloud Agents, which still need their own
+smoke.
 
 ## Routing work to the cloud
 
