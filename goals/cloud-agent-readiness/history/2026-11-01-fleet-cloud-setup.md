@@ -117,6 +117,10 @@ From [`2026-11-01-cloud-task-admission.md`](./2026-11-01-cloud-task-admission.md
   integration), whose merge this session confirmed.
 - P2, P4, P5 and P6 stay open, as do the unfinished Linux acceptance rows
   (L2, L4). Lifecycle stays `active`.
+- D1–D7 and the original acceptance obligations are unchanged by D42's
+  renames. The D2 denial path for the current `scripts/cloud/bootstrap.sh`
+  has not been exercised; it is an open gap, not a retired or waived check,
+  and no negative-path proof is claimed.
 
 ## Blockers and next work
 
@@ -126,6 +130,7 @@ From [`2026-11-01-cloud-task-admission.md`](./2026-11-01-cloud-task-admission.md
 | Codex reusable config publish | Fails twice with "Could not publish environment"; cause unknown | Retry once after a vendor-side change or support answer; no secret or network workaround. Until then Codex is bootstrap-proven only. |
 | Codex maintenance step | No native field in the current API | Keep the resume command as instructions; revisit if the API adds the field. |
 | Cursor agent package proof | Bootstrap and snapshot only | Run one Cursor Cloud Agent package proof on a small package. |
+| D2 denial path (current bootstrap) | Not exercised; retired script not recreated | Define and prove how `scripts/cloud/bootstrap.sh` fails by name when `pkg.pr.new` is denied while snapshot dependencies are present. |
 | P2 host awareness | Missing as specified | The separately owned notifier-guard job (T8) lands the guard; then prove acceptance row 4 with a cloud SessionStart/Stop transcript. |
 | P4 doctrine | Partial | Reconcile the AGENTS.md section and agent-pools cross-link and meter against D42 names; owned outside this PR. |
 | P5 / P6 | Pending | Packet PR to mergeable, then reflection and closeout. |
