@@ -5,7 +5,7 @@
     "title": "Trustworthy agent observability foundation",
     "status": "active",
     "created": "2026-10-27",
-    "updated": "2026-10-31",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-observability-foundation",
@@ -26,13 +26,25 @@
     "pullRequests": [
       {
         "number": 2364,
+        "role": "supporting"
+      },
+      {
+        "number": 2519,
+        "role": "supporting"
+      },
+      {
+        "number": 2534,
+        "role": "supporting"
+      },
+      {
+        "number": 2508,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/feat_agent-observability-foundation-delivery-bc5523c03660/verdict.json",
+        "ref": ".beep/yeet/runs/fix_agent-observability-foundation-closeout-65000fa11cae/verdict.json",
         "gating": true
       },
       {
@@ -102,13 +114,13 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Source implementation and bounded synthetic qualification supported; PR2364 remains the final delivery gate. Prospective closeout is declared, operative lifecycle stays active, and only exact-head readiness plus merge-time required-check verification can derive completion. Recovery hold intact.",
+  "statusNote": "Lifecycle active. PR2364 retains its unsatisfied historical completion result;2519 and2534 are supporting source delivery, not final readiness. FinalPR2508 has published870/40/73/44 package proof and independently accepted same-root synthetic stages. After main integration d240a7da, package applicability is244 exact inputs, four uninvoked script-only manifests and one test file with additional HarnessLedger cases awaiting final-head hosted proof. The original44-test result remains historical. Review fix94ccf096 requires explicit reviewed pins: six boundary tests and22 refusal controls pass; root84/84 exact and stage88/90,87/89 exact plus two reviewed guard-only helper deltas. Original executions/hashes remain unchanged. Final-head hosted/review/merge and canonical completion pending; recovery hold intact.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],
   "dependencies": [],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2364
+    "finalPullRequest": 2508
   }
 }
