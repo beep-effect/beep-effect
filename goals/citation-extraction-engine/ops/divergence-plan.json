@@ -237,7 +237,15 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-protocol-replay.md",
         "packages/law-practice/server/test/CitationCleanerCustomReplay.fixtures.ts",
         "packages/law-practice/server/test/integration/CitationCleanerNativeCustom.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-02-native-controlled-cleaners.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-native-controlled-cleaners.md",
+        "packages/law-practice/server/test/CitationCleanerBuiltinObservation.fixtures.ts",
+        "packages/law-practice/server/test/CitationCleanerNamedReplay.fixtures.ts",
+        "packages/law-practice/server/test/CitationNativeSpawner.fixtures.ts",
+        "packages/law-practice/server/test/integration/CitationCleanerNamedHtml.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-named-html-qualification.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-hosted-native-qualification.md",
+        "goals/citation-extraction-engine/history/evidence/logs/hosted-unicode-54d61ce7a2.log",
+        "goals/citation-extraction-engine/history/evidence/logs/hosted-native-d738c948ba.log"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

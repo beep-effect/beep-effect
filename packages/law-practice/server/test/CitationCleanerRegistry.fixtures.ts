@@ -5,6 +5,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
 import { CitationBuiltinCleaners, makeCitationBuiltinCleaners } from "../src/internal/Citation/BuiltinCleaners.ts";
 import {
   CitationCleanerFailure,
@@ -12,10 +13,24 @@ import {
   makeCitationCleanerPipeline,
 } from "../src/internal/Citation/CleanerPipeline.ts";
 import { CitationCleanerProtocols, makeCitationCleanerRegistry } from "../src/internal/Citation/CleanerRegistry.ts";
-import { CitationCleanerValues, makeCitationCleanerValues } from "../src/internal/Citation/CleanerValues.ts";
+import {
+  CitationBuiltinCleanerName,
+  CitationCleanerValues,
+  makeCitationCleanerValues,
+} from "../src/internal/Citation/CleanerValues.ts";
 import { makeCitationPythonHash } from "../src/internal/Citation/PythonHash.ts";
-import type { CitationCleanerObject, CitationCleanerWork } from "../src/internal/Citation/CleanerPipeline.ts";
+import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import type {
+  CitationCleanerObject,
+  CitationCleanerProduced,
+  CitationCleanerWork,
+} from "../src/internal/Citation/CleanerPipeline.ts";
 
+type BuiltinObservation = (
+  name: CitationBuiltinCleanerName,
+  value: CitationCleanerObject,
+  body: Effect.Effect<CitationCleanerProduced, CitationCleanerFailure | CitationSafetyLimitExceeded>
+) => Effect.Effect<CitationCleanerProduced, CitationCleanerFailure | CitationSafetyLimitExceeded>;
 const fail = () => CitationCleanerFailure.make({ reason: "callback-failed" });
 /** Capture real registry/value/builtin ownership for one scoped test.
  * @internal @category testing @since 0.0.0
@@ -25,7 +40,8 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
   authorities?: number,
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"] = ChildProcessSpawner.make(() =>
     Effect.die("Registry unit tests must not start native workers")
-  )
+  ),
+  observe: BuiltinObservation = (_name, _value, body) => body
 ) {
   const base = (yield* defaultCitationEnginePolicy).limits;
   const limits = {
@@ -86,7 +102,17 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
   });
   const registry = yield* makeCitationCleanerRegistry(limits).pipe(
     Effect.provideService(CitationCleanerValues, values),
-    Effect.provideService(CitationBuiltinCleaners, builtin),
+    Effect.provideService(
+      CitationBuiltinCleaners,
+      CitationBuiltinCleaners.of({
+        invoke: Effect.fn("CleanerRegistryTest.observeBuiltin")((name, value, work) =>
+          S.decodeUnknownEffect(CitationBuiltinCleanerName)(name).pipe(
+            Effect.mapError(fail),
+            Effect.flatMap((decoded) => observe(decoded, value, builtin.invoke(decoded, value, work)))
+          )
+        ),
+      })
+    ),
     Effect.provideService(CitationCleanerProtocols, protocols)
   );
   const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(

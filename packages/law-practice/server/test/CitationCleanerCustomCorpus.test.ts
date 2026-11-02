@@ -29,7 +29,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("controlled source c
       expect(yield* replayControlledCleanerScenes(controlledLiteralScenes)).toEqual({
         scenes: 40,
         runs: 42,
-        events: 104,
+        events: 114,
         safetyDivergences: 0,
       });
     })

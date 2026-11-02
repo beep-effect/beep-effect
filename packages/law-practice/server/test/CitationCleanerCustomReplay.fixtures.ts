@@ -37,6 +37,9 @@ const ObservableEvent = S.Union([
   S.Struct({ kind: S.tag("step-call"), mode: S.String, value: S.Json }),
   S.Struct({ kind: S.tag("equality-bool"), result: S.Boolean }),
   S.Struct({ kind: S.tag("callable-text-called") }),
+  S.Struct({ kind: S.tag("builtin-enter"), name: S.String, value: S.Json }),
+  S.Struct({ kind: S.tag("builtin-return"), name: S.String, value: S.Json }),
+  S.Struct({ kind: S.tag("builtin-raise"), name: S.String, failure: S.Struct({ pythonType: S.String }) }),
 ]).pipe(S.toTaggedUnion("kind"));
 const JsonArray = S.Array(S.Json);
 const SourceInput = S.Struct({ kind: S.tag("text"), text: S.String, subtype: S.Literals(["plain", "marked"]) });
@@ -147,11 +150,22 @@ export const replayControlledCleanerScenes = Effect.fn("CleanerCustomCorpusTest.
       expect(yield* admission.snapshot).toEqual({ active: 0, queued: 0, closed: false });
       runs++;
     }
-    const expected = yield* Effect.forEach(A.filter(row.events, S.is(ObservableEvent)), (value) =>
-      S.decodeEffect(ObservableEvent)(value).pipe(Effect.map((event) => expand(event)))
+    const decoded = yield* Effect.forEach(A.filter(row.events, S.is(ObservableEvent)), (value) =>
+      S.decodeEffect(ObservableEvent)(value)
     );
+    const expected = A.map(decoded, expand);
     const observed = yield* owned.events;
-    expect(observed, row.name).toEqual(row.name === "resource-before-callback" ? [] : expected);
+    const comparison =
+      row.name === "resource-before-callback"
+        ? [
+            A.findFirst(decoded, (event) => event.kind === "builtin-enter" && event.name === "html").pipe(
+              O.getOrThrow,
+              expand
+            ),
+            { kind: "builtin-resource-failure", name: "html", limit: "nativeHtmlParserResource" },
+          ]
+        : expected;
+    expect(observed, row.name).toEqual(comparison);
     expect(yield* owned.bindings, row.name).toEqual(A.map(row.lookupAfter, expand));
     traceEvents += observed.length;
     checked++;

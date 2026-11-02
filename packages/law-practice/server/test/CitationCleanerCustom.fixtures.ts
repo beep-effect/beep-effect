@@ -10,6 +10,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationCleanerFailure, CitationCleanerProduced } from "../src/internal/Citation/CleanerPipeline.ts";
+import { makeCitationBuiltinObservation } from "./CitationCleanerBuiltinObservation.fixtures.ts";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -94,13 +95,22 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
   scene: string,
   spawner?: ChildProcessSpawner.ChildProcessSpawner["Service"]
 ) {
-  const h = yield* makeCitationCleanerRegistryHarness(undefined, undefined, spawner);
+  let events = A.empty<S.Json>();
+  // Construction seeds registry identities without invoking builtins. The
+  // observer executes only after the serializer below has captured the owner.
+  const observe = yield* makeCitationBuiltinObservation(
+    (value) => present(value),
+    (event) =>
+      Effect.sync(() => {
+        events = A.append(events, event);
+      })
+  );
+  const h = yield* makeCitationCleanerRegistryHarness(undefined, undefined, spawner, observe);
   let callbacks = HashMap.empty<number, Body>();
   let names = HashMap.empty<number, string>();
   let counts = HashMap.empty<number, number>();
   let views = HashMap.empty<number, () => S.Json>();
   let slots = HashMap.empty<number, number>();
-  let events = A.empty<S.Json>();
   let unhashable = HashSet.empty<number>();
   let integer = O.none<number>();
   let dispatch = O.none<CitationCleanerObject>();

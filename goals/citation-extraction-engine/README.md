@@ -189,6 +189,16 @@ inspection. The eleven-scene hosted replay requires twelve runs, 59 selected
 target events, one already-approved resource divergence and ten confirmed child
 exits. It is wired/type-checked and pending hosted execution, not target parity.
 
+[Hosted native receipts](./history/evidence/2026-11-02-hosted-native-qualification.md)
+now prove actual Unicode-history execution at 54d61ce7a2 and both Unicode/native
+controlled execution at d738c948ba. Executed merge trees equal their PR heads.
+The [named HTML qualification](./history/evidence/2026-11-02-named-html-qualification.md)
+adds the remaining 504 named/official cases to hosted integration and strengthens
+builtin value/failure-category, final-registry and OS exit checks. The new checks
+are pending their own hosted result; prior green results are not reused as proof
+of changed bytes. Unit named outcomes remain 600 cases, now with 3,200 exact
+builtin observations. Canonical engine completion stays open.
+
 ## Mission
 
 Deliver an Effect-native citation engine with observable capability parity to
