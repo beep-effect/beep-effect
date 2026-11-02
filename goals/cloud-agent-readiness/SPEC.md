@@ -131,14 +131,14 @@ Higher sources outrank lower sources when they conflict.
 | Packet launcher size | `test "$(wc -m < goals/cloud-agent-readiness/GOAL.md)" -le 4000` | Passes |
 | Manifest JSON | `jq . goals/cloud-agent-readiness/ops/manifest.json` | Passes |
 | Whitespace | `git diff --check -- goals/cloud-agent-readiness scripts AGENTS.md docs .claude` | Passes |
-| Script lint | `shellcheck scripts/cloud-session-setup.sh` | No findings |
-| Script no-op on satisfied host | `bash scripts/cloud-session-setup.sh && git status --porcelain` | Exit `0`; no tracked changes |
-| Preflight on denied host | `bash scripts/cloud-session-setup.sh --check` in the cloud before the allowlist | Exit `78`; names `pkg.pr.new` |
-| Full bootstrap in the cloud | `bash scripts/cloud-session-setup.sh --host cloud && source ~/.cache/beep/cloud-env.sh && bun run beep --help` after the allowlist | Exit `0` |
+| Script lint | `shellcheck scripts/cloud/bootstrap.sh` (D42; was `scripts/cloud-session-setup.sh`) | No findings |
+| Script no-op on a workstation | `bash scripts/cloud/bootstrap.sh && git status --porcelain` without a cloud marker | Exit `0`; no tracked changes |
+| Preflight on denied host | **Open acceptance gap.** The historical `scripts/cloud-session-setup.sh --check` is retired and is not recreated. D2 still binds wherever `pkg.pr.new` snapshot dependencies are present: a denied `pkg.pr.new` must fail loudly by name, never as a silent partial install. The equivalent denial-path test for `scripts/cloud/bootstrap.sh` has not been exercised, and no negative-path proof is claimed | Unqualified: denial path for the current bootstrap still to be defined and proven |
+| Full bootstrap in the cloud | The saved vendor setup script from `docs/runbooks/cloud-environments.md`, then `bun run beep --help` | Exit `0` |
 | Hook guard | `BEEP_AGENT_HOST=cloud bash .claude/hooks/hook-pulse.sh < /dev/null; echo $?` and the SessionStart transcript of a cloud session | Exit `0`; no error lines |
 | Pulse conformance (only if D3 adds a literal) | `bun run beep quality package-verify @beep/repo-ai-metrics --quick` | Green |
 | Reflection artifact | `bun run beep lint reflection-artifacts` | Green |
-| Docs cross-links | `rg -n "cloud-sessions.md" docs/README.md docs/runbooks/agent-pools.md AGENTS.md` | Each file links the runbook |
+| Docs cross-links | `rg -n "cloud-environments.md" docs/README.md docs/runbooks/agent-pools.md AGENTS.md` (D42; was `cloud-sessions.md`) | Each file links the runbook |
 
 ## Stop Conditions
 
@@ -283,3 +283,13 @@ remote provisioning is required to qualify this repository change. Reversal
 is a revert of the integration commit; the previous branch tip is b6f027e178e0.
 The requested endpoint is mergeable, with the PR left open. Existing host and
 provider qualification gaps remain bounded by their recorded evidence.
+
+### Cloud vendor scope amendment — 2026-11-02
+
+D1–D7 stay in force for the original cloud scope, and the managed Linux
+decisions (D8–D40), L0–L4 and their boundaries are unchanged. D41 (advisory
+`beep-reviewer`) is unchanged. This amendment adds one decision.
+
+| Id | Decision | Consequence |
+| --- | --- | --- |
+| D42 | The operator explicitly expanded the cloud scope to set up Claude, Codex and Cursor cloud environments, spending existing expiring included credits only: no purchases, paid overage, new paid endpoints or plan changes. Current names replace retired ones: the bootstrap is `scripts/cloud/bootstrap.sh` (the retired `scripts/cloud-session-setup.sh` is not recreated), and the cloud runbook is `docs/runbooks/cloud-environments.md` (no separate `cloud-sessions.md` is created; acceptance row 5's runbook requirement reads against it). Per-vendor qualification needs its own receipt: an environment saved or a snapshot built is bootstrap evidence, not agent qualification, and no account count is claimed beyond collected receipts. | P3 is complete on #2486 (`43d0a511`). Renaming waives no obligation: D1–D7 and every original acceptance criterion still bind, read against the current names. The P1 acceptance rows were met by the retired script and stay as its evidence; their obligations carry over to `scripts/cloud/bootstrap.sh`, and the D2 denial path for the current bootstrap is an open, unqualified gap (Verification Matrix). The Verification Matrix uses the current names. Evidence, blockers and next work: [`history/2026-11-01-fleet-cloud-setup.md`](./history/2026-11-01-fleet-cloud-setup.md). Reverse by restoring the prior matrix rows and phase status; no tracked script or runbook is added or removed. |
