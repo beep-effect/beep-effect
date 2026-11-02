@@ -14,6 +14,7 @@
  *
  * @since 0.0.0
  */
+
 import { findRepoRoot } from "@beep/repo-utils";
 import { Workspaces } from "@beep/repo-workspaces";
 import * as A from "effect/Array";
@@ -48,6 +49,7 @@ import {
 import { makeRouteGit, RouteCensusReaderLive, RouteGit, VerificationRouteLive } from "./RouteCensus.ts";
 import { ChangeClassifierLive } from "./RouteClassify.ts";
 import { ROUTE_CORPUS_RECEIPT_FILE, RouteCorpusLive } from "./RouteCorpus.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
@@ -94,7 +96,7 @@ const DEFAULT_WORKFLOWS: ReadonlyArray<string> = ["Check", "Heavy"];
 const RouteGitFromRepo: Layer.Layer<
   RouteGit,
   never,
-  Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem
+  Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Git
 > = Layer.effect(
   RouteGit,
   findRepoRoot().pipe(

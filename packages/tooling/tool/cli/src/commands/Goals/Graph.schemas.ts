@@ -26,7 +26,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { CapabilitySlug, GoalStatus } from "./Goals.schemas.ts";
+import { CapabilitySlug, GoalCloseoutView, GoalStatus } from "./Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Graph.schemas");
 
@@ -580,6 +580,7 @@ export class GoalExplainReport extends S.Opaque<GoalExplainReport, { readonly br
     requirements: S.Array(GoalRequirementRow),
     unlockPath: S.Array(GoalUnlockStep),
     cycle: S.String.pipe(S.Array, S.optionalKey),
+    closeout: S.optionalKey(GoalCloseoutView),
   }).pipe(
     $I.annoteSchema("GoalExplainReport", {
       description: "Readiness explanation for one packet: requirements, unlock walk, and cycle membership.",

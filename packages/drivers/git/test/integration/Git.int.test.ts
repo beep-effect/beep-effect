@@ -310,6 +310,38 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
       })
     );
 
+    it.effect("isAncestor reads reachability from the exit code: fork point yes, branch tip into main no", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        assert.isTrue(yield* git.isAncestor(fixture.dir, fixture.commit1, fixture.branchCommit));
+        assert.isTrue(yield* git.isAncestor(fixture.dir, fixture.commit1, "main"));
+        // A commit is its own ancestor.
+        assert.isTrue(yield* git.isAncestor(fixture.dir, fixture.commit2, fixture.commit2));
+        assert.isFalse(yield* git.isAncestor(fixture.dir, fixture.branchCommit, "main"));
+        assert.isFalse(yield* git.isAncestor(fixture.dir, fixture.commit2, "feature/git"));
+        const unknown = yield* Effect.flip(git.isAncestor(fixture.dir, Str.repeat(40)("0"), "main"));
+        assert.instanceOf(unknown, UnknownRefError);
+      })
+    );
+
+    it.effect("worktreePrune drops the registration of a linked worktree whose directory was removed", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const parent = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-prune-" });
+        const linked = path.join(parent, "linked");
+        yield* git.worktreeAdd(fixture.dir, linked, { ref: fixture.commit1, detach: true });
+        const realLinked = yield* fs.realPath(linked);
+        const before = yield* git.worktreeList(fixture.dir);
+        assert.isTrue(A.some(before, (entry) => entry.path === realLinked));
+        yield* fs.remove(linked, { recursive: true });
+        yield* git.worktreePrune(fixture.dir);
+        const after = yield* git.worktreeList(fixture.dir);
+        assert.isFalse(A.some(after, (entry) => entry.path === realLinked));
+      })
+    );
+
     it.effect("changedFiles across the two commits names exactly the changed and deleted files", () =>
       Effect.gen(function* () {
         const git = yield* Git;

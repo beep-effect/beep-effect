@@ -237,6 +237,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
       }
       expect(output).toContain("Final PR #7: unknown. No matching clone receipt.");
       expect(output).not.toContain("Legacy completion declaration has no PR reference");
+      // The derived status line names the proposal and that this clone has not verified it.
+      expect(output).toContain("[goals:doctor] note: proposal-cited: completed-retained (proposed via #7, unverified)");
     })
   );
   it.effect("doctor prints the missing fact for unknown completion and nothing for verified", () =>

@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "cache-population-source-refresh/v2",
+  "recordedAt": "2026-11-02T06:41:34.783501+00:00",
+  "authority": "Current inventory and literal whole-command source review; no cache qualification, deployment or complete goal acceptance.",
+  "sourceBaseRevision": "68834a997e97a0504df6feee6f57d083b3258c1b",
+  "route": [
+    "bun run beep cache census --output <contained-private-census.json>",
+    "python3 goals/turborepo-quality-cache-adoption/research/refresh-current-population.py <census.json> --prior-review-archive goals/turborepo-quality-cache-adoption/research/population-before-refresh-2026-11-02.json"
+  ],
+  "counts": {
+    "workspaces": 191,
+    "rootScripts": 148,
+    "configuredGraphNodes": 4646,
+    "executableComputations": 2621,
+    "graphOnlyNodes": 2025,
+    "cacheEnabledExecutableComputations": 1665,
+    "newSinceRetainedHandoff": 687,
+    "retainedCommandTextUnchanged": 1923,
+    "retainedQualificationRecordStates": {
+      "excluded": 5
+    },
+    "priorReviewedDispositionsRetained": 199,
+    "priorReviewedComputationsStillPresent": 199
+  },
+  "currentSemanticReviewCounts": {
+    "reviewedCurrentSource": 198,
+    "pending": 2423
+  },
+  "censusSourcesVerified": 438,
+  "censusSha256": "1e0f54fe9a3169b0e4d01a80475896cf6e146a4e1ab1272ec7e002880a15e9de",
+  "populationSha256": "fa2bad68c799b843281b70a6b63b6b1cde7a2568389e55835274b8cb46fcc8bc",
+  "recipeSha256": "e901c3e499b38234a7595e8575f15974838a870ab361101a49bdbaad557982fe",
+  "priorReviewedPopulation": {
+    "path": "goals/turborepo-quality-cache-adoption/research/population-before-refresh-2026-11-02.json",
+    "sha256": "bf8b51d82b29a0b010fb500bb6bb27cf2743313aac34bcc2d5a0c697718ea853",
+    "sourceBaseRevision": "1e01d6f79ac13bdbf55198cab5bf81cc0ea5abaa",
+    "reviewedDispositionCount": 199,
+    "authority": "Historical source reviews retained byte-identically; current applicability is not inferred."
+  },
+  "currentDispositionReview": {
+    "path": "research/current-fresh-disposition-review-2026-11-02.json",
+    "sha256": "beaa70608a5c3eab98e481e52994d4c33496930d53b84163449234874ff4c88a"
+  },
+  "preservationControls": {
+    "path": "research/population-preservation-controls-2026-11-02.json",
+    "sha256": "d77447d4024bb351ebd99e078825e6972a66eb485e3e382e185a33765c5b42ae",
+    "passed": 11,
+    "scope": "Isolated data-preservation controls, including a reproduced old-writer replacement; no quality-task execution."
+  },
+  "attemptIdentityAmendment": {
+    "acceptedCommit": "f69e6dd06759639279eed885665a5c564528bd7c",
+    "specSha256": "ac686c4b18d398c66263b9648c020529aeb530551f60d1ca0fce499887177132",
+    "newImplementation": false
+  },
+  "remaining": [
+    "Review the changed current external-advisory command; its prior review is retained as historical evidence.",
+    "Review and dispose of the other current computations, preserving pure counterpart obligations.",
+    "Complete the 29 pending feature reviews and supported tuple-specific runtime qualifications.",
+    "Complete protected native publication, trust-role/epoch/rollback proofs, named cohort adoption and real seven/seven/fourteen-day backend observations.",
+    "Obtain strict final hosted readiness and same-PR reflection/lifecycle closeout for both full goals."
+  ],
+  "qualificationLedgerChanged": false,
+  "productionChanges": false,
+  "fullGoalAcceptanceChanged": false
+}
