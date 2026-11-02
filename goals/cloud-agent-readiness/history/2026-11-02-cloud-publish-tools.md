@@ -140,3 +140,8 @@ here, because it is not installed in the container.
 | this head | 28 passed |
 | `9a7be78d` | 25 passed, **3 failed**: the cleanup-failure case aborts the run; the directory target gets no refusal; the symlink case writes the staged file into the linked directory |
 | `origin/main` | **14 passed** (the original cases), **14 failed** (every new case) |
+
+A4 update: #2536 merged (`a0b0944b`) and released the runbook to this PR. The two proposed
+sentences are now in `docs/runbooks/cloud-environments.md`, in step 2 of Network access and in
+the denied-host bullet. A merge preview (`git merge-tree`) against `origin/main` is
+conflict-free, and the merged file equals main's file plus exactly those two edits.
