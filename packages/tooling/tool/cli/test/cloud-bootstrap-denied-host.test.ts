@@ -132,8 +132,35 @@ type Scenario = {
   readonly origin403?: string;
   readonly unreachable?: string;
   readonly proxy?: string;
-  readonly badSum?: boolean;
+  readonly badSum?: "1";
 };
+
+// Each scenario field becomes one stub-facing environment variable; fields a
+// scenario omits stay unset, which the stubs read as empty.
+const scenarioEnvKeys: { readonly [K in keyof Scenario]-?: string } = {
+  bun: "FIXTURE_BUN",
+  node: "FIXTURE_NODE",
+  deny: "FIXTURE_DENY",
+  unresolved: "FIXTURE_UNRESOLVED",
+  missing: "FIXTURE_MISSING",
+  failAfterDenial: "FIXTURE_FAIL_AFTER_DENIAL",
+  denyLate: "FIXTURE_DENY_LATE",
+  denyLateAfter: "FIXTURE_DENY_LATE_AFTER",
+  redirectDeny: "FIXTURE_REDIRECT_DENY",
+  proxyDown: "FIXTURE_PROXY_DOWN",
+  origin403: "FIXTURE_ORIGIN_403",
+  unreachable: "FIXTURE_UNREACHABLE",
+  proxy: "HTTPS_PROXY",
+  badSum: "FIXTURE_BAD_SUM",
+};
+
+const scenarioEnv = (scenario: Scenario): Record<string, string> =>
+  R.fromEntries(
+    A.map(
+      R.toEntries(scenario as Record<keyof Scenario, string>),
+      ([key, value]) => [scenarioEnvKeys[key], value] as const
+    )
+  );
 
 const prepareFixture = Effect.fn("CloudBootstrapDeniedHostTest.prepareFixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -184,20 +211,7 @@ const runBootstrap = Effect.fn("CloudBootstrapDeniedHostTest.runBootstrap")(func
       BEEP_CLOUD_SKIP_OP: "1",
       BEEP_CLOUD_VENDOR: "fixture",
       FIXTURE: fixture.root,
-      FIXTURE_BAD_SUM: scenario.badSum === true ? "1" : "",
-      FIXTURE_BUN: scenario.bun,
-      FIXTURE_DENY: scenario.deny ?? "",
-      FIXTURE_DENY_LATE: scenario.denyLate ?? "",
-      FIXTURE_DENY_LATE_AFTER: scenario.denyLateAfter ?? "",
-      FIXTURE_FAIL_AFTER_DENIAL: scenario.failAfterDenial ?? "",
-      FIXTURE_ORIGIN_403: scenario.origin403 ?? "",
-      FIXTURE_PROXY_DOWN: scenario.proxyDown ?? "",
-      FIXTURE_REDIRECT_DENY: scenario.redirectDeny ?? "",
-      FIXTURE_UNREACHABLE: scenario.unreachable ?? "",
-      HTTPS_PROXY: scenario.proxy,
-      FIXTURE_MISSING: scenario.missing ?? "",
-      FIXTURE_NODE: scenario.node,
-      FIXTURE_UNRESOLVED: scenario.unresolved ?? "",
+      ...scenarioEnv(scenario),
       HOME: fixture.home,
       NVM_DIR: path.join(fixture.home, ".nvm"),
       PATH: `${fixture.bin}:/usr/bin:/bin`,
@@ -330,7 +344,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap require
   it.effect("keeps a Node checksum mismatch a hard non-78 failure", () =>
     Effect.gen(function* () {
       const fixture = yield* prepareFixture();
-      const result = yield* runBootstrap(fixture, { bun: "pinned", node: "stale", badSum: true });
+      const result = yield* runBootstrap(fixture, { bun: "pinned", node: "stale", badSum: "1" });
       expect(result.exitCode, result.stderr).toBe(1);
       expect(result.stderr).toContain("Node");
       expect(result.stderr).not.toContain("required download host denied");
