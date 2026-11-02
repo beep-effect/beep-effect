@@ -349,11 +349,15 @@ const CODE_GLOBS = [
 const MARKDOWN_GLOBS = ["**/*.{md,mdx}"] as const;
 
 const NESTED_WORKTREE_SEGMENT = "/.claude/worktrees/";
-const GENERATED_OR_VENDOR_SEGMENTS = ["/.repos/", "/node_modules/", "/dist/", "/vendor/"] as const;
+// `build` holds bundler output such as infra/lambda/turbo-cache/build: gitignored, and the
+// repository tracks no file under any directory of that name (`git ls-files | grep -c
+// '/build/'` is 0), so it is excluded beside `dist`.
+const GENERATED_OR_VENDOR_SEGMENTS = ["/.repos/", "/node_modules/", "/dist/", "/build/", "/vendor/"] as const;
 const EXCLUDED_DIRECTORY_GLOBS = [
   "**/.repos",
   "**/node_modules",
   "**/dist",
+  "**/build",
   "**/vendor",
   "**/.claude/worktrees",
 ] as const;
@@ -370,7 +374,16 @@ const MARKDOWN_EXCLUSION_GLOBS = A.appendAll(
 // `**/.claude/worktrees` exclusion would otherwise walk before discarding. The
 // repository tracks no other directory of that name (`git ls-files | grep -c
 // '/worktrees/'` is 0), so the pruned set equals the excluded set over the tree.
-const PRUNED_DIRECTORY_NAMES = [".repos", "node_modules", "dist", "vendor", ".git", ".beep", "worktrees"] as const;
+const PRUNED_DIRECTORY_NAMES = [
+  ".repos",
+  "node_modules",
+  "dist",
+  "build",
+  "vendor",
+  ".git",
+  ".beep",
+  "worktrees",
+] as const;
 
 const hasPathPrefix = (prefix: string, filePath: string): boolean =>
   filePath === prefix || Str.startsWith(Str.endsWith("/")(prefix) ? prefix : `${prefix}/`)(filePath);
