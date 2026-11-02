@@ -1,3 +1,5 @@
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { Repo, RepoRef } from "@beep/github/Repo";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import {
   CiRerunRunnerLossInput,
@@ -22,9 +24,13 @@ import {
   runnerLossCopiedFrom,
   runnerLossFailedJob,
   runnerLossJobReruns,
-  runnerLossRerunArgs,
 } from "@beep/repo-cli/commands/Ci";
-import { GithubJobRecord, GithubJobStepRecord, githubJobHasFailedStep } from "@beep/repo-cli/test/SharedInternals";
+import {
+  GithubJobRecord,
+  GithubJobStepRecord,
+  GithubTransportFetch,
+  githubJobHasFailedStep,
+} from "@beep/repo-cli/test/SharedInternals";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -43,6 +49,7 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -51,7 +58,9 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
+import { githubFetch, reply, unreachable } from "./support/GithubFetch.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
+import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const LOST_MESSAGE =
@@ -193,13 +202,13 @@ describe("runner-loss rerun decision", () => {
     const green = decideRunnerLossRerun(input({ run: run({ conclusion: "success" }), failedJobs: [] }));
     expect(green.rerun).toBe(false);
     expect(green.reason).toBe("run-not-failed");
-    assertNone(runnerLossRerunArgs(green));
+    assertNone(green.rerunJob);
   });
 
   it("skips a failed run without a lost job and names its red", () => {
     const decision = decideRunnerLossRerun(input({ failedJobs: [red(12, "Heavy / Check")] }));
     expect(decision.reason).toBe("no-runner-loss");
-    assertNone(runnerLossRerunArgs(decision));
+    assertNone(decision.rerunJob);
     const summary = report(decision);
     expect(summary).toContain("- Left red, failed for another reason (never re-run): Heavy / Check");
     expect(summary).toContain("| Heavy / Check | `12` | unknown | failed | 0 | left red: not runner loss |");
@@ -221,7 +230,10 @@ describe("runner-loss rerun decision", () => {
       input({ failedJobs: [lost(11, "Heavy / Lint Policy"), red(12, "Check"), lost(13, "Heavy / Docgen")] })
     );
     expect(decision.reason).toBe("runner-loss");
-    assertSome(runnerLossRerunArgs(decision), ["run", "rerun", "--job", "11"]);
+    assertSome(
+      O.map(decision.rerunJob, (job) => job.id),
+      11
+    );
     const summary = report(decision);
     expect(summary).toContain("re-ran Heavy / Lint Policy with `gh run rerun --job 11`");
     expect(summary).toContain("- Left red, failed for another reason (never re-run): Check");
@@ -284,7 +296,7 @@ describe("runner-loss rerun decision", () => {
       input({ head: RunnerLossHead.make({ status: "superseded", currentSha: O.some(NEWER_SHA) }) })
     );
     expect(superseded.reason).toBe("superseded-head");
-    assertNone(runnerLossRerunArgs(superseded));
+    assertNone(superseded.rerunJob);
     const summary = report(superseded);
     expect(summary).toContain(`- Current head: \`${NEWER_SHA}\``);
     expect(summary).toContain("| Heavy / Lint Policy | `11` | beep-ci-i-11 | runner lost | 0 | not re-run |");
@@ -340,39 +352,68 @@ const handle = (exitCode: number, output: string) =>
     unref: Effect.succeed(Effect.void),
   });
 
-// One scripted gh response: `gh api <endpoint>` matches by endpoint, any other
-// gh call by its whole argument list. A negative exit code scripts a gh that
-// could not be spawned at all.
+// One scripted GitHub answer, keyed as the `gh` call it replaces: a REST read by its
+// `repos/{owner}/{repo}/...` endpoint, the job rerun by `run rerun --job <id>`. Exit 0 answers the output as
+// JSON, exit 1 a refusal (HTTP 403), and a negative exit a request that never reaches GitHub.
 type GhReply = readonly [key: string, exitCode: number, output: string];
-const ghSpawner = (replies: ReadonlyArray<GhReply>, commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    const key = commandArgs(command)[0] === "api" ? (commandArgs(command)[1] ?? "") : A.join(commandArgs(command), " ");
-    const reply = A.findFirst(replies, ([candidate]) => candidate === key);
-    return Ref.update(commands, A.append(commandArgs(command))).pipe(
-      Effect.andThen(
-        O.match(reply, {
-          onNone: () => Effect.succeed(handle(1, `gh: unscripted ${key} (HTTP 404)`)),
-          onSome: ([, exitCode, output]) =>
-            exitCode < 0
-              ? Effect.fail(
-                  PlatformError.systemError({
-                    _tag: "NotFound",
-                    module: "CiRerunRunnerLossTest",
-                    method: "spawn",
-                    description: output,
-                  })
-                )
-              : Effect.succeed(handle(exitCode, output)),
-        })
-      )
-    );
-  });
-const withGh = (replies: ReadonlyArray<GhReply>, commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
-  Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(replies, commands));
+const REPO_PATH = "/repos/beep-effect/beep-effect";
+const RERUN_PATH = /^\/repos\/beep-effect\/beep-effect\/actions\/jobs\/(\d+)\/rerun$/u;
+const decodeOutput = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
+const argvOf = (call: GithubFetchCall): ReadonlyArray<string> =>
+  pipe(
+    O.fromNullishOr(RERUN_PATH.exec(call.url.pathname)),
+    O.filter(() => call.method === "POST"),
+    O.match({
+      onNone: () => [
+        "api",
+        `repos/{owner}/{repo}${Str.slice(Str.length(REPO_PATH))(call.url.pathname)}${call.url.search}`,
+      ],
+      onSome: (match) => ["run", "rerun", "--job", match[1] ?? ""],
+    })
+  );
+const keyOf = (argv: ReadonlyArray<string>) => (argv[0] === "api" ? (argv[1] ?? "") : A.join(argv, " "));
+const answer = (replies: ReadonlyArray<GhReply>) => (call: GithubFetchCall) => {
+  const key = keyOf(argvOf(call));
+  return O.match(
+    A.findFirst(replies, ([candidate]) => candidate === key),
+    {
+      onNone: () => reply(404)({ message: `unscripted ${key}` }),
+      onSome: ([, exitCode, output]) =>
+        exitCode < 0
+          ? unreachable(output)
+          : exitCode === 0
+            ? Result.getOrElse(decodeOutput(output), () => ({}))
+            : reply(403)({ message: output }),
+    }
+  );
+};
+// The command resolves its own client from `gh auth token` and `GH_REPO`; the direct runs take this one.
+const ghAuthToken = ChildProcessSpawner.make((command) =>
+  ChildProcess.isStandardCommand(command) && A.join([command.command, ...commandArgs(command)], " ") === "gh auth token"
+    ? Effect.succeed(handle(0, "ghs_fixture\n"))
+    : Effect.die("rerun-runner-loss spawns only gh auth token")
+);
+const withGh =
+  (replies: ReadonlyArray<GhReply>, commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
+  <A, E, R>(program: Effect.Effect<A, E, R>) =>
+    Effect.gen(function* () {
+      const api = githubFetch(answer(replies));
+      const github = yield* Layer.build(
+        Layer.mergeAll(
+          GitHubClient.layerFromToken({ token: Redacted.make("ghs_fixture"), retry: "off", fetch: api.fetch }),
+          Repo.layer(RepoRef.make({ owner: "beep-effect", repo: "beep-effect" }))
+        )
+      );
+      return yield* program.pipe(
+        Effect.provideContext(github),
+        Effect.provideService(GithubTransportFetch, O.some(api.fetch)),
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghAuthToken),
+        Effect.ensuring(Effect.suspend(() => Ref.update(commands, A.appendAll(A.map(api.calls, argvOf)))))
+      );
+    }).pipe(Effect.scoped);
 const withEnv = Effect.provideService(
   ConfigProvider.ConfigProvider,
-  ConfigProvider.fromUnknown({ GITHUB_STEP_SUMMARY: "" })
+  ConfigProvider.fromUnknown({ GITHUB_STEP_SUMMARY: "", GH_REPO: "beep-effect/beep-effect" })
 );
 
 const RUN_ENDPOINT = "repos/{owner}/{repo}/actions/runs/36763005302";
@@ -380,8 +421,10 @@ const jobsEndpoint = (page: number) =>
   `repos/{owner}/{repo}/actions/runs/36763005302/attempts/1/jobs?per_page=100&page=${page}`;
 const annotationsEndpoint = (id: number, page = 1) =>
   `repos/{owner}/{repo}/check-runs/${id}/annotations?per_page=100&page=${page}`;
-const runJson = (values: Record<string, unknown> = {}) =>
-  encodeJson({
+// The REST shapes, built from the fields the decision reads.
+const ownerRepository = (login: unknown) => (login === null ? null : { owner: { login } });
+const runJson = (values: Record<string, unknown> = {}) => {
+  const { head_owner, pull_requests, ...fields } = {
     id: 36763005302,
     name: "Check",
     event: "pull_request",
@@ -390,20 +433,32 @@ const runJson = (values: Record<string, unknown> = {}) =>
     run_attempt: 1,
     head_sha: SHA,
     head_branch: "refactor/literal-kit-trim",
-    head_owner: "beep-effect",
-    pull_requests: [1338],
+    head_owner: "beep-effect" as unknown,
+    pull_requests: [1338] as ReadonlyArray<number>,
     ...values,
+  };
+  return encodeJson({
+    ...fields,
+    head_repository: ownerRepository(head_owner),
+    pull_requests: A.map(pull_requests, (number) => ({ number })),
   });
+};
+const pullRest = (pull: { number: number; state: string; head_sha: string; head_ref: string; head_owner: string }) => ({
+  number: pull.number,
+  state: pull.state,
+  head: { sha: pull.head_sha, ref: pull.head_ref, repo: ownerRepository(pull.head_owner) },
+});
+const annotationsJson = (messages: ReadonlyArray<string>) => encodeJson(A.map(messages, (message) => ({ message })));
 const jobsJson = (totalCount: number, jobs: ReadonlyArray<CiWorkflowJob>) =>
   encodeJson({ total_count: totalCount, jobs });
 const pullJson = (state: string, headSha: string, number = 1338, headRef = "refactor/literal-kit-trim") =>
-  encodeJson({ number, state, head_sha: headSha, head_ref: headRef, head_owner: "beep-effect" });
+  encodeJson(pullRest({ number, state, head_sha: headSha, head_ref: headRef, head_owner: "beep-effect" }));
 // Page 1 holds a lost job and a genuine red; page 2 a green job.
 const failedAttemptReplies: ReadonlyArray<GhReply> = [
   [jobsEndpoint(1), 0, jobsJson(3, [restJob(11, "failure", lostSteps), restJob(12, "failure", failedSteps)])],
   [jobsEndpoint(2), 0, jobsJson(3, [restJob(13, "success", [step("Set up job", "success")])])],
-  [annotationsEndpoint(11), 0, encodeJson([LOST_MESSAGE])],
-  [annotationsEndpoint(12), 0, encodeJson(["Process completed with exit code 1."])],
+  [annotationsEndpoint(11), 0, annotationsJson([LOST_MESSAGE])],
+  [annotationsEndpoint(12), 0, annotationsJson(["Process completed with exit code 1."])],
 ];
 
 // The suite's runner outputs: only the step-summary test publishes through it.
@@ -535,8 +590,8 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
           [
             [RUN_ENDPOINT, 0, runJson()],
             [jobsEndpoint(1), 0, jobsJson(1, [restJob(11, "failure", lostSteps)])],
-            [annotationsEndpoint(11, 1), 0, encodeJson(noise)],
-            [annotationsEndpoint(11, 2), 0, encodeJson([LOST_MESSAGE])],
+            [annotationsEndpoint(11, 1), 0, annotationsJson(noise)],
+            [annotationsEndpoint(11, 2), 0, annotationsJson([LOST_MESSAGE])],
             ["repos/{owner}/{repo}/pulls/1338", 0, pullJson("open", SHA)],
           ],
           commands
@@ -559,16 +614,21 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         [
           forkLookup,
           0,
-          encodeJson([
-            {
-              number: 7,
-              state: "open",
-              head_sha: SHA,
-              head_ref: "refactor/literal-kit-trim",
-              head_owner: "contributor",
-            },
-            { number: 8, state: "open", head_sha: NEWER_SHA, head_ref: "other/branch", head_owner: "contributor" },
-          ]),
+          encodeJson(
+            A.map(
+              [
+                {
+                  number: 7,
+                  state: "open",
+                  head_sha: SHA,
+                  head_ref: "refactor/literal-kit-trim",
+                  head_owner: "contributor",
+                },
+                { number: 8, state: "open", head_sha: NEWER_SHA, head_ref: "other/branch", head_owner: "contributor" },
+              ],
+              pullRest
+            )
+          ),
         ],
       ]);
       expect(fork.reason).toBe("runner-loss");
@@ -577,15 +637,20 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         [
           forkLookup,
           0,
-          encodeJson([
-            {
-              number: 7,
-              state: "open",
-              head_sha: NEWER_SHA,
-              head_ref: "refactor/literal-kit-trim",
-              head_owner: "contributor",
-            },
-          ]),
+          encodeJson(
+            A.map(
+              [
+                {
+                  number: 7,
+                  state: "open",
+                  head_sha: NEWER_SHA,
+                  head_ref: "refactor/literal-kit-trim",
+                  head_owner: "contributor",
+                },
+              ],
+              pullRest
+            )
+          ),
         ],
       ]);
       expect(movedFork.reason).toBe("superseded-head");
@@ -598,12 +663,18 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
     })
   );
 
-  layerIt.effect("re-runs a fork pull request's lost job and fails visibly when gh cannot start", () =>
+  layerIt.effect("re-runs a fork pull request's lost job and fails visibly when GitHub cannot be reached", () =>
     Effect.gen(function* () {
       const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const forkLookup = `repos/{owner}/{repo}/pulls?state=open&per_page=10&head=${encodeURIComponent("contributor:refactor/literal-kit-trim")}`;
       const forkPull = encodeJson([
-        { number: 7, state: "open", head_sha: SHA, head_ref: "refactor/literal-kit-trim", head_owner: "contributor" },
+        pullRest({
+          number: 7,
+          state: "open",
+          head_sha: SHA,
+          head_ref: "refactor/literal-kit-trim",
+          head_owner: "contributor",
+        }),
       ]);
       const rerun = (rerunReply: GhReply) =>
         decideRun(CiRerunRunnerLossInput.make({ runId: 36763005302, cwd: "." })).pipe(
@@ -620,8 +691,9 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       const requested = yield* rerun(["run rerun --job 11", 0, "✓ Requested"]);
       expect(requested.reason).toBe("runner-loss");
       expect(A.contains(endpoints(yield* Ref.get(commands)), "run rerun --job 11")).toBe(true);
-      const unspawned = yield* rerun(["run rerun --job 11", -1, "gh: command not found"]).pipe(Effect.flip);
-      expect(unspawned.message).toBe("gh run rerun --job 11 failed (spawn).");
+      const unreached = yield* rerun(["run rerun --job 11", -1, "fetch failed"]).pipe(Effect.flip);
+      // octokit reports a request that never reached GitHub as status 500.
+      expect(unreached.message).toBe("GitHub API rerun of job 11 failed (HTTP 500): fetch failed");
     })
   );
 
@@ -634,9 +706,9 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         );
       const push = { event: "push", head_branch: "main", pull_requests: [] };
       const tip = "repos/{owner}/{repo}/git/ref/heads/main";
-      const current = yield* decide(push, [[tip, 0, encodeJson({ sha: SHA })]]);
+      const current = yield* decide(push, [[tip, 0, encodeJson({ object: { sha: SHA } })]]);
       expect(current.reason).toBe("runner-loss");
-      const moved = yield* decide(push, [[tip, 0, encodeJson({ sha: NEWER_SHA })]]);
+      const moved = yield* decide(push, [[tip, 0, encodeJson({ object: { sha: NEWER_SHA } })]]);
       expect(moved.reason).toBe("superseded-head");
       const scheduled = yield* decide({ event: "schedule" }, []);
       expect(scheduled.reason).toBe("unsupported-event");
@@ -664,7 +736,7 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         ["repos/{owner}/{repo}/pulls/1338", 0, pullJson("open", SHA)],
         ["run rerun --job 11", 1, "run 36763005302 cannot be rerun; its workflow is already running"],
       ]);
-      expect(refused.message).toContain("gh run rerun --job 11 exited 1");
+      expect(refused.message).toContain("GitHub API rerun of job 11 failed (HTTP 403)");
     })
   );
 
@@ -692,7 +764,7 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         (job): GhReply => [
           annotationsEndpoint(job.id),
           0,
-          encodeJson(A.contains(lostIds, job.id) ? [LOST_MESSAGE] : []),
+          annotationsJson(A.contains(lostIds, job.id) ? [LOST_MESSAGE] : []),
         ]
       ),
       ["repos/{owner}/{repo}/pulls/1338", 0, pullJson("open", SHA)],
@@ -808,7 +880,7 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
 
       const exit = yield* runCommand(["--run-id", "1"]).pipe(withGh([], commands), withEnv, Effect.exit);
       expect(exit._tag).toBe("Failure");
-      expect(yield* errors).toContain("[ci] gh api repos/{owner}/{repo}/actions/runs/1 exited 1");
+      expect(yield* errors).toContain("[ci] GitHub API repos/{owner}/{repo}/actions/runs/1 failed (HTTP 404)");
     })
   );
   // The workflow runs on `workflow_run`, whose token can write Actions state

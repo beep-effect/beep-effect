@@ -1,5 +1,6 @@
 import { Git } from "@beep/git/Git";
 import { reviewerCheckExternalId } from "@beep/repo-cli/commands/Reviewer";
+import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import {
   decideMergeGate,
   MERGE_GATE_S11_DEFAULT_ATTRIBUTION,
@@ -39,6 +40,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -59,6 +61,7 @@ import threadsFixture from "./fixtures/yeet-merge-gate/threads.json" with { type
 import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" with { type: "json" };
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
 import { commandArgs } from "./support/commandArgs.ts";
+import { githubFetch, reply } from "./support/GithubFetch.ts";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
@@ -1014,7 +1017,7 @@ const gateReadAnswers = (script: ResolvedGhScript): ReadonlyArray<GhAnswerRoute>
   ["/check-suites", answer(script.windowExit, A.join(suiteInstants, "\n"))],
   ["graphql", answer(script.threadsExit, encodeJson(script.threads))],
   ["rules/branches/", answer(script.rulesExit, encodeJson(scriptReviewerRules(script)))],
-  ["?check_name=beep-reviewer", answer(0, encodeJson(scriptReviewerPage(script)))],
+  ["check_name=beep-reviewer", answer(0, encodeJson(scriptReviewerPage(script)))],
 ];
 
 // The inherited-red evidence: the compare of base...head names the merge base and the
@@ -1037,6 +1040,8 @@ const baseEvidenceAnswers = (script: ResolvedGhScript): ReadonlyArray<GhAnswerRo
 const ghAnswers = (script: GhScript): ReadonlyArray<GhAnswerRoute> => {
   const resolved = resolveScript(script);
   return [
+    // The reviewer gate reads the operator token, then calls GitHub through the `@beep/github` client.
+    ["gh auth token", answer(0, "gho_fixture\n")],
     ...postMergeAnswers(resolved),
     ...gateReadAnswers(resolved),
     ...baseEvidenceAnswers(resolved),
@@ -1074,6 +1079,20 @@ const scriptedGh = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
     return Ref.update(calls, A.append(line)).pipe(Effect.as(stubHandle(answer.exitCode, answer.output)));
   });
 
+// The reviewer gate's REST calls arrive through `fetch`; each is recorded and answered as the
+// `gh api <path>` line it replaced, so one answer table serves both transports.
+const decodeAnswer = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
+const scriptedGithub = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
+  githubFetch((call) => {
+    const line = `gh api ${Str.slice(1)(call.url.pathname)}${call.url.search}`;
+    // `fetch` is synchronous here; the Ref is updated in place, as `Ref.update` would.
+    MutableRef.update(calls.ref, A.append(line));
+    const scripted = answerFor(script, "gh", line);
+    return scripted.exitCode === 0
+      ? Result.getOrElse(decodeAnswer(scripted.output), () => ({}))
+      : reply(404)({ message: scripted.output });
+  });
+
 // Every scripted run records the argv it was asked for, so a test can prove the merge was or was not sent.
 const withScriptedGh = <A, E, R>(
   script: GhScript,
@@ -1086,6 +1105,7 @@ const withScriptedGh = <A, E, R>(
     Effect.andThen(Ref.make<ReadonlyArray<string>>(A.empty())),
     Effect.flatMap((calls) =>
       use(calls).pipe(
+        Effect.provideService(GithubTransportFetch, O.some(scriptedGithub(script, calls).fetch)),
         Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedGh(script, calls))
       )
@@ -1392,7 +1412,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             })
           ).pipe(Effect.result);
           expect(held._tag).toBe("Failure");
-          expect(A.filter(yield* Ref.get(calls), Str.includes("?check_name=beep-reviewer"))).toHaveLength(1);
+          expect(A.filter(yield* Ref.get(calls), Str.includes("check_name=beep-reviewer"))).toHaveLength(1);
           expect(yield* mergeWasSent(calls)).toBe(false);
         })
       )

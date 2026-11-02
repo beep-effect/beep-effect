@@ -1,9 +1,11 @@
+import { GitHubClient } from "@beep/github/GitHubClient";
 import {
   enforceReviewerGate,
   releaseReviewerRuleset,
   requireReviewerRuleset,
   reviewerCommand,
 } from "@beep/repo-cli/commands/Reviewer";
+import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -15,14 +17,12 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
-import * as HttpClient from "effect/http/HttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Ref from "effect/Ref";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
@@ -31,22 +31,19 @@ import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
+import { githubFetch, reply } from "./support/GithubFetch.ts";
+import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
-const ROOT = "repos/beep-effect/beep-effect";
-const LIST_ARGS = `api ${ROOT}/rulesets?includes_parents=true&per_page=100 --paginate --slurp`;
-const encoder = new TextEncoder();
+const ROOT = "/repos/beep-effect/beep-effect";
+const LIST = `GET ${ROOT}/rulesets`;
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
-const decodeObject = S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.Unknown)));
+const decodeObject = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
 const runReviewer = Command.runWith(reviewerCommand, { version: "0.0.0" });
-// Ruleset subcommands talk to GitHub only through gh; no filesystem, HTTP, or terminal input is used.
+// Ruleset subcommands talk to GitHub only through the `@beep/github` client; no filesystem or terminal input is used.
 const CommandLayer = Layer.mergeAll(
   FileSystem.layerNoop({}),
   Path.layer,
   Stdio.layerTest({ stdinIsTerminal: Effect.succeed(false), stdoutIsTerminal: Effect.succeed(false) }),
-  Layer.succeed(
-    HttpClient.HttpClient,
-    HttpClient.make(() => Effect.die("unused: ruleset commands only call gh"))
-  ),
   Layer.succeed(
     Terminal.Terminal,
     Terminal.make({
@@ -85,31 +82,29 @@ const ruleset = (id: number, withReviewer = true) => ({
 });
 
 const defaults = {
-  login: "kriegcloud\n",
+  login: "kriegcloud",
   branchRules: [
     { type: "deletion", ruleset_id: 11 },
     { type: "required_status_checks", ruleset_id: 11, parameters: {} },
   ] as ReadonlyArray<unknown>,
   summaries: [
-    [
-      { id: 11, source_type: "Repository", enforcement: "active" },
-      { id: 3, source_type: "Organization", enforcement: "active" },
-      { id: 4, source_type: "Repository", enforcement: "disabled" },
-    ],
-  ] as ReadonlyArray<ReadonlyArray<unknown>>,
+    { id: 11, source_type: "Repository", enforcement: "active" },
+    { id: 3, source_type: "Organization", enforcement: "active" },
+    { id: 4, source_type: "Repository", enforcement: "disabled" },
+  ] as ReadonlyArray<unknown>,
   rulesets: [[11, [ruleset(11)]]] as ReadonlyArray<readonly [number, ReadonlyArray<unknown>]>,
 };
-type GhFixture = typeof defaults;
+type GithubFixture = typeof defaults;
 
-const twoRulesets: GhFixture = {
+const twoRulesets: GithubFixture = {
   ...defaults,
   branchRules: [
     { type: "required_status_checks", ruleset_id: 11, parameters: {} },
     { type: "required_status_checks", ruleset_id: 12, parameters: {} },
   ],
   summaries: [
-    [{ id: 11, source_type: "Repository", enforcement: "active" }],
-    [{ id: 12, source_type: "Repository", enforcement: "active" }],
+    { id: 11, source_type: "Repository", enforcement: "active" },
+    { id: 12, source_type: "Repository", enforcement: "active" },
   ],
   rulesets: [
     [11, [ruleset(11)]],
@@ -117,14 +112,61 @@ const twoRulesets: GhFixture = {
   ],
 };
 
-class GhCall extends S.Class<GhCall, { readonly brand: unique symbol }>("GhCall")({
-  args: S.String,
-  stdin: S.Option(S.String),
-}) {}
+// One REST call as `METHOD /path`, the query string dropped.
+const callKey = (call: GithubFetchCall) => `${call.method} ${call.url.pathname}`;
+
+// Answers each REST call from canned JSON keyed on method and path; unknown requests answer 404.
+const respond = (fixture: GithubFixture, call: GithubFetchCall, priorCalls: ReadonlyArray<GithubFetchCall>) => {
+  const key = callKey(call);
+  if (key === `GET ${ROOT}/pulls/7`)
+    return { head: { sha: Str.repeat(40)("a") }, base: { sha: Str.repeat(40)("b"), ref: "main" } };
+  if (key === "GET /user") return { login: fixture.login };
+  if (key === `GET ${ROOT}`) return { default_branch: "main" };
+  if (key === `GET ${ROOT}/rules/branches/main`) return fixture.branchRules;
+  if (key === LIST) return fixture.summaries;
+  if (call.method === "PUT") return {};
+  const reads = A.findFirst(fixture.rulesets, ([id]) => key === `GET ${ROOT}/rulesets/${id}`);
+  if (O.isNone(reads)) return reply(404)({ message: "Not Found" });
+  const nth = A.length(A.filter(priorCalls, (prior) => callKey(prior) === key));
+  return O.getOrElse(A.get(reads.value[1], nth).pipe(O.orElse(() => A.last(reads.value[1]))), () =>
+    reply(404)({ message: "Not Found" })
+  );
+};
+
+// The `reviewer` commands read the operator token through `gh auth token`; nothing else is spawned.
+const ghAuthToken = ChildProcessSpawner.make((command) =>
+  ChildProcess.isStandardCommand(command) &&
+  command.command === "gh" &&
+  A.join(commandArgs(command), " ") === "auth token"
+    ? Effect.succeed(handle("gho_operator-fixture\n", 0))
+    : Effect.die("the reviewer ruleset workflow only spawns gh auth token")
+);
+
+// Runs a program against the fake GitHub API and a test console, returning its exit, recorded calls, and log lines.
+// The direct calls take the client from the context; the CLI builds its own from `gh auth token`, so the global
+// `fetch` that client falls back to is the same fake.
+const withFakeGithub = Effect.fnUntraced(function* <A, E, R>(fixture: GithubFixture, program: Effect.Effect<A, E, R>) {
+  const api = githubFetch((call) => respond(fixture, call, A.dropRight(api.calls, 1)));
+  const client = yield* Layer.build(
+    GitHubClient.layerFromToken({ token: Redacted.make("gho_fixture"), retry: "off", fetch: api.fetch })
+  );
+  const exit = yield* program.pipe(
+    Effect.provideContext(client),
+    Effect.provideService(GithubTransportFetch, O.some(api.fetch)),
+    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghAuthToken),
+    Effect.flatMap((value) => TestConsole.logLines.pipe(Effect.map((lines) => ({ value, lines })))),
+    Effect.provideServiceEffect(Console.Console, TestConsole.make),
+    Effect.exit
+  );
+  return { exit, calls: A.copy(api.calls) };
+}, Effect.scoped);
+
+const putCalls = (calls: ReadonlyArray<GithubFetchCall>) => A.filter(calls, (call) => call.method === "PUT");
+const callKeys = (calls: ReadonlyArray<GithubFetchCall>) => A.map(calls, callKey);
 
 const handle = (output: string, exitCode: number) =>
   ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(output)),
+    all: Stream.make(new TextEncoder().encode(output)),
     exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
     getInputFd: () => Sink.drain,
     getOutputFd: () => Stream.empty,
@@ -133,67 +175,9 @@ const handle = (output: string, exitCode: number) =>
     pid: ChildProcessSpawner.ProcessId(1),
     stderr: Stream.empty,
     stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(output)),
+    stdout: Stream.make(new TextEncoder().encode(output)),
     unref: Effect.succeed(Effect.void),
   });
-
-const readStdin = (input: ChildProcess.CommandOptions["stdin"]) =>
-  input === undefined || P.isString(input) || "stream" in input
-    ? Effect.succeed(O.none<string>())
-    : input.pipe(Stream.decodeText, Stream.mkString, Effect.asSome);
-
-// Answers each gh invocation from canned JSON keyed on its argv; unknown requests exit 1 like a failed gh call.
-const respond = Effect.fnUntraced(function* (fixture: GhFixture, args: string, priorCalls: ReadonlyArray<GhCall>) {
-  if (args === `api ${ROOT}/pulls/7`)
-    return O.some(
-      yield* encodeJson({
-        head: { sha: Str.repeat(40)("a") },
-        base: { sha: Str.repeat(40)("b"), ref: "main" },
-      })
-    );
-  if (args === "api user --jq .login") return O.some(fixture.login);
-  if (args === `api ${ROOT}`) return O.some(yield* encodeJson({ default_branch: "main" }));
-  if (args === `api ${ROOT}/rules/branches/main`) return O.some(yield* encodeJson(fixture.branchRules));
-  if (args === LIST_ARGS) return O.some(yield* encodeJson(fixture.summaries));
-  if (Str.startsWith("api --method PUT ")(args)) return O.some("{}");
-  const reads = A.findFirst(fixture.rulesets, ([id]) => args === `api ${ROOT}/rulesets/${id}`);
-  if (O.isNone(reads)) return O.none<string>();
-  const nth = A.length(A.filter(priorCalls, (call) => call.args === args));
-  const read = A.get(reads.value[1], nth).pipe(O.orElse(() => A.last(reads.value[1])));
-  return O.isSome(read) ? O.some(yield* encodeJson(read.value)) : O.none<string>();
-});
-
-const fakeGh = Effect.fnUntraced(function* (fixture: GhFixture) {
-  const calls = yield* Ref.make<ReadonlyArray<GhCall>>([]);
-  const spawner = ChildProcessSpawner.make((command) =>
-    Effect.gen(function* () {
-      if (!ChildProcess.isStandardCommand(command) || command.command !== "gh")
-        return yield* Effect.die("the reviewer ruleset workflow only spawns gh");
-      const args = A.join(commandArgs(command), " ");
-      const stdin = yield* readStdin(command.options.stdin).pipe(Effect.orDie);
-      const priorCalls = yield* Ref.get(calls);
-      yield* Ref.update(calls, A.append(GhCall.make({ args, stdin })));
-      const output = yield* respond(fixture, args, priorCalls).pipe(Effect.orDie);
-      return O.match(output, { onNone: () => handle("", 1), onSome: (text) => handle(text, 0) });
-    })
-  );
-  return { calls, spawner } as const;
-});
-
-// Runs a program against the fake gh and a test console, returning its exit, recorded calls, and log lines.
-const withFakeGh = Effect.fnUntraced(function* <A, E, R>(fixture: GhFixture, program: Effect.Effect<A, E, R>) {
-  const gh = yield* fakeGh(fixture);
-  const exit = yield* program.pipe(
-    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, gh.spawner),
-    Effect.flatMap((value) => TestConsole.logLines.pipe(Effect.map((lines) => ({ value, lines })))),
-    Effect.provideServiceEffect(Console.Console, TestConsole.make),
-    Effect.exit
-  );
-  return { exit, calls: yield* Ref.get(gh.calls) };
-});
-
-const putCalls = (calls: ReadonlyArray<GhCall>) =>
-  A.filter(calls, (call) => Str.startsWith("api --method PUT ")(call.args));
 
 const failureMessage = <A, E>(exit: Exit.Exit<A, E>) =>
   Exit.match(exit, { onFailure: flow(Cause.pretty, O.some), onSuccess: () => O.none<string>() });
@@ -205,7 +189,7 @@ const writable = ({ id: _id, source: _source, source_type: _sourceType, ...field
 describe("reviewer ruleset workflow", () => {
   it.effect("the merge gate stops requiring a reviewer after release", () =>
     Effect.gen(function* () {
-      const result = yield* withFakeGh(
+      const result = yield* withFakeGithub(
         {
           ...defaults,
           branchRules: [
@@ -219,31 +203,28 @@ describe("reviewer ruleset workflow", () => {
         enforceReviewerGate(7, Str.repeat(40)("a"))
       );
       yield* result.exit;
-      expect(A.map(result.calls, (call) => call.args)).toEqual([
-        `api ${ROOT}/pulls/7`,
-        `api ${ROOT}/rules/branches/main`,
-      ]);
+      expect(callKeys(result.calls)).toEqual([`GET ${ROOT}/pulls/7`, `GET ${ROOT}/rules/branches/main`]);
     })
   );
 
   it.effect("a moved PR head holds the merge gate before reading branch rules", () =>
     Effect.gen(function* () {
-      const result = yield* withFakeGh(defaults, enforceReviewerGate(7, Str.repeat(40)("c")));
+      const result = yield* withFakeGithub(defaults, enforceReviewerGate(7, Str.repeat(40)("c")));
       expect(O.getOrThrow(failureMessage(result.exit))).toContain("Reviewer merge gate held");
-      expect(A.map(result.calls, (call) => call.args)).toEqual([`api ${ROOT}/pulls/7`]);
+      expect(callKeys(result.calls)).toEqual([`GET ${ROOT}/pulls/7`]);
     })
   );
 
   it.effect("dry run prints the release diff and never writes", () =>
     Effect.gen(function* () {
-      const { calls, exit } = yield* withFakeGh(defaults, releaseReviewerRuleset(false, undefined));
+      const { calls, exit } = yield* withFakeGithub(defaults, releaseReviewerRuleset(false, undefined));
       const { lines } = yield* exit;
-      expect(A.map(calls, (call) => call.args)).toEqual([
-        "api user --jq .login",
-        `api ${ROOT}`,
-        `api ${ROOT}/rules/branches/main`,
-        LIST_ARGS,
-        `api ${ROOT}/rulesets/11`,
+      expect(callKeys(calls)).toEqual([
+        "GET /user",
+        `GET ${ROOT}`,
+        `GET ${ROOT}/rules/branches/main`,
+        LIST,
+        `GET ${ROOT}/rulesets/11`,
       ]);
       expect(putCalls(calls)).toEqual([]);
       const diff = A.join(A.map(lines, String), "\n");
@@ -255,13 +236,13 @@ describe("reviewer ruleset workflow", () => {
 
   it.effect("apply with an unchanged re-read issues one lossless PUT without the reviewer", () =>
     Effect.gen(function* () {
-      const { calls, exit } = yield* withFakeGh(defaults, releaseReviewerRuleset(true, undefined));
+      const { calls, exit } = yield* withFakeGithub(defaults, releaseReviewerRuleset(true, undefined));
       yield* exit;
       const puts = putCalls(calls);
-      expect(A.map(puts, (call) => call.args)).toEqual([`api --method PUT ${ROOT}/rulesets/11 --input -`]);
-      expect(A.length(A.filter(calls, (call) => call.args === `api ${ROOT}/rulesets/11`))).toBe(2);
+      expect(callKeys(puts)).toEqual([`PUT ${ROOT}/rulesets/11`]);
+      expect(A.length(A.filter(calls, (call) => callKey(call) === `GET ${ROOT}/rulesets/11`))).toBe(2);
       const put = O.getOrThrow(A.head(puts));
-      const payload = yield* put.stdin.pipe(O.getOrThrow, decodeObject);
+      const payload = yield* decodeObject(put.body);
       expect(payload).toEqual(writable(ruleset(11, false)));
       expect(payload).toMatchObject({ bypass_actors: ruleset(11).bypass_actors, conditions: ruleset(11).conditions });
       expect(yield* encodeJson(payload)).toContain('{"context":"Heavy / Check","integration_id":15368}');
@@ -270,32 +251,32 @@ describe("reviewer ruleset workflow", () => {
 
   it.effect("require apply adds the App-bound reviewer to a released ruleset", () =>
     Effect.gen(function* () {
-      const { calls, exit } = yield* withFakeGh(
+      const { calls, exit } = yield* withFakeGithub(
         { ...defaults, rulesets: [[11, [ruleset(11, false)]]] },
         requireReviewerRuleset(42, true, undefined)
       );
       yield* exit;
       const put = O.getOrThrow(A.head(putCalls(calls)));
-      expect(yield* put.stdin.pipe(O.getOrThrow, decodeObject)).toEqual(writable(ruleset(11)));
+      expect(yield* decodeObject(put.body)).toEqual(writable(ruleset(11)));
     })
   );
 
   it.effect("apply skips the write when the ruleset already matches", () =>
     Effect.gen(function* () {
-      const result = yield* withFakeGh(
+      const result = yield* withFakeGithub(
         { ...defaults, rulesets: [[11, [ruleset(11, false)]]] },
         releaseReviewerRuleset(true, undefined)
       );
       expect(result.exit._tag).toBe("Success");
       expect(putCalls(result.calls)).toEqual([]);
-      expect(A.length(A.filter(result.calls, (call) => call.args === `api ${ROOT}/rulesets/11`))).toBe(1);
+      expect(A.length(A.filter(result.calls, (call) => callKey(call) === `GET ${ROOT}/rulesets/11`))).toBe(1);
     })
   );
 
   it.effect("refuses to write when the ruleset changes between preview and apply", () =>
     Effect.gen(function* () {
       const moved = { ...ruleset(11), enforcement: "evaluate" };
-      const result = yield* withFakeGh(
+      const result = yield* withFakeGithub(
         { ...defaults, rulesets: [[11, [ruleset(11), moved]]] },
         releaseReviewerRuleset(true, undefined)
       );
@@ -308,18 +289,18 @@ describe("reviewer ruleset workflow", () => {
 
   it.effect("refuses another gh login before reading administration data", () =>
     Effect.gen(function* () {
-      const result = yield* withFakeGh(
-        { ...defaults, login: "someone-else\n" },
+      const result = yield* withFakeGithub(
+        { ...defaults, login: "someone-else" },
         releaseReviewerRuleset(true, undefined)
       );
       expect(O.getOrThrow(failureMessage(result.exit))).toContain("kriegcloud");
-      expect(A.map(result.calls, (call) => call.args)).toEqual(["api user --jq .login"]);
+      expect(callKeys(result.calls)).toEqual(["GET /user"]);
     })
   );
 
   it.effect("refuses zero matching repository rulesets", () =>
     Effect.gen(function* () {
-      const result = yield* withFakeGh(
+      const result = yield* withFakeGithub(
         { ...defaults, branchRules: [{ type: "deletion", ruleset_id: 11 }] },
         releaseReviewerRuleset(false, undefined)
       );
@@ -330,21 +311,19 @@ describe("reviewer ruleset workflow", () => {
 
   it.effect("refuses multiple matching rulesets unless --ruleset-id selects one", () =>
     Effect.gen(function* () {
-      const ambiguous = yield* withFakeGh(twoRulesets, releaseReviewerRuleset(true, undefined));
+      const ambiguous = yield* withFakeGithub(twoRulesets, releaseReviewerRuleset(true, undefined));
       expect(O.getOrThrow(failureMessage(ambiguous.exit))).toContain("select --ruleset-id explicitly");
       expect(putCalls(ambiguous.calls)).toEqual([]);
 
-      const selected = yield* withFakeGh(twoRulesets, releaseReviewerRuleset(true, 12));
+      const selected = yield* withFakeGithub(twoRulesets, releaseReviewerRuleset(true, 12));
       expect(selected.exit._tag).toBe("Success");
-      expect(A.map(putCalls(selected.calls), (call) => call.args)).toEqual([
-        `api --method PUT ${ROOT}/rulesets/12 --input -`,
-      ]);
+      expect(callKeys(putCalls(selected.calls))).toEqual([`PUT ${ROOT}/rulesets/12`]);
     })
   );
 
   it.effect("refuses a failed gh request", () =>
     Effect.gen(function* () {
-      const result = yield* withFakeGh({ ...defaults, rulesets: [] }, releaseReviewerRuleset(false, undefined));
+      const result = yield* withFakeGithub({ ...defaults, rulesets: [] }, releaseReviewerRuleset(false, undefined));
       expect(O.getOrThrow(failureMessage(result.exit))).toContain("Cannot read GitHub administration data.");
     })
   );
@@ -353,7 +332,7 @@ describe("reviewer ruleset workflow", () => {
 it.layer(CommandLayer, { timeout: "30 seconds" })("reviewer ruleset command", (it) => {
   it.effect("ruleset release --dry-run prints the diff through the CLI without writing", () =>
     Effect.gen(function* () {
-      const result = yield* withFakeGh(defaults, runReviewer(["ruleset", "release", "--apply", "--dry-run"]));
+      const result = yield* withFakeGithub(defaults, runReviewer(["ruleset", "release", "--apply", "--dry-run"]));
       const { lines } = yield* result.exit;
       expect(A.map(lines, String)).toContainEqual(expect.stringContaining("--- ruleset 11\n- "));
       expect(putCalls(result.calls)).toEqual([]);
@@ -363,27 +342,27 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("reviewer ruleset command", (i
 
   it.effect("ruleset release reports a refused login as a reviewer error", () =>
     Effect.gen(function* () {
-      const result = yield* withFakeGh({ ...defaults, login: "someone-else" }, runReviewer(["ruleset", "release"]));
+      const result = yield* withFakeGithub({ ...defaults, login: "someone-else" }, runReviewer(["ruleset", "release"]));
       expect(O.getOrThrow(failureMessage(result.exit))).toContain("[reviewer] Ruleset administration must use");
     })
   );
   it.effect("ruleset release --apply writes the selected ruleset through the CLI", () =>
     Effect.gen(function* () {
-      const result = yield* withFakeGh(
+      const result = yield* withFakeGithub(
         twoRulesets,
         runReviewer(["ruleset", "release", "--apply", "--ruleset-id", "12"])
       );
       yield* result.exit;
       const puts = putCalls(result.calls);
-      expect(A.map(puts, (call) => call.args)).toEqual([`api --method PUT ${ROOT}/rulesets/12 --input -`]);
+      expect(callKeys(puts)).toEqual([`PUT ${ROOT}/rulesets/12`]);
       const put = O.getOrThrow(A.head(puts));
-      expect(yield* put.stdin.pipe(O.getOrThrow, decodeObject)).toEqual(writable(ruleset(12, false)));
+      expect(yield* decodeObject(put.body)).toEqual(writable(ruleset(12, false)));
     })
   );
 
-  it.effect("ruleset require rejects a nonpositive App id before invoking gh", () =>
+  it.effect("ruleset require rejects a nonpositive App id before calling GitHub", () =>
     Effect.gen(function* () {
-      const result = yield* withFakeGh(
+      const result = yield* withFakeGithub(
         defaults,
         runReviewer(["ruleset", "require"]).pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_REVIEWER_APP_ID: 0 }))

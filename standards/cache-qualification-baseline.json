@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Codex (PR #2611, accepted-main integration of the reviewed storage input)",
-      "reason": "Retain accepted coverage/input-exclusion settings and re-acknowledge only the private storage module in the quality-seal closure.",
+      "reviewer": "Codex (PR #2611, accepted c737 main integration)",
+      "reason": "Preserve accepted main policy and re-acknowledge only the owned private-storage module in the quality-seal closure.",
       "basis": {
-        "path": "goals/turborepo-cache-trust-observability/research/private-object-accepted-coverage-baseline-review-2026-11-02.md",
-        "sha256": "32fda797849dfdf1cecbf7043cb545da3b38061fd268fa768794262e70325a97"
+        "path": "goals/turborepo-cache-trust-observability/research/private-object-c737-baseline-review-2026-11-02.md",
+        "sha256": "3ed1d59f09a50f187ce736ff043c8d1ea13ff4ae55b0da11ccba8426a13d5dec"
       }
     },
     "@beep/acp": {
@@ -1138,11 +1138,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-glob-exclusions, claude/perf-turbo-glob-exclusions-fb5814)",
-      "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W3 sites, feat/gh-git-w3-sites)",
+      "reason": "Record the W3 sites drift: repo-cli adds @beep/commands as a dependency (manifest byte change for six @beep/repo-cli tasks), and GithubIdentity.ts imports Run, so the commands driver's Run.ts closure joins the goals-doctor, knowledge and quality root seals; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w3-sites.md",
+        "sha256": "9f015c487185677458af286a766541dcbafc123de172f4c368040c78f74605aa"
       }
     },
     "@beep/repo-configs": {
@@ -3104,6 +3104,7 @@
             "packages/drivers/box-provisioning/package.json",
             "packages/drivers/box/package.json",
             "packages/drivers/commands/package.json",
+            "packages/drivers/commands/src/**",
             "packages/drivers/cosmos/package.json",
             "packages/drivers/discord/package.json",
             "packages/drivers/doc-text/package.json",
@@ -3355,6 +3356,10 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/drivers/commands/package.json",
+            "packages/drivers/commands/src/Redaction.ts",
+            "packages/drivers/commands/src/Run.ts",
+            "packages/drivers/commands/src/internal/capture.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -3909,6 +3914,10 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/drivers/commands/package.json",
+            "packages/drivers/commands/src/Redaction.ts",
+            "packages/drivers/commands/src/Run.ts",
+            "packages/drivers/commands/src/internal/capture.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -6378,6 +6387,10 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/drivers/commands/package.json",
+            "packages/drivers/commands/src/Redaction.ts",
+            "packages/drivers/commands/src/Run.ts",
+            "packages/drivers/commands/src/internal/capture.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -93368,6 +93381,7 @@
           "@beep/chalk#build",
           "@beep/cli-kit#build",
           "@beep/colors#build",
+          "@beep/commands#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
           "@beep/epistemics#build",
@@ -93476,6 +93490,7 @@
           "@beep/chalk#build",
           "@beep/cli-kit#build",
           "@beep/colors#build",
+          "@beep/commands#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
           "@beep/epistemics#build",
@@ -93571,6 +93586,7 @@
           "@beep/chalk#build",
           "@beep/cli-kit#build",
           "@beep/colors#build",
+          "@beep/commands#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
           "@beep/epistemics#build",
@@ -93718,6 +93734,7 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
+          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -93859,6 +93876,7 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
+          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -94119,6 +94137,7 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
+          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -94220,6 +94239,7 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
+          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -94344,6 +94364,7 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
+          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -122149,7 +122170,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "d55773c5a83aa44d16d977fca025e799a6a7142608b0986c42f5275bf24dc870"
+        "sha256": "0b9735667ae4e1720c9b637d9613e031926cc5df07d16d01b35e598e9162fc99"
       }
     ]
   }

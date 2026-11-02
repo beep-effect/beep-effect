@@ -36,7 +36,9 @@
     "explorations/turborepo-quality-cache/DECISIONS.md",
     "explorations/turborepo-quality-cache/MAP.md",
     "goals/turborepo-cache-trust-observability/research/producer-accepted-r5b-baseline-review-2026-10-31.md",
-    "goals/turborepo-cache-trust-observability/research/producer-accepted-r5b-baseline-request-2026-10-31.json"
+    "goals/turborepo-cache-trust-observability/research/producer-accepted-r5b-baseline-request-2026-10-31.json",
+    "goals/turborepo-cache-trust-observability/research/private-object-c737-baseline-review-2026-11-02.md",
+    "goals/turborepo-cache-trust-observability/research/private-object-c737-baseline-request-2026-11-02.json"
   ],
   "researchReports": [
     "research/SOURCES.md",
