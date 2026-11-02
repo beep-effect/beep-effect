@@ -3,7 +3,9 @@
  *
  * These helpers make every migrated site env-raisable: the effective run
  * count is `max(inline ?? default, BEEP_FC_NUM_RUNS)` — inline values
- * are floors and can never be lowered by the environment.
+ * are floors and can never be lowered by the environment. `fcRunsCapped`
+ * is the opt-out for I/O-heavy properties: a fixed count the floor
+ * cannot raise, with the seed pin kept.
  *
  * Lives in this leaf package (upstream of the entire `@beep/test-utils`
  * dependency closure) so that `@beep/schema`, `@beep/utils`, and
@@ -163,5 +165,44 @@ export const envFcNumRunsFloor = (): number =>
  */
 export const fcRuns = (inline?: number): Arbitrary.CheckOptions & { readonly runs: number } => ({
   runs: Math.max(inline ?? DEFAULT_FC_NUM_RUNS, envFcNumRunsFloor()),
-  ...O.getOrUndefined(O.map(envFcSeed(), (seed) => ({ seed }))),
+  ...envSeedOption(),
+});
+
+const envSeedOption = (): { readonly seed: number } | undefined =>
+  O.getOrUndefined(O.map(envFcSeed(), (seed) => ({ seed })));
+
+/**
+ * Build Effect Arbitrary run options with a fixed `runs` that the
+ * `BEEP_FC_NUM_RUNS` floor cannot raise, while still honouring the
+ * `BEEP_FC_SEED` pin.
+ *
+ * **Details**
+ *
+ * Use it for properties whose every run does real I/O or service work
+ * (filesystem writes, ledger audits, subprocesses) over a small input
+ * space, where the nightly property lane's `BEEP_FC_NUM_RUNS=1000` floor
+ * would multiply wall time without exploring new behaviour. Pick `runs`
+ * to cover the arbitrary's meaningful classes and say why at the call
+ * site. Pure, cheap properties keep using {@link fcRuns} so the nightly
+ * sweep can deepen them. The seed pin still applies, so a seeded rerun of
+ * a nightly failure tests identical inputs; an explicit inline `seed`
+ * spread over these options still wins.
+ *
+ * **Example** (Build capped runs options)
+ *
+ * ```ts
+ * import { fcRunsCapped } from "@beep/fc-runs"
+ *
+ * const options = fcRunsCapped(10)
+ * console.log(options.runs) // 10, even when BEEP_FC_NUM_RUNS=1000
+ * ```
+ *
+ * @param runs - The fixed run count for the property.
+ * @returns Check options for `Arbitrary.checkEffect`; pass `{ arbitrary: fcRunsCapped(n) }` to `it.prop`.
+ * @category testing
+ * @since 0.0.0
+ */
+export const fcRunsCapped = (runs: number): Arbitrary.CheckOptions & { readonly runs: number } => ({
+  runs,
+  ...envSeedOption(),
 });
