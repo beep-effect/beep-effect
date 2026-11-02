@@ -377,12 +377,44 @@ export const crossCheckAgainstRound = Effect.fn("QaJudgeCheck.crossCheckAgainstR
  * This is the single settlement behind {@link crossCheckAgainstRound} and
  * the QA judge gate certificate, so both see the same verdicts.
  *
- * **Example** (Inspect the settlement)
+ * **Example** (Settle an inventory without citations)
  *
  * ```ts
+ * import { RoundLayout } from "@beep/qa-capture"
+ * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import { settleAgainstRound } from "@beep/repo-cli/commands/Qa/JudgeCheck"
+ * import { QaEventLog } from "@beep/repo-cli/commands/Qa/Qa.session"
+ * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
+ * import * as NodePath from "@effect/platform-node/NodePath"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
  *
- * console.log(typeof settleAgainstRound) // "function"
+ * const root = "/repo/.beep/qa/round-1"
+ * const layout = RoundLayout.make({
+ *   clipsDir: `${root}/clips`,
+ *   eventsPath: `${root}/events.ndjson`,
+ *   framesDir: `${root}/frames`,
+ *   reportPath: `${root}/report.md`,
+ *   root,
+ *   round: 1,
+ *   sessionPath: `${root}/session.json`,
+ *   sheetsDir: `${root}/sheets`,
+ *   videoDir: `${root}/video`
+ * })
+ * const inventory = QaInventory.make({
+ *   findings: [],
+ *   judge: QaJudgeRef.make({ effort: "inherited", model: "claude-opus-5-5" }),
+ *   requiredCount: 0,
+ *   round: 1,
+ *   schemaVersion: "qa-inventory/v1",
+ *   sessionRef: "session.json"
+ * })
+ * const settlement = await Effect.runPromise(
+ *   settleAgainstRound(layout, inventory, QaEventLog.make({ events: [], rejectedCount: 0 })).pipe(
+ *     Effect.provide(Layer.merge(NodeFileSystem.layer, NodePath.layer))
+ *   )
+ * )
+ * console.log(settlement.crossCheck.verdict) // "allowed"
  * ```
  *
  * @category use-cases

@@ -92,7 +92,10 @@ describe("@beep/skill-contract GateCertificate settlement", () => {
     expect(settleGateCertificateOutcome("complete", [check("a", "inapplicable")])).toBe("inapplicable");
     expect(settleGateCertificateOutcome("complete", [])).toBe("inapplicable");
     expect(settleGateCertificateOutcome("complete", [passed, check("b", "untested", { inReach: false })])).toBe(
-      "passed"
+      "cantTell"
+    );
+    expect(settleGateCertificateOutcome("incomplete", [passed, check("b", "failed", { inReach: false })])).toBe(
+      "cantTell"
     );
     expect(settleGateCertificateOutcome([passed])("complete")).toBe("passed");
   });
@@ -111,6 +114,7 @@ describe("@beep/skill-contract GateCertificate settlement", () => {
         }
         if (CheckOutcome.is.passed(outcome)) {
           expect(reach).toBe("complete");
+          expect(A.length(inReach)).toBe(A.length(checks));
           expect(
             A.every(
               inReach,
@@ -189,7 +193,17 @@ describe("@beep/skill-contract GateCertificate envelope", () => {
         },
       }).pipe(Effect.flip);
 
+      const completeWithOutOfReach = yield* decodeReceipt({
+        ...encoded,
+        predicate: {
+          ...encoded.predicate,
+          checks: A.map(encoded.predicate.checks, (row) => ({ ...row, inReach: false })),
+          outcome: "cantTell",
+        },
+      }).pipe(Effect.flip);
+
       expect(wrongOutcome.message).toContain("must equal the outcome settled");
+      expect(completeWithOutOfReach.message).toContain("requires every listed check in reach");
       expect(duplicate.message).toContain("unique check ids");
       expect(noEvidence.message).toContain("require non-empty evidence subjects");
     })

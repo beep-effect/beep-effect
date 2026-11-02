@@ -899,8 +899,24 @@ export class RoundCrossCheckSettlement extends S.Opaque<RoundCrossCheckSettlemen
  *
  * ```ts
  * import { QaJudgeSettlement } from "@beep/repo-cli/commands/Qa"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract"
+ * import * as O from "effect/Option"
  *
- * console.log(QaJudgeSettlement.fields.decode !== undefined) // true
+ * const settlement = QaJudgeSettlement.make({
+ *   artifact: O.none(),
+ *   crossCheck: O.none(),
+ *   decode: O.none(),
+ *   eventId: O.none(),
+ *   inventory: EvidenceSubject.make({
+ *     digest: EvidenceDigest.make({
+ *       sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+ *     }),
+ *     name: "qa/round-1/inventory.json"
+ *   }),
+ *   round: O.none()
+ * })
+ * console.log(O.isNone(settlement.decode)) // true
  * ```
  *
  * @category models
@@ -947,12 +963,34 @@ const certifiedOutcome = (verdict: O.Option<{ readonly verdict: GateOutcome }>):
  * `passed` while any gate is untested. The envelope subject is the judged
  * inventory digest. The certificate is unsigned.
  *
- * **Example** (Build a certification)
+ * **Example** (Certify a settlement that never ran)
  *
  * ```ts
- * import { certifyQaJudgeSettlement } from "@beep/repo-cli/commands/Qa"
+ * import { certifyQaJudgeSettlement, QaJudgeSettlement } from "@beep/repo-cli/commands/Qa"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
- * console.log(typeof certifyQaJudgeSettlement) // "function"
+ * const inventory = EvidenceSubject.make({
+ *   digest: EvidenceDigest.make({
+ *     sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+ *   }),
+ *   name: "qa/round-1/inventory.json"
+ * })
+ * const receipt = Effect.runSync(
+ *   certifyQaJudgeSettlement(
+ *     QaJudgeSettlement.make({
+ *       artifact: O.none(),
+ *       crossCheck: O.none(),
+ *       decode: O.none(),
+ *       eventId: O.none(),
+ *       inventory,
+ *       round: O.none()
+ *     })
+ *   )
+ * )
+ * console.log(receipt.predicate.outcome) // "untested"
  * ```
  *
  * @category use-cases

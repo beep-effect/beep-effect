@@ -91,8 +91,10 @@ export type InconclusiveCheckOutcome = typeof InconclusiveCheckOutcome.Type;
  * **Details**
  *
  * Reach is always explicit. `complete` means every declared check is listed
- * and in reach; `incomplete` means some declared check is out of reach;
- * `unknown` means the producer cannot say. There is no nullable `conforms`.
+ * and in reach (`inReach: true`); a decoded certificate never pairs
+ * `complete` with an out-of-reach check. `incomplete` means some declared
+ * check is out of reach or not listed; `unknown` means the producer cannot
+ * say. There is no nullable `conforms`.
  *
  * **Example** (Inspect reach values)
  *
@@ -194,7 +196,7 @@ const settleGateCertificateOutcomeImpl = (
   if (has("untested")) {
     return "untested";
   }
-  if (!CertificateReach.is.complete(reach)) {
+  if (!CertificateReach.is.complete(reach) || A.length(inReach) < A.length(checks)) {
     return "cantTell";
   }
   return has("passed") ? "passed" : "inapplicable";
@@ -210,7 +212,8 @@ const settleGateCertificateOutcomeImpl = (
  * 1. Any blocking `failed` check settles `failed`.
  * 2. Any `cantTell` check settles `cantTell`; otherwise any `untested`
  *    check settles `untested`. Inconclusive checks never count as success.
- * 3. Reach other than `complete` settles `cantTell`.
+ * 3. Reach other than `complete`, or a `complete` reach that lists an
+ *    out-of-reach check, settles `cantTell`.
  * 4. At least one `passed` check settles `passed`; otherwise `inapplicable`.
  *
  * An advisory `failed` check does not fail the aggregate, matching the
@@ -265,6 +268,9 @@ const GateCertificateCoherenceCheck = S.makeFilter(
     if (!uniqueCheckIds(certificate.checks)) {
       return { path: ["checks"], issue: "Gate certificate checks must use unique check ids." };
     }
+    if (CertificateReach.is.complete(certificate.reach) && A.some(certificate.checks, (check) => !check.inReach)) {
+      return { path: ["reach"], issue: "A complete gate certificate reach requires every listed check in reach." };
+    }
     return Eq.equals(settleGateCertificateOutcomeImpl(certificate.reach, certificate.checks), certificate.outcome)
       ? undefined
       : {
@@ -274,7 +280,8 @@ const GateCertificateCoherenceCheck = S.makeFilter(
   },
   $I.annote("GateCertificateCoherenceCheck", {
     title: "Gate certificate coherence",
-    description: "Check ids are unique and the aggregate outcome is the one settled from reach and checks.",
+    description:
+      "Check ids are unique, complete reach has no out-of-reach check, and the aggregate outcome is the settled one.",
   })
 );
 
@@ -496,10 +503,49 @@ const applyGateCertificatePlanImpl = (
  *
  * **Example** (Refuse a stale plan)
  *
- * ```ts
- * import { applyGateCertificatePlan } from "@beep/skill-contract/GateCertificate"
+ * ```ts import.meta.vitest name="Refuse a stale plan"
+ * import { EvidenceDigest, EvidenceSubject, GateSummaryVerifier } from "@beep/skill-contract/EvidenceReceipt"
+ * import { EvidencePredicateType, GateId } from "@beep/skill-contract/Gate"
+ * import {
+ *   applyGateCertificatePlan,
+ *   CertificateCheck,
+ *   GateCertificate,
+ *   GateCertificateApplyPlan,
+ *   GateCertificatePredicateType,
+ *   GateCertificateReceipt
+ * } from "@beep/skill-contract/GateCertificate"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { URLStr } from "@beep/schema/URL"
  *
- * console.log(typeof applyGateCertificatePlan) // "function"
+ * const subject = (name: string, hex: string) =>
+ *   EvidenceSubject.make({ digest: EvidenceDigest.make({ sha256: Sha256Hex.make(hex) }), name })
+ * const inventory = subject("inventory.json", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+ * const receipt = GateCertificateReceipt.make({
+ *   predicate: GateCertificate.make({
+ *     checks: [
+ *       CertificateCheck.make({
+ *         checkId: GateId.make("artifact-exists"),
+ *         evidenceSubjects: [inventory],
+ *         evidenceType: EvidencePredicateType.make("https://example.test/evidence/artifact/v1"),
+ *         inReach: true,
+ *         outcome: "passed",
+ *         severity: "blocking"
+ *       })
+ *     ],
+ *     contractSubject: subject("contract@1.0.0", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+ *     outcome: "passed",
+ *     reach: "complete",
+ *     timeVerified: "2026-11-02T00:00:00.000Z",
+ *     verifier: GateSummaryVerifier.make({ id: URLStr.make("https://example.test/verifier/v1"), version: { kernel: "1.0.0" } })
+ *   }),
+ *   predicateType: GateCertificatePredicateType,
+ *   subject: [inventory]
+ * })
+ * const current = subject("certificate.json", "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc")
+ * const stale = subject("certificate.json", "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
+ * const plan = GateCertificateApplyPlan.make({ certificate: stale, checkIds: [GateId.make("artifact-exists")] })
+ *
+ * applyGateCertificatePlan(plan, current, receipt).verdict // => "refused"
  * ```
  *
  * @param plan - Digest-bound apply-by-id plan.
