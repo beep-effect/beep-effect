@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (perf-fallow K2, perf/fallow-k2-cache-concurrency)",
-      "reason": "Record eight Fallow root tasks flipping to cache: true (quality audit K2) with one shared input set that adds the baselines, discovered code outside the source trees, .gitignore files and root plugin configs; fallow:audit:check stays uncached. Commands, outputs and dependency edges are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (Yeet proof-tier dedupe, claude/perf-yeet-tier-dedupe-9fd6b5)",
+      "reason": "Record Yeet/internal/HeadInstallReceipt.ts added to the goals-doctor, knowledge and quality seal inputs; commands, outputs and cache settings are unchanged and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-fallow-k2-cache-review-2026-11-02.md",
-        "sha256": "5dfd1191a973bf2ab696ff59ea385c9f146bd989ec1ad91d00351397690332a4"
+        "path": "docs/reports/perf-yeet-tier-dedupe-cache-review-2026-11-02.md",
+        "sha256": "6d7f7fa83510f7752c1975f5890a092808febf73c57dcf91d26f01256b584e0b"
       }
     },
     "@beep/acp": {
@@ -120442,7 +120442,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "48953ba0d2681042f1a3aba3ee0ad0e38139ea5f06054fdabc7a6a509c569f0b"
+        "sha256": "5e09250e126b19bb369c26048f210973d83b85180318914c8fa0ef80d61a7c3d"
       }
     ]
   }

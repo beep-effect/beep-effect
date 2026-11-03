@@ -16,6 +16,7 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { constant } from "effect/Function";
 import * as Path from "effect/Path";
 import {
   commandTextForStep,
@@ -24,8 +25,10 @@ import {
   runRepoCommandCapture,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { captureGitKitExit, patientGit } from "./GitExec.ts";
+import { captureGitKitExit, currentCommitSha, patientGit } from "./GitExec.ts";
+import { clearHeadInstallReceipt, recordHeadInstallReceipt } from "./HeadInstallReceipt.ts";
 import type { Git } from "@beep/git/Git";
+import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -46,6 +49,9 @@ export const HEAD_INSTALL_PREFLIGHT_STEP_ID = "publish:00-head-install-preflight
  */
 const HEAD_INSTALL_PREFLIGHT_FAILURE_HINT =
   "Frozen-lockfile clean-HEAD install preflight failed. The lockfile/manifest state committed on HEAD may be incomplete. Commit or restage the required lockfile and manifest changes; if needed, run `bun install` and restage `bun.lock`." as const;
+
+// An unresolvable HEAD still runs against `HEAD` so the worktree add reports it.
+const unresolvedHead = constant("HEAD");
 
 const renderCommandOutput = (label: string, output: string): string =>
   A.join([`[head-install-preflight] ${label}`, output], "\n");
@@ -95,8 +101,39 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
 ): Effect.fn.Return<
   RepoStepRunResult,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Git
+  | Digest.Digest
 > {
+  // The install pins the commit up front so its receipt names exactly what was
+  // installed. An unresolvable HEAD still runs against `HEAD` and lets the
+  // worktree add report the failure, as before.
+  const commitSha = yield* currentCommitSha(context).pipe(Effect.option);
+  const result = yield* installCleanHead(context, step, rawOutputPath, O.getOrElse(commitSha, unresolvedHead));
+  // A failed install leaves no receipt behind, so a later verified-proof reuse
+  // cannot skip this preflight on the strength of an older success.
+  yield* O.match(
+    O.filter(commitSha, () => result.exitCode === 0),
+    {
+      onNone: () => clearHeadInstallReceipt(context),
+      onSome: (installed) =>
+        recordHeadInstallReceipt(context, installed).pipe(
+          Effect.ignore({ log: "Warn", message: "[head-install-preflight] install receipt not recorded" })
+        ),
+    }
+  );
+  return result;
+});
+
+const installCleanHead = Effect.fnUntraced(function* (
+  context: RepoRunContext,
+  step: RepoPlanStep,
+  rawOutputPath: O.Option<string>,
+  commitSha: string
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   // The add fills nothing, but the remove deletes a checkout `bun install` just filled, which can
@@ -121,10 +158,10 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
       // `Git.worktreeAdd` surfaces no transcript on a zero exit, so the rendered block carries
       // git's text only when the add failed (SPEC D-09).
       const add = yield* git
-        .worktreeAdd(context.repoRoot, checkout, { ref: "HEAD", detach: true })
+        .worktreeAdd(context.repoRoot, checkout, { ref: commitSha, detach: true })
         .pipe(
           captureGitKitExit(
-            GitCommand.worktreeAdd(checkout, "HEAD", true),
+            GitCommand.worktreeAdd(checkout, commitSha, true),
             "Failed to create the clean-HEAD preflight worktree."
           )
         );

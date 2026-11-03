@@ -8,6 +8,7 @@
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as OptionUtils from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Digest from "effect/crypto/Digest";
@@ -41,11 +42,18 @@ import {
   safeArtifactName,
 } from "./ArtifactPaths.ts";
 import { currentCommitSha, runGitOutput } from "./GitExec.ts";
+import {
+  collectHeadInstallInputs,
+  HeadInstallReceipt,
+  headInstallReceiptRefusals,
+  loadHeadInstallReceipt,
+} from "./HeadInstallReceipt.ts";
 import { renderJson, writeTextFile } from "./IssueArtifacts.ts";
 import { YeetProofTier } from "./Planner.ts";
 import type { Git } from "@beep/git/Git";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { HeadInstallReceiptRefusal } from "./HeadInstallReceipt.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofState");
 const textEncoder = new TextEncoder();
@@ -60,6 +68,9 @@ class YeetRunState extends S.Opaque<YeetRunState, { readonly brand: unique symbo
     commitSha: S.String,
     diffFingerprint: S.String,
     head: S.String,
+    // The clean-HEAD install this run proved for `commitSha`, when its
+    // preflight passed; `publish --push-only --reuse-verified` reuses it.
+    installReceipt: S.optionalKey(HeadInstallReceipt),
     proofCommand: S.String,
     proofTier: YeetProofTier,
     runId: S.String,
@@ -1609,14 +1620,17 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
   const statePath = yield* runStatePathForContext(context);
   const diffFingerprint = yield* collectDiffFingerprint(context);
   const verifiedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const commitSha = yield* currentCommitSha(context);
+  const installReceipt = yield* loadHeadInstallReceipt(context, commitSha);
   const state = YeetRunState.make({
     schemaVersion: "yeet-run-state/v1",
     artifactDir,
     base: context.base,
     branch: context.branch,
-    commitSha: yield* currentCommitSha(context),
+    commitSha,
     diffFingerprint,
     head: context.head,
+    ...OptionUtils.getSomesStruct({ installReceipt }),
     proofCommand: proofCommandForSteps(proofSteps),
     proofTier: tier,
     runId: yield* runIdForContext(context),
@@ -1815,4 +1829,49 @@ export const assertReusableVerifiedState = Effect.fn("Yeet.assertReusableVerifie
     )}\nRun \`bun run beep yeet verify\` against the exact current worktree before retrying.`,
     exitCode: 1,
   });
+});
+
+/**
+ * Decide whether the verified state's install receipt still proves a clean
+ * install of the current HEAD.
+ *
+ * **Details**
+ *
+ * Read only after {@link assertReusableVerifiedState} accepted the state, so
+ * the commit is already the verified one; the receipt must still match the
+ * commit's lockfile, manifests, Bun build and host, and be unexpired.
+ *
+ * **Example** (Reference the receipt decision)
+ *
+ * ```ts
+ * import { verifiedHeadInstallReceiptRefusals } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof verifiedHeadInstallReceiptRefusals) // "function"
+ * ```
+ *
+ * @param context - Repo context whose verified state and HEAD are compared.
+ * @returns The receipt, if any, and the reasons it cannot be reused (empty when it can).
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const verifiedHeadInstallReceiptRefusals = Effect.fn("Yeet.verifiedHeadInstallReceiptRefusals")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<
+  {
+    readonly receipt: O.Option<HeadInstallReceipt>;
+    readonly refusals: ReadonlyArray<HeadInstallReceiptRefusal>;
+  },
+  YeetCommandError,
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
+  | Git
+> {
+  const state = yield* loadVerifiedState(context);
+  const receipt = O.fromUndefinedOr(state.installReceipt);
+  const current = yield* collectHeadInstallInputs(context.repoRoot, yield* currentCommitSha(context));
+  const now = yield* DateTime.now;
+  return { receipt, refusals: headInstallReceiptRefusals(receipt, current, now) };
 });
