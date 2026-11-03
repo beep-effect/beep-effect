@@ -6,11 +6,11 @@
   "sourceBindings": [
     {
       "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-      "sha256": "b5fed4a449d723d736ab6b22ee907f5b83396d7e99843d60a33316ed9dbfe177"
+      "sha256": "44e6842fb3b73a66d8a0a707f67bb0a04401b9ca601daacc666617e733ad38e3"
     },
     {
       "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
-      "sha256": "244aaebc74eda859b8f63423eeb5133c3fca5b16c42ebb7487eaa1e247e4700e"
+      "sha256": "c8198c1d847455b0d9639e064d71e1b80634a80ff7cf322b36dd7305b81bface"
     }
   ],
   "environmentRecords": {
@@ -34,7 +34,7 @@
   "authoredControls": {
     "positiveDispatch": 1,
     "explicitOptInAndProvisioningDenial": 1,
-    "negativeEnvironmentCases": 11,
+    "negativeEnvironmentCases": 12,
     "executed": false
   },
   "verification": {
@@ -90,5 +90,34 @@
     "sourceReview": "Hoist the three encoders to module scope and use Effect.flip for newly authored failure controls. No new helper or assertion wrapper.",
     "controlsChanged": false,
     "controlsExecuted": false
+  },
+  "priorSourceBindingsBeforeHostedErrorRepair": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "b5fed4a449d723d736ab6b22ee907f5b83396d7e99843d60a33316ed9dbfe177"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+      "sha256": "244aaebc74eda859b8f63423eeb5133c3fca5b16c42ebb7487eaa1e247e4700e"
+    }
+  ],
+  "priorAuthoredControlsBeforeHostedErrorRepair": {
+    "positiveDispatch": 1,
+    "explicitOptInAndProvisioningDenial": 1,
+    "negativeEnvironmentCases": 11,
+    "executed": false
+  },
+  "hostedErrorRepair": {
+    "failedHead": "ca7b59d358ab7f978c3d0db0cd013ede0c6de2fa",
+    "classification": "introduced",
+    "cause": "Approval contract validation can fail with SchemaError; its error channel escaped the CLI error renderer. The material decoder also had a missed pipeable call.",
+    "repair": "Map only SchemaError to the fixed redacted approval diagnostic, preserve typed policy refusal, and pipe the redacted material into its decoder.",
+    "newControl": "A schema error containing a private marker is refused before missing material lookup and initialization; its input is absent from both captured outputs.",
+    "newControlExecuted": false,
+    "hostedRepairProof": "pending",
+    "boundedInventoryRefresh": "Canonical existing per-file analyzer refreshed only current Cache.command.ts locations; all semantic entries, totals, findings and original full-scan timestamp are preserved.",
+    "failedJobIds": [
+      125680220625, 125680220610, 125680220605, 125680220768, 125679616334
+    ]
   }
 }

@@ -922,6 +922,7 @@ describe("cache qualification command dispatch", () => {
       "oversized-runtime",
       "unicode-byte-bound",
       "mismatched-approval",
+      "schema-validation-error",
       "missing-material",
       "short-material",
       "long-material",
@@ -998,6 +999,7 @@ describe("cache qualification command dispatch", () => {
               "Producer approval's full policy differs from its fixed binding."
             )
           ),
+          Match.when("schema-validation-error", () => Tuple.make(records, "Producer environment approval is invalid.")),
           Match.when("missing-material", () =>
             Tuple.make(records, "Independently transferred producer issuer material is required.")
           ),
@@ -1022,6 +1024,10 @@ describe("cache qualification command dispatch", () => {
         );
         const initialize = vi.spyOn(Workflow, "initializeCacheProducerExecution");
         const read = vi.spyOn(Producer, "readCacheProducerProvisioning");
+        if (testCase === "schema-validation-error") {
+          const failure = yield* decodeProducerBinding(marker).pipe(Effect.flip);
+          vi.spyOn(Producer, "validateCacheProducerApproval").mockReturnValue(Effect.fail(failure));
+        }
         yield* f
           .run(["producer-install", "--from-environment"])
           .pipe(

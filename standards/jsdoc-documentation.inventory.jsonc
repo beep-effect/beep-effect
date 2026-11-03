@@ -469867,8 +469867,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 1478,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-1478-cachecommand",
+          "line": 1482,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-1482-cachecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -469889,8 +469889,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 1500,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-1500-makecachecommandfortesting",
+          "line": 1504,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-1504-makecachecommandfortesting",
           "currentTags": [
             "@internal",
             "@param",

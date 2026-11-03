@@ -1208,3 +1208,12 @@ hasher validate the report over 15,050 file records and actual runner tools.
 The [receipt](research/protected-source-inspection-2026-11-02.json) is source/tool
 evidence only. No issuer approval, signed execution, qualification or observation
 window is granted. Inspect the final accepted source again before provisioning.
+
+### Protected installer hosted error boundary, 2026-11-02
+
+The first hosted source replay exposed an introduced SchemaError channel beyond
+the typed CLI renderer and one missed pipeable call. Catch only the schema
+failure at the approval boundary with a fixed diagnostic; preserve the policy
+refusal and validate before material lookup. A fourteenth authored control
+exercises a private-marker schema failure without issuer material or store IO.
+The controls remain unrun locally; the repair needs fresh hosted proof.

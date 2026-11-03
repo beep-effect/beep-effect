@@ -1124,7 +1124,9 @@ const readProducerEnvironment = Effect.fn("Cache.readProducerEnvironment")(funct
   const approval = yield* ProducerApprovalJson.decode(Redacted.value(records.approval)).pipe(
     Effect.mapError(() => CacheCommandError.new("Producer environment approval is invalid."))
   );
-  yield* validateCacheProducerApproval(approval);
+  yield* validateCacheProducerApproval(approval).pipe(
+    Effect.catchTag("SchemaError", () => CacheCommandError.new("Producer environment approval is invalid."))
+  );
   const profile = yield* ProducerExecutionProfileJson.decode(Redacted.value(records.runtime)).pipe(
     Effect.mapError(() => CacheCommandError.new("Producer environment runtime profile is invalid."))
   );
@@ -1133,7 +1135,9 @@ const readProducerEnvironment = Effect.fn("Cache.readProducerEnvironment")(funct
   );
   if (Str.length(Redacted.value(encoded)) > 128)
     return yield* CacheCommandError.new("Producer issuer transport exceeds its fixed encoded bound.");
-  const material = yield* decodeProducerMaterial(Redacted.value(encoded)).pipe(
+  const material = yield* encoded.pipe(
+    Redacted.value,
+    decodeProducerMaterial,
     Effect.mapError(() => CacheCommandError.new("Producer issuer transport must encode exactly ninety-six bytes."))
   );
   return Tuple.make(approval, profile, O.some(Redacted.make(material)));

@@ -1932,3 +1932,12 @@ the newly authored environment-installation controls. Reuse module-level
 encoders and the existing Effect.flip failure pattern before submitting this
 wave. The thirteen controls retain their original scope and remain unrun; this
 source correction is not evidence that policy or behavioral gates have passed.
+
+### 2026-11-02 — installer error channel in hosted compilation
+
+PR #2643's Check, Build, Integration, Docgen and Repo Sanity jobs exposed the new
+installer's unhandled SchemaError from approval validation. Preserve the typed
+policy failure, erase schema-input details at the CLI boundary and retain the
+red logs as source-bound failures. Reuse the canonical per-file inventory
+analyzer for location-only changes after this small repair; its semantic
+comparison preserves every finding and count without another full scan.
