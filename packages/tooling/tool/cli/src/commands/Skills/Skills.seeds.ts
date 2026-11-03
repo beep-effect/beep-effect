@@ -19,10 +19,10 @@
  * @since 0.0.0
  */
 
+import { SkillProvenanceResolution } from "@beep/ai-sync/Skills.schemas";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { SkillProvenanceResolution } from "./Skills.schemas.ts";
 import type * as O from "effect/Option";
 
 const MATT_POCOCK_SKILLS_HEAD = "2ab958093e83e0ec752e6c1c5932da465bf23e0c";

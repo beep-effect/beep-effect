@@ -5,15 +5,15 @@
  * @since 0.0.0
  */
 
+import { SkillsLockMigrationPlan, SkillsLockWriteReceipt } from "@beep/ai-sync/SkillsLock.schemas";
 import * as A from "effect/Array";
 import * as Match from "effect/Match";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { renderPrettyCommandJson } from "../../internal/cli/Json.ts";
-import { SkillsLockMigrationPlan, SkillsLockWriteReceipt } from "./SkillsLock.schemas.ts";
-import type { SkillProvenanceReport } from "./Skills.schemas.ts";
-import type { SkillMigrationRow, UnresolvedMigrationRow, VendoredMigrationRow } from "./SkillsLock.schemas.ts";
+import type { SkillProvenanceReport } from "@beep/ai-sync/Skills.schemas";
+import type { SkillMigrationRow, UnresolvedMigrationRow, VendoredMigrationRow } from "@beep/ai-sync/SkillsLock.schemas";
 import type { SkillMaterializeReport, SkillMaterializeRow } from "./SkillsMaterialize.schemas.ts";
 import type { SkillRecoveryReport } from "./SkillsPublication.schemas.ts";
 
@@ -32,7 +32,7 @@ const encodeUnknownJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
  *
  * ```ts
  * import { renderSkillProvenanceJson } from "@beep/repo-cli/commands/Skills/Skills.render"
- * import { SkillProvenanceReport } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillProvenanceReport } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -110,7 +110,7 @@ export const renderSkillProvenanceJson = (report: SkillProvenanceReport): string
  *
  * ```ts
  * import { renderSkillProvenanceSummary } from "@beep/repo-cli/commands/Skills/Skills.render"
- * import { SkillProvenanceReport } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillProvenanceReport } from "@beep/ai-sync/Skills.schemas"
  * import * as S from "effect/Schema"
  *
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -202,7 +202,7 @@ const encodeMigrationPlanJson = S.encodeResult(S.fromJsonString(SkillsLockMigrat
  *
  * ```ts
  * import { renderSkillsLockMigrationPlanJson } from "@beep/repo-cli/commands/Skills/Skills.render"
- * import { SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillsLockMigrationPlan } from "@beep/ai-sync/SkillsLock.schemas"
  * import { Sha256Hex } from "@beep/schema"
  *
  * const digest = Sha256Hex.make("0".repeat(64))
@@ -275,7 +275,7 @@ const describeHistory = (row: VendoredMigrationRow): string =>
  *
  * ```ts
  * import { renderSkillsLockMigrationPlanSummary } from "@beep/repo-cli/commands/Skills/Skills.render"
- * import { SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillsLockMigrationPlan } from "@beep/ai-sync/SkillsLock.schemas"
  * import { Sha256Hex } from "@beep/schema"
  *
  * const digest = Sha256Hex.make("0".repeat(64))
@@ -321,7 +321,7 @@ const encodeWriteReceiptJson = S.encodeResult(S.fromJsonString(SkillsLockWriteRe
  *
  * ```ts
  * import { renderSkillsLockWriteReceiptJson } from "@beep/repo-cli/commands/Skills/Skills.render"
- * import { SkillsLockWriteReceipt, SkillsLockWrittenFile } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { SkillsLockWriteReceipt, SkillsLockWrittenFile } from "@beep/ai-sync/SkillsLock.schemas"
  * import { Sha256Hex } from "@beep/schema"
  *
  * const digest = Sha256Hex.make("0".repeat(64))

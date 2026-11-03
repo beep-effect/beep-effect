@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "foundation-completion-observation/v1",
+  "recordedAt": "2026-11-03T06:12:12.648124+00:00",
+  "pullRequest": 2649,
+  "acceptedHead": "9a144e3fb97cf71c204492241d48b73668c2483d",
+  "mergeCommit": "8f2c759fc811b161db821c9e027ff80e507eadc2",
+  "mergedAt": "2026-11-03T05:38:02.000Z",
+  "canonicalOutcome": "unknown",
+  "requiredContextsBeforeMerge": 15,
+  "completeMergeTimeInventory": true,
+  "eventualSuccessfulCheckRuns": 39,
+  "skippedCheckRuns": 3,
+  "coverageCompletedAt": "2026-11-03T05:39:22Z",
+  "observerFinalizedAt": "2026-11-03T05:39:33.252Z",
+  "positivePremergeVerdictPresent": false,
+  "actorAccount": "kriegcloud",
+  "initiatingHumanOrAgent": "Not established by account attribution.",
+  "scope": "Historical observation only. Later green checks and an observer ending after merged detection do not establish premerge readiness. The operator subsequently directed a coordination repair and a fresh owner-merged final checkpoint.",
+  "privateOriginalHashes": {
+    "canonical-receipt.json": "7d6fefc7304ffa21cea77a4c0074242135ae2f04c48e8f8389449cec55d59458",
+    "snapshot.json": "9a9f463cb01a0a5c9bd981d002996fc31846b00e46e391d0b5b5c1e2c032326a",
+    "verdict.json": "0a2c5fe1f886663fdaa27f1529ada52067734d8377ea4a3533039d7a11dd642a",
+    "assessment.json": "4432328bbb6a039beb2cd7147588ef57de38bc4f86e6928f955682d8fc27847e"
+  },
+  "recoveryHold": "Forwarder service and timer remain masked/inactive.",
+  "realHarnessPopulations": "All seven Unknown",
+  "currentExactRootAdmission": false
+}

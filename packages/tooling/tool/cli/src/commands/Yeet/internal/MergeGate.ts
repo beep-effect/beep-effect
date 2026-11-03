@@ -80,6 +80,7 @@ import {
   SquashPullRequestFacts,
 } from "./SquashCommitlint.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GithubCheckRunRecord, GithubWorkflowRunRecord } from "../../../internal/github/index.ts";
 import type { YeetGithubServices } from "./GhOps.ts";
@@ -1286,13 +1287,11 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
 ): Effect.fn.Return<
   MergeGateMerged,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | GithubRest
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | GithubRest | FileSystem.FileSystem
 > {
   yield* enforceReviewerGate(decision.prNumber, decision.headSha).pipe(
     withReviewerOperatorClient(process.cwd()),
-    Effect.mapError(() =>
-      YeetCommandError.make({ message: "beep-reviewer gate held on the current head.", exitCode: 1 })
-    )
+    Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 }))
   );
   // No commit message: GitHub writes the body its squash settings prescribe.
   const result = yield* GithubRest.use((rest) =>
@@ -1436,7 +1435,7 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
 ): Effect.fn.Return<
   MergeGateDecision,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | FileSystem.FileSystem
 > {
   return yield* runMergeGateAsGhLogin(context, options).pipe(provideYeetGhLogin(context.repoRoot));
 });

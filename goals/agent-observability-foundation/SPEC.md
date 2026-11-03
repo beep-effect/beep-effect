@@ -32,7 +32,7 @@ Do not infer that an enum, installed app, green service, transport acknowledgmen
 
 These thirteen criteria are supported by the [acceptance audit](research/ACCEPTANCE-EVIDENCE-AUDIT.md),
 [retained qualification](research/RETAINED-FINAL-QUALIFICATION.md) and
-[latest source comparison](ops/history/shared-repair-source-applicability-20261102.json)
+[latest source comparison](ops/history/merge-coordination-source-applicability-20261103.json)
 at their recorded source, synthetic, pinned-backend and historical-canary scopes.
 A checked box records qualified domain support. It does not certify a fresh
 execution at this PR head, current exact-source root admission, complete
@@ -701,7 +701,7 @@ reservation or rewrite historical readiness after merge.
 
 ### Final readiness checkpoint after PR2644 (2026-11-03 UTC)
 
-PR2649 is the sole final checkpoint, reserved to the owning chat. Preserve
+PR2649 was the reserved final checkpoint at that historical decision. Preserve
 PR2644's unknown receipt and all later passing checks without creating past
 readiness. The operator explicitly retained the original pre-merge rule. Update
 the live README, PLAN, manifest and qualification report together. Retained
@@ -711,3 +711,7 @@ admission remains false and all seven real-harness populations remain Unknown.
 The owner must retain actual terminal ready, successful job finalization and a
 positive exact-head classic verdict before strict merge, then obtain actual
 verified canonical completion. No S11, forced window or retrospective evidence.
+
+### Coordination-repaired final checkpoint (2026-11-03)
+
+The operator directed an executable coordination repair followed by final PR2655, to be merged by this chat after verification. Preserve PR2649 canonical unknown and the actual after-merge coverage/observer timing. The [coordination runbook](./research/MERGE-COORDINATION.md) covers the deployed cooperative guard, original evidence requirements and direct-website authority limits. Selected comparisons are now232/249,80/84, 84/90, 83/89 at accepted-main e81a5399; historical executions retain their source and time. All thirteen domain criteria retain their qualified scopes. Exact-root admission remains false, all seven real-harness populations remain Unknown, and the recovery hold remains intact. Require final-head hosted checks, actual resolved review, normal window, successfully finalized exact-head terminal readiness, positive canonical verdict archived BEFORE strict owner merge, then genuinely verified canonical completion.

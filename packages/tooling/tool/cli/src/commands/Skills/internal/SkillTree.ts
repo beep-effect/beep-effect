@@ -7,6 +7,7 @@
  * @since 0.0.0
  */
 
+import { SkillSnapshotFile, SkillTreeMode, SkillUpstreamContentFile } from "@beep/ai-sync/Skills.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
@@ -19,7 +20,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { concatBytes } from "../../../internal/cli/Bytes.ts";
 import { SkillsCommandError } from "../Skills.errors.ts";
-import { SkillSnapshotFile, SkillTreeMode, SkillUpstreamContentFile } from "../Skills.schemas.ts";
 import type * as Digest from "effect/crypto/Digest";
 
 const $I = $RepoCliId.create("commands/Skills/internal/SkillTree");

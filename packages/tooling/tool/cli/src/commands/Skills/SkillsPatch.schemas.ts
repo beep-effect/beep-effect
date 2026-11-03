@@ -13,11 +13,17 @@
  * @since 0.0.0
  */
 
+import {
+  SkillEffective,
+  SkillGitRevision,
+  SkillPatch,
+  SkillPatches,
+  SkillPatchLabel,
+} from "@beep/ai-sync/Skills.schemas";
+import { SkillsLockWrittenFile } from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
-import { SkillEffective, SkillGitRevision, SkillPatch, SkillPatches, SkillPatchLabel } from "./Skills.schemas.ts";
-import { SkillsLockWrittenFile } from "./SkillsLock.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Skills/SkillsPatch.schemas");
 

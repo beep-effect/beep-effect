@@ -4,6 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import * as NodeOS from "node:os";
+import { Run } from "@beep/commands/Run";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { PageOptions } from "@beep/github/Rest";
 import { $RepoCliId } from "@beep/identity/packages";
@@ -12,8 +14,10 @@ import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import { GithubClientRequest, GithubIdentity, layerGithubClientFor } from "../../internal/github/GithubIdentity.ts";
 import { ReviewerError } from "./ReviewerErrors.ts";
@@ -472,24 +476,38 @@ const readReviewerChecks = Effect.fn("Reviewer.readChecks")(function* (sha: stri
   );
 });
 
-/**
- * Holds the fleet merge until the configured source-bound reviewer check succeeds on the current head.
- *
- * **Details**
- * Activation follows the effective branch ruleset, allowing provisioning before enforcement.
- * Once required, this gate remains mandatory even for Yeet's relaxed S11 merges.
- *
- * **Example** (Compose the head-pinned fleet gate)
- * ```ts
- * import { enforceReviewerGate } from "@beep/repo-cli/commands/Reviewer";
- * import * as Effect from "effect/Effect";
- * console.log(Effect.isEffect(enforceReviewerGate(123, "a".repeat(40))));
- * ```
- *
- * @category workflows
- * @since 0.0.0
- */
-export const enforceReviewerGate = Effect.fn("Reviewer.enforceGate")(
+// The activation sentinel makes this a cooperative workstation guard. Hosts that
+// never activated reservations retain their normal merge path; activated hosts
+// must have a working helper, even when the target PR has no reservation.
+const enforceMergeReservation = Effect.fn("Reviewer.enforceMergeReservation")(function* (pr: number, sha: string) {
+  const held = () =>
+    ReviewerError.make({
+      operation: "merge-reservation",
+      message:
+        "Merge reservation held: cannot validate the reservation owner and exact-head proof. Check the workstation reservation helper and owner evidence.",
+    });
+  const fs = yield* FileSystem.FileSystem;
+  const home = yield* Effect.try({ try: () => NodeOS.userInfo().homedir, catch: held });
+  const stateRoot = `${home}/.local/state/beep/merge-reservations`;
+  const active = yield* fs.exists(`${stateRoot}/active`).pipe(Effect.mapError(held));
+  if (!active) return;
+  const code = yield* Run.exitCode(
+    ChildProcess.make("python3", [
+      `${home}/.cache/beep/orchestrator/bin/merge-reservations.py`,
+      "check",
+      "--repo",
+      "beep-effect/beep-effect",
+      "--pr",
+      `${pr}`,
+      "--head",
+      sha,
+    ]),
+    { timeout: "10 seconds" }
+  ).pipe(Effect.mapError(held));
+  if (code !== 0) return yield* held();
+});
+
+const enforceReviewerAppGate = Effect.fn("Reviewer.enforceAppGate")(
   function* (pr: number, sha: string) {
     const head = yield* api(`${ROOT}/pulls/${pr}`).pipe(Effect.flatMap(decodePr));
     if (head.head.sha !== sha) return yield* fail("PR head moved before reviewer gate.");
@@ -506,3 +524,27 @@ export const enforceReviewerGate = Effect.fn("Reviewer.enforceGate")(
     fail("Reviewer merge gate held: require a successful current-head beep-reviewer check from the ruleset App.")
   )
 );
+
+/**
+ * Holds the fleet merge until the configured source-bound reviewer check succeeds on the current head.
+ *
+ * **Details**
+ * Activation follows the effective branch ruleset, allowing provisioning before enforcement.
+ * Once required, this gate remains mandatory even for Yeet's relaxed S11 merges.
+ * An activated workstation reservation is checked first, including when the reviewer App is not required.
+ * Missing or failing reservation tooling holds the merge; hosts without the activation sentinel are unaffected.
+ *
+ * **Example** (Compose the head-pinned fleet gate)
+ * ```ts
+ * import { enforceReviewerGate } from "@beep/repo-cli/commands/Reviewer";
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(enforceReviewerGate(123, "a".repeat(40))));
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
+export const enforceReviewerGate = Effect.fn("Reviewer.enforceGate")(function* (pr: number, sha: string) {
+  yield* enforceMergeReservation(pr, sha);
+  yield* enforceReviewerAppGate(pr, sha);
+});

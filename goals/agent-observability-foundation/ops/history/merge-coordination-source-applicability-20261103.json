@@ -1,0 +1,325 @@
+{
+  "schemaVersion": "foundation-source-applicability/v6",
+  "recordedAt": "2026-11-03T06:14:23.248781+00:00",
+  "comparisonHead": "e81a5399b577235753c95afc7d772f66603f419e",
+  "previousComparison": "final-checkpoint-source-applicability-20261103.json",
+  "previousComparisonSha256": "a5231028bdc4307402142cccaf74e27042a8627c62a99c9b4ecd74e72653b1a0",
+  "sourceSets": {
+    "package": {
+      "selected": 249,
+      "exact": 232,
+      "changed": [
+        {
+          "path": "bun.lock",
+          "executedSha256": "ca8895b7a24b0da6e84473a95c048ea7760a31ed0e7d9dd84c2edd611be218ff",
+          "assessedSha256": "84ba57dd528ba511c5d65244cd9cb8e0b96aef2a21bda31e4477e1bd552ce45f"
+        },
+        {
+          "path": "package.json",
+          "executedSha256": "7847a27710af030c63345a836e1d6af2337ff0426bcc3e3a0e38e14660545825",
+          "assessedSha256": "4586f8438261d891334286381ab967abb91851923f59dce5c6c6f813e618dcbf"
+        },
+        {
+          "path": "packages/drivers/ai-provider-cli/package.json",
+          "executedSha256": "e1df2ab464009f332c467795019fa4cd1c37edb5e061d69eee85ab2253ce9b73",
+          "assessedSha256": "1f7dc5f03b3d2154fc94df88d970f930d7320c9ad040de0abc6b7b083fc51513"
+        },
+        {
+          "path": "packages/drivers/phoenix/package.json",
+          "executedSha256": "71a2a657e9be5e9ebea96882b15466265b3ddbaac854176c7aad9931890c2a71",
+          "assessedSha256": "cdcbdfda5609d21f715ef71521f1de607c12dcad3ad45f46ba8ee2ebf9104de1"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/package.json",
+          "executedSha256": "0e028a518bcae45ab6100065cb0771f3f1107d4e56f08e610555cf0a784ce3d9",
+          "assessedSha256": "01dabd19ecc6e783cac5e9b83b52acee99ef5ff102a6a625aa99b3c391ff43af"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+          "executedSha256": "2b0306dd8bd1a50e45ddb862c21eac6f7558819368b6f4b0ee5ceafa46efe538",
+          "assessedSha256": "bdc584404a6ff96215c993804def6b84f77366bb72369e43c110483614bcac81"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "executedSha256": "6c9240652a381b14622a4e7cdfc9ed3f1eb38801a871ea3c254198dd9174f8f1",
+          "assessedSha256": "3672069aa20c0a06f9cf58e59158b5014165e51d4e54e3358ad2a07783d92d61"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/install.ts",
+          "executedSha256": "efa7e150c482dff7395bc1d98ff2e125b4181aa8e02d40497ee6b87b4ce4b276",
+          "assessedSha256": "7635dd682d71e6d9bc9baa09a4f44e2957cff466176d5168940c3f453c5cc7b4"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/shell.ts",
+          "executedSha256": "761b2d2d095a1be0410c90751b13bf355748b830aa152fda65751d703b35a1ad",
+          "assessedSha256": "77cb6be5879447605a805a911dfc551c4f64d5a994c1d021910679610c83dcd7"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+          "executedSha256": "8c55ad13f64e400b8c01f2b0f4088cd2610c45419f56302cd51c554658a27ac7",
+          "assessedSha256": "3a198e135ec0ab8fbb5aeb7ec0ab181cbf391d39ba9182908cdc903659d0206c"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/config-snapshot-failures.test.ts",
+          "executedSha256": "3c852c797d6d956ced2b7a402b66fd81552dd6965c19ceebd888f3042e8b359b",
+          "assessedSha256": "a4be0dbe261a7182e14053ab77ca353135751313db2a0a36fe882cc3e74f72c7"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
+          "executedSha256": "6431cb0868e001a49b741f7e5c70360d4693ac30e767280052371facf1d53a1c",
+          "assessedSha256": "c870e0ad31b6422c6af6bf5b08e76ec0f19800cf700ce7be053a668e805a8e8d"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+          "executedSha256": "85d2eb613f80512dbb31ccae553d6aba438f7d0494c9216fb80775ba2e4e182e",
+          "assessedSha256": "135a39306c844d5d4157553e15d2ae957cb62de9af6d4b14ecaab6cde7043b75"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-launch-client.test.ts",
+          "executedSha256": "26025d6d11e279670e61aa86b5b90dfa83891454653ce5663306886ea937c9c3",
+          "assessedSha256": "9ad6f3a5b16c548ac7c2d10e7606a907f2ce1adfd0a22d02ecce4a6797c2bfc2"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/tsconfig.check.json",
+          "executedSha256": "c29ec547f32d9237b2ef160efde0e3fa7ccf092e11a1782fd052004a64508e3a",
+          "assessedSha256": "48e64dd3e3a05cf2d10802a5184fd932b7e242e364b90a2618ee55598e973b31"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/tsconfig.json",
+          "executedSha256": "78d4f61349dad891d912f492cc9ddb076c6868cd114bb2173c5780390dcf619c",
+          "assessedSha256": "5b22486ce6365958ca23951a2a23acacd2a128e79365c6fc967332f112bb825a"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/harness-ledger.test.ts",
+          "executedSha256": "26dbd905ab4df1fd0eeca896b5a8b7c4ed8dde4f515f0f53d854b690e86e7cee",
+          "assessedSha256": "997a0b2ace90404a286cb3f2a51223cf5f6a372b6a74c1b09b3b598933f893f8"
+        }
+      ]
+    },
+    "preparation": {
+      "selected": 84,
+      "exact": 80,
+      "changed": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+          "executedSha256": "2b0306dd8bd1a50e45ddb862c21eac6f7558819368b6f4b0ee5ceafa46efe538",
+          "assessedSha256": "bdc584404a6ff96215c993804def6b84f77366bb72369e43c110483614bcac81"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "executedSha256": "6c9240652a381b14622a4e7cdfc9ed3f1eb38801a871ea3c254198dd9174f8f1",
+          "assessedSha256": "3672069aa20c0a06f9cf58e59158b5014165e51d4e54e3358ad2a07783d92d61"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/install.ts",
+          "executedSha256": "efa7e150c482dff7395bc1d98ff2e125b4181aa8e02d40497ee6b87b4ce4b276",
+          "assessedSha256": "7635dd682d71e6d9bc9baa09a4f44e2957cff466176d5168940c3f453c5cc7b4"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/shell.ts",
+          "executedSha256": "761b2d2d095a1be0410c90751b13bf355748b830aa152fda65751d703b35a1ad",
+          "assessedSha256": "77cb6be5879447605a805a911dfc551c4f64d5a994c1d021910679610c83dcd7"
+        }
+      ]
+    },
+    "disposable": {
+      "selected": 90,
+      "exact": 84,
+      "changed": [
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "executedSha256": "162c54e11d9b5c01041559c9262d787ab8edd4d9d779e2ffb178b47c1d20ec19",
+          "assessedSha256": "dbba5256eef94dcb90e7fd52a5bd076b30fdb0c71332a8aeb25f8b971fac9b8c"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/declared_canary_support.py",
+          "executedSha256": "e57b2a75307e02c9ac3110e7af09edae8f1882e76fd4a526bacc4de9b39b3036",
+          "assessedSha256": "fb81d90bf370b7c89daec86a83fd0772bb40e56da32bc00cfd3bcb5581513ece"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+          "executedSha256": "2b0306dd8bd1a50e45ddb862c21eac6f7558819368b6f4b0ee5ceafa46efe538",
+          "assessedSha256": "bdc584404a6ff96215c993804def6b84f77366bb72369e43c110483614bcac81"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "executedSha256": "6c9240652a381b14622a4e7cdfc9ed3f1eb38801a871ea3c254198dd9174f8f1",
+          "assessedSha256": "3672069aa20c0a06f9cf58e59158b5014165e51d4e54e3358ad2a07783d92d61"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/install.ts",
+          "executedSha256": "efa7e150c482dff7395bc1d98ff2e125b4181aa8e02d40497ee6b87b4ce4b276",
+          "assessedSha256": "7635dd682d71e6d9bc9baa09a4f44e2957cff466176d5168940c3f453c5cc7b4"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/shell.ts",
+          "executedSha256": "761b2d2d095a1be0410c90751b13bf355748b830aa152fda65751d703b35a1ad",
+          "assessedSha256": "77cb6be5879447605a805a911dfc551c4f64d5a994c1d021910679610c83dcd7"
+        }
+      ]
+    },
+    "live": {
+      "selected": 89,
+      "exact": 83,
+      "changed": [
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "executedSha256": "162c54e11d9b5c01041559c9262d787ab8edd4d9d779e2ffb178b47c1d20ec19",
+          "assessedSha256": "dbba5256eef94dcb90e7fd52a5bd076b30fdb0c71332a8aeb25f8b971fac9b8c"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/declared_canary_support.py",
+          "executedSha256": "e57b2a75307e02c9ac3110e7af09edae8f1882e76fd4a526bacc4de9b39b3036",
+          "assessedSha256": "fb81d90bf370b7c89daec86a83fd0772bb40e56da32bc00cfd3bcb5581513ece"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+          "executedSha256": "2b0306dd8bd1a50e45ddb862c21eac6f7558819368b6f4b0ee5ceafa46efe538",
+          "assessedSha256": "bdc584404a6ff96215c993804def6b84f77366bb72369e43c110483614bcac81"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "executedSha256": "6c9240652a381b14622a4e7cdfc9ed3f1eb38801a871ea3c254198dd9174f8f1",
+          "assessedSha256": "3672069aa20c0a06f9cf58e59158b5014165e51d4e54e3358ad2a07783d92d61"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/install.ts",
+          "executedSha256": "efa7e150c482dff7395bc1d98ff2e125b4181aa8e02d40497ee6b87b4ce4b276",
+          "assessedSha256": "7635dd682d71e6d9bc9baa09a4f44e2957cff466176d5168940c3f453c5cc7b4"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/shell.ts",
+          "executedSha256": "761b2d2d095a1be0410c90751b13bf355748b830aa152fda65751d703b35a1ad",
+          "assessedSha256": "77cb6be5879447605a805a911dfc551c4f64d5a994c1d021910679610c83dcd7"
+        }
+      ]
+    }
+  },
+  "packageMembershipExact": true,
+  "selectedDeltasSinceV5": [
+    {
+      "path": "bun.lock",
+      "description": "Workspace lock adds @beep/repo-utils to ai-metrics dependency edge.",
+      "sourceSets": ["package"],
+      "previousSha256": "3862614eb3c2e4304a949cb38aeb41c5c31eaad2e66ba063c49825695561dbd9",
+      "currentSha256": "84ba57dd528ba511c5d65244cd9cb8e0b96aef2a21bda31e4477e1bd552ce45f"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/package.json",
+      "description": "Adds workspace @beep/repo-utils dependency.",
+      "sourceSets": ["package"],
+      "previousSha256": "789fd9df87f52dd92269269c1493347fc879ddd506b7098bcdab65b284534ec7",
+      "currentSha256": "01dabd19ecc6e783cac5e9b83b52acee99ef5ff102a6a625aa99b3c391ff43af"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+      "description": "Imports shellQuote from @beep/repo-utils/Shell instead of local shell.ts; already nonexact at V5.",
+      "sourceSets": ["package", "preparation", "disposable", "live"],
+      "previousSha256": "aadfa73d140d9e5a3e5ed24273700c3b01ab2207fe0a068244251e91a8935699",
+      "currentSha256": "3672069aa20c0a06f9cf58e59158b5014165e51d4e54e3358ad2a07783d92d61"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/install.ts",
+      "description": "Imports shellQuote from @beep/repo-utils/Shell instead of local shell.ts; newly nonexact selected input.",
+      "sourceSets": ["package", "preparation", "disposable", "live"],
+      "previousSha256": "efa7e150c482dff7395bc1d98ff2e125b4181aa8e02d40497ee6b87b4ce4b276",
+      "currentSha256": "7635dd682d71e6d9bc9baa09a4f44e2957cff466176d5168940c3f453c5cc7b4"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/shell.ts",
+      "description": "Removes local shellQuote implementation; newly nonexact selected input. Shared implementation expression matches removed expression by source inspection only.",
+      "sourceSets": ["package", "preparation", "disposable", "live"],
+      "previousSha256": "761b2d2d095a1be0410c90751b13bf355748b830aa152fda65751d703b35a1ad",
+      "currentSha256": "77cb6be5879447605a805a911dfc551c4f64d5a994c1d021910679610c83dcd7"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/tsconfig.json",
+      "description": "Adds repo-utils project reference.",
+      "sourceSets": ["package"],
+      "previousSha256": "4edf9fc491b77b4df74b910488077db73b84affddd58de22f556e23d419f60a7",
+      "currentSha256": "5b22486ce6365958ca23951a2a23acacd2a128e79365c6fc967332f112bb825a"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/tsconfig.check.json",
+      "description": "Adds repo-utils project reference.",
+      "sourceSets": ["package"],
+      "previousSha256": "0c331ba443e1070392ecb535d119409859bd8b5706947f1c309b4212bef84508",
+      "currentSha256": "48e64dd3e3a05cf2d10802a5184fd932b7e242e364b90a2618ee55598e973b31"
+    }
+  ],
+  "baselineLineage": {
+    "previousSha256": "625e8ec6a460c98745026df6b7811a0066245e47b7d6cf94d76d5f0c2e9677ce",
+    "currentSha256": "9831ddd2fc961ef21416958e7be0fef7e6a7a18ec48baab8bab9e4a59367de5d",
+    "newIdentityRows": [
+      {
+        "package": "@beep/repo-cli",
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.step.ts",
+        "row": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 95.65,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        }
+      },
+      {
+        "package": "@beep/repo-utils",
+        "path": "packages/tooling/library/repo-utils/src/Shell.ts",
+        "row": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    ],
+    "existingRowsRelocated": 0,
+    "existingRowValueChanges": 0,
+    "wholeDocumentAfterRemovingOnlyNewRowsEqualsV5": true,
+    "scope": "Earlier V5 eleven relocations and two additions remain historical lineage. W1b adds two identity rows only; all existing rows, totals, settings, epsilon, and document metadata are unchanged. This audit does not independently measure or adopt their coverage."
+  },
+  "canonicalConsumersAtAcceptedMain": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
+      "previousSha256": "d004a67bba335f2f4bc8563461436fcf77d9b48889e8af842549217269bc2db7",
+      "currentSha256": "d004a67bba335f2f4bc8563461436fcf77d9b48889e8af842549217269bc2db7",
+      "exactSinceV5": true
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/Merge.ts",
+      "previousSha256": "be878e3330a17d59f7b209a263b055e7c6bb1e74510a3134e27bf4477f21a485",
+      "currentSha256": "210264d55839c8ea3a0d5dfc5014b9da8619c6f855ea3ea69c4e40db1f3d7ffe",
+      "exactSinceV5": false
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/MergeGate.ts",
+      "previousSha256": "d8b3f4c3f1c29af0a74f98b871e01501feda0b6c547879e410f37ca18b4b7257",
+      "currentSha256": "96132ed97123b27a2b6cb9c701709f0b68b0960641f4b445f05e866e69c29693",
+      "exactSinceV5": false
+    }
+  ],
+  "canonicalSemanticsAtAcceptedMain": [
+    "Goals/Completion.ts remains byte-exact to V5. Its existing verified/unsatisfied/unknown and readiness-recovery rules are not revised by this review.",
+    "W1b splits Yeet schema vocabulary into Planner.schemas, MonitorComments.schemas, Settle.schemas and Status.schemas; moves Git error adaptation to GitErrorAdapter and writeTextFile to ArtifactPaths. Imports and transitive module identities changed, so prior canonical hash equality cannot establish unchanged consumer closure.",
+    "W6 moves review-window timeline/check-suite/PR reads to GithubRest, with malformed relevant timeline dates failing closed to unknown; missing suites or failed reads remain unknown. MergeGate changes the reader call signature. Review-window duration/anchor logic and merge criteria are not relaxed by the inspected diff.",
+    "W6 replaces merge subprocess with one REST squash PUT pinned to the viewed head, then bounded read-only merged-state confirmation before sweep. Merge default title/body are left to GitHub; credential diagnostics and gh-login lifetime/provenance/comment adapters change. Runtime parity is not established by source inspection.",
+    "Exact-head positive pre-merge readiness and verified canonical completion remain required. Post-merge passing checks or merged-state observation do not retroactively establish missing readiness; preserve historical PR2612 unsatisfied and PR2644 unknown records."
+  ],
+  "newCoordinationGuardScope": "New guard changes are separate current-branch implementation requiring focused tests, review and final-head hosted proof; historical consumer execution is not transferred.",
+  "independentReviewSha256": "ff93e3db5ebf2c0ffe851efd835b5b276027bdf1ce3fac89bd0ff79061ddab83",
+  "currentExactSourceRootAdmission": false,
+  "realHarnessPopulations": "All seven Unknown",
+  "recoveryHold": "Service and timer remain masked/inactive.",
+  "historicalExecutionScope": "Original package/root/stage/backend executions retain their original source and runtime. Selected-input comparison is not full dependency closure or fresh execution."
+}

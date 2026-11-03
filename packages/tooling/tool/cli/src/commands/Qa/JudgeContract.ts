@@ -7,6 +7,7 @@
 
 import { $I as $BeepId, $QaId, $RepoCliId } from "@beep/identity/packages";
 import { RoundNumber } from "@beep/qa-capture";
+import { decodeQaInventory, QaInventory } from "@beep/qa-capture/QaInventory.schemas";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Sha256Hex } from "@beep/schema/Sha256";
@@ -46,7 +47,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CitedArtifactExistsGate, CitedArtifactExistsVerdict } from "./CitedArtifactExistsGate.ts";
-import { decodeQaInventory, QaInventory } from "./Inventory.schemas.ts";
 import { QaJudgeGateId } from "./QaJudgeGateId.ts";
 import type { GateEvaluator } from "@beep/skill-contract";
 

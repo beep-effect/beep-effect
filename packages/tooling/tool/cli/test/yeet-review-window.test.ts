@@ -507,6 +507,7 @@ const statusAnswers = (bucket: "pass" | "pending"): Record<string, string> => ({
   "api graphql": threadsJson,
   "run list": "[]",
 });
+const encodeJsonText = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const ghRoute = (args: ReadonlyArray<string>) => A.join(A.take(args, 2), " ");
 // A kit REST read reaches the scripted `gh` as `api repos/{owner}/{repo}/<path>`;
 // it prints GitHub's JSON, or fails.
@@ -514,7 +515,7 @@ const ghRestAnswer = (answers: Answers, args: ReadonlyArray<string>) => {
   const endpoint = endpointOf(O.getOrElse(A.findFirst(args, Str.startsWith("repos/")), () => ""));
   const answer = restAnswer(answerOf(answers, endpoint), endpoint);
   return answer.status === undefined
-    ? { stdout: Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(answer.body)) }
+    ? { stdout: Result.getOrThrow(encodeJsonText(answer.body)) }
     : { stdout: "gh: API rate limit exceeded", exit: 1 };
 };
 const ghRunner = (answers: Answers, bucket: "pass" | "pending") =>
