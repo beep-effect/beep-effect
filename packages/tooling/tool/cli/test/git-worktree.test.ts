@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { isRegisteredWorktree, removeGitWorktree, runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -8,7 +9,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const runGit = Effect.fn("GitWorktreeTest.runGit")(function* (cwd: string, args: ReadonlyArray<string>) {
   const result = yield* runRepoCommandCapture("git", args, cwd);
@@ -43,10 +44,8 @@ const withRepository = <A, E, R>(use: (root: string, repoRoot: string) => Effect
       })
   );
 
-const failingSpawner = ChildProcessSpawner.make(() =>
-  Effect.fail(
-    PlatformError.badArgument({ description: "simulated spawn failure", method: "spawn", module: "ChildProcess" })
-  )
+const failingSpawner = ScriptedSpawner.make(() =>
+  PlatformError.badArgument({ description: "simulated spawn failure", method: "spawn", module: "ChildProcess" })
 );
 
 // `Git` rides beside the platform services: the worktree probes take it from the context (W1b).
@@ -97,7 +96,7 @@ it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCr
           // `Git` is rebuilt over the failing spawner: the probe takes the service from the context (W1b).
           yield* isRegisteredWorktree(repoRoot, repoRoot).pipe(
             Effect.provideServiceEffect(Git, Git.make),
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, failingSpawner)
+            provideSpawner(failingSpawner)
           )
         );
       })
@@ -133,7 +132,7 @@ it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCr
         expect(
           yield* removeGitWorktree(repoRoot, plain).pipe(
             Effect.provideServiceEffect(Git, Git.make),
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, failingSpawner)
+            provideSpawner(failingSpawner)
           )
         ).toBe(false);
       })

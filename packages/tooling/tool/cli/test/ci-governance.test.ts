@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   ciGovernanceCommands,
   decideHeavyAdmission,
@@ -23,13 +24,9 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
 import { githubFetch, reply } from "./support/GithubFetch.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
 const writer = (environment: string, token = "${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}") =>
@@ -173,23 +170,10 @@ describe("CI governance policy", () => {
 
 // The live governance client reads its token through `gh auth token` and calls GitHub through the
 // `@beep/github` transport; both are faked, so no test reaches the network.
-const tokenHandle = ChildProcessSpawner.makeHandle({
-  all: Stream.make(new TextEncoder().encode("gho_fixture\n")),
-  stdout: Stream.make(new TextEncoder().encode("gho_fixture\n")),
-  stderr: Stream.empty,
-  stdin: Sink.drain,
-  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-  getInputFd: () => Sink.drain,
-  getOutputFd: () => Stream.empty,
-  isRunning: Effect.succeed(false),
-  kill: () => Effect.void,
-  pid: ChildProcessSpawner.ProcessId(1),
-  unref: Effect.succeed(Effect.void),
-});
-const ghAuthToken = ChildProcessSpawner.make((command) =>
-  ChildProcess.isStandardCommand(command) && A.join([command.command, ...commandArgs(command)], " ") === "gh auth token"
-    ? Effect.succeed(tokenHandle)
-    : Effect.die("the governance client spawns only gh auth token")
+const ghAuthToken = ScriptedSpawner.make((command, args) =>
+  A.join([command, ...args], " ") === "gh auth token"
+    ? { stdout: "gho_fixture\n" }
+    : { exit: 1, stderr: "the governance client spawns only gh auth token" }
 );
 const callKey = (call: GithubFetchCall) => `${call.method} ${call.path}`;
 const withFakeGithub =
@@ -198,7 +182,7 @@ const withFakeGithub =
     const api = githubFetch(respond);
     return program(api.calls).pipe(
       Effect.provideService(GithubTransportFetch, O.some(api.fetch)),
-      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghAuthToken),
+      provideSpawner(ghAuthToken),
       Effect.provideService(
         ConfigProvider.ConfigProvider,
         ConfigProvider.fromUnknown({ GH_REPO: "beep-effect/beep-effect" })

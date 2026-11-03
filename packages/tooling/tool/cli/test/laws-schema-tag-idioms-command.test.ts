@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { lawsCommand } from "@beep/repo-cli/commands/Laws";
 import { runSchemaTagIdioms, SchemaTagIdiomsOptions } from "@beep/repo-cli/test/Laws";
 import { FsUtilsLive } from "@beep/repo-utils";
@@ -15,9 +16,9 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Str from "effect/String";
 import { withAncestorsHidden } from "./support/CommandTest.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const runInProcess = Command.runWith(lawsCommand, { version: "0.0.0" });
@@ -55,15 +56,13 @@ const runGit = Effect.fn("SchemaTagIdiomsCommandTest.runGit")(function* (root: s
   expect(yield* handle.exitCode).toBe(0);
 });
 
-const spawnFailure = ChildProcessSpawner.make(() =>
-  Effect.fail(
-    PlatformError.systemError({
-      _tag: "NotFound",
-      module: "ChildProcess",
-      method: "spawn",
-      description: "git is not installed",
-    })
-  )
+const spawnFailure = ScriptedSpawner.make(() =>
+  PlatformError.systemError({
+    _tag: "NotFound",
+    module: "ChildProcess",
+    method: "spawn",
+    description: "git is not installed",
+  })
 );
 
 /** A git checkout holding one TS and one Markdown finding plus a deleted, a generated and a history file. */
@@ -140,10 +139,7 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })((it) => {
 
         const noRoot = yield* run(bare).pipe(withAncestorsHidden(bare), Effect.exit);
         const noGit = yield* run(notGit).pipe(Effect.exit);
-        const noSpawn = yield* run(notGit).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawnFailure),
-          Effect.exit
-        );
+        const noSpawn = yield* run(notGit).pipe(provideSpawner(spawnFailure), Effect.exit);
 
         expect(failureText(noRoot)).toContain("Failed to locate the repository root");
         expect(failureText(noGit)).toContain("failed with exit code");

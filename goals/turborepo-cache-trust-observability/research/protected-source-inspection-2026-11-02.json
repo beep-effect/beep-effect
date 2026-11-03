@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "protected-source-inspection-receipt/v1",
+  "at": "2026-11-03T01:43:11.236343+00:00",
+  "runId": 41561109340,
+  "attempt": 1,
+  "runUrl": "https://github.com/beep-effect/beep-effect/actions/runs/41561109340",
+  "sourceRevision": "c96edf8c10326942d292d78635296ce31b5b07cf",
+  "resolvedWorkflows": [
+    {
+      "path": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+      "sha": "c96edf8c10326942d292d78635296ce31b5b07cf",
+      "ref": "refs/heads/main"
+    }
+  ],
+  "artifact": {
+    "id": 13195664880,
+    "name": "cache-producer-inspection-41561109340-1",
+    "sizeBytes": 2658228,
+    "digest": "sha256:7c3c616e583cde5e42600dcf4f0358fa9854f63e67f85c5cb513c7146778b5c7",
+    "expiresAt": "2026-11-04T01:41:29Z"
+  },
+  "reportSha256": "d5f02af8bceee45a8d5e1b842cda4115469601075153d5e4cc5b7468e70ae2bd",
+  "archiveSha256": "7c3c616e583cde5e42600dcf4f0358fa9854f63e67f85c5cb513c7146778b5c7",
+  "fileCount": 15050,
+  "approvalGranted": false,
+  "credentialOrSigningActivation": false,
+  "canonicalWorkflowSha256": "9227547db8e7979a63fa7c9f74affd5f1be8d491f60e1adc03bf0b5dbb3bb3c6",
+  "executionProfile": "clean-declared-sources/root-dependencies/v1",
+  "toolchain": {
+    "bun": {
+      "version": "1.4.4",
+      "sha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235"
+    },
+    "node": {
+      "version": "v24.22.1",
+      "sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+    },
+    "turbo": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "biome": {
+      "version": "Version: 2.5.6",
+      "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+    }
+  },
+  "inspectionToolCount": 7,
+  "evidenceScope": "Authenticated source/tool observation only; no execution approval, user-manager/cgroup readiness, portable adapter qualification, signed R2 run or qualification acceptance.",
+  "remaining": [
+    "Install the reviewed protected transport component and fixed workflow.",
+    "Inspect the final accepted source and independently approve its source/tool/profile binding.",
+    "Keep independent verifier authority off the runner and every material copy outside worker mounts.",
+    "Prove actual supervised runner readiness, signed R2 production/publication/acceptance, capability and epoch controls, rollback and required observation windows."
+  ],
+  "sourceMayAdvance": "This records c96edf8 source and resolved workflow only; inspect final accepted producer source again before independent approval."
+}

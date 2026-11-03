@@ -87,6 +87,7 @@ const makeStuckSpawner = Effect.fnUntraced(function* (options: {
   const pipe = Stream.make(encoder.encode(options.output)).pipe(
     Stream.concat(closed.pipe(Deferred.await, Stream.fromEffect, Stream.drain))
   );
+  // Own double: kill() is counted and ends the stream, and isRunning can fail; ScriptedSpawner's kill is a no-op.
   const handle = ChildProcessSpawner.makeHandle({
     all: pipe,
     exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
@@ -128,6 +129,7 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes?: boolea
   const pipe = Stream.make(encoder.encode("started")).pipe(
     Stream.concat(closed.pipe(Deferred.await, Stream.fromEffect, Stream.drain))
   );
+  // Own double: kill() is counted and settles a Deferred-gated exitCode, and unref is counted.
   const handle = ChildProcessSpawner.makeHandle({
     all: pipe,
     exitCode: Deferred.await(exited),

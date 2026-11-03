@@ -90,6 +90,24 @@ closeout to an unrelated state-only PR.
 5. Regenerate/check the goal index and preserve exploration links. Completion
    of this goal alone does not establish the whole cache program's completion.
 
+## Credential-free adapter preparation checkpoint, 2026-11-02
+
+The protected environment installation component also prepares a main-only
+candidate build through the admitted Heavy leaf. The new optional mode has
+no cache or issuer credentials and no protected environment. It reuses the
+reviewed upstream patch and pinned portable toolchain; one existing runner,
+twenty minutes, two Cargo jobs, sixteen-MiB artifact and one-day retention
+bound the preparation. Ordinary quality callers keep their matrix contexts.
+
+The fourteen environment dispatch controls and the workflow isolation controls
+are authored for hosted CI; no local proof competes with the operator's
+push-first instruction. Hosted Check, Build, Integration, Docgen and Repo Sanity
+passed the error repair at `f13ffb0610`; that historical source still had the
+separately owned coverage episode. The merged source and new preparation job
+need fresh hosted proof. No candidate has been built by this workflow, approved
+or executed. Protected signed production, independent publication acceptance,
+capability/epoch/rollback proof and the real observation windows remain open.
+
 ## Rollback and resume
 
 Use SPEC's rollback at the affected boundary. Record the failed gate, remaining
@@ -1270,3 +1288,27 @@ The [collector checkpoint](research/source-directory-alias-checkpoint-2026-11-02
 records focused controls and real-tree replay separately from actual protected
 inspection. A new main inspection and independent approval remain required; no
 whole-goal criterion or production configuration is changed.
+
+
+### Protected environment installation preparation, 2026-11-02
+
+The [transport preparation](research/producer-environment-install-preparation-2026-11-02.md) adds an explicit environment source to the existing installer. It reuses approved record schemas and the exclusive initializer, preserves file defaults, caps UTF-8/issuer bytes and adds thirteen authored dispatch controls. No local or hosted execution proof is claimed. Independent protected source/profile approval, step-scoped secret delivery, actual portable execution, bounded R2 publication and all representative windows remain gates.
+
+### Actual protected source inspection, 2026-11-02
+
+Main-only inspection run `41561109340` passed on accepted source and resolved
+Heavy revision `c96edf8c10326942d292d78635296ce31b5b07cf`. Its immutable artifact
+digest matches the bounded downloaded archive; the existing schema and workflow
+hasher validate the report over 15,050 file records and actual runner tools.
+The [receipt](research/protected-source-inspection-2026-11-02.json) is source/tool
+evidence only. No issuer approval, signed execution, qualification or observation
+window is granted. Inspect the final accepted source again before provisioning.
+
+### Protected installer hosted error boundary, 2026-11-02
+
+The first hosted source replay exposed an introduced SchemaError channel beyond
+the typed CLI renderer and one missed pipeable call. Catch only the schema
+failure at the approval boundary with a fixed diagnostic; preserve the policy
+refusal and validate before material lookup. A fourteenth authored control
+exercises a private-marker schema failure without issuer material or store IO.
+The controls remain unrun locally; the repair needs fresh hosted proof.

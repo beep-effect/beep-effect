@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import {
   enforceReviewerGate,
@@ -20,18 +21,15 @@ import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
 import { githubFetch, reply } from "./support/GithubFetch.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
+import type { SpawnRecord } from "@beep/commands/ScriptedSpawner";
 import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
 const ROOT = "/repos/beep-effect/beep-effect";
@@ -133,51 +131,34 @@ const respond = (fixture: GithubFixture, call: GithubFetchCall, priorCalls: Read
   );
 };
 
-// The `reviewer` commands read the operator token through `gh auth token`; nothing else is spawned.
-const ghAuthToken = ChildProcessSpawner.make((command) =>
-  ChildProcess.isStandardCommand(command) &&
-  command.command === "gh" &&
-  A.join(commandArgs(command), " ") === "auth token"
-    ? Effect.succeed(handle("gho_operator-fixture\n", 0))
-    : Effect.die("the reviewer ruleset workflow only spawns gh auth token")
-);
+// The `reviewer` commands read the operator token through `gh auth token`; nothing else is spawned, which
+// `withFakeGithub` asserts on the recorded spawns.
+const ghAuthToken = () => ScriptedSpawner.make(() => ({ stdout: "gho_operator-fixture\n" }));
+const isGhAuthToken = (spawn: SpawnRecord) => spawn.command === "gh" && A.join(spawn.args, " ") === "auth token";
 
 // Runs a program against the fake GitHub API and a test console, returning its exit, recorded calls, and log lines.
 // The direct calls take the client from the context; the CLI builds its own from `gh auth token`, so the global
 // `fetch` that client falls back to is the same fake.
 const withFakeGithub = Effect.fnUntraced(function* <A, E, R>(fixture: GithubFixture, program: Effect.Effect<A, E, R>) {
   const api = githubFetch((call) => respond(fixture, call, A.dropRight(api.calls, 1)));
+  const spawner = ghAuthToken();
   const client = yield* Layer.build(
     GitHubClient.layerFromToken({ token: Redacted.make("gho_fixture"), retry: "off", fetch: api.fetch })
   );
   const exit = yield* program.pipe(
     Effect.provideContext(client),
     Effect.provideService(GithubTransportFetch, O.some(api.fetch)),
-    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghAuthToken),
+    provideSpawner(spawner),
     Effect.flatMap((value) => TestConsole.logLines.pipe(Effect.map((lines) => ({ value, lines })))),
     Effect.provideServiceEffect(Console.Console, TestConsole.make),
     Effect.exit
   );
+  expect(A.every(spawner.spawns, isGhAuthToken)).toBe(true);
   return { exit, calls: A.copy(api.calls) };
 }, Effect.scoped);
 
 const putCalls = (calls: ReadonlyArray<GithubFetchCall>) => A.filter(calls, (call) => call.method === "PUT");
 const callKeys = (calls: ReadonlyArray<GithubFetchCall>) => A.map(calls, callKey);
-
-const handle = (output: string, exitCode: number) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(new TextEncoder().encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
-    stdin: Sink.drain,
-    stdout: Stream.make(new TextEncoder().encode(output)),
-    unref: Effect.succeed(Effect.void),
-  });
 
 const failureMessage = <A, E>(exit: Exit.Exit<A, E>) =>
   Exit.match(exit, { onFailure: flow(Cause.pretty, O.some), onSuccess: () => O.none<string>() });

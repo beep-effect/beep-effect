@@ -14,15 +14,12 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { DeletePackageDataResource } from "../../../commands/DeletePackage/internal/DataResource.ts";
-import { isCanonicalDeletionChangeset } from "../../../commands/DeletePackage/internal/DeletionChangeset.ts";
-import {
-  IDENTITY_SHAPE_TEST_PATH,
-  shapeTestRowAccessor,
-} from "../../../commands/DeletePackage/internal/ShapeTestRow.ts";
-import { workspaceDirectories, workspacePackages } from "../../RepoWorkspaces.ts";
-import { mentionsAnyToken, mentionsToken } from "../../WholeToken.ts";
-import { isLabsWorkspacePath } from "../Labs/index.ts";
+import { isLabsWorkspacePath } from "../../../../internal/cli/Labs/index.ts";
+import { workspaceDirectories, workspacePackages } from "../../../../internal/RepoWorkspaces.ts";
+import { mentionsAnyToken, mentionsToken } from "../../../../internal/WholeToken.ts";
+import { DeletePackageDataResource } from "../DataResource.ts";
+import { isCanonicalDeletionChangeset } from "../DeletionChangeset.ts";
+import { IDENTITY_SHAPE_TEST_PATH, shapeTestRowAccessor } from "../ShapeTestRow.ts";
 import { RegistrationGeometryError } from "./RegistrationGeometry.errors.ts";
 import { surfacesForTarget } from "./RegistrationGeometry.plan.ts";
 import {
@@ -269,6 +266,40 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
   });
 });
 
+/**
+ * Probes every declared surface of a target under a repository root and
+ * reports one doctor observation per surface.
+ *
+ * **Details**
+ *
+ * Surfaces are inspected with a concurrency of 8; the result keeps surface
+ * order. The Effect reads files only and requires `FileSystem` and `Path`.
+ *
+ * **Example** (Collect doctor statuses)
+ *
+ * ```ts
+ * import * as A from "effect/Array"
+ * import * as Effect from "effect/Effect"
+ * import { inspectTargetAtRoot, RegistrationTarget } from "@beep/repo-cli/test/DeletePackage"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ *
+ * const target = RegistrationTarget.make({
+ *   packageName: "@beep/demo",
+ *   packagePath: PosixPath.make("packages/demo"),
+ *   private: true
+ * })
+ * const statuses = inspectTargetAtRoot(".", target).pipe(
+ *   Effect.map(A.map((observation) => observation.status))
+ * )
+ *
+ * console.log(Effect.isEffect(statuses)) // true
+ * ```
+ *
+ * @param repoRoot - Absolute or working-directory-relative repository root.
+ * @param target - Package whose surfaces are probed.
+ * @category queries
+ * @since 0.0.0
+ */
 export const inspectTargetAtRoot = Effect.fn("RegistrationGeometry.inspectTargetAtRoot")(function* (
   repoRoot: string,
   target: RegistrationTarget

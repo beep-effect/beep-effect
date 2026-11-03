@@ -9,4 +9,4 @@ export * from "../commands/DeletePackage/DeletePackage.command.ts";
 export * from "../commands/DeletePackage/DeletePackage.policy.ts";
 export * from "../commands/DeletePackage/DeletePackage.schemas.ts";
 export * from "../commands/DeletePackage/internal/DataResource.ts";
-export * from "../internal/cli/RegistrationGeometry/index.ts";
+export * from "../commands/DeletePackage/internal/RegistrationGeometry/index.ts";

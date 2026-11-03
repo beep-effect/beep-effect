@@ -26,7 +26,7 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { asArrayBufferView } from "../../internal/cli/Bytes.ts";
 import { collectText } from "../../internal/process/StepExec.ts";
-import { makePublicationLedger, publicationSuffix } from "../../internal/publication/PublicationLedger.ts";
+import { makePublicationLedger, publicationSuffix } from "./internal/PublicationLedger.ts";
 import {
   ModelsExchangeFault,
   ModelsExchangeLaunchError,

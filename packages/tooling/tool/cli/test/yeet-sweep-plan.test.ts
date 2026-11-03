@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git, GitOptions } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
@@ -30,18 +31,14 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Ref from "effect/Ref";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { commandArgs } from "./support/commandArgs.ts";
+import type { SpawnRecord } from "@beep/commands/ScriptedSpawner";
 import type { SweepPlanStep } from "@beep/repo-cli/test/Yeet";
 
 const mergedTip = "aaaa1111bbbb2222";
@@ -478,8 +475,6 @@ describe("renderSweepReport", () => {
   });
 });
 
-const encoder = new TextEncoder();
-
 type CommandStub = {
   readonly exitCode: number;
   readonly output: string;
@@ -489,25 +484,13 @@ const ok = (output: string): CommandStub => ({ exitCode: 0, output });
 
 const nonzero = (exitCode: number): CommandStub => ({ exitCode, output: "" });
 
-const stubHandle = (stub: CommandStub) =>
-  ChildProcessSpawner.makeHandle({
-    all: Stream.make(encoder.encode(stub.output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(stub.exitCode)),
-    getInputFd: () => Sink.drain,
-    getOutputFd: () => Stream.empty,
-    isRunning: Effect.succeed(false),
-    kill: () => Effect.void,
-    pid: ChildProcessSpawner.ProcessId(1),
-    // git writes a failure to stderr, which is what the kit reads; a capture reads both.
-    stderr: stub.exitCode === 0 ? Stream.empty : Stream.make(encoder.encode(stub.output)),
-    stdin: Sink.drain,
-    stdout: stub.exitCode === 0 ? Stream.make(encoder.encode(stub.output)) : Stream.empty,
-    unref: Effect.succeed(Effect.void),
-  });
+// git writes a failure to stderr, which is what the kit reads; a capture reads both.
+const stubReply = (stub: CommandStub) =>
+  stub.exitCode === 0 ? { stdout: stub.output } : { stderr: stub.output, exit: stub.exitCode };
 
 /**
  * Probe overrides retain their ordered prefix matching. Successful mutations
- * have an explicit complete command line; every unlisted command fails visibly.
+ * have an explicit complete command line; every unlisted command exits 1 naming its line.
  */
 const allowedMutationCommands = [
   "git fetch --prune origin",
@@ -520,29 +503,27 @@ const allowedMutationCommands = [
   "bun install",
 ];
 
-const stubSpawnerLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
-  Layer.effect(
-    ChildProcessSpawner.ChildProcessSpawner,
-    Effect.succeed(
-      ChildProcessSpawner.make((command) =>
-        Effect.gen(function* () {
-          if (!ChildProcess.isStandardCommand(command))
-            return yield* Effect.die("the sweep never spawns a piped command");
-          const line = A.join([command.command, ...commandArgs(command)], " ");
-          const mutation =
-            (command.command === "git" &&
-              A.contains(["fetch", "merge", "branch", "push", "checkout"], commandArgs(command)[0])) ||
-            command.command === "bun";
-          if (mutation && !A.contains(allowedMutationCommands, line))
-            return yield* Effect.die(`Unexpected sweep mutation: ${line}`);
-          const stub = A.findFirst(stubs, ([prefix]) => Str.startsWith(prefix)(line));
-          if (O.isNone(stub) && !A.contains(allowedMutationCommands, line))
-            return yield* Effect.die(`Unexpected sweep command: ${line}`);
-          return stubHandle(O.match(stub, { onNone: () => ok(""), onSome: ([, stub]) => stub }));
-        })
-      )
-    )
-  );
+// The scripted spawner behind a sweep test layer, so a test can read every command line it ran.
+class SweepSpawner extends Context.Service<SweepSpawner, ScriptedSpawner>()(
+  "@beep/repo-cli/test/yeet-sweep-plan.test/SweepSpawner"
+) {}
+
+const lineOf = (spawn: SpawnRecord) => A.join([spawn.command, ...spawn.args], " ");
+
+const stubSpawnerLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) => {
+  const spawner = ScriptedSpawner.make((command, args) => {
+    const line = A.join([command, ...args], " ");
+    const mutation =
+      (command === "git" && A.contains(["fetch", "merge", "branch", "push", "checkout"], args[0])) || command === "bun";
+    if (mutation && !A.contains(allowedMutationCommands, line))
+      return { exit: 1, stderr: `Unexpected sweep mutation: ${line}` };
+    const stub = A.findFirst(stubs, ([prefix]) => Str.startsWith(prefix)(line));
+    if (O.isNone(stub) && !A.contains(allowedMutationCommands, line))
+      return { exit: 1, stderr: `Unexpected sweep command: ${line}` };
+    return stubReply(O.match(stub, { onNone: () => ok(""), onSome: ([, stub]) => stub }));
+  });
+  return Layer.merge(spawner.layer, Layer.succeed(SweepSpawner, spawner));
+};
 
 const prViewJson = `{"number":559,"headRefName":"feat/merge-loop","state":"MERGED","headRefOid":"${mergedTip}"}`;
 
@@ -616,24 +597,14 @@ const cloneOn = (head: string, tip: string): ReadonlyArray<readonly [string, Com
   ...mergedSweepStubs,
 ];
 
-// Runs the sweep through a spawner that records every command line, so a test
-// can assert what the clone was and was not subjected to.
+// Runs the sweep and returns every command line it spawned, so a test can
+// assert what the clone was and was not subjected to.
 const recordedSweep = Effect.fnUntraced(function* (root: string) {
-  const spawned = yield* Ref.make(A.empty<string>());
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const recording = ChildProcessSpawner.make((command) =>
-    Effect.gen(function* () {
-      if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected piped command");
-      yield* Ref.update(spawned, A.append(A.join([command.command, ...commandArgs(command)], " ")));
-      return yield* spawner.spawn(command);
-    })
-  );
-  // `Git` is rebuilt over the recording spawner so the kit's spawns are recorded too.
-  const report = yield* executeSweep(sweepContext(root)).pipe(
-    Effect.provideServiceEffect(Git, Git.make),
-    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recording)
-  );
-  return { report, spawned: yield* Ref.get(spawned) };
+  const spawner = yield* SweepSpawner;
+  const before = A.length(spawner.spawns);
+  // `Git` is rebuilt over the same scripted spawner, so the kit's spawns are recorded too.
+  const report = yield* executeSweep(sweepContext(root)).pipe(Effect.provideServiceEffect(Git, Git.make));
+  return { report, spawned: A.map(A.drop(spawner.spawns, before), lineOf) };
 });
 
 const outcomeOf = (report: SweepReport, id: SweepStepId) =>
@@ -656,21 +627,9 @@ describe("executeSweep", () => {
         Effect.fnUntraced(function* () {
           const fs = yield* FileSystem.FileSystem;
           const root = yield* fs.makeTempDirectoryScoped();
-          const spawned = yield* Ref.make(A.empty<string>());
-          const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-          const recordingSpawner = ChildProcessSpawner.make((command) =>
-            Effect.gen(function* () {
-              if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected piped command");
-              yield* Ref.update(spawned, A.append(A.join([command.command, ...commandArgs(command)], " ")));
-              return yield* spawner.spawn(command);
-            })
-          );
-          const report = yield* executeSweep(sweepContext(root)).pipe(
-            Effect.provideServiceEffect(Git, Git.make),
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner)
-          );
-          expect(yield* Ref.get(spawned)).toContain("git branch -d feat/merge-loop");
-          expect(yield* Ref.get(spawned)).not.toContain("git branch -D feat/merge-loop");
+          const { report, spawned } = yield* recordedSweep(root);
+          expect(spawned).toContain("git branch -d feat/merge-loop");
+          expect(spawned).not.toContain("git branch -D feat/merge-loop");
           const deletion = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-local-branch"));
           expect(deletion.outcome.status).toBe("executed");
           expect(

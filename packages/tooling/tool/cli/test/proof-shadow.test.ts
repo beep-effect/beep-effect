@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git, GitOptions } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { QualityTaskFailed, QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/commands/Quality";
@@ -14,9 +15,11 @@ import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   buildProofShadowReport,
   changedPackagesForAttempt,
+  changedPackageTripwireFor,
   loadProofShadowReport,
   ProofChangedPackagesKnown,
   ProofChangedPackagesUnavailable,
+  ProofInputDigest,
   ProofLedger,
   ProofLedgerShadowRow,
   ProofReuseHit,
@@ -54,14 +57,10 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { commandArgs } from "./support/commandArgs.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const encodeSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
 
@@ -543,6 +542,25 @@ describe("proof shadow mode", () => {
       })
     );
 
+    // Ruling 82: a key whose lane the attempt's own reports never journaled has no
+    // cacheability evidence, so it is read as uncacheable and fails closed on any change.
+    it("treats a lane missing from the attempt's reports as uncacheable", () => {
+      const key = ProofInputDigest.make({
+        laneId: "quality:unreported",
+        laneClass: "cli-runnable",
+        commandDigest: "c1",
+        envProfile: "local",
+        inputDigest: "d1",
+        inputSource: "turbo-task-hash",
+        epochDigest: "e1",
+        key: "k1",
+      });
+      const reports = [report([lane("cheap-gates:lint-policy", "passed", O.some("d-root"))])];
+      expect(changedPackageTripwireFor(reports, changedKnown([], 1))(key)).toBe(true);
+      expect(changedPackageTripwireFor(reports, changedNone())(key)).toBe(false);
+      expect(changedPackageTripwireFor(reports, changedUnavailable("git status failed"))(key)).toBe(true);
+    });
+
     // A lane report written before `inputsCacheable` existed decodes as uncacheable, so an
     // older journal can only make the tripwire fire more, never less.
     it.effect("reads a lane report without the cacheability field as uncacheable", () =>
@@ -1009,22 +1027,9 @@ it.layer(TripwireLayer, { timeout: "30 seconds" })("proof shadow changed package
   const encoder = new TextEncoder();
 
   // One scripted run: git's stdout on success, its stderr on a failure.
-  const scriptedHandle = (answer: GitAnswer) => {
+  const scriptedRun = (answer: GitAnswer) => {
     const exitCode = answer.exitCode ?? 0;
-    const bytes = Stream.make(encoder.encode(answer.output));
-    return ChildProcessSpawner.makeHandle({
-      all: bytes,
-      exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-      getInputFd: () => Sink.drain,
-      getOutputFd: () => Stream.empty,
-      isRunning: Effect.succeed(false),
-      kill: () => Effect.void,
-      pid: ChildProcessSpawner.ProcessId(1),
-      stderr: exitCode === 0 ? Stream.empty : bytes,
-      stdin: Sink.drain,
-      stdout: exitCode === 0 ? bytes : Stream.empty,
-      unref: Effect.succeed(Effect.void),
-    });
+    return exitCode === 0 ? { stdout: answer.output } : { exit: exitCode, stderr: answer.output };
   };
 
   // Rebuilds `Git` over a spawner that answers each git argv through `answer`. A truncated
@@ -1035,12 +1040,10 @@ it.layer(TripwireLayer, { timeout: "30 seconds" })("proof shadow changed package
     <A, E, R>(self: Effect.Effect<A, E, R>) =>
       self.pipe(
         Effect.provideServiceEffect(Git, Git.makeWith(GitOptions.make({ maxOutputBytes: bound }))),
-        Effect.provideService(
-          ChildProcessSpawner.ChildProcessSpawner,
-          ChildProcessSpawner.make((command) => {
-            if (!ChildProcess.isStandardCommand(command)) return Effect.die("the tripwire never pipes a command");
-            expect(command.command).toBe("git");
-            return Effect.succeed(scriptedHandle(answer(commandArgs(command))));
+        provideSpawner(
+          ScriptedSpawner.make((command, args) => {
+            expect(command).toBe("git");
+            return scriptedRun(answer(args));
           })
         )
       );
@@ -1313,11 +1316,8 @@ it.layer(TripwireLayer, { timeout: "30 seconds" })("proof shadow changed package
       Effect.gen(function* () {
         const changed = yield* changedPackagesForAttempt(context(root)).pipe(
           Effect.provideServiceEffect(Git, Git.make),
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            ChildProcessSpawner.make(() =>
-              Effect.fail(PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }))
-            )
+          provideSpawner(
+            ScriptedSpawner.make(() => PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }))
           )
         );
         expect(changed).toStrictEqual(
