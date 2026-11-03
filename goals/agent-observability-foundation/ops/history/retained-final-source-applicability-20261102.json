@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "observation-source-applicability/v1",
+  "comparisonHead": "9f4bf57385a8adb6b3ff4d7fe5499ebfcd184cce",
+  "originalPackageExecutionHead": "e2d941a0e9046669fa3b5bd72b90127ad83a75b2",
+  "selectedPackageInputCount": 249,
+  "identicalPackageInputCount": 244,
+  "packageMembershipExact": true,
+  "manifestDeltas": [
+    {
+      "path": "package.json",
+      "nonScriptJsonIdentical": true,
+      "changedScriptKeys": [
+        "lint:deprecated-imports",
+        "lint:policy-fingerprint:lint-schema-catalog",
+        "lint:schema-catalog"
+      ]
+    },
+    {
+      "path": "packages/drivers/ai-provider-cli/package.json",
+      "nonScriptJsonIdentical": true,
+      "changedScriptKeys": ["audit", "beep:audit"]
+    },
+    {
+      "path": "packages/drivers/phoenix/package.json",
+      "nonScriptJsonIdentical": true,
+      "changedScriptKeys": ["audit", "beep:audit"]
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/package.json",
+      "nonScriptJsonIdentical": true,
+      "changedScriptKeys": ["audit", "beep:audit"]
+    }
+  ],
+  "additionalTestFile": "packages/tooling/tool/cli/test/harness-ledger.test.ts",
+  "currentHarnessLedgerProof": {
+    "head": "7f91b189980ec022ea3dfa09a100218054247bb5",
+    "workflowRun": 41475655834,
+    "jobId": 125381842309,
+    "passed": 51,
+    "scope": "Actual hosted execution at this recorded head, not a new draft-head execution."
+  },
+  "preparationInputs": {
+    "selected": 84,
+    "exact": 84,
+    "membershipAndBytesExact": true
+  },
+  "disposableInputs": {
+    "selected": 90,
+    "exact": 88
+  },
+  "liveInputs": {
+    "selected": 89,
+    "exact": 87
+  },
+  "stageDelta": "The same two explicit-pin guard helpers and independently reviewed explicit-success-path bridge. Original stage receipts and source maps are unchanged.",
+  "historicalDirectTestCommandsInvokeChangedScriptKeys": false,
+  "newBackendExecution": false,
+  "completeTransitiveClosure": false,
+  "goalComplete": false,
+  "requiresFinalHeadHostedReadinessAndCanonicalCompletion": true
+}

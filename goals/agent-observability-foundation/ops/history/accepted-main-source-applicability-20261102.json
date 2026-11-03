@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "observation-source-applicability/v1",
+  "comparisonHead": "12aea7d2a40901b2156ba609723967c4d44e274a",
+  "acceptedMain": "105975ac27b8c463fb7d6e0e9dbe503cbdf84829",
+  "acceptedCoverageRepair": {
+    "pullRequest": 2616,
+    "head": "ae33540476025590c413f0ad13b20256b98f0e72",
+    "merge": "04e4f245fe539243f7dacd6ff65135f99d313456"
+  },
+  "acceptedLintRepair": {
+    "pullRequest": 2610,
+    "merge": "0cd1dd8f396197e436d9cd50461e7f1ffb62c631"
+  },
+  "previousComparison": "retained-final-source-applicability-20261102.json",
+  "sourceSets": {
+    "package": {
+      "selected": 249,
+      "exact": 244,
+      "changed": [
+        {
+          "path": "package.json",
+          "executedSha256": "7847a27710af030c63345a836e1d6af2337ff0426bcc3e3a0e38e14660545825",
+          "currentSha256": "dc1edc42c12c96838774996dfe20dea836896252407036e09a9b26fd366ae1eb"
+        },
+        {
+          "path": "packages/drivers/ai-provider-cli/package.json",
+          "executedSha256": "e1df2ab464009f332c467795019fa4cd1c37edb5e061d69eee85ab2253ce9b73",
+          "currentSha256": "1f7dc5f03b3d2154fc94df88d970f930d7320c9ad040de0abc6b7b083fc51513"
+        },
+        {
+          "path": "packages/drivers/phoenix/package.json",
+          "executedSha256": "71a2a657e9be5e9ebea96882b15466265b3ddbaac854176c7aad9931890c2a71",
+          "currentSha256": "cdcbdfda5609d21f715ef71521f1de607c12dcad3ad45f46ba8ee2ebf9104de1"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/package.json",
+          "executedSha256": "0e028a518bcae45ab6100065cb0771f3f1107d4e56f08e610555cf0a784ce3d9",
+          "currentSha256": "1fcafb56ca8392374272f3f71e6a40db5a07bee22b39fbb5dc7357144dfe9027"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/harness-ledger.test.ts",
+          "executedSha256": "26dbd905ab4df1fd0eeca896b5a8b7c4ed8dde4f515f0f53d854b690e86e7cee",
+          "currentSha256": "cf72c19891b9e02ba93d3bded09b2ae2ac1d9973c1b13165f5fd80483aafc075"
+        }
+      ],
+      "allSelectedPathsTracked": true
+    },
+    "preparation": {
+      "selected": 84,
+      "exact": 84,
+      "changed": [],
+      "allSelectedPathsTracked": true
+    },
+    "disposable": {
+      "selected": 90,
+      "exact": 88,
+      "changed": [
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "executedSha256": "162c54e11d9b5c01041559c9262d787ab8edd4d9d779e2ffb178b47c1d20ec19",
+          "currentSha256": "dbba5256eef94dcb90e7fd52a5bd076b30fdb0c71332a8aeb25f8b971fac9b8c"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/declared_canary_support.py",
+          "executedSha256": "e57b2a75307e02c9ac3110e7af09edae8f1882e76fd4a526bacc4de9b39b3036",
+          "currentSha256": "fb81d90bf370b7c89daec86a83fd0772bb40e56da32bc00cfd3bcb5581513ece"
+        }
+      ],
+      "allSelectedPathsTracked": true
+    },
+    "live": {
+      "selected": 89,
+      "exact": 87,
+      "changed": [
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "executedSha256": "162c54e11d9b5c01041559c9262d787ab8edd4d9d779e2ffb178b47c1d20ec19",
+          "currentSha256": "dbba5256eef94dcb90e7fd52a5bd076b30fdb0c71332a8aeb25f8b971fac9b8c"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/declared_canary_support.py",
+          "executedSha256": "e57b2a75307e02c9ac3110e7af09edae8f1882e76fd4a526bacc4de9b39b3036",
+          "currentSha256": "fb81d90bf370b7c89daec86a83fd0772bb40e56da32bc00cfd3bcb5581513ece"
+        }
+      ],
+      "allSelectedPathsTracked": true
+    }
+  },
+  "packageMembershipExact": true,
+  "dankserverSourceCount": 25,
+  "retainedRootAndStageReceiptHashes": {
+    "declared-root-integrated-v1/qualification.json": "11a78365fd7eade9c845f60c312b3273b77d41da4c6a6404ac83ce1f1dee9513",
+    "declared-root-integrated-v1/root-probe.json": "a96a267c1b43cd626638edf6ce578dfccfad1b49be2ad5bd0f5c672bdd2a388a",
+    "integrated-disposable/evidence.json": "8bef8394420dc4a76a3fc37dd30b2a65ea6fbb4e2c8b5385aa8f570004ce279b",
+    "integrated-live/evidence.json": "66158e7b399c704b4fa8eccd8a33df850a22f23bb067404058ead1216e1c18ed"
+  },
+  "hostedHarnessLedgerProof": "pr2612-hosted-harness-ledger-e2213fed.json",
+  "incomingGlobalConfiguration": "Accepted PR2575 changes Turbo task inputs, cache qualification baseline and Biome exclusions. This record does not transfer their quality proof; require fresh hosted gates on the final commit. The retained direct Node package commands do not invoke Turbo or the changed lint script keys.",
+  "scope": "Selected source bytes and retained original receipt integrity at the recorded comparison commit. All deltas match the previously independently reviewed manifest-script, appended HarnessLedger tests and explicit-pin helper bridges. Original executions, scopes and previous comparisons remain preserved. Not a fresh package/backend execution or complete transitive dependency closure.",
+  "goalComplete": false,
+  "requiresFinalHeadHostedReadinessAndCanonicalCompletion": true
+}

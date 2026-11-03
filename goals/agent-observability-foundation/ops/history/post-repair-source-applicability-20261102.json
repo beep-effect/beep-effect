@@ -1,0 +1,238 @@
+{
+  "schemaVersion": "observation-source-applicability/v2",
+  "comparisonHead": "81108098fec5115a73efd7d226a58d8e23e7c170",
+  "acceptedMain": "591f8a15b91b988dac6483caa04aeec164a7521c",
+  "acceptedRepairs": [
+    {
+      "pullRequest": 2620,
+      "head": "a20b41616d8e8abc97863886842c4f03fd3d0357",
+      "merge": "e2ea1514539450d5eb664fc02a3a3163029243e8",
+      "mergedAt": "2026-11-02T20:59:36Z",
+      "preMergePositiveVerdictSha256": "479160075fccd7105d567bc82b3b511018404b854c9594ee645068e58538ca42"
+    },
+    {
+      "pullRequest": 2621,
+      "head": "a9651afb719703bb5ca29a3154fab4b71df0c686",
+      "merge": "591f8a15b91b988dac6483caa04aeec164a7521c",
+      "mergedAt": "2026-11-02T21:49:33Z",
+      "preMergePositiveVerdictSha256": "526cf9f81957405c0e63c500aa5468c4d6ee8b19e797a62b9942b656393252aa"
+    }
+  ],
+  "previousComparison": "accepted-main-source-applicability-20261102.json",
+  "sourceSets": {
+    "package": {
+      "selected": 249,
+      "exact": 234,
+      "changed": [
+        {
+          "path": "bun.lock",
+          "executedSha256": "ca8895b7a24b0da6e84473a95c048ea7760a31ed0e7d9dd84c2edd611be218ff",
+          "assessedSha256": "3862614eb3c2e4304a949cb38aeb41c5c31eaad2e66ba063c49825695561dbd9"
+        },
+        {
+          "path": "package.json",
+          "executedSha256": "7847a27710af030c63345a836e1d6af2337ff0426bcc3e3a0e38e14660545825",
+          "assessedSha256": "022fc03c054754a6639f363518947ec58fa480e072be7d580a58d5730cea169c"
+        },
+        {
+          "path": "packages/drivers/ai-provider-cli/package.json",
+          "executedSha256": "e1df2ab464009f332c467795019fa4cd1c37edb5e061d69eee85ab2253ce9b73",
+          "assessedSha256": "1f7dc5f03b3d2154fc94df88d970f930d7320c9ad040de0abc6b7b083fc51513"
+        },
+        {
+          "path": "packages/drivers/phoenix/package.json",
+          "executedSha256": "71a2a657e9be5e9ebea96882b15466265b3ddbaac854176c7aad9931890c2a71",
+          "assessedSha256": "cdcbdfda5609d21f715ef71521f1de607c12dcad3ad45f46ba8ee2ebf9104de1"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/package.json",
+          "executedSha256": "0e028a518bcae45ab6100065cb0771f3f1107d4e56f08e610555cf0a784ce3d9",
+          "assessedSha256": "789fd9df87f52dd92269269c1493347fc879ddd506b7098bcdab65b284534ec7"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+          "executedSha256": "2b0306dd8bd1a50e45ddb862c21eac6f7558819368b6f4b0ee5ceafa46efe538",
+          "assessedSha256": "bdc584404a6ff96215c993804def6b84f77366bb72369e43c110483614bcac81"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "executedSha256": "6c9240652a381b14622a4e7cdfc9ed3f1eb38801a871ea3c254198dd9174f8f1",
+          "assessedSha256": "aadfa73d140d9e5a3e5ed24273700c3b01ab2207fe0a068244251e91a8935699"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+          "executedSha256": "8c55ad13f64e400b8c01f2b0f4088cd2610c45419f56302cd51c554658a27ac7",
+          "assessedSha256": "3a198e135ec0ab8fbb5aeb7ec0ab181cbf391d39ba9182908cdc903659d0206c"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/config-snapshot-failures.test.ts",
+          "executedSha256": "3c852c797d6d956ced2b7a402b66fd81552dd6965c19ceebd888f3042e8b359b",
+          "assessedSha256": "a4be0dbe261a7182e14053ab77ca353135751313db2a0a36fe882cc3e74f72c7"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
+          "executedSha256": "6431cb0868e001a49b741f7e5c70360d4693ac30e767280052371facf1d53a1c",
+          "assessedSha256": "c870e0ad31b6422c6af6bf5b08e76ec0f19800cf700ce7be053a668e805a8e8d"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+          "executedSha256": "85d2eb613f80512dbb31ccae553d6aba438f7d0494c9216fb80775ba2e4e182e",
+          "assessedSha256": "135a39306c844d5d4157553e15d2ae957cb62de9af6d4b14ecaab6cde7043b75"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-launch-client.test.ts",
+          "executedSha256": "26025d6d11e279670e61aa86b5b90dfa83891454653ce5663306886ea937c9c3",
+          "assessedSha256": "9ad6f3a5b16c548ac7c2d10e7606a907f2ce1adfd0a22d02ecce4a6797c2bfc2"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/tsconfig.check.json",
+          "executedSha256": "c29ec547f32d9237b2ef160efde0e3fa7ccf092e11a1782fd052004a64508e3a",
+          "assessedSha256": "0c331ba443e1070392ecb535d119409859bd8b5706947f1c309b4212bef84508"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/tsconfig.json",
+          "executedSha256": "78d4f61349dad891d912f492cc9ddb076c6868cd114bb2173c5780390dcf619c",
+          "assessedSha256": "4edf9fc491b77b4df74b910488077db73b84affddd58de22f556e23d419f60a7"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/harness-ledger.test.ts",
+          "executedSha256": "26dbd905ab4df1fd0eeca896b5a8b7c4ed8dde4f515f0f53d854b690e86e7cee",
+          "assessedSha256": "997a0b2ace90404a286cb3f2a51223cf5f6a372b6a74c1b09b3b598933f893f8"
+        }
+      ]
+    },
+    "preparation": {
+      "selected": 84,
+      "exact": 82,
+      "changed": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+          "executedSha256": "2b0306dd8bd1a50e45ddb862c21eac6f7558819368b6f4b0ee5ceafa46efe538",
+          "assessedSha256": "bdc584404a6ff96215c993804def6b84f77366bb72369e43c110483614bcac81"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "executedSha256": "6c9240652a381b14622a4e7cdfc9ed3f1eb38801a871ea3c254198dd9174f8f1",
+          "assessedSha256": "aadfa73d140d9e5a3e5ed24273700c3b01ab2207fe0a068244251e91a8935699"
+        }
+      ]
+    },
+    "disposable": {
+      "selected": 90,
+      "exact": 86,
+      "changed": [
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "executedSha256": "162c54e11d9b5c01041559c9262d787ab8edd4d9d779e2ffb178b47c1d20ec19",
+          "assessedSha256": "dbba5256eef94dcb90e7fd52a5bd076b30fdb0c71332a8aeb25f8b971fac9b8c"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/declared_canary_support.py",
+          "executedSha256": "e57b2a75307e02c9ac3110e7af09edae8f1882e76fd4a526bacc4de9b39b3036",
+          "assessedSha256": "fb81d90bf370b7c89daec86a83fd0772bb40e56da32bc00cfd3bcb5581513ece"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+          "executedSha256": "2b0306dd8bd1a50e45ddb862c21eac6f7558819368b6f4b0ee5ceafa46efe538",
+          "assessedSha256": "bdc584404a6ff96215c993804def6b84f77366bb72369e43c110483614bcac81"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "executedSha256": "6c9240652a381b14622a4e7cdfc9ed3f1eb38801a871ea3c254198dd9174f8f1",
+          "assessedSha256": "aadfa73d140d9e5a3e5ed24273700c3b01ab2207fe0a068244251e91a8935699"
+        }
+      ]
+    },
+    "live": {
+      "selected": 89,
+      "exact": 85,
+      "changed": [
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "executedSha256": "162c54e11d9b5c01041559c9262d787ab8edd4d9d779e2ffb178b47c1d20ec19",
+          "assessedSha256": "dbba5256eef94dcb90e7fd52a5bd076b30fdb0c71332a8aeb25f8b971fac9b8c"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/declared_canary_support.py",
+          "executedSha256": "e57b2a75307e02c9ac3110e7af09edae8f1882e76fd4a526bacc4de9b39b3036",
+          "assessedSha256": "fb81d90bf370b7c89daec86a83fd0772bb40e56da32bc00cfd3bcb5581513ece"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+          "executedSha256": "2b0306dd8bd1a50e45ddb862c21eac6f7558819368b6f4b0ee5ceafa46efe538",
+          "assessedSha256": "bdc584404a6ff96215c993804def6b84f77366bb72369e43c110483614bcac81"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "executedSha256": "6c9240652a381b14622a4e7cdfc9ed3f1eb38801a871ea3c254198dd9174f8f1",
+          "assessedSha256": "aadfa73d140d9e5a3e5ed24273700c3b01ab2207fe0a068244251e91a8935699"
+        }
+      ]
+    }
+  },
+  "packageMembershipExact": true,
+  "currentHostedComponents": {
+    "aiMetrics": {
+      "head": "a9651afb719703bb5ca29a3154fab4b71df0c686",
+      "job": 125560171187,
+      "run": 41527641691,
+      "tests": 871,
+      "files": 76,
+      "logSha256": "99c1e7ff189aa3d0b5bbc40838ad949485721dc00190b113d17e1b8cbea0b353",
+      "actualLines": [
+        "2026-11-02T21:33:54.8195861Z  \u2713 test/observation-launch-client.test.ts (9 tests) 315ms",
+        "2026-11-02T21:33:54.8672231Z       Tests  871 passed (871)"
+      ]
+    },
+    "harnessLedger": {
+      "head": "a9651afb719703bb5ca29a3154fab4b71df0c686",
+      "job": 125560171392,
+      "run": 41527641691,
+      "tests": 51,
+      "sourceSha256": "997a0b2ace90404a286cb3f2a51223cf5f6a372b6a74c1b09b3b598933f893f8",
+      "logSha256": "97e3607f407762731fc34ea2117e450c662f865660dcb03937c23bd880156a1d",
+      "actualLines": [
+        "2026-11-02T21:33:04.2396669Z  \u2713  shared  test/harness-ledger.test.ts (51 tests) 2633ms"
+      ]
+    },
+    "coverage": {
+      "head": "a9651afb719703bb5ca29a3154fab4b71df0c686",
+      "job": 125566993272,
+      "run": 41527641691,
+      "logSha256": "d9206aaeeb744083cd1d3efac137a6d6401a52ee926bec5b1cc8fc8cae6f6f85",
+      "originalBaselineSha256": "9593273c75e78eee66264e587d5954a71fbb98bbb55c59bca98c58343e394525",
+      "actualRatchetLines": [
+        "2026-11-02T21:43:29.6927976Z [coverage-ratchet] ok: compared 187 package(s) with epsilon 0.001; 0 raised row metric(s) judged against this pull request's own rows; 0 floor(s) lowered on packages it could not have moved"
+      ]
+    }
+  },
+  "syntheticSourceApplicability": {
+    "forwarder": "Documentation-only delta in JSDoc; executable code unchanged.",
+    "configSnapshot": "Real Git.lsFiles service, bounded listing and typed-error adapter changes. This is not exhaustive behavioral equivalence. Retained root probe uses observeAiMetricsGitRoot; dedicated observation worker and synthetic writer do not execute snapshot enumeration.",
+    "supportingObservations": "Bounded executable local import walk and archived-worker snapshot-marker absence support the path argument; not complete external/transitive runtime closure.",
+    "W2bDifferential": "Three same lsFiles cases: path containing space, subdirectory, unmerged index; no all-error/timeout/list-bound equivalence claim.",
+    "opsHelpers": "Keep prior independently reviewed explicit-pin helper bridge separate.",
+    "currentExactSourceRootAdmission": false,
+    "rootGuardPreserved": "declared_root_inputs.py exact-byte verification remains enforced. Retained root/stage receipts are historical executions; a new current exact-source admission requires fresh qualification.",
+    "historicalSourceMapsAndSourceStableDuringRun": "Preserved without rewriting."
+  },
+  "manifestAndLockBoundaries": "The former four-script-only-manifest/unchanged-lock description is historical. AI manifest and project references add Git; root manifest/lock also add unrelated Party-domain catalog/trust/workspace bindings. Three original script-only bridges were valid at a965; root manifest has later catalog/trust additions. Provider/Phoenix package source inputs remain scoped historical support. No full dependency closure or blanket current execution transfer.",
+  "immutableRootAndStageReceiptHashes": {
+    "declared-root-integrated-v1/qualification.json": "11a78365fd7eade9c845f60c312b3273b77d41da4c6a6404ac83ce1f1dee9513",
+    "declared-root-integrated-v1/root-probe.json": "a96a267c1b43cd626638edf6ce578dfccfad1b49be2ad5bd0f5c672bdd2a388a",
+    "integrated-disposable/evidence.json": "8bef8394420dc4a76a3fc37dd30b2a65ea6fbb4e2c8b5385aa8f570004ce279b",
+    "integrated-live/evidence.json": "66158e7b399c704b4fa8eccd8a33df850a22f23bb067404058ead1216e1c18ed"
+  },
+  "dankserverSelectedSources": 25,
+  "historicalOriginalTests": {
+    "aiMetrics": 870,
+    "phoenixNonIntegration": 40,
+    "provider": 73,
+    "harnessLedger": 44,
+    "scope": "Original executed inputs and runtime boundaries retained; later receipts do not rewrite them."
+  },
+  "collectionCoverage": "All seven real harness populations remain Unknown; synthetic CLI/desktop-marked fixtures do not qualify real applications.",
+  "recoveryHold": "Preserved; no production enrollment, reingestion, project deletion or hold release.",
+  "goalComplete": false,
+  "requiresFinalHeadHostedReadinessAndCanonicalCompletion": true
+}
