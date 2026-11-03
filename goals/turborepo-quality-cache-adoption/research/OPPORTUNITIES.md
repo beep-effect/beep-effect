@@ -870,3 +870,17 @@ observed schema difference changed the matrix and next qualification work.
   logging paths, refs, document contents, findings or credentials. Preserve
   the deadline and fail-closed baseline/mint rules; instrumentation is not a
   timeout fix or hosted-green proof. Local quality runs remain operator-skipped.
+
+
+### 2026-11-03 — assert warnings emitted by the current operation
+
+- Hosted repo-cli-2 job 126178598812 caught a console-isolation assumption
+  after the CI phase diagnostic change: the lease-warning case expected two
+  errors but read 35, including earlier live-doctor progress messages retained
+  by the shared test console. This is a newly triggered test failure, not an
+  infrastructure failure or a passing result.
+- Capture the preceding console length and assert only the lines emitted by
+  this case. Preserve the exact count of two, both failure-message checks and
+  process-capture restoration. Do not filter away unexpected new messages or
+  increase the expected count to match the diagnostic implementation. Push the
+  correction for fresh hosted proof; no local suite was started.
