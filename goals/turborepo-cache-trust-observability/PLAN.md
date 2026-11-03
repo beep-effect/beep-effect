@@ -1160,3 +1160,8 @@ The [collector checkpoint](research/source-directory-alias-checkpoint-2026-11-02
 records focused controls and real-tree replay separately from actual protected
 inspection. A new main inspection and independent approval remain required; no
 whole-goal criterion or production configuration is changed.
+
+
+### Protected environment installation preparation, 2026-11-02
+
+The [transport preparation](research/producer-environment-install-preparation-2026-11-02.md) adds an explicit environment source to the existing installer. It reuses approved record schemas and the exclusive initializer, preserves file defaults, caps UTF-8/issuer bytes and adds thirteen authored dispatch controls. No local or hosted execution proof is claimed. Independent protected source/profile approval, step-scoped secret delivery, actual portable execution, bounded R2 publication and all representative windows remain gates.

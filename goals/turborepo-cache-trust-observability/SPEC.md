@@ -1027,3 +1027,6 @@ the prior closure, never by overwriting a newer baseline or the ledger.
   ordinary R2 service change is included.
 - Reverse by reverting this collector change and retaining inspection refusal;
   preserve prior observations, private credentials and the existing cache.
+
+
+- 2026-11-02: Prepare explicit `producer-install --from-environment` through the existing independent installer. Decode the fixed redacted approval/profile records under the existing sixteen-KiB UTF-8 bounds, validate approval before issuer lookup and require exactly 96 transferred bytes under a 128-character Base64 cap. Keep private files as the default and forbid this transport for issuer provisioning. Actual protected delivery must be installation-step scoped, outside every worker environment/mount, with the verifier off-runner. Preserve all existing source/target/executable/binding checks and exclusive-store cleanup. No credential, runtime activation or proof authority is added; reverse by removing only the opt-in transport.

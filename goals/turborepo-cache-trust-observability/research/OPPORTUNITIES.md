@@ -1854,3 +1854,8 @@ Keep the original red receipts and all baseline floors. Run the root policy
 scanner on touched test files: package lint alone does not include that rule.
 
 - 2026-11-02: The accepted party-domain expansion added twelve executable nodes without recording its cache baseline. Merging main produced a baseline conflict and eight expansion blockers plus root policy drift. A generator-integrated configuration review would prevent this; the touched baseline is reconciled once through the named CAS review, preserving qualification bytes.
+
+
+### Protected input delivery and shared review-budget friction, 2026-11-02
+
+The private-file producer installer has no direct step-scoped protected-environment input. Preparing that bridge through the existing schemas/initializer avoids duplicating an authority or persisting an extra material copy. Thirteen controls are authored but not run under the push-only instruction. The isolated worktree used a frozen install with lifecycle scripts disabled to avoid unrelated compiler work; no local secret files were copied. Separately, three existing PR observers exhausted their API poll-error budgets after the shared GraphQL route was refused. Terminal results are retained; they are not merge readiness. Quota-aware restoration and fresh exact-head gates are required before acceptance.

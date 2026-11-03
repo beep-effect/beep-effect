@@ -624,3 +624,10 @@ success is not reused as ordinary qualification. All full-goal gates remain.
   controls, real-tree replay and remaining protected approval.
 - Effect `FileSystem.lstat` was verified in the installed 4.1.1 public source and
   canonical Effect reference. It inspects child type without following aliases.
+
+
+### 2026-11-02 — private producer environment transport
+
+- Existing `Cache.producer.ts` provisioning reader and `Cache.workflow.ts` exclusive initializer supply the authority, record bounds, source/target/executable checks and rollback.
+- Installed Effect 4.1.1 and the canonical Effect reference expose `Config.Redacted`, `Schema.Uint8ArrayFromBase64` and length checks; the transport uses those APIs and the existing JSON codecs.
+- The [preparation record](producer-environment-install-preparation-2026-11-02.json) binds implementation and authored controls. It records no executed test, deployment or qualification claim.

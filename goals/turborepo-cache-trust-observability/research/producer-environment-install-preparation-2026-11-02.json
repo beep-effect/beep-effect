@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "cache-producer-environment-preparation/v1",
+  "sourceBaseRevision": "71bc36fcb49a3b274dfb7bf9d22b60988439e5cb",
+  "status": "source-prepared-unverified",
+  "implementation": "Existing producer-install with explicit --from-environment; private-file installation remains the default.",
+  "sourceBindings": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "8215b9d6f278438aeb5118bc8169663ddb4c4907f2a721288cca96970f2499de"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+      "sha256": "d4c1e3342a4eaa5db87f3490e9beff4623801ee43cd648c7a76ee918aab03ef1"
+    }
+  ],
+  "environmentRecords": {
+    "approval": "BEEP_CACHE_PRODUCER_APPROVAL_JSON",
+    "runtime": "BEEP_CACHE_PRODUCER_RUNTIME_JSON",
+    "material": "BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64",
+    "store": "BEEP_CACHE_PRODUCER_STORE"
+  },
+  "bounds": {
+    "approvalUtf8Bytes": 16384,
+    "runtimeUtf8Bytes": 16384,
+    "materialEncodedCharacters": 128,
+    "materialDecodedBytes": 96
+  },
+  "reusedAuthority": [
+    "CacheProducerApproval",
+    "CacheProducerExecutionProfile",
+    "validateCacheProducerApproval",
+    "initializeCacheProducerExecution"
+  ],
+  "authoredControls": {
+    "positiveDispatch": 1,
+    "explicitOptInAndProvisioningDenial": 1,
+    "negativeEnvironmentCases": 11,
+    "executed": false
+  },
+  "verification": {
+    "targetedFormatting": "completed",
+    "normalGitHooks": "pending",
+    "packageVerify": "not run per operator push-only instruction",
+    "localYeetVerifyPublishFinalCheck": "not run",
+    "hostedChecks": "not started; wait for consolidated prerequisite landing order"
+  },
+  "activation": {
+    "runtimeChanged": false,
+    "credentialsReadOrProvisioned": false,
+    "cloudChanged": false,
+    "protectedWorkflowExecuted": false,
+    "signedQualificationGranted": false,
+    "wholeGoalAcceptanceGranted": false
+  },
+  "remaining": [
+    "Fresh hosted package and negative-control proof on the submitted head.",
+    "Actual protected-main inspection and independently approved source/tool/profile bindings.",
+    "Fixed protected workflow and step-scoped secret delivery outside every worker mount.",
+    "Current portable executable source/digest and real runner qualification.",
+    "Real bounded signed R2 production/publication/acceptance, capability/epoch/rollback/telemetry controls and representative windows."
+  ]
+}

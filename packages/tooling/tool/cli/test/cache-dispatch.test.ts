@@ -74,6 +74,7 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
@@ -172,6 +173,23 @@ const workflow = CacheProducerWorkflow.make({
 const decodeWorkflow = S.decodeUnknownEffect(S.fromJsonString(CacheProducerWorkflow));
 const decodeProducerBinding = S.decodeUnknownEffect(CacheProducerBinding);
 const decodeProducerContract = S.decodeUnknownEffect(CacheTaskContract);
+const producerProvisioning = Effect.fn("CacheDispatchTest.producerProvisioning")(function* () {
+  const contract = yield* decodeProducerContract(contractInput);
+  const binding = yield* decodeProducerBinding({
+    ...pilot,
+    protocolClient: protocol.observation.client,
+    workflowRevision: Str.repeat(40)("a"),
+    workflowImplementation: digest,
+    policyDigest: yield* hashCacheProducerContract(contract),
+  });
+  return Tuple.make(
+    CacheProducerApproval.make({ binding, contract }),
+    CacheProducerExecutionProfile.make({
+      target: targetFor({ url: "http://127.0.0.1:19427/" }),
+      adapterExecutable: "/fixture/adapter",
+    })
+  );
+});
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   NodeCrypto.layer,
@@ -787,19 +805,7 @@ describe("cache qualification command dispatch", () => {
     it.effect("uses only the two closed provisioning locations and no runtime capability configuration", () =>
       Effect.gen(function* () {
         const f = yield* fixture();
-        const contract = yield* decodeProducerContract(contractInput);
-        const binding = yield* decodeProducerBinding({
-          ...pilot,
-          protocolClient: protocol.observation.client,
-          workflowRevision: Str.repeat(40)("a"),
-          workflowImplementation: digest,
-          policyDigest: yield* hashCacheProducerContract(contract),
-        });
-        const approval = CacheProducerApproval.make({ binding, contract });
-        const profile = CacheProducerExecutionProfile.make({
-          target: targetFor({ url: "http://127.0.0.1:19427/" }),
-          adapterExecutable: "/fixture/adapter",
-        });
+        const [approval, profile] = yield* producerProvisioning();
         const read = vi
           .spyOn(Producer, "readCacheProducerProvisioning")
           .mockReturnValue(Effect.succeed(Tuple.make(approval, profile, O.none())));
@@ -844,6 +850,199 @@ describe("cache qualification command dispatch", () => {
         expect(f.calls).toEqual([]);
         expect(yield* consoleText).toContain("provisioned from independent approval");
         expect(yield* consoleText).not.toContain("/trusted");
+      })
+    );
+    it.effect("installs protected environment records through the existing initializer without reading files", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const [approval, profile] = yield* producerProvisioning();
+        const read = vi.spyOn(Producer, "readCacheProducerProvisioning");
+        const initialize = vi.spyOn(Workflow, "initializeCacheProducerExecution").mockReturnValue(Effect.void);
+        const bytes = new Uint8Array(96);
+        yield* f.run(["producer-install", "--from-environment"]).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({
+              BEEP_CACHE_PRODUCER_STORE: "/trusted/store",
+              BEEP_CACHE_PRODUCER_APPROVAL_JSON: yield* S.encodeEffect(S.fromJsonString(CacheProducerApproval))(
+                approval
+              ),
+              BEEP_CACHE_PRODUCER_RUNTIME_JSON: yield* S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile))(
+                profile
+              ),
+              BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: yield* S.encodeEffect(S.Uint8ArrayFromBase64)(bytes),
+            })
+          )
+        );
+        const installed = yield* A.last(initialize.mock.calls).pipe(
+          Effect.fromOption(() => CacheCommandError.new("Expected the existing producer initializer."))
+        );
+        deepStrictEqual(A.take(installed, 4), [process.cwd(), "/trusted/store", approval, profile]);
+        const material = yield* O.fromUndefinedOr(installed[4]).pipe(
+          O.flatten,
+          Effect.fromOption(() => CacheCommandError.new("Expected transferred issuer material."))
+        );
+        deepStrictEqual(Redacted.value(material), bytes);
+        expect(read).not.toHaveBeenCalled();
+        expect(f.calls).toEqual([]);
+        expect(yield* consoleText).not.toContain("/trusted");
+        expect(yield* consoleText).not.toContain("issuerMaterial");
+      })
+    );
+    it.effect("keeps environment installation opt-in and unavailable to issuer provisioning", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const initialize = vi.spyOn(Workflow, "initializeCacheProducerExecution");
+        const read = vi.spyOn(Producer, "readCacheProducerProvisioning");
+        const configuration = ConfigProvider.fromUnknown({
+          BEEP_CACHE_PRODUCER_STORE: "/trusted/store",
+          BEEP_CACHE_PRODUCER_APPROVAL_JSON: "private-unused-approval",
+          BEEP_CACHE_PRODUCER_RUNTIME_JSON: "private-unused-runtime",
+          BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: "private-unused-material",
+        });
+        expect(
+          yield* f
+            .run(["producer-install"])
+            .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configuration), Effect.isFailure)
+        ).toBe(true);
+        expect(yield* errorText).toContain(
+          "Independently selected provisioning inputs and producer store are required."
+        );
+        expect(
+          yield* f
+            .run(["producer-provision", "--from-environment"])
+            .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configuration), Effect.isFailure)
+        ).toBe(true);
+        expect(initialize).not.toHaveBeenCalled();
+        expect(read).not.toHaveBeenCalled();
+        expect(f.calls).toEqual([]);
+        expect(yield* errorText).not.toContain("private-unused");
+      })
+    );
+    it.effect.each([
+      "missing-records",
+      "malformed-approval",
+      "oversized-approval",
+      "malformed-runtime",
+      "oversized-runtime",
+      "unicode-byte-bound",
+      "mismatched-approval",
+      "missing-material",
+      "short-material",
+      "long-material",
+      "invalid-base64",
+    ])("refuses invalid protected environment input before installation: %s", (testCase) =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const [approval, profile] = yield* producerProvisioning();
+        const marker = `private-input-sentinel-${testCase}`;
+        const records = {
+          BEEP_CACHE_PRODUCER_STORE: "/trusted/store",
+          BEEP_CACHE_PRODUCER_APPROVAL_JSON: yield* S.encodeEffect(S.fromJsonString(CacheProducerApproval))(approval),
+          BEEP_CACHE_PRODUCER_RUNTIME_JSON: yield* S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile))(
+            profile
+          ),
+        };
+        const material = yield* S.encodeEffect(S.Uint8ArrayFromBase64)(new Uint8Array(96));
+        const short = yield* S.encodeEffect(S.Uint8ArrayFromBase64)(new Uint8Array(95));
+        const long = yield* S.encodeEffect(S.Uint8ArrayFromBase64)(new Uint8Array(97));
+        const mismatched = yield* S.encodeEffect(S.fromJsonString(CacheProducerApproval))(
+          CacheProducerApproval.make({
+            ...approval,
+            binding: CacheProducerBinding.make({
+              ...approval.binding,
+              policyDigest: Sha256Hex.make(Str.repeat(64)("b")),
+            }),
+          })
+        );
+        const complete = { ...records, BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: material };
+        const [configuration, diagnostic] = Match.value(testCase).pipe(
+          Match.when("missing-records", () =>
+            Tuple.make(
+              { BEEP_CACHE_PRODUCER_STORE: "/trusted/store" },
+              "Independent producer approval and runtime records are required."
+            )
+          ),
+          Match.when("malformed-approval", () =>
+            Tuple.make(
+              { ...records, BEEP_CACHE_PRODUCER_APPROVAL_JSON: marker },
+              "Producer environment approval is invalid."
+            )
+          ),
+          Match.when("oversized-approval", () =>
+            Tuple.make(
+              {
+                ...records,
+                BEEP_CACHE_PRODUCER_APPROVAL_JSON: records.BEEP_CACHE_PRODUCER_APPROVAL_JSON + Str.repeat(16385)(" "),
+              },
+              "Producer environment records exceed their sixteen KiB bound."
+            )
+          ),
+          Match.when("malformed-runtime", () =>
+            Tuple.make(
+              { ...records, BEEP_CACHE_PRODUCER_RUNTIME_JSON: marker },
+              "Producer environment runtime profile is invalid."
+            )
+          ),
+          Match.when("oversized-runtime", () =>
+            Tuple.make(
+              {
+                ...records,
+                BEEP_CACHE_PRODUCER_RUNTIME_JSON: records.BEEP_CACHE_PRODUCER_RUNTIME_JSON + Str.repeat(16385)(" "),
+              },
+              "Producer environment records exceed their sixteen KiB bound."
+            )
+          ),
+          Match.when("unicode-byte-bound", () =>
+            Tuple.make(
+              { ...records, BEEP_CACHE_PRODUCER_APPROVAL_JSON: Str.repeat(8193)("é") },
+              "Producer environment records exceed their sixteen KiB bound."
+            )
+          ),
+          Match.when("mismatched-approval", () =>
+            Tuple.make(
+              { ...records, BEEP_CACHE_PRODUCER_APPROVAL_JSON: mismatched },
+              "Producer approval's full policy differs from its fixed binding."
+            )
+          ),
+          Match.when("missing-material", () =>
+            Tuple.make(records, "Independently transferred producer issuer material is required.")
+          ),
+          Match.when("short-material", () =>
+            Tuple.make(
+              { ...records, BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: short },
+              "Producer issuer transport must encode exactly ninety-six bytes."
+            )
+          ),
+          Match.when("long-material", () =>
+            Tuple.make(
+              { ...records, BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: long },
+              "Producer issuer transport exceeds its fixed encoded bound."
+            )
+          ),
+          Match.orElse(() =>
+            Tuple.make(
+              { ...complete, BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64: marker },
+              "Producer issuer transport must encode exactly ninety-six bytes."
+            )
+          )
+        );
+        const initialize = vi.spyOn(Workflow, "initializeCacheProducerExecution");
+        const read = vi.spyOn(Producer, "readCacheProducerProvisioning");
+        expect(
+          yield* f
+            .run(["producer-install", "--from-environment"])
+            .pipe(
+              Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(configuration)),
+              Effect.isFailure
+            )
+        ).toBe(true);
+        expect(initialize).not.toHaveBeenCalled();
+        expect(read).not.toHaveBeenCalled();
+        expect(f.calls).toEqual([]);
+        expect(yield* consoleText).not.toContain(marker);
+        expect(yield* errorText).not.toContain(marker);
+        expect(yield* errorText).toContain(diagnostic);
       })
     );
     it.effect.each(["--request", "--store", "--approval", "--runtime", "--target", "--signing-key"])(
