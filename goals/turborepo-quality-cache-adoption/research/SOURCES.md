@@ -598,5 +598,20 @@ production qualification.
   `watch-feature-review.json` classifies every hit and bounds the decision.
 
 
+### Current source population, 2026-11-03
+
+- [Current source checkpoint](population-current-source-checkpoint-2026-11-03.json):
+  native census, complete source bindings, source delta, unchanged qualification
+  ledger and byte-preserved prior snapshot.
+- [Current literal freshness review](current-source-fresh-disposition-review-2026-11-03.json):
+  197 retained exact operations plus the explicitly inspected Party fixer. No
+  pure counterpart is qualified.
+- [Preserved prior population](population-before-t3-refresh-2026-11-03.json):
+  exact accepted bytes with the older review/history chain intact.
+- Installed Turbo 2.11.10 `docs/reference/run.mdx` documents `--dry=json` as
+  planning without task execution. Cache's current collector uses strict
+  environment mode and `--cache=local:` for that plan.
+
+
 - [Current npm dist-tags](https://registry.npmjs.org/-/package/turbo/dist-tags), observed 2026-11-03: stable 2.11.10 and canary 2.11.11-canary.1. `current-feature-client-refresh-2026-11-03.json` binds the current pins, SRI-verified canary package/native archive and availability observations; the previous aggregate pins remain byte-identical in `client-pins-before-current-pair-refresh-2026-11-03.json`.
 - [Published current canary package](https://registry.npmjs.org/turbo/2.11.11-canary.1): schema declares the canary-only `hashFilePermissions` flag. Sixty shared-flag and four canary-only-flag native dry runs executed no tasks. `native-permission-flag-availability.py` reuses the existing bounded collector; its three refusal controls are retained separately. No mode-hash semantics, task qualification or runtime activation is claimed.

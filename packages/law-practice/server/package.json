@@ -30,7 +30,7 @@
     "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
-    "beep:test": "bunx --bun vitest run",
+    "beep:test": "bunx --bun vitest run --exclude=test/PartyContactSource.boundary.test.ts && bunx vitest run test/PartyContactSource.boundary.test.ts",
     "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit"
   },
   "exports": {
@@ -49,7 +49,8 @@
     "./QuestionCalendar": "./src/QuestionCalendar/index.ts",
     "./ReviewFiles": "./src/ReviewFiles/index.ts",
     "./UsptoClaims": "./src/UsptoClaims/index.ts",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./PartyContactSource": "./src/PartyContactSource/index.ts"
   },
   "files": [
     "src/**/*.ts",
@@ -75,6 +76,7 @@
     "@beep/libpff": "workspace:^",
     "@beep/m365": "workspace:^",
     "@beep/mcp-kit": "workspace:^",
+    "@beep/party-use-cases": "workspace:^",
     "@beep/pglite": "workspace:^",
     "@beep/postgres": "workspace:^",
     "@beep/provenance": "workspace:^",
@@ -90,6 +92,7 @@
     "@beep/md": "workspace:^",
     "@beep/memfs": "workspace:^",
     "@beep/nlp": "workspace:^",
+    "@beep/repo-utils": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
@@ -98,6 +101,7 @@
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
+    "@typescript/native": "catalog:",
     "bun-types": "catalog:"
   }
 }

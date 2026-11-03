@@ -1249,3 +1249,23 @@ regression into one case. Strengthen that case against the actual execution
 leaf's read map and preserve the narrower selected-leaf defaults. Historical
 715-head CI evidence stays historical after merging this accepted base; fresh
 head checks remain required. No further permission or activation change.
+
+
+### Native OpenSSL build prerequisites, 2026-11-03
+
+The accepted-source credential-free candidate reached native compilation but
+OpenSSL Configure failed because the runner's minimal Perl lacked `FindBin`.
+Require Make and the required Perl core-module probes in the same prerequisite
+condition as the host compiler/linker/ELF tools, including when those existing
+tools already pass. Install `make perl-core` on dnf systems or `make perl` on
+Debian systems through the existing noninteractive route, retaining apt source
+pruning. Recheck prerequisites before Cargo and log Make/Perl versions. Preserve
+the six existing recorded executable identities, Rust/Zig/source/patch pins,
+two Cargo jobs, twenty-minute ceiling, isolated scratch and artifact limits.
+
+Preserve failed run 41610315729, its skipped artifact publication and successful
+cleanup. Require hosted regression proof, accepted-source preparation and
+independent artifact inspection before approval; no unchanged retry or authority
+is granted by this repair. Reverse by disabling preparation and reverting this
+prerequisite delta, retaining the failure receipt. Existing consumers, secrets,
+producer activation, qualification and whole-goal acceptance remain unchanged.

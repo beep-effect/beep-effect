@@ -666,6 +666,26 @@ cache writes require their own qualification. Reverse this evidence/decision
 registration without changing runtime configuration.
 
 
+### Source inventory after T3 and root-task changes, 2026-11-03
+
+Refresh the native static census at accepted source `fae5b2098c`: 191 workspaces,
+115 root scripts, 4,459 graph nodes and 2,400 executable computations. Account
+for 47 removed and 13 added computations from source, retaining all historical
+reviews. Whole-workspace script-map digest changes alone do not establish
+literal operation changes. Revalidate 197 surviving keep-fresh decisions by
+exact command/implementation and disabled-cache checks; explicitly review the
+new Party fixer, yielding 186 source-mutating fixers and twelve persistent
+services. Their pure counterparts remain unqualified.
+
+Keep the five original qualification exclusions and all other native reviews
+pending (2,202). Retired entries are source removals, not a scope waiver. The
+two unresolved entrypoint obligations and non-Turbo/nested execution coverage
+still require review. Census, review and archived bytes grant no runtime,
+qualification, adoption or whole-goal acceptance. Reverse publication by
+restoring the byte-identical prior snapshot as historical evidence; preserve
+that archive and rerun source-bound inventory before treating it as current.
+
+
 ### Current feature pair and canary-only permission hashing, 2026-11-03
 
 Refresh published metadata, native binary identities and documentation for
