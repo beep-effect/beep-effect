@@ -2,7 +2,6 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../tsconfig.json",
   "include": ["./**/*.ts", "../madge.d.ts"],
-  "files": ["./fixtures/agent-message/process.ts"],
   "exclude": ["./fixtures/**"],
   "compilerOptions": {
     "composite": false,

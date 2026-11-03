@@ -500,11 +500,6 @@
       "classification": "production"
     },
     {
-      "path": "packages/drivers/t3-code/package.json",
-      "source": "dependency-graph",
-      "classification": "production"
-    },
-    {
       "path": "packages/drivers/tailscale/package.json",
       "source": "dependency-graph",
       "classification": "production"

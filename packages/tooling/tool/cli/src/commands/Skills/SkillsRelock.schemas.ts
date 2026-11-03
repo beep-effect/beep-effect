@@ -25,12 +25,12 @@
  * @since 0.0.0
  */
 
+import { SkillEffective, SkillGitRevision, SkillSnapshot } from "@beep/ai-sync/Skills.schemas";
+import { SkillsLockWrittenFile } from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import * as S from "effect/Schema";
-import { SkillEffective, SkillGitRevision, SkillSnapshot } from "./Skills.schemas.ts";
-import { SkillsLockWrittenFile } from "./SkillsLock.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Skills/SkillsRelock.schemas");
 
@@ -202,7 +202,7 @@ export class SkillHunkReport extends S.Opaque<SkillHunkReport, { readonly brand:
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { SkillGitRevision } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillGitRevision } from "@beep/ai-sync/Skills.schemas"
  *
  * const digest = Sha256Hex.make("0".repeat(64))
  * const revision = await Effect.runPromise(S.decodeEffect(SkillGitRevision)("d6e773a562dc85c2a81b7c571f40ca2d81896679"))

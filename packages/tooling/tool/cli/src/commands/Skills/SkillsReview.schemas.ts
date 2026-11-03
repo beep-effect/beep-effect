@@ -23,10 +23,10 @@
  * @since 0.0.0
  */
 
+import { SkillGitRevision, SkillPatchLabel } from "@beep/ai-sync/Skills.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
-import { SkillGitRevision, SkillPatchLabel } from "./Skills.schemas.ts";
 import { SkillHunkStatus } from "./SkillsRelock.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Skills/SkillsReview.schemas");

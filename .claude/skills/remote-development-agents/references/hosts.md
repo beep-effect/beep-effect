@@ -1,15 +1,30 @@
 # Host profiles
 
 These are routing records, not live health attestations. Last reconciled:
-2026-10-24. The canonical Beep packet is `goals/cloud-agent-readiness` at the
+2026-11-02 (T3 routes added; tom-pc-1 stub). The canonical Beep packet is `goals/cloud-agent-readiness` at the
 repository containing this skill's real path. Read `SPEC.md` before changing a
 boundary. Host-specific receipts are under that packet's `history/` directory.
 
-| Target | Ordinary workstation connection | Readiness and boundary |
-| --- | --- | --- |
-| `beep-worker` | `ssh-beep-worker-yubi` | Existing headless development worker; default wrapper disables forwarding. Recheck current provider and workload readiness. |
-| `tbk-worker` | `ssh-tbk-worker` | Separate KVM guest, account `worker`, no sudo; initial serialized development verified. Only DankStation has admitted inbound SSH. |
-| `dankserver` | `ssh-dankserver-worker` | Dedicated bare-metal account `worker`; initial serialized development verified. Codex/Claude/Grok are available; Cursor/Muse have recorded quota holds. |
+| Target | T3 route | Ordinary workstation connection | Readiness and boundary |
+| --- | --- | --- | --- |
+| `beep-worker` | `environmentId: <beep-worker>` once linked (not yet) | `ssh-beep-worker-yubi` | Existing headless development worker; default wrapper disables forwarding. Recheck current provider and workload readiness. |
+| `tbk-worker` | `environmentId: <tbk-worker>` once linked (gated on the protective-stop latch release) | `ssh-tbk-worker` | Separate KVM guest, account `worker`, no sudo; initial serialized development verified. Only DankStation has admitted inbound SSH. |
+| `dankserver` | `environmentId: <dankserver>` once linked (not yet) | `ssh-dankserver-worker` | Dedicated bare-metal account `worker`; initial serialized development verified. Codex/Claude/Grok are available; Cursor/Muse have recorded quota holds. |
+| `tom-pc-1` | `environmentId: <tom-pc-1>` once linked (not yet) | none yet (a dedicated WSL distro; see below) | Stub: no agent work until `goals/t3code-fleet-rollout` provisions the distro and links it. |
+| `grok-bot-box-1` | out of scope | none | Not a T3 host (exploration ruling 2026-11-01): no operator SSH, no repo record of what runs there, no local credentials allowed. |
+
+## T3 route
+
+A host's T3 route is its `environmentId` as `t3_environment_links` lists it from
+the DankStation hub environment (hub and spoke; the hosts do not link to each
+other). The `<name>` placeholders above are filled in by
+`goals/t3code-fleet-rollout` per host; until a host is listed there, its T3
+route does not exist and the SSH wrapper is the only route. Linked environments
+is a beta setting that must be on at both ends. The link's access level caps
+what a remote thread may do; a full-access link runs unfenced as the remote
+worker account, which is acceptable only on hosts already provisioned as agent
+workers. Never write an environment id, tailnet name or address into the repo;
+they live in the private orchestrator handoff.
 
 ## beep-worker
 
@@ -113,3 +128,17 @@ Both dedicated worker accounts were corrected and their old accounts revoked
 after verification on October 24 UTC. Beep-worker's existing account was
 verified to see only `BEEP_SECRETS`. Vault visibility does not authorize using
 every credential in it or performing cloud deployments.
+
+## tom-pc-1 (stub)
+
+A Windows PC whose agent environment is a new dedicated WSL distro (exploration
+ruling 2026-11-01, superseding the 2026-10-26 Hyper-V design): its own Linux
+user and credentials, `/mnt/c` automount and Windows interop off, the T3 server
+inside the distro through the desktop app's WSL backend, and the existing
+Ubuntu distro untouched. Strict-tier rules apply: no Funnel, a tailnet-only or
+loopback listener, no client data in the repo. The Windows desktop app must stay
+open (Windows has no background T3 service) unless `t3 service` under systemd
+inside WSL is proven. Provisioning, the SSH route and the link belong to
+`goals/t3code-fleet-rollout`; this profile records only that no agent work goes
+there until that packet fills in the readiness line and the T3 route.
+

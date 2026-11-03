@@ -690,3 +690,40 @@ protected producer provenance, current-main qualification or production rollout.
   mode-0700 directory outside the checkout. Never pass secret values as arguments
   or repeat a probe whose private intent exists. Inspect/clean its exact owned
   keys first if the observation is incomplete.
+
+
+### Closed protected producer workflow, 2026-11-03
+
+- [Preparation record](protected-producer-workflow-preparation-2026-11-03.json)
+  binds the exact caller, Heavy leaf and authored CI policy controls. Existing
+  `producer-install`, `producer-run` and `producer-publish` implementations own
+  schema, source, mount, issuer and private-object checks. No observed report
+  approves its own source or credentials.
+- [GitHub reusable-workflow documentation](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)
+  requires environment-secret forwarding through the call and an environment
+  on the called job. This caller enumerates named fields instead of inheriting
+  all secrets. Actual protected delivery remains unexecuted.
+- [Pinned download-artifact inputs](https://raw.githubusercontent.com/actions/download-artifact/9000827ccba6bdab643e8b6fd33ac0654aef8333/action.yml)
+  support exact artifact IDs, authenticated cross-run selection and a failing
+  digest mismatch. Independent executable/source approval remains separate.
+- Syntax-only inspection covers both YAML files, fifteen shell blocks and five
+  Python bodies. The authored source/secret/publication checks and seven real
+  Bash-selection cases still require exact-head hosted execution.
+
+- [Actual host-compiler failure](candidate-host-compiler-failure-2026-11-03.json):
+  authenticated run/job metadata and a SHA-256-bound private log identify the
+  missing host linker. The build step failed, artifact retention skipped and
+  scratch cleanup succeeded. The 2,503-second queue and 43-second execution are
+  this operational job's timings only. No native comparison or savings claim.
+
+
+### Static producer secret selection, 2026-11-03
+
+- [zizmor overprovisioned-secrets](https://docs.zizmor.sh/audits/#overprovisioned-secrets):
+  access individual named secrets instead of the whole secrets context. This
+  source review motivates static installer references; no runtime delivery was observed.
+- [GitHub expression operators](https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#operators):
+  empty strings are false values. Guard both channel branches independently so
+  missing stable material cannot fall through to a canary value.
+- The source-bound preparation report records both review threads and the
+  expanded unprivileged environment/input/script regression boundary.

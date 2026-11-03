@@ -3,8 +3,9 @@
  * main 930758e06b except for import paths and the identity namespace. The reviewer gate is wrapped in `withReviewerOperatorClient` as W3 (#2614) did on main, so the copy builds after that merge.
  * W6 (SPEC D-15) moved the review-window read onto `GithubRest`; this body takes it through
  * `readYeetReviewWindowAsGhLogin`, the gh-login wrapper the live surfaces without services use.
- * Imports follow later moves only (beep-cli-composition W1b #2645 and the W6 login wrappers in `GhOps.ts`);
- * the replayed logic is unchanged.
+ * Imports follow later moves only (beep-cli-composition W1b #2645 and the W6 login wrappers in `GhOps.ts`).
+ * The shared reviewer gate now requires FileSystem for workstation reservation activation;
+ * only the execute/run adapter context types follow that requirement. The replayed logic is unchanged.
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
@@ -50,6 +51,7 @@ import {
   SquashPullRequestFacts,
 } from "./SquashCommitlint.old.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 export { MergeGateCheckRun } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MergeGate.schemas.ts";
@@ -1381,7 +1383,7 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
 ): Effect.fn.Return<
   MergeGateMerged,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | FileSystem.FileSystem
 > {
   yield* enforceReviewerGate(decision.prNumber, decision.headSha).pipe(
     withReviewerOperatorClient(process.cwd()),
@@ -1559,7 +1561,7 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
 ): Effect.fn.Return<
   MergeGateDecision,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | FileSystem.FileSystem
 > {
   const read = yield* readMergeGate(context, options.prNumber);
   yield* Console.log(

@@ -76,8 +76,7 @@
     "./test/*": "./src/test/*.test-kit.ts",
     "./test/DeletePackage": "./src/test/DeletePackage.test-kit.ts",
     "./test/Labs": "./src/test/Labs.test-kit.ts",
-    "./bin": null,
-    "./commands/AgentMessage": "./src/commands/AgentMessage/index.ts"
+    "./bin": null
   },
   "files": [
     "src/**/*.ts",
@@ -153,8 +152,7 @@
       "./test/*": null,
       "./test/DeletePackage": null,
       "./test/Labs": null,
-      "./bin": null,
-      "./commands/AgentMessage": "./dist/commands/AgentMessage/index.js"
+      "./bin": null
     }
   },
   "scripts": {
@@ -184,7 +182,6 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@beep/ai-provider-cli": "workspace:^",
     "@beep/ai-sync": "workspace:^",
     "@beep/chalk": "workspace:^",
     "@beep/cli-kit": "workspace:^",
@@ -231,7 +228,6 @@
     "@beep/semver": "workspace:^",
     "@beep/skill-contract": "workspace:^",
     "@beep/spdx": "workspace:^",
-    "@beep/t3-code": "workspace:^",
     "@beep/technical-drawing": "workspace:^",
     "@beep/tesseract": "workspace:^",
     "@beep/test-utils": "workspace:^",

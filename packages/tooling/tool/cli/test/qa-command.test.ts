@@ -26,16 +26,14 @@ import {
   renderInventoryMarkdown,
   renderJudgePrompt,
   renderRoundReport,
-  requiredFindingCount,
   selectJudgeEvidence,
   windowSeqsForLabel,
 } from "@beep/repo-cli/commands/Qa";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -59,47 +57,6 @@ const inventoryInput = (findings: ReadonlyArray<unknown>, requiredCount: number)
   round: 4,
   schemaVersion: "qa-inventory/v1",
   sessionRef: "session.json",
-});
-
-describe("commands/Qa Inventory.schemas", () => {
-  it.effect("accepts an inventory whose requiredCount matches its P0 and P1 findings", () =>
-    Effect.gen(function* () {
-      const inventory = yield* decodeQaInventory(
-        inventoryInput(
-          [
-            finding("R4-01", "P0", "frames/a.png", [2]),
-            finding("R4-02", "P1", "frames/b.png", [3]),
-            finding("R4-03", "P2", "frames/c.png", []),
-          ],
-          2
-        )
-      );
-      expect(inventory.requiredCount).toBe(2);
-      expect(A.length(inventory.findings)).toBe(3);
-    })
-  );
-
-  it.effect("rejects an inventory whose verdict disagrees with its findings", () =>
-    Effect.gen(function* () {
-      const exit = yield* Effect.exit(
-        decodeQaInventory(inventoryInput([finding("R4-01", "P0", "frames/a.png", [2])], 0))
-      );
-      exit.pipe(Exit.isFailure, assertTrue);
-    })
-  );
-
-  it.effect("rejects a finding id that is not R<round>-<nn>", () =>
-    Effect.gen(function* () {
-      const exit = yield* Effect.exit(
-        decodeQaInventory(inventoryInput([finding("R4-1", "P0", "frames/a.png", [2])], 1))
-      );
-      exit.pipe(Exit.isFailure, assertTrue);
-    })
-  );
-
-  it("counts only P0 and P1 findings as required", () => {
-    expect(requiredFindingCount([{ severity: "P0" }, { severity: "P1" }, { severity: "P2" }])).toBe(2);
-  });
 });
 
 describe("commands/Qa JudgeCheck JSON extraction", () => {

@@ -1,6 +1,12 @@
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import { extractFencedCodeBlocks } from "@beep/repo-docgen/Core";
+import {
+  jsDocSectionBodyText,
+  jsDocSectionOrder,
+  ParseJSDocSectionsOptions,
+  parseJSDocSections,
+} from "@beep/repo-utils/JSDoc/JSDocSections";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str, thunkFalse } from "@beep/utils";
 import * as DateTime from "effect/DateTime";
@@ -18,12 +24,6 @@ import * as S from "effect/Schema";
 import { Node, SyntaxKind, ts } from "ts-morph";
 import { formatJsonc } from "../../../internal/artifacts/index.ts";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
-import {
-  jsDocSectionBodyText,
-  jsDocSectionOrder,
-  ParseJSDocSectionsOptions,
-  parseJSDocSections,
-} from "../../../internal/jsdoc/JSDocSections.ts";
 import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "../../../internal/tsmorph/index.ts";
 import {
@@ -44,10 +44,10 @@ import {
   topoSortPackageNames,
   valuesForTag,
 } from "./QualityArtifactSupport.ts";
+import type { JSDocSectionName } from "@beep/repo-utils/JSDoc/JSDocSections";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { SourceFile } from "ts-morph";
-import type { JSDocSectionName } from "../../../internal/jsdoc/JSDocSections.ts";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
 

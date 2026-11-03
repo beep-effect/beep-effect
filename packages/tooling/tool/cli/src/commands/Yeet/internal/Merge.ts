@@ -318,9 +318,7 @@ export const mergePr = Effect.fn("Yeet.mergePr")(function* (
   }
   yield* enforceReviewerGate(view.number, pinnedHead.value).pipe(
     withReviewerOperatorClient(process.cwd()),
-    Effect.mapError(() =>
-      YeetCommandError.make({ message: "beep-reviewer gate held on the current head.", exitCode: 1 })
-    )
+    Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 }))
   );
   const confirmed = yield* mergeYeetPullRequestAtHead(view.number, pinnedHead.value, options).pipe(
     provideYeetGhLogin(context.repoRoot)

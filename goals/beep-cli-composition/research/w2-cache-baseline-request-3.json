@@ -1,0 +1,20 @@
+{
+  "previous": "9e5641866b964bbd17327ec83dc19085a442f1366c00f3622b50239fc8b16db7",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (W2 lane, refactor/beep-cli-w2-leaf)",
+    "reason": "Re-record the root and repo-utils subjects after merging main: repo-utils declares the @beep/markdown dependency its moved JSDoc section parser reads; no qualification is granted.",
+    "basis": {
+      "path": "goals/beep-cli-composition/research/w2-cache-baseline-review-2.md",
+      "sha256": "c09d4e99e6cb7d5591dd4f995cc909f0ba633dd39d98a33718969e70cc58056a"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/repo-utils"]
+}

@@ -33,11 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. Start by re-verifying the removal map against current `main` and reading the installed T3 server's MCP tool listing.
+P3 Yeet — final PR [#2594](https://github.com/beep-effect/beep-effect/pull/2594) (replaced #2574) passed `yeet final-check`; the proposed closeout `completed-retained` awaits exact-head hosted readiness and merge evidence.
 
 ## Latest Evidence
 
-Not started.
+2026-11-02: removal map re-verified against `6bb8584b6d` (every row still present); installed T3 tool listing captured in `history/2026-11-02-t3-tool-listing.md`; live round-trip receipt in `history/2026-11-02-t3-round-trip.md`; reflection `history/reflections/2026-11-02-claude.md`; final PR #2594 (#2574 was closed: a pushed over-long commit subject failed required Commitlint).
 
 ## Notes
 

@@ -36,9 +36,9 @@ import {
 } from "./JudgeContract.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
+import type { QaInventory } from "@beep/qa-capture/QaInventory.schemas";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
-import type { QaInventory } from "./Inventory.schemas.ts";
 import type { QaEventLog } from "./Qa.session.ts";
 
 const $I = $RepoCliId.create("commands/Qa/JudgeCheck");
@@ -101,7 +101,7 @@ export const isCrossCheckClean = (check: EvidenceCrossCheck): boolean =>
  * **Example** (Usage)
  *
  * ```ts
- * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
+ * import { QaInventory, QaJudgeRef } from "@beep/qa-capture/QaInventory.schemas"
  * import { citedPaths } from "@beep/repo-cli/commands/Qa/JudgeCheck"
  *
  * const inventory = QaInventory.make({
@@ -133,7 +133,7 @@ export const citedPaths = (inventory: QaInventory): ReadonlyArray<string> =>
  * **Example** (Usage)
  *
  * ```ts
- * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
+ * import { QaInventory, QaJudgeRef } from "@beep/qa-capture/QaInventory.schemas"
  * import { citedEventIds } from "@beep/repo-cli/commands/Qa/JudgeCheck"
  *
  * const inventory = QaInventory.make({
@@ -164,7 +164,7 @@ export const citedEventIds = (inventory: QaInventory): ReadonlyArray<number> =>
  *
  * **Example** (Usage)
  * ```ts
- * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
+ * import { QaInventory, QaJudgeRef } from "@beep/qa-capture/QaInventory.schemas"
  * import { crossCheckEvidence } from "@beep/repo-cli/commands/Qa/JudgeCheck"
  * import * as HashSet from "effect/HashSet"
  *
@@ -328,7 +328,7 @@ export const renderCrossCheckFailure: {
  *
  * **Example** (Usage)
  * ```ts
- * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
+ * import { QaInventory, QaJudgeRef } from "@beep/qa-capture/QaInventory.schemas"
  * import { crossCheckAgainstRound } from "@beep/repo-cli/commands/Qa/JudgeCheck"
  * import * as Effect from "effect/Effect";
  * import { QaEventLog } from "@beep/repo-cli/commands/Qa/Qa.session"
@@ -527,7 +527,7 @@ const requireInventoryRoundImpl = Effect.fn("QaJudgeCheck.requireInventoryRound"
  *
  * **Example** (Usage)
  * ```ts
- * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
+ * import { QaInventory, QaJudgeRef } from "@beep/qa-capture/QaInventory.schemas"
  * import { requireInventoryRound } from "@beep/repo-cli/commands/Qa/JudgeCheck"
  * import * as Effect from "effect/Effect";
  * const inventory = QaInventory.make({

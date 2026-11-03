@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 
+import { decodeSkillsLockDocumentJson } from "@beep/ai-sync/SkillsLock.schemas";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -15,10 +16,9 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { SkillsCommandError, SkillsLockWriteRefusal } from "../Skills.errors.ts";
-import { decodeSkillsLockDocumentJson } from "../SkillsLock.schemas.ts";
+import type { SkillsLockEntry, VendoredSkillLockEntry } from "@beep/ai-sync/SkillsLock.schemas";
 import type { Sha256Hex } from "@beep/schema";
 import type * as Digest from "effect/crypto/Digest";
-import type { SkillsLockEntry, VendoredSkillLockEntry } from "../SkillsLock.schemas.ts";
 
 const textEncoder = new TextEncoder();
 const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);

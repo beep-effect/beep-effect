@@ -32,7 +32,7 @@ import {
   ModelsManifest,
   SupersededModel,
 } from "./Models.manifest.schemas.ts";
-import type { EffortLevel, ModelId } from "./Models.catalog.schemas.ts";
+import type { EffortLevel, ModelId } from "@beep/ai-sync/ModelCatalog.schemas";
 import type {
   Locator,
   LocatorField,
@@ -155,8 +155,8 @@ const doctrineEffort: Locator = {
   after: '"',
 };
 
-const exampleModels = (id: string, path: string, role: RoutingRole, surface: RoutingSurface): ModelSyncTarget =>
-  target(id, "repo", `packages/tooling/tool/cli/src/commands/${path}`, false, [
+const repoExampleModels = (id: string, path: string, role: RoutingRole, surface: RoutingSurface): ModelSyncTarget =>
+  target(id, "repo", path, false, [
     {
       _tag: "line-value",
       binding: at(role, surface, "model"),
@@ -166,6 +166,9 @@ const exampleModels = (id: string, path: string, role: RoutingRole, surface: Rou
       after: '"',
     },
   ]);
+
+const exampleModels = (id: string, path: string, role: RoutingRole, surface: RoutingSurface): ModelSyncTarget =>
+  repoExampleModels(id, `packages/tooling/tool/cli/src/commands/${path}`, role, surface);
 
 const codexLauncher = (id: string, path: string): ModelSyncTarget =>
   target(id, "home", path, true, [
@@ -461,7 +464,12 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
     "home",
     "$HOME/.agents/skills/impeccable/agents/impeccable_manual_edit_applier.toml"
   ),
-  exampleModels("repo.examples.qa-inventory", "Qa/Inventory.schemas.ts", "qa.judge", "claude-code"),
+  repoExampleModels(
+    "repo.examples.qa-inventory",
+    "packages/tooling/library/qa-capture/src/QaInventory.schemas.ts",
+    "qa.judge",
+    "claude-code"
+  ),
   exampleModels("repo.examples.qa-judge-check", "Qa/JudgeCheck.ts", "qa.judge", "claude-code"),
   exampleModels("repo.examples.qa-render", "Qa/Qa.render.ts", "qa.judge", "claude-code"),
   exampleModels("repo.examples.yeet-provenance", "Yeet/internal/Provenance.ts", "codex.heavy", "codex-plugin"),
