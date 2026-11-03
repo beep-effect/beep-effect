@@ -167,9 +167,8 @@ const isInstallInputPath = (path: string): boolean =>
 const installInputLine = (line: string): Result.Result<string, string> => {
   const [meta, path] = Str.split("\t")(line);
   return pipe(
-    O.fromUndefinedOr(path),
-    O.filter(isInstallInputPath),
-    O.flatMap((inputPath) => O.map(A.get(Str.split(" ")(meta ?? ""), 2), (blob) => `${inputPath}\0${blob}`)),
+    O.all({ meta: O.fromUndefinedOr(meta), inputPath: O.filter(O.fromUndefinedOr(path), isInstallInputPath) }),
+    O.flatMap(({ meta, inputPath }) => O.map(A.get(Str.split(" ")(meta), 2), (blob) => `${inputPath}\0${blob}`)),
     Result.fromOption(() => line)
   );
 };

@@ -16,6 +16,7 @@ import {
   collectHeadInstallInputs,
   collectProofEnvironment,
   decideParityLaneReuse,
+  executeStepWithArtifacts,
   HEAD_INSTALL_RECEIPT_TTL,
   HeadInstallInputs,
   HeadInstallReceipt,
@@ -295,6 +296,8 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
     expect(headInstallReceiptRefusals(O.none(), inputs(), now)).toEqual(["no-receipt"]);
     const later = DateTime.addDuration(now, Duration.sum(HEAD_INSTALL_RECEIPT_TTL, Duration.seconds(1)));
     expect(headInstallReceiptRefusals(O.some(receiptAt(now, inputs())), inputs(), later)).toEqual(["expired"]);
+    const unreadable = HeadInstallReceipt.make({ ...receiptAt(now, inputs()), expiresAt: "not a date" });
+    expect(headInstallReceiptRefusals(O.some(unreadable), inputs(), now)).toEqual(["expired"]);
     const changed = inputs({
       commitSha: Str.repeat(40)("d"),
       treeSha: Str.repeat(40)("u"),
@@ -363,6 +366,32 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
         expect(yield* logged).toContain(
           "[yeet] running clean-HEAD install preflight: install receipt not reused (no receipt)"
         );
+      }).pipe(withTestConsole)
+    );
+
+    it.effect("records a receipt after a clean install and clears it after a failed one", () =>
+      Effect.gen(function* () {
+        const { context, git, commit } = yield* fixture();
+        const preflight = A.filter(
+          buildYeetRunPlanForTesting({ context, message: O.none(), mode: "verify", tier: "full" }).steps,
+          (step) => step.id === "publish:00-head-install-preflight"
+        );
+        // The dependency-free fixture installs without a lockfile.
+        yield* git("rm", "--quiet", "bun.lock");
+        yield* git("commit", "--quiet", "--no-verify", "-m", "drop lockfile");
+        const installed = yield* git("rev-parse", "HEAD");
+        const clean = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step));
+        expect(A.map(clean, (result) => result.exitCode)).toEqual([0]);
+        assertSome(
+          O.map(yield* loadHeadInstallReceipt(context, installed), (receipt) => receipt.inputs.lockfileDigest),
+          "absent"
+        );
+        // An unparseable lockfile fails the frozen install and drops the receipt.
+        const broken = yield* commit("bun.lock", "not a lockfile\n");
+        const failed = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step));
+        expect(A.map(failed, (result) => result.exitCode === 0)).toEqual([false]);
+        assertNone(yield* loadHeadInstallReceipt(context, broken));
+        assertNone(yield* loadHeadInstallReceipt(context, installed));
       }).pipe(withTestConsole)
     );
   });

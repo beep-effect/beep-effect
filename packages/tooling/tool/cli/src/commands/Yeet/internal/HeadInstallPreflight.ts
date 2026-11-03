@@ -16,6 +16,7 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { constant } from "effect/Function";
 import * as Path from "effect/Path";
 import {
   commandTextForStep,
@@ -48,6 +49,9 @@ export const HEAD_INSTALL_PREFLIGHT_STEP_ID = "publish:00-head-install-preflight
  */
 const HEAD_INSTALL_PREFLIGHT_FAILURE_HINT =
   "Frozen-lockfile clean-HEAD install preflight failed. The lockfile/manifest state committed on HEAD may be incomplete. Commit or restage the required lockfile and manifest changes; if needed, run `bun install` and restage `bun.lock`." as const;
+
+// An unresolvable HEAD still runs against `HEAD` so the worktree add reports it.
+const unresolvedHead = constant("HEAD");
 
 const renderCommandOutput = (label: string, output: string): string =>
   A.join([`[head-install-preflight] ${label}`, output], "\n");
@@ -108,12 +112,7 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
   // installed. An unresolvable HEAD still runs against `HEAD` and lets the
   // worktree add report the failure, as before.
   const commitSha = yield* currentCommitSha(context).pipe(Effect.option);
-  const result = yield* installCleanHead(
-    context,
-    step,
-    rawOutputPath,
-    O.getOrElse(commitSha, () => "HEAD")
-  );
+  const result = yield* installCleanHead(context, step, rawOutputPath, O.getOrElse(commitSha, unresolvedHead));
   // A failed install leaves no receipt behind, so a later verified-proof reuse
   // cannot skip this preflight on the strength of an older success.
   yield* O.match(
@@ -122,10 +121,7 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
       onNone: () => clearHeadInstallReceipt(context),
       onSome: (installed) =>
         recordHeadInstallReceipt(context, installed).pipe(
-          Effect.tapError((error) =>
-            Console.log(`[head-install-preflight] install receipt not recorded: ${error.message}`)
-          ),
-          Effect.ignore
+          Effect.ignore({ log: "Warn", message: "[head-install-preflight] install receipt not recorded" })
         ),
     }
   );
