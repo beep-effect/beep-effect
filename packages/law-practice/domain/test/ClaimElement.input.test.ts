@@ -1,5 +1,9 @@
 import { ClaimInputCollection, ClaimInputRecord } from "@beep/law-practice-domain/values/ClaimElement";
-import { normalizeClaimInput, normalizePatentClaims } from "@beep/law-practice-domain/values/PatentDocument";
+import {
+  normalizeClaimInput,
+  normalizePatentClaims,
+  qualifyClaimInput,
+} from "@beep/law-practice-domain/values/PatentDocument";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -126,6 +130,15 @@ describe("independent source-record normalization", () => {
         A.map(results, ({ status }) => status),
         ["normalization-failed", "normalization-failed", "normalization-failed", "extraction-failed"]
       );
+      const qualified = yield* qualifyClaimInput(input);
+      assert.deepStrictEqual(
+        A.map(qualified, ({ status }) => status),
+        ["normalization-failed", "normalization-failed", "normalization-failed", "extraction-failed"]
+      );
+      assert.deepStrictEqual(
+        A.map(qualified, ({ record }) => record),
+        A.fromIterable(input.records)
+      );
       assert.deepStrictEqual(
         A.map(results, ({ record }) => record),
         A.fromIterable(input.records)
@@ -156,6 +169,97 @@ describe("independent source-record normalization", () => {
       );
       const expected = yield* normalizePatentClaims(texts);
       assert.deepStrictEqual(actual, A.fromIterable(expected));
+    })
+  );
+});
+
+const numberedInput = (texts: readonly [readonly [string, string], ...ReadonlyArray<readonly [string, string]>]) =>
+  ClaimInputCollection.make({
+    sourceKey: "qualified-document-version",
+    records: A.map(texts, ([numberText, canonicalText], index) =>
+      ClaimInputRecord.cases.text.make({
+        sourceOrdinal: index + 1,
+        numberText: O.some(numberText),
+        sourceText: canonicalText,
+        canonicalText,
+      })
+    ),
+  });
+
+describe("source dependency qualification", () => {
+  it.effect("keeps independent siblings ready and propagates unavailable ancestry through every alternative", () =>
+    Effect.gen(function* () {
+      const input = numberedInput([
+        ["1", "A fixture comprising a panel."],
+        ["2", "A fragment without a transition."],
+        ["3", "A fixture comprising a sensor."],
+        ["4", "The fixture of claim 2 wherein the panel is metallic."],
+        ["5", "The fixture of claim 4 wherein the panel is coated."],
+        ["6", "The fixture of claims 1 or 5 wherein the panel is curved."],
+        ["7", "The fixture of claim 3 wherein the sensor is optical."],
+      ]);
+      const result = yield* qualifyClaimInput(input);
+      assert.deepStrictEqual(
+        A.map(result, ({ status }) => status),
+        [
+          "context-ready",
+          "normalization-failed",
+          "context-ready",
+          "context-unavailable",
+          "context-unavailable",
+          "context-unavailable",
+          "context-ready",
+        ]
+      );
+      assert.deepStrictEqual(
+        A.map(result, ({ record }) => record),
+        A.fromIterable(input.records)
+      );
+      const unknown = A.getSomes(
+        A.map(result, (record) => (record.status === "context-unavailable" ? O.some(record.issues) : O.none()))
+      );
+      assert.deepStrictEqual(
+        A.map(unknown, (issues) => A.map(issues, ({ kind }) => kind)),
+        [["unnormalized-parent"], ["affected-ancestor"], ["affected-ancestor"]]
+      );
+    })
+  );
+
+  it.effect("blocks both duplicate identities even when only one can normalize", () =>
+    Effect.gen(function* () {
+      const result = yield* qualifyClaimInput(
+        numberedInput([
+          ["1", "A fixture comprising a panel."],
+          ["01", "A fragment without a transition."],
+          ["2", "The fixture of claim 1 wherein the panel is metallic."],
+          ["3", "A fixture comprising a sensor."],
+        ])
+      );
+      assert.deepStrictEqual(
+        A.map(result, ({ status }) => status),
+        ["context-unavailable", "normalization-failed", "context-unavailable", "context-ready"]
+      );
+      const first = O.getOrThrow(A.head(result));
+      assert.strictEqual(first.status, "context-unavailable");
+      if (first.status === "context-unavailable") assert.strictEqual(first.issues[0].kind, "duplicate-number");
+    })
+  );
+
+  it.effect("does not infer a missing ancestor from record position", () =>
+    Effect.gen(function* () {
+      const result = yield* qualifyClaimInput(
+        numberedInput([
+          ["3", "A fixture comprising a panel."],
+          ["4", "The fixture of claim 1 wherein the panel is metallic."],
+        ])
+      );
+      assert.deepStrictEqual(
+        A.map(result, ({ status }) => status),
+        ["context-ready", "context-unavailable"]
+      );
+      const last = O.getOrThrow(A.last(result));
+      if (last.status === "context-unavailable")
+        assert.deepStrictEqual(last.issues, [{ kind: "missing-parent", parentClaimNumber: 1 }]);
     })
   );
 });

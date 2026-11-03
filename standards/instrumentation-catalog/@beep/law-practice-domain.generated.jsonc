@@ -12,6 +12,7 @@
     {"name":"PatentDocument.normalize","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"PatentDocument.normalizeClaimInput","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"PatentDocument.normalizeClaims","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
-    {"name":"PatentDocument.parseClaim","owner":"@beep/law-practice-domain","family":"slice","conforms":true}
+    {"name":"PatentDocument.parseClaim","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
+    {"name":"PatentDocument.qualifyClaimInput","owner":"@beep/law-practice-domain","family":"slice","conforms":true}
   ]
 }

@@ -1,6 +1,6 @@
 # Partial-input inspection design
 
-Status: source schema and independent normalization implemented; dependency qualification and product integration remain pending. No product coverage or accuracy gain claimed.
+Status: source schema, independent normalization and conservative per-record ancestry qualification implemented; product integration remains pending. No product coverage or accuracy gain claimed.
 Two independent GPT-6.1-Sol medium reviews identified and checked the constraints
 below. The original strict APIs, PatentClaim shape, runner, scorer and all
 reference/result files remain unchanged.
@@ -54,7 +54,7 @@ substantive judgment. Also test zero checkable claims, duplicate/missing
 numbers, unavailable text, transitive and alternative dependencies, and exact
 strict/inspection equivalence for wholly valid input.
 
-The current slice covers source preservation, source order and per-record normalization through the unchanged strict claim parser. Six focused tests and the domain package audit/docgen pass.
+The current slice covers source preservation, source order and per-record normalization through the unchanged strict claim parser. Nine focused tests, the full 275-test domain suite and the domain package audit/docgen pass. Qualification blocks duplicate identities and propagates unavailable ancestry through every alternative dependency; it does not yet perform checks or assert a complete global index.
 Ordinal validation alone cannot prove source completeness: the adapter must
 account for every input node, and the evaluation must verify the complete raw
 canonical inventory independently of successful normalization.

@@ -233,3 +233,103 @@ export const ClaimInputNormalization = normalizationOutcome
  * @since 0.0.0
  */
 export type ClaimInputNormalization = typeof ClaimInputNormalization.Type;
+
+const contextIssueKind = LiteralKit([
+  "duplicate-number",
+  "missing-parent",
+  "unnormalized-parent",
+  "affected-ancestor",
+]).pipe(
+  $I.annoteSchema("ClaimInputContextIssueKind", {
+    description: "Why a normalized record lacks unambiguous, fully normalized ancestry.",
+  })
+);
+
+/**
+ * Source-bound reason a normalized claim cannot receive a complete dependency check.
+ *
+ * **Example** (Recognize a missing-parent issue)
+ *
+ * ```ts
+ * import { ClaimInputContextIssue } from "@beep/law-practice-domain/values/ClaimElement"
+ * console.log(ClaimInputContextIssue.guards["missing-parent"]({})) // false
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const ClaimInputContextIssue = contextIssueKind
+  .toTaggedUnion("kind")({
+    "duplicate-number": { claimNumber: PosInt },
+    "missing-parent": { parentClaimNumber: PosInt },
+    "unnormalized-parent": { parentClaimNumber: PosInt },
+    "affected-ancestor": { parentClaimNumber: PosInt },
+  })
+  .pipe(
+    $I.annoteSchema("ClaimInputContextIssue", {
+      description: "Uncertainty in source identity or dependency ancestry, not an antecedent defect allegation.",
+    })
+  );
+
+/**
+ * Runtime context-qualification issue type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClaimInputContextIssue = typeof ClaimInputContextIssue.Type;
+
+const contextStatus = LiteralKit([
+  "context-ready",
+  "context-unavailable",
+  "extraction-failed",
+  "normalization-failed",
+]).pipe(
+  $I.annoteSchema("ClaimInputContextStatus", {
+    description: "Source extraction, normalization and ancestry qualification; no case means the claim was checked.",
+  })
+);
+
+/**
+ * Qualification of every source record for dependency-aware inspection.
+ *
+ * **Details**
+ * Context-ready means only that this claim's own identity and every ancestor
+ * are available and unambiguous. It does not assert that the global document
+ * index is complete or that any structural or antecedent check succeeded.
+ *
+ * **Example** (Recognize unavailable context)
+ *
+ * ```ts
+ * import { ClaimInputQualification } from "@beep/law-practice-domain/values/ClaimElement"
+ * console.log(ClaimInputQualification.guards["context-unavailable"]({})) // false
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
+ */
+export const ClaimInputQualification = contextStatus
+  .toTaggedUnion("status")({
+    "context-ready": { record: ClaimInputRecord.cases.text, claim: PatentClaim },
+    "context-unavailable": {
+      record: ClaimInputRecord.cases.text,
+      claim: PatentClaim,
+      issues: S.NonEmptyArray(ClaimInputContextIssue),
+    },
+    "extraction-failed": { record: ClaimInputRecord.cases.unavailable },
+    "normalization-failed": { record: ClaimInputRecord.cases.text, message: S.NonEmptyString },
+  })
+  .pipe(
+    $I.annoteSchema("ClaimInputQualification", {
+      description:
+        "One explicit source/normalization/context outcome per original record without renumbering or dropped failures.",
+    })
+  );
+
+/**
+ * Runtime per-record dependency qualification type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClaimInputQualification = typeof ClaimInputQualification.Type;
