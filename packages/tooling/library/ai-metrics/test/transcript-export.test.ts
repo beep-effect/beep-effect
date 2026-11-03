@@ -130,7 +130,8 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
       usage: { input_tokens: 11, output_tokens: 5, cache_read_input_tokens: 8, cache_creation_input_tokens: 2 },
     },
   });
-  yield* journal.acceptPage(yield* read("rejected", "invalid-private-json\n"), O.none());
+  const read1 = yield* read("rejected", "invalid-private-json\n");
+  yield* journal.acceptPage(read1, O.none());
   const page = yield* read("accepted", `${record}\ninvalid-private-json\n${record}\n`);
   const receipt = yield* journal.acceptPage(page, O.none());
   const frames = A.filter(page.frames, (f) => f._tag === "Accepted");
@@ -146,7 +147,8 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
   const context = yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 }));
   const server = Context.get(context, HttpServer.HttpServer);
   const origin = HttpServer.formatAddress(server.address);
-  const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
+  const build2 = yield* Layer.build(NodeHttpClient.layerNodeHttp);
+  const client = Context.get(build2, HttpClient.HttpClient);
   const policy = NativeDeliveryPolicy.make({
     endpoint: Redacted.make(`${origin}/v1/traces`),
     project: input.project,
@@ -170,7 +172,8 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
   const sql = yield* SqlClient.SqlClient;
   const capturePost = Effect.gen(function* () {
     const request = yield* HttpServerRequest.HttpServerRequest;
-    const bytes = new Uint8Array(yield* request.arrayBuffer);
+    const arrayBuffer3 = yield* request.arrayBuffer;
+    const bytes = new Uint8Array(arrayBuffer3);
     const raw = new TextDecoder().decode(bytes);
     for (const value of [
       "private-prompt",
@@ -191,7 +194,8 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
   const queryStored = Effect.fnUntraced(function* (url: string) {
     const current = yield* Ref.get(mode);
     const query = decodeURIComponent(url);
-    const span = A.findFirst(yield* Ref.get(stored), (row) => Str.includes(Hex.encode(row.spanId))(query));
+    const got = yield* Ref.get(stored);
+    const span = A.findFirst(got, (row) => Str.includes(Hex.encode(row.spanId))(query));
     if (O.isNone(span) || current === "missing") return yield* HttpServerResponse.json({ data: [], next_cursor: null });
     const row = span.value;
     const attributes = R.fromEntries(
@@ -240,7 +244,8 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
   // Ticks run under a TestClock seeded at the current time, so only the test moves the delay
   // windows and the tick deadline, never host load.
   const clock = yield* TestClock.make({ warningDelay: "30 seconds" });
-  yield* clock.setTime(yield* Clock.currentTimeMillis);
+  const currentTimeMillis4 = yield* Clock.currentTimeMillis;
+  yield* clock.setTime(currentTimeMillis4);
   const reopen = () =>
     Effect.map(
       makeNativeDeliveryScheduler(
@@ -268,7 +273,8 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       Effect.gen(function* () {
         const f = yield* fixture();
         const encoded: NativeEncodedBatch = yield* encodeTranscriptTraceBatch(f.input);
-        expect(yield* encodeTranscriptTraceBatch(f.input)).toEqual(encoded);
+        const encodedTranscriptTraceBatch = yield* encodeTranscriptTraceBatch(f.input);
+        expect(encodedTranscriptTraceBatch).toEqual(encoded);
         const scope = (yield* decode(encoded.body)).resourceSpans[0].scopeSpans[0];
         expect(scope.scope.version).toBe("transcript-export/v1");
         expect(scope.spans).toHaveLength(2);
@@ -291,16 +297,14 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         expect(attr(first, "session.id")).toEqual(attr(second, "session.id"));
         expect(attr(first, "session.id")._tag).toBe("Some");
         expect(encoded.eventIds).toEqual(A.map(f.frames, (frame) => frame.occurrenceId));
-        expect(
-          yield* encodeTranscriptTraceBatch(TranscriptExportInput.make({ ...f.input, namespaceId: id("f") })).pipe(
-            Effect.flip
-          )
-        ).toMatchObject({ reason: "namespace" });
-        expect(
-          yield* encodeTranscriptTraceBatch(TranscriptExportInput.make({ ...f.input, frames: [frame, frame] })).pipe(
-            Effect.flip
-          )
-        ).toMatchObject({ reason: "identity" });
+        const pipe5 = yield* encodeTranscriptTraceBatch(
+          TranscriptExportInput.make({ ...f.input, namespaceId: id("f") })
+        ).pipe(Effect.flip);
+        expect(pipe5).toMatchObject({ reason: "namespace" });
+        const pipe6 = yield* encodeTranscriptTraceBatch(
+          TranscriptExportInput.make({ ...f.input, frames: [frame, frame] })
+        ).pipe(Effect.flip);
+        expect(pipe6).toMatchObject({ reason: "identity" });
       })
   )
 );
@@ -311,21 +315,28 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       const f = yield* fixture();
       const event = f.frames[0];
       if (event === undefined) return yield* Effect.die("Missing fixture frame");
-      expect(yield* f.sender.send(f.selection)).toMatchObject({ _tag: "Recorded", outcome: { _tag: "Accepted" } });
-      expect(yield* f.sender.send(f.selection)).toMatchObject({ _tag: "ExistingAttempt" });
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const send7 = yield* f.sender.send(f.selection);
+      expect(send7).toMatchObject({ _tag: "Recorded", outcome: { _tag: "Accepted" } });
+      const send8 = yield* f.sender.send(f.selection);
+      expect(send8).toMatchObject({ _tag: "ExistingAttempt" });
+      const got9 = yield* Ref.get(f.posts);
+      expect(got9).toBe(1);
       for (const mode of ["missing", "invented-total", "invented-route", "parent"]) {
         yield* Ref.set(f.mode, mode);
-        expect(yield* f.reader.reconcile(f.selection, event.occurrenceId)).toMatchObject({
+        const reconcile10 = yield* f.reader.reconcile(f.selection, event.occurrenceId);
+        expect(reconcile10).toMatchObject({
           _tag: mode === "missing" ? "Missing" : "Mismatch",
         });
-        expect(yield* f.sender.ledger.state(event.occurrenceId)).toMatchObject({
+        const state11 = yield* f.sender.ledger.state(event.occurrenceId);
+        expect(state11).toMatchObject({
           value: { state: "accepted-unverified" },
         });
       }
       yield* Ref.set(f.mode, "valid");
-      expect(yield* f.reader.reconcile(f.selection, event.occurrenceId)).toMatchObject({ _tag: "Visible" });
-      expect(yield* f.sender.ledger.state(event.occurrenceId)).toMatchObject({ value: { state: "visible" } });
+      const reconcile12 = yield* f.reader.reconcile(f.selection, event.occurrenceId);
+      expect(reconcile12).toMatchObject({ _tag: "Visible" });
+      const state13 = yield* f.sender.ledger.state(event.occurrenceId);
+      expect(state13).toMatchObject({ value: { state: "visible" } });
     })
   )
 );
@@ -338,17 +349,20 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         const f = yield* fixture();
         for (const frame of f.frames) {
           const scheduler = yield* f.reopen();
-          expect(yield* scheduler.tick).toMatchObject({
+          const tick14 = yield* scheduler.tick;
+          expect(tick14).toMatchObject({
             _tag: "Complete",
             outcomes: [{ _tag: "Sent", eventId: frame.occurrenceId }],
           });
         }
-        expect(yield* Ref.get(f.posts)).toBe(2);
+        const got15 = yield* Ref.get(f.posts);
+        expect(got15).toBe(2);
         yield* f.clock.adjust(120);
         yield* Ref.set(f.mode, "missing");
         const scheduler = yield* f.reopen();
         for (let n = 0; n < 3; n++) yield* scheduler.tick;
-        expect(yield* Ref.get(f.posts)).toBe(2);
+        const got16 = yield* Ref.get(f.posts);
+        expect(got16).toBe(2);
         yield* Effect.forEach(
           f.frames,
           (frame) =>
@@ -369,13 +383,15 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
   it.effect("refuses empty selection and retained-payload corruption before reserving or sending", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      expect(
-        yield* f.sender.send(NativeDeliveryRequest.make({ ...f.selection, offset: 2 })).pipe(Effect.flip)
-      ).toMatchObject({ reason: "empty-selection" });
+      const pipe17 = yield* f.sender.send(NativeDeliveryRequest.make({ ...f.selection, offset: 2 })).pipe(Effect.flip);
+      expect(pipe17).toMatchObject({ reason: "empty-selection" });
       yield* f.sql`UPDATE observation_intake_pages SET payload=payload||' ' WHERE receipt_id=${f.receipt.receiptId}`;
-      expect(yield* f.sender.send(f.selection).pipe(Effect.flip)).toMatchObject({ reason: "storage" });
-      expect(yield* Ref.get(f.posts)).toBe(0);
-      expect(yield* f.sql`SELECT attempt_id FROM observation_delivery_attempts`).toEqual([]);
+      const pipe18 = yield* f.sender.send(f.selection).pipe(Effect.flip);
+      expect(pipe18).toMatchObject({ reason: "storage" });
+      const got19 = yield* Ref.get(f.posts);
+      expect(got19).toBe(0);
+      const value20 = yield* f.sql`SELECT attempt_id FROM observation_delivery_attempts`;
+      expect(value20).toEqual([]);
     })
   )
 );

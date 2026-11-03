@@ -59,7 +59,8 @@ const encodeObservationLaunchReceiptJson = S.encodeEffect(S.fromJsonString(Obser
 const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
   // Protocol validation uses real IO; only this fixture controls its deadline clock.
   const clock = yield* TestClock.make({ warningDelay: "30 seconds" });
-  yield* clock.setTime(yield* Clock.currentTimeMillis);
+  const currentTimeMillis1 = yield* Clock.currentTimeMillis;
+  yield* clock.setTime(currentTimeMillis1);
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ directory: "/tmp", prefix: "obs-client-" });
   yield* fs.chmod(directory, 0o700);
@@ -86,10 +87,8 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
   const posts = yield* Ref.make(0);
   const reached = yield* Deferred.make<void>();
   const release = yield* Deferred.make<void>();
-  const server = Context.get(
-    yield* Layer.build(BunHttpServer.layer({ unix: `${directory}/worker.sock` })),
-    HttpServer.HttpServer
-  );
+  const build2 = yield* Layer.build(BunHttpServer.layer({ unix: `${directory}/worker.sock` }));
+  const server = Context.get(build2, HttpServer.HttpServer);
   yield* fs.chmod(`${directory}/worker.sock`, 0o600);
   const receiptRow = Effect.gen(function* () {
     const row = (yield* facts.read(id("1"), 0))[0];
@@ -111,13 +110,13 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
     }
     if (scenario === "forged") {
       const row = yield* receiptRow;
-      return HttpServerResponse.text(
-        yield* encodeObservationLaunchReceiptJson(ObservationLaunchReceipt.make({ ...row, receiptId: id("f") })),
-        {
-          contentType: "application/json",
-          headers: { "x-observation-receipt": id("f") },
-        }
+      const encodedObservationLaunchReceiptJson = yield* encodeObservationLaunchReceiptJson(
+        ObservationLaunchReceipt.make({ ...row, receiptId: id("f") })
       );
+      return HttpServerResponse.text(encodedObservationLaunchReceiptJson, {
+        contentType: "application/json",
+        headers: { "x-observation-receipt": id("f") },
+      });
     }
     if (scenario === "extra-field") {
       const row = yield* receiptRow;
@@ -173,7 +172,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   it.effect("reads paused context through an owner-only socket and verifies exact committed receipts", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      expect(yield* f.client.context).toMatchObject({
+      const context3 = yield* f.client.context;
+      expect(context3).toMatchObject({
         hostId: id("a"),
         namespaceId: id("b"),
         evidenceEpoch: 0,
@@ -182,9 +182,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* f.control.resume;
       expect((yield* f.client.context).accepting).toBe(true);
       const receipt = yield* f.client.submit(f.submission);
-      expect(yield* f.client.submit(f.submission)).toEqual(receipt);
-      expect(yield* f.facts.read(id("1"), 0)).toEqual([receipt]);
-      expect(yield* Ref.get(f.posts)).toBe(2);
+      const submit4 = yield* f.client.submit(f.submission);
+      expect(submit4).toEqual(receipt);
+      const read5 = yield* f.facts.read(id("1"), 0);
+      expect(read5).toEqual([receipt]);
+      const got = yield* Ref.get(f.posts);
+      expect(got).toBe(2);
       expect(
         (yield* f.client
           .submit(ObservationLaunchSubmission.make({ ...f.submission, evidenceEpoch: 1 }))
@@ -209,7 +212,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       }
       yield* Ref.set(f.mode, "normal");
       expect((yield* f.client.submit(f.submission)).fact).toEqual(prepare);
-      expect(yield* Ref.get(f.posts)).toBe(5);
+      const got6 = yield* Ref.get(f.posts);
+      expect(got6).toBe(5);
     })
   )
 );
@@ -226,7 +230,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* Ref.set(f.mode, "normal");
       yield* Deferred.succeed(f.release, undefined);
       expect((yield* f.client.context).accepting).toBe(false);
-      expect(yield* Ref.get(f.posts)).toBe(0);
+      const got7 = yield* Ref.get(f.posts);
+      expect(got7).toBe(0);
     }).pipe(Effect.timeout("3 seconds"))
   )
 );
@@ -246,11 +251,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect((yield* Fiber.join(pending)).reason).toBe("ambiguous");
       const rows = yield* f.facts.read(id("1"), 0);
       expect(rows.length).toBe(1);
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const got8 = yield* Ref.get(f.posts);
+      expect(got8).toBe(1);
       yield* Ref.set(f.mode, "normal");
       yield* Deferred.succeed(f.release, undefined);
-      expect(yield* f.client.submit(f.submission)).toEqual(rows[0]);
-      expect(yield* Ref.get(f.posts)).toBe(2);
+      const submit9 = yield* f.client.submit(f.submission);
+      expect(submit9).toEqual(rows[0]);
+      const got10 = yield* Ref.get(f.posts);
+      expect(got10).toBe(2);
       expect((yield* f.facts.read(id("1"), 0)).length).toBe(1);
     }).pipe(Effect.timeout("3 seconds"))
   )
@@ -300,15 +308,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       );
       expect((yield* wrong.context.pipe(Effect.flip)).reason).toBe("invalid-response");
       expect((yield* wrong.submit(f.submission).pipe(Effect.flip)).reason).toBe("configuration");
-      expect(yield* Ref.get(f.posts)).toBe(0);
+      const got11 = yield* Ref.get(f.posts);
+      expect(got11).toBe(0);
       yield* f.fs.chmod(`${f.directory}/worker.sock`, 0o666);
       expect((yield* f.client.context.pipe(Effect.flip)).reason).toBe("configuration");
       yield* f.fs.chmod(`${f.directory}/worker.sock`, 0o600);
       yield* f.fs.rename(`${f.directory}/worker.sock`, `${f.directory}/retired.sock`);
-      const replacement = Context.get(
-        yield* Layer.build(BunHttpServer.layer({ unix: `${f.directory}/worker.sock` })),
-        HttpServer.HttpServer
-      );
+      const build12 = yield* Layer.build(BunHttpServer.layer({ unix: `${f.directory}/worker.sock` }));
+      const replacement = Context.get(build12, HttpServer.HttpServer);
       yield* replacement.serve(Effect.succeed(HttpServerResponse.text("synthetic replacement")));
       yield* f.fs.chmod(`${f.directory}/worker.sock`, 0o600);
       expect((yield* f.client.context.pipe(Effect.flip)).reason).toBe("configuration");
@@ -326,13 +333,16 @@ it.layer(Layer.merge(Layer.fresh(sqlLayer), NodeHttpClient.layerNodeHttp), {
       expect((yield* f.client.context).accepting).toBe(false);
       yield* f.control.resume;
       expect((yield* f.client.submit(f.submission)).fact).toEqual(prepare);
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const got13 = yield* Ref.get(f.posts);
+      expect(got13).toBe(1);
       const second = yield* fixture();
       expect((yield* second.client.context).accepting).toBe(false);
       yield* second.control.resume;
       expect((yield* second.client.submit(second.submission)).fact).toEqual(prepare);
-      expect(yield* Ref.get(second.posts)).toBe(1);
-      expect(yield* Ref.get(f.posts)).toBe(1);
+      const got14 = yield* Ref.get(second.posts);
+      expect(got14).toBe(1);
+      const got15 = yield* Ref.get(f.posts);
+      expect(got15).toBe(1);
     })
   )
 );
@@ -350,7 +360,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         Effect.flip
       );
       expect(error.reason).toBe("configuration");
-      expect(yield* Ref.get(f.posts)).toBe(0);
+      const got16 = yield* Ref.get(f.posts);
+      expect(got16).toBe(0);
     })
   )
 );

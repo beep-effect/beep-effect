@@ -15,7 +15,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(emptyLinesOptions)(value);
       const decoded = yield* S.decodeEffect(emptyLinesOptions)(encoded);
       assert.isTrue(S.toEquivalence(emptyLinesOptions)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(emptyLinesOptions)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(emptyLinesOptions)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );

@@ -41,7 +41,8 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
   const ready = `${directory}/ready.json`;
   const marker = `${directory}/boundary.json`;
   const output = `${directory}/result.json`;
-  const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
+  const build1 = yield* Layer.build(NodeHttpClient.layerNodeHttp);
+  const client = Context.get(build1, HttpClient.HttpClient);
   const body = yield* encodeJsonValue({
     resourceSpans: [
       {
@@ -69,10 +70,14 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
           )
         )
         .pipe(Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status))));
-    expect(yield* post(new Uint8Array(), "application/x-protobuf")).toBe(200);
-    expect(yield* post(Zlib.gzipSync(body), "application/json", "gzip")).toBe(200);
-    expect(yield* post(Zlib.gzipSync(Str.repeat(1_048_576)(" ")), "application/json", "gzip")).toBe(413);
-    expect(yield* post(new Uint8Array([255]), "application/x-protobuf")).toBe(400);
+    const post2 = yield* post(new Uint8Array(), "application/x-protobuf");
+    expect(post2).toBe(200);
+    const post3 = yield* post(Zlib.gzipSync(body), "application/json", "gzip");
+    expect(post3).toBe(200);
+    const post4 = yield* post(Zlib.gzipSync(Str.repeat(1_048_576)(" ")), "application/json", "gzip");
+    expect(post4).toBe(413);
+    const post5 = yield* post(new Uint8Array([255]), "application/x-protobuf");
+    expect(post5).toBe(400);
     const incomplete = yield* client
       .execute(
         HttpClientRequest.post(url).pipe(
@@ -91,8 +96,10 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
       busy = yield* post(new TextEncoder().encode("{}"));
     }
     expect(busy).toBe(503);
-    expect(yield* Fiber.join(incomplete)).toBe(503);
-    expect(yield* post(new TextEncoder().encode(body))).toBe(200);
+    const join6 = yield* Fiber.join(incomplete);
+    expect(join6).toBe(503);
+    const post7 = yield* post(new TextEncoder().encode(body));
+    expect(post7).toBe(200);
   });
   const start = Effect.fn("NativeHttpCrashTest.start")(function* (
     mode: "inspect" | "serve" | "protocol" | "before-commit" | "after-commit"
@@ -122,18 +129,22 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
       }
     );
     if (mode === "inspect") {
-      expect(yield* child.exitCode).toBe(0);
-      return O.some(yield* fs.readFileString(output).pipe(Effect.flatMap(decodeInspectionJson)));
+      const exitCode8 = yield* child.exitCode;
+      expect(exitCode8).toBe(0);
+      const pipe9 = yield* fs.readFileString(output).pipe(Effect.flatMap(decodeInspectionJson));
+      return O.some(pipe9);
     }
     while (!(yield* fs.exists(ready))) {
-      expect(yield* child.isRunning).toBe(true);
+      const isRunning10 = yield* child.isRunning;
+      expect(isRunning10).toBe(true);
       yield* Effect.sleep("10 millis");
     }
     const { url } = yield* fs.readFileString(ready).pipe(Effect.flatMap(decodeUrlRecordJson));
     if (mode === "protocol") {
       yield* qualifyProtocol(url);
       yield* child.kill({ killSignal: "SIGKILL" });
-      expect(Exit.isFailure(yield* Effect.exit(child.exitCode))).toBe(true);
+      const exit11 = yield* Effect.exit(child.exitCode);
+      expect(Exit.isFailure(exit11)).toBe(true);
       return O.none();
     }
     const request = yield* client
@@ -151,11 +162,13 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
       expect(response.status).toBe(200);
       expect(response.receipt).toMatch(/^[a-f0-9]{64}$/);
       yield* child.kill({ killSignal: "SIGKILL" });
-      expect(Exit.isFailure(yield* Effect.exit(child.exitCode))).toBe(true);
+      const exit12 = yield* Effect.exit(child.exitCode);
+      expect(Exit.isFailure(exit12)).toBe(true);
       return O.none();
     }
     while (!(yield* fs.exists(marker))) {
-      expect(yield* child.isRunning).toBe(true);
+      const isRunning13 = yield* child.isRunning;
+      expect(isRunning13).toBe(true);
       yield* Effect.sleep("10 millis");
     }
     const evidence = yield* fs.readFileString(marker).pipe(Effect.flatMap(decodeJsonValue));
@@ -164,11 +177,15 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
         ? { boundary: mode, pages: [{ n: 1 }], events: [{ n: 1 }], receipts: [{ n: 0 }] }
         : { boundary: mode, stats: { pages: 1, frames: 1, payloadBytes: expect.any(Number) } }
     );
-    expect(yield* Effect.sync(() => request.pollUnsafe())).toBeUndefined();
+    const sync14 = yield* Effect.sync(() => request.pollUnsafe());
+    expect(sync14).toBeUndefined();
     yield* child.kill({ killSignal: "SIGKILL" });
-    expect(Exit.isFailure(yield* Effect.exit(child.exitCode))).toBe(true);
-    expect(Exit.isFailure(yield* request.pipe(Fiber.join, Effect.exit))).toBe(true);
-    expect(yield* child.isRunning).toBe(false);
+    const exit15 = yield* Effect.exit(child.exitCode);
+    expect(Exit.isFailure(exit15)).toBe(true);
+    const pipe16 = yield* request.pipe(Fiber.join, Effect.exit);
+    expect(Exit.isFailure(pipe16)).toBe(true);
+    const isRunning17 = yield* child.isRunning;
+    expect(isRunning17).toBe(false);
     return O.none();
   });
   return { start };
@@ -178,7 +195,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const { start } = yield* scenario();
       yield* start("before-commit");
-      expect(yield* start("inspect")).toMatchObject({
+      const start18 = yield* start("inspect");
+      expect(start18).toMatchObject({
         _tag: "Some",
         value: {
           stats: { pages: 0, frames: 0, payloadBytes: 0 },
@@ -194,7 +212,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
         value: { stats: { pages: 1, frames: 1 }, events: [{ n: 1 }], receipts: [{ n: 1 }] },
       });
       yield* start("serve");
-      expect(yield* start("inspect")).toEqual(accepted);
+      const start19 = yield* start("inspect");
+      expect(start19).toEqual(accepted);
     }).pipe(Effect.timeout("20 seconds"))
   )
 );
@@ -209,7 +228,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
         value: { stats: { pages: 1, frames: 1 }, events: [{ n: 1 }], receipts: [{ n: 1 }] },
       });
       yield* start("serve");
-      expect(yield* start("inspect")).toEqual(accepted);
+      const start20 = yield* start("inspect");
+      expect(start20).toEqual(accepted);
     }).pipe(Effect.timeout("20 seconds"))
   )
 );
@@ -219,7 +239,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
     Effect.gen(function* () {
       const { start } = yield* scenario();
       yield* start("protocol");
-      expect(yield* start("inspect")).toMatchObject({
+      const start21 = yield* start("inspect");
+      expect(start21).toMatchObject({
         _tag: "Some",
         value: {
           stats: { pages: 1, frames: 1 },

@@ -194,13 +194,15 @@ describe("Yeet pull request lifecycle boundaries", () => {
 
     it.effect("treats a missing PR as None but rejects closed or mismatched PRs for monitoring", () =>
       Effect.gen(function* () {
-        assertNone(yield* findOpenPullRequest(context).pipe(withGh("no PR", 1)));
+        const pipe1 = yield* findOpenPullRequest(context).pipe(withGh("no PR", 1));
+        assertNone(pipe1);
         for (const view of [
           { number: 42, state: "CLOSED", headRefName: context.branch },
           { number: 42, state: "OPEN", headRefName: "feat/other" },
         ] as const) {
           const output = yield* encodeView(view);
-          assertNone(yield* findOpenPullRequest(context).pipe(withGh(output)));
+          const pipe2 = yield* findOpenPullRequest(context).pipe(withGh(output));
+          assertNone(pipe2);
           const failure = yield* validateOpenPullRequest(context).pipe(Effect.flip, withGh(output));
           expect(failure.message).toContain(view.state === "CLOSED" ? "is CLOSED" : "expected PR head");
         }
@@ -218,8 +220,10 @@ describe("Yeet pull request lifecycle boundaries", () => {
               Ref.update(calls, A.append(args)).pipe(Effect.as({ exitCode: 0, output: "labelled", truncated: false })),
           });
           const docs = A.contains(paths, "README.md");
-          expect(A.map(yield* Ref.get(recorder), (entry) => entry.status)).toEqual([docs ? "skipped" : "passed"]);
-          expect(yield* Ref.get(calls)).toEqual(
+          const got = yield* Ref.get(recorder);
+          expect(A.map(got, (entry) => entry.status)).toEqual([docs ? "skipped" : "passed"]);
+          const got3 = yield* Ref.get(calls);
+          expect(got3).toEqual(
             docs
               ? []
               : [
@@ -238,7 +242,8 @@ describe("Yeet pull request lifecycle boundaries", () => {
         }
         const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
         yield* applyHeavyAdmissionLabel(context, recorder, O.none(), created);
-        expect(yield* Ref.get(recorder)).toEqual([]);
+        const got4 = yield* Ref.get(recorder);
+        expect(got4).toEqual([]);
         yield* applyHeavyAdmissionLabel(
           context,
           recorder,
@@ -249,7 +254,8 @@ describe("Yeet pull request lifecycle boundaries", () => {
           changedPaths: () => Effect.succeed(["package.json"]),
           capture: () => Effect.succeed({ exitCode: 1, output: "label denied", truncated: false }),
         });
-        expect(A.map(yield* Ref.get(recorder), (entry) => [entry.status, entry.result.exitCode])).toEqual([
+        const got5 = yield* Ref.get(recorder);
+        expect(A.map(got5, (entry) => [entry.status, entry.result.exitCode])).toEqual([
           ["skipped", 0],
           ["failed", 1],
         ]);

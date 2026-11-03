@@ -67,7 +67,8 @@ const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
         if (O.isNone(url)) {
           return O.none();
         }
-        return O.some(yield* transfer.downloadToBuffer(url.value).pipe(moved(key)));
+        const pipe1 = yield* transfer.downloadToBuffer(url.value).pipe(moved(key));
+        return O.some(pipe1);
       })
     ),
 

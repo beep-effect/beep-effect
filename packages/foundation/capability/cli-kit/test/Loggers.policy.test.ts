@@ -80,7 +80,8 @@ describe("CliLogger sanitises and, under GitHub Actions, neutralizes", () => {
     Effect.gen(function* () {
       const err = yield* plain(Effect.logError(`${ESC}[31mx${ESC}[0m`));
       assert.deepStrictEqual(err, ["x"]);
-      const text = A.join(yield* plain(Effect.logError(HOSTILE)), "\n");
+      const plain1 = yield* plain(Effect.logError(HOSTILE));
+      const text = A.join(plain1, "\n");
       assert.notInclude(text, ESC);
       assert.notInclude(text, BEL);
       assert.notInclude(text, "evil");
@@ -122,9 +123,8 @@ describe("CliLogger sanitises and, under GitHub Actions, neutralizes", () => {
 
   it.effect("an ordinary line and a bare ## are untouched, even under Actions", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* plain(Effect.log("synced 3 repos", "## Heading"), "github-actions"), [
-        "synced 3 repos ## Heading",
-      ]);
+      const plain2 = yield* plain(Effect.log("synced 3 repos", "## Heading"), "github-actions");
+      assert.deepStrictEqual(plain2, ["synced 3 repos ## Heading"]);
     })
   );
 

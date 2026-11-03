@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The repo CLI's one workspace reader (4-A3): members from `@beep/repo-workspaces`
 // `WorkspaceDiscovery`, edges and order from `DependencyGraph`. These pin the
 // behaviour the retired repo-utils readers had and every caller relies on: the
@@ -30,16 +31,19 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const json = (value: unknown): string => `${JSON.stringify(value)}\n`;
+const json = (value: unknown): string =>
+  `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)}\n`;
 
 // A scratch repository: `files` maps repo-relative paths to contents.
 const repository = Effect.fnUntraced(function* (files: Readonly<Record<string, string>>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-repo-workspaces-" }));
+  const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "beep-repo-workspaces-" });
+  const root = yield* fs.realPath(madeTempDirectoryScoped);
   for (const [relative, content] of R.toEntries(files)) {
     const file = path.join(root, relative);
     yield* fs.makeDirectory(path.dirname(file), { recursive: true });
@@ -84,17 +88,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
     it.effect("reads a root that declares no workspaces as having no members", () =>
       Effect.gen(function* () {
         const root = yield* repository({ "package.json": json({ name: "fixture" }) });
-        deepStrictEqual(yield* workspacePackages(root), []);
-        strictEqual(HashMap.size(yield* workspaceDirectories(root)), 0);
+        const workspacePackages1 = yield* workspacePackages(root);
+        deepStrictEqual(workspacePackages1, []);
+        const workspaceDirectories2 = yield* workspaceDirectories(root);
+        strictEqual(HashMap.size(workspaceDirectories2), 0);
       })
     );
 
     it.effect("fails typed when the root manifest is missing or is not JSON", () =>
       Effect.gen(function* () {
-        const missing = yield* Effect.flip(workspaceMembers(yield* repository({})));
+        const repository3 = yield* repository({});
+        const missing = yield* Effect.flip(workspaceMembers(repository3));
         assertInstanceOf(missing, WorkspaceDiscoveryError);
         strictEqual(missing.kind, "read");
-        const malformed = yield* Effect.flip(workspaceMembers(yield* repository({ "package.json": "{" })));
+        const repository4 = yield* repository({ "package.json": "{" });
+        const malformed = yield* Effect.flip(workspaceMembers(repository4));
         assertInstanceOf(malformed, WorkspaceDiscoveryError);
         strictEqual(malformed.kind, "invalidJson");
       })
@@ -102,14 +110,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
 
     it.effect("fails typed on a root manifest that is valid JSON but fails the strict model", () =>
       Effect.gen(function* () {
-        const notArray = yield* Effect.flip(
-          workspaceMembers(yield* repository({ "package.json": json({ name: "root", workspaces: "notarray" }) }))
-        );
+        const repository5 = yield* repository({ "package.json": json({ name: "root", workspaces: "notarray" }) });
+        const notArray = yield* Effect.flip(workspaceMembers(repository5));
         assertInstanceOf(notArray, WorkspaceDiscoveryError);
         strictEqual(notArray.kind, "invalidShape");
-        const badName = yield* Effect.flip(
-          workspaceMembers(yield* repository({ "package.json": json({ name: 42, workspaces: ["packages/*"] }) }))
-        );
+        const repository6 = yield* repository({ "package.json": json({ name: 42, workspaces: ["packages/*"] }) });
+        const badName = yield* Effect.flip(workspaceMembers(repository6));
         assertInstanceOf(badName, WorkspaceDiscoveryError);
         strictEqual(badName.kind, "invalidShape");
       })
@@ -162,8 +168,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
           "packages/core/coverage/package.json": json({ name: "@gen/cov" }),
           "dist/out/package.json": json({ name: "@gen/dist" }),
         });
+        const workspaceMembers7 = yield* workspaceMembers(root);
         deepStrictEqual(
-          A.map(yield* workspaceMembers(root), (pkg) => pkg.name),
+          A.map(workspaceMembers7, (pkg) => pkg.name),
           ["@beep/app", "@beep/core"]
         );
       })
@@ -181,8 +188,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
           "packages/core/build/package.json": "{\n",
           "dist/out/package.json": "not json\n",
         });
+        const workspacePackages8 = yield* workspacePackages(root);
         deepStrictEqual(
-          A.map(yield* workspacePackages(root), (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          A.map(workspacePackages8, (pkg) => `${pkg.name}=${pkg.relativePath}`),
           ["root=.", "@beep/app=packages/app", "@beep/core=packages/core"]
         );
       })
@@ -195,8 +203,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
           "package.json": json({ name: "root", workspaces: ["packages/*/", "packages/core/"] }),
         });
         // The literal names a member the wildcard also selects: one member, at the unslashed path.
+        const workspacePackages9 = yield* workspacePackages(root);
         deepStrictEqual(
-          A.map(yield* workspacePackages(root), (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          A.map(workspacePackages9, (pkg) => `${pkg.name}=${pkg.relativePath}`),
           ["root=.", "@beep/app=packages/app", "@beep/core=packages/core"]
         );
       })
@@ -208,8 +217,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
           ...twoMembers,
           "package.json": json({ name: "root", workspaces: ["packages/core/**", "packages/*", "!./packages/app"] }),
         });
+        const workspacePackages10 = yield* workspacePackages(root);
         deepStrictEqual(
-          A.map(yield* workspacePackages(root), (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          A.map(workspacePackages10, (pkg) => `${pkg.name}=${pkg.relativePath}`),
           ["root=.", "@beep/core=packages/core"]
         );
       })
@@ -222,8 +232,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
         const root = yield* repository(twoMembers);
         const outside = yield* repository({ "package.json": json({ name: "@beep/outside" }) });
         yield* fs.symlink(outside, path.join(root, "packages", "outside"));
+        const workspaceMembers11 = yield* workspaceMembers(root);
         deepStrictEqual(
-          A.map(yield* workspaceMembers(root), (pkg) => pkg.name),
+          A.map(workspaceMembers11, (pkg) => pkg.name),
           ["@beep/app", "@beep/core"]
         );
       })
@@ -240,10 +251,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
           "package.json": json({ name: "@beep/root", private: true, workspaces: ["packages/*", "alias"] }),
         });
         yield* fs.symlink(path.join(root, "packages", "core"), path.join(root, "alias"));
-        const aliasRoot = path.join(yield* repository({}), "link");
+        const repository12 = yield* repository({});
+        const aliasRoot = path.join(repository12, "link");
         yield* fs.symlink(root, aliasRoot);
 
-        deepStrictEqual(sortedEntries(yield* workspaceDirectories(aliasRoot)), [
+        const workspaceDirectories13 = yield* workspaceDirectories(aliasRoot);
+        deepStrictEqual(sortedEntries(workspaceDirectories13), [
           ["@beep/app", path.join(root, "packages", "app")],
           ["@beep/core", path.join(root, "packages", "core")],
         ]);
@@ -270,7 +283,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
           ...twoMembers,
           "packages/core/package.json": json({ name: "@beep/core", scripts: { test: "" } }),
         });
-        assertInstanceOf(yield* Effect.flip(workspaceManifests(root)), S.SchemaError);
+        const flip14 = yield* Effect.flip(workspaceManifests(root));
+        assertInstanceOf(flip14, S.SchemaError);
       })
     );
   });
@@ -280,8 +294,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
       Effect.gen(function* () {
         const root = yield* repository(twoMembers);
         const graph = yield* workspaceDependencyGraph(root);
-        deepStrictEqual(yield* graph.dependenciesOf("@beep/app"), ["@beep/core"]);
-        deepStrictEqual(yield* graph.sort(), ["@beep/core", "@beep/app"]);
+        const dependenciesOf15 = yield* graph.dependenciesOf("@beep/app");
+        deepStrictEqual(dependenciesOf15, ["@beep/core"]);
+        const sort16 = yield* graph.sort();
+        deepStrictEqual(sort16, ["@beep/core", "@beep/app"]);
       })
     );
 
@@ -292,8 +308,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
           "packages/core/package.json": json({ name: "@beep/core", dependencies: { "@beep/core": "workspace:*" } }),
         });
         const graph = yield* workspaceDependencyGraph(root);
-        deepStrictEqual(yield* graph.dependenciesOf("@beep/core"), []);
-        deepStrictEqual(yield* graph.sort(), ["@beep/core", "@beep/app"]);
+        const dependenciesOf17 = yield* graph.dependenciesOf("@beep/core");
+        deepStrictEqual(dependenciesOf17, []);
+        const sort18 = yield* graph.sort();
+        deepStrictEqual(sort18, ["@beep/core", "@beep/app"]);
       })
     );
   });

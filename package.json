@@ -38,7 +38,7 @@
     "@effect/sql-pglite": "4.1.2",
     "@effect/sql-sqlite-bun": "4.1.2",
     "@effect/sql-sqlite-node": "4.1.2",
-    "@effect/tsgo": "0.63.0",
+    "@effect/tsgo": "0.64.1",
     "@tanstack/react-router": "1.170.46",
     "@tanstack/react-start": "1.169.4",
     "@typescript/native": "npm:typescript@^7.0.2",
@@ -325,8 +325,8 @@
   "packageManager": "bun@1.4.4",
   "patchedDependencies": {
     "drizzle-orm@1.0.0-rc.5-ab785fc": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch",
-    "effect@4.1.1": "patches/effect@4.1.1.patch",
-    "@effect/platform-node-shared@4.1.1": "patches/@effect%2Fplatform-node-shared@4.1.1.patch"
+    "effect@4.1.2": "patches/effect@4.1.2.patch",
+    "@effect/platform-node-shared@4.1.2": "patches/@effect%2Fplatform-node-shared@4.1.2.patch"
   },
   "private": true,
   "repository": {

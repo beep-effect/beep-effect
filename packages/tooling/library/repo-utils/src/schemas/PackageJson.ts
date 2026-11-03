@@ -968,7 +968,13 @@ export class PackageJson extends PackageManifest.extend<PackageJson>($I`PackageJ
    */
   override toJsonString(options?: PackageFormatOptions.Encoded): string {
     const encoded = Result.getOrThrowWith(S.encodeUnknownResult(PackageJson)(this), identity);
-    return Result.getOrThrowWith(PackageJsonFormat.formatToString(JSON.stringify(encoded), options), identity);
+    return Result.getOrThrowWith(
+      PackageJsonFormat.formatToString(
+        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(encoded), identity),
+        options
+      ),
+      identity
+    );
   }
 }
 

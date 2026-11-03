@@ -3,7 +3,7 @@ import { CommandNeutralizer } from "@beep/github-commands";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -26,8 +26,10 @@ describe("Render.githubLog: verbatim whitespace fidelity", () => {
   it.effect("keeps trailing spaces and whitespace-only indentation at top level and inside a list", () =>
     Effect.gen(function* () {
       const block = Doc.verbatim("x  \n  \n\ny  ", { indent: 2 });
-      assert.strictEqual(yield* log([block], { width: 1 }), "  x  \n    \n  \n  y  ");
-      assert.strictEqual(yield* log([Doc.list([block])], { width: 1 }), "-   x  \n      \n    \n    y  ");
+      const log1 = yield* log([block], { width: 1 });
+      assert.strictEqual(log1, "  x  \n    \n  \n  y  ");
+      const log2 = yield* log([Doc.list([block])], { width: 1 });
+      assert.strictEqual(log2, "-   x  \n      \n    \n    y  ");
     })
   );
 });
@@ -60,7 +62,9 @@ describe("Render.githubLog: groups", () => {
           layout: "inline",
         }),
       ];
-      assert.strictEqual(yield* log(doc), yield* plain(doc));
+      const log3 = yield* log(doc);
+      const plain11 = yield* plain(doc);
+      assert.strictEqual(log3, plain11);
     })
   );
 
@@ -117,16 +121,12 @@ describe("Render.githubLog: groups", () => {
 
   it.effect("an empty body is an open and a close, and the title is escaped like a command message", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* linesOf([Doc.collapsible("T", [])]), ["::group::T", "::endgroup::"]);
-      assert.deepStrictEqual(yield* linesOf([Doc.collapsible("100% ready\r\nnot a new line", [])]), [
-        "::group::100%25 ready%0D%0Anot a new line",
-        "::endgroup::",
-      ]);
-      assert.deepStrictEqual(yield* linesOf([Doc.collapsible("", [Doc.paragraph("x")])]), [
-        "::group::",
-        "x",
-        "::endgroup::",
-      ]);
+      const linesOf4 = yield* linesOf([Doc.collapsible("T", [])]);
+      assert.deepStrictEqual(linesOf4, ["::group::T", "::endgroup::"]);
+      const linesOf5 = yield* linesOf([Doc.collapsible("100% ready\r\nnot a new line", [])]);
+      assert.deepStrictEqual(linesOf5, ["::group::100%25 ready%0D%0Anot a new line", "::endgroup::"]);
+      const linesOf6 = yield* linesOf([Doc.collapsible("", [Doc.paragraph("x")])]);
+      assert.deepStrictEqual(linesOf6, ["::group::", "x", "::endgroup::"]);
     })
   );
 });
@@ -270,31 +270,55 @@ describe("Render.githubLog: document text cannot become a workflow command", () 
       "\u0085  ##[error]nel",
     ];
     for (const line of hostile) {
-      assert.isTrue(isCommand(line), `the oracle flags it first: ${JSON.stringify(line)}`);
+      assert.isTrue(
+        isCommand(line),
+        `the oracle flags it first: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(line), identity)}`
+      );
       const out = CommandNeutralizer.lines(line);
-      assert.deepStrictEqual(A.filter(out, isCommand), [], JSON.stringify(line));
+      assert.deepStrictEqual(
+        A.filter(out, isCommand),
+        [],
+        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(line), identity)
+      );
       assert.strictEqual(pipe(out, A.join(""), Str.replaceAll("\u200B", "")), line, "only a zero-width space is added");
     }
     assert.strictEqual(A.join(CommandNeutralizer.lines("a ##[x] b ##[y]"), ""), "a ##\u200B[x] b ##\u200B[y]");
     for (const bare of ["## Heading", "a ## b", "##", "###", "## [link]", "#[x]", "# #[x]", "##x[y]"]) {
-      assert.deepStrictEqual(CommandNeutralizer.lines(bare), [bare], JSON.stringify(bare));
+      assert.deepStrictEqual(
+        CommandNeutralizer.lines(bare),
+        [bare],
+        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(bare), identity)
+      );
     }
   });
 
   it("neutralizing is idempotent, so githubLog's own pass and the facade's never double up", () => {
     for (const text of ["::error::x\n a ##[b]\n##[c]", "plain", "::a::##[b]##[c]", "x\r\n::y"]) {
       const once = A.join(CommandNeutralizer.lines(text), "\n");
-      assert.strictEqual(A.join(CommandNeutralizer.lines(once), "\n"), once, JSON.stringify(text));
+      assert.strictEqual(
+        A.join(CommandNeutralizer.lines(once), "\n"),
+        once,
+        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)
+      );
     }
   });
 
   it("the detector itself: it finds a command behind every .NET whitespace and not behind U+200B or BOM", () => {
     for (const ws of ["", " ", "\t", "\u00A0", "\u0085", "\u2003", "\u3000", "  \u00A0 "]) {
-      assert.isTrue(isCommand(`${ws}::error::x`), JSON.stringify(ws));
-      assert.isTrue(isCommand(`${ws}##[group]x`), JSON.stringify(ws));
+      assert.isTrue(
+        isCommand(`${ws}::error::x`),
+        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(ws), identity)
+      );
+      assert.isTrue(
+        isCommand(`${ws}##[group]x`),
+        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(ws), identity)
+      );
     }
     for (const prefix of ["\u200B", "\uFEFF", "x", "- "])
-      assert.isFalse(isCommand(`${prefix}::error::x`), JSON.stringify(prefix));
+      assert.isFalse(
+        isCommand(`${prefix}::error::x`),
+        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(prefix), identity)
+      );
     assert.isFalse(isCommand("a :: b"));
     assert.isFalse(isCommand(": :error"));
   });
@@ -309,7 +333,9 @@ describe("Render.githubLog: document text cannot become a workflow command", () 
   it.effect("an ordinary line is left exactly as plain renders it, so only a command-looking one changes", () =>
     Effect.gen(function* () {
       const doc = [Doc.paragraph("a : b :: c ::"), Doc.paragraph("100% :: done"), Doc.paragraph("# not a command")];
-      assert.strictEqual(yield* log(doc), yield* plain(doc));
+      const log7 = yield* log(doc);
+      const plain12 = yield* plain(doc);
+      assert.strictEqual(log7, plain12);
     })
   );
 });
@@ -372,10 +398,13 @@ describe("Render.githubLog: annotations (okfit's trial)", () => {
   it.effect("an annotation inside a group or a top-level section is a command; inside a list it is nothing", () =>
     Effect.gen(function* () {
       const annotation = Doc.annotation({ level: "error" }, "x");
-      const grouped = Str.split(yield* log([Doc.collapsible("G", [Doc.paragraph("a"), annotation])]), "\n");
+      const log8 = yield* log([Doc.collapsible("G", [Doc.paragraph("a"), annotation])]);
+      const grouped = Str.split(log8, "\n");
       assert.deepStrictEqual(grouped, ["::group::G", "a", "::error::x", "::endgroup::"]);
-      assert.include(Str.split(yield* log([Doc.section("S", [annotation])]), "\n"), "::error::x");
-      assert.deepStrictEqual(commands(yield* log([Doc.list([Doc.paragraph("a"), annotation])])), []);
+      const log9 = yield* log([Doc.section("S", [annotation])]);
+      assert.include(Str.split(log9, "\n"), "::error::x");
+      const log10 = yield* log([Doc.list([Doc.paragraph("a"), annotation])]);
+      assert.deepStrictEqual(commands(log10), []);
     })
   );
 });

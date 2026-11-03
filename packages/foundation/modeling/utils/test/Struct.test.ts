@@ -3,9 +3,11 @@ import { Str, Struct } from "@beep/utils";
 import { assert, describe, expect, expectTypeOf } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 describe("@beep/utils Struct.dotGet", () => {
   it("supports data-first and data-last calls", () => {
@@ -393,7 +395,12 @@ describe("@beep/utils Struct.fromEntries", () => {
 
 describe("@beep/utils Struct.deepMerge", () => {
   it("ignores prototype-control keys from JSON patches", () => {
-    const patch = JSON.parse('{"__proto__":{"polluted":true},"constructor":{"polluted":true},"safe":2}') as {
+    const patch = Result.getOrThrowWith(
+      S.decodeResult(S.fromJsonString(S.Unknown))(
+        '{"__proto__":{"polluted":true},"constructor":{"polluted":true},"safe":2}'
+      ),
+      identity
+    ) as {
       readonly safe: number;
     };
 

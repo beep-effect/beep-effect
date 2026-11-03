@@ -149,11 +149,9 @@ const falseReadingArtifacts = Effect.fn("test.falseReadingArtifacts")(function* 
   const interpretation =
     scenario === "Grok paper interpretation"
       ? LibraryArtifact.make({
-          ...(yield* saveImmutable(
-            root,
-            "interpretation/import.json",
-            new TextEncoder().encode(
-              yield* fixtureJson({
+          ...(yield* yield* Effect.map(
+            Effect.map(
+              fixtureJson({
                 sourceId: "s",
                 canonicalUrl: source.canonicalUrl,
                 method: "grok-deep-research",
@@ -163,8 +161,10 @@ const falseReadingArtifacts = Effect.fn("test.falseReadingArtifacts")(function* 
                 complete: true,
                 capturedRevision: "abc",
                 artifacts: [LibraryArtifact.make({ ...evidence, role: "extracted-full-text" })],
-              })
-            )
+              }),
+              (value) => new TextEncoder().encode(value)
+            ),
+            (value) => saveImmutable(root, "interpretation/import.json", value)
           )),
           role: "import-provenance",
           mediaType: "application/json",
@@ -239,22 +239,18 @@ const fixture = Effect.gen(function* () {
     mediaType: "text/html",
   });
   const response = LibraryArtifact.make({
-    ...(yield* saveImmutable(
-      // Deliberate hostile provider receipt is persisted as data, never executed or embedded unescaped.
-      // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag
-      root,
-      "evidence/response.json",
-      new TextEncoder().encode(
-        // The JSON encoder preserves hostile fixture text for the escaping assertion below.
-        // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag
-        yield* fixtureJson({
+    ...(yield* yield* Effect.map(
+      Effect.map(
+        fixtureJson({
           data: {
             markdown: '<script>globalThis.pwned=true</script><img src=x onerror="alert(1)">',
             rawHtml: "<html>source</html>",
             metadata: { sourceURL: "https://example.com/source", statusCode: 200 },
           },
-        })
-      )
+        }),
+        (value) => new TextEncoder().encode(value)
+      ),
+      (value) => saveImmutable(root, "evidence/response.json", value)
     )),
     role: "raw-response",
     mediaType: "application/json",
@@ -531,16 +527,16 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         ownership: "unresolved",
       });
       const evidence = LibraryArtifact.make({
-        ...(yield* saveImmutable(
-          root,
-          "review/source-attempt.json",
-          new TextEncoder().encode(
-            yield* fixtureJson({
+        ...(yield* yield* Effect.map(
+          Effect.map(
+            fixtureJson({
               sourceId: source.id,
               locator: source.canonicalUrl,
               attempt: "Partial target evidence; no complete source reading",
-            })
-          )
+            }),
+            (value) => new TextEncoder().encode(value)
+          ),
+          (value) => saveImmutable(root, "review/source-attempt.json", value)
         )),
         role: "disposition-evidence",
         mediaType: "application/json",
@@ -558,10 +554,9 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         artifacts: [evidence],
       };
       const receipt = LibraryArtifact.make({
-        ...(yield* saveImmutable(
-          root,
-          "review/disposition.json",
-          new TextEncoder().encode(yield* fixtureJson(payload))
+        ...(yield* yield* Effect.map(
+          Effect.map(fixtureJson(payload), (value) => new TextEncoder().encode(value)),
+          (value) => saveImmutable(root, "review/disposition.json", value)
         )),
         role: "reviewed-disposition",
         mediaType: "application/json",
@@ -588,7 +583,9 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
           })
         )
       );
-      if (variation.corrupt) yield* fs.writeFileString(path.join(root, receipt.path), "Corrupted review receipt");
+      if (variation.corrupt) {
+        yield* fs.writeFileString(path.join(root, receipt.path), "Corrupted review receipt");
+      }
       expect(capture.complete).toBe(false);
       expect(capture.status).toBe("blocked");
       const outcome = yield* Effect.exit(verifyLibrary(root));
@@ -651,10 +648,9 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
           artifacts: [A.getUnsafe(A.getUnsafe(catalog.captures, 0).artifacts, 0)],
         });
         const receipt = LibraryArtifact.make({
-          ...(yield* saveImmutable(
-            root,
-            "reviews/partial.json",
-            new TextEncoder().encode(yield* fixtureJson(payload))
+          ...(yield* yield* Effect.map(
+            Effect.map(fixtureJson(payload), (value) => new TextEncoder().encode(value)),
+            (value) => saveImmutable(root, "reviews/partial.json", value)
           )),
           role: "reviewed-disposition",
           mediaType: "application/json",
@@ -671,7 +667,9 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
           reason: payload.reason,
           artifacts: [A.getUnsafe(A.getUnsafe(catalog.captures, 0).artifacts, 0), receipt],
         });
-        if (scenario === "corrupt review") yield* fs.writeFileString(path.resolve(root, receipt.path), "corrupt");
+        if (scenario === "corrupt review") {
+          yield* fs.writeFileString(path.resolve(root, receipt.path), "corrupt");
+        }
         const reviewedCatalog = LibraryCatalog.make({ ...prior, captures: [...prior.captures, reviewed] });
         const current = yield* libraryEffectiveCaptures(root, reviewedCatalog, source);
         expect(A.map(current, (item) => item.category)).toEqual([
@@ -774,9 +772,10 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       yield* fs.remove(path.join(root, evidence.path));
       (yield* Effect.exit(verifyLibrary(root))).pipe(Exit.isFailure, assertTrue);
       yield* renderLibrary(root);
-      expect(yield* fs.readFileString(path.join(root, "sources/s", `artifact-c-${evidence.sha256}.html`))).toContain(
-        "Artifact unavailable: read failed."
+      const readFileString1 = yield* fs.readFileString(
+        path.join(root, "sources/s", `artifact-c-${evidence.sha256}.html`)
       );
+      expect(readFileString1).toContain("Artifact unavailable: read failed.");
     })
   );
 
@@ -785,9 +784,10 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       const { root, fs, path, evidence } = yield* fixture;
       yield* fs.writeFileString(path.join(root, evidence.path), "corruption");
       yield* renderLibrary(root);
-      expect(yield* fs.readFileString(path.join(root, "sources/s", `artifact-c-${evidence.sha256}.html`))).toContain(
-        "Artifact unavailable: integrity mismatch."
+      const readFileString2 = yield* fs.readFileString(
+        path.join(root, "sources/s", `artifact-c-${evidence.sha256}.html`)
       );
+      expect(readFileString2).toContain("Artifact unavailable: integrity mismatch.");
       (yield* Effect.exit(verifyLibrary(root))).pipe(Exit.isFailure, assertTrue);
     })
   );
@@ -842,10 +842,11 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         artifacts: [evidence],
       });
       const receipt = LibraryArtifact.make({
-        ...(yield* saveImmutable(
-          root,
-          "reviewed/v1.json",
-          new TextEncoder().encode(yield* S.encodeEffect(LibraryDispositionImportPayloadJson)(payload))
+        ...(yield* yield* Effect.map(
+          Effect.map(S.encodeEffect(LibraryDispositionImportPayloadJson)(payload), (value) =>
+            new TextEncoder().encode(value)
+          ),
+          (value) => saveImmutable(root, "reviewed/v1.json", value)
         )),
         role: "reviewed-disposition",
         mediaType: "application/json",
@@ -889,12 +890,10 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       const card = yield* fs.readFileString(path.join(root, "sources/repo/index.html"));
       expect(card).toContain("indirect provenance through");
       expect(card).toContain('href="../../views/reports/r/index.html"');
-      expect(yield* fs.readFileString(path.join(root, "sources/repo/SOURCE.md"))).toContain(
-        "Related reports (indirect provenance)"
-      );
-      expect(yield* fs.readFileString(path.join(root, "views/reports/r/index.html"))).toContain(
-        'href="../../../sources/repo/index.html"'
-      );
+      const readFileString3 = yield* fs.readFileString(path.join(root, "sources/repo/SOURCE.md"));
+      expect(readFileString3).toContain("Related reports (indirect provenance)");
+      const readFileString4 = yield* fs.readFileString(path.join(root, "views/reports/r/index.html"));
+      expect(readFileString4).toContain('href="../../../sources/repo/index.html"');
       expect(catalog.occurrences.length).toBe(1);
     })
   );
@@ -930,10 +929,9 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         ],
       });
       const artifact = LibraryArtifact.make({
-        ...(yield* saveImmutable(
-          root,
-          intake.manifestPath,
-          new TextEncoder().encode(yield* S.encodeEffect(LibraryIntakeJson)(intake))
+        ...(yield* yield* Effect.map(
+          Effect.map(S.encodeEffect(LibraryIntakeJson)(intake), (value) => new TextEncoder().encode(value)),
+          (value) => saveImmutable(root, intake.manifestPath, value)
         )),
         role: "intake-manifest",
         mediaType: "application/json",
@@ -953,7 +951,8 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       const outside = yield* fs.makeTempDirectoryScoped({ prefix: "research-library-outside-" });
       yield* fs.symlink(outside, path.join(root, "sources"));
       (yield* Effect.exit(renderLibrary(root))).pipe(Exit.isFailure, assertTrue);
-      expect(yield* fs.readDirectory(outside)).toEqual([]);
+      const readDirectory5 = yield* fs.readDirectory(outside);
+      expect(readDirectory5).toEqual([]);
     })
   );
   it.effect.each(["", "v1"])("binds requested arXiv version '%s' to the observed PDF header", (requested) =>
@@ -980,22 +979,25 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
           mediaType,
         });
       });
+      const argument = yield* artifact("source.pdf", "%PDF-1.7 retained original", "raw-full-text", "application/pdf");
+      const argument1 = yield* artifact(
+        "source.txt",
+        "arXiv:2609.12345v2 Full paper text",
+        "extracted-full-text",
+        "text/plain"
+      );
+      const fixtureJson1 = yield* fixtureJson({
+        requestedUrl: source.canonicalUrl,
+        pdfUrl: `https://arxiv.org/pdf/2609.12345${requested}`,
+        status: 200,
+        requestedRevision: requested,
+        capturedRevision: "v2",
+        paperId: "2609.12345",
+      });
       const artifacts = [
-        yield* artifact("source.pdf", "%PDF-1.7 retained original", "raw-full-text", "application/pdf"),
-        yield* artifact("source.txt", "arXiv:2609.12345v2 Full paper text", "extracted-full-text", "text/plain"),
-        yield* artifact(
-          "target.json",
-          yield* fixtureJson({
-            requestedUrl: source.canonicalUrl,
-            pdfUrl: `https://arxiv.org/pdf/2609.12345${requested}`,
-            status: 200,
-            requestedRevision: requested,
-            capturedRevision: "v2",
-            paperId: "2609.12345",
-          }),
-          "target-metadata",
-          "application/json"
-        ),
+        argument,
+        argument1,
+        yield* artifact("target.json", fixtureJson1, "target-metadata", "application/json"),
       ];
       const capture = LibraryCapture.make({
         ...A.getUnsafe(catalog.captures, 0),
@@ -1013,12 +1015,8 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         complete: true,
         artifacts,
       });
-      const proof = yield* artifact(
-        "probe.json",
-        yield* S.encodeEffect(LibraryProbeEvidenceJson)(probe),
-        "qualification-probe",
-        "application/json"
-      );
+      const value6 = yield* S.encodeEffect(LibraryProbeEvidenceJson)(probe);
+      const proof = yield* artifact("probe.json", value6, "qualification-probe", "application/json");
       yield* withCatalog(root, () =>
         Effect.succeed(
           LibraryCatalog.make({
@@ -1122,10 +1120,9 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
                 ],
         };
         const evidence = LibraryArtifact.make({
-          ...(yield* saveImmutable(
-            root,
-            "reviews/token-context.json",
-            new TextEncoder().encode(yield* fixtureJson(context))
+          ...(yield* yield* Effect.map(
+            Effect.map(fixtureJson(context), (value) => new TextEncoder().encode(value)),
+            (value) => saveImmutable(root, "reviews/token-context.json", value)
           )),
           role: "disposition-evidence",
           mediaType: "application/json",
@@ -1144,7 +1141,8 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
           artifacts: [evidence],
         };
         const request = path.join(root, "non-reference-import.json");
-        yield* fs.writeFileString(request, yield* fixtureJson(raw));
+        const fixtureJson7 = yield* fixtureJson(raw);
+        yield* fs.writeFileString(request, fixtureJson7);
         const imported = yield* Effect.exit(importLibraryResult(root, request));
         if (scenario === "empty review" || scenario === "missing context") {
           imported.pipe(Exit.isFailure, assertTrue);
@@ -1153,7 +1151,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         imported.pipe(Exit.isSuccess, assertTrue);
         const current = yield* loadCatalog(root);
         expect(A.findFirst(current.captures, (c) => c.status === "non-reference")._tag).toBe("Some");
-        if (scenario === "wrong revision")
+        if (scenario === "wrong revision") {
           yield* withCatalog(root, () =>
             Effect.succeed(
               LibraryCatalog.make({
@@ -1164,6 +1162,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
               })
             )
           );
+        }
         const result = yield* Effect.exit(verifyLibrary(root));
         strictEqual(Exit.isSuccess(result), scenario === "valid");
       })
@@ -1204,31 +1203,31 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       });
       const originalMarkdown = yield* make("source.md", markdown, "extracted-full-text", "text/markdown");
       const originalHtml = yield* make("source.html", html, "raw-full-text", "text/html");
-      const response = yield* make(
-        "response.json",
-        yield* fixtureJson({
-          data: {
-            markdown,
-            rawHtml: html,
-            metadata: { sourceURL: A.getUnsafe(catalog.sources, 0).canonicalUrl, statusCode: 200 },
-          },
-        }),
-        "raw-response",
-        "application/json"
-      );
+      const fixtureJson8 = yield* fixtureJson({
+        data: {
+          markdown,
+          rawHtml: html,
+          metadata: { sourceURL: A.getUnsafe(catalog.sources, 0).canonicalUrl, statusCode: 200 },
+        },
+      });
+      const response = yield* make("response.json", fixtureJson8, "raw-response", "application/json");
       const capture = LibraryCapture.make({
         ...A.getUnsafe(catalog.captures, 0),
         artifacts: [originalMarkdown, originalHtml, response],
       });
-      expect(yield* librarySourceEvidenceValid(root, A.getUnsafe(catalog.sources, 0), capture)).toBe(true);
+      const librarySourceEvidenceValid9 = yield* librarySourceEvidenceValid(
+        root,
+        A.getUnsafe(catalog.sources, 0),
+        capture
+      );
+      expect(librarySourceEvidenceValid9).toBe(true);
       const altered = yield* make("altered.md", Str.slice(1)(markdown), "extracted-full-text", "text/markdown");
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          A.getUnsafe(catalog.sources, 0),
-          LibraryCapture.make({ ...capture, artifacts: [altered, originalHtml, response] })
-        )
-      ).toBe(false);
+      const librarySourceEvidenceValid10 = yield* librarySourceEvidenceValid(
+        root,
+        A.getUnsafe(catalog.sources, 0),
+        LibraryCapture.make({ ...capture, artifacts: [altered, originalHtml, response] })
+      );
+      expect(librarySourceEvidenceValid10).toBe(false);
     })
   );
   it.effect.each(webSourceKinds)("validates genuine imported Firecrawl %s originals", (kind) =>
@@ -1248,36 +1247,37 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         artifacts: capture.artifacts,
       };
       const envelope = LibraryArtifact.make({
-        ...(yield* saveImmutable(
-          root,
-          "imports/firecrawl.json",
-          new TextEncoder().encode(yield* fixtureJson(payload))
+        ...(yield* yield* Effect.map(
+          Effect.map(fixtureJson(payload), (value) => new TextEncoder().encode(value)),
+          (value) => saveImmutable(root, "imports/firecrawl.json", value)
         )),
         role: "import-provenance",
         mediaType: "application/json",
       });
       const imported = LibraryCapture.make({ ...capture, artifacts: [...capture.artifacts, envelope] });
-      expect(yield* librarySourceEvidenceValid(root, source, imported)).toBe(true);
-      expect(yield* librarySourceEvidenceValid(root, LibrarySource.make({ ...source, kind: "paper" }), imported)).toBe(
-        false
+      const librarySourceEvidenceValid11 = yield* librarySourceEvidenceValid(root, source, imported);
+      expect(librarySourceEvidenceValid11).toBe(true);
+      const librarySourceEvidenceValid12 = yield* librarySourceEvidenceValid(
+        root,
+        LibrarySource.make({ ...source, kind: "paper" }),
+        imported
       );
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          source,
-          LibraryCapture.make({
-            ...imported,
-            artifacts: A.filter(imported.artifacts, (a) => a.role !== "raw-response"),
-          })
-        )
-      ).toBe(false);
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          LibrarySource.make({ ...source, canonicalUrl: "https://example.com/unrelated" }),
-          imported
-        )
-      ).toBe(false);
+      expect(librarySourceEvidenceValid12).toBe(false);
+      const librarySourceEvidenceValid13 = yield* librarySourceEvidenceValid(
+        root,
+        source,
+        LibraryCapture.make({
+          ...imported,
+          artifacts: A.filter(imported.artifacts, (a) => a.role !== "raw-response"),
+        })
+      );
+      expect(librarySourceEvidenceValid13).toBe(false);
+      const librarySourceEvidenceValid14 = yield* librarySourceEvidenceValid(
+        root,
+        LibrarySource.make({ ...source, canonicalUrl: "https://example.com/unrelated" }),
+        imported
+      );
+      expect(librarySourceEvidenceValid14).toBe(false);
     })
   );
   it.effect.each(["valid", "wrong landing", "missing relationship", "wrong PDF target"])(
@@ -1302,74 +1302,62 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
           "publisher-landing-page",
           "text/html"
         );
-        const landingMeta = yield* make(
-          "landing.json",
-          yield* fixtureJson({
-            requestedUrl: scenario === "wrong landing" ? "https://example.com/unrelated" : source.canonicalUrl,
-            status: 200,
-          }),
-          "publisher-target-metadata"
-        );
-        const pdfMeta = yield* make(
-          "pdf-target.json",
-          yield* fixtureJson({
-            requestedUrl: scenario === "wrong PDF target" ? "https://example.com/unrelated.pdf" : pdfUrl,
-            pdfUrl,
-            status: 200,
-          }),
-          "pdf-request-metadata"
-        );
-        const target = yield* make(
-          "target.json",
-          yield* fixtureJson({ requestedUrl: source.canonicalUrl, pdfUrl, status: 200 }),
-          "target-metadata"
-        );
+        const fixtureJson15 = yield* fixtureJson({
+          requestedUrl: scenario === "wrong landing" ? "https://example.com/unrelated" : source.canonicalUrl,
+          status: 200,
+        });
+        const landingMeta = yield* make("landing.json", fixtureJson15, "publisher-target-metadata");
+        const fixtureJson16 = yield* fixtureJson({
+          requestedUrl: scenario === "wrong PDF target" ? "https://example.com/unrelated.pdf" : pdfUrl,
+          pdfUrl,
+          status: 200,
+        });
+        const pdfMeta = yield* make("pdf-target.json", fixtureJson16, "pdf-request-metadata");
+        const fixtureJson17 = yield* fixtureJson({ requestedUrl: source.canonicalUrl, pdfUrl, status: 200 });
+        const target = yield* make("target.json", fixtureJson17, "target-metadata");
         const pdf = yield* make("source.pdf", "%PDF-original fixture", "raw-full-text", "application/pdf");
-        const proof = yield* make(
-          "resolution.json",
-          yield* fixtureJson({
-            sourceId: source.id,
-            citedUrl: source.canonicalUrl,
-            pdfUrl,
-            observedCitationPdfUrl: pdfUrl,
-            landingHtmlSha256: landing.sha256,
-            landingMetadataSha256: landingMeta.sha256,
-            pdfMetadataSha256: pdfMeta.sha256,
-            pdfSha256: pdf.sha256,
-            reason: "Exact publisher citation relationship",
-          }),
-          "citation-resolution"
-        );
+        const fixtureJson18 = yield* fixtureJson({
+          sourceId: source.id,
+          citedUrl: source.canonicalUrl,
+          pdfUrl,
+          observedCitationPdfUrl: pdfUrl,
+          landingHtmlSha256: landing.sha256,
+          landingMetadataSha256: landingMeta.sha256,
+          pdfMetadataSha256: pdfMeta.sha256,
+          pdfSha256: pdf.sha256,
+          reason: "Exact publisher citation relationship",
+        });
+        const proof = yield* make("resolution.json", fixtureJson18, "citation-resolution");
         const originals = [landing, landingMeta, pdfMeta, target, pdf, proof, evidence];
-        const envelope = yield* make(
-          "import.json",
-          yield* fixtureJson({
-            sourceId: source.id,
-            canonicalUrl: source.canonicalUrl,
-            method: "paper",
-            provider: "publisher-http",
-            toolName: "fetch",
-            toolCallId: "actual",
-            complete: true,
-            capturedRevision: "abc",
-            artifacts: originals,
-          }),
-          "import-provenance"
-        );
+        const fixtureJson19 = yield* fixtureJson({
+          sourceId: source.id,
+          canonicalUrl: source.canonicalUrl,
+          method: "paper",
+          provider: "publisher-http",
+          toolName: "fetch",
+          toolCallId: "actual",
+          complete: true,
+          capturedRevision: "abc",
+          artifacts: originals,
+        });
+        const envelope = yield* make("import.json", fixtureJson19, "import-provenance");
         const capture = LibraryCapture.make({
           ...A.getUnsafe(catalog.captures, 0),
           method: "paper",
           artifacts: [...originals, envelope],
         });
-        expect(yield* librarySourceEvidenceValid(root, source, capture)).toBe(scenario === "valid");
+        const librarySourceEvidenceValid20 = yield* librarySourceEvidenceValid(root, source, capture);
+        expect(librarySourceEvidenceValid20).toBe(scenario === "valid");
       })
   );
   it.effect("binds GitHub blob evidence to the exact pinned file", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+      const argument2 = yield* Path.Path;
+      const String2 = yield* Config.String("HOME");
       const root = yield* fs.makeTempDirectoryScoped({
-        directory: (yield* Path.Path).join(yield* Config.String("HOME"), ".cache"),
+        directory: argument2.join(String2, ".cache"),
         prefix: "library-git-evidence-",
       });
       const clone = path.join(root, "repos/github/owner/repo");
@@ -1384,7 +1372,8 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       yield* fs.writeFileString(path.join(clone, "large.txt"), Str.repeat(1_100_000)("fixture "));
       yield* git(["add", "--", "target.ts", "README.md", "large.txt"]);
       yield* git(["-c", "core.hooksPath=/dev/null", "commit", "-m", "test: retain evidence fixture"]);
-      const revision = Str.trim(yield* git(["rev-parse", "HEAD"]));
+      const git21 = yield* git(["rev-parse", "HEAD"]);
+      const revision = Str.trim(git21);
       const make = Effect.fn(function* (name: string, text: string, role: string) {
         return LibraryArtifact.make({
           ...(yield* saveImmutable(root, `evidence/${name}`, new TextEncoder().encode(text))),
@@ -1392,17 +1381,15 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
           mediaType: "text/plain",
         });
       });
-      const pin = yield* make(
-        "pin.json",
-        yield* fixtureJson({
-          remote: "https://github.com/owner/repo.git",
-          revision,
-          clone: "repos/github/owner/repo",
-          requestedRevision: "HEAD",
-        }),
-        "repository-pin"
-      );
-      const tree = yield* make("tree.txt", yield* git(["ls-tree", "-r", "--name-only", revision]), "repository-tree");
+      const fixtureJson22 = yield* fixtureJson({
+        remote: "https://github.com/owner/repo.git",
+        revision,
+        clone: "repos/github/owner/repo",
+        requestedRevision: "HEAD",
+      });
+      const pin = yield* make("pin.json", fixtureJson22, "repository-pin");
+      const git23 = yield* git(["ls-tree", "-r", "--name-only", revision]);
+      const tree = yield* make("tree.txt", git23, "repository-tree");
       const exact = yield* make("target.txt", "export const target = true;\n", "raw-full-text");
       const borrowed = yield* make("README.txt", "A different document\n", "raw-full-text");
       const source = LibrarySource.make({
@@ -1427,17 +1414,15 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         reason: "fixture",
         artifacts: [pin, tree, exact],
       });
-      expect(yield* librarySourceEvidenceValid(root, source, capture)).toBe(true);
-      const commitPin = yield* make(
-        "commit-pin.json",
-        yield* fixtureJson({
-          remote: "https://github.com/owner/repo.git",
-          revision,
-          clone: "repos/github/owner/repo",
-          requestedRevision: revision,
-        }),
-        "repository-pin"
-      );
+      const librarySourceEvidenceValid24 = yield* librarySourceEvidenceValid(root, source, capture);
+      expect(librarySourceEvidenceValid24).toBe(true);
+      const fixtureJson25 = yield* fixtureJson({
+        remote: "https://github.com/owner/repo.git",
+        revision,
+        clone: "repos/github/owner/repo",
+        requestedRevision: revision,
+      });
+      const commitPin = yield* make("commit-pin.json", fixtureJson25, "repository-pin");
       const patchPath = path.join(root, "commit.diff");
       yield* git(["show", "--no-ext-diff", "--no-textconv", "--format=fuller", revision, `--output=${patchPath}`]);
       const patchBytes = yield* fs.readFile(patchPath);
@@ -1461,112 +1446,96 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         requestedRevision: revision,
         artifacts: [commitPin, tree, patch],
       });
-      expect(yield* librarySourceEvidenceValid(root, commitSource, commitCapture)).toBe(true);
+      const librarySourceEvidenceValid26 = yield* librarySourceEvidenceValid(root, commitSource, commitCapture);
+      expect(librarySourceEvidenceValid26).toBe(true);
       const partialPatch = yield* make("partial.diff", "An incomplete diff body", "raw-diff");
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          commitSource,
-          LibraryCapture.make({ ...commitCapture, artifacts: [commitPin, tree, partialPatch] })
-        )
-      ).toBe(false);
+      const librarySourceEvidenceValid27 = yield* librarySourceEvidenceValid(
+        root,
+        commitSource,
+        LibraryCapture.make({ ...commitCapture, artifacts: [commitPin, tree, partialPatch] })
+      );
+      expect(librarySourceEvidenceValid27).toBe(false);
       const listingSource = LibrarySource.make({
         ...source,
         canonicalUrl: "https://github.com/owner/repo/commits/HEAD",
       });
       const entries = [{ sha: revision, html_url: `https://github.com/owner/repo/commit/${revision}` }];
-      const page = yield* make("commits-page-1.json", yield* fixtureJson(entries), "raw-discussion");
-      const aggregate = yield* make("commits.json", yield* fixtureJson([entries]), "raw-discussion");
-      const pagination = yield* make(
-        "commits-pagination.json",
-        yield* fixtureJson({
-          endpoint: `repos/owner/repo/commits?sha=${revision}&per_page=100`,
-          pages: 1,
-          exhausted: true,
-          pageSize: 100,
-        }),
-        "pagination-metadata"
-      );
+      const fixtureJson28 = yield* fixtureJson(entries);
+      const page = yield* make("commits-page-1.json", fixtureJson28, "raw-discussion");
+      const fixtureJson29 = yield* fixtureJson([entries]);
+      const aggregate = yield* make("commits.json", fixtureJson29, "raw-discussion");
+      const fixtureJson30 = yield* fixtureJson({
+        endpoint: `repos/owner/repo/commits?sha=${revision}&per_page=100`,
+        pages: 1,
+        exhausted: true,
+        pageSize: 100,
+      });
+      const pagination = yield* make("commits-pagination.json", fixtureJson30, "pagination-metadata");
       const listingCapture = LibraryCapture.make({ ...capture, artifacts: [pin, tree, page, aggregate, pagination] });
-      expect(yield* librarySourceEvidenceValid(root, listingSource, listingCapture)).toBe(true);
-      const unexhausted = yield* make(
-        "unexhausted.json",
-        yield* fixtureJson({
-          endpoint: `repos/owner/repo/commits?sha=${revision}&per_page=100`,
-          pages: 1,
-          exhausted: false,
-          pageSize: 100,
-        }),
-        "pagination-metadata"
+      const librarySourceEvidenceValid31 = yield* librarySourceEvidenceValid(root, listingSource, listingCapture);
+      expect(librarySourceEvidenceValid31).toBe(true);
+      const fixtureJson32 = yield* fixtureJson({
+        endpoint: `repos/owner/repo/commits?sha=${revision}&per_page=100`,
+        pages: 1,
+        exhausted: false,
+        pageSize: 100,
+      });
+      const unexhausted = yield* make("unexhausted.json", fixtureJson32, "pagination-metadata");
+      const librarySourceEvidenceValid33 = yield* librarySourceEvidenceValid(
+        root,
+        listingSource,
+        LibraryCapture.make({ ...listingCapture, artifacts: [pin, tree, page, aggregate, unexhausted] })
       );
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          listingSource,
-          LibraryCapture.make({ ...listingCapture, artifacts: [pin, tree, page, aggregate, unexhausted] })
-        )
-      ).toBe(false);
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          listingSource,
-          LibraryCapture.make({ ...listingCapture, artifacts: [pin, tree, aggregate, pagination] })
-        )
-      ).toBe(false);
+      expect(librarySourceEvidenceValid33).toBe(false);
+      const librarySourceEvidenceValid34 = yield* librarySourceEvidenceValid(
+        root,
+        listingSource,
+        LibraryCapture.make({ ...listingCapture, artifacts: [pin, tree, aggregate, pagination] })
+      );
+      expect(librarySourceEvidenceValid34).toBe(false);
       const releaseSource = LibrarySource.make({
         ...source,
         kind: "github-release",
         canonicalUrl: "https://github.com/owner/repo/releases/tag/%40pkg%2Fcore%401.0",
       });
-      const release = yield* make(
-        "release.json",
-        yield* fixtureJson([
-          { html_url: "https://github.com/owner/repo/releases/tag/@pkg/core%401.0", tag_name: "@pkg/core@1.0" },
-        ]),
-        "raw-discussion"
+      const fixtureJson35 = yield* fixtureJson([
+        { html_url: "https://github.com/owner/repo/releases/tag/@pkg/core%401.0", tag_name: "@pkg/core@1.0" },
+      ]);
+      const release = yield* make("release.json", fixtureJson35, "raw-discussion");
+      const librarySourceEvidenceValid36 = yield* librarySourceEvidenceValid(
+        root,
+        releaseSource,
+        LibraryCapture.make({ ...capture, artifacts: [pin, tree, release] })
       );
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          releaseSource,
-          LibraryCapture.make({ ...capture, artifacts: [pin, tree, release] })
-        )
-      ).toBe(true);
-      const unrelated = yield* make(
-        "unrelated-release.json",
-        yield* fixtureJson([
-          { html_url: "https://github.com/other/repo/releases/tag/@pkg/core%401.0", tag_name: "@pkg/core@1.0" },
-        ]),
-        "raw-discussion"
+      expect(librarySourceEvidenceValid36).toBe(true);
+      const fixtureJson37 = yield* fixtureJson([
+        { html_url: "https://github.com/other/repo/releases/tag/@pkg/core%401.0", tag_name: "@pkg/core@1.0" },
+      ]);
+      const unrelated = yield* make("unrelated-release.json", fixtureJson37, "raw-discussion");
+      const librarySourceEvidenceValid38 = yield* librarySourceEvidenceValid(
+        root,
+        releaseSource,
+        LibraryCapture.make({ ...capture, artifacts: [pin, tree, unrelated] })
       );
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          releaseSource,
-          LibraryCapture.make({ ...capture, artifacts: [pin, tree, unrelated] })
-        )
-      ).toBe(false);
-      const wrongTag = yield* make(
-        "wrong-tag.json",
-        yield* fixtureJson([
-          { html_url: "https://github.com/owner/repo/releases/tag/@pkg/core%401.0", tag_name: "@pkg/core@2.0" },
-        ]),
-        "raw-discussion"
+      expect(librarySourceEvidenceValid38).toBe(false);
+      const fixtureJson39 = yield* fixtureJson([
+        { html_url: "https://github.com/owner/repo/releases/tag/@pkg/core%401.0", tag_name: "@pkg/core@2.0" },
+      ]);
+      const wrongTag = yield* make("wrong-tag.json", fixtureJson39, "raw-discussion");
+      const librarySourceEvidenceValid40 = yield* librarySourceEvidenceValid(
+        root,
+        releaseSource,
+        LibraryCapture.make({ ...capture, artifacts: [pin, tree, wrongTag] })
       );
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          releaseSource,
-          LibraryCapture.make({ ...capture, artifacts: [pin, tree, wrongTag] })
-        )
-      ).toBe(false);
+      expect(librarySourceEvidenceValid40).toBe(false);
       const identityBody = {
         id: 123,
         node_id: "repo-123",
         full_name: "owner/renamed",
         html_url: "https://github.com/owner/renamed",
       };
-      const identity = yield* make("identity.json", yield* fixtureJson(identityBody), "repository-identity-response");
+      const fixtureJson41 = yield* fixtureJson(identityBody);
+      const identity = yield* make("identity.json", fixtureJson41, "repository-identity-response");
       const receipts = A.map(["owner/repo", "owner/renamed"], (slug) => ({
         ...identityBody,
         requestedEndpoint: `https://api.github.com/repos/${slug}`,
@@ -1575,16 +1544,10 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         sha256: identity.sha256,
         bytes: identity.bytes,
       }));
-      const identityProof = yield* make(
-        "identity-receipts.json",
-        yield* fixtureJson(receipts),
-        "repository-identity-provenance"
-      );
-      const renamedDiscussion = yield* make(
-        "renamed-issue.json",
-        yield* fixtureJson([{ html_url: "https://github.com/owner/renamed/issues/1" }]),
-        "raw-discussion"
-      );
+      const fixtureJson42 = yield* fixtureJson(receipts);
+      const identityProof = yield* make("identity-receipts.json", fixtureJson42, "repository-identity-provenance");
+      const fixtureJson43 = yield* fixtureJson([{ html_url: "https://github.com/owner/renamed/issues/1" }]);
+      const renamedDiscussion = yield* make("renamed-issue.json", fixtureJson43, "raw-discussion");
       const discussionSource = LibrarySource.make({
         ...source,
         kind: "github-discussion",
@@ -1594,29 +1557,29 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         ...capture,
         artifacts: [pin, tree, renamedDiscussion, identity, identityProof],
       });
-      expect(yield* librarySourceEvidenceValid(root, discussionSource, renamedCapture)).toBe(true);
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          discussionSource,
-          LibraryCapture.make({ ...renamedCapture, artifacts: [pin, tree, renamedDiscussion] })
-        )
-      ).toBe(false);
+      const librarySourceEvidenceValid44 = yield* librarySourceEvidenceValid(root, discussionSource, renamedCapture);
+      expect(librarySourceEvidenceValid44).toBe(true);
+      const librarySourceEvidenceValid45 = yield* librarySourceEvidenceValid(
+        root,
+        discussionSource,
+        LibraryCapture.make({ ...renamedCapture, artifacts: [pin, tree, renamedDiscussion] })
+      );
+      expect(librarySourceEvidenceValid45).toBe(false);
+      const fixtureJson46 = yield* fixtureJson(A.map(receipts, (item) => ({ ...item, id: 999 })));
       const wrongIdentityProof = yield* make(
         "wrong-identity-receipts.json",
-        yield* fixtureJson(A.map(receipts, (item) => ({ ...item, id: 999 }))),
+        fixtureJson46,
         "repository-identity-provenance"
       );
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          discussionSource,
-          LibraryCapture.make({
-            ...renamedCapture,
-            artifacts: [pin, tree, renamedDiscussion, identity, wrongIdentityProof],
-          })
-        )
-      ).toBe(false);
+      const librarySourceEvidenceValid47 = yield* librarySourceEvidenceValid(
+        root,
+        discussionSource,
+        LibraryCapture.make({
+          ...renamedCapture,
+          artifacts: [pin, tree, renamedDiscussion, identity, wrongIdentityProof],
+        })
+      );
+      expect(librarySourceEvidenceValid47).toBe(false);
       const prSource = LibrarySource.make({
         ...source,
         kind: "github-pr",
@@ -1630,92 +1593,76 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         additions: 0,
         deletions: 0,
       };
-      const pull = yield* make("pull.json", yield* fixtureJson([pullBody]), "raw-discussion");
+      const fixtureJson48 = yield* fixtureJson([pullBody]);
+      const pull = yield* make("pull.json", fixtureJson48, "raw-discussion");
       const emptyDiff = yield* make("empty.diff", "", "raw-diff");
       const files = yield* make("files.json", "[[]]", "raw-discussion");
       const filesPage = yield* make("files-page-1.json", "[]", "raw-discussion");
-      const filesProof = yield* make(
-        "files-pagination.json",
-        yield* fixtureJson({
-          endpoint: "repos/owner/repo/pulls/1/files?per_page=100",
-          pages: 1,
-          exhausted: true,
-          pageSize: 100,
-        }),
-        "pagination-metadata"
-      );
-      const diffProof = yield* make(
-        "diff-proof.json",
-        yield* fixtureJson({
-          method: "gh-api-diff",
-          endpoint: "repos/owner/repo/pulls/1",
-          accept: "application/vnd.github.diff",
-          base: revision,
-          head: revision,
-        }),
-        "diff-provenance"
-      );
+      const fixtureJson49 = yield* fixtureJson({
+        endpoint: "repos/owner/repo/pulls/1/files?per_page=100",
+        pages: 1,
+        exhausted: true,
+        pageSize: 100,
+      });
+      const filesProof = yield* make("files-pagination.json", fixtureJson49, "pagination-metadata");
+      const fixtureJson50 = yield* fixtureJson({
+        method: "gh-api-diff",
+        endpoint: "repos/owner/repo/pulls/1",
+        accept: "application/vnd.github.diff",
+        base: revision,
+        head: revision,
+      });
+      const diffProof = yield* make("diff-proof.json", fixtureJson50, "diff-provenance");
       const emptyCapture = LibraryCapture.make({
         ...capture,
         artifacts: [pin, tree, pull, emptyDiff, files, filesPage, filesProof, diffProof],
       });
-      expect(yield* librarySourceEvidenceValid(root, prSource, emptyCapture)).toBe(true);
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          prSource,
-          LibraryCapture.make({
-            ...emptyCapture,
-            artifacts: A.filter(emptyCapture.artifacts, (a) => !libraryArtifactEquivalent(a, filesProof)),
-          })
-        )
-      ).toBe(false);
-      const changedPull = yield* make(
-        "changed-pull.json",
-        yield* fixtureJson([{ ...pullBody, changed_files: 1 }]),
-        "raw-discussion"
+      const librarySourceEvidenceValid51 = yield* librarySourceEvidenceValid(root, prSource, emptyCapture);
+      expect(librarySourceEvidenceValid51).toBe(true);
+      const librarySourceEvidenceValid52 = yield* librarySourceEvidenceValid(
+        root,
+        prSource,
+        LibraryCapture.make({
+          ...emptyCapture,
+          artifacts: A.filter(emptyCapture.artifacts, (a) => !libraryArtifactEquivalent(a, filesProof)),
+        })
       );
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          prSource,
-          LibraryCapture.make({
-            ...emptyCapture,
-            artifacts: [pin, tree, changedPull, emptyDiff, files, filesPage, filesProof, diffProof],
-          })
-        )
-      ).toBe(false);
+      expect(librarySourceEvidenceValid52).toBe(false);
+      const fixtureJson53 = yield* fixtureJson([{ ...pullBody, changed_files: 1 }]);
+      const changedPull = yield* make("changed-pull.json", fixtureJson53, "raw-discussion");
+      const librarySourceEvidenceValid54 = yield* librarySourceEvidenceValid(
+        root,
+        prSource,
+        LibraryCapture.make({
+          ...emptyCapture,
+          artifacts: [pin, tree, changedPull, emptyDiff, files, filesPage, filesProof, diffProof],
+        })
+      );
+      expect(librarySourceEvidenceValid54).toBe(false);
       yield* fs.writeFileString(path.join(clone, "target.ts"), "export const target = false;\n");
       yield* git(["add", "target.ts"]);
       yield* git(["-c", "core.hooksPath=/dev/null", "commit", "-m", "test: change cited target"]);
-      const child = Str.trim(yield* git(["rev-parse", "HEAD"]));
-      const legacyPull = yield* make(
-        "legacy-pull.json",
-        yield* fixtureJson([{ ...pullBody, head: { sha: Str.repeat(40)("f") }, changed_files: 1 }]),
-        "raw-discussion"
+      const git55 = yield* git(["rev-parse", "HEAD"]);
+      const child = Str.trim(git55);
+      const fixtureJson56 = yield* fixtureJson([{ ...pullBody, head: { sha: Str.repeat(40)("f") }, changed_files: 1 }]);
+      const legacyPull = yield* make("legacy-pull.json", fixtureJson56, "raw-discussion");
+      const git57 = yield* git(["diff", "--no-ext-diff", "--no-textconv", `${revision}...${child}`]);
+      const legacyDiff = yield* make("legacy.diff", git57, "raw-diff");
+      const librarySourceEvidenceValid58 = yield* librarySourceEvidenceValid(
+        root,
+        prSource,
+        LibraryCapture.make({ ...capture, artifacts: [pin, tree, legacyPull, legacyDiff] })
       );
-      const legacyDiff = yield* make(
-        "legacy.diff",
-        yield* git(["diff", "--no-ext-diff", "--no-textconv", `${revision}...${child}`]),
-        "raw-diff"
+      expect(librarySourceEvidenceValid58).toBe(true);
+      const librarySourceEvidenceValid59 = yield* librarySourceEvidenceValid(
+        root,
+        prSource,
+        LibraryCapture.make({
+          ...capture,
+          artifacts: [pin, tree, legacyPull, emptyDiff],
+        })
       );
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          prSource,
-          LibraryCapture.make({ ...capture, artifacts: [pin, tree, legacyPull, legacyDiff] })
-        )
-      ).toBe(true);
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          prSource,
-          LibraryCapture.make({
-            ...capture,
-            artifacts: [pin, tree, legacyPull, emptyDiff],
-          })
-        )
-      ).toBe(false);
+      expect(librarySourceEvidenceValid59).toBe(false);
       const incorrect = LibraryCapture.make({ ...capture, artifacts: [pin, tree, borrowed] });
       yield* withCatalog(root, () =>
         Effect.succeed(
@@ -1733,13 +1680,12 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       const message = Exit.match(result, { onFailure: Cause.pretty, onSuccess: () => "" });
       expect(message).toContain("source-kind evidence or target provenance missing");
       expect(message).not.toContain("pinned commit unavailable");
-      expect(
-        yield* librarySourceEvidenceValid(
-          root,
-          source,
-          LibraryCapture.make({ ...capture, artifacts: [pin, tree, borrowed] })
-        )
-      ).toBe(false);
+      const librarySourceEvidenceValid60 = yield* librarySourceEvidenceValid(
+        root,
+        source,
+        LibraryCapture.make({ ...capture, artifacts: [pin, tree, borrowed] })
+      );
+      expect(librarySourceEvidenceValid60).toBe(false);
     })
   );
   it.effect.each([
@@ -1751,8 +1697,10 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
   ])("binds headerless paper version proof: %s", (scenario) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
+      const argument3 = yield* Path.Path;
+      const String3 = yield* Config.String("HOME");
       const root = yield* fs.makeTempDirectoryScoped({
-        directory: (yield* Path.Path).join(yield* Config.String("HOME"), ".cache"),
+        directory: argument3.join(String3, ".cache"),
         prefix: "library-paper-proof-",
       });
       const make = Effect.fn(function* (name: string, text: string, role: string, mediaType = "application/json") {
@@ -1775,38 +1723,32 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         "arxiv-version-metadata",
         "application/atom+xml"
       );
-      const proof = yield* make(
-        "proof.json",
-        yield* fixtureJson({
-          metadataUrl:
-            scenario === "wrong metadata URL"
-              ? "https://export.arxiv.org/api/query?id_list=2608.99999"
-              : "https://export.arxiv.org/api/query?id_list=2608.23992",
-          metadataStatus: 200,
-          metadataSha256: atom.sha256,
-          paperId: "2608.23992",
-          observedRevision: "v3",
-          explicitUrl: "https://arxiv.org/pdf/2608.23992v3",
-          resolvedUrl: "https://arxiv.org/pdf/2608.23992v3",
-          status: 200,
-          originalPdfSha256: pdf.sha256,
-          versionedPdfSha256: versioned.sha256,
-          identicalPdf: true,
-        }),
-        "arxiv-version-proof"
-      );
-      const metadata = yield* make(
-        "target.json",
-        yield* fixtureJson({
-          requestedUrl: "https://arxiv.org/abs/2608.23992",
-          pdfUrl: "https://arxiv.org/pdf/2608.23992",
-          status: 200,
-          requestedRevision: "",
-          capturedRevision: "v3",
-          paperId: "2608.23992",
-        }),
-        "target-metadata"
-      );
+      const fixtureJson61 = yield* fixtureJson({
+        metadataUrl:
+          scenario === "wrong metadata URL"
+            ? "https://export.arxiv.org/api/query?id_list=2608.99999"
+            : "https://export.arxiv.org/api/query?id_list=2608.23992",
+        metadataStatus: 200,
+        metadataSha256: atom.sha256,
+        paperId: "2608.23992",
+        observedRevision: "v3",
+        explicitUrl: "https://arxiv.org/pdf/2608.23992v3",
+        resolvedUrl: "https://arxiv.org/pdf/2608.23992v3",
+        status: 200,
+        originalPdfSha256: pdf.sha256,
+        versionedPdfSha256: versioned.sha256,
+        identicalPdf: true,
+      });
+      const proof = yield* make("proof.json", fixtureJson61, "arxiv-version-proof");
+      const fixtureJson62 = yield* fixtureJson({
+        requestedUrl: "https://arxiv.org/abs/2608.23992",
+        pdfUrl: "https://arxiv.org/pdf/2608.23992",
+        status: 200,
+        requestedRevision: "",
+        capturedRevision: "v3",
+        paperId: "2608.23992",
+      });
+      const metadata = yield* make("target.json", fixtureJson62, "target-metadata");
       const text = yield* make(
         "source.txt",
         scenario === "wrong header version" ? "arXiv:2608.23992v30" : "Headerless extracted paper body",
@@ -1835,7 +1777,8 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         reason: "fixture",
         artifacts: [pdf, versioned, atom, proof, metadata, text],
       });
-      expect(yield* librarySourceEvidenceValid(root, source, capture)).toBe(scenario === "valid");
+      const librarySourceEvidenceValid63 = yield* librarySourceEvidenceValid(root, source, capture);
+      expect(librarySourceEvidenceValid63).toBe(scenario === "valid");
     })
   );
   it.effect.each([
@@ -1858,8 +1801,10 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
   ])("validates authentic transcript API proof: %s", (scenario) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
+      const argument4 = yield* Path.Path;
+      const String4 = yield* Config.String("HOME");
       const root = yield* fs.makeTempDirectoryScoped({
-        directory: (yield* Path.Path).join(yield* Config.String("HOME"), ".cache"),
+        directory: argument4.join(String4, ".cache"),
         prefix: "library-caption-api-",
       });
       const make = Effect.fn(function* (name: string, text: string, role: string, mediaType = "application/json") {
@@ -1875,18 +1820,15 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       const automatic = variation.automatic;
       const timedUrl = `https://www.youtube.com/api/timedtext?v=${variation.timedId}&lang=en${variation.query}`;
       const watch = yield* make("watch.html", "Retained watch response", "raw-response", "text/html");
-      const player = yield* make(
-        "player.json",
-        yield* fixtureJson({
-          videoDetails: { videoId: variation.playerId },
-          captions: {
-            playerCaptionsTracklistRenderer: {
-              captionTracks: [{ baseUrl: `${timedUrl}&fmt=srv3`, languageCode: "en", ...variation.captionKind }],
-            },
+      const fixtureJson64 = yield* fixtureJson({
+        videoDetails: { videoId: variation.playerId },
+        captions: {
+          playerCaptionsTracklistRenderer: {
+            captionTracks: [{ baseUrl: `${timedUrl}&fmt=srv3`, languageCode: "en", ...variation.captionKind }],
           },
-        }),
-        "raw-response"
-      );
+        },
+      });
+      const player = yield* make("player.json", fixtureJson64, "raw-response");
       const xml = yield* make(
         "timed.xml",
         `${variation.xmlDoctype}<transcript><text start="${variation.xmlStart}" dur="2">${variation.xmlText}</text><text start="4" dur="1">Next cue</text></transcript>`,
@@ -1897,55 +1839,43 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         { text: variation.decodedText, start: 1, duration: 2 },
         { text: "Next cue", start: 4, duration: 1 },
       ];
-      const api = yield* make(
-        "api.json",
-        yield* fixtureJson({
-          videoId: id,
-          languageCode: "en",
-          isGenerated: automatic,
-          snippets: variation.partialApi ? snippets.slice(0, 1) : snippets,
-        }),
-        "raw-api-response"
-      );
-      const target = yield* make(
-        "target.json",
-        yield* fixtureJson({ id, webpage_url: url, originalPlayerSha256: player.sha256 }),
-        "target-metadata"
-      );
-      const provenance = yield* make(
-        "provenance.json",
-        yield* fixtureJson([
-          {
-            language: "en",
-            url: timedUrl,
-            format: "xml",
-            origin: variation.origin,
-            sourceSha256: xml.sha256,
-          },
-        ]),
-        "transcript-provenance"
-      );
-      const receipts = yield* make(
-        "receipts.json",
-        yield* fixtureJson([
-          { path: "watch.html", url, status: 200, sha256: watch.sha256, bytes: watch.bytes },
-          {
-            path: "player.json",
-            url: "https://www.youtube.com/youtubei/v1/player",
-            status: 200,
-            sha256: player.sha256,
-            bytes: player.bytes,
-          },
-          {
-            path: "timed.xml",
-            url: timedUrl,
-            status: variation.status,
-            sha256: xml.sha256,
-            bytes: xml.bytes,
-          },
-        ]),
-        "http-response-provenance"
-      );
+      const fixtureJson65 = yield* fixtureJson({
+        videoId: id,
+        languageCode: "en",
+        isGenerated: automatic,
+        snippets: variation.partialApi ? snippets.slice(0, 1) : snippets,
+      });
+      const api = yield* make("api.json", fixtureJson65, "raw-api-response");
+      const fixtureJson66 = yield* fixtureJson({ id, webpage_url: url, originalPlayerSha256: player.sha256 });
+      const target = yield* make("target.json", fixtureJson66, "target-metadata");
+      const fixtureJson67 = yield* fixtureJson([
+        {
+          language: "en",
+          url: timedUrl,
+          format: "xml",
+          origin: variation.origin,
+          sourceSha256: xml.sha256,
+        },
+      ]);
+      const provenance = yield* make("provenance.json", fixtureJson67, "transcript-provenance");
+      const fixtureJson68 = yield* fixtureJson([
+        { path: "watch.html", url, status: 200, sha256: watch.sha256, bytes: watch.bytes },
+        {
+          path: "player.json",
+          url: "https://www.youtube.com/youtubei/v1/player",
+          status: 200,
+          sha256: player.sha256,
+          bytes: player.bytes,
+        },
+        {
+          path: "timed.xml",
+          url: timedUrl,
+          status: variation.status,
+          sha256: xml.sha256,
+          bytes: xml.bytes,
+        },
+      ]);
+      const receipts = yield* make("receipts.json", fixtureJson68, "http-response-provenance");
       const text = yield* make(
         "transcript.txt",
         `${variation.transcriptStart} ${variation.decodedText}\n[4.000 - 5.000] Next cue\n`,
@@ -1953,21 +1883,18 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         "text/plain"
       );
       const artifacts = [watch, player, xml, api, target, provenance, receipts, text];
-      const envelope = yield* make(
-        "import.json",
-        yield* fixtureJson({
-          sourceId: "video",
-          canonicalUrl: url,
-          method: "youtube-transcript-api",
-          provider: "youtube-transcript-api",
-          complete: true,
-          capturedRevision: id,
-          toolName: "YouTubeTranscriptApi.fetch",
-          toolCallId: "",
-          artifacts,
-        }),
-        "import-provenance"
-      );
+      const fixtureJson69 = yield* fixtureJson({
+        sourceId: "video",
+        canonicalUrl: url,
+        method: "youtube-transcript-api",
+        provider: "youtube-transcript-api",
+        complete: true,
+        capturedRevision: id,
+        toolName: "YouTubeTranscriptApi.fetch",
+        toolCallId: "",
+        artifacts,
+      });
+      const envelope = yield* make("import.json", fixtureJson69, "import-provenance");
       const source = LibrarySource.make({
         id: "video",
         kind: "youtube",
@@ -1994,20 +1921,18 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         ["automatic", "creator", "named and numeric entities", "xml11 declaration", "default XML after xml11"],
         scenario
       );
-      expect(yield* librarySourceEvidenceValid(root, source, capture)).toBe(valid);
-      const probe = yield* make(
-        "probe.json",
-        yield* fixtureJson({
-          adapter: "youtube",
-          sourceId: source.id,
-          sourceUrl: url,
-          status: "verified",
-          captureId: capture.id,
-          complete: true,
-          artifacts: capture.artifacts,
-        }),
-        "qualification-probe"
-      );
+      const librarySourceEvidenceValid70 = yield* librarySourceEvidenceValid(root, source, capture);
+      expect(librarySourceEvidenceValid70).toBe(valid);
+      const fixtureJson71 = yield* fixtureJson({
+        adapter: "youtube",
+        sourceId: source.id,
+        sourceUrl: url,
+        status: "verified",
+        captureId: capture.id,
+        complete: true,
+        artifacts: capture.artifacts,
+      });
+      const probe = yield* make("probe.json", fixtureJson71, "qualification-probe");
       const qualification = LibraryQualification.make({
         id: "probe",
         adapter: "youtube",
@@ -2025,7 +1950,8 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         captures: [capture],
         qualifications: [qualification],
       });
-      expect(yield* libraryQualificationValid(root, catalog, qualification)).toBe(valid);
+      const libraryQualificationValid72 = yield* libraryQualificationValid(root, catalog, qualification);
+      expect(libraryQualificationValid72).toBe(valid);
     })
   );
   it.effect.each([
@@ -2056,29 +1982,21 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
           mediaType,
         });
       });
-      const metadata = yield* make(
-        "metadata.json",
-        yield* fixtureJson({
-          id: "video-id",
-          webpage_url: variation.webpageUrl,
-        }),
-        "target-metadata",
-        "application/json"
-      );
+      const fixtureJson73 = yield* fixtureJson({
+        id: "video-id",
+        webpage_url: variation.webpageUrl,
+      });
+      const metadata = yield* make("metadata.json", fixtureJson73, "target-metadata", "application/json");
       const vtt = `WEBVTT\n\n00:00:00.000 --> 00:00:02.000\n${variation.spoken}\n`;
-      const provenance = yield* make(
-        "provenance.json",
-        yield* fixtureJson([
-          {
-            language: "en",
-            url: variation.url,
-            format: variation.format,
-            origin: variation.origin,
-          },
-        ]),
-        "transcript-provenance",
-        "application/json"
-      );
+      const fixtureJson74 = yield* fixtureJson([
+        {
+          language: "en",
+          url: variation.url,
+          format: variation.format,
+          origin: variation.origin,
+        },
+      ]);
+      const provenance = yield* make("provenance.json", fixtureJson74, "transcript-provenance", "application/json");
       const captions = yield* make("source.en.vtt", vtt, "transcript-full-text", "text/vtt");
       const transcript = yield* make("source.en.vtt.txt", variation.transcript, "transcript-full-text", "text/plain");
       const capture = LibraryCapture.make({
@@ -2093,7 +2011,8 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         reason: "fixture",
         artifacts: [metadata, provenance, captions, transcript],
       });
-      expect(yield* librarySourceEvidenceValid(root, source, capture)).toBe(variation.valid);
+      const librarySourceEvidenceValid75 = yield* librarySourceEvidenceValid(root, source, capture);
+      expect(librarySourceEvidenceValid75).toBe(variation.valid);
     })
   );
   it.effect("verifies immutable correction history and rejects an altered demoted capture", () =>
@@ -2150,7 +2069,9 @@ it.effect.prop(
   { value: Arbitrary.schema(LibraryIntake) },
   ({ value }) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(LibraryIntakeJson)(yield* S.encodeEffect(LibraryIntakeJson)(value));
+      const argument5 = S.decodeEffect(LibraryIntakeJson);
+      const value5 = yield* S.encodeEffect(LibraryIntakeJson)(value);
+      const decoded = yield* argument5(value5);
       expect(decoded).toEqual(value);
     }),
   { arbitrary: fcRuns(32) }

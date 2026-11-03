@@ -8,6 +8,7 @@ import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
@@ -309,7 +310,12 @@ describe("PackedInstall.run past the pack", () => {
       if (command === "tar") {
         const name = args[1] === CARRIER_TGZ ? "@x/carrier" : "@x/lib";
         const dependencies = name === "@x/carrier" ? carrierDeps : {};
-        return { stdout: JSON.stringify({ name, version: "1.0.0", dependencies }) };
+        return {
+          stdout: Result.getOrThrowWith(
+            S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name, version: "1.0.0", dependencies }),
+            identity
+          ),
+        };
       }
       return {};
     });
@@ -384,17 +390,15 @@ describe("PackedInstall.run past the pack", () => {
         }
 
         const fs = yield* FileSystem.FileSystem;
-        const npmManifest = Result.getOrThrow(
-          S.decodeResult(JsonValue)(yield* fs.readFileString("/scratch/consumer-npm/package.json"))
-        );
+        const argument = S.decodeResult(JsonValue);
+        const readFileString3 = yield* fs.readFileString("/scratch/consumer-npm/package.json");
+        const npmManifest = Result.getOrThrow(argument(readFileString3));
         if (!P.isObject(npmManifest)) return assert.fail("expected a manifest object");
         assert.strictEqual(npmManifest.packageManager, "npm@11.19.1");
         assert.deepStrictEqual(npmManifest.dependencies, { "@x/carrier": `file:${CARRIER_TGZ}` });
         assert.deepStrictEqual(npmManifest.overrides, { "@x/lib": `file:${LIB_TGZ}` });
-        assert.strictEqual(
-          yield* fs.readFileString("/scratch/consumer-pnpm/pnpm-workspace.yaml"),
-          `minimumReleaseAge: 0\noverrides:\n  "@x/lib": "file:${LIB_TGZ}"\n`
-        );
+        const readFileString1 = yield* fs.readFileString("/scratch/consumer-pnpm/pnpm-workspace.yaml");
+        assert.strictEqual(readFileString1, `minimumReleaseAge: 0\noverrides:\n  "@x/lib": "file:${LIB_TGZ}"\n`);
       })
     );
   });
@@ -429,7 +433,12 @@ describe("PackedInstall.run past the pack", () => {
       const wrongIdentity = ScriptedSpawner.make(
         script((command, args) =>
           command === "tar" && args[1] === tarball
-            ? { stdout: JSON.stringify({ name: packedName, version: "1.0.0" }) }
+            ? {
+                stdout: Result.getOrThrowWith(
+                  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: packedName, version: "1.0.0" }),
+                  identity
+                ),
+              }
             : manifests()(command, args)
         )
       );
@@ -645,7 +654,12 @@ describe("PackedInstall.run past the pack", () => {
         [EXT_TGZ]: { name: "@y/tgz" },
         ...overrides,
       };
-      return { stdout: JSON.stringify(manifests[args[1] ?? ""] ?? {}) };
+      return {
+        stdout: Result.getOrThrowWith(
+          S.encodeUnknownResult(S.fromJsonString(S.Unknown))(manifests[args[1] ?? ""] ?? {}),
+          identity
+        ),
+      };
     });
   const WithRoot = (root: string) =>
     WorkspaceDiscovery.layerTest({
@@ -664,7 +678,9 @@ describe("PackedInstall.run past the pack", () => {
     );
   const readManifest = Effect.fn("readManifest")(function* (file: string) {
     const fs = yield* FileSystem.FileSystem;
-    const manifest = Result.getOrThrow(S.decodeResult(JsonValue)(yield* fs.readFileString(file)));
+    const argument1 = S.decodeResult(JsonValue);
+    const readFileString4 = yield* fs.readFileString(file);
+    const manifest = Result.getOrThrow(argument1(readFileString4));
     if (!P.isObject(manifest)) return assert.fail("expected a manifest object");
     return manifest;
   });
@@ -732,8 +748,9 @@ describe("PackedInstall.run past the pack", () => {
             "@y/tgz": `file:${EXT_TGZ}`,
           });
           const fs = yield* FileSystem.FileSystem;
+          const readFileString2 = yield* fs.readFileString("/scratch/consumer-pnpm/pnpm-workspace.yaml");
           assert.strictEqual(
-            yield* fs.readFileString("/scratch/consumer-pnpm/pnpm-workspace.yaml"),
+            readFileString2,
             `minimumReleaseAge: 0\noverrides:\n${A.join(
               A.map(R.toEntries(specs), ([name, spec]) => `  "${name}": "${spec}"`),
               "\n"
@@ -837,14 +854,13 @@ describe("PackedInstall.run past the pack", () => {
 
     it.effect("closure defaults to auto and lists the overrides after the closure, by name", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* PackedInstall.closure("@x/carrier"), ["@x/carrier", "@x/lib"]);
-        assert.deepStrictEqual(
-          yield* PackedInstall.closure("@x/carrier", {
-            closure: [],
-            overrides: { "@y/tgz": EXT_TGZ, "@y/dir": "/ext/dir" },
-          }),
-          ["@x/carrier", "@y/dir", "@y/tgz"]
-        );
+        const closure3 = yield* PackedInstall.closure("@x/carrier");
+        assert.deepStrictEqual(closure3, ["@x/carrier", "@x/lib"]);
+        const closure4 = yield* PackedInstall.closure("@x/carrier", {
+          closure: [],
+          overrides: { "@y/tgz": EXT_TGZ, "@y/dir": "/ext/dir" },
+        });
+        assert.deepStrictEqual(closure4, ["@x/carrier", "@y/dir", "@y/tgz"]);
       })
     );
   });
@@ -1196,13 +1212,28 @@ describe("InstalledConsumer.binProvenance", () => {
     InstalledConsumer.make({ manager, managerVersion: "1.0.0", directory });
   const SEED: MemoryFileSystemSeed = {
     // A named manifest AT the bound: a walk that passed the consumer directory would claim the orphan for it.
-    [`${DIR}/package.json`]: JSON.stringify({ name: "the-consumer", private: true }),
-    [`${NM}/@x/carrier/package.json`]: JSON.stringify({ name: "@x/carrier", version: "1.0.0" }),
-    [`${NM}/@x/carrier/dist/package.json`]: JSON.stringify({ type: "module" }),
+    [`${DIR}/package.json`]: Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "the-consumer", private: true }),
+      identity
+    ),
+    [`${NM}/@x/carrier/package.json`]: Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/carrier", version: "1.0.0" }),
+      identity
+    ),
+    [`${NM}/@x/carrier/dist/package.json`]: Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ type: "module" }),
+      identity
+    ),
     [`${NM}/@x/carrier/dist/bin.js`]: "#!/usr/bin/env node\n",
-    [`${NM}/@x/cli/package.json`]: JSON.stringify({ name: "@x/cli", version: "1.0.0" }),
+    [`${NM}/@x/cli/package.json`]: Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/cli", version: "1.0.0" }),
+      identity
+    ),
     [`${NM}/@x/cli/bin.js`]: "#!/usr/bin/env node\n",
-    [`${NM}/@x/nulled/package.json`]: JSON.stringify({ name: "@x/nulled", version: "1.0.0" }),
+    [`${NM}/@x/nulled/package.json`]: Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/nulled", version: "1.0.0" }),
+      identity
+    ),
     [`${NM}/@x/nulled/lib/package.json`]: "null",
     [`${NM}/@x/nulled/lib/cli.js`]: "#!/usr/bin/env node\n",
     [`${NM}/@x/broken/package.json`]: "{ not json",
@@ -1222,8 +1253,9 @@ describe("InstalledConsumer.binProvenance", () => {
   layer(Layer.mergeAll(MemoryFileSystem.layerWith(SEED), Path.layer), { timeout: "30 seconds" })((it) => {
     it.effect("names the package a .bin symlink resolves into, past a nameless nested package.json", () =>
       Effect.gen(function* () {
+        const binProvenance5 = yield* at("npm").binProvenance("tool");
         assert.deepStrictEqual(
-          yield* at("npm").binProvenance("tool"),
+          binProvenance5,
           BinProvenance.make({ package: "@x/carrier", target: `${NM}/@x/carrier/dist/bin.js` })
         );
       })
@@ -1243,8 +1275,9 @@ describe("InstalledConsumer.binProvenance", () => {
 
     it.effect("realpaths the consumer directory first, so an alias or a trailing slash keeps the bound", () =>
       Effect.gen(function* () {
+        const binProvenance6 = yield* at("npm", "/alias/consumer-npm/").binProvenance("tool");
         assert.deepStrictEqual(
-          yield* at("npm", "/alias/consumer-npm/").binProvenance("tool"),
+          binProvenance6,
           BinProvenance.make({ package: "@x/carrier", target: `${NM}/@x/carrier/dist/bin.js` })
         );
       })
@@ -1252,7 +1285,8 @@ describe("InstalledConsumer.binProvenance", () => {
 
     it.effect("undefined means only an existing entry that is not a symlink (pnpm's shim)", () =>
       Effect.gen(function* () {
-        assert.isUndefined(yield* at("pnpm").binProvenance("shim"));
+        const binProvenance7 = yield* at("pnpm").binProvenance("shim");
+        assert.isUndefined(binProvenance7);
       })
     );
 
@@ -1309,7 +1343,8 @@ describe("InstalledConsumer.binProvenance", () => {
   layer(Layer.mergeAll(readLinkFails("Unknown", "EINVAL"), Path.layer), { timeout: "30 seconds" })((it) => {
     it.effect("a Node-style EINVAL from readLink on an existing entry is a shim: undefined", () =>
       Effect.gen(function* () {
-        assert.isUndefined(yield* at("pnpm").binProvenance("shim"));
+        const binProvenance8 = yield* at("pnpm").binProvenance("shim");
+        assert.isUndefined(binProvenance8);
       })
     );
   });
@@ -1436,13 +1471,19 @@ describe("InstalledConsumer.carrierCommand and runCarrierBin", () => {
       ...(carrier === undefined ? {} : { carrier }),
     });
   const SEED: MemoryFileSystemSeed = {
-    [`${NM}/@x/carrier/package.json`]: JSON.stringify({
-      name: "@x/carrier",
-      bin: { tool: "./dist/tool.js", gone: "./dist/gone.js" },
-    }),
+    [`${NM}/@x/carrier/package.json`]: Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        name: "@x/carrier",
+        bin: { tool: "./dist/tool.js", gone: "./dist/gone.js" },
+      }),
+      identity
+    ),
     [`${NM}/@x/carrier/dist/tool.js`]: "#!/usr/bin/env node\n",
     // The front end won the .bin slot: a link to its bin, not the carrier's.
-    [`${NM}/@x/cli/package.json`]: JSON.stringify({ name: "@x/cli", bin: { tool: "./bin.js" } }),
+    [`${NM}/@x/cli/package.json`]: Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/cli", bin: { tool: "./bin.js" } }),
+      identity
+    ),
     [`${NM}/@x/cli/bin.js`]: "#!/usr/bin/env node\n",
     [`${NM}/.bin/tool`]: MemoryFileSystem.symlink("../@x/cli/bin.js"),
     [`${NM}/@x/broken/package.json`]: "{ not json",

@@ -186,8 +186,10 @@ it.effect(
         return expect.fail("Expected a bidirectional PN name transformation");
       const codec = S.make<S.Codec<string, string>>(SchemaAST.decodeTo(link.to, schema.ast, link.transformation));
       const value = schema === SafePnPrefix ? "skos" : "prefLabel";
-      expect(yield* S.decodeEffect(codec)(value)).toBe(value);
-      expect(yield* S.encodeEffect(codec)(value)).toBe(value);
+      const value1 = yield* S.decodeEffect(codec)(value);
+      expect(value1).toBe(value);
+      const value2 = yield* S.encodeEffect(codec)(value);
+      expect(value2).toBe(value);
     }
   })
 );

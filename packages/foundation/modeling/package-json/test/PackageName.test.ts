@@ -80,15 +80,18 @@ describe("PackageName schema", () => {
     Effect.gen(function* () {
       for (const name of ["lodash", "@scope/pkg"]) {
         const decoded = yield* S.decodeEffect(PackageName)(name);
-        assert.strictEqual(yield* S.encodeEffect(PackageName)(decoded), name);
+        const value = yield* S.encodeEffect(PackageName)(decoded);
+        assert.strictEqual(value, name);
       }
     })
   );
 
   it.effect("decodes valid scoped and unscoped names", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* S.decodeEffect(PackageName)("lodash"), "lodash");
-      assert.strictEqual(yield* S.decodeEffect(PackageName)("@scope/pkg"), "@scope/pkg");
+      const value1 = yield* S.decodeEffect(PackageName)("lodash");
+      assert.strictEqual(value1, "lodash");
+      const value2 = yield* S.decodeEffect(PackageName)("@scope/pkg");
+      assert.strictEqual(value2, "@scope/pkg");
     })
   );
 
@@ -101,9 +104,11 @@ describe("PackageName schema", () => {
 
   it.effect("ScopedPackageName rejects unscoped, UnscopedPackageName rejects scoped", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* S.decodeEffect(ScopedPackageName)("@scope/pkg"), "@scope/pkg");
+      const value3 = yield* S.decodeEffect(ScopedPackageName)("@scope/pkg");
+      assert.strictEqual(value3, "@scope/pkg");
       assert.isTrue((yield* Effect.flip(S.decodeEffect(ScopedPackageName)("lodash")))._tag === "SchemaError");
-      assert.strictEqual(yield* S.decodeEffect(UnscopedPackageName)("lodash"), "lodash");
+      const value4 = yield* S.decodeEffect(UnscopedPackageName)("lodash");
+      assert.strictEqual(value4, "lodash");
       assert.isTrue((yield* Effect.flip(S.decodeEffect(UnscopedPackageName)("@scope/pkg")))._tag === "SchemaError");
     })
   );

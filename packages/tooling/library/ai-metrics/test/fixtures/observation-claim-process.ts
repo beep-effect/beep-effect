@@ -22,8 +22,10 @@ const program = Effect.gen(function* () {
     A.drop(process.argv, 2)
   );
   const fs = yield* FileSystem.FileSystem;
-  const policy = yield* decodeObservationClaimPolicyJson(yield* fs.readFileString(policyFile));
-  const submission = yield* decodeObservationLaunchSubmissionJson(yield* fs.readFileString(submissionFile));
+  const readFileString1 = yield* fs.readFileString(policyFile);
+  const policy = yield* decodeObservationClaimPolicyJson(readFileString1);
+  const readFileString2 = yield* fs.readFileString(submissionFile);
+  const submission = yield* decodeObservationLaunchSubmissionJson(readFileString2);
   const boundary = fs.writeFileString(marker, mode, { mode: 0o600 }).pipe(Effect.andThen(Effect.never));
   const injected: FileSystem.FileSystem = {
     ...fs,
@@ -67,7 +69,8 @@ const program = Effect.gen(function* () {
     .pipe(
       Effect.catchTag("ObservationClaimError", (error) => Effect.succeed({ executed: false, reason: error.reason }))
     );
-  yield* fs.writeFileString(output, yield* encodeExecutedReasonRecordJson(result), { mode: 0o600 });
+  const encodedExecutedReasonRecordJson = yield* encodeExecutedReasonRecordJson(result);
+  yield* fs.writeFileString(output, encodedExecutedReasonRecordJson, { mode: 0o600 });
 });
 NodeRuntime.runMain(
   NodeServices.layer.pipe(

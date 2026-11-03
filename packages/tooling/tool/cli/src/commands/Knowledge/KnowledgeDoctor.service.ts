@@ -1281,7 +1281,8 @@ const evaluateSpan = Effect.fn("KnowledgeDoctor.evaluateSpan")(function* (
 // Every goals-doctor finding the tree's bytes determine, listed as delegated: the goals doctor keeps
 // the gate, and each one is a causal root for the claims beneath it.
 const delegatedFindings = Effect.fn("KnowledgeDoctor.delegatedFindings")(function* (tree: KnowledgeDoctorTree) {
-  const delegatedRows = A.map(yield* tree.domain.goalsDoctorFindings, knowledgeDelegatedRow);
+  const goalsDoctorFindings1 = yield* tree.domain.goalsDoctorFindings;
+  const delegatedRows = A.map(goalsDoctorFindings1, knowledgeDelegatedRow);
   const severities = HashMap.fromIterable(
     A.map(delegatedRows, (row) => [row.candidate.subject, row.severity] as const)
   );
@@ -1871,13 +1872,14 @@ const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: Kno
         KnowledgeOperationalError.make({ message: "Malformed NUL-delimited rename output since mintedAt." })
       );
       const mintedAtPaths = O.isSome(head.identity)
-        ? HashSet.fromIterable(
-            A.map(
-              yield* readGitTree(refs.repoRoot, baseline.mintedAt, adapter, () =>
+        ? yield* Effect.map(
+            Effect.map(
+              readGitTree(refs.repoRoot, baseline.mintedAt, adapter, () =>
                 KnowledgeOperationalError.make({ message: "Malformed NUL-delimited mintedAt ls-tree output." })
               ),
-              (entry) => entry.path
-            )
+              (value) => A.map(value, (entry) => entry.path)
+            ),
+            HashSet.fromIterable
           )
         : HashSet.empty<string>();
       const changedPaths = yield* runGitPathList(
@@ -1994,7 +1996,8 @@ const mintLive = Effect.fn("KnowledgeDoctor.mintLive")(function* (options: Knowl
   );
   const commit = yield* resolveGitCommit(repoRoot, options.at, doctorGitAdapter(options.at));
   if (options.write) {
-    const reasons = knowledgeMintWriteRefusals(yield* mintWriteContext(repoRoot, commit, options.baseRef));
+    const mintWriteContext2 = yield* mintWriteContext(repoRoot, commit, options.baseRef);
+    const reasons = knowledgeMintWriteRefusals(mintWriteContext2);
     if (A.isReadonlyArrayNonEmpty(reasons)) {
       return yield* KnowledgeMintContextRefusal.make({
         message: `knowledge doctor mint --write: ${A.length(reasons)} condition(s) unmet at ${commit}.`,
@@ -2079,7 +2082,7 @@ const leasesLive = Effect.fn("KnowledgeDoctor.leasesLive")(function* (options: K
       const leases = O.match(head.leases, { onNone: A.empty<KnowledgeDebtLease>, onSome: (file) => file.leases });
       const base = A.isReadonlyArrayEmpty(leases)
         ? O.none<KnowledgeSealFiles>()
-        : O.some(yield* readKnowledgeSealFiles((yield* materializeKnowledgeTree(refs.mergeBase)).oracle));
+        : yield* Effect.asSome(readKnowledgeSealFiles((yield* materializeKnowledgeTree(refs.mergeBase)).oracle));
       const rows = yield* evaluateKnowledgeLeases(
         KnowledgeLeaseEvaluationInput.make({
           leases,

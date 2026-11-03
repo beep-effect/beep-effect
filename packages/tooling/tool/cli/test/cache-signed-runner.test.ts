@@ -87,8 +87,9 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
   const sourceRoot = path.join(parent, "source");
   const tool = path.join(parent, "tool");
   const issuer = path.join(parent, "issuer.key");
-  for (const directory of [root, sourceRoot, path.join(parent, "dependencies"), path.join(parent, "git")])
+  for (const directory of [root, sourceRoot, path.join(parent, "dependencies"), path.join(parent, "git")]) {
     yield* fs.makeDirectory(directory);
+  }
   yield* fs.writeFileString(tool, "fixture executable");
   yield* fs.writeFileString(issuer, "synthetic issuer fixture");
   const dependencies = CacheDependencyMaterialization.make({
@@ -161,11 +162,14 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
       expect((yield* fs.stat(directory)).mode & 0o777).toBe(0o700);
       expect(Str.startsWith(`${root}/`)(directory)).toBe(false);
       expect(Str.startsWith(`${sourceRoot}/`)(directory)).toBe(false);
-      expect(yield* fs.readLink(path.join(directory, "node_modules"))).toBe(path.join(root, "node_modules"));
+      const readLink1 = yield* fs.readLink(path.join(directory, "node_modules"));
+      expect(readLink1).toBe(path.join(root, "node_modules"));
       const config = `--config=${path.join(directory, "bunfig.toml")}`;
       expect(args).toContain(config);
-      expect(yield* fs.readFileString(path.join(directory, "bunfig.toml"))).toBe("");
-      expect(yield* fs.readFileString(worker)).toContain("runCacheSignedPilotWorker");
+      const readFileString2 = yield* fs.readFileString(path.join(directory, "bunfig.toml"));
+      expect(readFileString2).toBe("");
+      const readFileString3 = yield* fs.readFileString(worker);
+      expect(readFileString3).toContain("runCacheSignedPilotWorker");
       const protect = (pair: (typeof signedPilotInput.pairs)[number]) => ({
         ...pair,
         protection: { ...pair.protection, issuerMaterialDenied: true },
@@ -186,8 +190,12 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
           },
         })),
       });
-      yield* fs.writeFileString(path.join(directory, "report.json"), yield* encodeReport(report));
-      if (fault === "issuer-change") yield* fs.writeFileString(issuer, "changed fixture");
+      const argument = path.join(directory, "report.json");
+      const encodedReport = yield* encodeReport(report);
+      yield* fs.writeFileString(argument, encodedReport);
+      if (fault === "issuer-change") {
+        yield* fs.writeFileString(issuer, "changed fixture");
+      }
       return CacheRuntimeProcess.CapturedStreams.make({
         exitCode: fault === "exit" ? 1 : 0,
         stdout: privateSupervisorStream(fault),
@@ -284,7 +292,9 @@ const ownedUploadFixture = Effect.fn("SignedRunnerTest.uploadFixture")(function*
   const original = O.getOrThrow(O.fromUndefinedOr(f.process.getMockImplementation()));
   f.process.mockImplementation(
     Effect.fn("SignedRunnerTest.uploadProcess")(function* (options) {
-      if (options.command === "/usr/bin/git") return yield* original(options);
+      if (options.command === "/usr/bin/git") {
+        return yield* original(options);
+      }
       expect(options.command).toBe("/usr/bin/bwrap");
       expect(options.args).toContain("--unshare-all");
       expect(options.args).toContain("/cache-upload.sock");
@@ -309,8 +319,12 @@ const ownedUploadFixture = Effect.fn("SignedRunnerTest.uploadFixture")(function*
         ...seed,
         nativeSummary: fault === "missing-summary" ? O.none() : O.some(summary),
       });
-      yield* fs.writeFileString(path.join(path.dirname(worker), "report.json"), yield* encodePilotRun(report));
-      if (fault === "issuer-change") yield* fs.writeFileString(f.issuer, "changed owned issuer");
+      const argument1 = path.join(path.dirname(worker), "report.json");
+      const encodedPilotRun = yield* encodePilotRun(report);
+      yield* fs.writeFileString(argument1, encodedPilotRun);
+      if (fault === "issuer-change") {
+        yield* fs.writeFileString(f.issuer, "changed owned issuer");
+      }
       return CacheRuntimeProcess.CapturedStreams.make({
         exitCode: fault === "exit" ? 1 : 0,
         stdout: "",
@@ -402,7 +416,8 @@ it.layer(
             expect(error.cause).toBeUndefined();
           },
         });
-        expect(yield* fs.exists(path.dirname(script))).toBe(false);
+        const exists4 = yield* fs.exists(path.dirname(script));
+        expect(exists4).toBe(false);
       })
     );
   });
@@ -438,7 +453,8 @@ it.layer(
           },
         });
         expect(f.adapterStarted).toHaveBeenCalledOnce();
-        expect(yield* fs.exists(path.dirname(script))).toBe(false);
+        const exists5 = yield* fs.exists(path.dirname(script));
+        expect(exists5).toBe(false);
       })
     );
   });
@@ -487,7 +503,8 @@ it.layer(
           expect(error.message).toBe(`Signed pilot comparison exceeded its twenty-minute execution limit.${suffix}`);
           expect(error.message).not.toContain("synthetic-private");
           expect(error.cause).toBeUndefined();
-          expect(yield* fs.exists(path.dirname(script))).toBe(false);
+          const exists6 = yield* fs.exists(path.dirname(script));
+          expect(exists6).toBe(false);
         })
       );
     });
@@ -661,7 +678,8 @@ export const runCacheSignedPilotWorker = () => Effect.gen(function* () {
       for (const [options] of process.mock.calls) {
         if (options.command !== "/usr/bin/bwrap") continue;
         const worker = O.getOrThrow(A.last(options.args ?? []));
-        expect(yield* fs.exists(path.dirname(worker))).toBe(false);
+        const exists7 = yield* fs.exists(path.dirname(worker));
+        expect(exists7).toBe(false);
       }
     })
   );
@@ -721,7 +739,8 @@ export const runCacheSignedPilotWorker = () => Effect.gen(function* () {
         onSuccess: () => expect.fail("Supervisor accepted a source-visible private directory"),
         onFailure: (error) => expect(error.message).toContain("Private supervisor storage must remain outside"),
       });
-      expect(yield* fs.exists(path.join(alias, "request.json"))).toBe(false);
+      const exists8 = yield* fs.exists(path.join(alias, "request.json"));
+      expect(exists8).toBe(false);
       expect(process).toHaveBeenCalledTimes(1);
     })
   );
@@ -799,7 +818,8 @@ const protocolFixture = Effect.fn("ProtocolSupervisorTest.fixture")(function* (f
       expect(options.args).toContain("--unshare-all");
       const args = options.args ?? [];
       const directory = O.getOrThrow(A.get(args, O.getOrThrow(A.findFirstIndex(args, (arg) => arg === "--chdir")) + 1));
-      expect(yield* fs.readFileString(path.join(directory, "worker.ts"))).toContain("runCacheProtocolWorker");
+      const readFileString9 = yield* fs.readFileString(path.join(directory, "worker.ts"));
+      expect(readFileString9).toContain("runCacheProtocolWorker");
       const report = yield* decodeExecution({
         ...executionInput,
         bunSha256: fault === "bun" ? digest : executionInput.bunSha256,
@@ -812,7 +832,9 @@ const protocolFixture = Effect.fn("ProtocolSupervisorTest.fixture")(function* (f
           },
         },
       });
-      yield* fs.writeFileString(path.join(directory, "report.json"), yield* encodeExecution(report));
+      const argument2 = path.join(directory, "report.json");
+      const encodedExecution = yield* encodeExecution(report);
+      yield* fs.writeFileString(argument2, encodedExecution);
       return CacheRuntimeProcess.CapturedStreams.make({
         exitCode: fault === "exit" ? 1 : 0,
         stdout: privateSupervisorStream(fault),
@@ -846,23 +868,22 @@ it.layer(
   it.effect("rejects unsupported hosts before launching the worker", () =>
     Effect.gen(function* () {
       const { root, request } = yield* protocolFixture("none");
-      Result.match(
-        yield* runCacheProtocolExperiment(root, request).pipe(
-          Effect.provideService(HostProcessPlatform, "darwin"),
-          Effect.result
-        ),
-        {
-          onSuccess: () => expect.fail("Supervisor accepted unsupported host"),
-          onFailure: (error) => expect(error.message).toContain("Linux x64"),
-        }
+      const pipe10 = yield* runCacheProtocolExperiment(root, request).pipe(
+        Effect.provideService(HostProcessPlatform, "darwin"),
+        Effect.result
       );
+      Result.match(pipe10, {
+        onSuccess: () => expect.fail("Supervisor accepted unsupported host"),
+        onFailure: (error) => expect(error.message).toContain("Linux x64"),
+      });
     })
   );
   for (const fault of ["exit", "truncated", "client", "channel", "bun"] as const)
     it.effect(`rejects ${fault}`, () =>
       Effect.gen(function* () {
         const { root, request } = yield* protocolFixture(fault);
-        Result.match(yield* runCacheProtocolExperiment(root, request).pipe(Effect.result), {
+        const pipe11 = yield* runCacheProtocolExperiment(root, request).pipe(Effect.result);
+        Result.match(pipe11, {
           onSuccess: () => expect.fail("Supervisor accepted the injected fault"),
           onFailure: (error) => {
             expect(error.message).toContain(

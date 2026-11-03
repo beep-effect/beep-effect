@@ -2,6 +2,7 @@ import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { assert, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as S from "effect/Schema";
 
 const runs = { arbitrary: fcRuns(100) };
@@ -9,6 +10,7 @@ const runs = { arbitrary: fcRuns(100) };
 import { formatIssue, issueEntries, issueTreeChildren } from "@beep/cli-kit/internal/format";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import type { IssueEntry, IssueTreeNode } from "@beep/cli-kit/internal/format";
 
@@ -45,7 +47,9 @@ it.effect.prop(
         A.map(parsed, (entry) => `${entry.message} at ${A.join(entry.path, ".")}`)
       );
       const json = S.fromJsonString(S.Json);
-      const reparsedRaw = yield* S.decodeEffect(json)(yield* S.encodeEffect(json)(raw));
+      const argument = S.decodeEffect(json);
+      const value1 = yield* S.encodeEffect(json)(raw);
+      const reparsedRaw = yield* argument(value1);
       const reparsedError = yield* decode(reparsedRaw, { onExcessProperty: "error" }).pipe(Effect.flip);
       assert.deepStrictEqual(issueEntries(reparsedError.issue), parsed);
       assert.deepStrictEqual(formatIssue(reparsedError.issue), formatIssue(error.issue));
@@ -84,7 +88,12 @@ it.effect.prop(
       const tree = issueTreeChildren(input);
       const parsed = readTree(tree);
       const ordered = (values: ReadonlyArray<IssueEntry.Encoded>) =>
-        A.map(values, (value) => JSON.stringify([value.path, value.message])).sort();
+        A.map(values, (value) =>
+          Result.getOrThrowWith(
+            S.encodeUnknownResult(S.fromJsonString(S.Unknown))([value.path, value.message]),
+            identity
+          )
+        ).sort();
       assert.deepStrictEqual(ordered(parsed), ordered(input));
       assert.deepStrictEqual(issueTreeChildren(parsed), tree);
       assert.deepStrictEqual(readTree(issueTreeChildren(parsed)), parsed);

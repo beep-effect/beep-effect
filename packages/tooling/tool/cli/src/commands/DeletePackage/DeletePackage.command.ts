@@ -180,7 +180,8 @@ const resolveDeleteTarget = Effect.fn("DeletePackage.resolveTarget")(function* (
   const path = yield* Path.Path;
   const normalizedInput = normalizePath(input);
   const requestedName = packageNameForInput(input);
-  const workspaces = A.fromIterable(yield* workspaceDirectories(repoRoot));
+  const workspaceDirectories1 = yield* workspaceDirectories(repoRoot);
+  const workspaces = A.fromIterable(workspaceDirectories1);
   const workspacePaths = A.map(workspaces, ([, dir]) => normalizePath(path.relative(repoRoot, dir)));
   const match = A.findFirst(
     workspaces,
@@ -231,7 +232,8 @@ const resolveDeleteTarget = Effect.fn("DeletePackage.resolveTarget")(function* (
 
 const workspacePathsAtRoot = Effect.fn("DeletePackage.workspacePathsAtRoot")(function* (repoRoot: string) {
   const path = yield* Path.Path;
-  const workspaces = A.fromIterable(yield* workspaceDirectories(repoRoot));
+  const workspaceDirectories2 = yield* workspaceDirectories(repoRoot);
+  const workspaces = A.fromIterable(workspaceDirectories2);
   return A.map(workspaces, ([, directory]) => normalizePath(path.relative(repoRoot, directory)));
 });
 
@@ -409,7 +411,8 @@ const pruneChangesetFile = Effect.fn("DeletePackage.pruneChangesetFile")(functio
     yield* fs.remove(file, { force: true });
     return;
   }
-  yield* fs.writeFileString(file, yield* stripPackageFromFrontmatter(file, content, packageName));
+  const stripPackageFromFrontmatter3 = yield* stripPackageFromFrontmatter(file, content, packageName);
+  yield* fs.writeFileString(file, stripPackageFromFrontmatter3);
 });
 
 /**
@@ -772,7 +775,8 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
   const resolved = yield* resolveDeleteTarget(repoRoot, options.target, options.check);
   yield* enforceOwnedTreeTargetPolicy(resolved.target, resolved.workspacePaths);
   const executePlan = Effect.fn("DeletePackage.executePlan")(function* (plan: RegistrationPlan) {
-    yield* enforceOwnedTreeTargetPolicy(plan.target, yield* workspacePathsAtRoot(repoRoot));
+    const workspacePathsAtRoot4 = yield* workspacePathsAtRoot(repoRoot);
+    yield* enforceOwnedTreeTargetPolicy(plan.target, workspacePathsAtRoot4);
     if (options.retireChangesets)
       yield* Console.log(
         "[delete-package] --retire-changesets requested; the existing retired registry is preserved without adding an ambiguous name record."

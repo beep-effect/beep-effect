@@ -96,7 +96,8 @@ const catalogCommand = Command.make(
       );
     }
     if (json) {
-      yield* printCommandJson(yield* encodeReport(report));
+      const encodedReport = yield* encodeReport(report);
+      yield* printCommandJson(encodedReport);
     } else {
       yield* Console.log(A.join(reportLines(report), "\n"));
     }

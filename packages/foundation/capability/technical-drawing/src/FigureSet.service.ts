@@ -723,8 +723,8 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
       }
     );
     const validation = request.validate
-      ? O.some(
-          yield* validate(pdfPath, validationOptions).pipe(
+      ? yield* Effect.asSome(
+          validate(pdfPath, validationOptions).pipe(
             Effect.map((report) =>
               ValidationReport.make({
                 ...report,

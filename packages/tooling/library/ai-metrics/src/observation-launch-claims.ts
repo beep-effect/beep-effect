@@ -178,15 +178,17 @@ const sameAnchor = S.toEquivalence(ObservationClaimAnchor);
 const paths = Effect.fn("ObservationClaims.paths")(function* (policy: ObservationClaimPolicy) {
   const path = yield* Path.Path;
   for (const directory of [policy.directory, policy.journalDirectory]) {
-    if (!path.isAbsolute(directory) || path.normalize(directory) !== directory || directory === "/")
+    if (!path.isAbsolute(directory) || path.normalize(directory) !== directory || directory === "/") {
       return yield* fail("configuration");
+    }
   }
   if (
     policy.directory === policy.journalDirectory ||
     Str.startsWith(`${policy.directory}/`)(policy.journalDirectory) ||
     Str.startsWith(`${policy.journalDirectory}/`)(policy.directory)
-  )
+  ) {
     return yield* fail("configuration");
+  }
   return path;
 });
 const directoryIdentity = Effect.fn("ObservationClaims.directoryIdentity")(function* (directory: string, uid: number) {
@@ -198,8 +200,9 @@ const directoryIdentity = Effect.fn("ObservationClaims.directoryIdentity")(funct
     !O.contains(info.uid, uid) ||
     O.isNone(info.ino) ||
     (yield* fs.realPath(directory)) !== directory
-  )
+  ) {
     return yield* fail("configuration");
+  }
   return { dev: info.dev, ino: info.ino.value };
 });
 const syncDirectory = Effect.fn("ObservationClaims.syncDirectory")((directory: string) =>
@@ -216,7 +219,9 @@ const writeExclusive = Effect.fn("ObservationClaims.writeExclusive")((file: stri
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const bytes = new TextEncoder().encode(text);
-      if (bytes.byteLength > 8192) return yield* fail("capacity");
+      if (bytes.byteLength > 8192) {
+        return yield* fail("capacity");
+      }
       const handle = yield* fs
         .open(file, { flag: "wx", mode: 0o600, noFollow: true })
         .pipe(Effect.mapError((error) => fail(error.reason._tag === "AlreadyExists" ? "contended" : "storage")));
@@ -233,13 +238,14 @@ const readVerifiedClaimText = Effect.fnUntraced(function* (handle: FileSystem.Fi
     if (count === 0) break;
     offset += count;
   }
-  if (offset === 0 || offset > 8192) return yield* fail("integrity");
-  return O.some(
-    yield* Effect.try({
-      try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, offset)),
-      catch: () => fail("integrity"),
-    })
-  );
+  if (offset === 0 || offset > 8192) {
+    return yield* fail("integrity");
+  }
+  const try1 = yield* Effect.try({
+    try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, offset)),
+    catch: () => fail("integrity"),
+  });
+  return O.some(try1);
 });
 // Read through the checked descriptor; the path-stream helper cannot request noFollow.
 const readSlot = Effect.fn("ObservationClaims.readSlot")((file: string, uid: number) =>
@@ -254,7 +260,9 @@ const readSlot = Effect.fn("ObservationClaims.readSlot")((file: string, uid: num
         )
       );
       if (O.isNone(before)) return O.none<string>();
-      if (before.value.type !== "File") return yield* fail("integrity");
+      if (before.value.type !== "File") {
+        return yield* fail("integrity");
+      }
       const opened = yield* fs.open(file, { flag: "r", noFollow: true }).pipe(
         Effect.asSome,
         Effect.catchIf(
@@ -265,7 +273,9 @@ const readSlot = Effect.fn("ObservationClaims.readSlot")((file: string, uid: num
       if (O.isNone(opened)) return O.none<string>();
       const handle = opened.value;
       const info = yield* handle.stat;
-      if (!isPrivateObservationFile(info, uid)) return yield* fail("integrity");
+      if (!isPrivateObservationFile(info, uid)) {
+        return yield* fail("integrity");
+      }
       return yield* readVerifiedClaimText(handle);
     })
   )
@@ -294,7 +304,9 @@ export const initializeObservationClaims = Effect.fn("AiMetrics.initializeObserv
         yield* directoryIdentity(policy.journalDirectory, uid);
         yield* fs.makeDirectory(policy.directory, { mode: 0o700 });
         yield* directoryIdentity(policy.directory, uid);
-        yield* writeExclusive(path.join(policy.directory, "anchor.json"), yield* encodeAnchor(policy.anchor));
+        const argument = path.join(policy.directory, "anchor.json");
+        const encodedAnchor = yield* encodeAnchor(policy.anchor);
+        yield* writeExclusive(argument, encodedAnchor);
         yield* syncDirectory(policy.directory);
         yield* syncDirectory(path.dirname(policy.directory));
       })
@@ -335,10 +347,16 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
   const inspect = safe(
     Effect.gen(function* () {
       const current = yield* directoryIdentity(policy.directory, uid);
-      if (current.dev !== original.dev || current.ino !== original.ino) return yield* fail("configuration");
-      const text = yield* readSlot(path.join(policy.directory, "anchor.json"), uid);
-      if (O.isNone(text) || !sameAnchor(yield* decodeAnchor(text.value), policy.anchor))
+      if (current.dev !== original.dev || current.ino !== original.ino) {
         return yield* fail("configuration");
+      }
+      const text = yield* readSlot(path.join(policy.directory, "anchor.json"), uid);
+      if (
+        O.isNone(text) ||
+        !(yield* Effect.map(decodeAnchor(text.value), (value) => sameAnchor(value, policy.anchor)))
+      ) {
+        return yield* fail("configuration");
+      }
     })
   ).pipe(Effect.provideService(FileSystem.FileSystem, fs));
   yield* inspect;
@@ -358,15 +376,18 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
             claim.submission.hostId !== policy.anchor.hostId ||
             claim.submission.namespaceId !== policy.anchor.namespaceId ||
             claim.submission.fact._tag !== "Prepared" ||
-            (yield* hashPublicTextSha256(yield* encodeClaim(claim))) !== value.digest
-          )
+            (yield* yield* Effect.map(encodeClaim(claim), hashPublicTextSha256)) !== value.digest
+          ) {
             return yield* fail("integrity");
+          }
           return O.some(claim);
         }),
         { concurrency: 1 }
       );
       const launchIds = A.map(A.getSomes(records), (claim) => claim.submission.fact.launchId);
-      if (A.dedupe(launchIds).length !== launchIds.length) return yield* fail("integrity");
+      if (A.dedupe(launchIds).length !== launchIds.length) {
+        return yield* fail("integrity");
+      }
       yield* inspect;
       return records;
     })
@@ -379,22 +400,26 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
           submission.hostId !== policy.anchor.hostId ||
           submission.namespaceId !== policy.anchor.namespaceId ||
           submission.fact._tag !== "Prepared"
-        )
+        ) {
           return yield* fail("configuration");
+        }
         const rows = yield* snapshot;
-        if (A.some(rows, (row) => O.isSome(row) && row.value.submission.fact.launchId === submission.fact.launchId))
+        if (A.some(rows, (row) => O.isSome(row) && row.value.submission.fact.launchId === submission.fact.launchId)) {
           return yield* fail("claimed");
+        }
         const free = A.findFirstIndex(rows, (row: O.Option<ObservationLaunchClaim>) => O.isNone(row));
-        if (O.isNone(free)) return yield* fail("capacity");
+        if (O.isNone(free)) {
+          return yield* fail("capacity");
+        }
         const claim = ObservationLaunchClaim.make({
           fenceId: policy.anchor.fenceId,
           submission,
           claimedAt: yield* Clock.currentTimeMillis,
         });
-        yield* writeExclusive(
-          slotPath(free.value),
-          yield* encodeEnvelope({ claim, digest: yield* hashPublicTextSha256(yield* encodeClaim(claim)) })
-        );
+        const argument1 = slotPath(free.value);
+        const encodedClaim = yield* encodeClaim(claim);
+        const encodedEnvelope = yield* encodeEnvelope({ claim, digest: yield* hashPublicTextSha256(encodedClaim) });
+        yield* writeExclusive(argument1, encodedEnvelope);
         yield* syncDirectory(policy.directory);
         yield* inspect;
         return claim;
@@ -406,15 +431,21 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
     operation: (claim: ObservationLaunchClaim) => Effect.Effect<A, E, R>
   ) {
     const result = yield* permit.withPermitsIfAvailable(1)(persist(submission));
-    if (O.isNone(result)) return yield* fail("contended");
+    if (O.isNone(result)) {
+      return yield* fail("contended");
+    }
     return yield* Effect.suspend(() => operation(result.value));
   });
   const locate = Effect.fn("ObservationClaims.locate")(function* (launchId: Sha256Hex) {
     const rows = yield* snapshot;
     const index = A.findFirstIndex(rows, (row) => O.isSome(row) && row.value.submission.fact.launchId === launchId);
-    if (O.isNone(index)) return yield* fail("unclaimed");
+    if (O.isNone(index)) {
+      return yield* fail("unclaimed");
+    }
     const row = rows[index.value];
-    if (row === undefined || O.isNone(row)) return yield* fail("integrity");
+    if (row === undefined || O.isNone(row)) {
+      return yield* fail("integrity");
+    }
     return { index: index.value, claim: row.value };
   });
   const syncFile = Effect.fn("ObservationClaims.syncFile")((file: string) =>
@@ -431,11 +462,17 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
     const text = yield* readSlot(file, uid);
     if (O.isNone(text)) return O.none<string>();
     const value = yield* decodeOutboxEnvelope(text.value);
-    if ((yield* hashPublicTextSha256(value.payload)) !== value.digest) return yield* fail("integrity");
+    if ((yield* hashPublicTextSha256(value.payload)) !== value.digest) {
+      return yield* fail("integrity");
+    }
     return O.some(value.payload);
   });
   const writePayload = Effect.fn("ObservationClaims.writePayload")(function* (file: string, payload: string) {
-    yield* writeExclusive(file, yield* encodeOutboxEnvelope({ payload, digest: yield* hashPublicTextSha256(payload) }));
+    const encodedOutboxEnvelope = yield* encodeOutboxEnvelope({
+      payload,
+      digest: yield* hashPublicTextSha256(payload),
+    });
+    yield* writeExclusive(file, encodedOutboxEnvelope);
     yield* syncDirectory(policy.directory);
     yield* inspect;
   });
@@ -476,7 +513,9 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
             const payload = yield* readPayload(factPath(index, phase));
             if (O.isNone(payload)) continue;
             const submission = yield* decodeSubmission(payload.value);
-            if (!matches(submission, claim) || factPhase(submission.fact) !== phase) return yield* fail("integrity");
+            if (!matches(submission, claim) || factPhase(submission.fact) !== phase) {
+              return yield* fail("integrity");
+            }
             submissions = A.append(submissions, submission);
           }
           const started = A.some(submissions, (entry) => entry.fact._tag === "Started");
@@ -488,8 +527,9 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
                   (entry.fact._tag === "Finished" && entry.fact.outcome === "succeeded")) &&
                 !started
             )
-          )
+          ) {
             return yield* fail("integrity");
+          }
           yield* inspect;
           return { index, claim, submissions };
         })
@@ -505,8 +545,9 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
           if (O.isNone(payload)) continue;
           const receipt = yield* decodeReceipt(payload.value);
           const submission = A.findFirst(submissions, (entry) => factPhase(entry.fact) === phase);
-          if (O.isNone(submission) || !(yield* validReceipt(receipt, submission.value)))
+          if (O.isNone(submission) || !(yield* validReceipt(receipt, submission.value))) {
             return yield* fail("integrity");
+          }
           receipts = A.append(receipts, receipt);
         }
         yield* inspect;
@@ -533,14 +574,18 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
   const snapshotOutboxes = Effect.gen(function* () {
     const first = yield* scanOutboxes;
     const second = yield* scanOutboxes;
-    if (!S.toEquivalence(S.Array(ObservationLaunchOutbox))(first, second)) return yield* fail("contended");
+    if (!S.toEquivalence(S.Array(ObservationLaunchOutbox))(first, second)) {
+      return yield* fail("contended");
+    }
     return second;
   }).pipe(Effect.timeoutOrElse({ duration: "10 seconds", orElse: () => Effect.fail(fail("ambiguous")) }));
   const resyncSubmission = Effect.fnUntraced(function* (
     existing: ObservationLaunchSubmission,
     submission: ObservationLaunchSubmission
   ) {
-    if (!equalSubmission(existing, submission)) return yield* fail("conflict");
+    if (!equalSubmission(existing, submission)) {
+      return yield* fail("conflict");
+    }
     // A previous caller may have lost the sync result. Resync before acknowledging the exact record.
     const { index } = yield* locate(submission.fact.launchId);
     const file = submission.fact._tag === "Prepared" ? slotPath(index) : factPath(index, factPhase(submission.fact));
@@ -567,15 +612,23 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
           const accepted = yield* permit.withPermitsIfAvailable(1)(
             Effect.gen(function* () {
               const state = yield* readObservations(submission.fact.launchId);
-              if (!matches(submission, state.claim)) return yield* fail("configuration");
+              if (!matches(submission, state.claim)) {
+                return yield* fail("configuration");
+              }
               const existing = A.findFirst(
                 state.submissions,
                 (entry) => factPhase(entry.fact) === factPhase(submission.fact)
               );
-              if (O.isSome(existing)) return yield* resyncSubmission(existing.value, submission);
-              if (conflictsWithSubmissionHistory(submission, state.submissions)) return yield* fail("conflict");
+              if (O.isSome(existing)) {
+                return yield* resyncSubmission(existing.value, submission);
+              }
+              if (conflictsWithSubmissionHistory(submission, state.submissions)) {
+                return yield* fail("conflict");
+              }
               const { index } = yield* locate(submission.fact.launchId);
-              yield* writePayload(factPath(index, factPhase(submission.fact)), yield* encodeSubmission(submission));
+              const argument2 = factPath(index, factPhase(submission.fact));
+              const encodedSubmission = yield* encodeSubmission(submission);
+              yield* writePayload(argument2, encodedSubmission);
               return submission;
             })
           );
@@ -590,12 +643,16 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
     previous: O.Option<ObservationLaunchReceipt>
   ) {
     if (O.isSome(previous)) {
-      if (!equalReceipt(previous.value, receipt)) return yield* fail("conflict");
+      if (!equalReceipt(previous.value, receipt)) {
+        return yield* fail("conflict");
+      }
       yield* safe(syncFile(receiptPath(index, factPhase(submission.fact))));
       yield* safe(syncDirectory(policy.directory));
       yield* inspect;
     } else {
-      yield* safe(writePayload(receiptPath(index, factPhase(submission.fact)), yield* safe(encodeReceipt(receipt))));
+      const argument3 = receiptPath(index, factPhase(submission.fact));
+      const safe1 = yield* safe(encodeReceipt(receipt));
+      yield* safe(writePayload(argument3, safe1));
     }
   });
   const reconcile = Effect.fn("ObservationClaims.reconcile")(function* <E, R>(
@@ -611,7 +668,9 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
         for (const submission of state.submissions) {
           yield* inspect;
           const receipt = yield* deliver(submission);
-          if (!(yield* safe(validReceipt(receipt, submission)))) return yield* fail("conflict");
+          if (!(yield* safe(validReceipt(receipt, submission)))) {
+            return yield* fail("conflict");
+          }
           const previous = A.findFirst(state.receipts, (entry) => factPhase(entry.fact) === factPhase(submission.fact));
           yield* persistReconciledReceipt(index, submission, receipt, previous);
           receipts = A.append(receipts, receipt);

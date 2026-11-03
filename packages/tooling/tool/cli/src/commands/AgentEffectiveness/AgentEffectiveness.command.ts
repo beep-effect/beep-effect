@@ -191,7 +191,8 @@ const renderDoctorReport: {
   2,
   Effect.fn("AgentEffectiveness.renderDoctorReport")(function* (report: AgentEffectivenessDoctorReport, json: boolean) {
     if (json) {
-      yield* Console.log(yield* agentEffectivenessDoctorReportToJson(report));
+      const agentEffectivenessDoctorReportToJson1 = yield* agentEffectivenessDoctorReportToJson(report);
+      yield* Console.log(agentEffectivenessDoctorReportToJson1);
       return;
     }
     yield* printLines([
@@ -213,7 +214,8 @@ const renderAnnotationPlan: {
     json: boolean
   ) {
     if (json) {
-      yield* Console.log(yield* agentEffectivenessAnnotationPlanToJson(plan));
+      const agentEffectivenessAnnotationPlanToJson2 = yield* agentEffectivenessAnnotationPlanToJson(plan);
+      yield* Console.log(agentEffectivenessAnnotationPlanToJson2);
       return;
     }
 
@@ -511,7 +513,7 @@ const makeEvalScoreProgram = Effect.fn("AgentEffectiveness.makeEvalScoreProgram"
   taskPath,
 }: MakeEvalScoreProgramOptions) {
   const resolvedDataRoot = record
-    ? O.some(yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local))
+    ? yield* Effect.asSome(resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local))
     : O.none<string>();
   return yield* runAgentEffectivenessEvalScoreCommand(
     RunAgentEffectivenessEvalScoreCommandOptions.make({

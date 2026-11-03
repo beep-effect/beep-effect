@@ -290,6 +290,8 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/effected-promotion" />
       <excludeFolder url="file://$MODULE_DIR$/goals/exact-optional-keys" />
       <excludeFolder url="file://$MODULE_DIR$/goals/tsrs-gates" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-20" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-28" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />

@@ -63,8 +63,10 @@ const fixture = Effect.fn("LaunchHttpTest.fixture")(function* (enabled = true) {
   });
   const intake = yield* makeObservationLaunchHttp(config, policy, control);
   const facts = yield* makeObservationLaunchFacts(config);
-  const server = Context.get(yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh)), HttpServer.HttpServer);
-  const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
+  const build1 = yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh));
+  const server = Context.get(build1, HttpServer.HttpServer);
+  const build2 = yield* Layer.build(NodeHttpClient.layerNodeHttp);
+  const client = Context.get(build2, HttpClient.HttpClient);
   yield* server.serve(intake.handler);
   const url = `${HttpServer.formatAddress(server.address)}/v1/launch-facts`;
   const submission = (fact = prepare) =>
@@ -90,13 +92,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const f = yield* fixture();
       const body = yield* f.encode(f.submission());
       expect((yield* f.post(body)).status).toBe(503);
-      expect(yield* f.facts.read(id("1"), 0)).toEqual([]);
+      const read3 = yield* f.facts.read(id("1"), 0);
+      expect(read3).toEqual([]);
       yield* f.control.resume;
       const first = yield* f.post(body);
       expect(first.status).toBe(200);
       const receipt = yield* decodeObservationLaunchReceiptJson(first.text);
       expect(first.headers["x-observation-receipt"]).toBe(receipt.receiptId);
-      expect(yield* f.facts.read(id("1"), 0)).toEqual([receipt]);
+      const read4 = yield* f.facts.read(id("1"), 0);
+      expect(read4).toEqual([receipt]);
       expect((yield* f.post(body)).text).toBe(first.text);
       const started = ObservationLaunchFact.cases.Started.make({ launchId: id("1"), processInstanceId: id("2") });
       const startedBody = yield* f.encode(ObservationLaunchSubmission.make({ ...f.submission(), fact: started }));
@@ -129,15 +133,19 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
           [{ ...base, fact: { ...base.fact, identity: { ...identity, surface: "desktop" } } }, 403],
           [{ ...base, fact: { ...base.fact, identity: { ...identity, routeId: id("f") } } }, 403],
         ] as const) {
-          const result = yield* f.post(yield* json(value));
+          const json5 = yield* json(value);
+          const result = yield* f.post(json5);
           expect(result.status).toBe(status);
           expect(result.headers["x-observation-receipt"]).toBeUndefined();
           expect(result.text).not.toContain("private-canary");
         }
-        expect(yield* f.facts.read(id("1"), 0)).toEqual([]);
-        expect((yield* f.post(yield* f.encode(f.submission()))).status).toBe(200);
+        const read6 = yield* f.facts.read(id("1"), 0);
+        expect(read6).toEqual([]);
+        const encoded = yield* f.encode(f.submission());
+        expect((yield* f.post(encoded)).status).toBe(200);
         const changed = { ...base, fact: { ...base.fact, identity: { ...identity, evidenceId: id("f") } } };
-        expect((yield* f.post(yield* json(changed))).status).toBe(409);
+        const json7 = yield* json(changed);
+        expect((yield* f.post(json7)).status).toBe(409);
       })
   )
 );
@@ -172,9 +180,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const timedOut = yield* Fiber.join(slow);
       expect(timedOut.status).toBe(503);
       yield* timedOut.text;
-      expect(yield* f.facts.read(id("1"), 0)).toEqual([]);
+      const read8 = yield* f.facts.read(id("1"), 0);
+      expect(read8).toEqual([]);
       expect((yield* f.control.status).active).toBe(0);
-      expect((yield* f.post(yield* f.encode(f.submission()))).status).toBe(200);
+      const encoded9 = yield* f.encode(f.submission());
+      expect((yield* f.post(encoded9)).status).toBe(200);
     }).pipe(Effect.timeout("3 seconds"))
   )
 );
@@ -184,8 +194,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     Effect.gen(function* () {
       const f = yield* fixture(false);
       yield* f.control.resume;
-      expect((yield* f.post(yield* f.encode(f.submission()))).status).toBe(404);
-      expect(yield* f.facts.read(id("1"), 0)).toEqual([]);
+      const encoded10 = yield* f.encode(f.submission());
+      expect((yield* f.post(encoded10)).status).toBe(404);
+      const read11 = yield* f.facts.read(id("1"), 0);
+      expect(read11).toEqual([]);
     })
   )
 );
@@ -201,7 +213,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const refused = yield* f.post(body);
       expect(refused.status).toBe(503);
       expect(refused.headers["x-observation-receipt"]).toBeUndefined();
-      expect(yield* f.facts.read(id("1"), 0)).toEqual([]);
+      const read12 = yield* f.facts.read(id("1"), 0);
+      expect(read12).toEqual([]);
       yield* sql`DROP TRIGGER synthetic_launch_failure`;
       expect((yield* f.post(body)).status).toBe(200);
     })

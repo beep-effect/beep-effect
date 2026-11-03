@@ -41,9 +41,11 @@ describe("retention policy domain", () => {
         const wire = yield* S.encodeEffect(RetentionPolicy)(policy);
         const decoded = yield* S.decodeEffect(RetentionPolicy)(wire);
         const digest = yield* retentionPolicyDigest(policy);
-        expect(yield* retentionPolicyDigest(decoded)).toBe(digest);
+        const retentionPolicyDigest1 = yield* retentionPolicyDigest(decoded);
+        expect(retentionPolicyDigest1).toBe(digest);
         const changed = RetentionPolicy.make({ ...policy, payloadBudgetBytes: policy.payloadBudgetBytes + 1 });
-        expect(yield* retentionPolicyDigest(changed)).not.toBe(digest);
+        const retentionPolicyDigest2 = yield* retentionPolicyDigest(changed);
+        expect(retentionPolicyDigest2).not.toBe(digest);
       })
   );
   it.effect.prop("uses inclusive policy boundaries in both call forms", [PolicyArbitrary], ([policy]) =>

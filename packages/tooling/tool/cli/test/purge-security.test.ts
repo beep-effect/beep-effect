@@ -39,20 +39,17 @@ const outsideWorkspaceScenario = Effect.fnUntraced(function* () {
   yield* fs.writeFileString(externalSentinelPath, "keep\n");
   yield* fs.symlink(externalDir, workspaceDir);
 
-  const succeeded = yield* purgeAtRoot(tmpDir, false).pipe(
-    Effect.match({
-      onFailure: () => false,
-      onSuccess: () => true,
-    })
-  );
+  const succeeded = yield* purgeAtRoot(tmpDir, false).pipe(Effect.isSuccess);
 
   // Since 4-A3 discovery skips a member whose real path leaves the root before
   // reading it (`@beep/repo-workspaces` `containWithinRoot`), where the retired
   // repo-utils reader failed the whole purge. Either way nothing outside the
   // root is a purge target.
   expect(succeeded).toBe(true);
-  expect(yield* fs.exists(externalDistDir)).toBe(true);
-  expect(yield* fs.readFileString(externalSentinelPath)).toBe("keep\n");
+  const exists1 = yield* fs.exists(externalDistDir);
+  expect(exists1).toBe(true);
+  const readFileString2 = yield* fs.readFileString(externalSentinelPath);
+  expect(readFileString2).toBe("keep\n");
 });
 
 const canonicalRootScenario = Effect.fnUntraced(function* () {
@@ -75,16 +72,13 @@ const canonicalRootScenario = Effect.fnUntraced(function* () {
   yield* fs.makeDirectory(workspaceDist, { recursive: true });
   yield* fs.symlink(tmpDir, repoAlias);
 
-  const succeeded = yield* purgeAtRoot(repoAlias, false).pipe(
-    Effect.match({
-      onFailure: () => false,
-      onSuccess: () => true,
-    })
-  );
+  const succeeded = yield* purgeAtRoot(repoAlias, false).pipe(Effect.isSuccess);
 
   expect(succeeded).toBe(true);
-  expect(yield* fs.exists(rootNodeModules)).toBe(false);
-  expect(yield* fs.exists(workspaceDist)).toBe(false);
+  const exists3 = yield* fs.exists(rootNodeModules);
+  expect(exists3).toBe(false);
+  const exists4 = yield* fs.exists(workspaceDist);
+  expect(exists4).toBe(false);
 });
 
 it.layer(testLayer, { timeout: "5 seconds" })("purge security", (it) => {
@@ -137,7 +131,9 @@ it.layer(testLayer, { timeout: "5 seconds" })("purge security", (it) => {
           ) {
             const count = yield* Ref.updateAndGet(acquisitions, (n) => n + 1);
             if (count === 2 && failAcquisition) {
-              if (mode === "second acquisition interruption") return yield* Effect.interrupt;
+              if (mode === "second acquisition interruption") {
+                return yield* Effect.interrupt;
+              }
               return yield* failure;
             }
             const directory = yield* Effect.acquireRelease(fs.makeTempDirectory(options), (directory) =>
@@ -166,7 +162,8 @@ it.layer(testLayer, { timeout: "5 seconds" })("purge security", (it) => {
           Effect.exit
         );
         assertTrue(exit._tag === "Failure");
-        expect(yield* Ref.get(acquisitions)).toBe(2);
+        const got = yield* Ref.get(acquisitions);
+        expect(got).toBe(2);
         const acquired = yield* Ref.get(roots);
         if (failAcquisition) {
           expect(acquired).toHaveLength(1);
@@ -182,11 +179,15 @@ it.layer(testLayer, { timeout: "5 seconds" })("purge security", (it) => {
               assertExitFailure(Exit.failCause(Cause.combine(expected, Cause.fail("extra failure"))), expected)
             ).toThrow();
           }
-          for (const directory of acquired) expect(yield* fs.exists(directory)).toBe(false);
+          for (const directory of acquired) {
+            const exists2 = yield* fs.exists(directory);
+            expect(exists2).toBe(false);
+          }
           return;
         }
         {
-          const error = O.getOrThrow(yield* Ref.get(removalError));
+          const got5 = yield* Ref.get(removalError);
+          const error = O.getOrThrow(got5);
           assertInstanceOf(error.reason, PlatformError.SystemError);
           expect(error.reason._tag).toBe("PermissionDenied");
           expect(error.reason.method).toBe("remove");
@@ -211,7 +212,8 @@ it.layer(testLayer, { timeout: "5 seconds" })("purge security", (it) => {
           yield* Effect.forEach(
             acquired,
             Effect.fnUntraced(function* (directory, index) {
-              expect(yield* fs.exists(directory)).toBe(index === failedReleaseIndex);
+              const exists6 = yield* fs.exists(directory);
+              expect(exists6).toBe(index === failedReleaseIndex);
             }),
             { discard: true }
           );

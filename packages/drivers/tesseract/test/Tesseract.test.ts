@@ -114,7 +114,9 @@ it.effect(
   Effect.fnUntraced(function* () {
     const config = TesseractConfig.make({});
 
-    expect(config).toEqual(yield* S.decodeEffect(TesseractConfig)({}));
+    const expectation = expect(config);
+    const value = yield* S.decodeEffect(TesseractConfig)({});
+    expectation.toEqual(value);
     expect(config.tesseractPath).toBe("tesseract");
     expect(config.pageTimeoutMillis).toBe(60_000);
   })
@@ -236,7 +238,8 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("Tesseract page OCR engi
       const result = yield* engine.recognizePage(pageRequest("clean", { languages: ["chi_sim", "eng"] }));
       yield* engine.recognizePage(pageRequest("clean", { languages: [], mediaType: "image/jpeg" }));
       yield* engine.recognizePage(pageRequest("clean", { mediaType: "image/tiff" }));
-      const calls = A.filter(Str.split(yield* argsLog, "\n"), Str.isNonEmpty);
+      const argsLog1 = yield* argsLog;
+      const calls = A.filter(Str.split(argsLog1, "\n"), Str.isNonEmpty);
 
       expect(result.text).toBe("Synthetic page");
       expect(result.confidence).toBeCloseTo(0.85, 10);
@@ -316,8 +319,10 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("Tesseract page OCR engi
       const { tesseractPath } = yield* fixture();
       const engine = yield* makeTesseractPageOcrEngine(TesseractConfig.make({ tesseractPath }));
 
-      assertSome(yield* engine.detectScript(pageImage("clean")), "Han");
-      assertNone(yield* engine.detectScript(pageImage("crash")));
+      const detectScript2 = yield* engine.detectScript(pageImage("clean"));
+      assertSome(detectScript2, "Han");
+      const detectScript3 = yield* engine.detectScript(pageImage("crash"));
+      assertNone(detectScript3);
     })
   );
 });

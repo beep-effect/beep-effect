@@ -4,7 +4,9 @@
 import { displayWidth } from "@beep/cli-kit/internal/displayWidth";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import stringWidth from "string-width";
 
@@ -122,7 +124,8 @@ describe("displayWidth against string-width", () => {
       const length = 1 + Math.floor(next() * 6);
       let text = "";
       for (let j = 0; j < length; j++) text += atoms[Math.floor(next() * atoms.length)];
-      if (displayWidth(text) !== stringWidth(text)) mismatches.push(JSON.stringify(text));
+      if (displayWidth(text) !== stringWidth(text))
+        mismatches.push(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity));
     }
     assert.deepStrictEqual(mismatches.slice(0, 5), []);
   });

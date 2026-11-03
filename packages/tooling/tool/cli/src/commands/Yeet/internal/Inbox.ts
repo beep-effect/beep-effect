@@ -1979,7 +1979,8 @@ export const yeetInboxHoldsRow = Effect.fn("Yeet.yeetInboxHoldsRow")(function* (
   repoRoot: string,
   id: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
-  return A.some(yield* readYeetInboxHeldLines(repoRoot), (line) =>
+  const readYeetInboxHeldLines1 = yield* readYeetInboxHeldLines(repoRoot);
+  return A.some(readYeetInboxHeldLines1, (line) =>
     O.exists(YeetInboxRowJson.decodeOption(line), (decoded) => decoded.id === id)
   );
 });
@@ -2015,7 +2016,8 @@ export const yeetInboxReviewThreadRowIds = Effect.fn("Yeet.yeetInboxReviewThread
   prNumber: number,
   threadId: string
 ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-  return A.flatMap(yield* readYeetInboxHeldLines(repoRoot), (line) =>
+  const readYeetInboxHeldLines2 = yield* readYeetInboxHeldLines(repoRoot);
+  return A.flatMap(readYeetInboxHeldLines2, (line) =>
     YeetInboxRowJson.decodeOption(line).pipe(
       O.filter(S.is(YeetReviewThreadRow)),
       O.filter((row) => row.capsule.prNumber === prNumber && row.capsule.threadId === threadId),

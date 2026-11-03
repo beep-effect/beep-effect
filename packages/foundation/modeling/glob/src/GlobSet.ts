@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 /**
  * The GlobSet facade: multi-pattern include/exclude sets with glob-core's set
  * semantics, where a leading bang marks an exclusion filter applied after
@@ -66,7 +67,8 @@ const allCompileUnderDefaults = (patterns: ReadonlyArray<string>): true | string
   O.getOrElse(
     firstGuardTrip(
       patterns,
-      (pattern, guard) => `pattern ${JSON.stringify(Str.slice(0, 64)(pattern))}: ${guard.message}`
+      (pattern, guard) =>
+        `pattern ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(Str.slice(0, 64)(pattern)), identity)}: ${guard.message}`
     ),
     (): true | string => true
   );

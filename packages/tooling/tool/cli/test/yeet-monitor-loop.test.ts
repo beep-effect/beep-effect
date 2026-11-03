@@ -27,12 +27,14 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
@@ -510,7 +512,11 @@ const runListJson = (
     readonly headSha: string;
     readonly status: string;
   }>
-) => JSON.stringify(A.map(runs, (run) => ({ ...run, name: "CI" })));
+) =>
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))(A.map(runs, (run) => ({ ...run, name: "CI" }))),
+    identity
+  );
 
 const runJobsJson = (
   jobs: ReadonlyArray<{
@@ -520,15 +526,18 @@ const runJobsJson = (
     readonly status: string;
   }>
 ) =>
-  JSON.stringify({
-    jobs: A.map(jobs, (job) => ({
-      ...job,
-      steps: [
-        { name: "Set up job", conclusion: "success" },
-        { name: "Run lane", conclusion: job.conclusion },
-      ],
-    })),
-  });
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      jobs: A.map(jobs, (job) => ({
+        ...job,
+        steps: [
+          { name: "Set up job", conclusion: "success" },
+          { name: "Run lane", conclusion: job.conclusion },
+        ],
+      })),
+    }),
+    identity
+  );
 
 const stampedLog = (lines: ReadonlyArray<string>): string =>
   A.join(
@@ -904,7 +913,8 @@ describe("applyYeetMonitorJobDecision", () => {
         const result = yield* applyYeetMonitorJobDecision(monitorContext, rerunDecision());
 
         expect(result).toBeUndefined();
-        const lines = A.map(yield* TestConsole.logLines, String);
+        const logLines1 = yield* TestConsole.logLines;
+        const lines = A.map(logLines1, String);
         expect(A.some(lines, (line) => Str.includes("allowance spent")(line))).toBe(true);
         expect(A.some(lines, (line) => Str.includes("unbounded retry loop")(line))).toBe(true);
       }).pipe(provideSpawner(spawner(1)))
@@ -936,7 +946,8 @@ describe("applyYeetMonitorJobDecision", () => {
         const result = yield* applyYeetMonitorJobDecision(monitorContext, plan.decisions[0]!);
 
         expect(result).toBeUndefined();
-        const lines = A.map(yield* TestConsole.logLines, String);
+        const logLines2 = yield* TestConsole.logLines;
+        const lines = A.map(logLines2, String);
         expect(A.some(lines, (line) => Str.includes("reclassifying next poll")(line))).toBe(true);
         expect(spawner.spawns).toEqual([]);
       }).pipe(provideSpawner(spawner));

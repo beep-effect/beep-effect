@@ -11,7 +11,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow } from "effect/Function";
+import { flow, identity } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
@@ -25,6 +25,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as RpcClient from "effect/rpc/RpcClient";
 import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as S from "effect/Schema";
@@ -84,9 +85,11 @@ const silentLedgerLayer = Layer.unwrap(
           )
         ),
         readUnsettledAllowed: Effect.fn("OntologyMcpHarness.readUnsettledAllowed")(function* (runKey) {
-          const settled = A.map(yield* Ref.get(outcomes), (record) => record.decisionHash);
+          const got = yield* Ref.get(outcomes);
+          const settled = A.map(got, (record) => record.decisionHash);
+          const got1 = yield* Ref.get(decisions);
           return A.filter(
-            yield* Ref.get(decisions),
+            got1,
             (record) => record.runKey === runKey && record.verdict === "allowed" && !A.contains(settled, record.hash)
           );
         }),
@@ -206,14 +209,22 @@ const unwrapServerSentEvents = (response: HttpClientResponse.HttpClientResponse)
           ),
           Str.isNonEmpty
         );
-        const messages = A.map(payloads, (payload): unknown => JSON.parse(payload));
+        const messages = A.map(payloads, (payload): unknown =>
+          Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(payload), identity)
+        );
         const responses = A.filter(messages, P.hasProperty("id"));
         return HttpClientResponse.fromWeb(
           response.request,
-          new Response(JSON.stringify(responses.length === 1 ? responses[0] : responses), {
-            status: response.status,
-            headers: Headers.set(response.headers, "content-type", "application/json"),
-          })
+          new Response(
+            Result.getOrThrowWith(
+              S.encodeUnknownResult(S.fromJsonString(S.Unknown))(responses.length === 1 ? responses[0] : responses),
+              identity
+            ),
+            {
+              status: response.status,
+              headers: Headers.set(response.headers, "content-type", "application/json"),
+            }
+          )
         );
       })
     : Effect.succeed(response);

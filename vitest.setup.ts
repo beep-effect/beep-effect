@@ -34,8 +34,10 @@ import * as NodeStream from "node:stream";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { A, O, P, R } from "@beep/utils";
 import { addEqualityTesters } from "@effect/vitest";
+import { identity } from "effect/Function";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
@@ -264,7 +266,8 @@ const bufferToArrayBuffer = (buffer: Buffer): ArrayBuffer => {
 
 const file = (path: string | URL): BunFileShim => ({
   arrayBuffer: async () => bufferToArrayBuffer(await NodeFSP.readFile(path)),
-  json: async () => JSON.parse(await NodeFSP.readFile(path, "utf8")) as unknown,
+  json: async () =>
+    Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(await NodeFSP.readFile(path, "utf8")), identity),
   text: () => NodeFSP.readFile(path, "utf8"),
 });
 
@@ -621,7 +624,7 @@ const parseJsonlChunk: BunTestShim["JSONL"]["parseChunk"] = (content) => {
       continue;
     }
     try {
-      values.push(JSON.parse(line) as unknown);
+      values.push(Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(line), identity));
       read += lineWithTerminatorLength;
     } catch (cause) {
       return {

@@ -1,6 +1,9 @@
 import { ACTIVE_LICENSE_IDS } from "@beep/spdx/internal/licenseIds";
 import { isValidExpression } from "@beep/spdx/SpdxExpression";
 import { assert, describe, it } from "@effect/vitest";
+import { identity } from "effect/Function";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import spdxParse from "spdx-expression-parse";
 
 const oracleAccepts = (s: string): boolean => {
@@ -48,7 +51,11 @@ describe("differential oracle: @effected/spdx vs spdx-expression-parse", () => {
   });
   it("agrees across the expression corpus", () => {
     for (const s of CORPUS) {
-      assert.strictEqual(isValidExpression(s), oracleAccepts(s), `expr ${JSON.stringify(s)}`);
+      assert.strictEqual(
+        isValidExpression(s),
+        oracleAccepts(s),
+        `expr ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(s), identity)}`
+      );
     }
   });
 });

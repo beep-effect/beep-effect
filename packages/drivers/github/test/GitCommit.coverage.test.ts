@@ -36,10 +36,14 @@ describe("GitCommit test double contract", () => {
     it.effect("preserves all supplied operations", () =>
       Effect.gen(function* () {
         const double = GitCommit.makeTest(overrides);
-        assert.strictEqual(yield* double.get("sha"), ref);
-        assert.strictEqual(yield* double.createTree({ changes: [] }), "tree");
-        assert.strictEqual(yield* double.createCommit({ message: "m", tree: "t", parents: [] }), "commit");
-        assert.strictEqual(yield* double.commitFiles({ branch: "main", message: "m", changes: [] }), "commit");
+        const got = yield* double.get("sha");
+        assert.strictEqual(got, ref);
+        const createdTree = yield* double.createTree({ changes: [] });
+        assert.strictEqual(createdTree, "tree");
+        const createdCommit = yield* double.createCommit({ message: "m", tree: "t", parents: [] });
+        assert.strictEqual(createdCommit, "commit");
+        const commitFiles1 = yield* double.commitFiles({ branch: "main", message: "m", changes: [] });
+        assert.strictEqual(commitFiles1, "commit");
       })
     );
   });
@@ -57,7 +61,8 @@ describe("GitCommit test double contract", () => {
       it.effect("provides the supplied operation", () =>
         Effect.gen(function* () {
           const double = yield* GitCommit;
-          assert.strictEqual(yield* double.get("sha"), ref);
+          const got2 = yield* double.get("sha");
+          assert.strictEqual(got2, ref);
         })
       );
     }
@@ -76,8 +81,9 @@ for (const [name, invalid] of [
     it.effect(`returns a typed Git Database commit decode failure for invalid ${name}`, () =>
       Effect.gen(function* () {
         const service = yield* GitCommit;
+        const result3 = yield* Effect.result(service.get("commit"));
         assertFailure(
-          Result.mapError(yield* Effect.result(service.get("commit")), (error) => ({
+          Result.mapError(result3, (error) => ({
             tag: error._tag,
             kind: error.kind,
             operation: error.operation,

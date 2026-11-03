@@ -105,7 +105,8 @@ describe("CliEnv.layer", () => {
   )((it) => {
     it.effect("a human on a terminal is interactive, and the theme follows the terminal's colour", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* CliInteractive, true);
+        const CliInteractive1 = yield* CliInteractive;
+        assert.strictEqual(CliInteractive1, true);
         assert.strictEqual((yield* Audience).kind, "human");
         assert.strictEqual((yield* CliTheme).color, "256");
       })
@@ -121,7 +122,8 @@ describe("CliEnv.layer", () => {
   )((it) => {
     it.effect("piped stdin or stdout is not interactive", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* CliInteractive, false);
+        const CliInteractive2 = yield* CliInteractive;
+        assert.strictEqual(CliInteractive2, false);
       })
     );
   });
@@ -144,7 +146,9 @@ describe("CliRuntime.main with the env option", () => {
     Effect.gen(function* () {
       const seen: Array<string> = [];
       const program = Effect.gen(function* () {
-        seen.push((yield* Audience).kind, String(yield* CliInteractive), (yield* CliTheme).color);
+        const argument = (yield* Audience).kind;
+        const CliInteractive3 = yield* CliInteractive;
+        seen.push(argument, String(CliInteractive3), (yield* CliTheme).color);
         yield* TerminalEnv;
       });
       // `observe` returns an effect with R = never: a leaked requirement would not compile here.
@@ -285,10 +289,12 @@ describe("CliRuntime.main with the env option", () => {
         const app = Command.make("tool").pipe(Command.withSubcommands([Command.make("run", {}, () => Effect.void)]));
         const helpUnder = Effect.fn("helpUnder")(function* (env: Record<string, string>) {
           const { double, out } = capturing();
-          yield* CliRuntime.main(Command.runWith(app, { version: "1.0.0" })(["--help"]), {
+          const argument1 = Command.runWith(app, { version: "1.0.0" })(["--help"]);
+          const FileSystem4 = yield* FileSystem.FileSystem;
+          yield* CliRuntime.main(argument1, {
             platform: Layer.mergeAll(
               Layer.mergeAll(
-                Layer.succeed(FileSystem.FileSystem, yield* FileSystem.FileSystem),
+                Layer.succeed(FileSystem.FileSystem, FileSystem4),
                 Path.layer,
                 Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {
                   spawn: () => Effect.die("unexpected child process"),
@@ -304,8 +310,10 @@ describe("CliRuntime.main with the env option", () => {
           );
           return A.join(out, "\n");
         });
-        assert.include(yield* helpUnder({ FORCE_COLOR: "1" }), "\x1b[");
-        assert.notInclude(yield* helpUnder({}), "\x1b[");
+        const helpUnder3 = yield* helpUnder({ FORCE_COLOR: "1" });
+        assert.include(helpUnder3, "\x1b[");
+        const helpUnder4 = yield* helpUnder({});
+        assert.notInclude(helpUnder4, "\x1b[");
       })
     );
   });
@@ -322,9 +330,8 @@ describe("CliRuntime.main with the env option", () => {
           const terminal = yield* Terminal.Terminal;
           columns = yield* terminal.columns;
           // Reading input on the gated terminal is quit at once, and display writes nothing.
-          ended = Exit.isFailure(
-            yield* Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)).pipe(Effect.exit)
-          );
+          const pipe5 = yield* Effect.flatMap(terminal.readInput, (queue) => Queue.take(queue)).pipe(Effect.exit);
+          ended = Exit.isFailure(pipe5);
           yield* terminal.display("never shown");
         }),
         {
@@ -342,9 +349,12 @@ describe("CliRuntime.main with the env option", () => {
       assertExitSuccess(exit, undefined);
       assert.strictEqual(columns, 100, "the real terminal's size is delegated");
       assert.isTrue(ended);
-      assert.strictEqual(yield* real.output, "");
-      assert.deepStrictEqual(yield* real.reads, { keys: 0, lines: 0, subscriptions: 0 });
-      assert.strictEqual(yield* real.pending, 1);
+      const output6 = yield* real.output;
+      assert.strictEqual(output6, "");
+      const reads7 = yield* real.reads;
+      assert.deepStrictEqual(reads7, { keys: 0, lines: 0, subscriptions: 0 });
+      const pending8 = yield* real.pending;
+      assert.strictEqual(pending8, 1);
     })
   );
 
@@ -354,10 +364,12 @@ describe("CliRuntime.main with the env option", () => {
         const app = Command.make("tool").pipe(Command.withSubcommands([Command.make("run", {}, () => Effect.void)]));
         const helpOn = Effect.fn("helpOn")(function* (io: Layer.Layer<Stdio.Stdio | Terminal.Terminal>) {
           const { double, out } = capturing();
-          yield* CliRuntime.main(Command.runWith(app, { version: "1.0.0" })(["--help"]), {
+          const argument2 = Command.runWith(app, { version: "1.0.0" })(["--help"]);
+          const FileSystem5 = yield* FileSystem.FileSystem;
+          yield* CliRuntime.main(argument2, {
             platform: Layer.mergeAll(
               Layer.mergeAll(
-                Layer.succeed(FileSystem.FileSystem, yield* FileSystem.FileSystem),
+                Layer.succeed(FileSystem.FileSystem, FileSystem5),
                 Path.layer,
                 Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {
                   spawn: () => Effect.die("unexpected child process"),
@@ -373,8 +385,10 @@ describe("CliRuntime.main with the env option", () => {
           );
           return A.join(out, "\n");
         });
-        assert.notInclude(yield* helpOn(PIPED), "--wizard");
-        assert.include(yield* helpOn(TTY), "--wizard");
+        const helpOn9 = yield* helpOn(PIPED);
+        assert.notInclude(helpOn9, "--wizard");
+        const helpOn10 = yield* helpOn(TTY);
+        assert.include(helpOn10, "--wizard");
       })
     );
   });
@@ -500,8 +514,10 @@ describe("CliRuntime.main with the env option", () => {
         );
         return primary;
       });
-      assert.strictEqual(yield* themeUnder({}, PIPED), "", "no colour: the prompt colour fields are empty");
-      assert.notStrictEqual(yield* themeUnder({ FORCE_COLOR: "1" }, PIPED), "", "forced colour reaches core prompts");
+      const themeUnder11 = yield* themeUnder({}, PIPED);
+      assert.strictEqual(themeUnder11, "", "no colour: the prompt colour fields are empty");
+      const themeUnder12 = yield* themeUnder({ FORCE_COLOR: "1" }, PIPED);
+      assert.notStrictEqual(themeUnder12, "", "forced colour reaches core prompts");
     })
   );
 
@@ -557,11 +573,16 @@ describe("CliRuntime.main with the env option", () => {
           "provides CliLinks: file by default, vscode on the terminal signal, and the option and env var decide",
           () =>
             Effect.gen(function* () {
-              assert.strictEqual(yield* Mode0, "file");
-              assert.strictEqual(yield* Mode1, "vscode");
-              assert.strictEqual(yield* Mode2, "off");
-              assert.strictEqual(yield* Mode3, "vscode");
-              assert.strictEqual(yield* Mode4, "off");
+              const Mode013 = yield* Mode0;
+              assert.strictEqual(Mode013, "file");
+              const Mode114 = yield* Mode1;
+              assert.strictEqual(Mode114, "vscode");
+              const Mode215 = yield* Mode2;
+              assert.strictEqual(Mode215, "off");
+              const Mode316 = yield* Mode3;
+              assert.strictEqual(Mode316, "vscode");
+              const Mode417 = yield* Mode4;
+              assert.strictEqual(Mode417, "off");
             })
         );
       }
@@ -590,9 +611,11 @@ describe("CliRuntime.main with the env option", () => {
     )((it) => {
       it.effect("finds .vscode through the FileSystem and Path the platform provides, but does not require them", () =>
         Effect.gen(function* () {
-          assert.strictEqual(yield* WithFs, "vscode");
+          const WithFs18 = yield* WithFs;
+          assert.strictEqual(WithFs18, "vscode");
+          const WithoutFs19 = yield* WithoutFs;
           assert.strictEqual(
-            yield* WithoutFs,
+            WithoutFs19,
             "file",
             "without them the layer still builds, and only the terminal signal applies"
           );

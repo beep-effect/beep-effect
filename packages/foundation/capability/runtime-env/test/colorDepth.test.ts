@@ -3,6 +3,9 @@ import { colorDepth, colorKeys } from "@beep/runtime-env/internal/colorDepth";
 import { currentHostPlatform } from "@beep/utils/HostProcess";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { envReadsOf, sourceOf } from "./support/sources.ts";
 
 const nodeDepth = (env: Record<string, string>): string => {
@@ -70,9 +73,12 @@ const EXTRA_CASES: ReadonlyArray<Record<string, string>> = [
 
 describe("colorDepth", () => {
   for (const env of EXTRA_CASES) {
-    it.skipIf(win32)(`matches Node on a TTY for the extra row ${JSON.stringify(env)}`, () => {
-      assert.strictEqual(colorDepth(env, true), nodeDepth(env));
-    });
+    it.skipIf(win32)(
+      `matches Node on a TTY for the extra row ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(env), identity)}`,
+      () => {
+        assert.strictEqual(colorDepth(env, true), nodeDepth(env));
+      }
+    );
   }
 
   // Node looks TERM up in a plain object, so TERM=constructor reaches Object.prototype and returns a function
@@ -84,9 +90,12 @@ describe("colorDepth", () => {
   }
 
   for (const env of CASES) {
-    it.skipIf(win32)(`matches Node on a TTY for ${JSON.stringify(env)}`, () => {
-      assert.strictEqual(colorDepth(env, true), nodeDepth(env));
-    });
+    it.skipIf(win32)(
+      `matches Node on a TTY for ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(env), identity)}`,
+      () => {
+        assert.strictEqual(colorDepth(env, true), nodeDepth(env));
+      }
+    );
   }
 
   // Added beyond the brief's table: the CI provider keys live in a table the source regex cannot see.
@@ -153,7 +162,11 @@ describe("colorDepth", () => {
         { OS, TF_BUILD: "True", AGENT_NAME: "x" },
         { OS, TERM_PROGRAM: "Apple_Terminal" },
       ]) {
-        assert.strictEqual(colorDepth(env, true), "truecolor", JSON.stringify(env));
+        assert.strictEqual(
+          colorDepth(env, true),
+          "truecolor",
+          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(env), identity)
+        );
       }
     });
 

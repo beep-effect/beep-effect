@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // YamlToken / YamlTokens (#129): the public positioned token stream — the
 // sync Result primitive, the derived Stream form, the field reconciliation
 // (internal value/column → public text/character), and the total-tokenizer
@@ -102,7 +103,7 @@ describe("YamlTokens", () => {
 
 describe("public token CR positions", () => {
   for (const newline of ["\r", "\r\n", "\n"]) {
-    it(`uses one line break for ${JSON.stringify(newline)}`, () => {
+    it(`uses one line break for ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(newline), identity)}`, () => {
       const source = `a: 1${newline}  b: 2${newline}c: 3${newline}`;
       const keys = A.filter(tokensOf(source), (token) => ["a", "b", "c"].includes(token.text));
       assert.deepStrictEqual(

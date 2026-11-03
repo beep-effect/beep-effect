@@ -66,8 +66,11 @@ it.effect.prop(
       const multiline = `"""${Str.slice(1, -1)(encoded)}"""`;
       assert.deepStrictEqual(scanMultilineBasicString(multiline, 0), { value, end: multiline.length });
       const canonical = yield* Toml.stringify({ value });
-      assert.deepStrictEqual(yield* Toml.parse(canonical), { value });
-      assert.strictEqual(yield* Toml.stringify(yield* Toml.parse(canonical)), canonical);
+      const parsed1 = yield* Toml.parse(canonical);
+      assert.deepStrictEqual(parsed1, { value });
+      const parsed4 = yield* Toml.parse(canonical);
+      const stringify2 = yield* Toml.stringify(parsed4);
+      assert.strictEqual(stringify2, canonical);
     }),
   runs
 );
@@ -128,7 +131,9 @@ it.effect.prop(
       const start = pipe(encoded, Str.indexOf("="), O.getOrElse(constant(-1))) + 2;
       const canonical = scanValueToken(encoded, start);
       assert.strictEqual(classifyValueToken(canonical.value, start), value);
-      assert.strictEqual(yield* Toml.stringify(yield* Toml.parse(encoded)), encoded);
+      const parsed5 = yield* Toml.parse(encoded);
+      const stringify3 = yield* Toml.stringify(parsed5);
+      assert.strictEqual(stringify3, encoded);
     }),
   runs
 );

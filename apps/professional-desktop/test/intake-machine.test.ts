@@ -101,7 +101,8 @@ describe("document intake machine", { concurrent: false }, () => {
           yield* waitFor(actor, (current) => current.matches({ vault: "loadFailed" }));
           yield* send(actor, { type: "RETRY_CONFIG" });
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: "unconfigured" } }));
-          expect(yield* Ref.get(attempts)).toBe(2);
+          const got = yield* Ref.get(attempts);
+          expect(got).toBe(2);
         })
       );
     });
@@ -151,8 +152,10 @@ describe("document intake machine", { concurrent: false }, () => {
 
           yield* Deferred.succeed(confirm, void 0);
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
-          expect(yield* Ref.get(saved)).toMatchObject([{ vaultRootPath: selectedPath, workspaceId }]);
-          expect(yield* Queue.takeN(outcomes, 2)).toEqual(["selected", "success"]);
+          const got1 = yield* Ref.get(saved);
+          expect(got1).toMatchObject([{ vaultRootPath: selectedPath, workspaceId }]);
+          const takeN2 = yield* Queue.takeN(outcomes, 2);
+          expect(takeN2).toEqual(["selected", "success"]);
         })
       );
 
@@ -170,7 +173,8 @@ describe("document intake machine", { concurrent: false }, () => {
             current.matches({ vault: { watching: { unconfigured: "idle" } } })
           );
           expect(vaultSelectionOf(snapshot).kind).toBe("idle");
-          expect(yield* Queue.takeN(outcomes, 1)).toEqual(["cancelled"]);
+          const takeN3 = yield* Queue.takeN(outcomes, 1);
+          expect(takeN3).toEqual(["cancelled"]);
         })
       );
 
@@ -217,7 +221,8 @@ describe("document intake machine", { concurrent: false }, () => {
 
           yield* send(actor, { type: "CHOOSE_VAULT" });
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: { unconfigured: "idle" } } }));
-          expect(yield* Queue.takeN(outcomes, 2)).toEqual(["picker_failure", "cancelled"]);
+          const takeN4 = yield* Queue.takeN(outcomes, 2);
+          expect(takeN4).toEqual(["picker_failure", "cancelled"]);
         })
       );
 
@@ -275,7 +280,8 @@ describe("document intake machine", { concurrent: false }, () => {
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: { unconfigured: "idle" } } }));
           yield* send(actor, { type: "CHOOSE_VAULT" });
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: { unconfigured: "idle" } } }));
-          expect(yield* Queue.takeN(outcomes, 1)).toEqual(["cancelled"]);
+          const takeN5 = yield* Queue.takeN(outcomes, 1);
+          expect(takeN5).toEqual(["cancelled"]);
         })
       );
 
@@ -333,7 +339,8 @@ describe("document intake machine", { concurrent: false }, () => {
           });
           yield* send(actor, { type: "SUBMIT_MANUAL_PATH", rawPath: `  ${selectedPath}  ` });
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
-          expect(yield* Ref.get(saved)).toMatchObject([{ vaultRootPath: selectedPath }]);
+          const got6 = yield* Ref.get(saved);
+          expect(got6).toMatchObject([{ vaultRootPath: selectedPath }]);
         })
       );
 
@@ -463,7 +470,8 @@ describe("document intake machine", { concurrent: false }, () => {
           );
           expect(intake).toHaveBeenCalledTimes(2);
           expect(A.every(done.context.results, (result) => result.kind === "failure")).toBe(true);
-          expect(yield* Queue.takeN(settled, 2)).toEqual([1, 1]);
+          const takeN7 = yield* Queue.takeN(settled, 2);
+          expect(takeN7).toEqual([1, 1]);
 
           yield* send(actor, { type: "CLEAR_RESULTS" });
           yield* waitFor(actor, (current) => A.isReadonlyArrayEmpty(current.context.results));
@@ -531,16 +539,19 @@ describe("document intake configuration retry", () => {
         actor,
         (current) => current.matches({ vault: "loadFailed" }) && current.context.configAttempt === 1
       );
-      expect(yield* Ref.get(attempts)).toBe(2);
+      const got8 = yield* Ref.get(attempts);
+      expect(got8).toBe(2);
 
       // The second delay doubled: two more seconds are not enough.
       yield* TestClock.adjust("2 seconds");
-      expect(yield* Ref.get(attempts)).toBe(2);
+      const got9 = yield* Ref.get(attempts);
+      expect(got9).toBe(2);
       expect(actor.getSnapshot().matches({ vault: "loadFailed" })).toBe(true);
 
       yield* TestClock.adjust("2 seconds");
       const recovered = yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
-      expect(yield* Ref.get(attempts)).toBe(3);
+      const got10 = yield* Ref.get(attempts);
+      expect(got10).toBe(3);
       expect(recovered.context.configAttempt).toBe(0);
     })
   );

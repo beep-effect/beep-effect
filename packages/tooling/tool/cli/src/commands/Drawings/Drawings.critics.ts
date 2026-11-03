@@ -25,7 +25,7 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constant, flow, pipe } from "effect/Function";
+import { constant, flow, identity, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
@@ -410,14 +410,14 @@ export const loopSummaryMarkdown = (input: {
     const findings = A.map(
       report.findings,
       (f) =>
-        `- **${f.id}** ${f.severity} ${f.scope} ${f.category} FIG ${JSON.stringify(f.figures)} — ${f.location} — ${f.observation} — basis: ${f.basis} — fix: ${f.proposedFix} (confidence ${f.confidence})`
+        `- **${f.id}** ${f.severity} ${f.scope} ${f.category} FIG ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(f.figures), identity)} — ${f.location} — ${f.observation} — basis: ${f.basis} — fix: ${f.proposedFix} (confidence ${f.confidence})`
     );
     const stances = A.map(report.priorAssessment, (p) => `  - on ${p.id}: ${p.stance} — ${p.note}`);
     const unassessed =
       A.length(report.couldNotAssess) === 0 ? [] : [`  - could_not_assess: ${A.join(report.couldNotAssess, " | ")}`];
     return A.join(
       [
-        `\n## ${report.reviewer} — verdict ${report.verdict} — blockers: ${JSON.stringify(report.blockers)}\n`,
+        `\n## ${report.reviewer} — verdict ${report.verdict} — blockers: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(report.blockers), identity)}\n`,
         ...findings,
         ...stances,
         ...unassessed,
@@ -646,7 +646,9 @@ export const extractReportText = (input: { readonly route: CriticRoute; readonly
         parseJson(input.text),
         O.flatMap((wrapper) =>
           field(wrapper, "structuredOutput").pipe(
-            O.map((structured) => JSON.stringify(structured)),
+            O.map((structured) =>
+              Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(structured), identity)
+            ),
             O.orElse(() => field(wrapper, "text").pipe(O.filter(P.isString), O.flatMap(outermost)))
           )
         ),
@@ -939,8 +941,12 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     const pages =
       pageCount === 0
         ? A.empty<CriticPdfPage>()
-        : parsePdfInfoBoxes(yield* runPoppler("pdfinfo", ["-box", "-f", "1", "-l", `${pageCount}`, pdfPath]));
-    const fonts = parsePdfFonts(yield* runPoppler("pdffonts", [pdfPath]));
+        : yield* Effect.map(
+            runPoppler("pdfinfo", ["-box", "-f", "1", "-l", `${pageCount}`, pdfPath]),
+            parsePdfInfoBoxes
+          );
+    const resultPoppler = yield* runPoppler("pdffonts", [pdfPath]);
+    const fonts = parsePdfFonts(resultPoppler);
     return CriticPdfMeasurements.make({
       file: "render/sheets.pdf",
       version: structure.headerVersion,
@@ -1012,7 +1018,10 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
           view: figure.view,
           svgFile: `render/${figure.svgFile}`,
           svg,
-          coverage: JSON.stringify(O.getOrElse(figure.shadingCoverage, () => null)),
+          coverage: Result.getOrThrowWith(
+            S.encodeUnknownResult(S.fromJsonString(S.Unknown))(O.getOrElse(figure.shadingCoverage, () => null)),
+            identity
+          ),
         }))
       )
     );
@@ -1144,15 +1153,18 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     yield* Effect.logWarning(
       `critics: ${name} ${seatOutcome(input.stop).line}: ${input.stop.detail}; what it printed is in ${name}.log and ${name}.raw; continuing with the remaining reviewers.`
     );
+    const argument = O.none();
+    const argument1 = O.none();
+    const now3 = yield* DateTime.now;
     return CriticRunRecord.make({
       order: input.order,
       reviewer: input.reviewer,
       exitCode: input.exitCode,
-      report: O.none(),
-      reportSha256: O.none(),
+      report: argument,
+      reportSha256: argument1,
       findings: 0,
       startedAt: input.startedAt,
-      finishedAt: DateTime.formatIso(yield* DateTime.now),
+      finishedAt: DateTime.formatIso(now3),
       unavailable: O.some(input.stop),
     });
   });
@@ -1196,7 +1208,8 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
           ),
       })
     );
-    const finishedAt = DateTime.formatIso(yield* DateTime.now);
+    const now1 = yield* DateTime.now;
+    const finishedAt = DateTime.formatIso(now1);
     const persist = Effect.fn("DrawingCritics.persistReport")(function* (r: CriticReport) {
       const json = yield* encodeCriticReport(r).pipe(Effect.mapError(fail("Could not encode the report.")));
       yield* write(input.reportPath, `${json}\n`);
@@ -1234,7 +1247,8 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     const packDir = path.resolve(request.packDir);
     const loopDir = path.resolve(request.loopDir);
     const prior = yield* priorReports(loopDir);
-    const startedAt = DateTime.formatIso(yield* DateTime.now);
+    const now2 = yield* DateTime.now;
+    const startedAt = DateTime.formatIso(now2);
     const prompt = yield* Match.value(reviewer.scope).pipe(
       Match.when(
         "matter",

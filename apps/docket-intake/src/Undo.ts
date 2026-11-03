@@ -158,5 +158,6 @@ export const undoRun = Effect.fn("DocketIntakeApp.undoRun")(function* (
  * @since 0.0.0
  */
 export const listRuns = Effect.fn("DocketIntakeApp.listRuns")(function* (config: DocketIntakeAppConfig) {
-  return summarizeDocketRuns(yield* readDocketJournal(config.stateDirectory));
+  const readDocketJournal1 = yield* readDocketJournal(config.stateDirectory);
+  return summarizeDocketRuns(readDocketJournal1);
 });

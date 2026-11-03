@@ -37,9 +37,12 @@ describe("IdentityRegistry", () => {
     it.effect(
       "resolves all three exact encodings to the same entry",
       Effect.fnUntraced(function* () {
-        expect(yield* resolve({ _tag: "identity", value: entry.identity })).toBe(entry);
-        expect(yield* resolve({ _tag: "iri", value: entry.iri })).toBe(entry);
-        expect(yield* resolve({ _tag: "curie", value: entry.curie })).toBe(entry);
+        const resolved1 = yield* resolve({ _tag: "identity", value: entry.identity });
+        expect(resolved1).toBe(entry);
+        const resolved2 = yield* resolve({ _tag: "iri", value: entry.iri });
+        expect(resolved2).toBe(entry);
+        const resolved3 = yield* resolve({ _tag: "curie", value: entry.curie });
+        expect(resolved3).toBe(entry);
       })
     );
 

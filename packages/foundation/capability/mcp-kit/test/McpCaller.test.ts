@@ -12,15 +12,20 @@ import { assertNone } from "@effect/vitest/utils";
 import * as McpServer from "effect/ai/McpServer";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FixtureRegistrationsLive } from "./fixtures/FixtureHost.ts";
 import { StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
 const anchorReport = (result: { readonly content: ReadonlyArray<unknown> }): string => {
   const [first] = result.content;
-  return JSON.parse((first as { readonly text: string }).text) as string;
+  return Result.getOrThrowWith(
+    S.decodeResult(S.fromJsonString(S.Unknown))((first as { readonly text: string }).text),
+    identity
+  ) as string;
 };
 
 const decodeAnchor = S.decodeUnknownEffect(McpDispatchAnchor);
@@ -32,14 +37,17 @@ const fullLayer = FixtureRegistrationsLive.pipe(
 describe("dispatch anchor", () => {
   it.effect("is absent by default", () =>
     Effect.gen(function* () {
-      assertNone(yield* CurrentMcpDispatchAnchor);
+      const CurrentMcpDispatchAnchor1 = yield* CurrentMcpDispatchAnchor;
+      assertNone(CurrentMcpDispatchAnchor1);
     })
   );
 
   it.effect("brands a non-empty string and rejects an empty one", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* decodeAnchor("launch:abc"), "launch:abc");
-      if (!Exit.isFailure(yield* Effect.exit(decodeAnchor("")))) throw new Error("Expected a failure exit");
+      const decodedAnchor = yield* decodeAnchor("launch:abc");
+      assert.strictEqual(decodedAnchor, "launch:abc");
+      const exit2 = yield* Effect.exit(decodeAnchor(""));
+      if (!Exit.isFailure(exit2)) throw new Error("Expected a failure exit");
     })
   );
 

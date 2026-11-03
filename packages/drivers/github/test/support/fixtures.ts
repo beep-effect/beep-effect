@@ -1,4 +1,7 @@
+import { identity } from "effect/Function";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type * as Rest from "@beep/github/Rest";
 
 /**
@@ -58,10 +61,15 @@ export interface ScriptedFetch {
  * is purely an artifact of the double; defining the property removes it.
  */
 const toResponse = (reply: Reply, url: string): Response => {
-  const response = new Response(reply.body === undefined ? null : JSON.stringify(reply.body), {
-    status: reply.status,
-    headers: { "content-type": "application/json", ...reply.headers },
-  });
+  const response = new Response(
+    reply.body === undefined
+      ? null
+      : Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(reply.body), identity),
+    {
+      status: reply.status,
+      headers: { "content-type": "application/json", ...reply.headers },
+    }
+  );
   Object.defineProperty(response, "url", { value: url });
   return response;
 };

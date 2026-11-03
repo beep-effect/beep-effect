@@ -1100,11 +1100,7 @@ export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(functi
         ? capture
         : Effect.raceFirst(
             capture,
-            abortWhen.pipe(
-              Effect.catch((error) =>
-                interruptTimedOutCapture(handle, forceKillAfter).pipe(Effect.andThen(Effect.fail(error)))
-              )
-            )
+            abortWhen.pipe(Effect.tapError(() => interruptTimedOutCapture(handle, forceKillAfter)))
           );
       const [elapsed, [captured, exitCode]] = yield* Effect.timed(
         P.isUndefined(timeout)

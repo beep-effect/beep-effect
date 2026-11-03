@@ -40,7 +40,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertInclude, assertNone, assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { recordedGithub } from "./support/YeetGithub.ts";
@@ -460,7 +462,10 @@ const capturedThreadsText = await NodeServices.layer.pipe(
 );
 
 const capturedThreadsPayload = () => {
-  const captured = JSON.parse(capturedThreadsText) as {
+  const captured = Result.getOrThrowWith(
+    S.decodeResult(S.fromJsonString(S.Unknown))(capturedThreadsText),
+    identity
+  ) as {
     readonly data: {
       readonly repository: {
         readonly pullRequest: {

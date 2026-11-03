@@ -24,7 +24,8 @@ it.effect(
       </RegistryProvider>
     );
     const screen = within(container);
-    expect(yield* Effect.promise(() => screen.findByText(/error:/))).toBeInTheDocument();
+    const promise1 = yield* Effect.promise(() => screen.findByText(/error:/));
+    expect(promise1).toBeInTheDocument();
     expect(container.textContent).not.toContain("graph-render-secret");
     expect(container.textContent).not.toContain("/home/operator");
     expect(screen.getByRole("button", { name: "run stress pass" })).toBeInTheDocument();

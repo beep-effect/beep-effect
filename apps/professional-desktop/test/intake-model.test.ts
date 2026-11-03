@@ -5,9 +5,12 @@ import { describe, expect } from "@effect/vitest";
 import { propertyTest, testPaths } from "@xstate/test";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as Reactivity from "effect/reactivity/Reactivity";
+import * as S from "effect/Schema";
 import * as fc from "fast-check";
 import { DesktopIntakeClient } from "@/intake/DesktopIntake.client";
 import { documentIntakeMachine, documentIntakeStateOf, vaultStatusOf } from "@/intake/DocumentIntake.machine";
@@ -101,7 +104,8 @@ describe("document intake statechart model", { concurrent: false }, () => {
           // output, so traversal stops where the picker would read that output.
           // `results` and the batch sequence grow without bound, so states are
           // merged by their position in the chart.
-          serializeState: (snapshot) => JSON.stringify(snapshot.value),
+          serializeState: (snapshot) =>
+            Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(snapshot.value), identity),
           stopWhen: (snapshot) =>
             (snapshot as DocumentIntakeSnapshot).matches({ vault: { watching: { unconfigured: "picker" } } }),
           invariant: ({ snapshot }) => intakeInvariant(snapshot as DocumentIntakeSnapshot),

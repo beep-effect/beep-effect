@@ -25,11 +25,12 @@ import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constFalse, dual, flow, pipe } from "effect/Function";
+import { constFalse, dual, flow, identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -455,7 +456,8 @@ export const compileGraduationPlan: {
  */
 export const renderGraduationPlanJson: (plan: GraduationPlan) => Effect.Effect<string, S.SchemaError> =
   Effect.fnUntraced(function* (plan: GraduationPlan) {
-    return canonicalJsonTextPretty(yield* encodeGraduationPlan(plan));
+    const encodedGraduationPlan = yield* encodeGraduationPlan(plan);
+    return canonicalJsonTextPretty(encodedGraduationPlan);
   });
 
 /**
@@ -572,7 +574,7 @@ export const renderGraduatedManifest: {
                 links: { ...links, goals: A.appendAll(goals, edit.appendGoals) },
               },
             };
-            return `${JSON.stringify(edited, null, 2)}\n`;
+            return `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(edited), identity)}\n`;
           })
         )
       )
@@ -642,7 +644,8 @@ const planPendingEvents = Effect.fn("Explore.planPendingEvents")(function* (
 ) {
   const store = yield* PacketEventStore;
   const locator = explorationLocator(plan.exploration, packetPath);
-  const derived = yield* foldUnambiguousStream(locator, yield* store.list(locator));
+  const list1 = yield* store.list(locator);
+  const derived = yield* foldUnambiguousStream(locator, list1);
   return GraduationPendingEvents.make({
     planId: plan.planId,
     exploration: plan.exploration,
@@ -672,7 +675,8 @@ const appendPendingEvents = Effect.fn("Explore.appendPendingEvents")(function* (
   const store = yield* PacketEventStore;
   const path = yield* Path.Path;
   const locator = explorationLocator(pending.exploration, packetPath);
-  const derived = yield* foldUnambiguousStream(locator, yield* store.list(locator));
+  const list2 = yield* store.list(locator);
+  const derived = yield* foldUnambiguousStream(locator, list2);
   const owed = graduationEventBodies(
     derived.revision,
     O.fromUndefinedOr(derived.status),
@@ -680,10 +684,11 @@ const appendPendingEvents = Effect.fn("Explore.appendPendingEvents")(function* (
     { status: pending.previousStatus, stage: pending.previousStage }
   );
   const recordedSuffix = A.takeRight(pending.events, A.length(owed));
-  const owedText = canonicalJsonText(yield* encodeEventBodies(owed));
+  const encodedEventBodies = yield* encodeEventBodies(owed);
+  const owedText = canonicalJsonText(encodedEventBodies);
   if (
     A.length(recordedSuffix) !== A.length(owed) ||
-    canonicalJsonText(yield* encodeEventBodies(recordedSuffix)) !== owedText
+    (yield* Effect.map(encodeEventBodies(recordedSuffix), canonicalJsonText)) !== owedText
   ) {
     return yield* GraduationRecoveryError.new(
       pending.exploration,
@@ -813,11 +818,12 @@ export const writeGraduationPlan = Effect.fn("Explore.writeGraduationPlan")(func
   // The stream is folded and the owed events encoded before any child is
   // published, so a forked or corrupt stream refuses with nothing written.
   const pending = (yield* store.hasStream(packetPath))
-    ? O.some(
-        yield* Effect.gen(function* () {
+    ? yield* Effect.asSome(
+        Effect.gen(function* () {
           const afterDigest = yield* sha256Hex(nextText);
           const owed = yield* planPendingEvents(plan, edit.path, afterDigest, previous, at, packetPath);
-          return { owed, text: canonicalJsonTextPretty(yield* encodePendingEvents(owed)) };
+          const encodedPendingEvents = yield* encodePendingEvents(owed);
+          return { owed, text: canonicalJsonTextPretty(encodedPendingEvents) };
         }).pipe(Effect.mapError(streamFailure))
       )
     : O.none<{ readonly owed: GraduationPendingEvents; readonly text: string }>();
@@ -908,7 +914,8 @@ export const writeGraduationPlan = Effect.fn("Explore.writeGraduationPlan")(func
  */
 export const renderGraduationReceiptJson: (receipt: GraduationReceipt) => Effect.Effect<string, S.SchemaError> =
   Effect.fnUntraced(function* (receipt: GraduationReceipt) {
-    return canonicalJsonTextPretty(yield* encodeGraduationReceipt(receipt));
+    const encodedGraduationReceipt = yield* encodeGraduationReceipt(receipt);
+    return canonicalJsonTextPretty(encodedGraduationReceipt);
   });
 
 /**

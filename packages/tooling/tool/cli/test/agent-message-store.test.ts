@@ -134,8 +134,10 @@ const fixture = Effect.fnUntraced(function* <T, E, R>(
   const store = yield* makeAgentMessageStore(
     AgentMessageStoreLimits.make({ maxPending, maxPendingPerEndpoint, maxStoredMessages })
   ).pipe(Effect.provideService(SqlClient.SqlClient, client));
-  yield* store.register(yield* binding("a"));
-  yield* store.register(yield* binding("b"));
+  const binding1 = yield* binding("a");
+  yield* store.register(binding1);
+  const binding2 = yield* binding("b");
+  yield* store.register(binding2);
   return yield* run(store, filename);
 });
 
@@ -173,7 +175,9 @@ const processFixture = Effect.fn("AgentMessageTest.processFixture")(function* (
   );
   const waitFor = (suffix = "") =>
     Effect.gen(function* () {
-      while (!(yield* fs.exists(`${checkpoint}${suffix}`))) yield* Effect.sleep("10 millis");
+      while (!(yield* fs.exists(`${checkpoint}${suffix}`))) {
+        yield* Effect.sleep("10 millis");
+      }
       return yield* fs.readFileString(`${checkpoint}${suffix}`);
     }).pipe(
       Effect.raceFirst(
@@ -240,7 +244,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
               "Destination policy, capability or repository scope differs from the envelope."
             );
           }
-          expect(yield* store.inbox("b")).toHaveLength(0);
+          const inbox3 = yield* store.inbox("b");
+          expect(inbox3).toHaveLength(0);
         })
       )
     );
@@ -254,21 +259,24 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           expect(unauthorized.message).toBe(
             "Dispatcher does not match the evidenced enrollment owner and effective policy."
           );
-          const claimed = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+          const claimNext4 = yield* store.claimNext("b", "b-owner", 101, 201);
+          const claimed = O.getOrThrow(claimNext4);
           const contenderClient = yield* makeAgentMessageSqliteClient(filename, "50 millis");
           const contender = yield* makeAgentMessageStore().pipe(
             Effect.provideService(SqlClient.SqlClient, contenderClient)
           );
-          assertNone(yield* contender.claimNext("b", "b-owner", 102, 202));
-          expect((yield* Effect.flip(store.register(yield* binding("b", 2)))).code).toBe("staleClaim");
-          expect(yield* contender.recover(202)).toBe(1);
-          expect(yield* contender.recover(203)).toBe(0);
-          expect(A.map(yield* contender.receipts("m1"), (receipt) => receipt.status)).toEqual([
-            "accepted",
-            "claimed",
-            "ambiguous",
-          ]);
-          assertNone(yield* contender.claimNext("b", "b-owner", 203, 303));
+          const claimNext5 = yield* contender.claimNext("b", "b-owner", 102, 202);
+          assertNone(claimNext5);
+          const binding6 = yield* binding("b", 2);
+          expect((yield* Effect.flip(store.register(binding6))).code).toBe("staleClaim");
+          const recover7 = yield* contender.recover(202);
+          expect(recover7).toBe(1);
+          const recover8 = yield* contender.recover(203);
+          expect(recover8).toBe(0);
+          const receipts9 = yield* contender.receipts("m1");
+          expect(A.map(receipts9, (receipt) => receipt.status)).toEqual(["accepted", "claimed", "ambiguous"]);
+          const claimNext10 = yield* contender.claimNext("b", "b-owner", 203, 303);
+          assertNone(claimNext10);
           expect((yield* Effect.flip(store.complete(claimed, "delivered", 204))).code).toBe("staleClaim");
         })
       )
@@ -280,14 +288,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           Effect.gen(function* () {
             yield* store.accept(envelope("expired", "a", "b", 110), 100);
             expect((yield* Effect.flip(store.accept(envelope("overflow"), 100))).code).toBe("queueFull");
-            assertNone(yield* store.claimNext("b", "b-owner", 110, 210));
-            expect(A.map(yield* store.receipts("expired"), (receipt) => receipt.status)).toEqual([
-              "accepted",
-              "expired",
-            ]);
+            const claimNext11 = yield* store.claimNext("b", "b-owner", 110, 210);
+            assertNone(claimNext11);
+            const receipts12 = yield* store.receipts("expired");
+            expect(A.map(receipts12, (receipt) => receipt.status)).toEqual(["accepted", "expired"]);
             yield* store.accept(envelope("next"), 111);
+            const claimNext13 = yield* store.claimNext("b", "b-owner", 112, 212);
             assertSome(
-              O.map(yield* store.claimNext("b", "b-owner", 112, 212), (claim) => claim.envelope.messageId),
+              O.map(claimNext13, (claim) => claim.envelope.messageId),
               "next"
             );
           }),
@@ -314,18 +322,20 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             })
           );
           expect((yield* router.accept(request, 100)).sequence).toBe(accepted.sequence);
-          expect(
-            O.getOrThrow(yield* router.dispatchOne("b", "b-owner", 101, 201, () => Effect.succeed(102))).status
-          ).toBe("delivered");
+          const dispatchOne14 = yield* router.dispatchOne("b", "b-owner", 101, 201, () => Effect.succeed(102));
+          expect(O.getOrThrow(dispatchOne14).status).toBe("delivered");
           yield* router.acknowledge("request", "b", 103);
           yield* router.accept(Envelope.make({ ...envelope("reply", "b", "a"), replyTo: O.some("request") }), 104);
           yield* router.dispatchOne("a", "a-owner", 105, 205, () => Effect.succeed(106));
           expect(seen).toEqual(["bounded request", "bounded reply"]);
           expect(O.getOrNull((yield* router.message("reply")).replyTo)).toBe("request");
           expect((yield* router.receipts("request")).length).toBe(4);
-          expect(yield* router.recover(10000)).toBe(1);
-          expect(O.getOrThrow(A.last(yield* router.receipts("reply"))).status).toBe("ambiguous");
-          assertNone(yield* router.claimNext("a", "a-owner", 10001, 10101));
+          const recover15 = yield* router.recover(10000);
+          expect(recover15).toBe(1);
+          const receipts16 = yield* router.receipts("reply");
+          expect(O.getOrThrow(A.last(receipts16)).status).toBe("ambiguous");
+          const claimNext17 = yield* router.claimNext("a", "a-owner", 10001, 10101);
+          assertNone(claimNext17);
           expect(seen).toEqual(["bounded request", "bounded reply"]);
         })
       )
@@ -345,14 +355,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             })
           );
           yield* router.accept(envelope("uncertain"), 100);
-          expect(
-            O.getOrThrow(yield* router.dispatchOne("b", "b-owner", 101, 201, () => Effect.succeed(102))).status
-          ).toBe("ambiguous");
-          assertNone(yield* router.dispatchOne("b", "b-owner", 103, 203, () => Effect.succeed(104)));
+          const dispatchOne18 = yield* router.dispatchOne("b", "b-owner", 101, 201, () => Effect.succeed(102));
+          expect(O.getOrThrow(dispatchOne18).status).toBe("ambiguous");
+          const dispatchOne19 = yield* router.dispatchOne("b", "b-owner", 103, 203, () => Effect.succeed(104));
+          assertNone(dispatchOne19);
           expect(submissions).toBe(1);
-          expect(O.getOrNull(O.getOrThrow(A.last(yield* store.receipts("uncertain"))).detail)).toBe(
-            "storage: synthetic disconnected response"
-          );
+          const receipts20 = yield* store.receipts("uncertain");
+          expect(O.getOrNull(O.getOrThrow(A.last(receipts20)).detail)).toBe("storage: synthetic disconnected response");
         })
       )
     );
@@ -361,7 +370,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
       fixture((_store, filename) =>
         Effect.gen(function* () {
           const process = yield* processFixture(filename, "accept", "accept-checkpoint");
-          expect(yield* process.wait).toBe("accepted");
+          const wait21 = yield* process.wait;
+          expect(wait21).toBe("accepted");
           yield* process.child.kill({ killSignal: "SIGKILL" });
           expect((yield* Effect.flip(process.child.exitCode)).reason.cause).toMatchObject({
             message: expect.stringContaining("SIGKILL"),
@@ -370,8 +380,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
           const accepted = yield* reopened.accept(envelope("crash"), 101);
           expect(accepted.status).toBe("accepted");
-          expect(yield* reopened.receipts("crash")).toHaveLength(1);
-          expect(yield* reopened.inbox("b")).toHaveLength(1);
+          const receipts22 = yield* reopened.receipts("crash");
+          expect(receipts22).toHaveLength(1);
+          const inbox23 = yield* reopened.inbox("b");
+          expect(inbox23).toHaveLength(1);
         })
       )
     );
@@ -381,20 +393,20 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
         Effect.gen(function* () {
           yield* store.accept(envelope("crash"), 100);
           const process = yield* processFixture(filename, "claim", "claim-checkpoint");
-          expect(yield* process.wait).toBe("claimed");
+          const wait24 = yield* process.wait;
+          expect(wait24).toBe("claimed");
           yield* process.child.kill({ killSignal: "SIGKILL" });
           expect((yield* Effect.flip(process.child.exitCode)).reason.cause).toMatchObject({
             message: expect.stringContaining("SIGKILL"),
           });
           const client = yield* makeAgentMessageSqliteClient(filename);
           const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
-          expect(yield* reopened.recover(202)).toBe(1);
-          expect(A.map(yield* reopened.receipts("crash"), (receipt) => receipt.status)).toEqual([
-            "accepted",
-            "claimed",
-            "ambiguous",
-          ]);
-          assertNone(yield* reopened.claimNext("b", "b-owner", 203, 303));
+          const recover25 = yield* reopened.recover(202);
+          expect(recover25).toBe(1);
+          const receipts26 = yield* reopened.receipts("crash");
+          expect(A.map(receipts26, (receipt) => receipt.status)).toEqual(["accepted", "claimed", "ambiguous"]);
+          const claimNext27 = yield* reopened.claimNext("b", "b-owner", 203, 303);
+          assertNone(claimNext27);
         })
       )
     );
@@ -409,12 +421,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
               Effect.gen(function* () {
                 const child = yield* processFixture(filename, "claim", "initialization-contention");
                 // Release only after initialization has actually exhausted its native busy wait.
-                expect(yield* child.waitFor(".contended")).toBe("contended");
+                const waitFor28 = yield* child.waitFor(".contended");
+                expect(waitFor28).toBe("contended");
                 return child;
               }),
             () => blocker`ROLLBACK`.pipe(Effect.orDie)
           );
-          expect(yield* process.wait).toBe("none");
+          const wait29 = yield* process.wait;
+          expect(wait29).toBe("none");
           yield* process.child.kill({ killSignal: "SIGKILL" });
           expect((yield* Effect.flip(process.child.exitCode)).reason.cause).toMatchObject({
             message: expect.stringContaining("SIGKILL"),
@@ -441,7 +455,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           expect((yield* Effect.flip(second.child.exitCode)).reason.cause).toMatchObject({
             message: expect.stringContaining("SIGKILL"),
           });
-          expect(yield* store.recover(202)).toBe(1);
+          const recover30 = yield* store.recover(202);
+          expect(recover30).toBe(1);
         })
       )
     );
@@ -450,15 +465,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
       fixture((store) =>
         Effect.gen(function* () {
           yield* store.accept(envelope("old-generation"), 100);
-          yield* store.register(yield* binding("b", 2));
-          expect(A.map(yield* store.receipts("old-generation"), (receipt) => receipt.status)).toEqual([
-            "accepted",
-            "failed",
-          ]);
+          const binding31 = yield* binding("b", 2);
+          yield* store.register(binding31);
+          const receipts32 = yield* store.receipts("old-generation");
+          expect(A.map(receipts32, (receipt) => receipt.status)).toEqual(["accepted", "failed"]);
           yield* store.accept(envelope("new-generation"), 101);
-          expect(O.getOrThrow(yield* store.claimNext("b", "b-owner", 102, 202)).envelope.messageId).toBe(
-            "new-generation"
-          );
+          const claimNext33 = yield* store.claimNext("b", "b-owner", 102, 202);
+          expect(O.getOrThrow(claimNext33).envelope.messageId).toBe("new-generation");
         })
       )
     );
@@ -481,7 +494,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             })
           );
           yield* store.accept(envelope("advertised"), 100);
-          const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+          const claimNext34 = yield* store.claimNext("b", "b-owner", 101, 201);
+          const claim = O.getOrThrow(claimNext34);
           yield* store.complete(claim, "failed", 102);
           const next = yield* binding("b", 3);
           yield* store.register(
@@ -505,10 +519,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             })
           );
           yield* store.accept(envelope("previous"), 100);
-          const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+          const claimNext35 = yield* store.claimNext("b", "b-owner", 101, 201);
+          const claim = O.getOrThrow(claimNext35);
           yield* store.complete(claim, "delivered", 102);
           yield* store.acknowledge("previous", "b", 102);
-          yield* store.register(yield* binding("b", 2));
+          const binding36 = yield* binding("b", 2);
+          yield* store.register(binding36);
           yield* store.registerGrant(
             LaunchGrant.make({
               ...grant(),
@@ -520,7 +536,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             })
           );
           expect((yield* Effect.flip(store.scopedInbox("grant-b-old", 103))).code).toBe("invalidGrant");
-          expect(yield* store.scopedInbox("grant-b-new", 103)).toHaveLength(0);
+          const scopedInbox37 = yield* store.scopedInbox("grant-b-new", 103);
+          expect(scopedInbox37).toHaveLength(0);
           expect((yield* Effect.flip(store.scopedReceipts("previous", "grant-b-new", 103))).code).toBe("invalidGrant");
           yield* store.accept(envelope("current"), 104);
           yield* store.claimNext("b", "b-owner", 105, 205);
@@ -528,16 +545,17 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             "invalidGrant"
           );
           expect((yield* store.acknowledge("current", "b", 106, O.some("grant-b-new"))).status).toBe("acknowledged");
-          expect(yield* store.scopedReceipts("current", "grant-b-new", 107)).toHaveLength(3);
-          yield* store.register(yield* binding("a", 2));
+          const scopedReceipts38 = yield* store.scopedReceipts("current", "grant-b-new", 107);
+          expect(scopedReceipts38).toHaveLength(3);
+          const binding39 = yield* binding("a", 2);
+          yield* store.register(binding39);
           yield* store.registerGrant(LaunchGrant.make({ ...grant(), grantId: "grant-a-new", generation: 2 }));
           expect((yield* Effect.flip(store.acceptWithGrant(envelope("previous"), "grant-a-new", 107))).code).toBe(
             "conflict"
           );
           expect((yield* Effect.flip(store.scopedReceipts("previous", "grant-a-new", 107))).code).toBe("invalidGrant");
-          expect(A.map(yield* store.scopedEndpoints("grant-a-new", 107), (endpoint) => endpoint.endpointId)).toEqual([
-            "b",
-          ]);
+          const scopedEndpoints40 = yield* store.scopedEndpoints("grant-a-new", 107);
+          expect(A.map(scopedEndpoints40, (endpoint) => endpoint.endpointId)).toEqual(["b"]);
         })
       )
     );
@@ -546,13 +564,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
       fixture((store) =>
         Effect.gen(function* () {
           yield* store.accept(envelope("original"), 100);
-          yield* store.register(yield* binding("a", 2));
+          const binding41 = yield* binding("a", 2);
+          yield* store.register(binding41);
           expect(
             (yield* Effect.flip(
               store.accept(Envelope.make({ ...envelope("reply", "b", "a"), replyTo: O.some("original") }), 101)
             )).code
           ).toBe("conflict");
-          expect(yield* store.inbox("a")).toHaveLength(0);
+          const inbox42 = yield* store.inbox("a");
+          expect(inbox42).toHaveLength(0);
         })
       )
     );
@@ -567,7 +587,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           expect(
             (yield* Effect.flip(makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client)))).code
           ).toBe("storage");
-          expect(yield* client`SELECT version FROM agent_message_meta`).toEqual([{ version: 2 }]);
+          const value = yield* client`SELECT version FROM agent_message_meta`;
+          expect(value).toEqual([{ version: 2 }]);
         })
       )
     );
@@ -577,14 +598,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
         Effect.gen(function* () {
           yield* store.accept(envelope("settled"), 100);
           yield* store.accept(envelope("after-settled"), 100);
-          const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+          const claimNext43 = yield* store.claimNext("b", "b-owner", 101, 201);
+          const claim = O.getOrThrow(claimNext43);
           yield* store.acknowledge("settled", "b", 102);
           yield* store.complete(claim, "delivered", 103);
           expect((yield* Effect.flip(store.complete(claim, "ambiguous", 104))).code).toBe("staleClaim");
-          expect(O.getOrThrow(yield* store.claimNext("b", "b-owner", 105, 205)).envelope.messageId).toBe(
-            "after-settled"
-          );
-          expect(yield* store.receipts("settled")).toHaveLength(4);
+          const claimNext44 = yield* store.claimNext("b", "b-owner", 105, 205);
+          expect(O.getOrThrow(claimNext44).envelope.messageId).toBe("after-settled");
+          const receipts45 = yield* store.receipts("settled");
+          expect(receipts45).toHaveLength(4);
         })
       )
     );
@@ -602,27 +624,31 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             Effect.gen(function* () {
               yield* store.accept(envelope("ack-terminal"), 100);
               yield* store.accept(envelope("after-terminal"), 100);
-              const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+              const claimNext46 = yield* store.claimNext("b", "b-owner", 101, 201);
+              const claim = O.getOrThrow(claimNext46);
               const acknowledged = yield* store.acknowledge("ack-terminal", "b", 102);
-              if (uncertain) yield* store.complete(claim, "ambiguous", 102);
+              if (uncertain) {
+                yield* store.complete(claim, "ambiguous", 102);
+              }
               const detail = O.some(`Native ${status} detail`);
               const terminal = yield* store.complete(claim, status, 103, detail);
               expect(terminal.status).toBe(status);
               expect(terminal.detail).toEqual(detail);
               assertSome(terminal.owner, "b-owner");
               expect(terminal.attemptGeneration).toBe(claim.generation);
-              expect(yield* store.acknowledge("ack-terminal", "b", 104)).toEqual(acknowledged);
+              const acknowledge47 = yield* store.acknowledge("ack-terminal", "b", 104);
+              expect(acknowledge47).toEqual(acknowledged);
               expect((yield* store.complete(claim, status, 105, detail).pipe(Effect.flip)).code).toBe("staleClaim");
-              expect(A.map(yield* store.receipts("ack-terminal"), (receipt) => receipt.status)).toEqual([
+              const receipts48 = yield* store.receipts("ack-terminal");
+              expect(A.map(receipts48, (receipt) => receipt.status)).toEqual([
                 "accepted",
                 "claimed",
                 "acknowledged",
                 ...(uncertain ? ["ambiguous"] : []),
                 status,
               ]);
-              expect(O.getOrThrow(yield* store.claimNext("b", "b-owner", 106, 206)).envelope.messageId).toBe(
-                "after-terminal"
-              );
+              const claimNext49 = yield* store.claimNext("b", "b-owner", 106, 206);
+              expect(O.getOrThrow(claimNext49).envelope.messageId).toBe("after-terminal");
             })
           )
       )
@@ -632,14 +658,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
       fixture((store) =>
         Effect.gen(function* () {
           yield* store.accept(envelope("old-delivered", "a", "b", 110), 100);
-          const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+          const claimNext50 = yield* store.claimNext("b", "b-owner", 101, 201);
+          const claim = O.getOrThrow(claimNext50);
           yield* store.complete(claim, "delivered", 102);
-          expect((yield* Effect.flip(store.register(yield* binding("b", 2)))).code).toBe("staleClaim");
+          const binding51 = yield* binding("b", 2);
+          expect((yield* Effect.flip(store.register(binding51))).code).toBe("staleClaim");
           yield* store.acknowledge("old-delivered", "b", 103);
-          yield* store.register(yield* binding("b", 2));
+          const binding52 = yield* binding("b", 2);
+          yield* store.register(binding52);
           yield* store.accept(envelope("successor"), 104);
-          expect(yield* store.recover(110)).toBe(0);
-          expect(O.getOrThrow(yield* store.claimNext("b", "b-owner", 111, 211)).envelope.messageId).toBe("successor");
+          const recover53 = yield* store.recover(110);
+          expect(recover53).toBe(0);
+          const claimNext54 = yield* store.claimNext("b", "b-owner", 111, 211);
+          expect(O.getOrThrow(claimNext54).envelope.messageId).toBe("successor");
         })
       )
     );
@@ -649,23 +680,29 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
         Effect.gen(function* () {
           yield* store.accept(envelope("ack-uncertain"), 100);
           yield* store.accept(envelope("followup"), 100);
-          const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+          const claimNext55 = yield* store.claimNext("b", "b-owner", 101, 201);
+          const claim = O.getOrThrow(claimNext55);
           yield* store.acknowledge("ack-uncertain", "b", 102);
           expect((yield* store.complete(claim, "ambiguous", 103)).status).toBe("ambiguous");
-          assertNone(yield* store.claimNext("b", "b-owner", 104, 204));
-          expect((yield* Effect.flip(store.register(yield* binding("b", 2)))).code).toBe("staleClaim");
-          expect(A.map(yield* store.receipts("ack-uncertain"), (receipt) => receipt.status)).toEqual([
+          const claimNext56 = yield* store.claimNext("b", "b-owner", 104, 204);
+          assertNone(claimNext56);
+          const binding57 = yield* binding("b", 2);
+          expect((yield* Effect.flip(store.register(binding57))).code).toBe("staleClaim");
+          const receipts58 = yield* store.receipts("ack-uncertain");
+          expect(A.map(receipts58, (receipt) => receipt.status)).toEqual([
             "accepted",
             "claimed",
             "acknowledged",
             "ambiguous",
           ]);
-          const uncertain = O.getOrThrow(A.last(yield* store.receipts("ack-uncertain")));
+          const receipts59 = yield* store.receipts("ack-uncertain");
+          const uncertain = O.getOrThrow(A.last(receipts59));
           expect(O.getOrNull(uncertain.owner)).toBe("b-owner");
           expect(O.getOrNull(uncertain.detail)).toContain("Reconcile the original session");
           expect((yield* store.acknowledge("ack-uncertain", "b", 204)).status).toBe("acknowledged");
           expect((yield* store.complete(claim, "delivered", 205)).status).toBe("delivered");
-          expect(O.getOrThrow(yield* store.claimNext("b", "b-owner", 206, 306)).envelope.messageId).toBe("followup");
+          const claimNext60 = yield* store.claimNext("b", "b-owner", 206, 306);
+          expect(O.getOrThrow(claimNext60).envelope.messageId).toBe("followup");
         })
       )
     );
@@ -677,19 +714,25 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           Effect.gen(function* () {
             yield* store.accept(envelope("ack-recovery"), 100);
             yield* store.accept(envelope("after-recovery"), 100);
-            const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+            const claimNext61 = yield* store.claimNext("b", "b-owner", 101, 201);
+            const claim = O.getOrThrow(claimNext61);
             const acknowledged = yield* store.acknowledge("ack-recovery", "b", 102);
-            expect(yield* store.recover(201)).toBe(1);
-            expect(yield* store.recover(202)).toBe(0);
-            const held = O.getOrThrow(A.last(yield* store.receipts("ack-recovery")));
+            const recover62 = yield* store.recover(201);
+            expect(recover62).toBe(1);
+            const recover63 = yield* store.recover(202);
+            expect(recover63).toBe(0);
+            const receipts64 = yield* store.receipts("ack-recovery");
+            const held = O.getOrThrow(A.last(receipts64));
             expect(held.status).toBe("ambiguous");
             assertSome(held.owner, "b-owner");
             expect(O.getOrNull(held.detail)).toContain("reconciliation");
             expect((yield* store.acknowledge("ack-recovery", "b", 203)).sequence).toBe(acknowledged.sequence);
-            assertNone(yield* store.claimNext("b", "b-owner", 203, 303));
+            const claimNext65 = yield* store.claimNext("b", "b-owner", 203, 303);
+            assertNone(claimNext65);
             expect((yield* store.complete(claim, "delivered", 204)).status).toBe("delivered");
+            const claimNext66 = yield* store.claimNext("b", "b-owner", 205, 305);
             assertSome(
-              O.map(yield* store.claimNext("b", "b-owner", 205, 305), (next) => next.envelope.messageId),
+              O.map(claimNext66, (next) => next.envelope.messageId),
               "after-recovery"
             );
           })
@@ -718,13 +761,16 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             yield* router.dispatchOne("b", "b-owner", 101, 201, () => Effect.succeed(102));
             const client = yield* makeAgentMessageSqliteClient(filename);
             const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
-            expect(yield* reopened.recover(110)).toBe(1);
-            const latest = O.getOrThrow(A.last(yield* reopened.receipts("drop-ack")));
+            const recover67 = yield* reopened.recover(110);
+            expect(recover67).toBe(1);
+            const receipts68 = yield* reopened.receipts("drop-ack");
+            const latest = O.getOrThrow(A.last(receipts68));
             expect(latest.status).toBe("ambiguous");
             expect(latest.attemptGeneration).toBe(1);
             expect(O.getOrNull(latest.owner)).toBe("b-owner");
             expect(O.getOrNull(latest.detail)).toContain("reconcile the original session");
-            assertNone(yield* reopened.claimNext("b", "b-owner", 111, 211));
+            const claimNext69 = yield* reopened.claimNext("b", "b-owner", 111, 211);
+            assertNone(claimNext69);
             expect(consumed).toBe(1);
           })
         )
@@ -764,7 +810,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             assertSome(receipt.owner, "b-owner");
             expect(O.getOrNull(receipt.detail)).toContain("fixture-operator");
             expect(O.getOrNull(receipt.detail)).toContain(request.evidence);
-            expect(yield* store.resolveAmbiguity(request, 203)).toEqual(receipt);
+            const resolvedAmbiguity = yield* store.resolveAmbiguity(request, 203);
+            expect(resolvedAmbiguity).toEqual(receipt);
             expect(
               (yield* Effect.flip(
                 store.resolveAmbiguity(AmbiguityResolution.make({ ...request, reason: "changed" }), 203)
@@ -777,21 +824,20 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             ).toBe("conflict");
             const client = yield* makeAgentMessageSqliteClient(filename);
             const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
-            yield* reopened.register(yield* binding("b", 2));
-            expect(yield* reopened.resolveAmbiguity(request, 300)).toEqual(receipt);
-            expect(A.map(yield* reopened.receipts(request.messageId), (row) => row.status)).toEqual([
-              "accepted",
-              "claimed",
-              "ambiguous",
-              "failed",
-            ]);
+            const binding70 = yield* binding("b", 2);
+            yield* reopened.register(binding70);
+            const resolvedAmbiguity71 = yield* reopened.resolveAmbiguity(request, 300);
+            expect(resolvedAmbiguity71).toEqual(receipt);
+            const receipts72 = yield* reopened.receipts(request.messageId);
+            expect(A.map(receipts72, (row) => row.status)).toEqual(["accepted", "claimed", "ambiguous", "failed"]);
             const audit = yield* client`SELECT payload, decided_at, receipt_sequence FROM agent_message_resolutions`;
             expect(audit).toHaveLength(1);
             const rows = yield* S.decodeUnknownEffect(ResolutionAuditRows)(audit);
             const persisted = O.getOrThrow(A.head(rows));
             expect(persisted.decided_at).toBe(202);
             expect(persisted.receipt_sequence).toBe(receipt.sequence);
-            expect(yield* S.decodeEffect(ResolutionJson)(persisted.payload)).toEqual(request);
+            const value73 = yield* S.decodeEffect(ResolutionJson)(persisted.payload);
+            expect(value73).toEqual(request);
             yield* client`DELETE FROM agent_message_receipts WHERE sequence = ${receipt.sequence}`;
             expect((yield* Effect.flip(reopened.resolveAmbiguity(request, 301))).message).toBe(
               "Resolution audit has no original receipt."
@@ -875,12 +921,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           ).toBe(false);
           expect(S.is(AmbiguityResolution)({ ...request, reason: "" })).toBe(false);
           expect(S.is(AmbiguityResolution)({ ...request, disposition: "abandoned" })).toBe(false);
-          expect(yield* store.receipts(request.messageId)).toHaveLength(3);
+          const receipts74 = yield* store.receipts(request.messageId);
+          expect(receipts74).toHaveLength(3);
           const receipt = yield* store.resolveAmbiguity(request, 203);
           expect(receipt.status).toBe("delivered");
           yield* store.acknowledge(request.messageId, "b", 204);
-          yield* store.register(yield* binding("b", 2));
-          expect(yield* store.resolveAmbiguity(request, 205)).toEqual(receipt);
+          const binding75 = yield* binding("b", 2);
+          yield* store.register(binding75);
+          const resolvedAmbiguity76 = yield* store.resolveAmbiguity(request, 205);
+          expect(resolvedAmbiguity76).toEqual(receipt);
         })
       )
     );
@@ -916,16 +965,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             });
             yield* persistSettlement(store, request);
             yield* store.resolveAmbiguity(request, 202);
-            expect(yield* store.acknowledge("resolved-ack", "b", 203)).toEqual(acknowledged);
-            expect(A.map(yield* store.receipts("resolved-ack"), (row) => row.status)).toEqual([
+            const acknowledge77 = yield* store.acknowledge("resolved-ack", "b", 203);
+            expect(acknowledge77).toEqual(acknowledged);
+            const receipts78 = yield* store.receipts("resolved-ack");
+            expect(A.map(receipts78, (row) => row.status)).toEqual([
               "accepted",
               "claimed",
               "acknowledged",
               "ambiguous",
               "failed",
             ]);
+            const claimNext79 = yield* store.claimNext("b", "b-owner", 204, 304);
             assertSome(
-              O.map(yield* store.claimNext("b", "b-owner", 204, 304), (claim) => claim.envelope.messageId),
+              O.map(claimNext79, (claim) => claim.envelope.messageId),
               "resolution-successor"
             );
           })
@@ -971,7 +1023,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           );
           expect(A.filter(outcomes, Result.isSuccess)).toHaveLength(1);
           expect(A.map(A.filter(outcomes, Result.isFailure), (outcome) => outcome.failure.code)).toEqual(["conflict"]);
-          expect(yield* store.receipts(request.messageId)).toHaveLength(4);
+          const receipts80 = yield* store.receipts(request.messageId);
+          expect(receipts80).toHaveLength(4);
           const rows = yield* client`SELECT count(*) AS count FROM agent_message_resolutions`;
           expect(rows).toEqual([{ count: 1 }]);
         })
@@ -982,7 +1035,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
       fixture((store, filename) =>
         Effect.gen(function* () {
           yield* store.accept(envelope("confirmed-delivery-resolution", "a", "b", 110), 100);
-          const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+          const claimNext81 = yield* store.claimNext("b", "b-owner", 101, 201);
+          const claim = O.getOrThrow(claimNext81);
           const originalTerminal = {
             adapter: "injected",
             sessionId: "b-session",
@@ -990,9 +1044,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             outcome: "delivered",
             source: "Synthetic original runtime terminal record",
           } satisfies OriginalRuntimeEvidence;
-          yield* store.recordSettlement(claim, yield* S.decodeEffect(OriginalRuntimeEvidence)(originalTerminal), 102);
+          const value82 = yield* S.decodeEffect(OriginalRuntimeEvidence)(originalTerminal);
+          yield* store.recordSettlement(claim, value82, 102);
           yield* store.complete(claim, "delivered", 102);
-          expect(yield* store.recover(110)).toBe(1);
+          const recover83 = yield* store.recover(110);
+          expect(recover83).toBe(1);
           const before = yield* store.receipts(claim.envelope.messageId);
           const request = AmbiguityResolution.make({
             resolutionId: "confirmed-delivery-decision",
@@ -1014,14 +1070,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             reason: "Reject contradictory assertion",
           });
           expect((yield* Effect.flip(store.resolveAmbiguity(request, 111))).code).toBe("conflict");
-          expect(yield* store.receipts(request.messageId)).toEqual(before);
+          const receipts84 = yield* store.receipts(request.messageId);
+          expect(receipts84).toEqual(before);
           const client = yield* makeAgentMessageSqliteClient(filename);
-          expect(
-            yield* client`SELECT state, dispatch_active, attempt_generation FROM agent_messages WHERE id = ${request.messageId}`
-          ).toEqual([{ state: "ambiguous", dispatch_active: 0, attempt_generation: 1 }]);
-          expect(
-            yield* client`SELECT count(*) AS count FROM agent_message_resolutions WHERE message_id = ${request.messageId}`
-          ).toEqual([{ count: 0 }]);
+          const value85 =
+            yield* client`SELECT state, dispatch_active, attempt_generation FROM agent_messages WHERE id = ${request.messageId}`;
+          expect(value85).toEqual([{ state: "ambiguous", dispatch_active: 0, attempt_generation: 1 }]);
+          const value86 =
+            yield* client`SELECT count(*) AS count FROM agent_message_resolutions WHERE message_id = ${request.messageId}`;
+          expect(value86).toEqual([{ count: 0 }]);
           const delivered = AmbiguityResolution.make({
             ...request,
             disposition: "delivered",
@@ -1037,12 +1094,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           });
           const resolved = yield* store.resolveAmbiguity(delivered, 112);
           expect(resolved.status).toBe("delivered");
-          expect(yield* store.resolveAmbiguity(delivered, 113)).toEqual(resolved);
-          expect(yield* store.receipts(request.messageId)).toHaveLength(A.length(before) + 1);
-          expect(
-            yield* client`SELECT count(*) AS count FROM agent_message_resolutions WHERE message_id = ${request.messageId}`
-          ).toEqual([{ count: 1 }]);
-          expect(yield* store.recover(114)).toBe(0);
+          const resolvedAmbiguity87 = yield* store.resolveAmbiguity(delivered, 113);
+          expect(resolvedAmbiguity87).toEqual(resolved);
+          const receipts88 = yield* store.receipts(request.messageId);
+          expect(receipts88).toHaveLength(A.length(before) + 1);
+          const value89 =
+            yield* client`SELECT count(*) AS count FROM agent_message_resolutions WHERE message_id = ${request.messageId}`;
+          expect(value89).toEqual([{ count: 1 }]);
+          const recover90 = yield* store.recover(114);
+          expect(recover90).toBe(0);
         })
       )
     );
@@ -1054,7 +1114,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           Effect.gen(function* () {
             yield* store.accept(envelope("resolved-expired-delivery", "a", "b", 110), 100);
             yield* store.claimNext("b", "b-owner", 101, 201);
-            expect(yield* store.recover(201)).toBe(1);
+            const recover91 = yield* store.recover(201);
+            expect(recover91).toBe(1);
             const request = AmbiguityResolution.make({
               resolutionId: "expired-delivery-decision",
               messageId: "resolved-expired-delivery",
@@ -1076,14 +1137,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             });
             yield* persistSettlement(store, request);
             const resolved = yield* store.resolveAmbiguity(request, 202);
-            expect(yield* store.recover(203)).toBe(0);
-            expect(yield* store.recover(204)).toBe(0);
+            const recover92 = yield* store.recover(203);
+            expect(recover92).toBe(0);
+            const recover93 = yield* store.recover(204);
+            expect(recover93).toBe(0);
             yield* store.accept(envelope("after-expired-resolution", "a", "b", 300), 204);
-            const successor = O.getOrThrow(yield* store.claimNext("b", "b-owner", 205, 305));
+            const claimNext94 = yield* store.claimNext("b", "b-owner", 205, 305);
+            const successor = O.getOrThrow(claimNext94);
             expect(successor.envelope.messageId).toBe("after-expired-resolution");
             expect((yield* store.acknowledge(request.messageId, "b", 206)).status).toBe("acknowledged");
-            expect(yield* store.resolveAmbiguity(request, 207)).toEqual(resolved);
-            expect(A.map(yield* store.receipts(request.messageId), (receipt) => receipt.status)).toEqual([
+            const resolvedAmbiguity95 = yield* store.resolveAmbiguity(request, 207);
+            expect(resolvedAmbiguity95).toEqual(resolved);
+            const receipts96 = yield* store.receipts(request.messageId);
+            expect(A.map(receipts96, (receipt) => receipt.status)).toEqual([
               "accepted",
               "claimed",
               "ambiguous",
@@ -1091,15 +1157,17 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
               "acknowledged",
             ]);
             const client = yield* makeAgentMessageSqliteClient(filename);
-            expect(
-              yield* client`SELECT count(*) AS count FROM agent_message_resolutions WHERE message_id = ${request.messageId}`
-            ).toEqual([{ count: 1 }]);
-            expect(
-              yield* client`SELECT state, dispatch_active, attempt_generation FROM agent_messages WHERE id = ${request.messageId}`
-            ).toEqual([{ state: "acknowledged", dispatch_active: 0, attempt_generation: 1 }]);
+            const value97 =
+              yield* client`SELECT count(*) AS count FROM agent_message_resolutions WHERE message_id = ${request.messageId}`;
+            expect(value97).toEqual([{ count: 1 }]);
+            const value98 =
+              yield* client`SELECT state, dispatch_active, attempt_generation FROM agent_messages WHERE id = ${request.messageId}`;
+            expect(value98).toEqual([{ state: "acknowledged", dispatch_active: 0, attempt_generation: 1 }]);
             yield* store.complete(successor, "delivered", 208);
-            expect(yield* store.recover(300)).toBe(1);
-            expect(O.getOrThrow(A.last(yield* store.receipts(successor.envelope.messageId))).status).toBe("ambiguous");
+            const recover99 = yield* store.recover(300);
+            expect(recover99).toBe(1);
+            const receipts100 = yield* store.receipts(successor.envelope.messageId);
+            expect(O.getOrThrow(A.last(receipts100)).status).toBe("ambiguous");
           })
         )
     );
@@ -1131,16 +1199,21 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           });
           yield* persistSettlement(store, request);
           const process = yield* processFixture(filename, "resolve", "resolution-checkpoint", O.some(request));
-          const committed = yield* S.decodeEffect(ReceiptJson)(yield* process.wait);
+          const argument = S.decodeEffect(ReceiptJson);
+          const wait1 = yield* process.wait;
+          const committed = yield* argument(wait1);
           yield* process.child.kill({ killSignal: "SIGKILL" });
           const client = yield* makeAgentMessageSqliteClient(filename);
           const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
-          expect(yield* reopened.resolveAmbiguity(request, 300)).toEqual(committed);
-          expect(yield* reopened.receipts(request.messageId)).toHaveLength(4);
-          expect(yield* client`SELECT count(*) AS count FROM agent_message_resolutions`).toEqual([{ count: 1 }]);
-          expect(
-            yield* client`SELECT state, dispatch_active, attempt_generation FROM agent_messages WHERE id = ${request.messageId}`
-          ).toEqual([{ state: "failed", dispatch_active: 0, attempt_generation: 1 }]);
+          const resolvedAmbiguity101 = yield* reopened.resolveAmbiguity(request, 300);
+          expect(resolvedAmbiguity101).toEqual(committed);
+          const receipts102 = yield* reopened.receipts(request.messageId);
+          expect(receipts102).toHaveLength(4);
+          const value103 = yield* client`SELECT count(*) AS count FROM agent_message_resolutions`;
+          expect(value103).toEqual([{ count: 1 }]);
+          const value104 =
+            yield* client`SELECT state, dispatch_active, attempt_generation FROM agent_messages WHERE id = ${request.messageId}`;
+          expect(value104).toEqual([{ state: "failed", dispatch_active: 0, attempt_generation: 1 }]);
         })
       )
     );
@@ -1161,13 +1234,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           expect((yield* Effect.flip(store.recordSettlement(inventedClaim, evidence, 101))).message).toBe(
             "Terminal settlement requires the original unresolved dispatch hold."
           );
-          assertNone(yield* store.settlement(original.messageId));
-          expect(yield* store.recover(110)).toBe(1);
-          expect(A.map(yield* store.receipts(original.messageId), (receipt) => receipt.status)).toEqual([
-            "accepted",
-            "expired",
-          ]);
-          expect(yield* store.recover(111)).toBe(0);
+          const settlement105 = yield* store.settlement(original.messageId);
+          assertNone(settlement105);
+          const recover106 = yield* store.recover(110);
+          expect(recover106).toBe(1);
+          const receipts107 = yield* store.receipts(original.messageId);
+          expect(A.map(receipts107, (receipt) => receipt.status)).toEqual(["accepted", "expired"]);
+          const recover108 = yield* store.recover(111);
+          expect(recover108).toBe(0);
         })
       )
     );
@@ -1178,7 +1252,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
         fixture((store, filename) =>
           Effect.gen(function* () {
             yield* store.accept(envelope("settlement-crash"), 100);
-            const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+            const claimNext109 = yield* store.claimNext("b", "b-owner", 101, 201);
+            const claim = O.getOrThrow(claimNext109);
             const runtimeEvidence = {
               adapter: "injected",
               sessionId: "b-session",
@@ -1200,11 +1275,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
               reason: "Reconcile after host crash",
             });
             const process = yield* processFixture(filename, "settle", "settled-checkpoint", O.some(request));
-            expect(yield* process.wait).toBe("settled");
+            const wait110 = yield* process.wait;
+            expect(wait110).toBe("settled");
             yield* process.child.kill({ killSignal: "SIGKILL" });
             const client = yield* makeAgentMessageSqliteClient(filename);
             const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
-            assertSome(yield* reopened.settlement(request.messageId), request.runtimeEvidence);
+            const settlement111 = yield* reopened.settlement(request.messageId);
+            assertSome(settlement111, request.runtimeEvidence);
             yield* reopened.recordSettlement(claim, request.runtimeEvidence, 202);
             const invalidReplays = [
               Claim.make({ ...claim, ownerId: "foreign-owner" }),
@@ -1226,11 +1303,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
                 reopened.resolveAmbiguity(AmbiguityResolution.make({ ...request, runtimeEvidence: changed }), 202)
               )).code
             ).toBe("conflict");
-            assertNone(yield* reopened.claimNext("b", "b-owner", 202, 302));
+            const claimNext112 = yield* reopened.claimNext("b", "b-owner", 202, 302);
+            assertNone(claimNext112);
             const receipt = yield* reopened.resolveAmbiguity(request, 203);
-            expect(yield* reopened.resolveAmbiguity(request, 204)).toEqual(receipt);
-            expect(yield* client`SELECT count(*) AS count FROM agent_message_settlements`).toEqual([{ count: 1 }]);
-            expect(yield* reopened.receipts(request.messageId)).toHaveLength(4);
+            const resolvedAmbiguity113 = yield* reopened.resolveAmbiguity(request, 204);
+            expect(resolvedAmbiguity113).toEqual(receipt);
+            const value114 = yield* client`SELECT count(*) AS count FROM agent_message_settlements`;
+            expect(value114).toEqual([{ count: 1 }]);
+            const receipts115 = yield* reopened.receipts(request.messageId);
+            expect(receipts115).toHaveLength(4);
           })
         )
     );
@@ -1246,7 +1327,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             })
           );
           yield* store.accept(envelope("original-native-prompt", "a", "c"), 100);
-          const claim = O.getOrThrow(yield* store.claimNext("c", "c-owner", 101, 201));
+          const claimNext116 = yield* store.claimNext("c", "c-owner", 101, 201);
+          const claim = O.getOrThrow(claimNext116);
           const wrongMessage = {
             adapter: "codex",
             sessionId: "c-session",
@@ -1258,13 +1340,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           expect((yield* Effect.flip(store.recordSettlement(claim, wrongMessage, 102))).message).toBe(
             "Native terminal response does not identify the original prompt."
           );
-          assertNone(yield* store.settlement(claim.envelope.messageId));
+          const settlement117 = yield* store.settlement(claim.envelope.messageId);
+          assertNone(settlement117);
           const evidence = yield* S.decodeEffect(OriginalRuntimeEvidence)({
             ...wrongMessage,
             messageId: claim.envelope.messageId,
           });
           yield* store.recordSettlement(claim, evidence, 103);
-          assertSome(yield* store.settlement(claim.envelope.messageId), evidence);
+          const settlement118 = yield* store.settlement(claim.envelope.messageId);
+          assertSome(settlement118, evidence);
           yield* store.recover(201);
           const request = AmbiguityResolution.make({
             resolutionId: "native-original",
@@ -1288,7 +1372,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
       fixture((store, filename) =>
         Effect.gen(function* () {
           yield* store.accept(envelope("legacy-hold"), 100);
-          const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+          const claimNext119 = yield* store.claimNext("b", "b-owner", 101, 201);
+          const claim = O.getOrThrow(claimNext119);
           const evidence = yield* S.decodeEffect(OriginalRuntimeEvidence)({
             adapter: "injected",
             sessionId: "b-session",
@@ -1299,7 +1384,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           const client = yield* makeAgentMessageSqliteClient(filename);
           yield* client`CREATE TRIGGER fixture_settlement_abort BEFORE INSERT ON agent_message_settlements BEGIN SELECT RAISE(ABORT, 'fixture settlement abort'); END`;
           expect((yield* Effect.flip(store.recordSettlement(claim, evidence, 102))).code).toBe("storage");
-          assertNone(yield* store.settlement(claim.envelope.messageId));
+          const settlement120 = yield* store.settlement(claim.envelope.messageId);
+          assertNone(settlement120);
           yield* store.recover(201);
           const request = AmbiguityResolution.make({
             resolutionId: "legacy-assertion",
@@ -1316,8 +1402,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           });
           const rejected = yield* Effect.flip(store.resolveAmbiguity(request, 202));
           expect(rejected.message).toBe("No original runtime terminal settlement was persisted; retain this hold.");
-          expect(yield* store.receipts(request.messageId)).toHaveLength(3);
-          assertNone(yield* store.claimNext("b", "b-owner", 203, 303));
+          const receipts121 = yield* store.receipts(request.messageId);
+          expect(receipts121).toHaveLength(3);
+          const claimNext122 = yield* store.claimNext("b", "b-owner", 203, 303);
+          assertNone(claimNext122);
           yield* client`DROP TRIGGER fixture_settlement_abort`;
           for (const stale of [
             Claim.make({ ...claim, generation: 2 }),
@@ -1333,7 +1421,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             sessionId: "replacement-session",
           });
           expect((yield* Effect.flip(store.recordSettlement(claim, wrongSession, 204))).code).toBe("staleClaim");
-          assertNone(yield* store.settlement(request.messageId));
+          const settlement123 = yield* store.settlement(request.messageId);
+          assertNone(settlement123);
         })
       )
     );
@@ -1367,17 +1456,22 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           const client = yield* makeAgentMessageSqliteClient(filename);
           yield* client`CREATE TRIGGER fixture_resolution_abort BEFORE INSERT ON agent_message_resolutions BEGIN SELECT RAISE(ABORT, 'fixture audit abort'); END`;
           expect((yield* Effect.flip(store.resolveAmbiguity(request, 202))).code).toBe("storage");
-          expect(yield* store.receipts(request.messageId)).toHaveLength(3);
-          assertNone(yield* store.claimNext("b", "b-owner", 203, 303));
-          expect(yield* client`SELECT count(*) AS count FROM agent_message_resolutions`).toEqual([{ count: 0 }]);
-          expect(
-            yield* client`SELECT state, dispatch_active, attempt_generation FROM agent_messages WHERE id = ${request.messageId}`
-          ).toEqual([{ state: "ambiguous", dispatch_active: 2, attempt_generation: 1 }]);
+          const receipts124 = yield* store.receipts(request.messageId);
+          expect(receipts124).toHaveLength(3);
+          const claimNext125 = yield* store.claimNext("b", "b-owner", 203, 303);
+          assertNone(claimNext125);
+          const value126 = yield* client`SELECT count(*) AS count FROM agent_message_resolutions`;
+          expect(value126).toEqual([{ count: 0 }]);
+          const value127 =
+            yield* client`SELECT state, dispatch_active, attempt_generation FROM agent_messages WHERE id = ${request.messageId}`;
+          expect(value127).toEqual([{ state: "ambiguous", dispatch_active: 2, attempt_generation: 1 }]);
           yield* client`DROP TRIGGER fixture_resolution_abort`;
           const reopened = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
           const receipt = yield* reopened.resolveAmbiguity(request, 204);
-          expect(yield* store.resolveAmbiguity(request, 205)).toEqual(receipt);
-          expect(yield* store.receipts(request.messageId)).toHaveLength(4);
+          const resolvedAmbiguity128 = yield* store.resolveAmbiguity(request, 205);
+          expect(resolvedAmbiguity128).toEqual(receipt);
+          const receipts129 = yield* store.receipts(request.messageId);
+          expect(receipts129).toHaveLength(4);
         })
       )
     );
@@ -1412,10 +1506,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           yield* client`UPDATE agent_messages SET target_generation = 2 WHERE id = ${request.messageId}`;
           expect((yield* Effect.flip(store.resolveAmbiguity(request, 202))).code).toBe("staleClaim");
           yield* client`UPDATE agent_messages SET target_generation = 1 WHERE id = ${request.messageId}`;
-          const replacement = yield* S.encodeEffect(BindingJson)(yield* binding("b", 2));
+          const argument1 = S.encodeEffect(BindingJson);
+          const binding3 = yield* binding("b", 2);
+          const replacement = yield* argument1(binding3);
           yield* client`UPDATE agent_message_endpoints SET payload = ${replacement} WHERE id = 'b'`;
           expect((yield* Effect.flip(store.resolveAmbiguity(request, 203))).code).toBe("staleClaim");
-          expect(yield* store.receipts(request.messageId)).toHaveLength(3);
+          const receipts130 = yield* store.receipts(request.messageId);
+          expect(receipts130).toHaveLength(3);
         })
       )
     );
@@ -1425,19 +1522,17 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
         (store) =>
           Effect.gen(function* () {
             yield* store.accept(envelope("retained-cap", "a", "b", 110), 100);
-            const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+            const claimNext131 = yield* store.claimNext("b", "b-owner", 101, 201);
+            const claim = O.getOrThrow(claimNext131);
             expect((yield* Effect.flip(store.accept(envelope("claimed-cap"), 102))).code).toBe("queueFull");
-            yield* store.recordSettlement(
-              claim,
-              yield* S.decodeEffect(OriginalRuntimeEvidence)({
-                adapter: "injected",
-                sessionId: "b-session",
-                terminalId: "fixture-terminal",
-                outcome: "delivered",
-                source: "Synthetic original runtime terminal record",
-              }),
-              103
-            );
+            const value132 = yield* S.decodeEffect(OriginalRuntimeEvidence)({
+              adapter: "injected",
+              sessionId: "b-session",
+              terminalId: "fixture-terminal",
+              outcome: "delivered",
+              source: "Synthetic original runtime terminal record",
+            });
+            yield* store.recordSettlement(claim, value132, 103);
             yield* store.complete(claim, "delivered", 103);
             expect((yield* Effect.flip(store.accept(envelope("delivered-cap"), 104))).code).toBe("queueFull");
             yield* store.recover(110);
@@ -1481,15 +1576,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
       fixture(
         (store) =>
           Effect.gen(function* () {
-            yield* store.register(yield* binding("c"));
+            const binding133 = yield* binding("c");
+            yield* store.register(binding133);
             yield* store.registerGrant(grant(1));
             const accepted = yield* store.accept(envelope("endpoint-full"), 100);
-            expect(yield* store.accept(envelope("endpoint-full"), 101)).toEqual(accepted);
+            const accept134 = yield* store.accept(envelope("endpoint-full"), 101);
+            expect(accept134).toEqual(accepted);
             expect((yield* Effect.flip(store.acceptWithGrant(envelope("rejected-budget"), "grant-a", 101))).code).toBe(
               "queueFull"
             );
             yield* store.accept(envelope("other-endpoint", "a", "c"), 101);
-            const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 102, 202));
+            const claimNext135 = yield* store.claimNext("b", "b-owner", 102, 202);
+            const claim = O.getOrThrow(claimNext135);
             yield* store.complete(claim, "failed", 103);
             expect((yield* store.acceptWithGrant(envelope("available-budget"), "grant-a", 104)).status).toBe(
               "accepted"
@@ -1505,7 +1603,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
       fixture(
         (store, filename) =>
           Effect.gen(function* () {
-            yield* store.register(yield* binding("c"));
+            const binding136 = yield* binding("c");
+            yield* store.register(binding136);
             yield* store.accept(envelope("global-full"), 100);
             expect((yield* Effect.flip(store.accept(envelope("other-global", "a", "c"), 101))).code).toBe("queueFull");
             const client = yield* makeAgentMessageSqliteClient(filename);
@@ -1532,15 +1631,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           Effect.gen(function* () {
             const original = envelope("retained-history");
             const accepted = yield* store.accept(original, 100);
-            const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+            const claimNext137 = yield* store.claimNext("b", "b-owner", 101, 201);
+            const claim = O.getOrThrow(claimNext137);
             yield* store.complete(claim, "failed", 102);
-            expect(yield* store.accept(original, 103)).toEqual(accepted);
+            const accept138 = yield* store.accept(original, 103);
+            expect(accept138).toEqual(accepted);
             const rejected = yield* Effect.flip(store.accept(envelope("history-overflow"), 104));
             expect(rejected.code).toBe("queueFull");
             expect(rejected.message).toBe(
               "Retained message history is at the global storage ceiling; archive this store before new admission."
             );
-            expect(yield* store.receipts(original.messageId)).toHaveLength(3);
+            const receipts139 = yield* store.receipts(original.messageId);
+            expect(receipts139).toHaveLength(3);
           }),
         10,
         5,
@@ -1609,11 +1711,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
               allowedRecipients: ["a"],
             })
           );
-          expect(A.map(yield* store.scopedInbox("scoped-b", 101), (mail) => mail.messageId)).toEqual(["scoped-task"]);
+          const scopedInbox140 = yield* store.scopedInbox("scoped-b", 101);
+          expect(A.map(scopedInbox140, (mail) => mail.messageId)).toEqual(["scoped-task"]);
           expect((yield* Effect.flip(store.scopedReceipts("other-task", "scoped-b", 101))).code).toBe("invalidGrant");
-          const claim = O.getOrThrow(yield* store.claimNext("b", "b-owner", 101, 201));
+          const claimNext141 = yield* store.claimNext("b", "b-owner", 101, 201);
+          const claim = O.getOrThrow(claimNext141);
           yield* store.complete(claim, "delivered", 102);
-          const second = O.getOrThrow(yield* store.claimNext("b", "b-owner", 103, 203));
+          const claimNext142 = yield* store.claimNext("b", "b-owner", 103, 203);
+          const second = O.getOrThrow(claimNext142);
           expect(second.envelope.messageId).toBe("other-task");
           expect((yield* Effect.flip(store.acknowledge("other-task", "b", 104, O.some("scoped-b")))).code).toBe(
             "invalidGrant"
@@ -1635,8 +1740,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           Effect.gen(function* () {
             const client = yield* makeAgentMessageSqliteClient(filename);
             const store = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
-            yield* store.register(yield* binding("a"));
-            yield* store.register(yield* binding("b"));
+            const binding143 = yield* binding("a");
+            yield* store.register(binding143);
+            const binding144 = yield* binding("b");
+            yield* store.register(binding144);
             yield* store.registerGrant(grant());
             yield* store.acceptWithGrant(envelope("pending-backup"), "grant-a", 100);
           })
@@ -1660,12 +1767,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
         );
         const client = yield* makeAgentMessageSqliteClient(path.join(restored, "messages.sqlite"));
         const store = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
-        expect(A.map(yield* store.inbox("b"), (message) => message.messageId)).toEqual(["pending-backup"]);
+        const inbox145 = yield* store.inbox("b");
+        expect(A.map(inbox145, (message) => message.messageId)).toEqual(["pending-backup"]);
         expect((yield* store.acceptWithGrant(envelope("pending-backup"), "grant-a", 101)).status).toBe("accepted");
         expect((yield* Effect.flip(store.acceptWithGrant(envelope("budget-still-spent"), "grant-a", 102))).code).toBe(
           "invalidGrant"
         );
-        expect(yield* store.receipts("pending-backup")).toHaveLength(1);
+        const receipts146 = yield* store.receipts("pending-backup");
+        expect(receipts146).toHaveLength(1);
         expect((yield* fs.stat(backup)).mode & 0o077).toBe(0);
         expect((yield* fs.stat(path.join(backup, "messages.sqlite"))).mode & 0o077).toBe(0);
       })

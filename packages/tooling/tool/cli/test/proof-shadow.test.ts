@@ -232,7 +232,9 @@ describe("proof shadow mode", () => {
         const fs = yield* FileSystem.FileSystem;
         const summary = yield* recordProofShadowForAttempt(root, facts(), [report([])], changedNone());
         expect(summary).toMatchObject({ recorded: 0, wouldReuse: 0, disagreements: 0, undeclared: 0 });
-        expect(yield* fs.exists(yield* proofLedgerPathForCheckout(root))).toBe(false);
+        const proofLedgerPathForCheckout8 = yield* proofLedgerPathForCheckout(root);
+        const exists1 = yield* fs.exists(proofLedgerPathForCheckout8);
+        expect(exists1).toBe(false);
       })
     );
 
@@ -268,8 +270,10 @@ describe("proof shadow mode", () => {
         expect(A.map(rows, (row) => row.laneId)).toStrictEqual(["quality:coverage", "quality:check", "quality:labs"]);
         expect(A.every(rows, (row) => row.branch === "feat/example" && row.stage === "pre-push")).toBe(true);
         expect(A.map(rows, (row) => row.durationMs)).toStrictEqual([600_000, 1_000, 0]);
-        expect(yield* ledger.facts).toBe(3);
-        expect(yield* ledger.malformedRows).toBe(0);
+        const facts2 = yield* ledger.facts;
+        expect(facts2).toBe(3);
+        const malformedRows3 = yield* ledger.malformedRows;
+        expect(malformedRows3).toBe(0);
       })
     );
 
@@ -325,7 +329,8 @@ describe("proof shadow mode", () => {
           ["attempt-2", "quality:coverage", "fix/review"],
         ]);
         const ledger = yield* ProofLedger.make(root);
-        expect(yield* ledger.disagreements).toHaveLength(1);
+        const disagreements4 = yield* ledger.disagreements;
+        expect(disagreements4).toHaveLength(1);
 
         const text = renderProofShadowReport(shadow);
         expect(Str.includes("shadow rows: 6 across 2 attempt(s) on 2 branch(es)")(text)).toBe(true);
@@ -881,7 +886,11 @@ describe("proof shadow mode", () => {
         args: ["turbo", "run", "check", "--summarize"],
         cwd: root,
       });
-      assertSome(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(child)), true);
+      const recordTurboLaneLedgerRowForTesting5 = yield* recordTurboLaneLedgerRowForTesting(
+        O.some(ledger),
+        outcome(child)
+      );
+      assertSome(recordTurboLaneLedgerRowForTesting5, true);
       yield* closeTurboLaneLedger(ledger, 1);
       const wrapper = QualityTaskStep.make({
         label: "quality:check",
@@ -913,7 +922,8 @@ describe("proof shadow mode", () => {
             const green = yield* wrapperLaneRun(root, "2026-09-28T10:00:00.000Z", 0);
             const red = yield* wrapperLaneRun(root, "2026-09-28T11:00:00.000Z", 1);
             // Same task hash, same key: the red run's digest names the work, not the result.
-            assertSome(red.inputDigest, yield* Effect.fromOption(green.inputDigest));
+            const fromOption6 = yield* Effect.fromOption(green.inputDigest);
+            assertSome(red.inputDigest, fromOption6);
             expect(red.inputPackages).toStrictEqual(["@beep/x"]);
 
             const first = yield* recordProofShadowForAttempt(root, facts(), [report([green])], changedNone());
@@ -984,8 +994,11 @@ describe("proof shadow mode", () => {
                 [report([lane("quality:coverage", "passed", O.some("digest-a"))])],
                 changedNone()
               );
-              expect(yield* fs.exists(path.join(laneRoot, ".beep"))).toBe(false);
-              expect(Str.includes(`"originKey":"${laneRoot}"`)(yield* fs.readFileString(cloneLedger))).toBe(true);
+              const exists7 = yield* fs.exists(path.join(laneRoot, ".beep"));
+              expect(exists7).toBe(false);
+              const argument = Str.includes(`"originKey":"${laneRoot}"`);
+              const readFileString1 = yield* fs.readFileString(cloneLedger);
+              expect(argument(readFileString1)).toBe(true);
 
               const fromLane = yield* loadProofShadowReport(laneRoot);
               expect(fromLane).toMatchObject({ ledgerPath: cloneLedger, shadowRows: 1, facts: 1 });

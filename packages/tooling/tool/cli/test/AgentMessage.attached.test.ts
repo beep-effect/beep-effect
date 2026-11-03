@@ -77,7 +77,8 @@ const binding = (id: string) =>
 const setup = Effect.fn("AttachedTest.setup")(function* (grantLifetimeMs = 60000) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const directory = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+  const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+  const directory = yield* fs.realPath(madeTempDirectoryScoped);
   yield* fs.chmod(directory, 0o700);
   const context = yield* agentMessageStoreLayer(path.join(directory, "store")).pipe(Layer.build);
   const store = yield* AgentMessageStore.pipe(Effect.provide(context));
@@ -97,7 +98,8 @@ const setup = Effect.fn("AttachedTest.setup")(function* (grantLifetimeMs = 60000
   });
   yield* store.registerGrant(grant);
   const grantFile = path.join(directory, "grant.json");
-  yield* fs.writeFileString(grantFile, yield* S.encodeEffect(GrantJson)(grant), { mode: 0o600 });
+  const value1 = yield* S.encodeEffect(GrantJson)(grant);
+  yield* fs.writeFileString(grantFile, value1, { mode: 0o600 });
   const configuration = yield* decodeConfiguration({
     threadId: "owned-thread",
     modelSelection: {
@@ -150,7 +152,8 @@ const setup = Effect.fn("AttachedTest.setup")(function* (grantLifetimeMs = 60000
     policyFingerprint: "policy",
   });
   yield* store.accept(envelope, now);
-  const claim = O.getOrThrow(yield* store.claimNext("b", "owner-b", now + 1, now + 20000));
+  const claimNext2 = yield* store.claimNext("b", "owner-b", now + 1, now + 20000);
+  const claim = O.getOrThrow(claimNext2);
   return { fs, directory, grantFile, grant, configuration, profile, context, store, claim, now };
 });
 const fixture = Effect.fn("AttachedTest.driver")(function* (
@@ -292,10 +295,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
                   )
               ),
             });
-            expect(
-              yield* verifyAttachedT3(state.profile, true).pipe(Effect.provideService(T3Code, rejected), Effect.flip)
-            ).toMatchObject({ _tag: "RouterError", code: "policyMismatch" });
-            expect(yield* Ref.get(sent)).toBe(0);
+            const pipe3 = yield* verifyAttachedT3(state.profile, true).pipe(
+              Effect.provideService(T3Code, rejected),
+              Effect.flip
+            );
+            expect(pipe3).toMatchObject({ _tag: "RouterError", code: "policyMismatch" });
+            const got = yield* Ref.get(sent);
+            expect(got).toBe(0);
           }),
         { concurrency: 1 }
       )
@@ -318,9 +324,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
               Effect.provideService(AgentMessageStore, state.store),
               Effect.provideService(T3Code, driver)
             );
-            expect(yield* dispatch.submit(state.claim)).toBe("failed");
-            expect(yield* Ref.get(sent)).toBe(0);
-            expect(yield* state.store.receipts("incoming")).toHaveLength(2);
+            const submit4 = yield* dispatch.submit(state.claim);
+            expect(submit4).toBe("failed");
+            const got5 = yield* Ref.get(sent);
+            expect(got5).toBe(0);
+            const receipts6 = yield* state.store.receipts("incoming");
+            expect(receipts6).toHaveLength(2);
           }),
         { concurrency: 1 }
       )
@@ -360,12 +369,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
               Effect.provideService(AgentMessageStore, state.store),
               Effect.provideService(T3Code, inconsistent)
             );
-            expect(yield* dispatch.submit(state.claim).pipe(Effect.flip)).toMatchObject({
+            const pipe7 = yield* dispatch.submit(state.claim).pipe(Effect.flip);
+            expect(pipe7).toMatchObject({
               _tag: "RouterError",
               code: "policyMismatch",
             });
-            expect(yield* Ref.get(sent)).toBe(1);
-            Utils.assertNone(yield* state.store.claimNext("b", "owner-b", state.now + 10, state.now + 20000));
+            const got8 = yield* Ref.get(sent);
+            expect(got8).toBe(1);
+            const claimNext9 = yield* state.store.claimNext("b", "owner-b", state.now + 10, state.now + 20000);
+            Utils.assertNone(claimNext9);
           }),
         { concurrency: 1 }
       )
@@ -379,8 +391,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           Effect.provideService(AgentMessageStore, state.store),
           Effect.provideService(T3Code, driver)
         );
-        expect(yield* dispatch.submit(state.claim)).toBe("delivered");
-        expect(yield* Ref.get(sent)).toBe(1);
+        const submit10 = yield* dispatch.submit(state.claim);
+        expect(submit10).toBe("delivered");
+        const got11 = yield* Ref.get(sent);
+        expect(got11).toBe(1);
       })
     );
     it.effect("settles the exact completed run when a different queued run is active", () =>
@@ -391,8 +405,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           Effect.provideService(AgentMessageStore, state.store),
           Effect.provideService(T3Code, driver)
         );
-        expect(yield* dispatch.submit(state.claim)).toBe("delivered");
-        expect(yield* Ref.get(sent)).toBe(1);
+        const submit12 = yield* dispatch.submit(state.claim);
+        expect(submit12).toBe("delivered");
+        const got13 = yield* Ref.get(sent);
+        expect(got13).toBe(1);
       })
     );
     it.effect("rejects contradictory active status for the exact completed run without resubmission", () =>
@@ -405,7 +421,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         );
         const result = yield* dispatch.submit(state.claim).pipe(Effect.result);
         result.pipe(Result.isFailure, Utils.assertTrue);
-        expect(yield* Ref.get(sent)).toBe(1);
+        const got14 = yield* Ref.get(sent);
+        expect(got14).toBe(1);
       })
     );
     it.effect("does not treat native completion without participant ACK as consumption", () =>
@@ -462,7 +479,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
               O.map(receipt, (receipt) => receipt.status),
               "failed"
             );
-            expect(yield* Ref.get(sent)).toBe(0);
+            const got15 = yield* Ref.get(sent);
+            expect(got15).toBe(0);
             const later = Envelope.make({
               ...state.claim.envelope,
               messageId: "later",
@@ -471,11 +489,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
               expiresAt: now + 30000,
             });
             yield* state.store.accept(later, now);
+            const claimNext16 = yield* state.store.claimNext("b", "owner-b", now + 1, now + 20000);
             Utils.assertSome(
-              O.map(
-                yield* state.store.claimNext("b", "owner-b", now + 1, now + 20000),
-                (claim) => claim.envelope.messageId
-              ),
+              O.map(claimNext16, (claim) => claim.envelope.messageId),
               "later"
             );
           }),
@@ -495,7 +511,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             );
             const result = yield* dispatch.submit(state.claim).pipe(Effect.result);
             result.pipe(Result.isFailure, Utils.assertTrue);
-            expect(yield* Ref.get(sent)).toBe(1);
+            const got17 = yield* Ref.get(sent);
+            expect(got17).toBe(1);
           }),
         { concurrency: 1 }
       )
@@ -513,8 +530,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           Effect.result
         );
         enrollment.pipe(Result.isFailure, Utils.assertTrue);
-        expect(yield* dispatch.submit(state.claim)).toBe("delivered");
-        expect(yield* Ref.get(sent)).toBe(1);
+        const submit18 = yield* dispatch.submit(state.claim);
+        expect(submit18).toBe("delivered");
+        const got19 = yield* Ref.get(sent);
+        expect(got19).toBe(1);
       })
     );
     it.effect("rejects validly queued foreign conversation and unallowed sender before native exposure", () =>
@@ -549,14 +568,17 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             expect((yield* state.store.acceptWithGrant(foreign, senderGrant.grantId, state.now + 3)).status).toBe(
               "accepted"
             );
-            const claim = O.getOrThrow(yield* state.store.claimNext("b", "owner-b", state.now + 4, state.now + 20000));
+            const claimNext20 = yield* state.store.claimNext("b", "owner-b", state.now + 4, state.now + 20000);
+            const claim = O.getOrThrow(claimNext20);
             const { driver, sent } = yield* fixture(state, "ack");
             const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
               Effect.provideService(AgentMessageStore, state.store),
               Effect.provideService(T3Code, driver)
             );
-            expect(yield* dispatch.submit(claim)).toBe("failed");
-            expect(yield* Ref.get(sent)).toBe(0);
+            const submit21 = yield* dispatch.submit(claim);
+            expect(submit21).toBe("failed");
+            const got22 = yield* Ref.get(sent);
+            expect(got22).toBe(0);
           }),
         { concurrency: 1 }
       )
@@ -583,7 +605,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const state = yield* setup();
         const expired = LaunchGrant.make({ ...state.grant, grantId: "expired", expiresAt: 0 });
         yield* state.store.registerGrant(expired);
-        yield* state.fs.writeFileString(state.grantFile, yield* S.encodeEffect(GrantJson)(expired), { mode: 0o600 });
+        const value23 = yield* S.encodeEffect(GrantJson)(expired);
+        yield* state.fs.writeFileString(state.grantFile, value23, { mode: 0o600 });
         const result = yield* callAgentMessagePeer(state.grantFile, "agent_message_inbox", {}).pipe(
           Effect.provideService(AgentMessageStore, state.store),
           Effect.result

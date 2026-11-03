@@ -482,7 +482,9 @@ const verifyReconciledBody = Effect.fn("ProvenanceFooter.verifyReconciledBody")(
               message: `[yeet] provenance footer for PR #${prNumber} preserved a concurrent body edit by ${bodyEditorLabel(edit)}`,
             }),
         });
-  if (outcome.status !== "current") yield* Console.warn(outcome.message);
+  if (outcome.status !== "current") {
+    yield* Console.warn(outcome.message);
+  }
   return outcome;
 });
 
@@ -612,11 +614,13 @@ export const persistPrSessionRecord = Effect.fn("ProvenanceFooter.persistRecord"
   mirror: Effect.Effect<void, MirrorError, MirrorRequirements>
 ) {
   const appendExit = yield* Effect.exit(append);
-  if (Exit.isFailure(appendExit))
+  if (Exit.isFailure(appendExit)) {
     yield* Console.warn(`[yeet] provenance registry append skipped: ${Cause.pretty(appendExit.cause)}`);
+  }
   const mirrorExit = yield* Effect.exit(mirror);
-  if (Exit.isFailure(mirrorExit))
+  if (Exit.isFailure(mirrorExit)) {
     yield* Console.warn(`[yeet] provenance run mirror skipped: ${Cause.pretty(mirrorExit.cause)}`);
+  }
   return PrSessionRecordingResult.make({
     repository,
     registryRowExists: Exit.isSuccess(appendExit),
@@ -735,7 +739,8 @@ export const makeCurrentPrSessionRecord = Effect.fn("ProvenanceFooter.makeRecord
 ) {
   const detector = yield* makePrProvenanceServiceLive();
   const provenance = yield* detector.detect(context.repoRoot, context.branch);
-  const headSha = Str.trim(yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD"]));
+  const resultGitOutput = yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD"]);
+  const headSha = Str.trim(resultGitOutput);
   const recordedAt = yield* DateTime.now;
   return PrSessionRecord.make({
     ...provenance,
@@ -807,7 +812,9 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
         const path = yield* Path.Path;
         const mirror = yield* runArtifactPathForContext(context, "provenance.json");
         yield* fs.makeDirectory(path.dirname(mirror), { recursive: true, mode: 0o700 });
-        yield* writeContainedFileString(path.dirname(mirror), mirror, yield* encodeRecord(record));
+        const argument = path.dirname(mirror);
+        const encodedRecord = yield* encodeRecord(record);
+        yield* writeContainedFileString(argument, mirror, encodedRecord);
       })
     );
   }).pipe(

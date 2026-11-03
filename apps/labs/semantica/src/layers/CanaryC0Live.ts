@@ -346,7 +346,8 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
               yield* Effect.forEach(
                 extractionOutcomes,
                 Effect.fnUntraced(function* (extraction) {
-                  yield* ledger.appendBatch(extraction, yield* batchEvents(extraction, chunked));
+                  const batchEvents1 = yield* batchEvents(extraction, chunked);
+                  yield* ledger.appendBatch(extraction, batchEvents1);
                 }),
                 { concurrency: 1, discard: true }
               );

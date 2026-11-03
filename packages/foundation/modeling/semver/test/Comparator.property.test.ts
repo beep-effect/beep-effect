@@ -16,7 +16,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(value, decoded));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -34,10 +35,14 @@ describe("Comparator property floor", () => {
         const text = value.toString();
         assert.strictEqual(inspect(value), text);
         const parsed = yield* Comparator.parse(` ${text} `);
-        assert.deepStrictEqual(yield* S.encodeEffect(Comparator)(parsed), yield* S.encodeEffect(Comparator)(value));
+        const value2 = yield* S.encodeEffect(Comparator)(parsed);
+        const value4 = yield* S.encodeEffect(Comparator)(value);
+        assert.deepStrictEqual(value2, value4);
         assert.strictEqual(parsed.toString(), text);
         const again = yield* Effect.fromResult(Comparator.parseResult(parsed.toString()));
-        assert.deepStrictEqual(yield* S.encodeEffect(Comparator)(again), yield* S.encodeEffect(Comparator)(parsed));
+        const value3 = yield* S.encodeEffect(Comparator)(again);
+        const value5 = yield* S.encodeEffect(Comparator)(parsed);
+        assert.deepStrictEqual(value3, value5);
       }),
     runs
   );

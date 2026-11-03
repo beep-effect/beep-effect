@@ -545,7 +545,8 @@ const runGates = Effect.fn("Yeet.runFinalCheckGates")(function* (
 // Untracked, non-ignored files count: the gates read them (check typechecks
 // every file), so a receipt for the committed head cannot cover them.
 const dirtyTree = Effect.fn("Yeet.finalCheckDirtyTree")(function* (repoRoot: string) {
-  return Str.isNonEmpty(Str.trim(yield* runGitOutput(repoRoot, ["status", "--porcelain", "--untracked-files=all"])));
+  const resultGitOutput = yield* runGitOutput(repoRoot, ["status", "--porcelain", "--untracked-files=all"]);
+  return Str.isNonEmpty(Str.trim(resultGitOutput));
 });
 
 const refuseDirtyTree = Effect.fn("Yeet.refuseDirtyFinalCheckTree")(function* (repoRoot: string) {
@@ -562,7 +563,8 @@ const refuseDirtyTree = Effect.fn("Yeet.refuseDirtyFinalCheckTree")(function* (r
 // uncommitted edit landing meanwhile (another session, an editor save) means
 // they checked bytes the pinned head does not hold, so no receipt is written.
 const refuseMovedTree = Effect.fn("Yeet.refuseMovedFinalCheckTree")(function* (repoRoot: string, headSha: string) {
-  const liveHead = Str.trim(yield* runGitOutput(repoRoot, ["rev-parse", "HEAD"]));
+  const resultGitOutput1 = yield* runGitOutput(repoRoot, ["rev-parse", "HEAD"]);
+  const liveHead = Str.trim(resultGitOutput1);
   if (liveHead !== headSha || (yield* dirtyTree(repoRoot))) {
     return yield* YeetCommandError.make({
       message: `yeet final-check refused: the checkout changed while the gates ran (head ${Str.slice(0, 12)(headSha)} -> ${Str.slice(0, 12)(liveHead)}, or uncommitted edits or untracked files); no receipt was written. Commit, then re-run \`${YEET_FINAL_CHECK_COMMAND}\`.`,
@@ -618,8 +620,10 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
   const gates = yield* parseFinalCheckGates(options.gates);
   const skips = yield* parseFinalCheckSkips(options.skip);
-  const headSha = Str.trim(yield* runGitOutput(repoRoot, ["rev-parse", "HEAD"]));
-  const mergeBase = Str.trim(yield* runGitOutput(repoRoot, ["merge-base", options.base, "HEAD"]));
+  const resultGitOutput2 = yield* runGitOutput(repoRoot, ["rev-parse", "HEAD"]);
+  const headSha = Str.trim(resultGitOutput2);
+  const resultGitOutput3 = yield* runGitOutput(repoRoot, ["merge-base", options.base, "HEAD"]);
+  const mergeBase = Str.trim(resultGitOutput3);
   const changedFiles = yield* runGitPathList(repoRoot, [
     "diff",
     "--name-only",

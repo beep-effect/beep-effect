@@ -161,7 +161,8 @@ export const collectTypeScriptFiles = Effect.fn("Lint.collectTypeScriptFiles")(f
         if (isExcludedTypeScriptSourcePath(`${candidate}/`)) {
           continue;
         }
-        results = A.appendAll(results, yield* walk(candidate));
+        const walk1 = yield* walk(candidate);
+        results = A.appendAll(results, walk1);
         continue;
       }
 
@@ -173,7 +174,8 @@ export const collectTypeScriptFiles = Effect.fn("Lint.collectTypeScriptFiles")(f
     return results;
   });
 
-  return A.sort(yield* walk(root), Order.String);
+  const walk2 = yield* walk(root);
+  return A.sort(walk2, Order.String);
 });
 
 const recoverLintFileDiscovery = <A>(checkName: string, fallback: A) =>

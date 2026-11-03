@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 /**
  * A recorded GitHub transport for the Yeet suites: the real `@beep/github`
  * client (route interpolation, pagination, error classification, GraphQL
@@ -21,6 +22,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { YeetGithubServices } from "@beep/repo-cli/test/Yeet";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -56,7 +59,8 @@ export type GithubRoutes = (call: GithubCall) => GithubAnswer | undefined | Prom
 
 const repoPrefix = `/repos/${YEET_GITHUB_REPO.owner}/${YEET_GITHUB_REPO.repo}`;
 
-const bodyOf = (text: string): unknown => (Str.isEmpty(text) ? undefined : JSON.parse(text));
+const bodyOf = (text: string): unknown =>
+  Str.isEmpty(text) ? undefined : Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(text), identity);
 
 const graphqlOf = (path: string, body: unknown): O.Option<string> =>
   path === "/graphql" && P.isObject(body) && P.hasProperty(body, "query") && P.isString(body.query)
@@ -68,7 +72,10 @@ const respond = (url: string, answer: GithubAnswer): Response => {
   const response =
     status === 204
       ? new Response(null, { status })
-      : new Response(JSON.stringify(answer.body ?? null), { status, headers: { "content-type": "application/json" } });
+      : new Response(
+          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(answer.body ?? null), identity),
+          { status, headers: { "content-type": "application/json" } }
+        );
   // octokit reads `response.url` back on paginated reads; a hand-built Response has none.
   Object.defineProperty(response, "url", { value: url });
   return response;
@@ -179,7 +186,10 @@ export const githubCallLine = (call: GithubCall): string =>
 // suite's own (scripted) spawner, and the printed answer is returned as
 // GitHub's, with recorded thread pages lifted into the kit's selection.
 
-const fieldText = (value: unknown): string => (P.isString(value) ? value : JSON.stringify(value));
+const fieldText = (value: unknown): string =>
+  P.isString(value)
+    ? value
+    : Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
 
 const graphqlVariables = (call: GithubCall): Readonly<Record<string, unknown>> =>
   P.isObject(call.body) && P.hasProperty(call.body, "variables") && P.isObject(call.body.variables)
@@ -320,7 +330,9 @@ const kitThreadsFromLegacy = (payload: unknown): unknown => {
   return payload;
 };
 
-const parseJson = O.liftThrowable((text: string): unknown => JSON.parse(text));
+const parseJson = O.liftThrowable((text: string): unknown =>
+  Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(text), identity)
+);
 
 /** What a recorded `gh` call printed, as GitHub's own answer. */
 export const legacyGhAnswer = ({

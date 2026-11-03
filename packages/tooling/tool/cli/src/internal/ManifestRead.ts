@@ -113,7 +113,8 @@ export const manifestParser = (
 ): ((text: string) => Effect.Effect<LenientManifest, PackageJsonSyntaxError | DegradedManifestFieldError>) => {
   const requireShapes = requireFieldShapes(fields);
   return Effect.fn("ManifestRead.parse")(function* (text: string) {
-    return yield* requireShapes(yield* LenientManifest.parse(text));
+    const parsed1 = yield* LenientManifest.parse(text);
+    return yield* requireShapes(parsed1);
   });
 };
 
@@ -149,6 +150,7 @@ export const manifestDecoder = (
 ): ((input: unknown) => Effect.Effect<LenientManifest, PackageDecodeError | DegradedManifestFieldError>) => {
   const requireShapes = requireFieldShapes(fields);
   return Effect.fn("ManifestRead.decode")(function* (input: unknown) {
-    return yield* requireShapes(yield* LenientManifest.decode(input));
+    const decoded = yield* LenientManifest.decode(input);
+    return yield* requireShapes(decoded);
   });
 };

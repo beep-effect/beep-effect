@@ -62,7 +62,8 @@ const insertFromCommand = Effect.fn("Agents.ProviderInstanceRepository.insertFro
   command: AddProviderInstanceCommand,
   scope: ProviderInstanceActorContext["Service"]
 ) {
-  const now = DateTime.toEpochMillis(yield* DateTime.now);
+  const now1 = yield* DateTime.now;
+  const now = DateTime.toEpochMillis(now1);
   const insert = yield* decodeProviderInstanceInsert({
     binaryPath: command.binaryPath,
     createdAt: now,
@@ -190,7 +191,8 @@ export const makeProviderInstanceRepository = Effect.fn("Agents.ProviderInstance
       if (O.isNone(A.head(rows))) return yield* notFound(id);
     }),
     save: Effect.fn("Agents.ProviderInstanceRepository.save")(function* (instance) {
-      const now = DateTime.toEpochMillis(yield* DateTime.now);
+      const now2 = yield* DateTime.now;
+      const now = DateTime.toEpochMillis(now2);
       const insert = yield* Effect.fromResult(toProviderInstanceInsert(instance)).pipe(
         unavailable("encode ProviderInstance")
       );

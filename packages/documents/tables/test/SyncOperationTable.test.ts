@@ -177,23 +177,19 @@ describe("SyncOperation table", () => {
       const syncOperation = yield* decodeUnknownSyncOperation(uploadRow);
       const insert = yield* Effect.fromResult(toSyncOperationInsert(syncOperation));
 
-      expectConverterFailure(
-        yield* converterFailure(toSyncOperationInsert(withUnencodablePublicId(syncOperation))),
-        "SyncOperationConverterError"
+      const converterFailure1 = yield* converterFailure(toSyncOperationInsert(withUnencodablePublicId(syncOperation)));
+      expectConverterFailure(converterFailure1, "SyncOperationConverterError");
+      const converterFailure2 = yield* converterFailure(
+        fromSyncOperationRow({
+          ...insert,
+          id: 20,
+          inputContentDigest: insert.inputContentDigest ?? null,
+          lastError: insert.lastError ?? null,
+          publicId: 42,
+          targetParentRelPath: insert.targetParentRelPath ?? null,
+        } as unknown as SyncOperationRow)
       );
-      expectConverterFailure(
-        yield* converterFailure(
-          fromSyncOperationRow({
-            ...insert,
-            id: 20,
-            inputContentDigest: insert.inputContentDigest ?? null,
-            lastError: insert.lastError ?? null,
-            publicId: 42,
-            targetParentRelPath: insert.targetParentRelPath ?? null,
-          } as unknown as SyncOperationRow)
-        ),
-        "SyncOperationConverterError"
-      );
+      expectConverterFailure(converterFailure2, "SyncOperationConverterError");
     })
   );
 });

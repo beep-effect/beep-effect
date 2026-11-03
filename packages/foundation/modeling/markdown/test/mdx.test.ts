@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The MDX vocabulary: construction (schema checks included), serialization
 // conformance against the vendored oracles, and the Mdast interop boundary.
 //
@@ -393,7 +394,9 @@ describe("mdx nodes", () => {
         flowElement("ApiSignature", [
           MdxJsxAttribute.make({
             name: "code",
-            value: MdxJsxAttributeValueExpression.make({ value: JSON.stringify(props) }),
+            value: MdxJsxAttributeValueExpression.make({
+              value: Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(props), identity),
+            }),
           }),
         ])
       );

@@ -7,8 +7,10 @@ it.effect("spawn result schema preserves plain output and finite caller-policy e
   Effect.gen(function* () {
     for (const code of [0, 1, -1, 1.5]) {
       const result = { output: "", code } satisfies SpawnOnceResult.Encoded;
-      assert.deepStrictEqual(yield* S.decodeEffect(SpawnOnceResult)(result), result);
-      assert.deepStrictEqual(yield* S.encodeEffect(SpawnOnceResult)(SpawnOnceResult.make(result)), result);
+      const value = yield* S.decodeEffect(SpawnOnceResult)(result);
+      assert.deepStrictEqual(value, result);
+      const value1 = yield* S.encodeEffect(SpawnOnceResult)(SpawnOnceResult.make(result));
+      assert.deepStrictEqual(value1, result);
     }
     for (const code of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, "0", undefined]) {
       assert.isFalse(S.is(SpawnOnceResult)({ output: "text", code }));

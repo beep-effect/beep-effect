@@ -87,7 +87,8 @@ const fixture = Effect.fn("AgentMessageToolsTest.fixture")(function* <A, E>(
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const directory = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+  const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+  const directory = yield* fs.realPath(madeTempDirectoryScoped);
   yield* fs.chmod(directory, 0o700);
   const context = yield* Layer.build(agentMessageStoreLayer(path.join(directory, "store")));
   return yield* Effect.gen(function* () {
@@ -176,10 +177,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage enrollment
         expect(repeated.isFailure).toBe(false);
         expect(repeated.encodedResult).toEqual(first.encodedResult);
         expect((yield* call("grant-a", "agent_message_send", { ...input, body: "changed" })).isFailure).toBe(true);
-        expect(yield* store.message(input.messageId)).toEqual(original);
-        expect(yield* store.receipts(input.messageId)).toHaveLength(1);
-        expect(yield* store.inbox("b")).toEqual([original]);
-        expect(yield* store.inbox("a")).toEqual([]);
+        const message1 = yield* store.message(input.messageId);
+        expect(message1).toEqual(original);
+        const receipts2 = yield* store.receipts(input.messageId);
+        expect(receipts2).toHaveLength(1);
+        const inbox3 = yield* store.inbox("b");
+        expect(inbox3).toEqual([original]);
+        const inbox4 = yield* store.inbox("a");
+        expect(inbox4).toEqual([]);
       })
     )
   );
@@ -221,7 +226,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage enrollment
           body: "hello",
         });
         expect(denied.isFailure).toBe(true);
-        Utils.assertNone(yield* store.findMessage("denied"));
+        const foundMessage = yield* store.findMessage("denied");
+        Utils.assertNone(foundMessage);
         yield* call("grant-a", "agent_message_send", {
           messageId: "own",
           conversationId: "c",
@@ -253,11 +259,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage enrollment
         expect(inspect.isFailure).toBe(true);
         expect((yield* S.decodeUnknownEffect(RouterError)(inspect.encodedResult)).code).toBe("invalidGrant");
         const inbox = yield* call("grant-a", "agent_message_inbox", {});
-        expect(yield* S.decodeUnknownEffect(EnvelopeList)(inbox.encodedResult)).toEqual([]);
+        const value = yield* S.decodeUnknownEffect(EnvelopeList)(inbox.encodedResult);
+        expect(value).toEqual([]);
         const peers = yield* call("grant-a", "agent_message_discover", {});
-        expect(
-          A.map(yield* S.decodeUnknownEffect(EndpointList)(peers.encodedResult), (peer) => peer.endpointId)
-        ).toEqual(["b"]);
+        const value5 = yield* S.decodeUnknownEffect(EndpointList)(peers.encodedResult);
+        expect(A.map(value5, (peer) => peer.endpointId)).toEqual(["b"]);
         expect(
           (yield* call("grant-a", "agent_message_reply", { messageId: "bad-reply", replyTo: "secret", body: "x" }))
             .isFailure
@@ -281,7 +287,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage enrollment
             body: "x",
           })).isFailure
         ).toBe(true);
-        Utils.assertNone(yield* store.findMessage("premature"));
+        const foundMessage6 = yield* store.findMessage("premature");
+        Utils.assertNone(foundMessage6);
 
         expect((yield* call("expired", "agent_message_inbox", {})).isFailure).toBe(true);
         yield* store.register(binding("a", "repo", 2));
@@ -315,13 +322,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage enrollment
           recipient: "b",
           body: "next",
         });
-        const claim = O.getOrThrow(yield* store.claimNext("b", "owner-b", now, now + 10000));
+        const claimNext7 = yield* store.claimNext("b", "owner-b", now, now + 10000);
+        const claim = O.getOrThrow(claimNext7);
         const ack = yield* call("grant-b", "agent_message_acknowledge", { messageId: "m1" });
         expect(ack.isFailure).toBe(false);
         expect((yield* S.decodeUnknownEffect(Receipt)(ack.encodedResult)).status).toBe("acknowledged");
-        Utils.assertNone(yield* store.claimNext("b", "owner-b", now, now + 10000));
+        const claimNext8 = yield* store.claimNext("b", "owner-b", now, now + 10000);
+        Utils.assertNone(claimNext8);
         yield* store.complete(claim, "delivered", now + 1);
-        expect(O.getOrThrow(A.last(yield* store.receipts("m1"))).status).toBe("delivered");
+        const receipts9 = yield* store.receipts("m1");
+        expect(O.getOrThrow(A.last(receipts9)).status).toBe("delivered");
         yield* store
           .claimNext("b", "owner-b", now + 2, now + 10000)
           .pipe(Effect.map(O.isSome), Effect.map(Utils.assertTrue));
@@ -363,10 +373,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage enrollment
         const result = yield* call("grant-a", "agent_message_inbox", {}).pipe(
           Effect.provideService(AgentMessageStore, racingStore)
         );
-        expect(yield* Ref.get(revoked)).toBe(true);
+        const got = yield* Ref.get(revoked);
+        expect(got).toBe(true);
         expect(result.isFailure).toBe(true);
         expect((yield* S.decodeUnknownEffect(RouterError)(result.encodedResult)).code).toBe("invalidGrant");
-        expect(A.length(yield* store.inbox("a"))).toBe(1);
+        const inbox10 = yield* store.inbox("a");
+        expect(A.length(inbox10)).toBe(1);
       })
     )
   );
@@ -382,7 +394,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage enrollment
           recipient: "a",
           body: "previous owner mail",
         });
-        const claim = O.getOrThrow(yield* store.claimNext("a", "owner-a", now, now + 10000));
+        const claimNext11 = yield* store.claimNext("a", "owner-a", now, now + 10000);
+        const claim = O.getOrThrow(claimNext11);
         yield* store.complete(claim, "delivered", now + 1);
         yield* store.acknowledge("prior", "a", now + 2);
         yield* store.register(binding("a", "repo", 2));
@@ -391,7 +404,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage enrollment
         );
         const inbox = yield* call("new-a", "agent_message_inbox", {});
         expect(inbox.isFailure).toBe(false);
-        expect(yield* S.decodeUnknownEffect(EnvelopeList)(inbox.encodedResult)).toEqual([]);
+        const value12 = yield* S.decodeUnknownEffect(EnvelopeList)(inbox.encodedResult);
+        expect(value12).toEqual([]);
         expect((yield* call("new-a", "agent_message_inspect", { messageId: "prior" })).isFailure).toBe(true);
         expect(
           (yield* call("new-a", "agent_message_reply", {
@@ -400,7 +414,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage enrollment
             body: "reply",
           })).isFailure
         ).toBe(true);
-        Utils.assertNone(yield* store.findMessage("unauthorized-reply"));
+        const foundMessage13 = yield* store.findMessage("unauthorized-reply");
+        Utils.assertNone(foundMessage13);
       })
     )
   );

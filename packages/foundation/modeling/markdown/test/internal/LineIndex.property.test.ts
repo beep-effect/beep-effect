@@ -16,7 +16,8 @@ describe("line index properties", () => {
         const encoded = yield* S.encodeEffect(InvalidLineTableError)(value);
         const decoded = yield* S.decodeEffect(InvalidLineTableError)(encoded);
         assert.strictEqual(S.toEquivalence(InvalidLineTableError)(value, decoded), true);
-        assert.deepStrictEqual(yield* S.encodeEffect(InvalidLineTableError)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(InvalidLineTableError)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );

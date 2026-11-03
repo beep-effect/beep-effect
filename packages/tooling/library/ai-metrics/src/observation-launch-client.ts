@@ -171,16 +171,14 @@ export const makeObservationLaunchClient = Effect.fn("AiMetrics.makeObservationL
     };
   }).pipe(Effect.mapError(() => failure("configuration")));
   const original = yield* inspect;
-  const client = Context.get(
-    yield* Layer.build(
-      NodeHttpClient.layerNodeHttpOptions({
-        socketPath: path.join(policy.directory, "worker.sock"),
-        keepAlive: false,
-        maxSockets: 1,
-      }).pipe(Layer.fresh)
-    ),
-    HttpClient.HttpClient
+  const build1 = yield* Layer.build(
+    NodeHttpClient.layerNodeHttpOptions({
+      socketPath: path.join(policy.directory, "worker.sock"),
+      keepAlive: false,
+      maxSockets: 1,
+    }).pipe(Layer.fresh)
   );
+  const client = Context.get(build1, HttpClient.HttpClient);
   const permit = yield* Semaphore.make(1);
   const exchange = Effect.fn("AiMetrics.launchClient.exchange")(function* (
     submission: O.Option<ObservationLaunchSubmission>

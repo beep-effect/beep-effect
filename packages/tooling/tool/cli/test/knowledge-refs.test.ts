@@ -730,7 +730,8 @@ describe("knowledge refs check gate", () => {
         ".claude/skills/demo/SKILL.md": "Memory lives under ~/.claude/memory today.\n",
       });
       yield* applyKnowledgeRefsCheck(report, { json: true });
-      expect(yield* TestConsole.logLines).toEqual([]);
+      const logLines1 = yield* TestConsole.logLines;
+      expect(logLines1).toEqual([]);
     })
   );
 
@@ -763,7 +764,10 @@ describe("knowledge refs negative controls", () => {
       const forward = yield* scanFixture(permutationFiles);
       const reversed = yield* scanFixture(permutationFiles, { order: A.reverse });
       const encode = (report: KnowledgeRefsReport) => encodeKnowledgeRefsReportJson(report).pipe(Effect.orDie);
-      expect(yield* encode(reversed)).toEqual(yield* encode(forward));
+      const encoded2 = yield* encode(reversed);
+      const expectation = expect(encoded2);
+      const encoded1 = yield* encode(forward);
+      expectation.toEqual(encoded1);
     })
   );
 
@@ -1236,7 +1240,8 @@ describe("knowledge refs source-bound generated evidence", () => {
         ).toEqual(A.map(hosts, (row) => [row.documentId, "audit-pattern-literal"]));
         temp += anchorCount(hosts, "temp");
         home += anchorCount(hosts, "home-absolute");
-        const unverified = hostObservations(yield* scanFixture(docs));
+        const scanFixture3 = yield* scanFixture(docs);
+        const unverified = hostObservations(scanFixture3);
         expect(A.map(hosts, ({ classification, remediation, ...identity }) => identity)).toEqual(
           A.map(unverified, ({ classification, remediation, ...identity }) => identity)
         );
@@ -1313,16 +1318,12 @@ describe("knowledge refs source-bound generated evidence", () => {
         expect(knowledgeRefsLiveDebt(report).length).toBe(2);
       }
       const wrongSchema = Str.replace('"effect-vitest-inventory/v1"', '"other/v1"')(docs[generatedInventoryPath]);
-      expect(
-        knowledgeRefsLiveDebt(
-          yield* scanFixture({ [generatedInventoryPath]: wrongSchema, [generatedSourcePath]: source })
-        ).length
-      ).toBe(1);
+      const scanFixture4 = yield* scanFixture({ [generatedInventoryPath]: wrongSchema, [generatedSourcePath]: source });
+      expect(knowledgeRefsLiveDebt(scanFixture4).length).toBe(1);
       const comment = '/* consume("/tmp/data") */';
       const commentDocs = yield* generatedDocuments(generatedFinding(comment, comment));
-      expect(knowledgeRefsLiveDebt(yield* scanFixture({ ...commentDocs, [generatedSourcePath]: comment })).length).toBe(
-        2
-      );
+      const scanFixture5 = yield* scanFixture({ ...commentDocs, [generatedSourcePath]: comment });
+      expect(knowledgeRefsLiveDebt(scanFixture5).length).toBe(2);
     })
   );
 });
@@ -1333,7 +1334,8 @@ it.effect(
     const source = `consume("${Str.repeat(180)("x")}/tmp/closed-path")`;
     const evidence = Str.slice(0, 200)(source);
     const docs = yield* generatedDocuments(generatedFinding(source, evidence));
-    const hosts = hostObservations(yield* scanFixture({ ...docs, [generatedSourcePath]: source }));
+    const scanFixture6 = yield* scanFixture({ ...docs, [generatedSourcePath]: source });
+    const hosts = hostObservations(scanFixture6);
     expect(hosts).toHaveLength(2);
     expect(A.map(hosts, (row) => [row.location.path, row.classification])).toEqual(
       expect.arrayContaining([
@@ -1343,7 +1345,8 @@ it.effect(
     );
     expect(A.every(hosts, (row) => row.classification === "audit-pattern-literal")).toBe(true);
     for (const invalid of [evidence, `/* ${source} */`, Str.replace("closed-path", "different-path")(source)]) {
-      expect(knowledgeRefsLiveDebt(yield* scanFixture({ ...docs, [generatedSourcePath]: invalid })).length).toBe(2);
+      const scanFixture7 = yield* scanFixture({ ...docs, [generatedSourcePath]: invalid });
+      expect(knowledgeRefsLiveDebt(scanFixture7).length).toBe(2);
     }
   })
 );

@@ -50,7 +50,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Reactivity.layer),
       const restoredFacts = yield* makeObservationLaunchFacts(config).pipe(
         Effect.provideService(SqlClient.SqlClient, restoredSql)
       );
-      expect(yield* restoredFacts.read(input.fact.launchId, 0)).toEqual([]);
+      const read1 = yield* restoredFacts.read(input.fact.launchId, 0);
+      expect(read1).toEqual([]);
       const reopened = yield* makeObservationClaims(
         ObservationClaimPolicy.make({ ...f.policy, journalDirectory: `${f.root}/restored` }),
         f.uid
@@ -58,7 +59,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Reactivity.layer),
       expect((yield* reopened.runOnce(input, () => restoredFacts.record(input.fact, 0)).pipe(Effect.flip)).reason).toBe(
         "claimed"
       );
-      expect(yield* restoredFacts.read(input.fact.launchId, 0)).toEqual([]);
+      const read2 = yield* restoredFacts.read(input.fact.launchId, 0);
+      expect(read2).toEqual([]);
       expect((yield* reopened.snapshot)[0]?.submission).toEqual(input);
       yield* TestClock.adjust("1 second");
       expect(

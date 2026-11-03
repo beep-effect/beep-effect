@@ -212,13 +212,12 @@ const readHistoricalRuleset = Effect.fn("Goals.Completion.historicalRuleset")(fu
     return yield* YeetCommandError.make({
       message: "Inherited ruleset history is unavailable through the repository-only adapter",
     });
-  const history = A.flatten(
-    yield* readGoalCompletionJson(
-      root,
-      ["api", `repos/{owner}/{repo}/rulesets/${ruleset.id}/history?per_page=100`, "--paginate", "--slurp"],
-      RulesetHistory
-    )
+  const readGoalCompletionJson1 = yield* readGoalCompletionJson(
+    root,
+    ["api", `repos/{owner}/{repo}/rulesets/${ruleset.id}/history?per_page=100`, "--paginate", "--slurp"],
+    RulesetHistory
   );
+  const history = A.flatten(readGoalCompletionJson1);
   const version = A.reduce(
     A.filter(history, (row) => DateTime.toEpochMillis(row.updated_at) <= DateTime.toEpochMillis(mergedAt)),
     O.none<(typeof RulesetHistory.Type)[number][number]>(),
@@ -269,18 +268,17 @@ const readMergeRuleSuite = Effect.fn("Goals.CompletionEvidence.ruleSuite")(funct
   mergeCommit: string
 ) {
   const ref = `refs/heads/${base}`;
-  const listed = A.flatten(
-    yield* readGoalCompletionJson(
-      root,
-      [
-        "api",
-        `repos/{owner}/{repo}/rulesets/rule-suites?ref=${ref}&time_period=month&per_page=100`,
-        "--paginate",
-        "--slurp",
-      ],
-      RuleSuiteList
-    )
+  const readGoalCompletionJson2 = yield* readGoalCompletionJson(
+    root,
+    [
+      "api",
+      `repos/{owner}/{repo}/rulesets/rule-suites?ref=${ref}&time_period=month&per_page=100`,
+      "--paginate",
+      "--slurp",
+    ],
+    RuleSuiteList
   );
+  const listed = A.flatten(readGoalCompletionJson2);
   // Offset pagination can repeat a row when new pushes arrive mid-read; one suite id is one suite.
   const ids = A.dedupe(
     A.map(

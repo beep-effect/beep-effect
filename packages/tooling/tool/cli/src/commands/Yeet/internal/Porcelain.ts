@@ -237,10 +237,14 @@ const renderReportOutput = (json: boolean, report: SweepReport): Effect.Effect<s
 // Plan or execute the sweep against `context`, whichever checkout that names.
 const sweepClone = Effect.fn("Yeet.sweepClone")(function* (options: YeetSweepOptions, context: RepoRunContext) {
   if (options.plan) {
-    yield* Console.log(yield* renderPlanOutput(options.json, yield* planSweep(context)));
+    const planSweep7 = yield* planSweep(context);
+    const renderPlanOutput1 = yield* renderPlanOutput(options.json, planSweep7);
+    yield* Console.log(renderPlanOutput1);
     return;
   }
-  yield* Console.log(yield* renderReportOutput(options.json, yield* executeSweep(context)));
+  const executeSweep8 = yield* executeSweep(context);
+  const renderReportOutput2 = yield* renderReportOutput(options.json, executeSweep8);
+  yield* Console.log(renderReportOutput2);
 });
 
 const encodeRetireSweepPlan = (document: YeetRetireSweepPlan): Effect.Effect<string, YeetCommandError> =>
@@ -345,7 +349,8 @@ const retireThenSweep = Effect.fn("Yeet.retireThenSweep")(function* (
   // Read before the lane is archived: the merged packet content lives there.
   const activePackets = yield* activePacketsOnBranch(retire, state);
   if (options.plan) {
-    return yield* printRetirePlan(options, retire, state, activePackets, yield* planSweep(cloneContext));
+    const planSweep3 = yield* planSweep(cloneContext);
+    return yield* printRetirePlan(options, retire, state, activePackets, planSweep3);
   }
   // A refused gate stops nothing: the verdict is checked again inside the removal.
   const stoppedJobs = YeetRetireVerdict.guards.refused(retireVerdict(retire, state))
@@ -432,7 +437,8 @@ export const runYeetMerge = Effect.fn("Yeet.runMergeCommand")(function* (
   YeetCommandError,
   SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
-  const outcome = yield* mergePr(yield* hydrateYeetReadOnlyContext(options));
+  const hydrateYeetReadOnlyContext4 = yield* hydrateYeetReadOnlyContext(options);
+  const outcome = yield* mergePr(hydrateYeetReadOnlyContext4);
   yield* Console.log(`[yeet] pull request #${outcome.pullRequestNumber} is ${outcome.state}`);
   yield* Console.log(renderSweepReport(outcome.sweep));
 });
@@ -482,7 +488,8 @@ export const runYeetReplyPass = Effect.fn("Yeet.runReplyCommand")(function* (
 > {
   const context = yield* hydrateYeetReadOnlyContext(options);
   const report = yield* runYeetReply(context);
-  yield* failYeetReplyOnFailedOutcomes(report, yield* replyReportPathForContext(context));
+  const replyReportPathForContext5 = yield* replyReportPathForContext(context);
+  yield* failYeetReplyOnFailedOutcomes(report, replyReportPathForContext5);
 });
 
 /**
@@ -610,7 +617,8 @@ export const runYeetMergeLoop: {
     const job = yield* readCurrentProofJobRecord(context.repoRoot);
     // Only a job's unit sets BEEP_YEET_JOB_ID, the same test that routes the
     // loop through the job's outcome reporting.
-    const attachment = O.isSome(yield* configStringOption("BEEP_YEET_JOB_ID"))
+    const configStringOption6 = yield* configStringOption("BEEP_YEET_JOB_ID");
+    const attachment = O.isSome(configStringOption6)
       ? YeetMonitorAttachment.Enum.detached
       : YeetMonitorAttachment.Enum.attached;
     const terminal = yield* (dependencies.mergeLoop ?? runYeetMonitorUntilMerged)(context, {

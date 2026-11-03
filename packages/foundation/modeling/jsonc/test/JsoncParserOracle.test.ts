@@ -260,10 +260,8 @@ describe("jsonc-parser oracle", () => {
         const edits = yield* JsoncModifier.modifyWithFormatting(document, ["b"], undefined, {
           formattingOptions: formatting,
         });
-        assert.deepStrictEqual(
-          triples(yield* JsoncModifier.modifyWithFormatting('{"a":1}', ["a"], 2)),
-          triples(jsoncParser.modify('{"a":1}', ["a"], 2, {}))
-        );
+        const modifyWithFormatting1 = yield* JsoncModifier.modifyWithFormatting('{"a":1}', ["a"], 2);
+        assert.deepStrictEqual(triples(modifyWithFormatting1), triples(jsoncParser.modify('{"a":1}', ["a"], 2, {})));
         assert.strictEqual(
           JsoncEdit.applyAll(document, edits),
           Result.getOrThrow(oracleModify(document, ["b"], undefined, { formattingOptions: formatting }))

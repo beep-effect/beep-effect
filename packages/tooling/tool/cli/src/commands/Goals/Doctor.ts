@@ -815,8 +815,10 @@ export const goalPacketFindings = Effect.fn("Goals.packetFindings")(function* <E
   }
 
   findings = A.appendAll(findings, decodedManifestFindings(record, decoded.value, raw));
-  findings = A.appendAll(findings, yield* explorationBacklinkFindings(record, raw, reader));
-  findings = A.appendAll(findings, yield* opsScriptFindings(record, decoded.value, reader));
+  const explorationBacklinkFindings1 = yield* explorationBacklinkFindings(record, raw, reader);
+  findings = A.appendAll(findings, explorationBacklinkFindings1);
+  const opsScriptFindings2 = yield* opsScriptFindings(record, decoded.value, reader);
+  findings = A.appendAll(findings, opsScriptFindings2);
   return { findings, manifest: O.some(decoded.value) };
 });
 
@@ -1218,7 +1220,7 @@ const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")
 ) {
   const root = yield* findRepoRoot().pipe(Effect.orElseSucceed(process.cwd));
   const receipt = online
-    ? O.some(yield* observeGoalCompletion(root, packet.record.slug, manifest, final))
+    ? yield* Effect.asSome(observeGoalCompletion(root, packet.record.slug, manifest, final))
     : yield* storedGoalCompletion(root, packet.record.slug, manifest, final).pipe(Effect.orElseSucceed(O.none));
   if (
     O.isNone(receipt) &&
@@ -1395,9 +1397,10 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   }
 
   const advisoriesFromGit = yield* gitAdvisories(packets);
-  const structured = A.getSomes(
-    yield* Effect.forEach(packets, (packet) => structuredCompletionAdvisory(packet, options.online === true))
+  const forEach3 = yield* Effect.forEach(packets, (packet) =>
+    structuredCompletionAdvisory(packet, options.online === true)
   );
+  const structured = A.getSomes(forEach3);
   const completionFindings = A.flatMap(structured, (row) => row.findings);
   const structuredSlugs = HashSet.fromIterable(A.map(structured, (row) => row.slug));
   const capabilityFindings = capabilityPacketFindings(

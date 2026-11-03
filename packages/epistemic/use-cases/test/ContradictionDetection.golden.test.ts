@@ -38,7 +38,8 @@ const detect = Effect.fnUntraced(function* (snapshot: ContradictionDetectionSnap
   return yield* ContradictionDetectionService.use((service) => service.detect(snapshot));
 });
 const encodedOutput = Effect.fnUntraced(function* (candidates: ReadonlyArray<DetectedContradiction>) {
-  return canonicalDetectionJson(yield* S.encodeEffect(DetectedContradictions)(candidates));
+  const value1 = yield* S.encodeEffect(DetectedContradictions)(candidates);
+  return canonicalDetectionJson(value1);
 });
 const conformance = Effect.fnUntraced(function* (record: DetectedContradiction, index: number) {
   const wire = yield* S.encodeEffect(DetectedContradiction)(record);
@@ -88,7 +89,8 @@ describe("Contradiction detection golden vectors", () => {
       "encodes both proposals through the shipped non-empty assessment field",
       Effect.fnUntraced(function* () {
         const snapshot = yield* S.decodeUnknownEffect(ContradictionDetectionSnapshot)(A.getUnsafe(vectors, 0).snapshot);
-        const record = A.getUnsafe(yield* detect(snapshot), 0);
+        const detect2 = yield* detect(snapshot);
+        const record = A.getUnsafe(detect2, 0);
         const wire: typeof ContradictionAssessment.Encoded = {
           confidence: record.assessment.confidence,
           proposals: yield* S.encodeEffect(ContradictionAssessment.fields.proposals)(record.assessment.proposals),
@@ -113,7 +115,8 @@ describe("Contradiction detection golden vectors", () => {
               expect(record.matchBasis.detector).toBe(`epistemic-contradiction-detection-${vector.expectedClass}`);
               expect(record.assessment.confidence).toBe(vector.expectedClass === "exact-negation" ? 1 : 0.9);
             }
-            expect(yield* encodedOutput(records)).toBe(A.getUnsafe(golden, index).canonicalOutput);
+            const encodedOutput3 = yield* encodedOutput(records);
+            expect(encodedOutput3).toBe(A.getUnsafe(golden, index).canonicalOutput);
             yield* Effect.forEach(records, conformance, { concurrency: 1 });
             for (const record of records) {
               for (const proposal of record.assessment.proposals) {
@@ -132,12 +135,20 @@ describe("Contradiction detection golden vectors", () => {
             }
 
             yield* TestClock.adjust("1 hour");
-            expect(yield* encodedOutput(yield* detect(snapshot))).toBe(yield* encodedOutput(records));
+            const detect9 = yield* detect(snapshot);
+            const encodedOutput4 = yield* encodedOutput(detect9);
+            const expectation = expect(encodedOutput4);
+            const encodedOutput1 = yield* encodedOutput(records);
+            expectation.toBe(encodedOutput1);
             const permuted = ContradictionDetectionSnapshot.make({
               beliefs: A.reverse(snapshot.beliefs),
               singleValuedPredicates: A.reverse(snapshot.singleValuedPredicates),
             });
-            expect(yield* encodedOutput(yield* detect(permuted))).toBe(yield* encodedOutput(records));
+            const detect10 = yield* detect(permuted);
+            const encodedOutput5 = yield* encodedOutput(detect10);
+            const expectation1 = expect(encodedOutput5);
+            const encodedOutput2 = yield* encodedOutput(records);
+            expectation1.toBe(encodedOutput2);
           })
         );
       });
@@ -155,16 +166,20 @@ describe("Contradiction detection golden vectors", () => {
         yield* Effect.forEach(records, conformance, { concurrency: 1 });
         const permuted = ContradictionDetectionSnapshot.make({ ...snapshot, beliefs: A.reverse(snapshot.beliefs) });
         expect(A.length(records)).toBe(1);
-        expect(yield* encodedOutput(yield* detect(permuted))).toBe(yield* encodedOutput(records));
+        const detect11 = yield* detect(permuted);
+        const encodedOutput6 = yield* encodedOutput(detect11);
+        const expectation2 = expect(encodedOutput6);
+        const encodedOutput8 = yield* encodedOutput(records);
+        expectation2.toBe(encodedOutput8);
       }),
       { arbitrary: { seed: 520 } }
     );
     it.effect(
       "groups and sorts multiple candidates independently of input order",
       Effect.fnUntraced(function* () {
-        const original = yield* S.encodeEffect(ContradictionDetectionSnapshot)(
-          yield* S.decodeUnknownEffect(ContradictionDetectionSnapshot)(A.getUnsafe(vectors, 0).snapshot)
-        );
+        const argument = S.encodeEffect(ContradictionDetectionSnapshot);
+        const value9 = yield* S.decodeUnknownEffect(ContradictionDetectionSnapshot)(A.getUnsafe(vectors, 0).snapshot);
+        const original = yield* argument(value9);
         const third = {
           ...A.getUnsafe(original.beliefs, 1),
           ref: { edgeVersionId: 3, logicalKey: Str.repeat(64)("3"), version: 1 },
@@ -183,19 +198,20 @@ describe("Contradiction detection golden vectors", () => {
             Order.String
           )
         );
-        expect(
-          yield* encodedOutput(
-            yield* detect(ContradictionDetectionSnapshot.make({ ...snapshot, beliefs: A.reverse(snapshot.beliefs) }))
-          )
-        ).toBe(yield* encodedOutput(records));
+        const detect12 = yield* detect(
+          ContradictionDetectionSnapshot.make({ ...snapshot, beliefs: A.reverse(snapshot.beliefs) })
+        );
+        const encodedOutput7 = yield* encodedOutput(detect12);
+        const expectation3 = expect(encodedOutput7);
+        const encodedOutput10 = yield* encodedOutput(records);
+        expectation3.toBe(encodedOutput10);
       })
     );
     it.effect(
       "empty input emits nothing",
       Effect.fnUntraced(function* () {
-        expect(yield* detect(ContradictionDetectionSnapshot.make({ beliefs: [], singleValuedPredicates: [] }))).toEqual(
-          []
-        );
+        const detect8 = yield* detect(ContradictionDetectionSnapshot.make({ beliefs: [], singleValuedPredicates: [] }));
+        expect(detect8).toEqual([]);
       })
     );
     it.effect(

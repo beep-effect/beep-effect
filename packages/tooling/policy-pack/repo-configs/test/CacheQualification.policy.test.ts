@@ -128,10 +128,12 @@ describe("cache qualification policy", () => {
     "accepts package names containing s and rejects whitespace independently",
     Effect.fnUntraced(function* () {
       for (const computation of ["@beep/schema#check", "@beep/types#lint"]) {
-        assertTrue(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isSuccess));
+        const pipe1 = yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isSuccess);
+        assertTrue(pipe1);
       }
       for (const computation of ["pkg #lint", "pkg#li nt", "pkg\t#lint"]) {
-        assertTrue(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isFailure));
+        const pipe2 = yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isFailure);
+        assertTrue(pipe2);
       }
     })
   );
@@ -330,7 +332,8 @@ describe("cache qualification policy", () => {
         "@/package.json",
         "https://example.com/@scope/package.json",
       ]) {
-        assertTrue(yield* decodeCacheEvidenceReference({ path, sha256: digest(1) }).pipe(Effect.isFailure));
+        const pipe3 = yield* decodeCacheEvidenceReference({ path, sha256: digest(1) }).pipe(Effect.isFailure);
+        assertTrue(pipe3);
       }
     })
   );
@@ -339,11 +342,14 @@ describe("cache qualification policy", () => {
     "rejects invalid identities, unbound evidence and unsafe receipt paths at decode",
     Effect.fnUntraced(function* () {
       for (const computation of ["lint", "workspace#", "workspace#lint#extra", "workspace #lint"]) {
-        assertTrue(yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isFailure));
+        const pipe4 = yield* decodeCacheQualificationKey({ ...key, computation }).pipe(Effect.isFailure);
+        assertTrue(pipe4);
       }
-      assertTrue(yield* decodeCacheQualificationObservation({ passed: true }).pipe(Effect.isFailure));
+      const pipe5 = yield* decodeCacheQualificationObservation({ passed: true }).pipe(Effect.isFailure);
+      assertTrue(pipe5);
       for (const path of ["/private/log", "../receipt.json", "safe/../../escape", "windows\\\\receipt"]) {
-        assertTrue(yield* decodeCacheEvidenceReference({ path, sha256: digest(1) }).pipe(Effect.isFailure));
+        const pipe6 = yield* decodeCacheEvidenceReference({ path, sha256: digest(1) }).pipe(Effect.isFailure);
+        assertTrue(pipe6);
       }
     })
   );
@@ -687,11 +693,10 @@ it.effect("keeps signed execution identities distinct and rejects inconsistent a
       )
     ).toContain("signed-execution-source-drift");
     const encoded = yield* S.encodeEffect(CacheSignedExecutionProfile)(execution);
-    expect(
-      yield* S.decodeUnknownEffect(CacheSignedExecutionProfile)({
-        ...encoded,
-        runtimeKeys: { stable: digest(106) },
-      }).pipe(Effect.isFailure)
-    ).toBe(true);
+    const pipe7 = yield* S.decodeUnknownEffect(CacheSignedExecutionProfile)({
+      ...encoded,
+      runtimeKeys: { stable: digest(106) },
+    }).pipe(Effect.isFailure);
+    expect(pipe7).toBe(true);
   })
 );

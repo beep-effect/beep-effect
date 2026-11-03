@@ -178,7 +178,8 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
       );
 
       const perUserInstalled = Effect.gen(function* () {
-        const executable = path.join(yield* localAppData, "AnthropicClaude", "claude.exe");
+        const localAppData1 = yield* localAppData;
+        const executable = path.join(localAppData1, "AnthropicClaude", "claude.exe");
         const present = yield* fs
           .exists(executable)
           .pipe(Effect.mapError(failWith("Claude's folder could not be checked.")));
@@ -207,7 +208,8 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
       // claude:// handler pointing at a removed app-<version> folder, so files
       // and links go to this launcher, which always starts the current version.
       const perUserClaude = Effect.gen(function* () {
-        const claude = path.join(yield* localAppData, "AnthropicClaude", "claude.exe");
+        const localAppData2 = yield* localAppData;
+        const claude = path.join(localAppData2, "AnthropicClaude", "claude.exe");
         const present = yield* fs
           .exists(claude)
           .pipe(Effect.mapError(failWith("Claude's folder could not be checked.")));
@@ -268,7 +270,8 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
           );
         }),
         stateDir: Effect.gen(function* () {
-          const dir = path.join(yield* localAppData, "beep", "practice-setup");
+          const localAppData3 = yield* localAppData;
+          const dir = path.join(localAppData3, "beep", "practice-setup");
           yield* fs
             .makeDirectory(dir, { recursive: true })
             .pipe(Effect.mapError(failWith("The setup folder could not be created.")));
@@ -324,7 +327,8 @@ export class InstallerDownload extends Context.Service<InstallerDownload, Instal
   static readonly layer = Layer.effect(
     InstallerDownload,
     Effect.gen(function* () {
-      const client = HttpClient.filterStatusOk(yield* HttpClient.HttpClient);
+      const HttpClient4 = yield* HttpClient.HttpClient;
+      const client = HttpClient.filterStatusOk(HttpClient4);
       const crypto = yield* Digest.Digest;
       const fs = yield* FileSystem.FileSystem;
 
@@ -334,7 +338,8 @@ export class InstallerDownload extends Context.Service<InstallerDownload, Instal
             message: "The Claude installer could not be downloaded. Check the internet connection and try again.",
           });
           const response = yield* client.get(installer.url).pipe(Effect.mapError(() => unreachable));
-          const bytes = new Uint8Array(yield* response.arrayBuffer.pipe(Effect.mapError(() => unreachable)));
+          const pipe5 = yield* response.arrayBuffer.pipe(Effect.mapError(() => unreachable));
+          const bytes = new Uint8Array(pipe5);
           const digest = yield* crypto.digestHex(Digest.sha256, bytes);
           if (digest !== installer.sha256) {
             return yield* SetupFailure.make({
@@ -571,21 +576,17 @@ export class ClaudeState extends Context.Service<ClaudeState, ClaudeStateShape>(
 
       const dataDir = Effect.gen(function* () {
         return (yield* host.claudeInstall) === ClaudeInstall.Enum.msix
-          ? path.join(
-              yield* Config.String("LOCALAPPDATA"),
-              "Packages",
-              CLAUDE_PACKAGE_FAMILY,
-              "LocalCache",
-              "Roaming",
-              "Claude"
+          ? yield* Effect.map(Config.String("LOCALAPPDATA"), (value) =>
+              path.join(value, "Packages", CLAUDE_PACKAGE_FAMILY, "LocalCache", "Roaming", "Claude")
             )
-          : path.join(yield* Config.String("APPDATA"), "Claude");
+          : yield* Effect.map(Config.String("APPDATA"), (value) => path.join(value, "Claude"));
       });
 
       // None when the file does not exist yet; fails when it cannot be located or read.
       const readClaudeFile = Effect.fnUntraced(function* (name: string) {
-        const file = path.join(yield* dataDir, name);
-        return (yield* fs.exists(file)) ? O.some(yield* fs.readFileString(file)) : O.none();
+        const dataDir6 = yield* dataDir;
+        const file = path.join(dataDir6, name);
+        return (yield* fs.exists(file)) ? yield* Effect.asSome(fs.readFileString(file)) : O.none();
       });
 
       return ClaudeState.of({

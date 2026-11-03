@@ -115,7 +115,8 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
         engines: { node: ">=24" },
         packageManager: "pnpm@10.0.0",
       });
-      const keys = R.keys(yield* S.decodeEffect(Json)(json));
+      const value1 = yield* S.decodeEffect(Json)(json);
+      const keys = R.keys(value1);
       assert.isBelow(keys.indexOf("packageManager"), keys.indexOf("engines"));
       assert.isBelow(keys.indexOf("engines"), keys.indexOf("devEngines"));
     })
@@ -129,7 +130,8 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
         sideEffects: false,
         author: "C. Spencer Beggs",
       });
-      const keys = R.keys(yield* S.decodeEffect(Json)(json));
+      const value2 = yield* S.decodeEffect(Json)(json);
+      const keys = R.keys(value2);
       assert.isBelow(keys.indexOf("author"), keys.indexOf("sideEffects"));
       assert.isBelow(keys.indexOf("sideEffects"), keys.indexOf("type"));
     })
@@ -143,7 +145,8 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
         cpu: ["arm64"],
         os: ["darwin"],
       });
-      const keys = R.keys(yield* S.decodeEffect(Json)(json));
+      const value3 = yield* S.decodeEffect(Json)(json);
+      const keys = R.keys(value3);
       assert.isBelow(keys.indexOf("os"), keys.indexOf("cpu"));
       assert.isBelow(keys.indexOf("cpu"), keys.indexOf("publishConfig"));
     })
@@ -158,7 +161,8 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
         _meta: 3,
         pnpm: { overrides: {} },
       });
-      const keys = R.keys(yield* S.decodeEffect(Json)(json));
+      const value4 = yield* S.decodeEffect(Json)(json);
+      const keys = R.keys(value4);
       // `pnpm` is a known key; the unknowns follow it: public sorted, then private.
       assert.isBelow(keys.indexOf("pnpm"), keys.indexOf("aardvark"));
       assert.isBelow(keys.indexOf("aardvark"), keys.indexOf("zebra"));
@@ -298,7 +302,8 @@ describe("renderJson property", () => {
     ([raw]) =>
       Effect.gen(function* () {
         const text = renderJson(raw, resolveFormatOptions({ sort: false, stripEmpty: false, newline: false }));
-        assert.deepStrictEqual(yield* S.decodeEffect(Json)(text), raw);
+        const value5 = yield* S.decodeEffect(Json)(text);
+        assert.deepStrictEqual(value5, raw);
       }),
     { arbitrary: fcRuns(50) }
   );

@@ -410,10 +410,12 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
     if (excluded) continue;
     appendLiteralKitConstAssertionViolations(literalKitConstAssertionViolations, sourceFile, filePath);
     A.appendInPlace(scannedFiles, filePath);
-    A.appendAllInPlace(
-      parityEntries,
-      yield* SchemaFirstDetectors.parityEntriesFromSourceFile(sourceFile, filePath, owner)
+    const parityEntriesFromSourceFile1 = yield* SchemaFirstDetectors.parityEntriesFromSourceFile(
+      sourceFile,
+      filePath,
+      owner
     );
+    A.appendAllInPlace(parityEntries, parityEntriesFromSourceFile1);
     appendInterfaceEntries(entries, sourceFile, filePath, owner);
     appendTypeAliasEntries(entries, sourceFile, filePath, owner);
     appendCallEntries(entries, sourceFile, filePath, owner);
@@ -756,7 +758,8 @@ export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (opt
   yield* SchemaFirstRender.logEnforcedCandidates(findings.enforcedCandidates);
   yield* SchemaFirstRender.logLiteralKitConstAssertionViolations(literalKitConstAssertionViolations);
   yield* SchemaFirstRender.logActiveAdvisories(findings.activeAdvisories);
-  yield* enforceRatchet(yield* SchemaFirstRender.parityRatchetInput(findings.parity, options));
+  const parityRatchetInput2 = yield* SchemaFirstRender.parityRatchetInput(findings.parity, options);
+  yield* enforceRatchet(parityRatchetInput2);
 
   if (schemaFirstLintHasFailures(options, findings, literalKitConstAssertionViolations)) {
     return yield* failWithReportedExit("schema-first: inventory enforcement failed.");

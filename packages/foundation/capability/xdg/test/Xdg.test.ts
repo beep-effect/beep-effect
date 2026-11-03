@@ -8,9 +8,11 @@ import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 /** Build the fixture graph in a scope that owns its acquired resources. */
@@ -31,7 +33,9 @@ describe("Xdg", () => {
     [Arbitrary.schema(XdgPaths)],
     ([paths]) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(XdgPaths)(yield* S.encodeEffect(XdgPaths)(paths));
+        const argument = S.decodeEffect(XdgPaths);
+        const value2 = yield* S.encodeEffect(XdgPaths)(paths);
+        const decoded = yield* argument(value2);
         assertTrue(S.toEquivalence(XdgPaths)(decoded, paths));
       }),
     { arbitrary: fcRuns(50) }
@@ -92,23 +96,27 @@ describe("Xdg", () => {
     // one resolved every AppDirs fallback against the working directory. HOME now
     // takes the absolute-only rule of the other variables, POSIX or Windows.
     for (const home of ["relative/home", "./home", " /home/ada", "~/ada", "C:relative"]) {
-      it.effect(`rejects a relative HOME ${JSON.stringify(home)} with XdgEnvError`, () =>
-        Effect.gen(function* () {
-          const error = yield* Effect.flip(Effect.void.pipe(provideLayer(env({ HOME: home }))));
-          assert.instanceOf(error, XdgEnvError);
-          assert.strictEqual(error.variable, "HOME");
-          assert.strictEqual(error.message, "The HOME environment variable is not set to an absolute path");
-          assert(P.isTagged("ConfigError")(error.cause));
-        })
+      it.effect(
+        `rejects a relative HOME ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(home), identity)} with XdgEnvError`,
+        () =>
+          Effect.gen(function* () {
+            const error = yield* Effect.flip(Effect.void.pipe(provideLayer(env({ HOME: home }))));
+            assert.instanceOf(error, XdgEnvError);
+            assert.strictEqual(error.variable, "HOME");
+            assert.strictEqual(error.message, "The HOME environment variable is not set to an absolute path");
+            assert(P.isTagged("ConfigError")(error.cause));
+          })
       );
     }
 
     for (const home of ["/home/ada", "C:\\Users\\ada", "D:/Users/ada", "\\\\server\\home"]) {
-      it.effect(`keeps an absolute HOME ${JSON.stringify(home)} verbatim`, () =>
-        Effect.gen(function* () {
-          const paths = yield* Xdg;
-          assert.strictEqual(paths.home, home);
-        }).pipe(provideLayer(env({ HOME: home })))
+      it.effect(
+        `keeps an absolute HOME ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(home), identity)} verbatim`,
+        () =>
+          Effect.gen(function* () {
+            const paths = yield* Xdg;
+            assert.strictEqual(paths.home, home);
+          }).pipe(provideLayer(env({ HOME: home })))
       );
     }
 
@@ -136,11 +144,13 @@ describe("Xdg", () => {
 
     for (const [variable, field] of posixDirectories) {
       for (const value of [" ", "relative", "~/dir", " /leading-space", "C:\\Users\\ada"]) {
-        it.effect(`ignores ${JSON.stringify(value)} in ${variable}`, () =>
-          Effect.gen(function* () {
-            const paths = yield* Xdg;
-            assert.isFalse(field in paths);
-          }).pipe(provideLayer(env({ HOME: "/home/ada", [variable]: value })))
+        it.effect(
+          `ignores ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)} in ${variable}`,
+          () =>
+            Effect.gen(function* () {
+              const paths = yield* Xdg;
+              assert.isFalse(field in paths);
+            }).pipe(provideLayer(env({ HOME: "/home/ada", [variable]: value })))
         );
       }
     }
@@ -262,7 +272,8 @@ describe("Xdg", () => {
       });
       assert.isTrue(S.is(PlatformEvent)({ platform: "linux" }));
       assert.isFalse(S.is(PlatformEvent)({ platform: "other" }));
-      assert.strictEqual(yield* S.decodeEffect(XdgPlatform)("linux"), "linux");
+      const value1 = yield* S.decodeEffect(XdgPlatform)("linux");
+      assert.strictEqual(value1, "linux");
     })
   );
 

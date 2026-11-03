@@ -11,11 +11,13 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Result from "effect/Result";
 import * as Runtime from "effect/Runtime";
+import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
@@ -39,7 +41,7 @@ const platformServices = Layer.mergeAll(
 );
 
 const sub = Command.make("sub", { count: Flag.Int("count").pipe(Flag.withDefault(1)) }, ({ count }) =>
-  Console.log(JSON.stringify({ count }))
+  Console.log(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ count }), identity))
 );
 const app = Command.make("app").pipe(Command.withSubcommands([sub]));
 const HELP_MARK = "USAGE";

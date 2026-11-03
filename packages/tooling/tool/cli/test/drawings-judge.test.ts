@@ -60,11 +60,14 @@ describe("beep drawings judge-ingest", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const dir = yield* writePack();
-        const result = yield* ingest(dir, yield* fenced(inventory("orientation", "sheets/fig-1.png")));
+        const fenced1 = yield* fenced(inventory("orientation", "sheets/fig-1.png"));
+        const result = yield* ingest(dir, fenced1);
         expect(result.requiredCount).toBe(1);
-        expect(yield* fs.exists(path.join(dir, "inventory.json"))).toBe(true);
+        const exists2 = yield* fs.exists(path.join(dir, "inventory.json"));
+        expect(exists2).toBe(true);
         // a bare JSON reply is accepted too
-        const bare = yield* ingest(dir, yield* toJson(inventory("view-agreement", "sheets/fig-1.png")));
+        const toJson3 = yield* toJson(inventory("view-agreement", "sheets/fig-1.png"));
+        const bare = yield* ingest(dir, toJson3);
         expect(bare.findings[0]?.lens).toBe("view-agreement");
       })
     );
@@ -73,14 +76,18 @@ describe("beep drawings judge-ingest", () => {
       "refuses a browser lens, evidence outside the pack, and a wrong requiredCount",
       Effect.fnUntraced(function* () {
         const dir = yield* writePack();
-        const browser = yield* Effect.flip(ingest(dir, yield* fenced(inventory("drag-ghost", "sheets/fig-1.png"))));
+        const fenced4 = yield* fenced(inventory("drag-ghost", "sheets/fig-1.png"));
+        const browser = yield* Effect.flip(ingest(dir, fenced4));
         assertInstanceOf(browser, DrawingsCommandError);
         expect(browser.message).toContain('lens "drag-ghost" is not a drawing-rubric lens');
-        const missing = yield* Effect.flip(ingest(dir, yield* fenced(inventory("orientation", "sheets/fig-9.png"))));
+        const fenced5 = yield* fenced(inventory("orientation", "sheets/fig-9.png"));
+        const missing = yield* Effect.flip(ingest(dir, fenced5));
         expect(missing.message).toContain('"sheets/fig-9.png" is not a file in the pack');
-        const escape = yield* Effect.flip(ingest(dir, yield* fenced(inventory("orientation", "../../etc/passwd"))));
+        const fenced6 = yield* fenced(inventory("orientation", "../../etc/passwd"));
+        const escape = yield* Effect.flip(ingest(dir, fenced6));
         expect(escape.message).toContain("is not a file in the pack");
-        const count = yield* Effect.flip(ingest(dir, yield* fenced(inventory("orientation", "sheets/fig-1.png", 0))));
+        const fenced7 = yield* fenced(inventory("orientation", "sheets/fig-1.png", 0));
+        const count = yield* Effect.flip(ingest(dir, fenced7));
         expect(count.message).toContain("not a valid qa-inventory/v1");
       })
     );

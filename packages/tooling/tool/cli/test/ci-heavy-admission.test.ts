@@ -28,10 +28,12 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { parseRunnerFile } from "./support/runnerFile.ts";
@@ -42,16 +44,19 @@ const docs = ["docs/runbooks/ci.md", "goals/x/PLAN.md"];
 const event = (values: Partial<HeavyAdmissionEvent> = {}) =>
   HeavyAdmissionEvent.make({ eventName: "pull_request", labels: [], draft: false, changedPaths: code, ...values });
 const payload = (labels: ReadonlyArray<string>, draft = false, base = "main") =>
-  JSON.stringify({
-    action: "synchronize",
-    number: 1,
-    pull_request: {
-      draft,
-      labels: A.map(labels, (name) => ({ name, color: "ededed" })),
-      head: { repo: { full_name: "beep-effect/beep-effect" } },
-      base: { ref: base, repo: { full_name: "beep-effect/beep-effect" } },
-    },
-  });
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      action: "synchronize",
+      number: 1,
+      pull_request: {
+        draft,
+        labels: A.map(labels, (name) => ({ name, color: "ededed" })),
+        head: { repo: { full_name: "beep-effect/beep-effect" } },
+        base: { ref: base, repo: { full_name: "beep-effect/beep-effect" } },
+      },
+    }),
+    identity
+  );
 // The scripted git: fetch succeeds silently, diff prints the scripted paths.
 const gitSpawner = (diff: string) =>
   ScriptedSpawner.make((_command, args) => ({ stdout: args[0] === "diff" ? diff : "" }));
@@ -81,7 +86,8 @@ const roundTrips = Effect.fn("admissionTest.roundTrips")(function* <Schema exten
     Effect.fnUntraced(function* (value) {
       const encoded = yield* S.encodeEffect(schema)(value);
       const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-      expect(yield* S.encodeEffect(schema)(decoded)).toEqual(encoded);
+      const value1 = yield* S.encodeEffect(schema)(decoded);
+      expect(value1).toEqual(encoded);
     })
   );
 });
@@ -247,7 +253,8 @@ it.layer(platform, { timeout: "30 seconds" })("B8 heavy admission reader", (laye
             changedPaths: ["packages/a/src/index.ts", "docs/x.md"],
           })
         );
-        expect(yield* Ref.get(commands)).toEqual([
+        const got = yield* Ref.get(commands);
+        expect(got).toEqual([
           ["git", "fetch", "--quiet", "--no-tags", "origin", "+refs/heads/main:refs/remotes/origin/main"],
           ["git", "diff", "--name-only", "origin/main...HEAD"],
         ]);
@@ -262,7 +269,8 @@ it.layer(platform, { timeout: "30 seconds" })("B8 heavy admission reader", (laye
           }),
           capture
         );
-        expect(A.map(yield* Ref.get(commands), lastLine)).toEqual([
+        const got2 = yield* Ref.get(commands);
+        expect(A.map(got2, lastLine)).toEqual([
           "+refs/heads/release/2026:refs/remotes/origin/release/2026",
           "origin/release/2026...HEAD",
         ]);
@@ -272,7 +280,8 @@ it.layer(platform, { timeout: "30 seconds" })("B8 heavy admission reader", (laye
           const bare = yield* readHeavyAdmissionEvent(HeavyAdmissionReadInput.make({ eventName, cwd: root }), capture);
           expect(bare).toEqual(HeavyAdmissionEvent.make({ eventName }));
         }
-        expect(yield* Ref.get(commands)).toEqual([]);
+        const got3 = yield* Ref.get(commands);
+        expect(got3).toEqual([]);
       })
     )
   );
@@ -332,7 +341,8 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         // The layer shares one TestConsole across tests: read only this test's lines.
-        const priorLines = A.length(yield* logs);
+        const logs4 = yield* logs;
+        const priorLines = A.length(logs4);
         const path = yield* writeEvent(root, payload([]));
         const output = `${root}/github-output.txt`;
         yield* fs.writeFileString(output, "prior=1\n");
@@ -360,12 +370,15 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
           docsCapture
         ).pipe(provideScopedLayer(outputs));
         expect(skipped.verdict).toBe("skip-satisfied");
-        const printed = A.drop(yield* logs, priorLines);
-        expect(yield* HeavyAdmissionJson.decode(printed[0] ?? "")).toEqual(held);
+        const logs5 = yield* logs;
+        const printed = A.drop(logs5, priorLines);
+        const decoded6 = yield* HeavyAdmissionJson.decode(printed[0] ?? "");
+        expect(decoded6).toEqual(held);
         expect(printed[1]).toContain("heavy admission: skip-satisfied");
         // Parity: the entries the runner reads equal the key=value lines the
         // command appended before the write moved to `ActionOutputs.set`.
-        expect(parseRunnerFile(yield* fs.readFileString(output))).toEqual(
+        const readFileString7 = yield* fs.readFileString(output);
+        expect(parseRunnerFile(readFileString7)).toEqual(
           parseRunnerFile(
             A.join(
               [
@@ -430,7 +443,8 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
             changedPathCount: 1,
           })
         );
-        expect(parseRunnerFile(yield* fs.readFileString(output))).toEqual(
+        const readFileString8 = yield* fs.readFileString(output);
+        expect(parseRunnerFile(readFileString8)).toEqual(
           parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
         );
         expect(A.map(spawner.spawns, (spawn) => spawn.args[0])).toEqual(["fetch", "diff"]);
@@ -441,11 +455,13 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
           Effect.provideService(ConfigProvider.ConfigProvider, env)
         );
         expect(idle.spawns).toEqual([]);
-        expect(parseRunnerFile(yield* fs.readFileString(output))).toEqual(
+        const readFileString9 = yield* fs.readFileString(output);
+        expect(parseRunnerFile(readFileString9)).toEqual(
           parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
         );
         const again = yield* logs;
-        expect(yield* HeavyAdmissionJson.decode(lastLine(again))).toMatchObject({
+        const decoded10 = yield* HeavyAdmissionJson.decode(lastLine(again));
+        expect(decoded10).toMatchObject({
           verdict: "run",
           sources: ["main-push"],
           changedPathCount: 0,
@@ -464,7 +480,8 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
           Effect.exit
         );
         expect(exit._tag).toBe("Failure");
-        expect(yield* errors).toContain("GITHUB_OUTPUT");
+        const errors11 = yield* errors;
+        expect(errors11).toContain("GITHUB_OUTPUT");
         expect(root.length).toBeGreaterThan(0);
       })
     )

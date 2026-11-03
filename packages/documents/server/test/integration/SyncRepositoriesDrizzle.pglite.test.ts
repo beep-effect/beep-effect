@@ -322,7 +322,8 @@ if (!shouldRunPgliteIntegration) {
         "rejects a stale SyncItem update with a typed version conflict",
         Effect.fnUntraced(function* () {
           yield* migrateDocumentsSync();
-          yield* Versioning.staleSyncItemUpdate(yield* makeDrizzleSyncItemRepository());
+          const madeDrizzleSyncItemRepository = yield* makeDrizzleSyncItemRepository();
+          yield* Versioning.staleSyncItemUpdate(madeDrizzleSyncItemRepository);
         }),
         pgliteIntegrationTimeoutMillis
       );
@@ -331,7 +332,8 @@ if (!shouldRunPgliteIntegration) {
         "advances SyncOperation versions on requeue so a stale lease cannot write",
         Effect.fnUntraced(function* () {
           yield* migrateDocumentsSync();
-          yield* Versioning.staleSyncOperationAfterRequeue(yield* makeDrizzleSyncOperationRepository());
+          const madeDrizzleSyncOperationRepository = yield* makeDrizzleSyncOperationRepository();
+          yield* Versioning.staleSyncOperationAfterRequeue(madeDrizzleSyncOperationRepository);
         }),
         pgliteIntegrationTimeoutMillis
       );

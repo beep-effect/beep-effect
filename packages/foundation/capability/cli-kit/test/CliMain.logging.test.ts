@@ -6,7 +6,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
@@ -180,7 +180,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     const program = Effect.logDebug("handler ran");
     const isJson = (line: string): boolean => {
       try {
-        JSON.parse(line);
+        Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(line), identity);
         return true;
       } catch {
         return false;
@@ -330,7 +330,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
     it.effect("control: off GitHub Actions the same line is left as it is", () =>
       Effect.gen(function* () {
-        assert.isNotEmpty(commands(yield* run("pretty", {})));
+        const result = yield* run("pretty", {});
+        assert.isNotEmpty(commands(result));
       })
     );
   });
@@ -382,7 +383,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
   describe("CliRuntime.main: the audience-override warning is written exactly once, in the decided format", () => {
     const isJson = (line: string): boolean => {
       try {
-        JSON.parse(line);
+        Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(line), identity);
         return true;
       } catch {
         return false;
@@ -436,7 +437,8 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
     it.effect("agent, plainLogger false, a valid override: nothing on stderr", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* run({ ...AGENT, TOOL_AUDIENCE: "agent" }, { plainLogger: false }), []);
+        const result1 = yield* run({ ...AGENT, TOOL_AUDIENCE: "agent" }, { plainLogger: false });
+        assert.deepStrictEqual(result1, []);
       })
     );
   });

@@ -17,8 +17,11 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
@@ -163,7 +166,7 @@ describe("internal/cli/Json printCommandJson", () => {
     const moduleUrl = new URL("../src/internal/cli/Json.ts", import.meta.url).href;
     const program = A.join(
       [
-        `import { printCommandJson } from ${JSON.stringify(moduleUrl)};`,
+        `import { printCommandJson } from ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(moduleUrl), identity)};`,
         'import * as Effect from "effect/Effect";',
         "const rawWrite = process.stdout.write.bind(process.stdout);",
         "process.stdout.write = (chunk, ...args) => {",
@@ -183,7 +186,9 @@ describe("internal/cli/Json printCommandJson", () => {
 
     expect(result.exitCode, `printCommandJson Bun child stderr: ${result.stderr.toString()}`).toBe(0);
     expect(result.stdout.byteLength).toBeGreaterThan(65_536);
-    expect(output).toBe(`${JSON.stringify(payload)}\n`);
+    expect(output).toBe(
+      `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(payload), identity)}\n`
+    );
   });
 
   it.effect(
@@ -250,7 +255,8 @@ describe("internal/cli/Printer tagged logging", () => {
         function* () {
           const log = makeTaggedLogger("ci");
           yield* log("done");
-          expect(yield* TestConsole.logLines).toEqual(["[ci] done"]);
+          const logLines1 = yield* TestConsole.logLines;
+          expect(logLines1).toEqual(["[ci] done"]);
         },
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )
@@ -263,10 +269,8 @@ describe("internal/cli/Printer tagged logging", () => {
       Effect.fnUntraced(
         function* () {
           yield* logTaggedSummary("schema-first", { live_entries: 3, missing_entries: 0 });
-          expect(yield* TestConsole.logLines).toEqual([
-            "[schema-first] live_entries=3",
-            "[schema-first] missing_entries=0",
-          ]);
+          const logLines2 = yield* TestConsole.logLines;
+          expect(logLines2).toEqual(["[schema-first] live_entries=3", "[schema-first] missing_entries=0"]);
         },
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )

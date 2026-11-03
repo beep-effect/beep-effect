@@ -64,7 +64,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import { constant, pipe } from "effect/Function";
+import { constant, identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -805,7 +805,9 @@ const exerciseEvidenceVariant = (
     RT.transformationSegmentReconciles(summary.family, summary, variant),
     `${summary.family}:${label}:transformationSegmentReconciles`
   ).toBe(expected.transformationSegmentReconciles);
-  const lines = A.map(variant, (record) => JSON.stringify(record));
+  const lines = A.map(variant, (record) =>
+    Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(record), identity)
+  );
   const segmentText = A.join(A.dropRight(lines, 2), "\n");
   const referenceHash = bytesToHex(sha256(utf8ToBytes(Str.isEmpty(segmentText) ? "" : `${segmentText}\n`)));
   expect(RT.strictEvidenceSha256(lines)).toBe(referenceHash);
@@ -1078,7 +1080,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration evidence inva
         "mail",
         "full.jsonl"
       );
-      const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+      const argument1 = Str.split(/\r?\n/u);
+      const readFileString1 = yield* fs.readFileString(ledgerPath);
+      const lines = A.filter(argument1(readFileString1), Str.isNonEmpty);
       const mailRecords = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
       const recycleFixture = yield* makeRecycleRestorationFixture();
       yield* restoreRecycle(
@@ -1091,31 +1095,25 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration evidence inva
           runLabel: "synthetic-recycle-restoration",
         })
       );
-      const recycleLines = A.filter(
-        Str.split(/\r?\n/u)(
-          yield* fs.readFileString(
-            path.join(
-              recycleFixture.corpusRoot,
-              "staging/restoration/runs/synthetic-recycle-restoration/ledgers/recycle/full.jsonl"
-            )
-          )
-        ),
-        Str.isNonEmpty
+      const argument2 = Str.split(/\r?\n/u);
+      const readFileString4 = yield* fs.readFileString(
+        path.join(
+          recycleFixture.corpusRoot,
+          "staging/restoration/runs/synthetic-recycle-restoration/ledgers/recycle/full.jsonl"
+        )
       );
+      const recycleLines = A.filter(argument2(readFileString4), Str.isNonEmpty);
       const recycleRecords = yield* Effect.forEach(recycleLines, decodeTransformationLedgerRecordJson);
       const legacyFixture = yield* makeLegacyWordRestorationFixture();
       yield* restoreLegacyWord(legacyWordRestorationOptions(legacyFixture));
-      const legacyLines = A.filter(
-        Str.split(/\r?\n/u)(
-          yield* fs.readFileString(
-            path.join(
-              legacyFixture.corpusRoot,
-              "staging/restoration/runs/synthetic-legacy-word-restoration/ledgers/legacy-word/full.jsonl"
-            )
-          )
-        ),
-        Str.isNonEmpty
+      const argument3 = Str.split(/\r?\n/u);
+      const readFileString6 = yield* fs.readFileString(
+        path.join(
+          legacyFixture.corpusRoot,
+          "staging/restoration/runs/synthetic-legacy-word-restoration/ledgers/legacy-word/full.jsonl"
+        )
       );
+      const legacyLines = A.filter(argument3(readFileString6), Str.isNonEmpty);
       const legacyRecords = yield* Effect.forEach(legacyLines, decodeTransformationLedgerRecordJson);
 
       A.forEach([mailRecords, recycleRecords, legacyRecords], exerciseEvidenceMutations);
@@ -1253,17 +1251,20 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus catalog", (it) => {
         sizeBytes: number,
         destPath: string
       ): string =>
-        JSON.stringify({
-          destPath,
-          mtimeEpoch: 1_700_000_000,
-          mtimeIso: "2023-11-14T22:13:20Z",
-          originPath: `/origin/${sourceLabel}/${relativePath}`,
-          relativePath,
-          salvagedAt: "2026-06-11T15:00:00Z",
-          sha256,
-          sizeBytes,
-          sourceLabel,
-        });
+        Result.getOrThrowWith(
+          S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+            destPath,
+            mtimeEpoch: 1_700_000_000,
+            mtimeIso: "2023-11-14T22:13:20Z",
+            originPath: `/origin/${sourceLabel}/${relativePath}`,
+            relativePath,
+            salvagedAt: "2026-06-11T15:00:00Z",
+            sha256,
+            sizeBytes,
+            sourceLabel,
+          }),
+          identity
+        );
 
       const manifestLines = [
         record("source-a", "docs/a.txt", digestA, 100, path.join(sourceADir, "docs/a.txt")),
@@ -1508,10 +1509,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus organize", (it) => {
         unsortedFiles: 1,
         versionGroups: 1,
       });
-      const records = yield* Effect.forEach(
-        yield* readProvenanceLines(path.join(catalogRoot, "organize-manifest.jsonl")),
-        (line) => decodeOrganizeRecordJson(line)
-      );
+      const readProvenanceLines1 = yield* readProvenanceLines(path.join(catalogRoot, "organize-manifest.jsonl"));
+      const records = yield* Effect.forEach(readProvenanceLines1, (line) => decodeOrganizeRecordJson(line));
       expect(
         A.map(
           A.filter(records, (row) => row.docket === "10109WO02-US1"),
@@ -1520,16 +1519,19 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus organize", (it) => {
       ).toEqual([1, 2]);
       expect(A.filter(records, (row) => !row.materialized)).toHaveLength(2);
       const organizedRoot = path.join(corpusRoot, "organized");
-      expect(yield* fs.readFileString(path.join(organizedRoot, "clients/Example_Client/notes.txt"))).toBe(
-        "client notes"
-      );
-      expect(yield* fs.readFileString(path.join(organizedRoot, "_unsorted/source-b/misc.txt"))).toBe("unsorted notes");
+      const readFileString2 = yield* fs.readFileString(path.join(organizedRoot, "clients/Example_Client/notes.txt"));
+      expect(readFileString2).toBe("client notes");
+      const readFileString3 = yield* fs.readFileString(path.join(organizedRoot, "_unsorted/source-b/misc.txt"));
+      expect(readFileString3).toBe("unsorted notes");
       const archiveLink = path.join(organizedRoot, "email-archives/source-a--mail.pst");
-      expect(yield* fs.readLink(archiveLink)).toBe(path.join(rawRoot, "source-a/mail.pst"));
+      const readLink4 = yield* fs.readLink(archiveLink);
+      expect(readLink4).toBe(path.join(rawRoot, "source-a/mail.pst"));
       const refused = yield* organizeCorpus(options).pipe(Effect.flip);
       expect(refused.message).toContain("is not empty; pass --overwrite");
-      expect(yield* fs.readFileString(archiveLink)).toBe("mail archive");
-      expect(yield* organizeCorpus(CorpusOrganizeOptions.make({ ...options, overwrite: true }))).toEqual(summary);
+      const readFileString5 = yield* fs.readFileString(archiveLink);
+      expect(readFileString5).toBe("mail archive");
+      const organizeCorpus6 = yield* organizeCorpus(CorpusOrganizeOptions.make({ ...options, overwrite: true }));
+      expect(organizeCorpus6).toEqual(summary);
       const withoutClients = yield* organizeCorpus(CorpusOrganizeOptions.make({ corpusRoot, overwrite: true }));
       expect(withoutClients.clientFiles).toBe(0);
       expect(withoutClients.unsortedFiles).toBe(2);
@@ -1560,7 +1562,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus organize", (it) => {
       expect(
         (yield* organizeCorpus(CorpusOrganizeOptions.make({ ...options, clientMapPath })).pipe(Effect.flip)).message
       ).toContain("Client map failed schema validation");
-      expect(yield* fs.readDirectory(path.join(corpusRoot, "organized"))).toEqual([]);
+      const readDirectory7 = yield* fs.readDirectory(path.join(corpusRoot, "organized"));
+      expect(readDirectory7).toEqual([]);
     })
   );
 });
@@ -1872,8 +1875,10 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus extract and salvage", (it
       ).pipe(Effect.flip);
 
       expect(error.message).toContain("cannot contain a symbolic link");
-      expect(yield* fs.readFileString(sentinel)).toBe("untouched");
-      expect(yield* fs.exists(path.join(stagingRoot, ".extract.extract.lock"))).toBe(false);
+      const readFileString8 = yield* fs.readFileString(sentinel);
+      expect(readFileString8).toBe("untouched");
+      const exists9 = yield* fs.exists(path.join(stagingRoot, ".extract.extract.lock"));
+      expect(exists9).toBe(false);
     })
   );
 
@@ -1922,17 +1927,20 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus extract and salvage", (it
       yield* fs.writeFileString(txtPath, "stub text body");
 
       const record = (relativePath: string, hash: string, sizeBytes: number, destPath: string): string =>
-        JSON.stringify({
-          destPath,
-          mtimeEpoch: 1_700_000_000,
-          mtimeIso: "2023-11-14T22:13:20Z",
-          originPath: `/origin/source-a/${relativePath}`,
-          relativePath,
-          salvagedAt: "2026-06-11T15:00:00Z",
-          sha256: hash,
-          sizeBytes,
-          sourceLabel: "source-a",
-        });
+        Result.getOrThrowWith(
+          S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+            destPath,
+            mtimeEpoch: 1_700_000_000,
+            mtimeIso: "2023-11-14T22:13:20Z",
+            originPath: `/origin/source-a/${relativePath}`,
+            relativePath,
+            salvagedAt: "2026-06-11T15:00:00Z",
+            sha256: hash,
+            sizeBytes,
+            sourceLabel: "source-a",
+          }),
+          identity
+        );
 
       // Real digests so salvage verification passes: sha256("not a real pst") / sha256("stub text body")
       const pstDigest = "166df44db090f14dbb3ec7730fc17e78c170477163a6c913e5485d075c4b92d0";
@@ -2288,13 +2296,12 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
     Effect.fnUntraced(function* () {
       const scan = "pages=3 synthetic scan";
       const digital = "pages=1 extract-long-text";
-      const image = new Uint8Array(
-        yield* Effect.promise(() =>
-          sharp({ create: { width: 1, height: 1, channels: 3, background: "white" } })
-            .png()
-            .toBuffer()
-        )
+      const promise10 = yield* Effect.promise(() =>
+        sharp({ create: { width: 1, height: 1, channels: 3, background: "white" } })
+          .png()
+          .toBuffer()
       );
+      const image = new Uint8Array(promise10);
       const fixture = yield* makeExtractResumeFixture([
         { content: scan, name: "scan.pdf" },
         { content: image, name: "photo.png" },
@@ -2322,7 +2329,8 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
 
       expect(withoutOcr.ocrSourceCount).toBe(0);
       expect(withoutOcr.textArtifactCount).toBe(4);
-      expect(yield* fixture.exists(`ocr/pages/${operationIdFor(scan)}.jsonl`)).toBe(true);
+      const exists11 = yield* fixture.exists(`ocr/pages/${operationIdFor(scan)}.jsonl`);
+      expect(exists11).toBe(true);
 
       // Nothing from the non-OCR run is reused: its markers never looked at the pages.
       expect(Struct.pick(summary, ocrSummaryCountKeys)).toEqual({
@@ -2365,7 +2373,8 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
 
       expect(resumed.alreadyCompleteCount).toBe(6);
       expect(resumed.ocrPageCount).toBe(4);
-      expect(A.length(yield* fixture.recognitionCalls())).toBe(4);
+      const recognitionCalls12 = yield* fixture.recognitionCalls();
+      expect(A.length(recognitionCalls12)).toBe(4);
     })
   );
 
@@ -2443,17 +2452,23 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
       yield* fixture.run({ ocr: true });
       const resumed = yield* fixture.run({ ocr: true });
       expect(resumed.alreadyCompleteCount).toBe(1);
-      expect(yield* fixture.recognitionCalls()).toHaveLength(1);
-      expect(yield* fixture.readText("ocr/languages.json")).toContain('"missing":["chi_sim","chi_tra"]');
+      const recognitionCalls13 = yield* fixture.recognitionCalls();
+      expect(recognitionCalls13).toHaveLength(1);
+      const readText14 = yield* fixture.readText("ocr/languages.json");
+      expect(readText14).toContain('"missing":["chi_sim","chi_tra"]');
 
       yield* fixture.installLanguages(["chi_sim", "eng", "osd"]);
       const installed = yield* fixture.run({ ocr: true });
       expect(installed.alreadyCompleteCount).toBe(0);
-      expect(yield* fixture.recognitionCalls()).toHaveLength(2);
-      expect(A.map(yield* fixture.pageRows(han), (row) => row.languages)).toEqual([["chi_sim", "eng"]]);
-      expect(yield* fixture.readText("ocr/languages.json")).toContain('"missing":["chi_tra"]');
+      const recognitionCalls15 = yield* fixture.recognitionCalls();
+      expect(recognitionCalls15).toHaveLength(2);
+      const pageRows16 = yield* fixture.pageRows(han);
+      expect(A.map(pageRows16, (row) => row.languages)).toEqual([["chi_sim", "eng"]]);
+      const readText17 = yield* fixture.readText("ocr/languages.json");
+      expect(readText17).toContain('"missing":["chi_tra"]');
       expect((yield* fixture.run({ ocr: true })).alreadyCompleteCount).toBe(1);
-      expect(yield* fixture.readText("ocr/languages.json")).toContain('"missing":["chi_tra"]');
+      const readText18 = yield* fixture.readText("ocr/languages.json");
+      expect(readText18).toContain('"missing":["chi_tra"]');
     })
   );
 
@@ -2469,13 +2484,17 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
         ["osd"]
       );
       yield* fixture.run({ ocr: true });
-      expect(yield* fixture.recognitionCalls()).toHaveLength(0);
-      expect(yield* fixture.readText(`outcomes/${contentDigest(han)}.json`)).toContain('"ocrEnabled":false');
+      const recognitionCalls19 = yield* fixture.recognitionCalls();
+      expect(recognitionCalls19).toHaveLength(0);
+      const readText20 = yield* fixture.readText(`outcomes/${contentDigest(han)}.json`);
+      expect(readText20).toContain('"ocrEnabled":false');
       expect((yield* fixture.run({ ocr: true })).alreadyCompleteCount).toBe(1);
-      expect(yield* fixture.readText("ocr/languages.json")).toContain('"missing":["chi_sim","chi_tra","eng"]');
+      const readText21 = yield* fixture.readText("ocr/languages.json");
+      expect(readText21).toContain('"missing":["chi_sim","chi_tra","eng"]');
       yield* fixture.installLanguages(["chi_sim", "eng", "osd"]);
       expect((yield* fixture.run({ ocr: true })).alreadyCompleteCount).toBe(1);
-      expect(yield* fixture.recognitionCalls()).toHaveLength(1);
+      const recognitionCalls22 = yield* fixture.recognitionCalls();
+      expect(recognitionCalls22).toHaveLength(1);
       expect((yield* fixture.run({ ocr: true })).alreadyCompleteCount).toBe(2);
     })
   );
@@ -2500,26 +2519,26 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
       const undetectedReport = yield* undetected.readText("ocr/languages.json");
       const modellessReport = yield* modelless.readText("ocr/languages.json");
 
-      expect(yield* english.recognitionCalls()).toHaveLength(1);
-      expect(A.every(yield* english.recognitionCalls(), (call) => pipe(call, Str.includes(" -l eng tsv")))).toBe(true);
+      const recognitionCalls23 = yield* english.recognitionCalls();
+      expect(recognitionCalls23).toHaveLength(1);
+      const recognitionCalls24 = yield* english.recognitionCalls();
+      expect(A.every(recognitionCalls24, (call) => pipe(call, Str.includes(" -l eng tsv")))).toBe(true);
       expect(englishReport).toContain('"missing":["chi_sim","chi_tra"]');
-      expect(A.map(yield* english.pageRows(chinese), (row) => row.languages)).toEqual([["eng"]]);
+      const pageRows25 = yield* english.pageRows(chinese);
+      expect(A.map(pageRows25, (row) => row.languages)).toEqual([["eng"]]);
 
-      expect(
-        A.every(yield* multilingual.recognitionCalls(), (call) =>
-          pipe(call, Str.includes(" -l chi_sim+chi_tra+eng tsv"))
-        )
-      ).toBe(true);
+      const recognitionCalls26 = yield* multilingual.recognitionCalls();
+      expect(A.every(recognitionCalls26, (call) => pipe(call, Str.includes(" -l chi_sim+chi_tra+eng tsv")))).toBe(true);
       expect(multilingualReport).toContain('"missing":[]');
 
       // Without the osd model there is no script detection: the page is read as English.
-      expect(A.every(yield* undetected.recognitionCalls(), (call) => pipe(call, Str.includes(" -l eng tsv")))).toBe(
-        true
-      );
+      const recognitionCalls27 = yield* undetected.recognitionCalls();
+      expect(A.every(recognitionCalls27, (call) => pipe(call, Str.includes(" -l eng tsv")))).toBe(true);
       expect(undetectedReport).toContain('"scriptDetection":false');
 
       // Not even English is installed: nothing is read and the gap is reported.
-      expect(yield* modelless.recognitionCalls()).toHaveLength(0);
+      const recognitionCalls28 = yield* modelless.recognitionCalls();
+      expect(recognitionCalls28).toHaveLength(0);
       expect(modellessSummary.ocrSourceCount).toBe(0);
       expect(modellessSummary.succeededCount).toBe(1);
       expect(modellessReport).toContain('"missing":["chi_sim","chi_tra","eng"]');
@@ -2563,20 +2582,20 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
       const summary = yield* fixture.run({ ocr: true });
 
       expect(summary.ocrSourceCount).toBe(0);
-      expect(yield* fixture.recognitionCalls()).toEqual([]);
+      const recognitionCalls29 = yield* fixture.recognitionCalls();
+      expect(recognitionCalls29).toEqual([]);
     })
   );
 
   it.effect(
     "reads a single-frame TIFF and leaves a multi-frame TIFF on its first reading",
     Effect.fnUntraced(function* () {
-      const single = new Uint8Array(
-        yield* Effect.promise(() =>
-          sharp({ create: { width: 1, height: 1, channels: 3, background: "white" } })
-            .tiff()
-            .toBuffer()
-        )
+      const promise30 = yield* Effect.promise(() =>
+        sharp({ create: { width: 1, height: 1, channels: 3, background: "white" } })
+          .tiff()
+          .toBuffer()
       );
+      const single = new Uint8Array(promise30);
       const multi = syntheticTiff(3);
       const fixture = yield* makeExtractResumeFixture([
         { content: single, name: "single.tif" },
@@ -2637,14 +2656,17 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
       expect(afterTesseract.alreadyCompleteCount).toBe(0);
       expect(afterTesseract.ocrSourceCount).toBe(1);
       expect(afterTesseract.ocrPageCount).toBe(2);
-      expect(yield* noTesseract.recognitionCalls()).toHaveLength(2);
+      const recognitionCalls31 = yield* noTesseract.recognitionCalls();
+      expect(recognitionCalls31).toHaveLength(2);
       expect(afterPdfinfo.alreadyCompleteCount).toBe(0);
       expect(afterPdfinfo.ocrSourceCount).toBe(1);
-      expect(yield* noPdfinfo.recognitionCalls()).toHaveLength(2);
+      const recognitionCalls32 = yield* noPdfinfo.recognitionCalls();
+      expect(recognitionCalls32).toHaveLength(2);
 
       // Once read with the pass on, the source is settled.
       expect(settled.alreadyCompleteCount).toBe(1);
-      expect(yield* noTesseract.recognitionCalls()).toHaveLength(2);
+      const recognitionCalls33 = yield* noTesseract.recognitionCalls();
+      expect(recognitionCalls33).toHaveLength(2);
     })
   );
 });
@@ -3412,7 +3434,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
           })
         );
         const manifestPath = path.join(fixture.corpusRoot, "raw", "synthetic-restoration", "archive-ledger.jsonl");
-        const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(manifestPath)), Str.isNonEmpty);
+        const argument4 = Str.split(/\r?\n/u);
+        const readFileString7 = yield* fs.readFileString(manifestPath);
+        const lines = A.filter(argument4(readFileString7), Str.isNonEmpty);
         const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson);
         const changedRows = A.filter(records, (record) => record.recordType === "archive-changed-during-copy");
         const stablePass = A.findFirst(
@@ -3506,7 +3530,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
             })
           ).pipe(Effect.flip);
           const manifestPath = path.join(fixture.corpusRoot, "raw", "synthetic-restoration", "archive-ledger.jsonl");
-          const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(manifestPath)), Str.isNonEmpty);
+          const argument5 = Str.split(/\r?\n/u);
+          const readFileString9 = yield* fs.readFileString(manifestPath);
+          const lines = A.filter(argument5(readFileString9), Str.isNonEmpty);
           const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson);
 
           if (changeParentMode) {
@@ -3546,7 +3572,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
         ).pipe(Effect.flip);
 
         expect(error.message).toContain(attack === "ledger" ? "restoration append destination" : "Partial archive");
-        expect(yield* fs.readFileString(outsideCanary)).toBe(`${attack} canary`);
+        const readFileString34 = yield* fs.readFileString(outsideCanary);
+        expect(readFileString34).toBe(`${attack} canary`);
       }
     })
   );
@@ -3604,7 +3631,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
 
       yield* withRestorationWriterClaim(claimDirectory, claimName, Effect.void);
 
-      expect(yield* fs.exists(claimPath)).toBe(false);
+      const exists35 = yield* fs.exists(claimPath);
+      expect(exists35).toBe(false);
     }),
     120_000
   );
@@ -3685,7 +3713,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
         })
       );
       const manifestPath = path.join(fixture.corpusRoot, "raw", "synthetic-restoration", "archive-ledger.jsonl");
-      const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(manifestPath)), Str.isNonEmpty);
+      const argument6 = Str.split(/\r?\n/u);
+      const readFileString10 = yield* fs.readFileString(manifestPath);
+      const lines = A.filter(argument6(readFileString10), Str.isNonEmpty);
       const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson);
       const resumedPass = A.findFirst(
         records,
@@ -3743,7 +3773,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
       const fixture = yield* makeRestorationFixture();
       yield* preserveRestorationArchive(restorationOptions({ ...fixture, capacityCeilingBytes: 10 * 1024 * 1024 }));
       const manifestPath = path.join(fixture.corpusRoot, "raw", "synthetic-restoration", "archive-ledger.jsonl");
-      const originalLines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(manifestPath)), Str.isNonEmpty);
+      const argument7 = Str.split(/\r?\n/u);
+      const readFileString11 = yield* fs.readFileString(manifestPath);
+      const originalLines = A.filter(argument7(readFileString11), Str.isNonEmpty);
       const records = yield* Effect.forEach(originalLines, decodeArchiveLedgerRecordJson);
       const seal = A.findFirst(records, (record) => record.recordType === "archive-manifest-seal");
       const terminal = A.findFirst(
@@ -3769,7 +3801,12 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
         recordCount: S.Natural.make(0),
       });
       const encodedEmptySeal = yield* encodeArchiveLedgerRecordJson(emptySeal);
-      expect(yield* RA.validateArchiveManifestSeal(archiveRoot, [encodedEmptySeal], [emptySeal])).toEqual(emptySeal);
+      const validateArchiveManifestSeal36 = yield* RA.validateArchiveManifestSeal(
+        archiveRoot,
+        [encodedEmptySeal],
+        [emptySeal]
+      );
+      expect(validateArchiveManifestSeal36).toEqual(emptySeal);
       const fileDestination = path.join(archiveRoot, fileTerminal.value.destinationRelativePath);
       const originalFileBytes = yield* fs.readFile(fileDestination);
       yield* fs.writeFileString(fileDestination, "corrupt-terminal-bytes");
@@ -3900,8 +3937,10 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
             runLabel: "synthetic-restoration",
           })
         );
-        expect(yield* fs.readFileString(manifestPath)).not.toContain("interrupted-manifest");
-        expect(yield* fs.readFileString(provenancePath)).not.toContain('"interrupted":"provenance');
+        const readFileString37 = yield* fs.readFileString(manifestPath);
+        expect(readFileString37).not.toContain("interrupted-manifest");
+        const readFileString38 = yield* fs.readFileString(provenancePath);
+        expect(readFileString38).not.toContain('"interrupted":"provenance');
         expect(verified.unapprovedCount).toBe(0);
       }
     })
@@ -4249,7 +4288,9 @@ const mailRestorationOptions = (
 
 const readTransformationLedgerFixture = Effect.fnUntraced(function* (ledgerPath: string) {
   const fs = yield* FileSystem.FileSystem;
-  const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+  const argument8 = Str.split(/\r?\n/u);
+  const readFileString12 = yield* fs.readFileString(ledgerPath);
+  const lines = A.filter(argument8(readFileString12), Str.isNonEmpty);
   const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
   return { lines, records };
 });
@@ -4258,9 +4299,13 @@ const truncateLedgerAtFirstAttemptStart = Effect.fnUntraced(function* (ledgerPat
   const fs = yield* FileSystem.FileSystem;
   const decoded = yield* readTransformationLedgerFixture(ledgerPath);
   const start = A.findFirst(decoded.records, (record) => record.recordType === "family-attempt-start");
-  if (O.isNone(start)) return yield* Effect.die("Mail run did not publish its durable attempt start.");
+  if (O.isNone(start)) {
+    return yield* Effect.die("Mail run did not publish its durable attempt start.");
+  }
   const index = A.findFirstIndex(decoded.records, (record) => record === start.value);
-  if (O.isNone(index)) return yield* Effect.die("Mail attempt start was absent from its ledger.");
+  if (O.isNone(index)) {
+    return yield* Effect.die("Mail attempt start was absent from its ledger.");
+  }
   yield* fs.writeFileString(ledgerPath, `${A.join(A.take(decoded.lines, index.value + 1), "\n")}\n`);
   return start.value;
 });
@@ -4343,7 +4388,9 @@ const makeMailMembershipFixture = Effect.fnUntraced(function* (
   const pass = yield* Effect.fromOption(
     A.findFirst(records, (row) => row.recordType === "archive-file-pass" && row.sizeBytes === 1024 * 1024 + 64)
   );
-  if (pass.recordType !== "archive-file-pass") return yield* Effect.die("Expected synthetic PST pass.");
+  if (pass.recordType !== "archive-file-pass") {
+    return yield* Effect.die("Expected synthetic PST pass.");
+  }
   const membership = yield* S.decodeEffect(MailOccurrenceMembership)({
     schema: "mail-occurrence-membership/v1",
     preservationLabel,
@@ -4351,7 +4398,8 @@ const makeMailMembershipFixture = Effect.fnUntraced(function* (
     members: [{ objectId: pass.objectId, sha256: pass.sha256, sizeBytes: pass.sizeBytes }],
   });
   const membershipFile = path.join(fixture.corpusRoot, "membership.json");
-  yield* fs.writeFileString(membershipFile, yield* encodeMailOccurrenceMembershipJson(membership));
+  const encodedMailOccurrenceMembershipJson = yield* encodeMailOccurrenceMembershipJson(membership);
+  yield* fs.writeFileString(membershipFile, encodedMailOccurrenceMembershipJson);
   const member = yield* Effect.fromOption(A.head(membership.members));
   return { membershipFile, member, membership };
 });
@@ -4374,7 +4422,9 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
         "mail",
         "slice.jsonl"
       );
-      const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+      const argument9 = Str.split(/\r?\n/u);
+      const readFileString13 = yield* fs.readFileString(ledgerPath);
+      const lines = A.filter(argument9(readFileString13), Str.isNonEmpty);
       const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
       const pass = A.findFirst(records, (record) => record.recordType === "mail-store-pass");
       const children = A.filter(records, (record) => record.recordType === "mail-child-pass");
@@ -4465,7 +4515,8 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       expect(
         A.map(A.filter(original.records, isTransformationLedgerRecordCasesMailStorePass), (pass) => pass.objectId)
       ).not.toEqual([member.objectId]);
-      expect(yield* fs.readFileString(originalLedger)).toBe(originalBytes);
+      const readFileString39 = yield* fs.readFileString(originalLedger);
+      expect(readFileString39).toBe(originalBytes);
       const oldStart = O.getOrThrow(A.findFirst(original.records, (row) => row.recordType === "family-run-start"));
       const newStart = O.getOrThrow(A.findFirst(records, (row) => row.recordType === "family-run-start"));
       expect(newStart.policySha256).not.toBe(oldStart.policySha256);
@@ -4513,7 +4564,8 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
         });
         const error = yield* restoreMail(options).pipe(Effect.flip);
         expect(error._tag).toBe("CorpusCommandError");
-        expect(yield* fs.exists(path.join(fixture.corpusRoot, "staging/restoration/runs/refused-plan"))).toBe(false);
+        const exists40 = yield* fs.exists(path.join(fixture.corpusRoot, "staging/restoration/runs/refused-plan"));
+        expect(exists40).toBe(false);
       }
     })
   );
@@ -4545,7 +4597,8 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       ]) {
         yield* fs.writeFileString(membershipFile, text);
         yield* restoreMail(options).pipe(Effect.flip);
-        expect(yield* fs.exists(path.join(fixture.corpusRoot, "staging/restoration/runs/refused-plan"))).toBe(false);
+        const exists41 = yield* fs.exists(path.join(fixture.corpusRoot, "staging/restoration/runs/refused-plan"));
+        expect(exists41).toBe(false);
       }
       yield* fs.writeFileString(membershipFile, encoded);
       yield* restoreMail(RestorationMailOptions.make({ ...options, maxTotalOutputBytes: PosInt.make(1) })).pipe(
@@ -4562,13 +4615,15 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
           ...(yield* S.encodeEffect(MailOccurrenceMembership)(membership)),
           members: [changed],
         });
-        yield* fs.writeFileString(membershipFile, yield* encodeMailOccurrenceMembershipJson(changedMembership));
+        const encodedMailOccurrenceMembershipJson42 = yield* encodeMailOccurrenceMembershipJson(changedMembership);
+        yield* fs.writeFileString(membershipFile, encodedMailOccurrenceMembershipJson42);
         const changedOptions = yield* S.decodeEffect(RestorationMailOptions)({
           ...(yield* S.encodeEffect(RestorationMailOptions)(options)),
           occurrence: changed.objectId,
         });
         yield* restoreMail(changedOptions).pipe(Effect.flip);
-        expect(yield* fs.exists(path.join(fixture.corpusRoot, "staging/restoration/runs/refused-plan"))).toBe(false);
+        const exists43 = yield* fs.exists(path.join(fixture.corpusRoot, "staging/restoration/runs/refused-plan"));
+        expect(exists43).toBe(false);
       }
     })
   );
@@ -4592,7 +4647,8 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       };
       const decoded = yield* S.decodeEffect(MailOccurrenceMembership)(invalid).pipe(Effect.exit);
       decoded.pipe(Exit.isFailure, assertTrue);
-      yield* fs.writeFileString(membershipFile, yield* S.encodeEffect(unknownJson)(invalid));
+      const value44 = yield* S.encodeEffect(unknownJson)(invalid);
+      yield* fs.writeFileString(membershipFile, value44);
       const options = yield* S.decodeEffect(RestorationMailOptions)({
         ...(yield* S.encodeEffect(RestorationMailOptions)(defaults)),
         occurrence: member.objectId,
@@ -4602,9 +4658,10 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       });
       const error = yield* restoreMail(options).pipe(Effect.flip);
       expect(error._tag).toBe("CorpusCommandError");
-      expect(yield* fs.exists(path.join(fixture.corpusRoot, "staging/restoration/runs/refused-duplicate-plan"))).toBe(
-        false
+      const exists45 = yield* fs.exists(
+        path.join(fixture.corpusRoot, "staging/restoration/runs/refused-duplicate-plan")
       );
+      expect(exists45).toBe(false);
     })
   );
 
@@ -4646,9 +4703,10 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
         expect(decoded).toEqual(terminal.value);
         const legacy = yield* S.decodeEffect(TransformationLedgerRecord)(Struct.omit(terminal.value, ["failureCause"]));
         expect(isTransformationLedgerRecordCasesMailStoreException(legacy) && legacy.failureCause).toBeUndefined();
-        expect(
-          yield* fs.exists(path.join(runRoot, "output/mail/slice/attempts", `${terminal.value.attemptId}.partial`))
-        ).toBe(true);
+        const exists46 = yield* fs.exists(
+          path.join(runRoot, "output/mail/slice/attempts", `${terminal.value.attemptId}.partial`)
+        );
+        expect(exists46).toBe(true);
       }
     })
   );
@@ -4698,17 +4756,16 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
         maxTotalElapsedMillis: 43_200_000,
       });
       const recoveryOptions = RestorationMailOptions.make({ ...oldOptions, maxElapsedMillis: PosInt.make(22_320_000) });
-      expect(
-        yield* RT.extractAttachmentText(
-          derivedPath,
-          "synthetic",
-          recoveryOptions,
-          context,
-          startedAt,
-          fixture.corpusRoot,
-          1024 * 1024 * 1024
-        )
-      ).toBe("synthetic extracted attachment text\n");
+      const extractAttachmentText47 = yield* RT.extractAttachmentText(
+        derivedPath,
+        "synthetic",
+        recoveryOptions,
+        context,
+        startedAt,
+        fixture.corpusRoot,
+        1024 * 1024 * 1024
+      );
+      expect(extractAttachmentText47).toBe("synthetic extracted attachment text\n");
       const familyExpired = yield* RT.extractAttachmentText(
         derivedPath,
         "synthetic",
@@ -4795,9 +4852,12 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
           O.getOrUndefined
         )
       ).toBe("family-acceptance-pass");
-      expect(yield* fs.exists(path.join(freshRoot, "output/mail/slice/attempts"))).toBe(true);
-      expect(yield* fs.exists(path.join(fixture.corpusRoot, "raw", freshLabel))).toBe(false);
-      expect(yield* fs.readFileString(originalLedger)).toBe(sealedText);
+      const exists48 = yield* fs.exists(path.join(freshRoot, "output/mail/slice/attempts"));
+      expect(exists48).toBe(true);
+      const exists49 = yield* fs.exists(path.join(fixture.corpusRoot, "raw", freshLabel));
+      expect(exists49).toBe(false);
+      const readFileString50 = yield* fs.readFileString(originalLedger);
+      expect(readFileString50).toBe(sealedText);
     })
   );
 
@@ -4925,7 +4985,9 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
 
       yield* TestClock.adjust("2 seconds");
       const resumed = yield* restoreMail(options);
-      const resumedLines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+      const argument10 = Str.split(/\r?\n/u);
+      const readFileString14 = yield* fs.readFileString(ledgerPath);
+      const resumedLines = A.filter(argument10(readFileString14), Str.isNonEmpty);
       const records = yield* Effect.forEach(resumedLines, decodeTransformationLedgerRecordJson);
       const familyStarts = A.filter(records, (record) => record.recordType === "family-run-start");
       const attemptStarts = A.filter(records, (record) => record.recordType === "family-attempt-start");
@@ -4942,7 +5004,8 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       expect(interrupted).toHaveLength(1);
       expect(terminals).toHaveLength(1);
       expect(summaries).toHaveLength(1);
-      expect(yield* fs.readFileString(ledgerPath)).not.toContain("interrupted-attempt");
+      const readFileString51 = yield* fs.readFileString(ledgerPath);
+      expect(readFileString51).not.toContain("interrupted-attempt");
       expect(A.map(attemptStarts, (record) => record.retryOrdinal)).toStrictEqual([0, 1]);
       expect(A.map(interrupted, (record) => record.attemptId)).toStrictEqual(
         A.take(
@@ -4993,7 +5056,9 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       yield* fs.rename(path.join(outputRoot, "attempts", firstStart.attemptId), path.join(retainedRoot, "final"));
 
       const resumed = yield* restoreMail(options);
-      const resumedLines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+      const argument11 = Str.split(/\r?\n/u);
+      const readFileString15 = yield* fs.readFileString(ledgerPath);
+      const resumedLines = A.filter(argument11(readFileString15), Str.isNonEmpty);
       const records = yield* Effect.forEach(resumedLines, decodeTransformationLedgerRecordJson);
       const interruptions = A.filter(records, (record) => record.recordType === "family-attempt-interrupted");
       const starts = A.filter(records, (record) => record.recordType === "family-attempt-start");
@@ -5009,7 +5074,8 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       expect(interruptions[0]?.attemptId).toBe(firstStart.attemptId);
       expect(interruptions[0]?.retainedOutputRelativePath).toBe(`interrupted/${firstStart.attemptId}`);
       expect(terminals[0]?.attemptId).toBe(starts[1]?.attemptId);
-      expect(yield* fs.exists(path.join(retainedRoot, "final"))).toBe(true);
+      const exists52 = yield* fs.exists(path.join(retainedRoot, "final"));
+      expect(exists52).toBe(true);
     }),
     { concurrent: false }
   );
@@ -5036,7 +5102,9 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
         yield* truncateLedgerAtFirstAttemptStart(ledgerPath);
         yield* restoreMail(options);
 
-        const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+        const argument12 = Str.split(/\r?\n/u);
+        const readFileString16 = yield* fs.readFileString(ledgerPath);
+        const lines = A.filter(argument12(readFileString16), Str.isNonEmpty);
         const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
         const segment = A.dropRight(records, 2);
         const interrupted = A.findFirst(segment, (record) => record.recordType === "family-attempt-interrupted");
@@ -5113,7 +5181,9 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
           "mail",
           "slice.jsonl"
         );
-        const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+        const argument13 = Str.split(/\r?\n/u);
+        const readFileString17 = yield* fs.readFileString(ledgerPath);
+        const lines = A.filter(argument13(readFileString17), Str.isNonEmpty);
         const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
         const terminal = A.findFirst(records, (record) => record.recordType === "mail-store-exception");
         assertSome(
@@ -5135,7 +5205,9 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       const summary = yield* restoreMail(mailRestorationOptions(fixture, "full"));
       const runRoot = path.join(fixture.corpusRoot, "staging", "restoration", "runs", "synthetic-mail-restoration");
       const ledgerPath = path.join(runRoot, "ledgers", "mail", "full.jsonl");
-      const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+      const argument14 = Str.split(/\r?\n/u);
+      const readFileString18 = yield* fs.readFileString(ledgerPath);
+      const lines = A.filter(argument14(readFileString18), Str.isNonEmpty);
       const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
       const terminal = A.findFirst(records, (record) => record.recordType === "mail-store-exception");
       if (O.isNone(terminal) || terminal.value.recordType !== "mail-store-exception") {
@@ -5161,7 +5233,8 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
         "attempts",
         `${terminal.value.attemptId}.partial`
       );
-      expect(yield* fs.readDirectory(partialRoot)).toStrictEqual([]);
+      const readDirectory53 = yield* fs.readDirectory(partialRoot);
+      expect(readDirectory53).toStrictEqual([]);
     })
   );
 
@@ -5308,7 +5381,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration recycle", (it
         "recycle",
         "full.jsonl"
       );
-      const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+      const argument15 = Str.split(/\r?\n/u);
+      const readFileString19 = yield* fs.readFileString(ledgerPath);
+      const lines = A.filter(argument15(readFileString19), Str.isNonEmpty);
       const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
       const joins = A.filter(records, (record) => record.recordType === "recycle-join");
       const mappings = A.filter(records, (record) => record.recordType === "recycle-mapping");
@@ -5633,7 +5708,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration legacy Word",
         "legacy-word",
         "full.jsonl"
       );
-      const lines = A.filter(Str.split(/\r?\n/u)(yield* fs.readFileString(ledgerPath)), Str.isNonEmpty);
+      const argument16 = Str.split(/\r?\n/u);
+      const readFileString20 = yield* fs.readFileString(ledgerPath);
+      const lines = A.filter(argument16(readFileString20), Str.isNonEmpty);
       const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
       const passes = A.filter(records, (record) => record.recordType === "legacy-word-pass");
       const exceptions = A.filter(records, (record) => record.recordType === "legacy-word-exception");
@@ -5723,7 +5800,8 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
         "full.jsonl"
       );
       yield* fs.makeDirectory(path.dirname(crossRunLedgerPath), { recursive: true });
-      yield* fs.writeFileString(crossRunLedgerPath, yield* fs.readFileString(sourceLedgerPath));
+      const readFileString54 = yield* fs.readFileString(sourceLedgerPath);
+      yield* fs.writeFileString(crossRunLedgerPath, readFileString54);
       const error = yield* reconcileRestorationAcceptance(
         RestorationVerifyOptions.make({
           corpusRoot: fixture.corpusRoot,

@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The emitter: an owned CycloneDX 1.6 model and its canonical JSON.
 //
 // `generate` and `toJson` are TOTAL — no error channel — which is a deliberate
@@ -10,6 +11,7 @@ import { Component, Contact, Sbom, SbomInput, SbomJsonOptions, SbomMetadata, Sup
 import { assert, describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -104,7 +106,10 @@ describe("Sbom.toJson", () => {
   it("emits the hyphenated `bom-ref` key, not `bomRef`", () => {
     // The one field whose JSON name differs from its TypeScript name. Emitting
     // `bomRef` produces a document that looks right and validates wrong.
-    const json: unknown = JSON.parse(Sbom.toJson(Sbom.generate({ root, components: [] })));
+    const json: unknown = Result.getOrThrowWith(
+      S.decodeResult(S.fromJsonString(S.Unknown))(Sbom.toJson(Sbom.generate({ root, components: [] }))),
+      identity
+    );
     assertTrue(S.is(ComponentDocument)(json));
     assert.property(json.metadata.component, "bom-ref");
     assert.notProperty(json.metadata.component, "bomRef");
@@ -112,7 +117,10 @@ describe("Sbom.toJson", () => {
 
   it("omits absent optional fields rather than emitting null", () => {
     const bare = Component.make({ type: "library", name: "bare" });
-    const json: unknown = JSON.parse(Sbom.toJson(Sbom.generate({ root: bare, components: [] })));
+    const json: unknown = Result.getOrThrowWith(
+      S.decodeResult(S.fromJsonString(S.Unknown))(Sbom.toJson(Sbom.generate({ root: bare, components: [] }))),
+      identity
+    );
     assertTrue(S.is(ComponentDocument)(json));
     assert.notProperty(json.metadata.component, "version");
     assert.notProperty(json.metadata.component, "purl");
@@ -122,7 +130,10 @@ describe("Sbom.toJson", () => {
   it("renders licenses in CycloneDX's wrapper shape", () => {
     // `licenses` is an array of single-key wrapper objects, not bare strings.
     const licensed = Component.make({ type: "library", name: "x", licenses: ["MIT"] });
-    const json: unknown = JSON.parse(Sbom.toJson(Sbom.generate({ root: licensed, components: [] })));
+    const json: unknown = Result.getOrThrowWith(
+      S.decodeResult(S.fromJsonString(S.Unknown))(Sbom.toJson(Sbom.generate({ root: licensed, components: [] }))),
+      identity
+    );
     assertTrue(S.is(ComponentDocument)(json));
     assert.deepStrictEqual<unknown>(json.metadata.component.licenses, [{ license: { id: "MIT" } }]);
   });
@@ -137,7 +148,10 @@ describe("Sbom.toJson", () => {
         authors: [Contact.make({ name: "Dee", email: "dee@example.com" })],
       }),
     });
-    const json: unknown = JSON.parse(Sbom.toJson(document));
+    const json: unknown = Result.getOrThrowWith(
+      S.decodeResult(S.fromJsonString(S.Unknown))(Sbom.toJson(document)),
+      identity
+    );
     assertTrue(S.is(MetadataDocument)(json));
     assert.strictEqual(json.metadata.supplier.name, "Acme");
     assert.strictEqual(json.metadata.authors[0]?.name, "Dee");

@@ -33,7 +33,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as F from "effect/Function";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -354,9 +354,14 @@ describe("Lexical.model", { concurrent: false }, () => {
   });
 
   it("round-trips through the JSON string codec", () => {
-    const json = JSON.stringify(fixture);
+    const json = Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(fixture), identity);
     const state = decoded(decodeEditorStateFromJsonResult(json));
-    expect(JSON.parse(decoded(encodeEditorStateFromJsonResult(state)))).toEqual(fixture);
+    expect(
+      Result.getOrThrowWith(
+        S.decodeResult(S.fromJsonString(S.Unknown))(decoded(encodeEditorStateFromJsonResult(state))),
+        identity
+      )
+    ).toEqual(fixture);
   });
 
   it.prop(
@@ -551,8 +556,10 @@ describe("Lexical.model", { concurrent: false }, () => {
           assertNone(SerializedEditorState.decodeOption(stateWithExtension));
           expect(decodeEditorStateFromJsonResult(jsonWithExtension)._tag).toBe("Failure");
           expect((yield* Effect.exit(decodeEditorStateStrict(stateWithExtension)))._tag).toBe("Failure");
-          expect(yield* decodeEditorStateLossless(stateWithExtension)).toEqual(stateWithExtension);
-          expect(yield* decodeEditorStateWireFromJson(jsonWithExtension)).toEqual(stateWithExtension);
+          const decodedEditorStateLossless = yield* decodeEditorStateLossless(stateWithExtension);
+          expect(decodedEditorStateLossless).toEqual(stateWithExtension);
+          const decodedEditorStateWireFromJson = yield* decodeEditorStateWireFromJson(jsonWithExtension);
+          expect(decodedEditorStateWireFromJson).toEqual(stateWithExtension);
         }),
         { discard: true }
       );
@@ -565,7 +572,8 @@ describe("Lexical.model", { concurrent: false }, () => {
     Effect.fnUntraced(function* ({ wire }) {
       const decoded = yield* decodeEditorStateLossless(wire);
       expect(decoded).toEqual(wire);
-      expect(yield* encodeSerializedEditorStateWire(decoded)).toEqual(wire);
+      const encodedSerializedEditorStateWire = yield* encodeSerializedEditorStateWire(decoded);
+      expect(encodedSerializedEditorStateWire).toEqual(wire);
     }),
     { arbitrary: fcRuns(50) }
   );
@@ -587,7 +595,8 @@ describe("Lexical.model", { concurrent: false }, () => {
         },
       };
 
-      expect(yield* decodeEditorStateLossless(future)).toEqual(future);
+      const decodedEditorStateLossless1 = yield* decodeEditorStateLossless(future);
+      expect(decodedEditorStateLossless1).toEqual(future);
       expect((yield* Effect.exit(decodeEditorStateStrict(future)))._tag).toBe("Failure");
     })
   );
@@ -678,8 +687,10 @@ describe("Lexical.model", { concurrent: false }, () => {
 
           const wire = yield* decodeEditorStateLossless(state);
           expect(wire).toEqual(state);
-          expect(yield* encodeSerializedEditorStateWire(wire)).toEqual(state);
-          expect(yield* decodeEditorStateWireFromJson(source)).toEqual(state);
+          const encodedSerializedEditorStateWire2 = yield* encodeSerializedEditorStateWire(wire);
+          expect(encodedSerializedEditorStateWire2).toEqual(state);
+          const decodedEditorStateWireFromJson3 = yield* decodeEditorStateWireFromJson(source);
+          expect(decodedEditorStateWireFromJson3).toEqual(state);
         }),
         { discard: true }
       );
@@ -792,7 +803,8 @@ describe("Lexical.model", { concurrent: false }, () => {
       const misplacedRoot = decoded(decodeUnknownRootNodeResult(misplacedText.root));
       expect(() => SerializedEditorState.make({ root: misplacedRoot })).toThrow();
       pipe(decodeUnknownSerializedEditorStateResult(misplacedText), Result.isFailure, assertTrue);
-      expect(yield* decodeEditorStateLossless(misplacedText)).toEqual(misplacedText);
+      const decodedEditorStateLossless4 = yield* decodeEditorStateLossless(misplacedText);
+      expect(decodedEditorStateLossless4).toEqual(misplacedText);
       expect((yield* Effect.exit(decodeEditorStateStrict(misplacedText)))._tag).toBe("Failure");
     })
   );
@@ -845,7 +857,8 @@ describe("Lexical.model", { concurrent: false }, () => {
         },
       };
 
-      expect(yield* decodeEditorStateLossless(empty)).toEqual(empty);
+      const decodedEditorStateLossless5 = yield* decodeEditorStateLossless(empty);
+      expect(decodedEditorStateLossless5).toEqual(empty);
       expect((yield* Effect.exit(decodeEditorStateStrict(empty)))._tag).toBe("Failure");
 
       const compatibility = yield* analyzeEditorStateCompatibility(empty);

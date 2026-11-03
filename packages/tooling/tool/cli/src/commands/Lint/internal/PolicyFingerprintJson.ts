@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 /**
  * JSON edits for the policy fingerprint writer, laid out the way the
  * repository's Biome JSON formatter prints them.
@@ -14,6 +15,7 @@ import { A, O, Str } from "@beep/utils";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { JsoncNode, JsoncPath } from "@beep/jsonc/JsoncNode";
 
 const FORMATTING = { insertSpaces: true, tabSize: 2, eol: "\n" } as const;
@@ -44,7 +46,7 @@ const renderObject = (record: Readonly<Record<string, unknown>>, indent: string)
   const entries = R.toEntries(record);
   if (A.isReadonlyArrayEmpty(entries)) return "{}";
   const lines = A.map(entries, ([key, member], index) => {
-    const prefix = `${indent}  ${JSON.stringify(key)}: `;
+    const prefix = `${indent}  ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(key), identity)}: `;
     return `${prefix}${renderJson(member, `${indent}  `, prefix.length, trailingWidth(index, entries.length))}`;
   });
   return `{\n${A.join(lines, ",\n")}\n${indent}}`;
@@ -55,7 +57,7 @@ const renderObject = (record: Readonly<Record<string, unknown>>, indent: string)
 const renderJson = (value: unknown, indent: string, column: number, trailing: number): string => {
   if (A.isArray(value)) return renderArray(value, indent, column, trailing);
   if (P.isObject(value) && value !== null) return renderObject(value as Readonly<Record<string, unknown>>, indent);
-  return JSON.stringify(value);
+  return Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
 };
 
 /**

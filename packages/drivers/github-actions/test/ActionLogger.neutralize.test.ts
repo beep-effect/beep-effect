@@ -71,7 +71,8 @@ describe("ActionLogger neutralizes the plain text it writes", () => {
   it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
     it.effect("an ordinary line, and a bare ##, are untouched", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* logged(Effect.logInfo("hello", 3)), ["hello 3"]);
+        const logged1 = yield* logged(Effect.logInfo("hello", 3));
+        assert.deepStrictEqual(logged1, ["hello 3"]);
       })
     );
   });
@@ -79,7 +80,8 @@ describe("ActionLogger neutralizes the plain text it writes", () => {
   it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
     it.effect("a markdown heading is not a command", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* logged(Effect.logInfo("## Heading")), ["## Heading"]);
+        const logged2 = yield* logged(Effect.logInfo("## Heading"));
+        assert.deepStrictEqual(logged2, ["## Heading"]);
       })
     );
   });
@@ -99,7 +101,8 @@ describe("ActionLogger neutralizes the plain text it writes", () => {
   it.layer(ActionLogger.layerLogger, { timeout: "30 seconds" })((it) => {
     it.effect("a warning is still a real ::warning:: command", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* logged(Effect.logWarning("careful")), [WorkflowCommand.warning("careful")]);
+        const logged3 = yield* logged(Effect.logWarning("careful"));
+        assert.deepStrictEqual(logged3, [WorkflowCommand.warning("careful")]);
       })
     );
   });
@@ -174,7 +177,8 @@ describe("a detached worker's setFailed degrades to a neutralized plain line", (
       Effect.gen(function* () {
         const outputs = yield* ActionOutputs;
         yield* outputs.setFailed("bad\n::error::x ##[stop-commands]y");
-        const errors = A.map(yield* TestConsole.errorLines, String);
+        const errorLines4 = yield* TestConsole.errorLines;
+        const errors = A.map(errorLines4, String);
         assert.deepStrictEqual(
           commandLines(A.join(errors, "\n")),
           [],

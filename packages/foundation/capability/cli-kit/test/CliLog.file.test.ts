@@ -10,7 +10,7 @@ import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as O from "effect/Option";
@@ -179,7 +179,11 @@ describe("CliLog.layer file option", () => {
       // Identical to the stderr line for the same log call, byte for byte.
       assert.deepStrictEqual(lines, ndjson(h.err));
       assert.deepStrictEqual(
-        A.map(lines, (l) => JSON.parse(l).level),
+        A.map(
+          lines,
+          (l) =>
+            Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Struct({ level: S.String })))(l), identity).level
+        ),
         ["DEBUG", "ERROR"]
       );
       assert.isTrue(Str.endsWith("\n")(h.file() ?? ""));

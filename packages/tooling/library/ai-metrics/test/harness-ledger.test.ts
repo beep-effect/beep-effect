@@ -120,7 +120,9 @@ describe("harness-ledger", () => {
         expect(fingerprint.reasoningEffort).toBe(harnessFingerprintUnknown);
         expect(fingerprint.harnessSessionHash).toBe(hashA);
         expect(fingerprint.harnessBaselineHash).toBe(hashB);
-        expect(fingerprint.fingerprintId).toBe(yield* deriveHarnessFingerprintId(fingerprint));
+        const expectation = expect(fingerprint.fingerprintId);
+        const deriveHarnessFingerprintId1 = yield* deriveHarnessFingerprintId(fingerprint);
+        expectation.toBe(deriveHarnessFingerprintId1);
       })
     );
 
@@ -165,8 +167,10 @@ describe("harness-ledger", () => {
         const fingerprint = yield* harnessFingerprintFromParts(parts);
         const encodedParts = yield* encodeFingerprintParts(parts);
         const encodedFingerprint = yield* encodeFingerprint(fingerprint);
-        expect(yield* decodeFingerprintParts(encodedParts)).toStrictEqual(parts);
-        expect(yield* decodeFingerprint(encodedFingerprint)).toStrictEqual(fingerprint);
+        const decodedFingerprintParts = yield* decodeFingerprintParts(encodedParts);
+        expect(decodedFingerprintParts).toStrictEqual(parts);
+        const decodedFingerprint = yield* decodeFingerprint(encodedFingerprint);
+        expect(decodedFingerprint).toStrictEqual(fingerprint);
         const { reasoningEffort: _dropped, ...withoutEffort } = encodedParts;
         expect((yield* decodeFingerprintParts(withoutEffort)).reasoningEffort).toBe(harnessFingerprintUnknown);
       })
@@ -183,7 +187,9 @@ describe("harness-ledger", () => {
         const hash = yield* deriveHarnessHash(source);
         // `printf 'harness-hash-v2\n%s\n%s' "$session" "$baseline" | sha256sum`
         expect(hash).toBe("fec020c5d50deb68f02574185e8edebf6fea5a1f4576d46e57541311b76e38b6");
-        expect(hash).toBe(yield* hashPublicTextSha256(`harness-hash-v2\n${hashA}\n${hashB}`));
+        const expectation1 = expect(hash);
+        const hashPublicTextSha2562 = yield* hashPublicTextSha256(`harness-hash-v2\n${hashA}\n${hashB}`);
+        expectation1.toBe(hashPublicTextSha2562);
         pipe(isHarnessHash(hash), assertTrue);
       })
     );
@@ -196,11 +202,19 @@ describe("harness-ledger", () => {
           harnessSessionHash: Sha256Hex.make(hashB),
           harnessBaselineHash: Sha256Hex.make(hashA),
         });
-        const edited = yield* deriveHarnessHash(yield* fingerprintFor("gpt-6-astra", hashC));
+        const fingerprintFor1 = yield* fingerprintFor("gpt-6-astra", hashC);
+        const edited = yield* deriveHarnessHash(fingerprintFor1);
         expect(astra.fingerprintId).not.toBe(sol.fingerprintId);
-        expect(yield* deriveHarnessHash(astra)).toBe(yield* deriveHarnessHash(sol));
-        expect(swapped).not.toBe(yield* deriveHarnessHash(astra));
-        expect(edited).not.toBe(yield* deriveHarnessHash(astra));
+        const deriveHarnessHash2 = yield* deriveHarnessHash(astra);
+        const expectation2 = expect(deriveHarnessHash2);
+        const deriveHarnessHash3 = yield* deriveHarnessHash(sol);
+        expectation2.toBe(deriveHarnessHash3);
+        const argument = expect(swapped).not;
+        const deriveHarnessHash4 = yield* deriveHarnessHash(astra);
+        argument.toBe(deriveHarnessHash4);
+        const argument1 = expect(edited).not;
+        const deriveHarnessHash5 = yield* deriveHarnessHash(astra);
+        argument1.toBe(deriveHarnessHash5);
       })
     );
   });
@@ -214,11 +228,14 @@ describe("harness-ledger", () => {
       "roundtrips arbitrary fingerprints, edit refs, and claims",
       [Arbitrary.schema(HarnessFingerprint), Arbitrary.schema(HarnessEditRef), Arbitrary.schema(BehavioralClaim)],
       Effect.fnUntraced(function* ([fingerprint, edit, claim]) {
-        const fingerprintRoundtrip = yield* decodeFingerprint(yield* encodeFingerprint(fingerprint));
+        const encodedFingerprint3 = yield* encodeFingerprint(fingerprint);
+        const fingerprintRoundtrip = yield* decodeFingerprint(encodedFingerprint3);
 
-        const editRoundtrip = yield* decodeEditRef(yield* encodeEditRef(edit));
+        const encodedEditRef = yield* encodeEditRef(edit);
+        const editRoundtrip = yield* decodeEditRef(encodedEditRef);
 
-        const claimRoundtrip = yield* decodeClaim(yield* encodeClaim(claim));
+        const encodedClaim = yield* encodeClaim(claim);
+        const claimRoundtrip = yield* decodeClaim(encodedClaim);
 
         pipe(fingerprintEquivalent(fingerprintRoundtrip, fingerprint), assertTrue);
 
@@ -239,7 +256,8 @@ describe("harness-ledger", () => {
           { kind: "pending" },
         ]) {
           const decoded = yield* decodeUnknownEditRef(encoded);
-          expect(yield* encodeEditRef(decoded)).toStrictEqual(encoded);
+          const encodedEditRef4 = yield* encodeEditRef(decoded);
+          expect(encodedEditRef4).toStrictEqual(encoded);
         }
         pipe(isHarnessEditRef({ kind: "diff-digest", ref: "not-a-digest" }), assertFalse);
       })
@@ -253,8 +271,12 @@ describe("harness-ledger", () => {
           expectedMetric: "schema-first findings per task",
         });
         const delta = HarnessLedgerDelta.make({ score: 0.05, cost: -120 });
-        expect(yield* decodeClaim(yield* encodeClaim(claim))).toStrictEqual(claim);
-        expect(yield* decodeDelta(yield* encodeDelta(delta))).toStrictEqual(delta);
+        const encodedClaim15 = yield* encodeClaim(claim);
+        const decodedClaim = yield* decodeClaim(encodedClaim15);
+        expect(decodedClaim).toStrictEqual(claim);
+        const encodedDelta = yield* encodeDelta(delta);
+        const decodedDelta = yield* decodeDelta(encodedDelta);
+        expect(decodedDelta).toStrictEqual(delta);
       })
     );
   });
@@ -285,29 +307,30 @@ describe("harness-ledger", () => {
       Effect.gen(function* () {
         const row = yield* makeRow();
         const json = yield* encodeRowJson(row);
-        const parsed = yield* asRecord(yield* parseJson(json));
+        const parsedJson = yield* parseJson(json);
+        const parsed = yield* asRecord(parsedJson);
         pipe(A.isArray(parsed.touched), assertTrue);
         const decoded = yield* decodeRowJson(json);
         expect(decoded.rowId).toBe(row.rowId);
         expect(HashSet.size(decoded.touched)).toBe(1);
         expect(decoded.fingerprint.fingerprintId).toBe(row.fingerprint.fingerprintId);
-        expect(yield* encodeRowJson(decoded)).toBe(json);
+        const encodedRowJson = yield* encodeRowJson(decoded);
+        expect(encodedRowJson).toBe(json);
       })
     );
 
     it.effect("defaults absent optional keys on decode", () =>
       Effect.gen(function* () {
         const row = yield* makeRow();
-        const decoded = yield* decodeRowJson(
-          yield* stringifyJson({
-            rowId: row.rowId,
-            createdAt: "2026-09-25T12:00:00.000Z",
-            edit: { kind: "pending" },
-            mechanismClass: "config",
-            fingerprint: yield* encodeFingerprint(row.fingerprint),
-            disposition: "proposed",
-          })
-        );
+        const stringifyJson5 = yield* stringifyJson({
+          rowId: row.rowId,
+          createdAt: "2026-09-25T12:00:00.000Z",
+          edit: { kind: "pending" },
+          mechanismClass: "config",
+          fingerprint: yield* encodeFingerprint(row.fingerprint),
+          disposition: "proposed",
+        });
+        const decoded = yield* decodeRowJson(stringifyJson5);
         pipe(HashSet.isEmpty(decoded.touched), assertTrue);
         assertNone(decoded.hypothesis);
         assertNone(decoded.repoRevision);
@@ -318,14 +341,19 @@ describe("harness-ledger", () => {
     it.effect("rejects a malformed row id and resurrectWhen outside tombstoned rows", () =>
       Effect.gen(function* () {
         const row = yield* makeRow();
-        const encoded = yield* asRecord(yield* parseJson(yield* encodeRowJson(row)));
-        const badId = yield* Effect.flip(decodeRowJson(yield* stringifyJson({ ...encoded, rowId: "hl-2026-09-25" })));
-        const badResurrect = yield* Effect.flip(
-          decodeRowJson(yield* stringifyJson({ ...encoded, resurrectWhen: "model changes" }))
-        );
-        const tombstone = yield* decodeRowJson(
-          yield* stringifyJson({ ...encoded, disposition: "tombstoned", resurrectWhen: "model changes" })
-        );
+        const encodedRowJson16 = yield* encodeRowJson(row);
+        const parsedJson6 = yield* parseJson(encodedRowJson16);
+        const encoded = yield* asRecord(parsedJson6);
+        const stringifyJson7 = yield* stringifyJson({ ...encoded, rowId: "hl-2026-09-25" });
+        const badId = yield* Effect.flip(decodeRowJson(stringifyJson7));
+        const stringifyJson8 = yield* stringifyJson({ ...encoded, resurrectWhen: "model changes" });
+        const badResurrect = yield* Effect.flip(decodeRowJson(stringifyJson8));
+        const stringifyJson9 = yield* stringifyJson({
+          ...encoded,
+          disposition: "tombstoned",
+          resurrectWhen: "model changes",
+        });
+        const tombstone = yield* decodeRowJson(stringifyJson9);
         expect(badId._tag).toBe("SchemaError");
         expect(badResurrect._tag).toBe("SchemaError");
         assertSome(tombstone.resurrectWhen, "model changes");
@@ -346,11 +374,12 @@ describe("harness-ledger", () => {
         assertSome(decoded.previousRowId, "hl-20260924-deadbeef");
         assertSome(decoded.targetSurface, target);
         assertSome(decoded.windowSessions, 30);
-        const encoded = yield* asRecord(yield* parseJson(json));
-        const badPrevious = yield* Effect.flip(
-          decodeRowJson(yield* stringifyJson({ ...encoded, previousRowId: "row-1" }))
-        );
-        const badWindow = yield* Effect.flip(decodeRowJson(yield* stringifyJson({ ...encoded, windowSessions: 0 })));
+        const parsedJson10 = yield* parseJson(json);
+        const encoded = yield* asRecord(parsedJson10);
+        const stringifyJson11 = yield* stringifyJson({ ...encoded, previousRowId: "row-1" });
+        const badPrevious = yield* Effect.flip(decodeRowJson(stringifyJson11));
+        const stringifyJson12 = yield* stringifyJson({ ...encoded, windowSessions: 0 });
+        const badWindow = yield* Effect.flip(decodeRowJson(stringifyJson12));
         expect(badPrevious._tag).toBe("SchemaError");
         expect(badWindow._tag).toBe("SchemaError");
         const defaulted = yield* makeRow();
@@ -366,11 +395,14 @@ describe("harness-ledger", () => {
         const row = yield* makeRow({ decidedUnder: O.some(decidedUnder) });
         const json = yield* encodeRowJson(row);
         assertSome((yield* decodeRowJson(json)).decidedUnder, decidedUnder);
-        const encoded = yield* asRecord(yield* parseJson(json));
+        const parsedJson13 = yield* parseJson(json);
+        const encoded = yield* asRecord(parsedJson13);
         expect(encoded.decidedUnder).toBe(hashC);
-        const bad = yield* Effect.flip(decodeRowJson(yield* stringifyJson({ ...encoded, decidedUnder: "harness-b" })));
+        const stringifyJson14 = yield* stringifyJson({ ...encoded, decidedUnder: "harness-b" });
+        const bad = yield* Effect.flip(decodeRowJson(stringifyJson14));
         expect(bad._tag).toBe("SchemaError");
-        const legacy = yield* encodeRowJson(yield* makeRow());
+        const madeRow = yield* makeRow();
+        const legacy = yield* encodeRowJson(madeRow);
         expect(legacy).not.toContain("decidedUnder");
       })
     );

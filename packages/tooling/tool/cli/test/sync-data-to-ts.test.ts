@@ -422,13 +422,12 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
             url: "https://example.test/archive.tar.gz",
           });
 
-          expect(
-            yield* assertPinnedArchive({
-              expectedSha256: "expected",
-              source,
-              targetId: "fixture-target",
-            })
-          ).toBe(source);
+          const assertPinnedArchive1 = yield* assertPinnedArchive({
+            expectedSha256: "expected",
+            source,
+            targetId: "fixture-target",
+          });
+          expect(assertPinnedArchive1).toBe(source);
         },
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )
@@ -862,8 +861,10 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
       Effect.andThen(
         temporaryRepository,
         Effect.gen(function* () {
-          expect(yield* readPreviousCourtVocabularyForTesting()).toStrictEqual([]);
-          expect(yield* readPreviousReporterVocabularyForTesting()).toStrictEqual([]);
+          const readPreviousCourtVocabularyForTesting2 = yield* readPreviousCourtVocabularyForTesting();
+          expect(readPreviousCourtVocabularyForTesting2).toStrictEqual([]);
+          const readPreviousReporterVocabularyForTesting3 = yield* readPreviousReporterVocabularyForTesting();
+          expect(readPreviousReporterVocabularyForTesting3).toStrictEqual([]);
 
           const courts = yield* assembleCourtsData(
             `[{"citation_string":"Fixture Ct.","dates":[],"examples":[],"id":"fixture-court","level":null,"location":"Example","name":"Fixture Court","regex":[],"system":"state","type":null}]`,
@@ -892,8 +893,10 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
             formatJson({ records: reporterRecords })
           );
 
-          expect(yield* readPreviousCourtVocabularyForTesting()).toStrictEqual(courtRecords);
-          expect(yield* readPreviousReporterVocabularyForTesting()).toStrictEqual(reporterRecords);
+          const readPreviousCourtVocabularyForTesting4 = yield* readPreviousCourtVocabularyForTesting();
+          expect(readPreviousCourtVocabularyForTesting4).toStrictEqual(courtRecords);
+          const readPreviousReporterVocabularyForTesting5 = yield* readPreviousReporterVocabularyForTesting();
+          expect(readPreviousReporterVocabularyForTesting5).toStrictEqual(reporterRecords);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -906,7 +909,7 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
       });
 
       expect(rendered).toContain('import * as S from "effect/Schema"');
-      expect(rendered).toContain("S.decodeUnknownResult(S.fromJsonString(S.Unknown))");
+      expect(rendered).toContain("S.decodeResult(S.fromJsonString(S.Unknown))");
       expect(rendered).toContain("Result.getOrThrow");
       expect(rendered).toContain("export const FixtureData: unknown");
       expect(rendered).not.toContain("JSON.parse");

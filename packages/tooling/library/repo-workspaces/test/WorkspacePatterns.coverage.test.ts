@@ -71,7 +71,8 @@ it.layer(
 )("existence faults", (it) => {
   it.effect("treats failed existence probes as absent configuration", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* WorkspacePatterns.read("/repo"), []);
+      const read1 = yield* WorkspacePatterns.read("/repo");
+      assert.deepStrictEqual(read1, []);
     })
   );
 });

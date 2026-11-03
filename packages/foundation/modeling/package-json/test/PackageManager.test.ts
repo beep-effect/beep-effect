@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The `packageManager` field: `<name>@<version>[+<integrity>]`.
 //
 // Two of the three components are shared verbatim with `@beep/npm-spec`'s
@@ -42,7 +43,8 @@ describe("PackageManager.FromString", () => {
     Effect.gen(function* () {
       for (const input of ["pnpm@10.33.0+sha512.abc", "yarn@4.1.0", "npm@10.2.3-beta.1", "bun@1.2.20"]) {
         const pm = yield* decode(input);
-        assert.strictEqual(yield* encode(pm), input);
+        const encoded = yield* encode(pm);
+        assert.strictEqual(encoded, input);
       }
     })
   );
@@ -96,7 +98,8 @@ describe("PackageManager.FromString", () => {
     Effect.gen(function* () {
       const input = "yarn@4.12.0+sha224.877304e3c9e5b53431969ee2ca17ee44f366533b0da5a4ba9c2bd447";
       const pm = yield* decode(input);
-      assert.strictEqual(yield* encode(pm), input);
+      const encoded1 = yield* encode(pm);
+      assert.strictEqual(encoded1, input);
     })
   );
 
@@ -128,12 +131,14 @@ describe("PackageManager.FromString", () => {
 // with `semver.valid`. Reinstating that regex turns this whole block red.
 describe("PackageManager.FromString version rejection matrix", () => {
   const rejects = (input: string, why: string) =>
-    it.effect(`rejects ${JSON.stringify(input)} — ${why}`, () =>
-      Effect.gen(function* () {
-        const error = yield* Effect.flip(decode(input));
-        assert.strictEqual(error._tag, "SchemaError");
-        assert.include(String(error), "version", "the failure must name the component that failed");
-      })
+    it.effect(
+      `rejects ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(input), identity)} — ${why}`,
+      () =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(decode(input));
+          assert.strictEqual(error._tag, "SchemaError");
+          assert.include(String(error), "version", "the failure must name the component that failed");
+        })
     );
 
   // Leading zeros on a numeric component are not SemVer 2.0.0 (§2).
@@ -163,7 +168,8 @@ describe("PackageManager.FromString version rejection matrix", () => {
     Effect.gen(function* () {
       for (const input of ["pnpm@1.2.3-rc.1", "pnpm@1.2.3-0rc", "pnpm@1.2.3-alpha.0", "pnpm@0.0.0"]) {
         const pm = yield* decode(input);
-        assert.strictEqual(yield* encode(pm), input, input);
+        const encoded2 = yield* encode(pm);
+        assert.strictEqual(encoded2, input, input);
       }
     })
   );
@@ -197,7 +203,8 @@ describe("PackageManager name latitude (deliberately wider than PackageManagerPi
     Effect.gen(function* () {
       for (const input of ["bun@1.2.20", "deno@2.5.1", "cargo@1.0.0"]) {
         const pm = yield* decode(input);
-        assert.strictEqual(yield* encode(pm), input, input);
+        const encoded3 = yield* encode(pm);
+        assert.strictEqual(encoded3, input, input);
       }
     })
   );

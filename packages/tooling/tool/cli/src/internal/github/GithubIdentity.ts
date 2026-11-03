@@ -368,7 +368,8 @@ export const layerGithubClientFor: {
   ): Layer.Layer<GitHubClient, GithubIdentityError, ChildProcessSpawner.ChildProcessSpawner> =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const transport = O.match(yield* GithubTransportFetch, {
+        const GithubTransportFetch1 = yield* GithubTransportFetch;
+        const transport = O.match(GithubTransportFetch1, {
           onNone: () => options,
           onSome: (fetch) => ({ fetch, ...options }),
         });

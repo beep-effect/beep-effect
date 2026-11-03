@@ -140,10 +140,13 @@ const runLintDeprecatedApis = Effect.fn("Lint.deprecatedApis")(function* (option
   }
   if (O.isNone(directory)) {
     const ci = yield* isCi;
-    const sweeps = yield* readLintPolicySweeps(yield* findRepoRoot());
-    if (!full && !ci) return yield* runRootDeprecatedApisTask(base);
+    const foundRepoRoot = yield* findRepoRoot();
+    const sweeps = yield* readLintPolicySweeps(foundRepoRoot);
+    if (!full && !ci) {
+      return yield* runRootDeprecatedApisTask(base);
+    }
     return yield* sweeps.deprecatedApis === "oxlint"
-      ? runDeprecatedApiLint(yield* findRepoRoot(), ["apps", "packages", "infra"])
+      ? yield* Effect.map(findRepoRoot(), (value) => runDeprecatedApiLint(value, ["apps", "packages", "infra"]))
       : runRootDeprecatedApisTask();
   }
   const root = yield* findRepoRoot();

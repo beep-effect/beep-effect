@@ -13,9 +13,11 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 
@@ -218,7 +220,10 @@ describe("ToolDiscovery.resolve — version extraction", () => {
     Effect.gen(function* () {
       const tool = Tool.named("deno", { version: VersionJson.make({ flag: "info --json", path: "deno.version" }) });
       const resolved = yield* run(resolve(tool), () => ({
-        stdout: JSON.stringify({ deno: { version: "1.44.0" } }),
+        stdout: Result.getOrThrowWith(
+          S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ deno: { version: "1.44.0" } }),
+          identity
+        ),
         exit: 0,
       })).effect;
       assertSome(resolved.version, "1.44.0");

@@ -160,7 +160,8 @@ describe("transport thrown headers and classification", () => {
           .pipe(Effect.flip);
         assert.strictEqual(result.cause, thrown);
         assert.strictEqual(result.kind, "notFound");
-        assertNone(yield* transport.rateLimit);
+        const rateLimit1 = yield* transport.rateLimit;
+        assertNone(rateLimit1);
       })
     );
   }
@@ -174,7 +175,8 @@ describe("transport thrown headers and classification", () => {
       yield* transport
         .request<unknown>("array", "/answer", { request: { hook: () => Promise.reject(thrown) } })
         .pipe(Effect.flip);
-      assertNone(yield* transport.rateLimit);
+      const rateLimit2 = yield* transport.rateLimit;
+      assertNone(rateLimit2);
     })
   );
 
@@ -212,7 +214,8 @@ const seedReplies = (retained: boolean): ReadonlyArray<Reply> =>
 const seedPrior = Effect.fnUntraced(function* (transport: Transport, retained: boolean) {
   if (!retained) return;
   yield* transport.request("seed", "/seed", {});
-  assertSome(yield* transport.rateLimit, priorSnapshot);
+  const rateLimit3 = yield* transport.rateLimit;
+  assertSome(rateLimit3, priorSnapshot);
 });
 
 /** The snapshot survives an invalid reset only when an earlier response recorded it. */
@@ -225,8 +228,10 @@ const assertRetainedSnapshot = Effect.fnUntraced(function* (transport: Transport
 const deliversPayload = Effect.fnUntraced(function* (transport: Transport, mode: "request" | "pagination") {
   if (mode === "pagination") {
     const source = transport.pageSource<{ readonly answer: number }>("pages", "GET /answers", {});
-    assertSome(yield* source.next, [{ answer: 42 }]);
-    assertNone(yield* source.next);
+    const next4 = yield* source.next;
+    assertSome(next4, [{ answer: 42 }]);
+    const next5 = yield* source.next;
+    assertNone(next5);
     return;
   }
   const response = yield* transport.request<{ readonly answer: number }>("answer", "/answer", {});
@@ -349,8 +354,10 @@ describe("transport cancellation", () => {
       assertSome(second, O.getOrThrow(second));
       assert.strictEqual(first.value[0]?.id, 1);
       assert.strictEqual(second.value[0]?.id, 2);
-      assertNone(yield* source.next);
-      assertNone(yield* source.next);
+      const next6 = yield* source.next;
+      assertNone(next6);
+      const next7 = yield* source.next;
+      assertNone(next7);
       assert.strictEqual(unused.count(), 0);
       assert.strictEqual(script.count(), 3);
       assert.strictEqual(script.calls[0]?.url, script.calls[1]?.url);

@@ -73,13 +73,15 @@ const renderedOutput = Effect.fnUntraced(function* <Name extends string>(
   root: Command.Command<Name, {}, {}, never, never>,
   argv: ReadonlyArray<string>
 ) {
-  const logged = A.length(yield* TestConsole.logLines);
-  const errored = A.length(yield* TestConsole.errorLines);
+  const logLines1 = yield* TestConsole.logLines;
+  const logged = A.length(logLines1);
+  const errorLines2 = yield* TestConsole.errorLines;
+  const errored = A.length(errorLines2);
   yield* Command.runWith(root, { version: "0.0.0" })(argv).pipe(Effect.ignore);
-  const lines = A.appendAll(
-    A.drop(yield* TestConsole.logLines, logged),
-    A.drop(yield* TestConsole.errorLines, errored)
-  );
+  const logLines3 = yield* TestConsole.logLines;
+  const argument = A.drop(logLines3, logged);
+  const errorLines1 = yield* TestConsole.errorLines;
+  const lines = A.appendAll(argument, A.drop(errorLines1, errored));
   return A.join(A.filter(lines, P.isString), "\n");
 });
 
@@ -116,17 +118,20 @@ it.layer(HelpRenderLayer, { timeout: "30 seconds" })((it) => {
   describe("lazy dispatch help rendering", () => {
     it.effect("renders root help and every group's help identically to the eager tree", () =>
       Effect.gen(function* () {
-        expect(yield* renderedOutput(makeRootCommand(HashMap.empty()), ["--help"])).toBe(
-          yield* renderedOutput(realRoot, ["--help"])
-        );
-        expect(yield* renderedOutput(makeRootCommand(HashMap.empty()), ["no-such-group"])).toBe(
-          yield* renderedOutput(realRoot, ["no-such-group"])
-        );
+        const renderedOutput4 = yield* renderedOutput(makeRootCommand(HashMap.empty()), ["--help"]);
+        const expectation = expect(renderedOutput4);
+        const renderedOutput2 = yield* renderedOutput(realRoot, ["--help"]);
+        expectation.toBe(renderedOutput2);
+        const renderedOutput5 = yield* renderedOutput(makeRootCommand(HashMap.empty()), ["no-such-group"]);
+        const expectation1 = expect(renderedOutput5);
+        const renderedOutput3 = yield* renderedOutput(realRoot, ["no-such-group"]);
+        expectation1.toBe(renderedOutput3);
         for (const real of realGroups) {
           const lazyRoot = makeRootCommand(HashMap.make([real.name, real]));
-          expect(yield* renderedOutput(lazyRoot, [real.name, "--help"]), `beep ${real.name} --help`).toBe(
-            yield* renderedOutput(realRoot, [real.name, "--help"])
-          );
+          const renderedOutput6 = yield* renderedOutput(lazyRoot, [real.name, "--help"]);
+          const expectation2 = expect(renderedOutput6, `beep ${real.name} --help`);
+          const renderedOutput7 = yield* renderedOutput(realRoot, [real.name, "--help"]);
+          expectation2.toBe(renderedOutput7);
         }
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // Comment fidelity (#127): the commentBefore / comment / spaceBefore split on
 // the four node classes, the composer's FORWARD own-line attribution, blank
 // line preservation, and stringifier emission across node kinds and styles.
@@ -292,7 +293,8 @@ describe("comment fidelity (#127)", () => {
       assert.strictEqual(out, source);
       // And the emission is stable: parse(out) stringifies identically.
       const again = yield* YamlDocument.parse(out);
-      assert.strictEqual(yield* again.stringify(options), out);
+      const stringify1 = yield* again.stringify(options);
+      assert.strictEqual(stringify1, out);
     });
 
     it.effect("emits leading, trailing and section comments in block mappings", () =>
@@ -366,10 +368,12 @@ describe("comment fidelity (#127)", () => {
         assert.strictEqual(out, "m:\n  {\n    a: 1, # c\n    b: 2\n  }\n");
         assert.include(out, "a: 1, # c");
         assert.include(out, "{");
-        assert.deepStrictEqual(yield* Yaml.parse(out), { m: { a: 1, b: 2 } });
+        const parsed2 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed2, { m: { a: 1, b: 2 } });
         // Idempotent from the second pass on.
         const again = yield* YamlDocument.parse(out);
-        assert.strictEqual(yield* again.stringify(), out);
+        const stringify3 = yield* again.stringify();
+        assert.strictEqual(stringify3, out);
       })
     );
 
@@ -382,9 +386,11 @@ describe("comment fidelity (#127)", () => {
         assert.strictEqual(out, "s:\n  [\n    one, # c\n    two\n  ]\n");
         assert.include(out, "# c");
         assert.include(out, "[");
-        assert.deepStrictEqual(yield* Yaml.parse(out), { s: ["one", "two"] });
+        const parsed4 = yield* Yaml.parse(out);
+        assert.deepStrictEqual(parsed4, { s: ["one", "two"] });
         const again = yield* YamlDocument.parse(out);
-        assert.strictEqual(yield* again.stringify(), out);
+        const stringify5 = yield* again.stringify();
+        assert.strictEqual(stringify5, out);
       })
     );
 
@@ -403,7 +409,8 @@ describe("comment fidelity (#127)", () => {
         const out = yield* doc.stringify();
         assert.strictEqual(out, "[\n  a,\n  # own\n  b\n]\n");
         const again = yield* YamlDocument.parse(out);
-        assert.strictEqual(yield* again.stringify(), out);
+        const stringify6 = yield* again.stringify();
+        assert.strictEqual(stringify6, out);
       })
     );
 
@@ -423,7 +430,8 @@ describe("comment fidelity (#127)", () => {
           const out = yield* doc.stringify();
           assert.strictEqual(out, "[\n  a, # t\n  # own\n  b\n]\n");
           const again = yield* YamlDocument.parse(out);
-          assert.strictEqual(yield* again.stringify(), out);
+          const stringify7 = yield* again.stringify();
+          assert.strictEqual(stringify7, out);
         })
     );
 
@@ -438,7 +446,8 @@ describe("comment fidelity (#127)", () => {
         const out = yield* doc.stringify();
         assert.strictEqual(out, "[\n  a,\n  b\n  # own\n]\n");
         const again = yield* YamlDocument.parse(out);
-        assert.strictEqual(yield* again.stringify(), out);
+        const stringify8 = yield* again.stringify();
+        assert.strictEqual(stringify8, out);
       })
     );
 
@@ -519,7 +528,8 @@ describe("comment fidelity (#127)", () => {
       it.effect("an inline flow map with only a trailing comment stays on one line", () =>
         Effect.gen(function* () {
           const source = "a: {b: 1} # t\n";
-          const map = firstMap(yield* YamlDocument.parse(source)).items[0]?.value;
+          const parsed9 = yield* YamlDocument.parse(source);
+          const map = firstMap(parsed9).items[0]?.value;
           assert.instanceOf(map, YamlMap);
           assert.ok(S.is(YamlMap)(map));
           assert.strictEqual(map.comment, " t");
@@ -549,7 +559,8 @@ describe("comment fidelity (#127)", () => {
           const out = YamlFormat.formatToString(source);
           assert.strictEqual(out, "top:\n  inner:\n    [\n      1,\n\n      # c\n      2\n    ]\n");
           assert.strictEqual(YamlFormat.formatToString(out), out);
-          assert.deepStrictEqual(yield* Yaml.parse(out), { top: { inner: [1, 2] } });
+          const parsed10 = yield* Yaml.parse(out);
+          assert.deepStrictEqual(parsed10, { top: { inner: [1, 2] } });
         })
       );
     });
@@ -563,7 +574,8 @@ describe("comment fidelity (#127)", () => {
         assert.include(out, "# entry");
         assert.include(out, ": 1 # one");
         const again = yield* YamlDocument.parse(out);
-        assert.strictEqual(yield* again.stringify(), out);
+        const stringify11 = yield* again.stringify();
+        assert.strictEqual(stringify11, out);
       })
     );
 
@@ -599,7 +611,8 @@ describe("comment fidelity (#127)", () => {
             const out = yield* doc.stringify();
             assert.strictEqual(out, source);
             const again = yield* YamlDocument.parse(out);
-            assert.strictEqual(yield* again.stringify(), out);
+            const stringify12 = yield* again.stringify();
+            assert.strictEqual(stringify12, out);
           })
         );
       }
@@ -640,7 +653,8 @@ describe("comment fidelity (#127)", () => {
           const out = yield* doc.stringify();
           assert.strictEqual(out, source);
           const again = yield* YamlDocument.parse(out);
-          assert.strictEqual(yield* again.stringify(), out);
+          const stringify13 = yield* again.stringify();
+          assert.strictEqual(stringify13, out);
         })
       );
 
@@ -663,7 +677,8 @@ describe("comment fidelity (#127)", () => {
           const out = yield* doc.stringify();
           assert.strictEqual((O.getOrNull(Str.match(/#/g)(out)) ?? []).length, 2);
           const again = yield* YamlDocument.parse(out);
-          assert.strictEqual(yield* again.stringify(), out);
+          const stringify14 = yield* again.stringify();
+          assert.strictEqual(stringify14, out);
         })
       );
 
@@ -676,7 +691,8 @@ describe("comment fidelity (#127)", () => {
           const out = yield* doc.stringify();
           assert.strictEqual(out, "a: | # pair\n  body\n");
           const again = yield* YamlDocument.parse(out);
-          assert.strictEqual(yield* again.stringify(), out);
+          const stringify15 = yield* again.stringify();
+          assert.strictEqual(stringify15, out);
         })
       );
 
@@ -705,7 +721,8 @@ describe("comment fidelity (#127)", () => {
           assert.ok(S.is(YamlScalar)(scalar));
           assert.strictEqual(scalar.blockIndent, 4);
           assert.strictEqual(scalar.value, "body\n");
-          assert.strictEqual(yield* doc.stringify(), "a: |\n  body\n");
+          const stringify16 = yield* doc.stringify();
+          assert.strictEqual(stringify16, "a: |\n  body\n");
         })
       );
 
@@ -718,7 +735,8 @@ describe("comment fidelity (#127)", () => {
           const scalar = firstMap(doc).items[0]?.value;
           assert.ok(S.is(YamlScalar)(scalar));
           assert.strictEqual(scalar.chomp, "clip");
-          assert.strictEqual(yield* doc.stringify(), "a: | # x+y\n  body\n");
+          const stringify17 = yield* doc.stringify();
+          assert.strictEqual(stringify17, "a: | # x+y\n  body\n");
 
           const doc2 = yield* YamlDocument.parse("a: | # strip-me\n  body\n");
           const scalar2 = firstMap(doc2).items[0]?.value;
@@ -757,7 +775,8 @@ describe("comment fidelity (#127)", () => {
             const out = yield* doc.stringify();
             assert.strictEqual(out, source);
             const again = yield* YamlDocument.parse(out);
-            assert.strictEqual(yield* again.stringify(), out);
+            const stringify18 = yield* again.stringify();
+            assert.strictEqual(stringify18, out);
           })
         );
       }
@@ -780,7 +799,8 @@ describe("comment fidelity (#127)", () => {
       it.effect("canonical mode still drops it", () =>
         Effect.gen(function* () {
           const doc = yield* YamlDocument.parse("| # hdr\n  body\n");
-          assert.notInclude(yield* doc.stringify(YamlStringifyOptions.make({ forceDefaultStyles: true })), "#");
+          const stringify19 = yield* doc.stringify(YamlStringifyOptions.make({ forceDefaultStyles: true }));
+          assert.notInclude(stringify19, "#");
         })
       );
     });
@@ -882,7 +902,8 @@ describe("comment fidelity (#127)", () => {
           const seq = firstMap(doc).items[0]?.value;
           assert.ok(S.is(YamlSeq)(seq));
           assert.strictEqual(seq.commentBefore, "lead");
-          assert.strictEqual(yield* doc.stringify(), source);
+          const stringify20 = yield* doc.stringify();
+          assert.strictEqual(stringify20, source);
         })
       );
     });
@@ -988,7 +1009,9 @@ describe("comment fidelity (#127)", () => {
           undefined,
           YamlFormattingOptions.make({ indentSequences: true })
         );
-        assert.deepStrictEqual(yield* Yaml.parse(out), yield* Yaml.parse(fixture));
+        const parsed21 = yield* Yaml.parse(out);
+        const parsed22 = yield* Yaml.parse(fixture);
+        assert.deepStrictEqual(parsed21, parsed22);
       })
     );
   });
@@ -1132,7 +1155,7 @@ describe("comment fidelity (#127)", () => {
     }
 
     for (const input of inlineInputs) {
-      it(`idempotence + meaning preservation — ${JSON.stringify(input)}`, () => {
+      it(`idempotence + meaning preservation — ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(input), identity)}`, () => {
         const once = YamlFormat.formatToString(input);
         assert.strictEqual(YamlFormat.formatToString(once), once);
         assert.deepStrictEqual(

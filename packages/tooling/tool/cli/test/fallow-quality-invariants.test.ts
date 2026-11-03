@@ -160,7 +160,11 @@ it("does not let a rename in one instance hide an unregistered edit in another",
 
 it.effect("reads workflow YAML into a plain value", () =>
   Effect.gen(function* () {
-    expect(yield* workflowYamlValueForTesting(".github/workflows/check.yml", "name: Check\non: [push]\n")).toEqual({
+    const workflowYamlValueForTesting1 = yield* workflowYamlValueForTesting(
+      ".github/workflows/check.yml",
+      "name: Check\non: [push]\n"
+    );
+    expect(workflowYamlValueForTesting1).toEqual({
       name: "Check",
       on: ["push"],
     });

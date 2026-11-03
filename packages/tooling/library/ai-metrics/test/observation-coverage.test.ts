@@ -154,8 +154,10 @@ describe("independent coverage reconciliation", () => {
             ...value,
             routes: A.map(value.routes, (route) => ({ ...route, visibleEvents: snapshot([id("2"), id("2")]) })),
           },
-        ])
-          expect(yield* report(invalid).pipe(Effect.isFailure)).toBe(true);
+        ]) {
+          const pipe2 = yield* report(invalid).pipe(Effect.isFailure);
+          expect(pipe2).toBe(true);
+        }
       })
   );
   it.effect("bounds total observation populations independently of the manifest", () =>
@@ -168,13 +170,12 @@ describe("independent coverage reconciliation", () => {
         acceptedEvents: snapshot(ids),
         visibleEvents: snapshot(ids),
       });
-      expect(
-        yield* report({
-          ...value,
-          inventory: { ...value.inventory, routes: [route(), route(id("5"))] },
-          routes: [observed(id("c")), observed(id("5"))],
-        }).pipe(Effect.isFailure)
-      ).toBe(true);
+      const pipe1 = yield* report({
+        ...value,
+        inventory: { ...value.inventory, routes: [route(), route(id("5"))] },
+        routes: [observed(id("c")), observed(id("5"))],
+      }).pipe(Effect.isFailure);
+      expect(pipe1).toBe(true);
     })
   );
 });

@@ -115,21 +115,22 @@ describe("canonical package scripts schemas", () => {
       assertSome(HashMap.get(block.tasks, "build"), "bun run beep:build");
       expect(HashMap.size(block.impls)).toBe(1);
       expect(HashMap.size(block.extras)).toBe(2);
-      expect(yield* encodeApp(block)).toEqual(input);
+      const encodedApp = yield* encodeApp(block);
+      expect(encodedApp).toEqual(input);
     })
   );
   it.effect(
     "rejects tier overlap and non-string script values with typed schema errors",
     Effect.fnUntraced(function* () {
-      expect(
-        yield* decodeBlock({
-          kind: "app",
-          tasks: HashMap.empty(),
-          impls: HashMap.empty(),
-          extras: HashMap.make(["build", "bad"]),
-        }).pipe(Effect.isFailure)
-      ).toBe(true);
-      expect(yield* decodeUnknownApp({ build: 1 }).pipe(Effect.isFailure)).toBe(true);
+      const pipe1 = yield* decodeBlock({
+        kind: "app",
+        tasks: HashMap.empty(),
+        impls: HashMap.empty(),
+        extras: HashMap.make(["build", "bad"]),
+      }).pipe(Effect.isFailure);
+      expect(pipe1).toBe(true);
+      const pipe2 = yield* decodeUnknownApp({ build: 1 }).pipe(Effect.isFailure);
+      expect(pipe2).toBe(true);
     })
   );
   it.effect(
@@ -169,7 +170,8 @@ describe("canonical package scripts schemas", () => {
       };
       const report = yield* decodeReport(wire);
       expect(HashSet.has(report.written, "apps/a/package.json")).toBe(true);
-      expect(yield* encodeReport(report)).toEqual(wire);
+      const encodedReport = yield* encodeReport(report);
+      expect(encodedReport).toEqual(wire);
     })
   );
   it.effect(
@@ -184,7 +186,8 @@ describe("canonical package scripts schemas", () => {
       } as const;
       const report = yield* decodeReport(legacy);
       expect(HashMap.size(report.implDrift)).toBe(0);
-      expect(yield* encodeReport(report)).toEqual({ ...legacy, implDrift: {} });
+      const encodedReport3 = yield* encodeReport(report);
+      expect(encodedReport3).toEqual({ ...legacy, implDrift: {} });
     })
   );
   it("models checker scripts, non-canonical checkers and reviewed exemptions", () => {

@@ -35,7 +35,8 @@ const planCommand = Command.make(
     const home = yield* homeConfig;
     const workspace = yield* ReferenceWorkspace;
     const resolved = yield* workspace.resolveRoot(home, root);
-    yield* Console.log(A.join(yield* workspace.plan(home, resolved), "\n"));
+    const plan1 = yield* workspace.plan(home, resolved);
+    yield* Console.log(A.join(plan1, "\n"));
   })
 ).pipe(
   Command.withDescription("Print the clone and link plan without writing"),
@@ -55,7 +56,8 @@ const provisionCommand = Command.make(
       onNone: () => owner,
       onSome: (value) => resolveOperatorPath(value, home, path.resolve),
     });
-    yield* Console.log(A.join(yield* workspace.provision(home, target, resolved), "\n"));
+    const provision2 = yield* workspace.provision(home, target, resolved);
+    yield* Console.log(A.join(provision2, "\n"));
   })
 ).pipe(
   Command.withDescription("Clone missing members, preserve existing checkouts, and link references"),
@@ -78,7 +80,8 @@ const refreshCommand = Command.make(
     const workspace = yield* ReferenceWorkspace;
     const resolved = yield* workspace.resolveRoot(home, root);
     const status = yield* workspace.refresh(home, resolved);
-    yield* Console.log(yield* RefsRefreshStatus.encodeJson(status));
+    const encodedJson = yield* RefsRefreshStatus.encodeJson(status);
+    yield* Console.log(encodedJson);
   })
 ).pipe(
   Command.withDescription("Fast-forward clean members on their configured branches (operator only)"),
@@ -97,22 +100,29 @@ const timerCommand = Command.make(
   Effect.fn("Refs.installTimer")(function* (options) {
     const home = yield* homeConfig;
     const workspace = yield* ReferenceWorkspace;
-    if (options.refresh && options.uninstall)
+    if (options.refresh && options.uninstall) {
       return yield* ReferenceWorkspaceError.make({ path: home, message: "Choose --refresh or --uninstall, not both." });
-    if (options.uninstall) return yield* Console.log(A.join(yield* workspace.uninstallTimer(home), "\n"));
+    }
+    if (options.uninstall) {
+      const uninstallTimer1 = yield* workspace.uninstallTimer(home);
+      return yield* Console.log(A.join(uninstallTimer1, "\n"));
+    }
     if (options.refresh) {
-      if (O.isSome(options.owner) || O.isSome(options.onCalendar))
+      if (O.isSome(options.owner) || O.isSome(options.onCalendar)) {
         return yield* ReferenceWorkspaceError.make({
           path: home,
           message: "--refresh reuses the installed owner and calendar; omit --owner and --on-calendar.",
         });
-      return yield* Console.log(A.join(yield* workspace.refreshTimer(home, options.bunPath), "\n"));
+      }
+      const refreshTimer3 = yield* workspace.refreshTimer(home, options.bunPath);
+      return yield* Console.log(A.join(refreshTimer3, "\n"));
     }
-    if (O.isNone(options.owner))
+    if (O.isNone(options.owner)) {
       return yield* ReferenceWorkspaceError.make({
         path: home,
         message: "--owner is required for a fresh timer installation.",
       });
+    }
     const path = yield* Path.Path;
     const owner = resolveOperatorPath(options.owner.value, home, path.resolve);
     const bunPath = yield* resolveUnitBunPath({ home, pinned: options.bunPath });
@@ -127,15 +137,11 @@ const timerCommand = Command.make(
         );
       })
     );
-    yield* Console.log(
-      A.join(
-        yield* Layer.build(referenceWorkspaceLayer(owner)).pipe(
-          Effect.flatMap((context) => install.pipe(Effect.provide(context))),
-          Effect.scoped
-        ),
-        "\n"
-      )
+    const pipe4 = yield* Layer.build(referenceWorkspaceLayer(owner)).pipe(
+      Effect.flatMap((context) => install.pipe(Effect.provide(context))),
+      Effect.scoped
     );
+    yield* Console.log(A.join(pipe4, "\n"));
   })
 ).pipe(
   Command.withDescription("Install, re-render, or uninstall beep-refs-refresh user units"),

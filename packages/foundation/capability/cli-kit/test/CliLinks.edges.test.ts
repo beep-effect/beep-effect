@@ -7,6 +7,7 @@ import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
@@ -184,7 +185,7 @@ describe("CliLinks.linker writes a URL as OSC 8 wants it: bytes outside 32 to 12
       for (const ch of written)
         assert.isTrue(
           O.exists(Str.charCodeAt(ch, 0), (code) => code >= 32 && code <= 126),
-          `${JSON.stringify(url)} -> ${written}`
+          `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(url), identity)} -> ${written}`
         );
     }
   });

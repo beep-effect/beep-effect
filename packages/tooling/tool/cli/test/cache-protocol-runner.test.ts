@@ -201,7 +201,8 @@ it.layer(
     it.effect(`refuses ${fault}`, () =>
       Effect.gen(function* () {
         const { run } = yield* fixture(fault);
-        Result.match(yield* run.pipe(Effect.result), {
+        const pipe1 = yield* run.pipe(Effect.result);
+        Result.match(pipe1, {
           onSuccess: () => expect.fail("Worker accepted the injected fault"),
           onFailure: (error) => expect(error.message).toContain(message),
         });

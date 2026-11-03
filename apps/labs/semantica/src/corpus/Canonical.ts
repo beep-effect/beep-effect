@@ -1,11 +1,14 @@
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 
-const canonicalPrimitive = (value: string | number | boolean | null): string => JSON.stringify(value);
+const canonicalPrimitive = (value: string | number | boolean | null): string =>
+  Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
 
 const canonicalArray = (value: ReadonlyArray<unknown>): string => `[${pipe(value, A.map(canonicalJson), A.join(","))}]`;
 

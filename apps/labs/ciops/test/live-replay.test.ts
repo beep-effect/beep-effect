@@ -13,10 +13,12 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { decodeAdmissionPolicyParams } from "@/projection/AboxPolicy";
@@ -117,7 +119,8 @@ const readText = Effect.fn("LiveReplayTest.readText")(function* (path: string) {
 });
 
 const readPolicy = Effect.fn("LiveReplayTest.readPolicy")(function* () {
-  return yield* decodeAdmissionPolicyParams(yield* readText(`${repoRoot}/${aboxPath}`));
+  const readText1 = yield* readText(`${repoRoot}/${aboxPath}`);
+  return yield* decodeAdmissionPolicyParams(readText1);
 });
 
 // A scratch evidence file holding a frozen record, addressed repo-relative like every live path.
@@ -142,7 +145,8 @@ const replaySource = Effect.fn("LiveReplayTest.replaySource")(function* (source:
 });
 
 const replayFixture = Effect.fn("LiveReplayTest.replayFixture")(function* (path: string, options?: ReplayOptions) {
-  return yield* replaySource(yield* readText(path), options);
+  const readText2 = yield* readText(path);
+  return yield* replaySource(readText2, options);
 });
 
 const v3Base = {
@@ -266,7 +270,7 @@ const legacyProtocol = O.some("legacy-origin-lock/v1");
 
 const ndjson = (rows: ReadonlyArray<Record<string, unknown>>): string =>
   A.join(
-    A.map(rows, (row) => JSON.stringify(row)),
+    A.map(rows, (row) => Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(row), identity)),
     "\n"
   );
 
@@ -363,8 +367,10 @@ describe("@beep/ciops live replay", () => {
 
     it.effect("decodes surrogate rows as surrogate custody and pid rows as live custody", () =>
       Effect.gen(function* () {
-        const surrogate = yield* decodeAdmissionJournal(yield* readText(surrogateFixturePath));
-        const mixed = yield* decodeAdmissionJournal(yield* readText(mixedFixturePath));
+        const readText3 = yield* readText(surrogateFixturePath);
+        const surrogate = yield* decodeAdmissionJournal(readText3);
+        const readText4 = yield* readText(mixedFixturePath);
+        const mixed = yield* decodeAdmissionJournal(readText4);
 
         expect(surrogate).toHaveLength(9);
         expect(A.every(surrogate, (event) => admissionRowCustody(event) === "surrogate")).toBe(true);
@@ -586,7 +592,8 @@ describe("@beep/ciops live replay", () => {
             Effect.map((failure) => [failure._tag, "member" in failure ? failure.member : failure.message])
           );
         const policy = yield* readPolicy();
-        const events = yield* decodeAdmissionJournal(yield* readText(releasedOnlyFixturePath));
+        const readText5 = yield* readText(releasedOnlyFixturePath);
+        const events = yield* decodeAdmissionJournal(readText5);
         const digestFailure = yield* Effect.flip(
           replayAdmissionJournal(policy, events, "fixture-policy", Str.repeat(64)("c"), windowed(fixtureWindow(2)))
         );
@@ -598,18 +605,12 @@ describe("@beep/ciops live replay", () => {
           "1",
           "2",
         ]);
-        expect(yield* failureMember(fixtureWindow(2, 1700))).toStrictEqual([
-          "ReplayWindowError",
-          "lastRetainedInstant",
-        ]);
-        expect(yield* failureMember(fixtureWindow(2, 1600, 999))).toStrictEqual([
-          "ReplayWindowError",
-          "firstRetainedInstant",
-        ]);
-        expect(yield* failureMember(fixtureWindow(2, 1600, 1001))).toStrictEqual([
-          "ReplayWindowError",
-          "firstRetainedInstant",
-        ]);
+        const failureMember6 = yield* failureMember(fixtureWindow(2, 1700));
+        expect(failureMember6).toStrictEqual(["ReplayWindowError", "lastRetainedInstant"]);
+        const failureMember7 = yield* failureMember(fixtureWindow(2, 1600, 999));
+        expect(failureMember7).toStrictEqual(["ReplayWindowError", "firstRetainedInstant"]);
+        const failureMember8 = yield* failureMember(fixtureWindow(2, 1600, 1001));
+        expect(failureMember8).toStrictEqual(["ReplayWindowError", "firstRetainedInstant"]);
         assertInstanceOf(digestFailure, ReplayWindowError);
         expect(digestFailure.member).toBe("journalSha256");
       })
@@ -642,7 +643,8 @@ describe("@beep/ciops live replay", () => {
 
     it.effect("reads the pinned manifest's window and pre-v3 members line by line", () =>
       Effect.gen(function* () {
-        const members = readManifestWindowMembers(yield* readText(`${repoRoot}/${pin}/MANIFEST.yaml`));
+        const readText9 = yield* readText(`${repoRoot}/${pin}/MANIFEST.yaml`);
+        const members = readManifestWindowMembers(readText9);
 
         assertSome(HashMap.get(members, "admission_roots[0].label"), "canonical");
         assertSome(
@@ -718,7 +720,10 @@ describe("@beep/ciops live replay", () => {
 
     it.effect("shares one pin constant set with the evidence script, equal to the literal pin", () =>
       Effect.gen(function* () {
-        expect(yield* encodeWindow(run4FleetCanonicalWindow)).toStrictEqual(yield* encodeWindow(pinnedWindowLiteral));
+        const encodedWindow = yield* encodeWindow(run4FleetCanonicalWindow);
+        const expectation = expect(encodedWindow);
+        const encodedWindow1 = yield* encodeWindow(pinnedWindowLiteral);
+        expectation.toStrictEqual(encodedWindow1);
         expect(run4FleetLiveEvidencePaths).toStrictEqual(pinnedPathsLiteral);
       })
     );
@@ -758,7 +763,9 @@ describe("@beep/ciops live replay", () => {
           })
         );
         expect([live.withdrawnRows, live.ticketEvictedRows]).toStrictEqual([44, 1]);
-        expect(run.rendered).toBe(yield* readText(committedEvidencePath));
+        const expectation1 = expect(run.rendered);
+        const readText6 = yield* readText(committedEvidencePath);
+        expectation1.toBe(readText6);
       })
     );
 
@@ -808,14 +815,16 @@ describe("@beep/ciops live replay", () => {
 
         assertInstanceOf(drift, PolicyDecodeError);
         expect(drift.message).toContain("evidence:s7-live:write");
-        expect(yield* readText(scratch.absolute)).toBe(frozenRecord);
+        const readText10 = yield* readText(scratch.absolute);
+        expect(readText10).toBe(frozenRecord);
 
         const written = yield* generateLiveReplayEvidence(
           EvidenceMode.Enum.write,
           scratch.paths,
           run4FleetCanonicalWindow
         );
-        expect(yield* readText(scratch.absolute)).toBe(written.rendered);
+        const readText11 = yield* readText(scratch.absolute);
+        expect(readText11).toBe(written.rendered);
       })
     );
 
@@ -831,22 +840,21 @@ describe("@beep/ciops live replay", () => {
             )
           ).pipe(Effect.map((failure) => [failure._tag, "member" in failure ? failure.member : failure.message]));
 
-        expect(yield* failureMember({ journalSha256: Sha256Hex.make(Str.repeat(64)("0")) })).toStrictEqual([
+        const failureMember12 = yield* failureMember({ journalSha256: Sha256Hex.make(Str.repeat(64)("0")) });
+        expect(failureMember12).toStrictEqual(["ReplayWindowError", "journalSha256"]);
+        const failureMember13 = yield* failureMember({ manifestSha256: Sha256Hex.make(Str.repeat(64)("0")) });
+        expect(failureMember13).toStrictEqual(["ReplayWindowError", "manifestSha256"]);
+        const failureMember14 = yield* failureMember({
+          firstRetainedInstant: DateTime.makeUnsafe("2026-10-01T09:32:09.603Z"),
+        });
+        expect(failureMember14).toStrictEqual([
           "ReplayWindowError",
-          "journalSha256",
+          "admission_roots[0].window.first_retained_row_instant",
         ]);
-        expect(yield* failureMember({ manifestSha256: Sha256Hex.make(Str.repeat(64)("0")) })).toStrictEqual([
-          "ReplayWindowError",
-          "manifestSha256",
-        ]);
-        expect(
-          yield* failureMember({ firstRetainedInstant: DateTime.makeUnsafe("2026-10-01T09:32:09.603Z") })
-        ).toStrictEqual(["ReplayWindowError", "admission_roots[0].window.first_retained_row_instant"]);
-        expect(yield* failureMember({ preV3Chains: S.Natural.make(1) })).toStrictEqual([
-          "ReplayWindowError",
-          "admission_roots[0].window.released_only_chains",
-        ]);
-        expect(yield* readText(scratch.absolute)).toBe(frozenRecord);
+        const failureMember15 = yield* failureMember({ preV3Chains: S.Natural.make(1) });
+        expect(failureMember15).toStrictEqual(["ReplayWindowError", "admission_roots[0].window.released_only_chains"]);
+        const readText16 = yield* readText(scratch.absolute);
+        expect(readText16).toBe(frozenRecord);
       })
     );
 
@@ -1024,7 +1032,8 @@ describe("@beep/ciops live replay", () => {
         const crypto = yield* Digest.Digest;
         const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(run.rendered));
         const policy = yield* readPolicy();
-        const events = yield* decodeAdmissionJournal(yield* readText(`${repoRoot}/${goldenJournalPath}`));
+        const readText17 = yield* readText(`${repoRoot}/${goldenJournalPath}`);
+        const events = yield* decodeAdmissionJournal(readText17);
         const report = yield* replayAdmissionJournal(policy, events, "frozen-policy", "frozen-journal");
 
         expect(Hex.encode(digest)).toBe(goldenRenderSha256);

@@ -147,7 +147,8 @@ it.layer(testLayer)("ProofManifest", (it) => {
           toolVersion: "0.0.0-stale",
         }),
       });
-      yield* fs.writeFileString(manifestPath, yield* encodeManifestJson(rewritten));
+      const encodedManifestJson = yield* encodeManifestJson(rewritten);
+      yield* fs.writeFileString(manifestPath, encodedManifestJson);
 
       const verification = yield* ProofManifest.verifyDocgenProofManifest(packagePath, packageName);
 

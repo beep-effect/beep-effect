@@ -40,11 +40,16 @@ const main = Effect.gen(function* () {
       })
     )
   );
-  const query = yield* S.decodeEffect(S.fromJsonString(RetentionQuery))(yield* fs.readFileString(args.query));
+  const argument = S.decodeEffect(S.fromJsonString(RetentionQuery));
+  const readFileString1 = yield* fs.readFileString(args.query);
+  const query = yield* argument(readFileString1);
   const policy = yield* O.match(args.policy, {
     onNone: () => Effect.succeedNone,
     onSome: Effect.fn("RetentionCLI.readPolicy")(function* (file) {
-      return O.some(yield* S.decodeEffect(S.fromJsonString(RetentionPolicy))(yield* fs.readFileString(file)));
+      const argument1 = S.decodeEffect(S.fromJsonString(RetentionPolicy));
+      const readFileString2 = yield* fs.readFileString(file);
+      const value = yield* argument1(readFileString2);
+      return O.some(value);
     }),
   });
   const context = yield* Layer.build(authority);

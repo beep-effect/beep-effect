@@ -50,7 +50,9 @@ export const callAgentMessagePeer = Effect.fn("AgentMessage.peerCall")(function*
 >(filename: string, name: Name, input: Tool.ParametersEncoded<(typeof AgentMessageToolkit.tools)[Name]>) {
   yield* requirePrivateAgentPath(filename, "File");
   const fs = yield* FileSystem.FileSystem;
-  const grant = yield* S.decodeEffect(GrantJson)(yield* fs.readFileString(filename));
+  const argument = S.decodeEffect(GrantJson);
+  const readFileString1 = yield* fs.readFileString(filename);
+  const grant = yield* argument(readFileString1);
   const context = yield* Layer.build(agentMessageHandlersLayer(grant.grantId));
   const toolkit = yield* AgentMessageToolkit.pipe(Effect.provide(context));
   const results = yield* toolkit.handle(name, input).pipe(Effect.flatMap(Stream.runCollect));
@@ -74,7 +76,8 @@ const execute = Effect.fn("AgentMessage.peerPrint")(function* <Name extends keyo
   input: Tool.ParametersEncoded<(typeof AgentMessageToolkit.tools)[Name]>
 ) {
   const wire = yield* callAgentMessagePeer(filename, name, input);
-  yield* Console.log(yield* encodeWire(wire));
+  const encodedWire = yield* encodeWire(wire);
+  yield* Console.log(encodedWire);
 });
 const send = Command.make(
   "send",

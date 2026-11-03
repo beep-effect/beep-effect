@@ -125,7 +125,8 @@ describe("PackageManifest wire fidelity", () => {
         text,
         '{\n  "scripts": {\n    "": "",\n    "\\u0000": "",\n    ")": ""\n  },\n  "extra": ""\n}\n'
       );
-      const decoded = yield* PackageManifest.decode(yield* S.decodeEffect(Json)(text));
+      const value = yield* S.decodeEffect(Json)(text);
+      const decoded = yield* PackageManifest.decode(value);
       assert.strictEqual(decoded.toJsonString(), text);
     })
   );

@@ -150,7 +150,8 @@ describe("EnvOverride.readResult", () => {
         for (const value of ["passthrough", "SILENT", "stream", "agent", "ci-annotations", "nope", ""]) {
           const env = value === "" ? {} : { VITEST_AGENT_CONSOLE: value };
           const r = yield* result(env, kind);
-          assert.deepStrictEqual(yield* read(env, kind), r.accepted, `${kind} ${value}`);
+          const read1 = yield* read(env, kind);
+          assert.deepStrictEqual(read1, r.accepted, `${kind} ${value}`);
         }
       }
     })

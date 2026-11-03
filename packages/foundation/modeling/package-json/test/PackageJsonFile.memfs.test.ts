@@ -7,10 +7,12 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import boilerplate from "./fixtures/manifests/boilerplate/package.fixture.json" with { type: "json" };
@@ -28,11 +30,26 @@ const TestLayer = PackageJsonFile.layer.pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       MemoryFileSystem.layerWith({
-        [fixturePath("minimal")]: JSON.stringify(minimal),
-        [fixturePath("full")]: JSON.stringify(full),
-        [fixturePath("scoped")]: JSON.stringify(scoped),
-        [fixturePath("boilerplate")]: JSON.stringify(boilerplate),
-        [fixturePath("with-custom-fields")]: JSON.stringify(customFields),
+        [fixturePath("minimal")]: Result.getOrThrowWith(
+          S.encodeUnknownResult(S.fromJsonString(S.Unknown))(minimal),
+          identity
+        ),
+        [fixturePath("full")]: Result.getOrThrowWith(
+          S.encodeUnknownResult(S.fromJsonString(S.Unknown))(full),
+          identity
+        ),
+        [fixturePath("scoped")]: Result.getOrThrowWith(
+          S.encodeUnknownResult(S.fromJsonString(S.Unknown))(scoped),
+          identity
+        ),
+        [fixturePath("boilerplate")]: Result.getOrThrowWith(
+          S.encodeUnknownResult(S.fromJsonString(S.Unknown))(boilerplate),
+          identity
+        ),
+        [fixturePath("with-custom-fields")]: Result.getOrThrowWith(
+          S.encodeUnknownResult(S.fromJsonString(S.Unknown))(customFields),
+          identity
+        ),
       }),
       Path.layer
     )
@@ -126,7 +143,9 @@ describe("PackageJsonFile round-trip", () => {
       const outPath = pathService.join(dir, "package.json");
       const pkg = yield* file.read(fixturePath(fixture));
       yield* file.write(outPath, pkg);
-      const written = yield* S.decodeEffect(Json)(yield* fs.readFileString(outPath));
+      const argument = S.decodeEffect(Json);
+      const readFileString1 = yield* fs.readFileString(outPath);
+      const written = yield* argument(readFileString1);
 
       return written;
     });
@@ -190,7 +209,9 @@ describe("PackageJsonFile round-trip", () => {
           dependencies: { lib: "workspace:*" },
         });
         yield* file.write(outPath, pkg);
-        const written = yield* S.decodeEffect(Json)(yield* fs.readFileString(outPath));
+        const argument1 = S.decodeEffect(Json);
+        const readFileString3 = yield* fs.readFileString(outPath);
+        const written = yield* argument1(readFileString3);
 
         assert.strictEqual(written.customX, "preserved");
         assert.deepStrictEqual(written.dependencies, { lib: "workspace:*" });
@@ -292,7 +313,9 @@ describe("PackageJsonFile manifest and modify", () => {
         yield* fs.writeFileString(path, PRIVATE_ROOT_TEXT);
         const manifest = yield* file.readManifest(path);
         yield* file.writeManifest(path, manifest, { indent: "preserve" });
-        const written = yield* S.decodeEffect(Json)(yield* fs.readFileString(path));
+        const argument2 = S.decodeEffect(Json);
+        const readFileString4 = yield* fs.readFileString(path);
+        const written = yield* argument2(readFileString4);
         const raw = yield* fs.readFileString(path);
 
         assert.isFalse("name" in written);
@@ -312,9 +335,11 @@ describe("PackageJsonFile manifest and modify", () => {
         const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-bun-root-" });
         const path = pathService.join(dir, "package.json");
         yield* fs.writeFileString(path, BUN_ROOT_TEXT);
-        yield* file.write(path, yield* file.read(path), { indent: "preserve" });
+        const read1 = yield* file.read(path);
+        yield* file.write(path, read1, { indent: "preserve" });
 
-        assert.strictEqual(yield* fs.readFileString(path), BUN_ROOT_TEXT);
+        const readFileString2 = yield* fs.readFileString(path);
+        assert.strictEqual(readFileString2, BUN_ROOT_TEXT);
       })
     );
 
@@ -392,7 +417,8 @@ describe("PackageJsonFile write/read property", () => {
           const pathService = yield* Path.Path;
           const dir = yield* fs.makeTempDirectoryScoped({ prefix: "pkg-json-prop-" });
           const path = pathService.join(dir, "package.json");
-          yield* file.write(path, yield* Package.decode({ name, version: "1.0.0" }));
+          const decoded = yield* Package.decode({ name, version: "1.0.0" });
+          yield* file.write(path, decoded);
           const read = yield* file.read(path);
           assert.strictEqual(read.name, name);
           assert.strictEqual(read.version.toString(), "1.0.0");

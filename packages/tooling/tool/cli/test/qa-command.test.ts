@@ -36,8 +36,11 @@ import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { identity } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const judge = QaJudgeRef.make({ effort: "high", model: "gpt-daybreak-blue-latest" });
@@ -153,7 +156,13 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
   it("handles escaped quotes and a string ending in an escaped backslash", () => {
     // The "path" value ends in a backslash, so its closing quote is preceded by
     // an even backslash run — the parity branch that decides the quote is real.
-    const candidate = JSON.stringify({ message: 'escaped quote: "; braces: }{', path: "C:\\logs\\" });
+    const candidate = Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        message: 'escaped quote: "; braces: }{',
+        path: "C:\\logs\\",
+      }),
+      identity
+    );
     const stdout = `thinking... ${candidate} trailing prose`;
     expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe(candidate);
   });

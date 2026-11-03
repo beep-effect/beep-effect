@@ -31,10 +31,12 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -84,7 +86,8 @@ const recordingSpawnerLayer = (respond: (commandLine: string) => CommandStub) =>
 
 // `gh api --paginate --slurp` answers with one array OF PAGES, so every stub
 // here wraps its rows in a page the way the real command does.
-const pages = (rows: ReadonlyArray<unknown>): string => JSON.stringify([rows]);
+const pages = (rows: ReadonlyArray<unknown>): string =>
+  Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))([rows]), identity);
 const EMPTY_PAGE = pages([]);
 
 const issueCommentJson = (id: number, createdAt: string): string =>
@@ -173,7 +176,8 @@ const writeStateText = Effect.fnUntraced(function* (context: RepoRunContext, tex
 });
 
 const writeState = Effect.fnUntraced(function* (context: RepoRunContext, state: YeetMonitorCommentState) {
-  yield* writeStateText(context, yield* YeetMonitorCommentStateJson.encode(state));
+  const encoded = yield* YeetMonitorCommentStateJson.encode(state);
+  yield* writeStateText(context, encoded);
 });
 
 const stateAt = (prNumber: number, createdAt: string, id: number): YeetMonitorCommentState => {
@@ -190,16 +194,20 @@ const stateAt = (prNumber: number, createdAt: string, id: number): YeetMonitorCo
 // Written as text on purpose: the v1 class is module-private, and this is what
 // is actually sitting on disk in every lane that ran the previous build.
 const stateTextV1 = (prNumber: number, createdAt: string, id: number): string =>
-  JSON.stringify({
-    schemaVersion: "yeet-monitor-comments/v1",
-    prNumber,
-    updatedAt: createdAt,
-    watermark: { issue: { createdAt, id }, review: { createdAt, id } },
-  });
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+      schemaVersion: "yeet-monitor-comments/v1",
+      prNumber,
+      updatedAt: createdAt,
+      watermark: { issue: { createdAt, id }, review: { createdAt, id } },
+    }),
+    identity
+  );
 
 const readStateText = Effect.fnUntraced(function* (context: RepoRunContext) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* fs.readFileString(yield* yeetMonitorCommentStatePath(context));
+  const yeetMonitorCommentStatePath1 = yield* yeetMonitorCommentStatePath(context);
+  return yield* fs.readFileString(yeetMonitorCommentStatePath1);
 });
 
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer);
@@ -215,7 +223,11 @@ describe("yeet monitor comment cursor persistence", () => {
         makeTempDirectory,
         (root) =>
           Effect.gen(function* () {
-            assertNone(yield* loadYeetMonitorCommentWatermark(monitorContext(root), PR_NUMBER));
+            const loadedYeetMonitorCommentWatermark = yield* loadYeetMonitorCommentWatermark(
+              monitorContext(root),
+              PR_NUMBER
+            );
+            assertNone(loadedYeetMonitorCommentWatermark);
           }),
         removeTempDirectory
       )
@@ -256,7 +268,8 @@ describe("yeet monitor comment cursor persistence", () => {
             const context = monitorContext(root);
             yield* writeState(context, stateAt(PR_NUMBER + 1, EARLIER_COMMENT_AT, 44));
 
-            assertNone(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER));
+            const loadedYeetMonitorCommentWatermark2 = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
+            assertNone(loadedYeetMonitorCommentWatermark2);
           }),
         removeTempDirectory
       )
@@ -272,7 +285,8 @@ describe("yeet monitor comment cursor persistence", () => {
             const context = monitorContext(root);
             yield* writeStateText(context, "{ this is not the artifact }");
 
-            assertNone(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER));
+            const loadedYeetMonitorCommentWatermark3 = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
+            assertNone(loadedYeetMonitorCommentWatermark3);
           }),
         removeTempDirectory
       )
@@ -294,8 +308,9 @@ describe("yeet monitor comment cursor persistence", () => {
 
               expect(A.map(comments, (comment) => comment.id)).toStrictEqual([44]);
               expect((yield* Ref.get(watermarkRef)).issue.id).toBe(1);
+              const loadedYeetMonitorCommentWatermark4 = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
               assertSome(
-                O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id),
+                O.map(loadedYeetMonitorCommentWatermark4, (mark) => mark.issue.id),
                 1
               );
 
@@ -305,8 +320,9 @@ describe("yeet monitor comment cursor persistence", () => {
               yield* acknowledgeYeetMonitorComments(context, PR_NUMBER, watermarkRef, comments);
 
               expect((yield* Ref.get(watermarkRef)).issue.id).toBe(44);
+              const loadedYeetMonitorCommentWatermark5 = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
               assertSome(
-                O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id),
+                O.map(loadedYeetMonitorCommentWatermark5, (mark) => mark.issue.id),
                 44
               );
             }),
@@ -383,14 +399,16 @@ describe("yeet monitor comment cursor persistence", () => {
             // The second run must ask GitHub for everything since the saved
             // position — not since its own start — or a comment posted between the
             // two runs is invisible to both.
-            const firstRunCommandCount = A.length(yield* recordedCommands);
+            const recordedCommands6 = yield* recordedCommands;
+            const firstRunCommandCount = A.length(recordedCommands6);
             yield* recordedCommands.pipe(
               Effect.map((commands) => A.length(commands) >= firstRunCommandCount + 2),
               until,
               Effect.raceFirst(runYeetPullRequestCommentMonitor(context, PR_NUMBER))
             );
 
-            const secondRunCommands = A.drop(yield* recordedCommands, firstRunCommandCount);
+            const recordedCommands7 = yield* recordedCommands;
+            const secondRunCommands = A.drop(recordedCommands7, firstRunCommandCount);
             const issuePoll = A.findFirst(secondRunCommands, Str.includes("/issues/"));
             assertSome(O.map(issuePoll, Str.includes(`since=${LATER_COMMENT_AT}`)), true);
           }),
@@ -433,7 +451,8 @@ describe("yeet monitor comment poll failures", () => {
 
             expect(winner).toBe("checks finished");
             // It really did try, and really did fail: the race was survived, not skipped.
-            expect(A.length(yield* recordedCommands)).toBeGreaterThan(0);
+            const recordedCommands8 = yield* recordedCommands;
+            expect(A.length(recordedCommands8)).toBeGreaterThan(0);
           }),
         removeTempDirectory
       )
@@ -461,7 +480,8 @@ describe("yeet monitor comment poll failures", () => {
               runYeetPullRequestCommentMonitor(monitorContext(root), PR_NUMBER, 1)
             );
 
-            const errors = A.map(yield* TestConsole.errorLines, String);
+            const errorLines9 = yield* TestConsole.errorLines;
+            const errors = A.map(errorLines9, String);
             // Each failed tick is reported with gh's own words, numbered against
             // the bound, and says the checks are still being watched.
             expect(A.some(errors, Str.includes("API rate limit exceeded"))).toBe(true);
@@ -508,7 +528,8 @@ describe("yeet monitor comment replay", () => {
 
             yield* replayYeetMonitorComments(context, PR_NUMBER);
 
-            const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            const logLines10 = yield* TestConsole.logLines;
+            const printed = A.join(A.map(logLines10, String), "\n");
             // The header quotes the position it read from, so an operator can tell
             // "nothing happened" apart from "the cursor was already past it".
             expect(printed).toContain(`comment replay: 3 comment(s) since ${MISSED_AT}`);
@@ -532,7 +553,8 @@ describe("yeet monitor comment replay", () => {
               O.map(persisted, (mark) => mark.reviewBody.id),
               5275652920
             );
-            expect(yield* readStateText(context)).toContain("yeet-monitor-comments/v2");
+            const readStateText11 = yield* readStateText(context);
+            expect(readStateText11).toContain("yeet-monitor-comments/v2");
           }),
         removeTempDirectory
       )
@@ -579,11 +601,13 @@ describe("yeet monitor comment replay", () => {
 
             yield* replayYeetMonitorComments(context, PR_NUMBER);
 
-            const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            const logLines12 = yield* TestConsole.logLines;
+            const printed = A.join(A.map(logLines12, String), "\n");
             expect(printed).toContain(`comment replay: no watermark for #${PR_NUMBER}; starting at`);
             // Nothing was read, because there was no "since" to read from — the
             // point of the line is that the NEXT open is the one that resumes.
-            expect(A.length(yield* recordedCommands)).toBe(0);
+            const recordedCommands13 = yield* recordedCommands;
+            expect(A.length(recordedCommands13)).toBe(0);
             (yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER)).pipe(O.isSome, assertTrue);
           }),
         removeTempDirectory
@@ -609,10 +633,12 @@ describe("yeet monitor comment replay", () => {
             // unreachable while it tried to print old comments.
             yield* replayYeetMonitorComments(context, PR_NUMBER);
 
-            const warnings = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+            const errorLines14 = yield* TestConsole.errorLines;
+            const warnings = A.join(A.map(errorLines14, String), "\n");
             expect(warnings).toContain("comment replay unavailable");
+            const loadedYeetMonitorCommentWatermark15 = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
             assertSome(
-              O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id),
+              O.map(loadedYeetMonitorCommentWatermark15, (mark) => mark.issue.id),
               1
             );
           }),
@@ -634,24 +660,27 @@ describe("yeet monitor comment truncation", () => {
     expect(salvageYeetMonitorClippedJson('[[{"id":')).toBe("[]");
   });
 
-  const clipped = JSON.stringify([
-    [
-      {
-        body: "the one that fits",
-        created_at: FIRST_AT,
-        html_url: `https://github.com/o/r/pull/${PR_NUMBER}#issuecomment-1`,
-        id: 1,
-        user: { login: "octocat" },
-      },
-      {
-        body: Str.repeat(600 * 1024)("x"),
-        created_at: SECOND_AT,
-        html_url: `https://github.com/o/r/pull/${PR_NUMBER}#issuecomment-2`,
-        id: 2,
-        user: { login: "octocat" },
-      },
-    ],
-  ]);
+  const clipped = Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+      [
+        {
+          body: "the one that fits",
+          created_at: FIRST_AT,
+          html_url: `https://github.com/o/r/pull/${PR_NUMBER}#issuecomment-1`,
+          id: 1,
+          user: { login: "octocat" },
+        },
+        {
+          body: Str.repeat(600 * 1024)("x"),
+          created_at: SECOND_AT,
+          html_url: `https://github.com/o/r/pull/${PR_NUMBER}#issuecomment-2`,
+          id: 2,
+          user: { login: "octocat" },
+        },
+      ],
+    ]),
+    identity
+  );
   it.layer(
     Layer.provideMerge(
       Git.layer,
@@ -680,11 +709,13 @@ describe("yeet monitor comment truncation", () => {
             // A clipped read is no longer a failed read: what was read is streamed,
             // and the cursor stops at it so the rest repeats rather than vanishing.
             expect(A.map(comments, (comment) => comment.id)).toStrictEqual([1]);
+            const loadedYeetMonitorCommentWatermark16 = yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER);
             assertSome(
-              O.map(yield* loadYeetMonitorCommentWatermark(context, PR_NUMBER), (mark) => mark.issue.id),
+              O.map(loadedYeetMonitorCommentWatermark16, (mark) => mark.issue.id),
               1
             );
-            const warned = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+            const errorLines17 = yield* TestConsole.errorLines;
+            const warned = A.join(A.map(errorLines17, String), "\n");
             expect(warned).toContain("was clipped by the capture bound");
           }),
         removeTempDirectory
@@ -696,27 +727,33 @@ describe("yeet monitor comment truncation", () => {
 // The replay is a side effect of the status *mode*, so `--json` suppressing it
 // can only be proved by running the mode: a comment printed to stdout there
 // would land inside the document the caller is parsing.
-const statusPullRequestJson = JSON.stringify({
-  headRefOid: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  id: "PR_kwDOA",
-  isDraft: false,
-  labels: [],
-  mergeStateStatus: "CLEAN",
-  mergeable: "MERGEABLE",
-  number: PR_NUMBER,
-  reviewDecision: "APPROVED",
-  state: "OPEN",
-  url: `https://github.com/o/r/pull/${PR_NUMBER}`,
-});
+const statusPullRequestJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    headRefOid: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    id: "PR_kwDOA",
+    isDraft: false,
+    labels: [],
+    mergeStateStatus: "CLEAN",
+    mergeable: "MERGEABLE",
+    number: PR_NUMBER,
+    reviewDecision: "APPROVED",
+    state: "OPEN",
+    url: `https://github.com/o/r/pull/${PR_NUMBER}`,
+  }),
+  identity
+);
 
-const statusThreadsJson = JSON.stringify({
-  data: {
-    node: {
-      author: { login: "kriegcloud" },
-      reviewThreads: { nodes: [], pageInfo: { endCursor: null, hasNextPage: false } },
+const statusThreadsJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    data: {
+      node: {
+        author: { login: "kriegcloud" },
+        reviewThreads: { nodes: [], pageInfo: { endCursor: null, hasNextPage: false } },
+      },
     },
-  },
-});
+  }),
+  identity
+);
 
 const statusCommandStub = (commandLine: string): CommandStub =>
   Str.includes("pr view")(commandLine)
@@ -759,7 +796,8 @@ describe("yeet status comment replay", () => {
             // and none of the three comment endpoints was touched anyway.
             expect(A.some(commands, Str.includes("pr view"))).toBe(true);
             expect(A.filter(commands, Str.includes(`repos/{owner}/{repo}`))).toEqual([]);
-            const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            const logLines18 = yield* TestConsole.logLines;
+            const printed = A.join(A.map(logLines18, String), "\n");
             expect(printed).not.toContain("comment replay:");
           }),
         removeTempDirectory

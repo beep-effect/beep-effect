@@ -137,8 +137,10 @@ const processGoalMigration = Effect.fn("Goals.processGoalMigration")(function* (
 const runGoalsMigration = Effect.fn("Goals.runGoalsMigration")(function* (options: { readonly write: boolean }) {
   const records = yield* listGoalPackets();
   let counts = emptyGoalsMigrationCounts;
-  for (const record of records)
-    counts = addGoalsMigrationCounts(counts, yield* processGoalMigration(record, options.write));
+  for (const record of records) {
+    const processGoalMigration1 = yield* processGoalMigration(record, options.write);
+    counts = addGoalsMigrationCounts(counts, processGoalMigration1);
+  }
 
   const mode = options.write ? "applied" : "planned (dry-run; rerun with --write to apply)";
   yield* Console.log(
@@ -408,7 +410,8 @@ const planStreamTransition = Effect.fn("Goals.planStreamTransition")(function* (
     actor: "operator",
     at,
   });
-  return O.some(yield* writer.plan(request));
+  const plan1 = yield* writer.plan(request);
+  return O.some(plan1);
 });
 
 type ManifestEdit = { readonly path: ReadonlyArray<string>; readonly value: unknown };

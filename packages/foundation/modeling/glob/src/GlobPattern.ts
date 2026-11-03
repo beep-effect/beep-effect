@@ -17,7 +17,7 @@
 import { $GlobId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -126,7 +126,7 @@ export class GlobPatternError extends S.TaggedError<GlobPatternError, { readonly
    */
   override get message(): string {
     const shown = this.pattern.length > 64 ? `${Str.slice(0, 64)(this.pattern)}…` : this.pattern;
-    return `glob pattern ${JSON.stringify(shown)} rejected: ${this.reason} (limit ${this.limit}, actual ${this.actual})`;
+    return `glob pattern ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(shown), identity)} rejected: ${this.reason} (limit ${this.limit}, actual ${this.actual})`;
   }
 }
 

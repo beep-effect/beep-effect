@@ -20,10 +20,11 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { QaSeverity } from "../Qa/Inventory.schemas.ts";
 import { FigureNumber } from "./Drawings.review.schemas.ts";
@@ -450,12 +451,13 @@ export const encodeCriticReport = (report: CriticReport) => encodeCriticReportJs
  * @since 0.0.0
  */
 export const criticReportJsonSchema = (): string =>
-  JSON.stringify(
-    strictKeywords(
-      S.toJsonSchemaDocument(CriticReport, { onExcessProperty: "error", referencePolicy: () => undefined }).schema
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(
+      strictKeywords(
+        S.toJsonSchemaDocument(CriticReport, { onExcessProperty: "error", referencePolicy: () => undefined }).schema
+      )
     ),
-    null,
-    2
+    identity
   );
 
 const STRICT_KEYWORDS = HashSet.fromIterable([

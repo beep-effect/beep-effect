@@ -394,7 +394,8 @@ export const makeAgentMessageStore = Effect.fn("AgentMessageStore.make")(
         if (O.isSome(duplicate)) {
           if (duplicate.value.payload !== payload || duplicate.value.sender_generation !== senderGeneration)
             return yield* error("conflict", "Message identity was reused with different content.");
-          const receipt = A.head(yield* receipts(envelope.messageId));
+          const receipts1 = yield* receipts(envelope.messageId);
+          const receipt = A.head(receipts1);
           if (O.isNone(receipt)) return yield* error("storage", "Accepted message has no durable acceptance receipt.");
           return O.some(receipt.value);
         }
@@ -605,7 +606,8 @@ export const makeAgentMessageStore = Effect.fn("AgentMessageStore.make")(
               )
             )
           );
-        const last = A.last(yield* receipts(claim.envelope.messageId));
+        const receipts2 = yield* receipts(claim.envelope.messageId);
+        const last = A.last(receipts2);
         if (O.isNone(last)) return yield* error("storage", "Acknowledged message has no receipt.");
         return last.value;
       });
@@ -677,10 +679,8 @@ export const makeAgentMessageStore = Effect.fn("AgentMessageStore.make")(
         if (O.isNone(previous)) return O.none<Receipt>();
         if (previous.value.payload !== payload)
           return yield* error("conflict", "Resolution identity or attempt already has a different operator decision.");
-        const original = A.findFirst(
-          yield* receipts(request.messageId),
-          (receipt) => receipt.sequence === previous.value.receipt_sequence
-        );
+        const receipts3 = yield* receipts(request.messageId);
+        const original = A.findFirst(receipts3, (receipt) => receipt.sequence === previous.value.receipt_sequence);
         if (O.isNone(original)) return yield* error("storage", "Resolution audit has no original receipt.");
         return O.some(original.value);
       });
@@ -808,8 +808,9 @@ export const makeAgentMessageStore = Effect.fn("AgentMessageStore.make")(
         if (request.runtimeEvidence.outcome !== request.disposition)
           return yield* error("conflict", "Terminal evidence outcome contradicts the requested disposition.");
         if (request.disposition !== "failed") return;
+        const receipts4 = yield* receipts(request.messageId);
         const confirmed = A.some(
-          yield* receipts(request.messageId),
+          receipts4,
           (receipt) => receipt.status === "delivered" && receipt.attemptGeneration === request.attemptGeneration
         );
         if (confirmed)
@@ -1003,10 +1004,8 @@ export const makeAgentMessageStore = Effect.fn("AgentMessageStore.make")(
           transaction(
             Effect.gen(function* () {
               const current = yield* state(messageId);
-              return O.map(
-                yield* originalSettlement(messageId, current.attempt_generation),
-                (record) => record.evidence
-              );
+              const originalSettlement5 = yield* originalSettlement(messageId, current.attempt_generation);
+              return O.map(originalSettlement5, (record) => record.evidence);
             })
           ),
         claimNext: (endpointId, ownerId, now, leaseUntil) =>
@@ -1107,7 +1106,8 @@ export const makeAgentMessageStore = Effect.fn("AgentMessageStore.make")(
               yield* authorizeAcknowledgement(envelope, endpointId, now, grantId);
               yield* validateAcknowledgementRecipient(envelope, endpointId, current);
               if (current.state === "acknowledged") {
-                const last = A.findLast(yield* receipts(messageId), (receipt) => receipt.status === "acknowledged");
+                const receipts6 = yield* receipts(messageId);
+                const last = A.findLast(receipts6, (receipt) => receipt.status === "acknowledged");
                 if (O.isNone(last)) return yield* error("storage", "Acknowledged message has no receipt.");
                 return last.value;
               }

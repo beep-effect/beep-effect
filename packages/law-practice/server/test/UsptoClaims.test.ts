@@ -82,14 +82,12 @@ describe("UsptoClaims adapter", () => {
         const port = yield* UsptoClaims;
         const reasonOf = (source: UsptoClaimSource) =>
           Effect.map(Effect.flip(port.claims(source)), ({ reason }) => reason);
-        assert.deepStrictEqual(
-          yield* Effect.all([
-            reasonOf(application("SYNTHCLM1")),
-            reasonOf(application("SYNTHCLM9")),
-            reasonOf(UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make("10123456") })),
-          ]),
-          ["no-full-text-claims", "not-found", "not-found"]
-        );
+        const all1 = yield* Effect.all([
+          reasonOf(application("SYNTHCLM1")),
+          reasonOf(application("SYNTHCLM9")),
+          reasonOf(UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make("10123456") })),
+        ]);
+        assert.deepStrictEqual(all1, ["no-full-text-claims", "not-found", "not-found"]);
       })
     );
 

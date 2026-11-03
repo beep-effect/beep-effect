@@ -239,7 +239,8 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
         expect(status.openConflicts).toBe(1);
         expect(A.map(conflicts, (conflict) => conflict.conflictKind)).toEqual(["remoteDelete"]);
         // One-way push posture: remote drift never mutates the local vault.
-        expect(yield* fs.readFileString(path.join(root, "kept.txt"))).toBe("kept body");
+        const readFileString1 = yield* fs.readFileString(path.join(root, "kept.txt"));
+        expect(readFileString1).toBe("kept body");
       })
     );
   });
@@ -275,7 +276,8 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
         );
 
         expect(reviewed.resolutionStatus).toBe("reviewed");
-        expect(yield* engine.listOpenConflicts(listConflictsInput)).toEqual([]);
+        const listOpenConflicts2 = yield* engine.listOpenConflicts(listConflictsInput);
+        expect(listOpenConflicts2).toEqual([]);
       })
     );
   });
@@ -355,7 +357,8 @@ describe("Vault review ownership and detached conflicts", () => {
           })
         );
         yield* engine.syncOnce(syncInput(root));
-        const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+        const listOpenConflicts3 = yield* engine.listOpenConflicts(listConflictsInput);
+        const conflict = yield* Effect.fromOption(A.head(listOpenConflicts3));
         assertNone(conflict.syncItemId);
         const foreign = MarkConflictReviewedInput.make({
           conflictId: conflict.id,
@@ -363,11 +366,14 @@ describe("Vault review ownership and detached conflicts", () => {
         });
         const rejection = yield* Effect.flip(engine.markConflictReviewed(foreign));
         expect(rejection).toMatchObject({ _tag: "SyncConflictRepositoryNotFound", conflictId: conflict.id });
-        expect(A.map(yield* engine.listOpenConflicts(listConflictsInput), (entry) => entry.id)).toEqual([conflict.id]);
+        const listOpenConflicts4 = yield* engine.listOpenConflicts(listConflictsInput);
+        expect(A.map(listOpenConflicts4, (entry) => entry.id)).toEqual([conflict.id]);
         const own = MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId });
         expect((yield* engine.markConflictReviewed(own)).resolutionStatus).toBe("reviewed");
-        expect(yield* engine.listOpenConflicts(listConflictsInput)).toEqual([]);
-        expect(yield* Effect.flip(engine.markConflictReviewed(own))).toMatchObject({
+        const listOpenConflicts5 = yield* engine.listOpenConflicts(listConflictsInput);
+        expect(listOpenConflicts5).toEqual([]);
+        const flip6 = yield* Effect.flip(engine.markConflictReviewed(own));
+        expect(flip6).toMatchObject({
           _tag: "SyncConflictRepositoryNotFound",
         });
         const status = yield* engine.status(VaultSyncStatusInput.make({ workspaceId, forceProbe: true }));
@@ -399,7 +405,8 @@ describe("Vault review ownership and detached conflicts", () => {
         const conflicted = yield* findTrackedItem("current.txt");
         expect(conflicted.syncState).toBe("conflict");
         const current = yield* repository.update(DomainSyncItem.SyncItem.make({ ...conflicted, syncState: "current" }));
-        const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+        const listOpenConflicts7 = yield* engine.listOpenConflicts(listConflictsInput);
+        const conflict = yield* Effect.fromOption(A.head(listOpenConflicts7));
         yield* engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId }));
         const after = yield* findTrackedItem("current.txt");
         expect(after).toEqual(current);
@@ -426,7 +433,8 @@ describe("Vault review ownership and detached conflicts", () => {
           })
         );
         yield* engine.syncOnce(syncInput(root));
-        const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+        const listOpenConflicts8 = yield* engine.listOpenConflicts(listConflictsInput);
+        const conflict = yield* Effect.fromOption(A.head(listOpenConflicts8));
         expect(conflict.conflictKind).toBe("remoteEdit");
         expect(O.getOrNull(conflict.syncItemId)).toBe(tracked.id);
       })
@@ -445,7 +453,8 @@ it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
       yield* handle.failNext("pollEvents", false);
       const failedBootstrap = yield* engine.syncOnce(syncInput(root));
       assertNone(failedBootstrap.cursorPosition);
-      assertNone(yield* cursors.find(FindSyncCursorInput.make({ provider: "box", workspaceId })));
+      const found = yield* cursors.find(FindSyncCursorInput.make({ provider: "box", workspaceId }));
+      assertNone(found);
       const recovered = yield* engine.syncOnce(syncInput(root));
       pipe(recovered.cursorPosition, O.isSome, assertTrue);
       expect(recovered.failedOperations).toBe(0);
@@ -469,7 +478,8 @@ it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
       yield* mirror.renameItem(RenameItemInput.make({ itemKind: "folder", remoteId, newName: "renamed" }));
       expect((yield* handle.snapshotTree)["renamed/nested.txt"]).toBeDefined();
       yield* engine.syncOnce(syncInput(root));
-      const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+      const listOpenConflicts9 = yield* engine.listOpenConflicts(listConflictsInput);
+      const conflict = yield* Effect.fromOption(A.head(listOpenConflicts9));
       expect(conflict.conflictKind).toBe("remoteRename");
       yield* engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId }));
       const recovered = yield* engine.syncOnce(syncInput(root));
@@ -534,7 +544,8 @@ it.layer(Layer.fresh(FailedReviewEngineLayer), { timeout: "10 seconds" })((it) =
       const remoteId = yield* Effect.fromOption(item.remoteId);
       yield* mirror.renameItem(RenameItemInput.make({ itemKind: "file", remoteId, newName: "drifted.txt" }));
       yield* engine.syncOnce(syncInput(root));
-      const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+      const listOpenConflicts10 = yield* engine.listOpenConflicts(listConflictsInput);
+      const conflict = yield* Effect.fromOption(A.head(listOpenConflicts10));
       const error = yield* Effect.flip(
         engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId }))
       );
@@ -630,7 +641,8 @@ for (const laterReview of [false, true]) {
             const remoteId = yield* Effect.fromOption(item.remoteId);
             yield* applyRemoteCorrection(correction, itemKind, remoteId, "renamed");
             yield* engine.syncOnce(syncInput(root));
-            const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+            const listOpenConflicts11 = yield* engine.listOpenConflicts(listConflictsInput);
+            const conflict = yield* Effect.fromOption(A.head(listOpenConflicts11));
             const review = MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId });
             const failure = yield* Effect.flip(engine.markConflictReviewed(review));
             expect(failure).toMatchObject({
@@ -658,8 +670,10 @@ for (const laterReview of [false, true]) {
             const queuedBeforeRetry = yield* operations.listByStatus(queuedInput);
             const itemBeforeRetry = yield* findTrackedItem(originalPath);
             expect((yield* engine.markConflictReviewed(review)).resolutionStatus).toBe("reviewed");
-            expect(yield* findTrackedItem(originalPath)).toEqual(itemBeforeRetry);
-            expect(yield* operations.listByStatus(queuedInput)).toEqual(queuedBeforeRetry);
+            const foundTrackedItem = yield* findTrackedItem(originalPath);
+            expect(foundTrackedItem).toEqual(itemBeforeRetry);
+            const listByStatus12 = yield* operations.listByStatus(queuedInput);
+            expect(listByStatus12).toEqual(queuedBeforeRetry);
             const afterRetry = yield* engine.status(VaultSyncStatusInput.make({ workspaceId }));
             expect(afterRetry.pendingItems).toBe(laterOperations);
             expect(afterRetry.queuedOperations).toBe(laterOperations);
@@ -733,8 +747,10 @@ for (const pathChange of ["rename", "move"] as const) {
         // A retry after the path/generation changed still addresses A's
         // original recorded identity instead of creating a third correction.
         yield* engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: first.id, workspaceId }));
-        expect(yield* operations.listByStatus(queuedInput)).toEqual([]);
-        expect(yield* findTrackedItem(destination)).toEqual(current);
+        const listByStatus13 = yield* operations.listByStatus(queuedInput);
+        expect(listByStatus13).toEqual([]);
+        const foundTrackedItem14 = yield* findTrackedItem(destination);
+        expect(foundTrackedItem14).toEqual(current);
       })
     );
   });

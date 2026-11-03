@@ -55,7 +55,8 @@ describe("AgentMessage bounded contracts", () => {
       const codec = S.fromJsonString(AmbiguityResolution);
       const wire = yield* S.encodeEffect(codec)(resolution);
       const decoded = yield* S.decodeEffect(codec)(wire);
-      expect(yield* S.encodeEffect(codec)(decoded)).toBe(wire);
+      const value = yield* S.encodeEffect(codec)(decoded);
+      expect(value).toBe(wire);
       expect(decoded).toEqual(resolution);
     }),
     { arbitrary: fcRuns(50) }
@@ -68,7 +69,8 @@ describe("AgentMessage bounded contracts", () => {
       const codec = Envelope.pipe(S.fromJsonString);
       const wire = yield* S.encodeEffect(codec)(message);
       const decoded = yield* S.decodeEffect(codec)(wire);
-      expect(yield* S.encodeEffect(codec)(decoded)).toBe(wire);
+      const value1 = yield* S.encodeEffect(codec)(decoded);
+      expect(value1).toBe(wire);
       expect(decoded.messageId).toBe(message.messageId);
       expect(decoded.conversationId).toBe(message.conversationId);
       expect(decoded.to).toEqual(message.to);
@@ -83,8 +85,12 @@ describe("AgentMessage bounded contracts", () => {
     Effect.fnUntraced(function* ([execution, host]) {
       const executionCodec = EndpointExecutionRef.pipe(S.fromJsonString);
       const hostCodec = EndpointHostRef.pipe(S.fromJsonString);
-      const decodedExecution = yield* S.decodeEffect(executionCodec)(yield* S.encodeEffect(executionCodec)(execution));
-      const decodedHost = yield* S.decodeEffect(hostCodec)(yield* S.encodeEffect(hostCodec)(host));
+      const argument = S.decodeEffect(executionCodec);
+      const value2 = yield* S.encodeEffect(executionCodec)(execution);
+      const decodedExecution = yield* argument(value2);
+      const argument1 = S.decodeEffect(hostCodec);
+      const value3 = yield* S.encodeEffect(hostCodec)(host);
+      const decodedHost = yield* argument1(value3);
       expect(decodedExecution).toEqual(execution);
       expect(decodedHost).toEqual(host);
     }),

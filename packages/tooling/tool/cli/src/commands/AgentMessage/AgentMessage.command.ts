@@ -50,13 +50,17 @@ const encodeReceipt = S.encodeEffect(Receipt);
 const print = (value: unknown) => encodeUnknownJson(value).pipe(Effect.flatMap(Console.log));
 const read = Effect.fn("AgentMessage.readDocument")(function* <T, I>(filename: string, schema: S.Codec<T, I>) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* S.decodeEffect(S.fromJsonString(schema))(yield* fs.readFileString(filename));
+  const argument = S.decodeEffect(S.fromJsonString(schema));
+  const readFileString1 = yield* fs.readFileString(filename);
+  return yield* argument(readFileString1);
 });
 const list = Command.make(
   "list",
   { stateDir },
   Effect.fnUntraced(function* () {
-    yield* print(yield* encodeEndpointBindings(yield* (yield* AgentMessageStore).endpoints));
+    const endpoints5 = yield* (yield* AgentMessageStore).endpoints;
+    const encodedEndpointBindings = yield* encodeEndpointBindings(endpoints5);
+    yield* print(encodedEndpointBindings);
   })
 ).pipe(
   Command.provide(({ stateDir }) => agentMessageStoreLayer(stateDir)),
@@ -95,9 +99,14 @@ const send = Command.make(
   { stateDir, file },
   Effect.fnUntraced(function* ({ file }) {
     const envelope = yield* read(file, Envelope);
-    const receipt = yield* (yield* AgentMessageStore).accept(Envelope.make(envelope), yield* Clock.currentTimeMillis);
-    yield* print(yield* encodeEnvelope(Envelope.make(envelope)));
-    yield* print(yield* encodeReceipt(receipt));
+    const argument1 = yield* AgentMessageStore;
+    const argument2 = Envelope.make(envelope);
+    const currentTimeMillis2 = yield* Clock.currentTimeMillis;
+    const receipt = yield* argument1.accept(argument2, currentTimeMillis2);
+    const encodedEnvelope = yield* encodeEnvelope(Envelope.make(envelope));
+    yield* print(encodedEnvelope);
+    const encodedReceipt = yield* encodeReceipt(receipt);
+    yield* print(encodedReceipt);
   })
 ).pipe(
   Command.provide(({ stateDir }) => agentMessageStoreLayer(stateDir)),
@@ -112,9 +121,14 @@ const reply = Command.make(
     if (O.isNone(envelope.replyTo)) {
       return yield* RouterError.make({ code: "conflict", message: "A reply envelope must name its original message." });
     }
-    const receipt = yield* (yield* AgentMessageStore).accept(Envelope.make(envelope), yield* Clock.currentTimeMillis);
-    yield* print(yield* encodeEnvelope(Envelope.make(envelope)));
-    yield* print(yield* encodeReceipt(receipt));
+    const argument3 = yield* AgentMessageStore;
+    const argument4 = Envelope.make(envelope);
+    const currentTimeMillis3 = yield* Clock.currentTimeMillis;
+    const receipt = yield* argument3.accept(argument4, currentTimeMillis3);
+    const encodedEnvelope1 = yield* encodeEnvelope(Envelope.make(envelope));
+    yield* print(encodedEnvelope1);
+    const encodedReceipt2 = yield* encodeReceipt(receipt);
+    yield* print(encodedReceipt2);
   })
 ).pipe(
   Command.provide(({ stateDir }) => agentMessageStoreLayer(stateDir)),
@@ -125,7 +139,9 @@ const inbox = Command.make(
   "inbox",
   { stateDir, endpointId },
   Effect.fnUntraced(function* ({ endpointId }) {
-    yield* print(yield* encodeEnvelopes(yield* (yield* AgentMessageStore).inbox(endpointId)));
+    const inbox6 = yield* (yield* AgentMessageStore).inbox(endpointId);
+    const encodedEnvelopes = yield* encodeEnvelopes(inbox6);
+    yield* print(encodedEnvelopes);
   })
 ).pipe(
   Command.provide(({ stateDir }) => agentMessageStoreLayer(stateDir)),
@@ -136,7 +152,9 @@ const inspect = Command.make(
   "inspect",
   { stateDir, messageId },
   Effect.fnUntraced(function* ({ messageId }) {
-    yield* print(yield* encodeReceipts(yield* (yield* AgentMessageStore).receipts(messageId)));
+    const receipts7 = yield* (yield* AgentMessageStore).receipts(messageId);
+    const encodedReceipts = yield* encodeReceipts(receipts7);
+    yield* print(encodedReceipts);
   })
 ).pipe(
   Command.provide(({ stateDir }) => agentMessageStoreLayer(stateDir)),
@@ -163,11 +181,11 @@ const acknowledge = Command.make(
   "acknowledge",
   { stateDir, messageId, endpointId },
   Effect.fnUntraced(function* ({ messageId, endpointId }) {
-    yield* print(
-      yield* encodeReceipt(
-        yield* (yield* AgentMessageStore).acknowledge(messageId, endpointId, yield* Clock.currentTimeMillis)
-      )
-    );
+    const argument5 = yield* AgentMessageStore;
+    const currentTimeMillis4 = yield* Clock.currentTimeMillis;
+    const acknowledge8 = yield* argument5.acknowledge(messageId, endpointId, currentTimeMillis4);
+    const encodedReceipt3 = yield* encodeReceipt(acknowledge8);
+    yield* print(encodedReceipt3);
   })
 ).pipe(
   Command.provide(({ stateDir }) => agentMessageStoreLayer(stateDir)),
@@ -180,14 +198,12 @@ const resolveAmbiguity = Command.make(
   Effect.fnUntraced(function* ({ file }) {
     yield* requirePrivateAgentPath(file, "File");
     const resolution = yield* read(file, AmbiguityResolution);
-    yield* print(
-      yield* encodeReceipt(
-        yield* (yield* AgentMessageStore).resolveAmbiguity(
-          AmbiguityResolution.make(resolution),
-          yield* Clock.currentTimeMillis
-        )
-      )
-    );
+    const argument6 = yield* AgentMessageStore;
+    const argument7 = AmbiguityResolution.make(resolution);
+    const currentTimeMillis5 = yield* Clock.currentTimeMillis;
+    const resolvedAmbiguity = yield* argument6.resolveAmbiguity(argument7, currentTimeMillis5);
+    const encodedReceipt4 = yield* encodeReceipt(resolvedAmbiguity);
+    yield* print(encodedReceipt4);
   })
 ).pipe(
   Command.provide(({ stateDir }) => agentMessageStoreLayer(stateDir)),
@@ -200,7 +216,9 @@ const recover = Command.make(
   "recover",
   { stateDir },
   Effect.fnUntraced(function* () {
-    yield* print({ recovered: yield* (yield* AgentMessageStore).recover(yield* Clock.currentTimeMillis) });
+    const argument8 = yield* AgentMessageStore;
+    const currentTimeMillis6 = yield* Clock.currentTimeMillis;
+    yield* print({ recovered: yield* argument8.recover(currentTimeMillis6) });
   })
 ).pipe(
   Command.provide(({ stateDir }) => agentMessageStoreLayer(stateDir)),

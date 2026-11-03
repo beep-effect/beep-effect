@@ -90,7 +90,8 @@ const fixture = Effect.fnUntraced(function* () {
     path.join(home, "AGENTS.md"),
     "intro\n<!-- beep-models:begin synthetic -->\nold\n<!-- beep-models:end synthetic -->\ntail\n"
   );
-  yield* fs.writeFileString(manifestFile, yield* encodeManifest(manifest));
+  const encodedManifest = yield* encodeManifest(manifest);
+  yield* fs.writeFileString(manifestFile, encodedManifest);
   return Tuple.make(home, file, manifestFile, manifest);
 });
 
@@ -127,7 +128,9 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
           const bytes = new TextEncoder().encode(content);
           if (tag === "invalid-bytes") bytes[bytes.indexOf(63)] = 0xff;
           yield* fs.writeFile(actual, bytes);
-          if (file !== actual) yield* fs.symlink(actual, file);
+          if (file !== actual) {
+            yield* fs.symlink(actual, file);
+          }
           const reader = FileSystem.FileSystem.of({
             ...fs,
             readFile: Effect.fn("ModelsEligibilityTest.readFile")((target) =>
@@ -138,30 +141,31 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
             ModelsLocatorWrite.make({ locator, expected: "gpt-6.1-sol" }),
           ]).pipe(Effect.provideService(FileSystem.FileSystem, reader));
           expect(result._tag).toBe(tag);
-          yield* fs.writeFileString(
-            manifestFile,
-            yield* encodeManifest(
-              ModelsManifest.make({
-                ...manifest,
-                targets: [
-                  ModelSyncTarget.make({
-                    id: TargetId.make("synthetic.tagged"),
-                    root: "home",
-                    path: `$HOME/${name}`,
-                    optional: false,
-                    locators: [locator],
-                  }),
-                ],
-              })
-            )
+          const encodedManifest1 = yield* encodeManifest(
+            ModelsManifest.make({
+              ...manifest,
+              targets: [
+                ModelSyncTarget.make({
+                  id: TargetId.make("synthetic.tagged"),
+                  root: "home",
+                  path: `$HOME/${name}`,
+                  optional: false,
+                  locators: [locator],
+                }),
+              ],
+            })
           );
+          yield* fs.writeFileString(manifestFile, encodedManifest1);
           yield* run(["check", "--home", home, "--repo", home, "--manifest", manifestFile, "--offline", "--json"]).pipe(
             Effect.provideService(FileSystem.FileSystem, reader),
             Effect.result
           );
-          const report = A.last(yield* TestConsole.logLines).pipe(O.getOrThrow);
-          expect(A.fromIterable(yield* fs.readFile(actual))).toEqual(A.fromIterable(bytes));
-          expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+          const logLines2 = yield* TestConsole.logLines;
+          const report = A.last(logLines2).pipe(O.getOrThrow);
+          const readFile3 = yield* fs.readFile(actual);
+          expect(A.fromIterable(readFile3)).toEqual(A.fromIterable(bytes));
+          const exists4 = yield* fs.exists(path.join(home, ".config-backups"));
+          expect(exists4).toBe(false);
           if (tag === "eligible") {
             expect(report).toContain('"findings": []');
             expect(report).toContain('"hasDrift": false');
@@ -216,30 +220,35 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
         const bytes = new TextEncoder().encode(content);
         if (name === destination) bytes[bytes.indexOf(63)] = 0xff;
         yield* fs.writeFile(actual, bytes);
-        if (name !== destination) yield* fs.symlink(actual, requested);
-        yield* fs.writeFileString(
-          manifestFile,
-          yield* encodeManifest(
-            ModelsManifest.make({
-              ...manifest,
-              targets: [
-                ModelSyncTarget.make({
-                  id: TargetId.make("synthetic.r9"),
-                  root: "home",
-                  path: `$HOME/${name}`,
-                  optional: false,
-                  locators: [locator],
-                }),
-              ],
-            })
-          )
+        if (name !== destination) {
+          yield* fs.symlink(actual, requested);
+        }
+        const encodedManifest5 = yield* encodeManifest(
+          ModelsManifest.make({
+            ...manifest,
+            targets: [
+              ModelSyncTarget.make({
+                id: TargetId.make("synthetic.r9"),
+                root: "home",
+                path: `$HOME/${name}`,
+                optional: false,
+                locators: [locator],
+              }),
+            ],
+          })
         );
+        yield* fs.writeFileString(manifestFile, encodedManifest5);
         const flags = ["--home", home, "--repo", home, "--manifest", manifestFile];
         yield* Effect.flip(run(["check", ...flags, "--offline", "--json"]));
-        expect(A.last(yield* TestConsole.logLines).pipe(O.getOrThrow)).toContain('"hasDrift": true');
-        for (const mode of ["--check", "--write"]) yield* Effect.flip(run(["apply", ...flags, mode]));
-        expect(A.fromIterable(yield* fs.readFile(actual))).toEqual(A.fromIterable(bytes));
-        expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+        const logLines6 = yield* TestConsole.logLines;
+        expect(A.last(logLines6).pipe(O.getOrThrow)).toContain('"hasDrift": true');
+        for (const mode of ["--check", "--write"]) {
+          yield* Effect.flip(run(["apply", ...flags, mode]));
+        }
+        const readFile7 = yield* fs.readFile(actual);
+        expect(A.fromIterable(readFile7)).toEqual(A.fromIterable(bytes));
+        const exists8 = yield* fs.exists(path.join(home, ".config-backups"));
+        expect(exists8).toBe(false);
       }
     })
   );
@@ -261,27 +270,26 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
       ];
       for (const [name, locator, content] of cases) {
         yield* fs.writeFileString(path.join(home, name), content);
-        yield* fs.writeFileString(
-          manifestFile,
-          yield* encodeManifest(
-            ModelsManifest.make({
-              ...manifest,
-              targets: [
-                ModelSyncTarget.make({
-                  id: TargetId.make("synthetic.clean"),
-                  root: "home",
-                  path: `$HOME/${name}`,
-                  optional: false,
-                  locators: [locator],
-                }),
-              ],
-            })
-          )
+        const encodedManifest9 = yield* encodeManifest(
+          ModelsManifest.make({
+            ...manifest,
+            targets: [
+              ModelSyncTarget.make({
+                id: TargetId.make("synthetic.clean"),
+                root: "home",
+                path: `$HOME/${name}`,
+                optional: false,
+                locators: [locator],
+              }),
+            ],
+          })
         );
+        yield* fs.writeFileString(manifestFile, encodedManifest9);
         const flags: ReadonlyArray<string> = ["--home", home, "--repo", home, "--manifest", manifestFile];
         yield* run(["apply", ...flags, "--check"]);
         yield* run(["check", ...flags, "--json"]);
-        const report = A.last(yield* TestConsole.logLines).pipe(O.getOrThrow);
+        const logLines10 = yield* TestConsole.logLines;
+        const report = A.last(logLines10).pipe(O.getOrThrow);
         expect(report).toContain('"hasDrift": false');
         expect(report).toContain('"manual": []');
         if (name === "clean.json") {
@@ -289,7 +297,8 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
           yield* Effect.flip(run(["check", ...flags, "--json"]));
           yield* Effect.flip(run(["apply", ...flags, "--check"]));
         }
-        expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+        const exists11 = yield* fs.exists(path.join(home, ".config-backups"));
+        expect(exists11).toBe(false);
       }
     })
   );
@@ -328,31 +337,35 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
         const actual = path.join(home, `canonical-${name}`);
         yield* fs.writeFileString(actual, content);
         yield* fs.symlink(actual, file);
-        yield* fs.writeFileString(
-          manifestFile,
-          yield* encodeManifest(
-            ModelsManifest.make({
-              ...manifest,
-              targets: [
-                ModelSyncTarget.make({
-                  id: TargetId.make("synthetic.positive"),
-                  root: "home",
-                  path: `$HOME/${name}`,
-                  optional: false,
-                  locators: [locator],
-                }),
-              ],
-            })
-          )
+        const encodedManifest12 = yield* encodeManifest(
+          ModelsManifest.make({
+            ...manifest,
+            targets: [
+              ModelSyncTarget.make({
+                id: TargetId.make("synthetic.positive"),
+                root: "home",
+                path: `$HOME/${name}`,
+                optional: false,
+                locators: [locator],
+              }),
+            ],
+          })
         );
+        yield* fs.writeFileString(manifestFile, encodedManifest12);
         const flags = ["--home", home, "--repo", home, "--manifest", manifestFile];
         yield* run(["check", ...flags, "--offline", "--json"]);
-        expect(A.last(yield* TestConsole.logLines).pipe(O.getOrThrow)).toContain('"hasDrift": false');
+        const logLines13 = yield* TestConsole.logLines;
+        expect(A.last(logLines13).pipe(O.getOrThrow)).toContain('"hasDrift": false');
         yield* run(["apply", ...flags, "--check"]);
-        if (name !== "fallback.json") yield* run(["apply", ...flags, "--write"]);
-        expect(yield* fs.readFileString(actual)).toBe(content);
-        expect(yield* fs.readLink(file)).toBe(actual);
-        expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+        if (name !== "fallback.json") {
+          yield* run(["apply", ...flags, "--write"]);
+        }
+        const readFileString14 = yield* fs.readFileString(actual);
+        expect(readFileString14).toBe(content);
+        const readLink15 = yield* fs.readLink(file);
+        expect(readLink15).toBe(actual);
+        const exists16 = yield* fs.exists(path.join(home, ".config-backups"));
+        expect(exists16).toBe(false);
       }
     })
   );
@@ -424,48 +437,51 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
       for (const [name, locator, content, clean] of cases) {
         const file = path.join(home, name);
         yield* fs.writeFileString(file, content);
-        yield* fs.writeFileString(
-          manifestFile,
-          yield* encodeManifest(
-            ModelsManifest.make({
-              ...manifest,
-              targets: [
-                ModelSyncTarget.make({
-                  id: TargetId.make("synthetic.parsed"),
-                  root: "home",
-                  path: `$HOME/${name}`,
-                  optional: false,
-                  locators: [locator],
-                }),
-              ],
-            })
-          )
+        const encodedManifest17 = yield* encodeManifest(
+          ModelsManifest.make({
+            ...manifest,
+            targets: [
+              ModelSyncTarget.make({
+                id: TargetId.make("synthetic.parsed"),
+                root: "home",
+                path: `$HOME/${name}`,
+                optional: false,
+                locators: [locator],
+              }),
+            ],
+          })
         );
+        yield* fs.writeFileString(manifestFile, encodedManifest17);
         const flags: ReadonlyArray<string> = ["--home", home, "--repo", home, "--manifest", manifestFile];
         if (clean) {
           yield* run(["check", ...flags, "--offline", "--json"]);
-          expect(A.last(yield* TestConsole.logLines).pipe(O.getOrThrow)).toContain('"hasDrift": false');
+          const logLines18 = yield* TestConsole.logLines;
+          expect(A.last(logLines18).pipe(O.getOrThrow)).toContain('"hasDrift": false');
           yield* run(["apply", ...flags, "--check"]);
-          expect(
-            A.some(yield* TestConsole.logLines, (line) => P.isString(line) && Str.includes("change=false")(line))
-          ).toBe(true);
+          const logLines19 = yield* TestConsole.logLines;
+          expect(A.some(logLines19, (line) => P.isString(line) && Str.includes("change=false")(line))).toBe(true);
           yield* run(["apply", ...flags, "--write"]);
         } else {
           yield* Effect.flip(run(["check", ...flags, "--offline", "--json"]));
-          expect(A.last(yield* TestConsole.logLines).pipe(O.getOrThrow)).toContain('"hasDrift": true');
+          const logLines20 = yield* TestConsole.logLines;
+          expect(A.last(logLines20).pipe(O.getOrThrow)).toContain('"hasDrift": true');
           yield* Effect.flip(run(["apply", ...flags, "--check"]));
-          if (name === "quoted-trap.toml")
+          if (name === "quoted-trap.toml") {
+            const logLines1 = yield* TestConsole.logLines;
             expect(
               A.last(
                 A.filter(
-                  yield* TestConsole.logLines,
+                  logLines1,
                   (line) => P.isString(line) && Str.startsWith("models: preview synthetic.parsed")(line)
                 )
               ).pipe(O.getOrThrow)
             ).toBe("models: preview synthetic.parsed [toml-top-level-key] change=true expected=gpt-6.1-sol");
+          }
         }
-        expect(yield* fs.readFileString(file)).toBe(content);
-        expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+        const readFileString21 = yield* fs.readFileString(file);
+        expect(readFileString21).toBe(content);
+        const exists22 = yield* fs.exists(path.join(home, ".config-backups"));
+        expect(exists22).toBe(false);
       }
     })
   );
@@ -481,19 +497,18 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
       yield* fs.makeDirectory(directory);
       yield* fs.writeFileString(file, "MODEL=new\n");
       yield* fs.writeFileString(backup, "MODEL=old\n");
-      yield* fs.writeFileString(
-        path.join(directory, "models-empty.json"),
-        yield* jsonStringifyPretty({
-          id: "models-empty",
-          file,
-          requestedFile: file,
-          backup,
-          beforeHash: "before",
-          afterHash: "after",
-          mode: 420,
-          writes: [],
-        })
-      );
+      const argument = path.join(directory, "models-empty.json");
+      const jsonStringifyPretty2 = yield* jsonStringifyPretty({
+        id: "models-empty",
+        file,
+        requestedFile: file,
+        backup,
+        beforeHash: "before",
+        afterHash: "after",
+        mode: 420,
+        writes: [],
+      });
+      yield* fs.writeFileString(argument, jsonStringifyPretty2);
       const accesses: Array<string> = [];
       const recording = FileSystem.FileSystem.of({
         ...fs,
@@ -513,8 +528,10 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
       );
       expect(error._tag).toBe("ModelsCommandError");
       expect(accesses).toEqual([]);
-      expect(yield* fs.readFileString(file)).toBe("MODEL=new\n");
-      expect(yield* fs.readFileString(backup)).toBe("MODEL=old\n");
+      const readFileString23 = yield* fs.readFileString(file);
+      expect(readFileString23).toBe("MODEL=new\n");
+      const readFileString24 = yield* fs.readFileString(backup);
+      expect(readFileString24).toBe("MODEL=old\n");
     })
   );
 
@@ -532,25 +549,27 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
           binding: LocatorBinding.make({ role: "codex.heavy", surface: "codex-cli", field: "model" }),
           render: { _tag: "verbatim" },
         };
-        if (state === "existing") yield* fs.writeFileString(file, "MODEL=gpt-6.1-sol\n");
-        if (state === "dangling") yield* fs.symlink(path.join(home, "missing"), file);
-        yield* fs.writeFileString(
-          manifestFile,
-          yield* encodeManifest(
-            ModelsManifest.make({
-              ...manifest,
-              targets: [
-                ModelSyncTarget.make({
-                  id: TargetId.make("synthetic.preflight"),
-                  root: "home",
-                  path: "$HOME/start.sh",
-                  optional: true,
-                  locators: [locator],
-                }),
-              ],
-            })
-          )
+        if (state === "existing") {
+          yield* fs.writeFileString(file, "MODEL=gpt-6.1-sol\n");
+        }
+        if (state === "dangling") {
+          yield* fs.symlink(path.join(home, "missing"), file);
+        }
+        const encodedManifest25 = yield* encodeManifest(
+          ModelsManifest.make({
+            ...manifest,
+            targets: [
+              ModelSyncTarget.make({
+                id: TargetId.make("synthetic.preflight"),
+                root: "home",
+                path: "$HOME/start.sh",
+                optional: true,
+                locators: [locator],
+              }),
+            ],
+          })
         );
+        yield* fs.writeFileString(manifestFile, encodedManifest25);
         const accesses: Array<string> = [];
         const record = (name: string, target: string) => {
           if (target === file) accesses.push(name);
@@ -588,10 +607,12 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
         );
         expect(error._tag).toBe("ModelsCommandError");
         expect(accesses).toEqual([]);
-        expect(yield* TestConsole.errorLines).toContain(
+        const errorLines26 = yield* TestConsole.errorLines;
+        expect(errorLines26).toContain(
           "models: refused synthetic.preflight: Shell targets are check-only; edit by hand."
         );
-        expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+        const exists27 = yield* fs.exists(path.join(home, ".config-backups"));
+        expect(exists27).toBe(false);
       })
     );
 
@@ -622,21 +643,22 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
           locators: [locator],
         });
         yield* fs.writeFileString(path.join(home, "manual"), content);
-        yield* fs.writeFileString(
-          manifestFile,
-          yield* encodeManifest(ModelsManifest.make({ ...manifest, targets: [target] }))
-        );
+        const encodedManifest28 = yield* encodeManifest(ModelsManifest.make({ ...manifest, targets: [target] }));
+        yield* fs.writeFileString(manifestFile, encodedManifest28);
         const flags: ReadonlyArray<string> = ["--home", home, "--repo", home, "--manifest", manifestFile];
         yield* run(["apply", ...flags, "--check"]);
         yield* run(["check", ...flags, "--json"]);
-        const report = A.last(yield* TestConsole.logLines).pipe(O.getOrThrow);
+        const logLines29 = yield* TestConsole.logLines;
+        const report = A.last(logLines29).pipe(O.getOrThrow);
         expect(report).toContain('"manual": [');
         expect(report).toContain('"status": "manual verification required"');
         expect(report).toContain(`"_tag": "${locator._tag}"`);
         expect(report).toContain('"current": "gpt-6.1-sol"');
         expect(report).toContain('"hasDrift": false');
-        expect(yield* fs.readFileString(path.join(home, "manual"))).toBe(content);
-        expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+        const readFileString30 = yield* fs.readFileString(path.join(home, "manual"));
+        expect(readFileString30).toBe(content);
+        const exists31 = yield* fs.exists(path.join(home, ".config-backups"));
+        expect(exists31).toBe(false);
       }
     })
   );
@@ -656,23 +678,21 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
         render: { _tag: "verbatim" },
       };
       const writer = yield* ModelsApply;
-      yield* fs.writeFileString(
-        manifestFile,
-        yield* encodeManifest(
-          ModelsManifest.make({
-            ...manifest,
-            targets: [
-              ModelSyncTarget.make({
-                id: TargetId.make("home.codex.config"),
-                root: "home",
-                path: "$HOME/.codex/config.toml",
-                optional: false,
-                locators: [locator],
-              }),
-            ],
-          })
-        )
+      const encodedManifest32 = yield* encodeManifest(
+        ModelsManifest.make({
+          ...manifest,
+          targets: [
+            ModelSyncTarget.make({
+              id: TargetId.make("home.codex.config"),
+              root: "home",
+              path: "$HOME/.codex/config.toml",
+              optional: false,
+              locators: [locator],
+            }),
+          ],
+        })
       );
+      yield* fs.writeFileString(manifestFile, encodedManifest32);
       const flags = ["--home", home, "--repo", home, "--manifest", manifestFile];
       for (const content of [
         '[sandbox_mode]\nsandbox_mode.foo = "native"\n',
@@ -701,16 +721,20 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
           expect(refused.message).toBe(
             "Ineligible native target: Unsupported removal shape: owned leaf must be a scalar TOML assignment."
           );
-          expect(yield* fs.readFileString(file)).toBe(content);
-          expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+          const readFileString33 = yield* fs.readFileString(file);
+          expect(readFileString33).toBe(content);
+          const exists34 = yield* fs.exists(path.join(home, ".config-backups"));
+          expect(exists34).toBe(false);
         }
         for (const mode of ["--check", "--dry-run", "--write"]) {
           const refused = yield* Effect.flip(run(["codex-permissions", ...flags, mode]));
           expect(refused.message).toBe(
             "Ineligible native target: Unsupported removal shape: owned leaf must be a scalar TOML assignment."
           );
-          expect(yield* fs.readFileString(file)).toBe(content);
-          expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+          const readFileString35 = yield* fs.readFileString(file);
+          expect(readFileString35).toBe(content);
+          const exists36 = yield* fs.exists(path.join(home, ".config-backups"));
+          expect(exists36).toBe(false);
         }
       }
     })
@@ -729,14 +753,17 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
         const content = `sandbox_mode = ${scalar}\n${native}`;
         yield* fs.writeFileString(file, content);
         yield* run(["codex-permissions", ...flags, "--dry-run"]);
-        expect(A.takeRight(yield* TestConsole.logLines, 2)).toEqual([
+        const logLines37 = yield* TestConsole.logLines;
+        expect(A.takeRight(logLines37, 2)).toEqual([
           "models: preview home.codex.config [toml-top-level-key] change=true expected=<absent>",
           "models: codex-permissions dry-run complete; no file written",
         ]);
         yield* Effect.flip(run(["codex-permissions", ...flags, "--check"]));
-        expect(yield* fs.readFileString(file)).toBe(content);
+        const readFileString38 = yield* fs.readFileString(file);
+        expect(readFileString38).toBe(content);
         yield* run(["codex-permissions", ...flags, "--write"]);
-        expect(yield* fs.readFileString(file)).toBe(native);
+        const readFileString39 = yield* fs.readFileString(file);
+        expect(readFileString39).toBe(native);
         yield* run(["codex-permissions", ...flags, "--check"]);
       }
     })
@@ -754,24 +781,32 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
       yield* fs.writeFileString(file, before);
       const flags = ["--home", home, "--repo", home, "--manifest", manifest];
       yield* run(["codex-permissions", ...flags]);
-      expect(yield* fs.readFileString(file)).toBe(before);
-      expect(yield* TestConsole.logLines).toContain(
+      const readFileString40 = yield* fs.readFileString(file);
+      expect(readFileString40).toBe(before);
+      const logLines41 = yield* TestConsole.logLines;
+      expect(logLines41).toContain(
         "models: preview home.codex.config [toml-top-level-key] change=true expected=<absent>"
       );
       yield* Effect.flip(run(["codex-permissions", ...flags, "--check"]));
       yield* Effect.flip(run(["codex-permissions", ...flags, "--check", "--write"]));
       yield* run(["codex-permissions", ...flags, "--write"]);
-      expect(yield* fs.readFileString(file)).toBe(native);
-      for (const mode of ["--check", "--dry-run", "--write"]) yield* run(["codex-permissions", ...flags, mode]);
-      expect(yield* TestConsole.logLines).toContain(
+      const readFileString42 = yield* fs.readFileString(file);
+      expect(readFileString42).toBe(native);
+      for (const mode of ["--check", "--dry-run", "--write"]) {
+        yield* run(["codex-permissions", ...flags, mode]);
+      }
+      const logLines43 = yield* TestConsole.logLines;
+      expect(logLines43).toContain(
         "models: preview home.codex.config [toml-top-level-key] change=false expected=<absent>"
       );
-      expect(yield* fs.readFileString(file)).toBe(native);
+      const readFileString44 = yield* fs.readFileString(file);
+      expect(readFileString44).toBe(native);
       const backups = path.join(home, ".config-backups");
       const entries = yield* fs.readDirectory(backups);
       expect(entries).toHaveLength(2);
       const backup = A.findFirst(entries, Str.endsWith(".backup")).pipe(O.getOrThrow);
-      expect(yield* fs.readFileString(path.join(backups, backup))).toBe(before);
+      const readFileString45 = yield* fs.readFileString(path.join(backups, backup));
+      expect(readFileString45).toBe(before);
     })
   );
 
@@ -786,10 +821,12 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
         const before = `${key}="danger-full-access"\n${native}`;
         yield* fs.writeFileString(file, before);
         yield* run(["codex-permissions", "--home", home, "--repo", home, "--manifest", manifest, "--dry-run"]);
-        expect(yield* TestConsole.logLines).toContain(
+        const logLines46 = yield* TestConsole.logLines;
+        expect(logLines46).toContain(
           "models: preview home.codex.config [toml-top-level-key] change=true expected=<absent>"
         );
-        expect(yield* fs.readFileString(file)).toBe(before);
+        const readFileString47 = yield* fs.readFileString(file);
+        expect(readFileString47).toBe(before);
       }
     })
   );
@@ -801,18 +838,22 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
       const [home, file, manifest] = yield* fixture();
       const flags = ["--home", home, "--repo", home, "--manifest", manifest];
       yield* run(["apply", ...flags]);
-      expect(yield* fs.readFileString(file)).toBe(native);
-      expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+      const readFileString48 = yield* fs.readFileString(file);
+      expect(readFileString48).toBe(native);
+      const exists49 = yield* fs.exists(path.join(home, ".config-backups"));
+      expect(exists49).toBe(false);
       yield* Effect.flip(run(["apply", ...flags, "--check", "--target", "synthetic.codex"]));
       yield* run(["apply", ...flags, "--write", "--target", "synthetic.codex"]);
-      expect(yield* fs.readFileString(file)).toContain('model = "gpt-6.1-sol"');
+      const readFileString50 = yield* fs.readFileString(file);
+      expect(readFileString50).toContain('model = "gpt-6.1-sol"');
       yield* run(["apply", ...flags, "--check", "--target", "synthetic.codex"]);
       yield* run(["apply", ...flags, "--write", "--target", "synthetic.codex"]);
       const files = yield* fs.readDirectory(path.join(home, ".config-backups"));
       expect(files).toHaveLength(2);
       const journalFile = O.getOrThrow(A.findFirst(files, Str.endsWith(".json")));
       yield* run(["restore", ...flags, "--journal", Str.replace(/\.json$/, "")(journalFile)]);
-      expect(yield* fs.readFileString(file)).toBe(native);
+      const readFileString51 = yield* fs.readFileString(file);
+      expect(readFileString51).toBe(native);
       yield* Effect.flip(run(["restore", ...flags, "--journal", "../unsafe"]));
     })
   );
@@ -844,7 +885,8 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
           }),
         ],
       });
-      yield* fs.writeFileString(manifestFile, yield* encodeManifest(shellManifest));
+      const encodedManifest52 = yield* encodeManifest(shellManifest);
+      yield* fs.writeFileString(manifestFile, encodedManifest52);
       const flags: ReadonlyArray<string> = ["--home", home, "--repo", home, "--manifest", manifestFile];
       yield* fs.writeFileString(shellFile, "ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n");
       yield* run(["apply", ...flags, "--check"]);
@@ -854,7 +896,8 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
         yield* fs.writeFileString(shellFile, text);
         yield* Effect.flip(run(["apply", ...flags, "--check"]));
         yield* Effect.flip(run(["check", ...flags]));
-        expect(yield* fs.readFileString(shellFile)).toBe(text);
+        const readFileString53 = yield* fs.readFileString(shellFile);
+        expect(readFileString53).toBe(text);
       }
       for (const text of [
         "export 'ANTHROPIC_DEFAULT_HAIKU_MODEL=wrong'; claude\nANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-6-luna claude\n",
@@ -868,11 +911,13 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
         yield* fs.writeFileString(shellFile, text);
         yield* Effect.flip(run(["apply", ...flags, "--check"]));
         yield* Effect.flip(run(["check", ...flags]));
-        expect(yield* fs.readFileString(shellFile)).toBe(text);
+        const readFileString54 = yield* fs.readFileString(shellFile);
+        expect(readFileString54).toBe(text);
       }
+      const errorLines55 = yield* TestConsole.errorLines;
       expect(
         A.some(
-          yield* TestConsole.errorLines,
+          errorLines55,
           (line) =>
             P.isString(line) &&
             /models: refused synthetic.shell: Unsupported shell form: line [0-9]+: owned configuration drift detected/.test(
@@ -880,7 +925,8 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
             )
         )
       ).toBe(true);
-      expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+      const exists56 = yield* fs.exists(path.join(home, ".config-backups"));
+      expect(exists56).toBe(false);
     })
   );
 
@@ -914,10 +960,8 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
           optional: false,
           locators: [locator],
         });
-        yield* fs.writeFileString(
-          manifestFile,
-          yield* encodeManifest(ModelsManifest.make({ ...manifest, targets: [target] }))
-        );
+        const encodedManifest57 = yield* encodeManifest(ModelsManifest.make({ ...manifest, targets: [target] }));
+        yield* fs.writeFileString(manifestFile, encodedManifest57);
         const flags: ReadonlyArray<string> = ["--home", home, "--repo", home, "--manifest", manifestFile];
         yield* fs.writeFileString(file, clean);
         yield* run(["apply", ...flags, "--check"]);
@@ -928,9 +972,11 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
           yield* run(["apply", ...flags, "--dry-run"]);
           yield* Effect.flip(run(["apply", ...flags, "--check"]));
           yield* Effect.flip(run(["check", ...flags]));
-          expect(yield* fs.readFileString(file)).toBe(text);
+          const readFileString58 = yield* fs.readFileString(file);
+          expect(readFileString58).toBe(text);
         }
-        expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+        const exists59 = yield* fs.exists(path.join(home, ".config-backups"));
+        expect(exists59).toBe(false);
       }
     })
   );
@@ -964,34 +1010,40 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
           ...manifest.targets,
         ],
       });
-      yield* fs.writeFileString(manifestFile, yield* encodeManifest(shellManifest));
+      const encodedManifest60 = yield* encodeManifest(shellManifest);
+      yield* fs.writeFileString(manifestFile, encodedManifest60);
       const flags: ReadonlyArray<string> = ["--home", home, "--repo", home, "--manifest", manifestFile];
       yield* run(["apply", ...flags]);
-      expect(yield* TestConsole.logLines).toContain(
+      const logLines61 = yield* TestConsole.logLines;
+      expect(logLines61).toContain(
         "models: preview synthetic.shell [shell-assign] manual verification required; recognized drift=true expected=gpt-6.1-sol"
       );
-      expect(yield* TestConsole.logLines).toContain(
+      const logLines62 = yield* TestConsole.logLines;
+      expect(logLines62).toContain(
         "models: preview synthetic.codex [toml-top-level-key] change=true expected=gpt-6.1-sol"
       );
-      expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+      const exists63 = yield* fs.exists(path.join(home, ".config-backups"));
+      expect(exists63).toBe(false);
       yield* Effect.flip(run(["apply", ...flags, "--check"]));
+      const errorLines64 = yield* TestConsole.errorLines;
       expect(
         A.some(
-          yield* TestConsole.errorLines,
+          errorLines64,
           (line) => P.isString(line) && /models: refused synthetic.shell: Owned configuration drift detected/.test(line)
         )
       ).toBe(true);
-      expect(yield* TestConsole.errorLines).toContain(
-        "models: refused synthetic.codex: Owned configuration drift detected."
-      );
+      const errorLines65 = yield* TestConsole.errorLines;
+      expect(errorLines65).toContain("models: refused synthetic.codex: Owned configuration drift detected.");
       yield* Effect.flip(run(["apply", ...flags, "--write", "--target", "synthetic.shell"]));
-      expect(yield* TestConsole.errorLines).toContain(
-        "models: refused synthetic.shell: Shell targets are check-only; edit by hand."
-      );
+      const errorLines66 = yield* TestConsole.errorLines;
+      expect(errorLines66).toContain("models: refused synthetic.shell: Shell targets are check-only; edit by hand.");
       yield* Effect.flip(run(["check", ...flags]));
-      expect(yield* fs.readFileString(shellFile)).toBe(shellText);
-      expect(yield* fs.readFileString(file)).toBe(native);
-      expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+      const readFileString67 = yield* fs.readFileString(shellFile);
+      expect(readFileString67).toBe(shellText);
+      const readFileString68 = yield* fs.readFileString(file);
+      expect(readFileString68).toBe(native);
+      const exists69 = yield* fs.exists(path.join(home, ".config-backups"));
+      expect(exists69).toBe(false);
     })
   );
 
@@ -1017,8 +1069,10 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
           "synthetic.optional",
         ])
       );
-      expect(yield* fs.readLink(link)).toBe(missing);
-      expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+      const readLink70 = yield* fs.readLink(link);
+      expect(readLink70).toBe(missing);
+      const exists71 = yield* fs.exists(path.join(home, ".config-backups"));
+      expect(exists71).toBe(false);
     })
   );
 
@@ -1035,8 +1089,10 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
       yield* fs.remove(file);
       yield* fs.symlink(outside, file);
       yield* Effect.flip(run(["apply", ...flags, "--write", "--target", "synthetic.codex"]));
-      expect(yield* fs.readFileString(outside)).toBe(native);
-      expect(yield* fs.exists(path.join(home, ".config-backups"))).toBe(false);
+      const readFileString72 = yield* fs.readFileString(outside);
+      expect(readFileString72).toBe(native);
+      const exists73 = yield* fs.exists(path.join(home, ".config-backups"));
+      expect(exists73).toBe(false);
     })
   );
 
@@ -1044,10 +1100,8 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const [home, file, manifestFile, manifest] = yield* fixture();
-      yield* fs.writeFileString(
-        manifestFile,
-        yield* encodeManifest(ModelsManifest.make({ ...manifest, bindings: [] }))
-      );
+      const encodedManifest74 = yield* encodeManifest(ModelsManifest.make({ ...manifest, bindings: [] }));
+      yield* fs.writeFileString(manifestFile, encodedManifest74);
       yield* Effect.flip(
         run([
           "apply",
@@ -1062,7 +1116,8 @@ layer(ModelsApplyLive.pipe(Layer.provideMerge(modelsTestExchangeLayer), Layer.pr
           "synthetic.codex",
         ])
       );
-      expect(yield* fs.readFileString(file)).toBe(native);
+      const readFileString75 = yield* fs.readFileString(file);
+      expect(readFileString75).toBe(native);
     })
   );
 });

@@ -253,9 +253,10 @@ const twoReferences = (disposeFirst: boolean, disposeSecond: boolean) =>
   Effect.fnUntraced(function* () {
     const a = yield* observation("a", TEXT_A);
     const b = yield* observation("b", TEXT_B);
+    const argument = disposeFirst ? yield* Effect.asSome(dispositionFixture(10, targets(1, a))) : O.none();
     const dispositions = A.getSomes([
-      disposeFirst ? O.some(yield* dispositionFixture(10, targets(1, a))) : O.none(),
-      disposeSecond ? O.some(yield* dispositionFixture(11, targets(2, b))) : O.none(),
+      argument,
+      disposeSecond ? yield* Effect.asSome(dispositionFixture(11, targets(2, b))) : O.none(),
     ]);
     return {
       dispositions,
@@ -284,9 +285,10 @@ const supersession = (options: {
     const ordered = options.reverseOrder === true ? [newerEvent, olderEvent] : [olderEvent, newerEvent];
     const events = options.replay === true ? A.append(ordered, olderEvent) : ordered;
 
+    const argument1 = options.disposeOlder ? yield* Effect.asSome(dispositionFixture(10, targets(1, older))) : O.none();
     const dispositions = A.getSomes([
-      options.disposeOlder ? O.some(yield* dispositionFixture(10, targets(1, older))) : O.none(),
-      options.disposeNewer ? O.some(yield* dispositionFixture(11, targets(2, newer))) : O.none(),
+      argument1,
+      options.disposeNewer ? yield* Effect.asSome(dispositionFixture(11, targets(2, newer))) : O.none(),
     ]);
 
     return { dispositions, events, sources: [sourceEntry(older), sourceEntry(newer)] } satisfies Fixture;
@@ -438,7 +440,8 @@ describe("CandorPolicy — one AI-discovered event", () => {
   it.layer(scenario(undisposed()), { timeout: "30 seconds" })((it) => {
     it.effect("blocks promotion while the event carries no disposition", () =>
       Effect.gen(function* () {
-        expectBlocked(yield* evaluateFiling(), ["no-disposition"]);
+        const evaluateFiling1 = yield* evaluateFiling();
+        expectBlocked(evaluateFiling1, ["no-disposition"]);
       })
     );
   });
@@ -446,7 +449,8 @@ describe("CandorPolicy — one AI-discovered event", () => {
   it.layer(scenario(disposed()), { timeout: "30 seconds" })((it) => {
     it.effect("stops blocking once a disposition covers the exact observation version", () =>
       Effect.gen(function* () {
-        expectReleased(yield* evaluateFiling());
+        const evaluateFiling2 = yield* evaluateFiling();
+        expectReleased(evaluateFiling2);
       })
     );
   });
@@ -476,7 +480,8 @@ describe("CandorPolicy — the quantifier above cardinality one", () => {
   it.layer(scenario(twoReferences(true, true)()), { timeout: "30 seconds" })((it) => {
     it.effect("releases only once every current event is disposed", () =>
       Effect.gen(function* () {
-        expectReleased(yield* evaluateFiling());
+        const evaluateFiling3 = yield* evaluateFiling();
+        expectReleased(evaluateFiling3);
       })
     );
   });
@@ -496,7 +501,8 @@ describe("CandorPolicy — declared supersession moves currency", () => {
   it.layer(scenario(supersession({ disposeNewer: true, disposeOlder: true })()), { timeout: "30 seconds" })((it) => {
     it.effect("stops blocking the superseded event only once the newer event is disposed", () =>
       Effect.gen(function* () {
-        expectReleased(yield* evaluateFiling());
+        const evaluateFiling4 = yield* evaluateFiling();
+        expectReleased(evaluateFiling4);
       })
     );
   });
@@ -560,7 +566,8 @@ describe("CandorPolicy — supersession stays within one patent reference", () =
   it.layer(scenario(independentReferencesSameSource()), { timeout: "30 seconds" })((it) => {
     it.effect("releases two independently disposed citations recorded in one prosecution source", () =>
       Effect.gen(function* () {
-        expectReleased(yield* evaluateFiling());
+        const evaluateFiling5 = yield* evaluateFiling();
+        expectReleased(evaluateFiling5);
       })
     );
   });
@@ -568,7 +575,8 @@ describe("CandorPolicy — supersession stays within one patent reference", () =
   it.layer(scenario(supersession({ disposeNewer: true, disposeOlder: true })()), { timeout: "30 seconds" })((it) => {
     it.effect("honors supersession between equal references with a publication number", () =>
       Effect.gen(function* () {
-        expectReleased(yield* evaluateFiling());
+        const evaluateFiling6 = yield* evaluateFiling();
+        expectReleased(evaluateFiling6);
       })
     );
   });
@@ -578,7 +586,8 @@ describe("CandorPolicy — a judgment must still stand, and a human must have ma
   it.layer(scenario(withDisposition({ lifecycle: "withdrawn" })()), { timeout: "30 seconds" })((it) => {
     it.effect("does not let a withdrawn disposition cover its event", () =>
       Effect.gen(function* () {
-        expectBlocked(yield* evaluateFiling(), ["disposition-not-effective"]);
+        const evaluateFiling7 = yield* evaluateFiling();
+        expectBlocked(evaluateFiling7, ["disposition-not-effective"]);
       })
     );
   });
@@ -586,7 +595,8 @@ describe("CandorPolicy — a judgment must still stand, and a human must have ma
   it.layer(scenario(withDisposition({}, { lifecycle: "withdrawn" })()), { timeout: "30 seconds" })((it) => {
     it.effect("does not let a superseded disposition cover its event", () =>
       Effect.gen(function* () {
-        expectBlocked(yield* evaluateFiling(), ["disposition-not-effective"]);
+        const evaluateFiling8 = yield* evaluateFiling();
+        expectBlocked(evaluateFiling8, ["disposition-not-effective"]);
       })
     );
   });
@@ -594,7 +604,8 @@ describe("CandorPolicy — a judgment must still stand, and a human must have ma
   it.layer(scenario(withDisposition({ principal: agentPrincipal })()), { timeout: "30 seconds" })((it) => {
     it.effect("never lets an agent principal's disposition cover an AI-discovered event", () =>
       Effect.gen(function* () {
-        expectBlocked(yield* evaluateFiling(), ["disposition-author-not-user"]);
+        const evaluateFiling9 = yield* evaluateFiling();
+        expectBlocked(evaluateFiling9, ["disposition-author-not-user"]);
       })
     );
   });
@@ -602,7 +613,8 @@ describe("CandorPolicy — a judgment must still stand, and a human must have ma
   it.layer(scenario(withDisposition({ rule56: null })()), { timeout: "30 seconds" })((it) => {
     it.effect("does not treat a disposition with no Rule 56 decision as coverage", () =>
       Effect.gen(function* () {
-        expectBlocked(yield* evaluateFiling(), ["no-rule56-judgment"]);
+        const evaluateFiling10 = yield* evaluateFiling();
+        expectBlocked(evaluateFiling10, ["no-rule56-judgment"]);
       })
     );
   });
@@ -615,7 +627,8 @@ describe("CandorPolicy — retirement is derived over the whole recorded set", (
         // Before the fix the retiring row was filtered out by the event binding
         // before its `supersedes` was read, so the retired judgment still
         // covered and the gate released.
-        expectBlocked(yield* evaluateFiling(), ["disposition-not-effective"]);
+        const evaluateFiling11 = yield* evaluateFiling();
+        expectBlocked(evaluateFiling11, ["disposition-not-effective"]);
       })
     );
   });
@@ -625,7 +638,8 @@ describe("CandorPolicy — evidence that cannot be re-proven blocks", () => {
   it.layer(scenario(unresolvableSource()), { timeout: "30 seconds" })((it) => {
     it.effect("blocks when the canonical source text cannot be resolved", () =>
       Effect.gen(function* () {
-        expectBlocked(yield* evaluateFiling(), ["source-unresolved"]);
+        const evaluateFiling12 = yield* evaluateFiling();
+        expectBlocked(evaluateFiling12, ["source-unresolved"]);
       })
     );
   });
@@ -633,7 +647,8 @@ describe("CandorPolicy — evidence that cannot be re-proven blocks", () => {
   it.layer(scenario(driftedSource()), { timeout: "30 seconds" })((it) => {
     it.effect("blocks when the persisted receipt no longer re-verifies against the source", () =>
       Effect.gen(function* () {
-        expectBlocked(yield* evaluateFiling(), ["anchor-unverified"]);
+        const evaluateFiling13 = yield* evaluateFiling();
+        expectBlocked(evaluateFiling13, ["anchor-unverified"]);
       })
     );
   });
@@ -643,7 +658,8 @@ describe("CandorPolicy — evidence that cannot be re-proven blocks", () => {
   })((it) => {
     it.effect("treats a quarantined event as uncovered even when it carries a disposition", () =>
       Effect.gen(function* () {
-        expectBlocked(yield* evaluateFiling(), ["quarantined"]);
+        const evaluateFiling14 = yield* evaluateFiling();
+        expectBlocked(evaluateFiling14, ["quarantined"]);
       })
     );
   });
@@ -651,7 +667,8 @@ describe("CandorPolicy — evidence that cannot be re-proven blocks", () => {
   it.layer(scenario(withEventOptions({ possibleDuplicateOf: 2 })()), { timeout: "30 seconds" })((it) => {
     it.effect("treats a possible duplicate as uncovered rather than resolving it", () =>
       Effect.gen(function* () {
-        expectBlocked(yield* evaluateFiling(), ["possible-duplicate"]);
+        const evaluateFiling15 = yield* evaluateFiling();
+        expectBlocked(evaluateFiling15, ["possible-duplicate"]);
       })
     );
   });
@@ -675,7 +692,8 @@ describe("CandorPolicy — an examiner-observed head is dispositionable", () => 
       Effect.gen(function* () {
         // The examiner head is the current observation; one human disposition
         // clears the whole declared lineage.
-        expectReleased(yield* evaluateFiling());
+        const evaluateFiling16 = yield* evaluateFiling();
+        expectReleased(evaluateFiling16);
       })
     );
   });
@@ -695,7 +713,8 @@ describe("CandorPolicy — examiner occurrences gate in their own right", () => 
   it.layer(scenario(examinerOnly(true)()), { timeout: "30 seconds" })((it) => {
     it.effect("releases an examiner-only source after a human disposition", () =>
       Effect.gen(function* () {
-        expectReleased(yield* evaluateFiling());
+        const evaluateFiling17 = yield* evaluateFiling();
+        expectReleased(evaluateFiling17);
       })
     );
   });

@@ -435,7 +435,8 @@ export const resolveLintPolicyScope = Effect.fn("LintPolicyScope.resolve")(funct
   base: string
 ): Effect.fn.Return<LintPolicyScope, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path | Git> {
   const facts = yield* collectLintPolicyChangeFacts(repoRoot, base);
-  return planLintPolicyScope(facts, yield* readLintPolicySeal(repoRoot), base);
+  const readLintPolicySeal1 = yield* readLintPolicySeal(repoRoot);
+  return planLintPolicyScope(facts, readLintPolicySeal1, base);
 });
 
 /**

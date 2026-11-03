@@ -111,7 +111,8 @@ const eventRows = Effect.fnUntraced(function* (store: BreakerStore) {
 });
 
 const decodedEvents = Effect.fnUntraced(function* (store: BreakerStore) {
-  return yield* Effect.forEach(yield* eventRows(store), (row) => CircuitBreakerEventV1.decodeJsonEffect(row));
+  const eventRows1 = yield* eventRows(store);
+  return yield* Effect.forEach(eventRows1, (row) => CircuitBreakerEventV1.decodeJsonEffect(row));
 });
 
 it.layer(NodeServices.layer)("agent command circuit breaker", (it) => {
@@ -130,9 +131,8 @@ it.layer(NodeServices.layer)("agent command circuit breaker", (it) => {
       const failed = yield* runBreaker(store, ["run", "op", "claude-code", "--", "/bin/false"]);
       expect(failed).toEqual({ exitCode: 1, stderr: "", stdout: "" });
 
-      const openState = yield* CircuitBreakerOpenStateV1.decodeJsonEffect(
-        yield* fs.readFileString(store.openStatePath)
-      );
+      const readFileString2 = yield* fs.readFileString(store.openStatePath);
+      const openState = yield* CircuitBreakerOpenStateV1.decodeJsonEffect(readFileString2);
       expect(openState.probe).toBe("op");
       expect(openState.exitCode).toBe(1);
       expect(openState.retryAfterEpochMs).toBeGreaterThan(openState.trippedEpochMs);
@@ -143,11 +143,13 @@ it.layer(NodeServices.layer)("agent command circuit breaker", (it) => {
         codexBreakerPath
       );
       expect(skipped).toEqual({ exitCode: 75, stderr: "", stdout: "" });
-      pipe(yield* fs.exists(store.markerPath), assertFalse);
+      const exists3 = yield* fs.exists(store.markerPath);
+      pipe(exists3, assertFalse);
 
       const reset = yield* runBreaker(store, ["reset", "op", "operator"]);
       expect(reset).toEqual({ exitCode: 0, stderr: "", stdout: "" });
-      pipe(yield* fs.exists(store.openStatePath), assertFalse);
+      const exists4 = yield* fs.exists(store.openStatePath);
+      pipe(exists4, assertFalse);
 
       const succeeded = yield* runBreaker(store, ["run", "op", "codex-cli", "--", "/bin/true"]);
       expect(succeeded).toEqual({ exitCode: 0, stderr: "", stdout: "" });
@@ -160,8 +162,9 @@ it.layer(NodeServices.layer)("agent command circuit breaker", (it) => {
         "probe-succeeded",
       ]);
       expect(A.map(events, ({ caller }) => caller)).toEqual(["claude-code", "codex-cli", "operator", "codex-cli"]);
+      const eventRows5 = yield* eventRows(store);
       pipe(
-        A.every(yield* eventRows(store), (row) => !Str.includes(CANARY)(row)),
+        A.every(eventRows5, (row) => !Str.includes(CANARY)(row)),
         assertTrue
       );
     })
@@ -173,19 +176,19 @@ it.layer(NodeServices.layer)("agent command circuit breaker", (it) => {
       const path = yield* Path.Path;
       const store = yield* makeBreakerStore();
       yield* fs.makeDirectory(path.dirname(store.openStatePath), { recursive: true });
-      yield* fs.writeFileString(
-        store.openStatePath,
-        yield* encodeJson({ schemaVersion: "unknown", command: CANARY, retryAfterEpochMs: 0 })
-      );
+      const encodedJson = yield* encodeJson({ schemaVersion: "unknown", command: CANARY, retryAfterEpochMs: 0 });
+      yield* fs.writeFileString(store.openStatePath, encodedJson);
 
       const run = yield* runBreaker(store, ["run", "op", "claude-code", "--", "/usr/bin/touch", store.markerPath]);
       expect(run).toEqual({ exitCode: 76, stderr: "", stdout: "" });
-      pipe(yield* fs.exists(store.markerPath), assertFalse);
+      const exists6 = yield* fs.exists(store.markerPath);
+      pipe(exists6, assertFalse);
 
       const events = yield* decodedEvents(store);
       expect(A.map(events, ({ outcome }) => outcome.status)).toEqual(["coordination-skipped"]);
+      const eventRows7 = yield* eventRows(store);
       pipe(
-        A.every(yield* eventRows(store), (row) => !Str.includes(CANARY)(row)),
+        A.every(eventRows7, (row) => !Str.includes(CANARY)(row)),
         assertTrue
       );
     })

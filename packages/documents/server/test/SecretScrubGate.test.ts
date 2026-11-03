@@ -79,7 +79,8 @@ describe("FilingDecisionLlm secret scrub gate", () => {
       LanguageModel.make({
         generateText: Effect.fn("generateText")(function* (options) {
           calls += 1;
-          prompts = A.append(prompts, yield* encodePrompt(options.prompt).pipe(Effect.orDie));
+          const pipe1 = yield* encodePrompt(options.prompt).pipe(Effect.orDie);
+          prompts = A.append(prompts, pipe1);
           return [
             Response.makePart("text", {
               text: '{"confidence":0.91,"rationale":"Public complaint.","taxonomyConceptId":"pleadings"}',
@@ -121,7 +122,9 @@ describe("FilingDecisionLlm secret scrub gate", () => {
           expect(outcome.kind === (fixture.admitted ? "filed" : "inboxed")).toBe(true);
           if (outcome.kind === "inboxed") expect(outcome.reason).toBe("secret-scrub-blocked");
           expect(A.every(prompts, (text) => !Str.includes(canary())(text))).toBe(true);
-          expect(Str.includes(canary())(yield* encode(logs))).toBe(false);
+          const argument = Str.includes(canary());
+          const encoded = yield* encode(logs);
+          expect(argument(encoded)).toBe(false);
           expect(A.length(logs) > 0).toBe(true);
           expect(A.length(spans) > 0).toBe(true);
           const telemetry = A.map(spans, (span) => ({
@@ -132,7 +135,9 @@ describe("FilingDecisionLlm secret scrub gate", () => {
                 ? Cause.pretty(span.status.exit.cause)
                 : "",
           }));
-          expect(Str.includes(canary())(yield* encode(telemetry))).toBe(false);
+          const argument1 = Str.includes(canary());
+          const encoded1 = yield* encode(telemetry);
+          expect(argument1(encoded1)).toBe(false);
           if (fixture.id === "masked") expect(A.some(prompts, Str.includes("API_KEY=[REDACTED]"))).toBe(true);
           if (fixture.id === "absent") expect(A.some(prompts, Str.includes("Document text excerpt"))).toBe(false);
         })

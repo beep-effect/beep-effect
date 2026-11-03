@@ -32,16 +32,20 @@ describe("MappedLiteralKit", () => {
   it.effect(
     "decodes From literals into To literals",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeSqlStateEffect("SUCCESSFUL_COMPLETION")).toBe("00000");
-      expect(yield* decodeSqlStateEffect("WARNING")).toBe("01000");
+      const decodedSqlStateEffect = yield* decodeSqlStateEffect("SUCCESSFUL_COMPLETION");
+      expect(decodedSqlStateEffect).toBe("00000");
+      const decodedSqlStateEffect1 = yield* decodeSqlStateEffect("WARNING");
+      expect(decodedSqlStateEffect1).toBe("01000");
     })
   );
 
   it.effect(
     "encodes To literals back into From literals",
     Effect.fnUntraced(function* () {
-      expect(yield* encodeSqlStateEffect("00000")).toBe("SUCCESSFUL_COMPLETION");
-      expect(yield* encodeSqlStateEffect("01000")).toBe("WARNING");
+      const encodedSqlStateEffect = yield* encodeSqlStateEffect("00000");
+      expect(encodedSqlStateEffect).toBe("SUCCESSFUL_COMPLETION");
+      const encodedSqlStateEffect2 = yield* encodeSqlStateEffect("01000");
+      expect(encodedSqlStateEffect2).toBe("WARNING");
     })
   );
 
@@ -52,7 +56,9 @@ describe("MappedLiteralKit", () => {
       [arbitrary],
       Effect.fnUntraced(function* ([literal]) {
         expect(A.map(SqlState.Pairs, ([, code]) => code)).toContain(literal);
-        expect(yield* decodeUnknownSqlStateEffect(yield* encodeSqlStateEffect(literal))).toBe(literal);
+        const encodedSqlStateEffect5 = yield* encodeSqlStateEffect(literal);
+        const decodedUnknownSqlStateEffect = yield* decodeUnknownSqlStateEffect(encodedSqlStateEffect5);
+        expect(decodedUnknownSqlStateEffect).toBe(literal);
 
         return true;
       }),
@@ -89,11 +95,13 @@ describe("MappedLiteralKit", () => {
       expect(annotated.From).not.toBe(SqlState);
       expect(annotated.To).toBe(SqlState.To);
       expect(annotated.Enum.SUCCESSFUL_COMPLETION).toBe("00000");
-      expect(yield* S.decodeEffect(annotated)("WARNING")).toBe("01000");
+      const value = yield* S.decodeEffect(annotated)("WARNING");
+      expect(value).toBe("01000");
 
       expect(reannotated.From).toBe(reannotated);
       expect(reannotated.To).toBe(SqlState.To);
-      expect(yield* S.encodeEffect(reannotated)("00000")).toBe("SUCCESSFUL_COMPLETION");
+      const value3 = yield* S.encodeEffect(reannotated)("00000");
+      expect(value3).toBe("SUCCESSFUL_COMPLETION");
     })
   );
 
@@ -135,8 +143,10 @@ describe("MappedLiteralKit", () => {
   it.effect(
     "decodes and encodes on the reverse directional kit",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeSqlStateToEffect("00000")).toBe("SUCCESSFUL_COMPLETION");
-      expect(yield* encodeSqlStateToEffect("SUCCESSFUL_COMPLETION")).toBe("00000");
+      const decodedSqlStateToEffect = yield* decodeSqlStateToEffect("00000");
+      expect(decodedSqlStateToEffect).toBe("SUCCESSFUL_COMPLETION");
+      const encodedSqlStateToEffect = yield* encodeSqlStateToEffect("SUCCESSFUL_COMPLETION");
+      expect(encodedSqlStateToEffect).toBe("00000");
     })
   );
 
@@ -190,7 +200,8 @@ describe("MappedLiteralKit statics across derivations", () => {
         expect(derived.is).toBe(SqlState.is);
         expect(derived.match).toBe(SqlState.match);
       }
-      expect(yield* decodeCheckedSqlStateEffect("SUCCESSFUL_COMPLETION")).toBe("00000");
+      const decodedCheckedSqlStateEffect = yield* decodeCheckedSqlStateEffect("SUCCESSFUL_COMPLETION");
+      expect(decodedCheckedSqlStateEffect).toBe("00000");
       expect(isPipedSqlState("01000")).toBe(false);
       expect(PipedSqlState.Enum.WARNING).toBe("01000");
     })
@@ -223,7 +234,8 @@ describe("MappedLiteralKit subsets and matchOrElse", () => {
         ["CREATED", 201],
       ]);
       expect(Success.Enum.OK).toBe(200);
-      expect(yield* S.decodeEffect(Success)("CREATED")).toBe(201);
+      const value4 = yield* S.decodeEffect(Success)("CREATED");
+      expect(value4).toBe(201);
       expect(S.is(Success.To)(404)).toBe(false);
     })
   );

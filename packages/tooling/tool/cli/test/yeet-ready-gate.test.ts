@@ -413,7 +413,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
+        const got1 = yield* Ref.get(calls);
+        expect(got1).toEqual([["ready", "42"]]);
       })
     );
 
@@ -432,8 +433,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
-        expect(yield* Ref.get(requests)).toEqual([[42, headSha]]);
+        const got2 = yield* Ref.get(calls);
+        expect(got2).toEqual([["ready", "42"]]);
+        const got3 = yield* Ref.get(requests);
+        expect(got3).toEqual([[42, headSha]]);
       })
     );
 
@@ -476,7 +479,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
+        const got4 = yield* Ref.get(calls);
+        expect(got4).toEqual([["ready", "42"]]);
       })
     );
 
@@ -500,7 +504,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(error).toMatchObject({ _tag: "YeetCommandError" });
         expect(error.message).toContain("changed between the gate read and the flip");
         expect(error.message).toContain(`gate ${headSha}, live fedcba9876`);
-        expect(yield* Ref.get(calls)).toEqual([]);
+        const got5 = yield* Ref.get(calls);
+        expect(got5).toEqual([]);
       })
     );
 
@@ -516,7 +521,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         }).pipe(Effect.flip);
         expect(error).toMatchObject({ _tag: "YeetCommandError" });
         expect(error.message).toContain("now blocked on threads-resolved");
-        expect(yield* Ref.get(calls)).toEqual([]);
+        const got6 = yield* Ref.get(calls);
+        expect(got6).toEqual([]);
       })
     );
 
@@ -533,7 +539,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "threads-resolved" });
         expect(error.message).toContain("blocked on threads-resolved");
         expect(error.message).toContain("2 review thread(s) still owe an answer");
-        expect(yield* Ref.get(calls)).toEqual([]);
+        const got7 = yield* Ref.get(calls);
+        expect(got7).toEqual([]);
       })
     );
 
@@ -560,7 +567,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           )
         );
         expect(failing).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
-        expect(yield* Ref.get(calls)).toEqual([]);
+        const got8 = yield* Ref.get(calls);
+        expect(got8).toEqual([]);
       })
     );
 
@@ -594,12 +602,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+        const logLines9 = yield* TestConsole.logLines;
+        const printed = A.join(A.map(logLines9, String), "\n");
         expect(printed).toContain(`carries the receipt of ancestor ${receiptHead}`);
         expect(printed).toContain("standards/schema-first.inventory.jsonc (standards-inventory)");
         expect(printed).toContain("unknown.txt (not allowed)");
         expect(printed).toContain(`final <sha40> #42 receipt ${receiptHead}`);
-        expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
+        const got10 = yield* Ref.get(calls);
+        expect(got10).toEqual([["ready", "42"]]);
       })
     );
 
@@ -639,10 +649,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+        const logLines11 = yield* TestConsole.logLines;
+        const printed = A.join(A.map(logLines11, String), "\n");
         expect(printed).toContain("own changes since the receipt: none");
         expect(printed).toContain("coverage (no reason)");
-        expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
+        const got12 = yield* Ref.get(calls);
+        expect(got12).toEqual([["ready", "42"]]);
       })
     );
 
@@ -673,7 +685,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           `the nearest ancestor receipt, on ${Str.slice(0, 12)(receiptHead)}, does not carry`
         );
         expect(error.message).toContain("src/index.ts");
-        expect(yield* Ref.get(calls)).toEqual([]);
+        const got13 = yield* Ref.get(calls);
+        expect(got13).toEqual([]);
       })
     );
 
@@ -701,7 +714,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
         expect(error.message).toContain(detail);
         expect(error.message).not.toContain("nearest ancestor receipt, on");
-        expect(yield* Ref.get(calls)).toEqual([]);
+        const got14 = yield* Ref.get(calls);
+        expect(got14).toEqual([]);
       })
     );
 
@@ -721,7 +735,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           markReady: () => Effect.void,
         }).pipe(Effect.flip);
         expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
-        expect(yield* Ref.get(consulted)).toBe(false);
+        const got15 = yield* Ref.get(consulted);
+        expect(got15).toBe(false);
       })
     );
 
@@ -765,11 +780,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+        const logLines16 = yield* TestConsole.logLines;
+        const printed = A.join(A.map(logLines16, String), "\n");
         expect(printed).toContain(
           "pass with 2 skipped gate(s): coverage (admission waited 10 minutes); fallow (no reason)"
         );
-        expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
+        const got17 = yield* Ref.get(calls);
+        expect(got17).toEqual([["ready", "42"]]);
       })
     );
 
@@ -806,8 +823,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
-        const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+        const got18 = yield* Ref.get(calls);
+        expect(got18).toEqual([["ready", "42"]]);
+        const logLines19 = yield* TestConsole.logLines;
+        const printed = A.join(A.map(logLines19, String), "\n");
         expect(printed).toContain("the review window starts now");
         expect(printed).toContain("do not merge in this step");
       })
@@ -826,8 +845,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
-        const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+        const got20 = yield* Ref.get(calls);
+        expect(got20).toEqual([["ready", "42"]]);
+        const logLines21 = yield* TestConsole.logLines;
+        const printed = A.join(A.map(logLines21, String), "\n");
         expect(printed).toContain(
           "[yeet] warning: the squash commit message GitHub will write for #42 fails commitlint: footer-max-line-length at line 3 (102 chars)"
         );
@@ -857,8 +878,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           requestReview: stubReviewerRequest,
           findMonitor: () => Effect.succeedNone,
         });
-        expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
-        const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+        const got22 = yield* Ref.get(calls);
+        expect(got22).toEqual([["ready", "42"]]);
+        const logLines23 = yield* TestConsole.logLines;
+        const printed = A.join(A.map(logLines23, String), "\n");
         expect(printed).toContain("[yeet] squash-commitlint #42: pass");
         expect(printed).toContain("[yeet] warning: squash-commitlint check skipped for #42");
       })
@@ -934,12 +957,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         );
         expect(decision._tag).toBe("flip");
         // The confirmation decided with the same --inherited list, or it would have refused on Lint.
-        expect(yield* Ref.get(reads)).toBe(3);
-        expect(yield* Ref.get(calls)).toEqual([
+        const got24 = yield* Ref.get(reads);
+        expect(got24).toBe(3);
+        const got25 = yield* Ref.get(calls);
+        expect(got25).toEqual([
           ["record", "42", "Lint"],
           ["ready", "42"],
         ]);
-        const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+        const logLines26 = yield* TestConsole.logLines;
+        const printed = A.join(A.map(logLines26, String), "\n");
         expect(printed).toContain(
           "[yeet] note: --inherited Knip is not a failing required check on this head; ignored (optional reds never hold the flip)"
         );
@@ -963,7 +989,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         ).pipe(Effect.flip);
         expect(error).toMatchObject({ _tag: "YeetCommandError" });
         expect(error.message).toContain("could not record: 403");
-        expect(yield* Ref.get(calls)).toEqual([["record", "42", "Lint"]]);
+        const got27 = yield* Ref.get(calls);
+        expect(got27).toEqual([["record", "42", "Lint"]]);
       })
     );
 
@@ -983,7 +1010,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           },
           [lintInherited]
         );
-        expect(yield* Ref.get(calls)).toEqual([
+        const got28 = yield* Ref.get(calls);
+        expect(got28).toEqual([
           ["record", "42"],
           ["ready", "42"],
         ]);
@@ -1024,7 +1052,8 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       }).pipe(Effect.flip);
       expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
       expect(error.message).toContain(`no final-check receipt for head ${headSha}`);
-      expect(yield* Ref.get(calls)).toEqual([]);
+      const got29 = yield* Ref.get(calls);
+      expect(got29).toEqual([]);
     })
   );
 
@@ -1376,15 +1405,22 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         };
         const error = yield* runYeetReadyGate(context, dependencies, [lintInherited]).pipe(Effect.flip);
         expect(error.message).toContain("changed while recording inherited reds");
-        expect(yield* Ref.get(body)).toContain("- `Lint`:");
-        expect(yield* Ref.get(flips)).toBe(0);
+        const got30 = yield* Ref.get(body);
+        expect(got30).toContain("- `Lint`:");
+        const got31 = yield* Ref.get(flips);
+        expect(got31).toBe(0);
         yield* Ref.set(currentHead, "fedcba9876");
         expect((yield* runYeetReadyGate(context, dependencies))._tag).toBe("flip");
-        expect(yield* Ref.get(body)).toContain("None: no required check is red on this head.");
-        expect(yield* Ref.get(body)).toContain("Inherited reds (S11) at fedcba9876");
-        expect(yield* Ref.get(body)).not.toContain("- `Lint`:");
-        expect(yield* Ref.get(body)).toContain("Summary");
-        expect(yield* Ref.get(flips)).toBe(1);
+        const got32 = yield* Ref.get(body);
+        expect(got32).toContain("None: no required check is red on this head.");
+        const got33 = yield* Ref.get(body);
+        expect(got33).toContain("Inherited reds (S11) at fedcba9876");
+        const got34 = yield* Ref.get(body);
+        expect(got34).not.toContain("- `Lint`:");
+        const got35 = yield* Ref.get(body);
+        expect(got35).toContain("Summary");
+        const got36 = yield* Ref.get(flips);
+        expect(got36).toBe(1);
       })
     );
 
@@ -1411,15 +1447,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         };
         expect((yield* runYeetReadyGate(context, dependencies, [lintInherited]))._tag).toBe("flip");
-        expect(yield* Ref.get(body)).toContain("- `Lint`:");
+        const got37 = yield* Ref.get(body);
+        expect(got37).toContain("- `Lint`:");
         expect((yield* runYeetReadyGate(context, dependencies))._tag).toBe("already-ready");
         yield* Ref.set(draft, true);
         yield* Ref.set(green, true);
         yield* Ref.set(sha, "fedcba9876");
         expect((yield* runYeetReadyGate(context, dependencies))._tag).toBe("flip");
-        expect(yield* Ref.get(body)).toContain("Inherited reds (S11) at fedcba9876");
-        expect(yield* Ref.get(body)).toContain("None: no required check is red on this head.");
-        expect(yield* Ref.get(body)).not.toContain("- `Lint`:");
+        const got38 = yield* Ref.get(body);
+        expect(got38).toContain("Inherited reds (S11) at fedcba9876");
+        const got39 = yield* Ref.get(body);
+        expect(got39).toContain("None: no required check is red on this head.");
+        const got40 = yield* Ref.get(body);
+        expect(got40).not.toContain("- `Lint`:");
       })
     );
 
@@ -1542,7 +1582,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         }).pipe(Effect.flip, Effect.provideServiceEffect(Git, Git.make), provideSpawner(refusing));
         expect(error).toMatchObject({ _tag: "YeetCommandError", command: "bun run beep yeet gh pr ready 42" });
         expect(error.message).toContain("could not mark pull request #42 ready for review");
-        const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+        const logLines41 = yield* TestConsole.logLines;
+        const printed = A.join(A.map(logLines41, String), "\n");
         expect(printed).toContain("[yeet] warning:");
         expect(printed).not.toContain("S11 requires the record");
       })
@@ -1575,9 +1616,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* Ref.get(reads)).toBe(1);
-        expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
-        const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+        const got42 = yield* Ref.get(reads);
+        expect(got42).toBe(1);
+        const got43 = yield* Ref.get(calls);
+        expect(got43).toEqual([["ready", "42"]]);
+        const logLines44 = yield* TestConsole.logLines;
+        const printed = A.join(A.map(logLines44, String), "\n");
         expect(printed).toContain("[yeet] warning:");
         expect(printed).toContain("REST body read failed");
         expect(printed).not.toContain("S11 requires the record");
@@ -1599,11 +1643,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* Ref.get(calls)).toEqual([
+        const got45 = yield* Ref.get(calls);
+        expect(got45).toEqual([
           ["record", "42"],
           ["ready", "42"],
         ]);
-        expect(A.join(A.map(yield* TestConsole.logLines, String), "\n")).toContain("[yeet] warning:");
+        const logLines46 = yield* TestConsole.logLines;
+        expect(A.join(A.map(logLines46, String), "\n")).toContain("[yeet] warning:");
       })
     );
     it.effect("refuses the flip when the default inherited-red recorder cannot acquire its identity", () =>
@@ -1814,16 +1860,20 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             findMonitor: () => Effect.succeedNone,
           }).pipe(Effect.flip, Effect.forkChild);
           yield* TestClock.adjust(Duration.seconds(1));
-          expect(yield* Ref.get(flip.probes)).toBe(1);
-          expect(yield* Ref.get(flip.restReads)).toBe(0);
+          const got47 = yield* Ref.get(flip.probes);
+          expect(got47).toBe(1);
+          const got48 = yield* Ref.get(flip.restReads);
+          expect(got48).toBe(0);
           yield* Ref.set(flip.liveHead, "fedcba9876");
           yield* TestClock.adjust(Duration.minutes(11));
           const error = yield* Fiber.join(fiber);
           expect(error).toMatchObject({ _tag: "YeetCommandError", exitCode: 1 });
           expect(error.message).toContain(`confirmed ${headSha}, live fedcba9876`);
           expect(error.message).toContain("Re-run `bun run beep yeet ready`");
-          expect(yield* Ref.get(flip.mutations)).toBe(0);
-          expect(yield* Ref.get(flip.restReads)).toBe(1);
+          const got49 = yield* Ref.get(flip.mutations);
+          expect(got49).toBe(0);
+          const got50 = yield* Ref.get(flip.restReads);
+          expect(got50).toBe(1);
         })
       );
     });
@@ -1844,9 +1894,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           }).pipe(Effect.forkChild);
           yield* TestClock.adjust(Duration.minutes(11));
           expect((yield* Fiber.join(fiber))._tag).toBe("flip");
-          expect(yield* Ref.get(confirmed)).toBe(headSha);
-          expect(yield* Ref.get(flip.mutations)).toBe(1);
-          expect(yield* Ref.get(flip.restReads)).toBe(1);
+          const got51 = yield* Ref.get(confirmed);
+          expect(got51).toBe(headSha);
+          const got52 = yield* Ref.get(flip.mutations);
+          expect(got52).toBe(1);
+          const got53 = yield* Ref.get(flip.restReads);
+          expect(got53).toBe(1);
         })
       );
     });
@@ -1876,15 +1929,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           const fiber = yield* runYeetReadyGate(context, dependencies, inherited).pipe(Effect.flip, Effect.forkChild);
           yield* TestClock.adjust(Duration.minutes(11));
           expect((yield* Fiber.join(fiber)).message).toContain("GraphQL budget too low");
-          expect(yield* Ref.get(flip.restReads)).toBe(0);
-          expect(yield* Ref.get(flip.mutations)).toBe(0);
+          const got54 = yield* Ref.get(flip.restReads);
+          expect(got54).toBe(0);
+          const got55 = yield* Ref.get(flip.mutations);
+          expect(got55).toBe(0);
           yield* runYeetReadyGate(
             context,
             { ...dependencies, markReady: () => Effect.void, findMonitor: () => Effect.succeedNone },
             inherited
           );
-          expect(yield* Ref.get(reads)).toBe(6);
-          expect(yield* Ref.get(records)).toBe(2);
+          const got56 = yield* Ref.get(reads);
+          expect(got56).toBe(6);
+          const got57 = yield* Ref.get(records);
+          expect(got57).toBe(2);
         })
       );
     });
@@ -1901,7 +1958,8 @@ const scratchGit = Effect.fn("YeetReadyTest.scratchGit")(function* (cwd: string,
     stderr: "inherit",
   });
   const output = yield* handle.stdout.pipe(Stream.decodeText(), Stream.mkString);
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode58 = yield* handle.exitCode;
+  expect(exitCode58).toBe(0);
   return Str.trim(output);
 });
 
@@ -1947,11 +2005,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* scratchGit(clone.origin, ["log", "-1", "--format=%s", "main"])).toBe(
-          YEET_REVIEWER_REQUEST_SUBJECT
-        );
-        expect(yield* scratchGit(clone.origin, ["rev-parse", "main~1"])).toBe(clone.head);
-        expect(yield* scratchGit(clone.work, ["diff", "--stat", "HEAD~1", "HEAD"])).toBe("");
+        const scratchGit59 = yield* scratchGit(clone.origin, ["log", "-1", "--format=%s", "main"]);
+        expect(scratchGit59).toBe(YEET_REVIEWER_REQUEST_SUBJECT);
+        const scratchGit60 = yield* scratchGit(clone.origin, ["rev-parse", "main~1"]);
+        expect(scratchGit60).toBe(clone.head);
+        const scratchGit61 = yield* scratchGit(clone.work, ["diff", "--stat", "HEAD~1", "HEAD"]);
+        expect(scratchGit61).toBe("");
       })
     );
 
@@ -1986,8 +2045,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* scratchGit(clone.origin, ["rev-parse", "main"])).toBe(advanced);
-        expect(yield* scratchGit(clone.work, ["rev-parse", "HEAD~1"])).toBe(clone.head);
+        const scratchGit62 = yield* scratchGit(clone.origin, ["rev-parse", "main"]);
+        expect(scratchGit62).toBe(advanced);
+        const scratchGit63 = yield* scratchGit(clone.work, ["rev-parse", "HEAD~1"]);
+        expect(scratchGit63).toBe(clone.head);
       })
     );
 
@@ -2003,8 +2064,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* scratchGit(clone.origin, ["rev-parse", "main"])).toBe(clone.head);
-        expect(yield* scratchGit(clone.work, ["rev-parse", "HEAD"])).toBe(clone.head);
+        const scratchGit64 = yield* scratchGit(clone.origin, ["rev-parse", "main"]);
+        expect(scratchGit64).toBe(clone.head);
+        const scratchGit65 = yield* scratchGit(clone.work, ["rev-parse", "HEAD"]);
+        expect(scratchGit65).toBe(clone.head);
       })
     );
   }
@@ -2029,11 +2092,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* scratchGit(clone.origin, ["log", "-1", "--format=%s", "main"])).toBe(
-          YEET_REVIEWER_REQUEST_SUBJECT
-        );
-        expect(yield* scratchGit(clone.origin, ["diff", "--name-only", "main~1", "main"])).toBe("");
-        expect(yield* scratchGit(clone.work, ["diff", "--cached", "--name-only"])).toBe("staged.txt");
+        const scratchGit66 = yield* scratchGit(clone.origin, ["log", "-1", "--format=%s", "main"]);
+        expect(scratchGit66).toBe(YEET_REVIEWER_REQUEST_SUBJECT);
+        const scratchGit67 = yield* scratchGit(clone.origin, ["diff", "--name-only", "main~1", "main"]);
+        expect(scratchGit67).toBe("");
+        const scratchGit68 = yield* scratchGit(clone.work, ["diff", "--cached", "--name-only"]);
+        expect(scratchGit68).toBe("staged.txt");
       })
     );
 
@@ -2056,10 +2120,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* scratchGit(clone.origin, ["log", "-1", "--format=%s", "main"])).toBe(
-          YEET_REVIEWER_REQUEST_SUBJECT
-        );
-        expect(yield* scratchGit(decoy, ["for-each-ref", "--format=%(refname)"])).toBe("");
+        const scratchGit69 = yield* scratchGit(clone.origin, ["log", "-1", "--format=%s", "main"]);
+        expect(scratchGit69).toBe(YEET_REVIEWER_REQUEST_SUBJECT);
+        const scratchGit70 = yield* scratchGit(decoy, ["for-each-ref", "--format=%(refname)"]);
+        expect(scratchGit70).toBe("");
       })
     );
 
@@ -2076,9 +2140,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           findMonitor: () => Effect.succeedNone,
         });
         expect(decision._tag).toBe("flip");
-        expect(yield* scratchGit(clone.work, ["log", "-1", "--format=%s"])).toBe(YEET_REVIEWER_REQUEST_SUBJECT);
-        expect(yield* scratchGit(clone.work, ["rev-parse", "HEAD~1"])).toBe(clone.head);
-        expect(yield* scratchGit(clone.origin, ["rev-parse", "main"])).toBe(clone.head);
+        const scratchGit71 = yield* scratchGit(clone.work, ["log", "-1", "--format=%s"]);
+        expect(scratchGit71).toBe(YEET_REVIEWER_REQUEST_SUBJECT);
+        const scratchGit72 = yield* scratchGit(clone.work, ["rev-parse", "HEAD~1"]);
+        expect(scratchGit72).toBe(clone.head);
+        const scratchGit73 = yield* scratchGit(clone.origin, ["rev-parse", "main"]);
+        expect(scratchGit73).toBe(clone.head);
       })
     );
   }

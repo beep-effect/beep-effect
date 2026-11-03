@@ -87,15 +87,18 @@ describe("shared-domain schema parity", () => {
       });
 
       assertNone(emptyOptions.brand);
-      expect(yield* encodeEntityIdOptions(emptyOptions)).toEqual({});
-      expect(yield* encodeEntityIdOptions(explicitOptions)).toEqual({
+      const encodedEntityIdOptions = yield* encodeEntityIdOptions(emptyOptions);
+      expect(encodedEntityIdOptions).toEqual({});
+      const encodedEntityIdOptions1 = yield* encodeEntityIdOptions(explicitOptions);
+      expect(encodedEntityIdOptions1).toEqual({
         brand: "CustomDocumentId",
         description: "Custom document id.",
         entityType: "CustomDocument",
         resource: "custom.document",
         tableName: "custom_document",
       });
-      expect(yield* encodeEntityIdDefinition(CustomDocumentId.definition)).toEqual({
+      const encodedEntityIdDefinition = yield* encodeEntityIdDefinition(CustomDocumentId.definition);
+      expect(encodedEntityIdDefinition).toEqual({
         brand: "CustomDocumentId",
         description: "Custom document id.",
         entityType: "CustomDocument",
@@ -132,17 +135,20 @@ describe("shared-domain schema parity", () => {
         kind: "ConnectorAccount",
       });
 
-      expect(yield* encodePrincipalServiceAccountPrincipal(serviceAccount)).toEqual({
+      const encodedPrincipalServiceAccountPrincipal = yield* encodePrincipalServiceAccountPrincipal(serviceAccount);
+      expect(encodedPrincipalServiceAccountPrincipal).toEqual({
         kind: "ServiceAccount",
         serviceAccountId: 1,
       });
-      expect(yield* encodePrincipalAgentPrincipal(agent)).toEqual({
+      const encodedPrincipalAgentPrincipal = yield* encodePrincipalAgentPrincipal(agent);
+      expect(encodedPrincipalAgentPrincipal).toEqual({
         agentId: 1,
         agentVersionId: 1,
         kind: "Agent",
         onBehalfOfUserId: 1,
       });
-      expect(yield* encodePrincipalConnectorAccountPrincipal(connector)).toEqual({
+      const encodedPrincipalConnectorAccountPrincipal = yield* encodePrincipalConnectorAccountPrincipal(connector);
+      expect(encodedPrincipalConnectorAccountPrincipal).toEqual({
         connectorAccountId: 1,
         kind: "ConnectorAccount",
       });
@@ -156,8 +162,10 @@ describe("shared-domain schema parity", () => {
       const viaSchema = yield* decodeLocalDateFromString("2024-06-15");
 
       assertTrue(Equal.equals(viaHelper, viaSchema));
-      assert.deepEqual(yield* encodeLocalDateFromString(viaHelper), "2024-06-15");
-      assert.deepEqual(yield* encodeLocalDateModel(viaHelper), {
+      const encodedLocalDateFromString = yield* encodeLocalDateFromString(viaHelper);
+      assert.deepEqual(encodedLocalDateFromString, "2024-06-15");
+      const encodedLocalDateModel = yield* encodeLocalDateModel(viaHelper);
+      assert.deepEqual(encodedLocalDateModel, {
         day: 15,
         month: 6,
         year: 2024,

@@ -323,7 +323,8 @@ export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function*
     }),
     events: Stream.fromPubSub(events),
     prompt: Effect.fn("ManagedClaude.submit")(function* (message: ManagedSessionMessage) {
-      if (O.isSome(yield* Ref.get(active))) yield* publish("deferred");
+      const got = yield* Ref.get(active);
+      if (O.isSome(got)) yield* publish("deferred");
       return yield* prompt(message).pipe(Semaphore.withPermits(lock, 1));
     }),
     cancel: send({ type: "control_request", request_id: "beep-interrupt", request: { subtype: "interrupt" } }),

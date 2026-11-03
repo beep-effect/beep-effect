@@ -341,7 +341,8 @@ const make = Effect.gen(function* () {
   return {
     token: (audience?: string) => Effect.map(issue(audience), Redacted.make),
     claims: Effect.fn("OidcTokenIssuer.claims")(function* (audience?: string) {
-      return yield* readClaims(yield* issue(audience));
+      const issue1 = yield* issue(audience);
+      return yield* readClaims(issue1);
     }),
   } satisfies OidcTokenIssuerShape;
 });

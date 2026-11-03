@@ -35,7 +35,8 @@ it.layer(NodeServices.layer)("identity lint profile projection", (it) => {
         linter: { enabled: true },
         overrides: [{ includes: ["**/test/**"], formatter: { enabled: false } }],
       });
-      expect(yield* renderCacheIdentityLintProfile(`// root comments\n${source}`)).toBe(rendered);
+      const renderCacheIdentityLintProfile1 = yield* renderCacheIdentityLintProfile(`// root comments\n${source}`);
+      expect(renderCacheIdentityLintProfile1).toBe(rendered);
     })
   );
 
@@ -50,8 +51,10 @@ it.layer(NodeServices.layer)("identity lint profile projection", (it) => {
         '{"root":true,"files":{"includes":["**","src/**"]}}',
         '{"root":true,"files":{"includes":["**","!"]}}',
         '{"root":true,"files":{"includes":[]}}',
-      ])
-        expect(yield* renderCacheIdentityLintProfile(invalid).pipe(Effect.isFailure)).toBe(true);
+      ]) {
+        const pipe1 = yield* renderCacheIdentityLintProfile(invalid).pipe(Effect.isFailure);
+        expect(pipe1).toBe(true);
+      }
     })
   );
 
@@ -61,18 +64,21 @@ it.layer(NodeServices.layer)("identity lint profile projection", (it) => {
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-profile-" });
       yield* fs.writeFileString(path.join(root, "biome.jsonc"), source);
-      expect(yield* verifyCacheIdentityLintProfile(root).pipe(Effect.isFailure)).toBe(true);
+      const pipe2 = yield* verifyCacheIdentityLintProfile(root).pipe(Effect.isFailure);
+      expect(pipe2).toBe(true);
       yield* writeCacheIdentityLintProfile(root);
       yield* verifyCacheIdentityLintProfile(root);
       yield* fs.writeFileString(
         path.join(root, "biome.jsonc"),
         '{"root":true,"files":{"includes":["**","!**/src/index.ts"]},"linter":{"enabled":false}}'
       );
-      expect(yield* verifyCacheIdentityLintProfile(root).pipe(Effect.isFailure)).toBe(true);
+      const pipe3 = yield* verifyCacheIdentityLintProfile(root).pipe(Effect.isFailure);
+      expect(pipe3).toBe(true);
       yield* writeCacheIdentityLintProfile(root);
       yield* verifyCacheIdentityLintProfile(root);
       yield* fs.writeFileString(path.join(root, "biome.identity.jsonc"), "{}\n");
-      expect(yield* verifyCacheIdentityLintProfile(root).pipe(Effect.isFailure)).toBe(true);
+      const pipe4 = yield* verifyCacheIdentityLintProfile(root).pipe(Effect.isFailure);
+      expect(pipe4).toBe(true);
     })
   );
 
@@ -85,9 +91,12 @@ it.layer(NodeServices.layer)("identity lint profile projection", (it) => {
       const target = path.join(root, "preserved.txt");
       yield* fs.writeFileString(target, "preserve");
       yield* fs.symlink("preserved.txt", path.join(root, "biome.identity.jsonc"));
-      expect(yield* writeCacheIdentityLintProfile(root).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* verifyCacheIdentityLintProfile(root).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* fs.readFileString(target)).toBe("preserve");
+      const pipe5 = yield* writeCacheIdentityLintProfile(root).pipe(Effect.isFailure);
+      expect(pipe5).toBe(true);
+      const pipe6 = yield* verifyCacheIdentityLintProfile(root).pipe(Effect.isFailure);
+      expect(pipe6).toBe(true);
+      const readFileString7 = yield* fs.readFileString(target);
+      expect(readFileString7).toBe("preserve");
     })
   );
 });

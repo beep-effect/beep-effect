@@ -32,13 +32,12 @@ it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
       const f = yield* fixture();
       const claims = yield* makeObservationClaims(f.policy, f.uid);
       const count = yield* Ref.make(0);
-      expect(
-        yield* claims
-          .runOnce(submission(), () =>
-            Ref.update(count, (n) => n + 1).pipe(Effect.andThen(Effect.fail("synthetic-operation-failed")))
-          )
-          .pipe(Effect.flip)
-      ).toBe("synthetic-operation-failed");
+      const pipe1 = yield* claims
+        .runOnce(submission(), () =>
+          Ref.update(count, (n) => n + 1).pipe(Effect.andThen(Effect.fail("synthetic-operation-failed")))
+        )
+        .pipe(Effect.flip);
+      expect(pipe1).toBe("synthetic-operation-failed");
       const reopened = yield* makeObservationClaims(f.policy, f.uid);
       expect(
         (yield* reopened.runOnce(submission(), () => Ref.update(count, (n) => n + 1)).pipe(Effect.flip)).reason
@@ -48,7 +47,8 @@ it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
           .runOnce(ObservationLaunchSubmission.make({ ...submission(), evidenceEpoch: 1 }), () => Effect.void)
           .pipe(Effect.flip)).reason
       ).toBe("claimed");
-      expect(yield* Ref.get(count)).toBe(1);
+      const got = yield* Ref.get(count);
+      expect(got).toBe(1);
       expect((yield* reopened.snapshot)[0]?.submission).toEqual(submission());
     })
   )
@@ -68,12 +68,14 @@ it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
         ],
         { concurrency: 2 }
       );
-      expect(yield* Ref.get(count)).toBe(1);
+      const got2 = yield* Ref.get(count);
+      expect(got2).toBe(1);
       expect((yield* left.snapshot).length).toBe(1);
       expect(
         (yield* right.runOnce(submission("2"), () => Ref.update(count, (n) => n + 1)).pipe(Effect.flip)).reason
       ).toBe("capacity");
-      expect(yield* Ref.get(count)).toBe(1);
+      const got3 = yield* Ref.get(count);
+      expect(got3).toBe(1);
     })
   )
 );
@@ -153,7 +155,8 @@ it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
       expect((yield* claims.snapshot).length).toBe(0);
       yield* f.fs.rename(f.policy.directory, `${f.root}/preserved`);
       expect((yield* makeObservationClaims(f.policy, f.uid).pipe(Effect.flip)).reason).toBe("storage");
-      expect(yield* f.fs.exists(f.policy.directory)).toBe(false);
+      const exists4 = yield* f.fs.exists(f.policy.directory);
+      expect(exists4).toBe(false);
     })
   )
 );
@@ -212,7 +215,8 @@ it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
         Effect.flip
       );
       expect(error.reason).toBe("configuration");
-      expect(yield* f.fs.exists(policy.directory)).toBe(false);
+      const exists5 = yield* f.fs.exists(policy.directory);
+      expect(exists5).toBe(false);
     })
   )
 );

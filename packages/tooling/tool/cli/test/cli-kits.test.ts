@@ -143,7 +143,8 @@ describe("internal/cli/FailureRendering", () => {
 describe("internal/cli/RunMode", () => {
   it.effect("decodes the shared run-mode literals", () =>
     Effect.gen(function* () {
-      expect(yield* decodeRunModeEffect("dry-run")).toBe("dry-run");
+      const decodedRunModeEffect = yield* decodeRunModeEffect("dry-run");
+      expect(decodedRunModeEffect).toBe("dry-run");
       expect(RunModeIs.write("write")).toBe(true);
       expect(RunModeIs.write("check")).toBe(false);
     })
@@ -257,7 +258,8 @@ describe("internal/cli/FsGuards", () => {
         expect(error.target).toBe(target);
         assertSome(error.cause, cause);
         expect(create).toHaveBeenCalledWith(directory);
-        expect(yield* fs.exists(target)).toBe(false);
+        const exists1 = yield* fs.exists(target);
+        expect(exists1).toBe(false);
       })
     );
 
@@ -314,14 +316,14 @@ describe("internal/cli/FsGuards", () => {
       const options = {
         onInvalid: (label: string, value: string) => InvalidPathSegment.make({ message: `${label}: ${value}` }),
       };
-      expect(yield* validatePathSegment("source", "ok", options)).toBeUndefined();
-      expect(yield* validatePathSegment("ok", options)("source")).toBeUndefined();
-      expect(yield* validatePathSegment("source", "..", options).pipe(Effect.flip)).toEqual(
-        InvalidPathSegment.make({ message: "source: .." })
-      );
-      expect(yield* validatePathSegment("..", options)("source").pipe(Effect.flip)).toEqual(
-        InvalidPathSegment.make({ message: "source: .." })
-      );
+      const validatePathSegment2 = yield* validatePathSegment("source", "ok", options);
+      expect(validatePathSegment2).toBeUndefined();
+      const value3 = yield* validatePathSegment("ok", options)("source");
+      expect(value3).toBeUndefined();
+      const pipe4 = yield* validatePathSegment("source", "..", options).pipe(Effect.flip);
+      expect(pipe4).toEqual(InvalidPathSegment.make({ message: "source: .." }));
+      const pipe5 = yield* validatePathSegment("..", options)("source").pipe(Effect.flip);
+      expect(pipe5).toEqual(InvalidPathSegment.make({ message: "source: .." }));
     })
   );
 
@@ -447,7 +449,8 @@ describe("internal/cli/FsGuards", () => {
             },
             { discard: true }
           );
-          const expected = Hex.encode(yield* crypto.digest(Digest.sha256, whole));
+          const digest6 = yield* crypto.digest(Digest.sha256, whole);
+          const expected = Hex.encode(digest6);
 
           const chunkSizes = MutableList.make<number>();
           const requestedChunkSizes = MutableList.make<number | undefined>();
@@ -470,7 +473,8 @@ describe("internal/cli/FsGuards", () => {
           const observedSizes = MutableList.toArray(chunkSizes);
 
           expect(digest).toBe(expected);
-          expect(yield* Ref.get(wholeFileReads)).toBe(0);
+          const got = yield* Ref.get(wholeFileReads);
+          expect(got).toBe(0);
           expect(MutableList.toArray(requestedChunkSizes)).toEqual([hashFileChunkBytes]);
           expect(A.length(observedSizes)).toBeGreaterThanOrEqual(chunkCount);
           expect(Math.max(...observedSizes)).toBeLessThanOrEqual(hashFileChunkBytes);

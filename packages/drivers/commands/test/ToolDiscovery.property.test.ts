@@ -29,7 +29,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -91,8 +92,13 @@ it.effect.prop(
       const text = yield* S.encodeEffect(codec)({ tool: { version: value } });
       const parsed = yield* discover(text, probe);
       assertSome(parsed.version, value);
-      const canonical = yield* S.encodeEffect(codec)(yield* S.decodeEffect(codec)(text));
-      assert.strictEqual(yield* S.encodeEffect(codec)(yield* S.decodeEffect(codec)(canonical)), canonical);
+      const argument = S.encodeEffect(codec);
+      const value3 = yield* S.decodeEffect(codec)(text);
+      const canonical = yield* argument(value3);
+      const argument1 = S.encodeEffect(codec);
+      const value4 = yield* S.decodeEffect(codec)(canonical);
+      const value2 = yield* argument1(value4);
+      assert.strictEqual(value2, canonical);
       assertSome((yield* discover(canonical, probe)).version, value);
     }),
   runs

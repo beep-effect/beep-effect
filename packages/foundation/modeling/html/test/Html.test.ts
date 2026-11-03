@@ -135,7 +135,8 @@ describe("HtmlNode AST — structure & nodes", () => {
       };
       const node = yield* decode(json);
       expect(node._tag).toBe("div");
-      expect(yield* encode(node)).toStrictEqual(json);
+      const encoded1 = yield* encode(node);
+      expect(encoded1).toStrictEqual(json);
     })
   );
 
@@ -180,7 +181,9 @@ describe("HtmlNode AST — structure & nodes", () => {
       const script = Script.make({ content: "console.log(1)" });
       expect(script._tag).toBe("script");
       expect(script.content).toBe("console.log(1)");
-      expect(yield* encode(yield* decode({ _tag: "style", content: ".a{}" }))).toStrictEqual({
+      const decoded = yield* decode({ _tag: "style", content: ".a{}" });
+      const encoded2 = yield* encode(decoded);
+      expect(encoded2).toStrictEqual({
         _tag: "style",
         content: ".a{}",
       });
@@ -248,7 +251,9 @@ describe("HtmlNode AST — attributes", () => {
         dataset: { testid: "save-btn" },
         children: [],
       };
-      expect(yield* encode(yield* decode(json))).toStrictEqual(json);
+      const decoded5 = yield* decode(json);
+      const encoded3 = yield* encode(decoded5);
+      expect(encoded3).toStrictEqual(json);
     })
   );
 });
@@ -256,52 +261,51 @@ describe("HtmlNode AST — attributes", () => {
 describe("HtmlNode AST — schema laws", () => {
   it.effect("keeps option-defaulted fields byte-identical on the encoded wire", () =>
     Effect.gen(function* () {
-      expect(yield* encodeGlobalAttributesStruct(GlobalAttributesStruct.make({}))).toStrictEqual({});
-      expect(
-        yield* encodeGlobalAttributesStruct(
-          GlobalAttributesStruct.make({
-            autofocus: O.some(true),
-            dataset: O.some({ testid: "save" }),
-            id: O.some("root"),
-          })
-        )
-      ).toStrictEqual({
+      const encodedGlobalAttributesStruct = yield* encodeGlobalAttributesStruct(GlobalAttributesStruct.make({}));
+      expect(encodedGlobalAttributesStruct).toStrictEqual({});
+      const encodedGlobalAttributesStruct4 = yield* encodeGlobalAttributesStruct(
+        GlobalAttributesStruct.make({
+          autofocus: O.some(true),
+          dataset: O.some({ testid: "save" }),
+          id: O.some("root"),
+        })
+      );
+      expect(encodedGlobalAttributesStruct4).toStrictEqual({
         autofocus: true,
         dataset: { testid: "save" },
         id: "root",
       });
-      expect(yield* encodeDoctype(Doctype.html())).toStrictEqual({ _tag: "#doctype", name: "html" });
-      expect(
-        yield* encodeInput(
-          Input.make({
-            alt: O.some("Search"),
-            src: O.some("x.png"),
-            type: O.some("text"),
-          })
-        )
-      ).toStrictEqual({ _tag: "input", alt: "Search", src: "x.png", type: "text" });
-      expect(
-        yield* encodeHtmlElementMeta(
-          HtmlElementMeta.make({
-            tag: "a",
-            interface: "HTMLAnchorElement",
-            conformance: "conforming",
-            void: false,
-            rawText: false,
-            textMode: "normal",
-            categories: ["flow", "phrasing"],
-            children: ["transparent"],
-            currentAttributes: [],
-            obsoleteAttributes: [],
-            conditionalCategories: [],
-            attributeEqualities: [],
-            attributeRequirements: [],
-            numericAttributeRelationships: [],
-            rules: HtmlElementConformanceRules.make({}),
-            uniqueAttributes: [],
-          })
-        )
-      ).toStrictEqual({
+      const encodedDoctype = yield* encodeDoctype(Doctype.html());
+      expect(encodedDoctype).toStrictEqual({ _tag: "#doctype", name: "html" });
+      const encodedInput = yield* encodeInput(
+        Input.make({
+          alt: O.some("Search"),
+          src: O.some("x.png"),
+          type: O.some("text"),
+        })
+      );
+      expect(encodedInput).toStrictEqual({ _tag: "input", alt: "Search", src: "x.png", type: "text" });
+      const encodedHtmlElementMeta = yield* encodeHtmlElementMeta(
+        HtmlElementMeta.make({
+          tag: "a",
+          interface: "HTMLAnchorElement",
+          conformance: "conforming",
+          void: false,
+          rawText: false,
+          textMode: "normal",
+          categories: ["flow", "phrasing"],
+          children: ["transparent"],
+          currentAttributes: [],
+          obsoleteAttributes: [],
+          conditionalCategories: [],
+          attributeEqualities: [],
+          attributeRequirements: [],
+          numericAttributeRelationships: [],
+          rules: HtmlElementConformanceRules.make({}),
+          uniqueAttributes: [],
+        })
+      );
+      expect(encodedHtmlElementMeta).toStrictEqual({
         tag: "a",
         interface: "HTMLAnchorElement",
         conformance: "conforming",

@@ -147,19 +147,23 @@ const readPrivateDocument = Effect.fn("AgentObservation.readPrivateDocument")(
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const uid = currentOwnerUid();
-    if (!path.isAbsolute(directory) || path.normalize(directory) !== directory || directory === "/")
+    if (!path.isAbsolute(directory) || path.normalize(directory) !== directory || directory === "/") {
       return yield* failure("configuration");
+    }
     const root = yield* fs.lstat(directory);
     if (
       root.type !== "Directory" ||
       (root.mode & 0o777) !== 0o700 ||
       !O.contains(root.uid, uid) ||
       (yield* fs.realPath(directory)) !== directory
-    )
+    ) {
       return yield* failure("configuration");
+    }
     const filename = path.join(directory, name);
     const before = yield* fs.lstat(filename);
-    if (before.type !== "File") return yield* failure("configuration");
+    if (before.type !== "File") {
+      return yield* failure("configuration");
+    }
     const body = yield* Effect.scoped(
       Effect.gen(function* () {
         const file = yield* fs.open(filename, { flag: "r", noFollow: true });
@@ -168,8 +172,9 @@ const readPrivateDocument = Effect.fn("AgentObservation.readPrivateDocument")(
           !isPrivateObservationFile(info, uid) ||
           info.dev !== before.dev ||
           !O.exists(info.ino, (inode) => O.contains(before.ino, inode))
-        )
+        ) {
           return yield* failure("configuration");
+        }
         const bytes = new Uint8Array(32769);
         let length = 0;
         while (length < bytes.length) {
@@ -177,7 +182,9 @@ const readPrivateDocument = Effect.fn("AgentObservation.readPrivateDocument")(
           if (n === 0) break;
           length += n;
         }
-        if (length === 0 || length > 32768) return yield* failure("configuration");
+        if (length === 0 || length > 32768) {
+          return yield* failure("configuration");
+        }
         return yield* Effect.try({
           try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, length)),
           catch: () => failure("configuration"),
@@ -199,8 +206,9 @@ const privateHasher = Effect.gen(function* () {
   if (
     resolveAiMetricsHashSaltStatus(hashSalt) !== "provided" ||
     Redacted.value(salt) === AI_METRICS_LOCAL_INSECURE_HASH_SALT
-  )
+  ) {
     return yield* failure("configuration");
+  }
   return (value: string) => hashPrivateIdentifier(value, hashSalt);
 });
 const ownerHarness = (provider: AgentObservationOwner["provider"]) =>
@@ -284,8 +292,9 @@ const prepareEnrollment = Effect.fn("AgentObservation.prepareEnrollment")(functi
     request.destination.namespaceId !== namespace ||
     request.claims.anchor.hostId !== request.destination.hostId ||
     request.claims.journalDirectory !== request.destination.directory
-  )
+  ) {
     return yield* failure("identity");
+  }
   const ownerBinding = yield* hash(
     `agent-message-observation-owner/v1:${yield* encodeAgentObservationOwnerJson(request.owner)}`
   );
@@ -344,8 +353,9 @@ const checkEnrollmentSeparation = Effect.fnUntraced(function* (
       directory === existing ||
       Str.startsWith(`${directory}/`)(existing) ||
       Str.startsWith(`${existing}/`)(directory)
-    )
+    ) {
       return yield* failure("configuration");
+    }
   }
 });
 
@@ -356,8 +366,9 @@ const prepareEnrollmentParent = Effect.fnUntraced(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  if (!path.isAbsolute(directory) || path.normalize(directory) !== directory || directory === "/")
+  if (!path.isAbsolute(directory) || path.normalize(directory) !== directory || directory === "/") {
     return yield* failure("configuration");
+  }
   yield* checkEnrollmentSeparation(enrollment, directory);
   const parent = path.dirname(directory);
   const parentInfo = yield* fs.lstat(parent);
@@ -366,8 +377,9 @@ const prepareEnrollmentParent = Effect.fnUntraced(function* (
     (parentInfo.mode & 0o777) !== 0o700 ||
     !O.contains(parentInfo.uid, uid) ||
     (yield* fs.realPath(parent)) !== parent
-  )
+  ) {
     return yield* failure("configuration");
+  }
   return parent;
 });
 
@@ -391,14 +403,20 @@ export const enrollAgentObservation = Effect.fn("AgentObservation.enroll")(funct
   const enrollment = yield* prepareEnrollment(requestDirectory);
   const uid = currentOwnerUid();
   const claims = yield* makeObservationClaims(enrollment.claims, uid).pipe(Effect.mapError(() => failure("claim")));
-  if (A.some(yield* claims.snapshot, (claim) => claim.submission.fact.launchId === enrollment.submission.fact.launchId))
+  const snapshot1 = yield* claims.snapshot;
+  if (A.some(snapshot1, (claim) => claim.submission.fact.launchId === enrollment.submission.fact.launchId)) {
     return yield* failure("claim");
+  }
   yield* Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const parent = yield* prepareEnrollmentParent(enrollment, directory, uid);
-    const body = new TextEncoder().encode(yield* encodeAgentObservationEnrollmentJson(enrollment));
-    if (body.byteLength > 32768) return yield* failure("configuration");
+    const argument = new TextEncoder();
+    const encodedAgentObservationEnrollmentJson = yield* encodeAgentObservationEnrollmentJson(enrollment);
+    const body = argument.encode(encodedAgentObservationEnrollmentJson);
+    if (body.byteLength > 32768) {
+      return yield* failure("configuration");
+    }
     yield* fs.makeDirectory(directory, { mode: 0o700 });
     yield* Effect.scoped(
       Effect.gen(function* () {
@@ -411,16 +429,20 @@ export const enrollAgentObservation = Effect.fn("AgentObservation.enroll")(funct
         yield* file.sync;
       })
     );
-    for (const target of [directory, parent])
+    for (const target of [directory, parent]) {
       yield* Effect.scoped(
         Effect.gen(function* () {
           const handle = yield* fs.open(target, { flag: "r", noFollow: true });
           yield* handle.sync;
         })
       );
+    }
     // Re-read through the same owner/mode/descriptor checks used by serving.
-    if (!S.toEquivalence(AgentObservationEnrollment)(yield* readEnrollment(directory), enrollment))
+    const argument1 = S.toEquivalence(AgentObservationEnrollment);
+    const readEnrollment1 = yield* readEnrollment(directory);
+    if (!argument1(readEnrollment1, enrollment)) {
       return yield* failure("write");
+    }
   }).pipe(Effect.mapError(() => failure("write")));
   return provisioned(enrollment, "enroll");
 });
@@ -449,8 +471,9 @@ export const readAgentObservationPopulation = Effect.fn("AgentObservation.popula
   if (
     !S.toEquivalence(ObservationLaunchSubmission)(enrollment.submission, state.outbox.claim.submission) ||
     enrollment.claims.anchor.fenceId !== state.outbox.claim.fenceId
-  )
+  ) {
     return yield* failure("identity");
+  }
   return yield* readObservationClaimPopulation(
     enrollment.claims,
     ObservationClaimPopulationRequest.make(request),
@@ -509,13 +532,15 @@ export const recoverAgentObservation = Effect.fn("AgentObservation.recover")(fun
     submission.hostId !== destination.hostId ||
     submission.namespaceId !== destination.namespaceId ||
     policy.journalDirectory !== destination.directory
-  )
+  ) {
     return yield* failure("identity");
+  }
   const uid = currentOwnerUid();
   const claims = yield* makeObservationClaims(policy, uid).pipe(Effect.mapError(() => failure("claim")));
   const before = yield* claims.readOutbox(submission.fact.launchId).pipe(Effect.mapError(() => failure("claim")));
-  if (!S.toEquivalence(ObservationLaunchSubmission)(before.claim.submission, submission))
+  if (!S.toEquivalence(ObservationLaunchSubmission)(before.claim.submission, submission)) {
     return yield* failure("identity");
+  }
   if (operation === "reconcile") {
     yield* Effect.scoped(
       Effect.gen(function* () {
@@ -546,15 +571,18 @@ export const recoverAgentObservation = Effect.fn("AgentObservation.recover")(fun
  */
 export const openAgentMessageSession = Effect.fn("AgentObservation.open")(function* (request: AgentObservationRequest) {
   const sessions = yield* AiProviderCliSession;
-  if (O.isNone(request.enrollmentDirectory)) return yield* sessions.open(request.profile);
+  if (O.isNone(request.enrollmentDirectory)) {
+    return yield* sessions.open(request.profile);
+  }
   const enrollment = yield* readEnrollment(request.enrollmentDirectory.value);
   const fs = yield* FileSystem.FileSystem;
   const hash = yield* privateHasher;
   const canonicalWorkspace = yield* fs
     .realPath(request.profile.workspace)
     .pipe(Effect.mapError(() => failure("identity")));
-  if (request.owner.provider !== request.profile.provider || request.owner.workspace !== canonicalWorkspace)
+  if (request.owner.provider !== request.profile.provider || request.owner.workspace !== canonicalWorkspace) {
     return yield* failure("identity");
+  }
   const ownerBinding = yield* hash(
     `agent-message-observation-owner/v1:${yield* encodeAgentObservationOwnerJson(request.owner)}`
   );
@@ -574,8 +602,9 @@ export const openAgentMessageSession = Effect.fn("AgentObservation.open")(functi
     submission.hostId !== enrollment.claims.anchor.hostId ||
     submission.hostId !== enrollment.destination.hostId ||
     enrollment.claims.journalDirectory !== enrollment.destination.directory
-  )
+  ) {
     return yield* failure("identity");
+  }
   const uid = currentOwnerUid();
   const claims = yield* makeObservationClaims(enrollment.claims, uid).pipe(Effect.mapError(() => failure("claim")));
   const append = (fact: ObservationLaunchFact) =>
@@ -587,15 +616,18 @@ export const openAgentMessageSession = Effect.fn("AgentObservation.open")(functi
   const flush = Effect.gen(function* () {
     const client = yield* makeObservationLaunchClient(enrollment.destination, uid);
     yield* claims.reconcile(launchId, client.submit);
-    if (yield* Ref.getAndSet(transportFailed, false)) yield* Effect.logInfo("Agent observation delivery recovered.");
+    if (yield* Ref.getAndSet(transportFailed, false)) {
+      yield* Effect.logInfo("Agent observation delivery recovered.");
+    }
   }).pipe(
     Effect.scoped,
     Effect.catch(
       Effect.fnUntraced(function* () {
-        if (!(yield* Ref.getAndSet(transportFailed, true)))
+        if (!(yield* Ref.getAndSet(transportFailed, true))) {
           yield* Effect.logWarning(
             "Agent observation delivery unresolved; durable metadata retained for reconciliation."
           );
+        }
       })
     )
   );
@@ -634,7 +666,9 @@ export const openAgentMessageSession = Effect.fn("AgentObservation.open")(functi
             Exit.isFailure(exit)
               ? Effect.gen(function* () {
                   const observed = yield* Ref.get(child);
-                  if (O.isSome(observed) && (yield* observed.value.isRunning)) return yield* failure("cleanup");
+                  if (O.isSome(observed) && (yield* observed.value.isRunning)) {
+                    return yield* failure("cleanup");
+                  }
                   yield* append(ObservationLaunchFact.cases.Finished.make({ launchId, outcome: "unknown" }));
                 }).pipe(Effect.catch(() => Effect.logWarning("Agent observation closure unresolved; claim retained.")))
               : Effect.void
@@ -647,7 +681,9 @@ export const openAgentMessageSession = Effect.fn("AgentObservation.open")(functi
           yield* Fiber.interrupt(delivery);
           const running = yield* session.process.isRunning;
           const closed = yield* Effect.exit(session.close);
-          if (yield* session.process.isRunning) return yield* failure("cleanup");
+          if (yield* session.process.isRunning) {
+            return yield* failure("cleanup");
+          }
           const outcome = running
             ? Exit.isSuccess(closed)
               ? "cancelled"

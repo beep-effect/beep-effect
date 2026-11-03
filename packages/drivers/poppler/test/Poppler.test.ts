@@ -128,7 +128,8 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("Poppler rasterizer", (i
       const { pdfinfoPath, pdfPath } = yield* fixture({ pdfinfo: pdfinfoStub("Pages:          3") });
       const rasterizer = yield* makePopplerRasterizer(PopplerConfig.make({ pdfinfoPath }));
 
-      expect(yield* rasterizer.pageCount(pdfPath)).toBe(3);
+      const pageCount1 = yield* rasterizer.pageCount(pdfPath);
+      expect(pageCount1).toBe(3);
     })
   );
 

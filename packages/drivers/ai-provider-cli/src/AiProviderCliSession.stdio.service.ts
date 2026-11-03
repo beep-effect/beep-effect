@@ -120,8 +120,11 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
   const overflow = yield* Ref.make(false);
   const appendText = Effect.fn("ManagedSession.appendText")(function* (text: string) {
     const previous = yield* Ref.get(chunks);
-    if (Str.length(previous) + Str.length(text) > 1048576) yield* Ref.set(overflow, true);
-    else yield* Ref.set(chunks, Str.concat(text)(previous));
+    if (Str.length(previous) + Str.length(text) > 1048576) {
+      yield* Ref.set(overflow, true);
+    } else {
+      yield* Ref.set(chunks, Str.concat(text)(previous));
+    }
   });
   const closed = yield* Ref.make(false);
   const active = yield* Ref.make(O.none<Deferred.Deferred<string, ManagedSessionError>>());
@@ -156,47 +159,64 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
   yield* client.handleSessionUpdate(
     Effect.fnUntraced(function* (payload) {
       const text = S.decodeUnknownOption(AcpText)(payload);
-      if (O.isSome(text) && text.value.sessionId === sessionId) yield* appendText(text.value.update.content.text);
+      if (O.isSome(text) && text.value.sessionId === sessionId) {
+        yield* appendText(text.value.update.content.text);
+      }
       yield* publish("update", { sessionId });
     })
   );
   const bufferItem = Effect.fn("ManagedSession.bufferItem")(function* (item: CodexItem) {
     const buffered = yield* Ref.get(earlyItems);
-    if (A.length(buffered) >= 128) yield* Ref.set(overflow, true);
-    else yield* Ref.set(earlyItems, A.append(buffered, item));
+    if (A.length(buffered) >= 128) {
+      yield* Ref.set(overflow, true);
+    } else {
+      yield* Ref.set(earlyItems, A.append(buffered, item));
+    }
   });
   const receiveItem = Effect.fn("ManagedSession.receiveItem")(function* (item: CodexItem) {
-    if (item.threadId !== sessionId || O.isNone(yield* Ref.get(active))) return;
+    if (item.threadId !== sessionId || (yield* Effect.map(Ref.get(active), O.isNone))) return;
     const turn = yield* Ref.get(activeTurnId);
-    if (O.isNone(turn)) return yield* bufferItem(item);
-    if (turn.value === item.turnId) yield* appendText(item.item.text);
+    if (O.isNone(turn)) {
+      return yield* bufferItem(item);
+    }
+    if (turn.value === item.turnId) {
+      yield* appendText(item.item.text);
+    }
   });
   const bufferCompletion = Effect.fn("ManagedSession.bufferCompletion")(function* (
     complete: CodexComplete,
     pending: Deferred.Deferred<string, ManagedSessionError>
   ) {
     const buffered = yield* Ref.get(earlyComplete);
-    if (A.length(buffered) >= 128)
+    if (A.length(buffered) >= 128) {
       yield* Deferred.fail(
         pending,
         failure.make("prompt", "provider-failure", "Early completion buffer exceeded its bounded limit")
       );
-    else yield* Ref.set(earlyComplete, A.append(buffered, complete));
+    } else {
+      yield* Ref.set(earlyComplete, A.append(buffered, complete));
+    }
   });
   const receiveCompletion = Effect.fn("ManagedSession.receiveCompletion")(function* (complete: CodexComplete) {
     if (complete.threadId !== sessionId) return;
     const pending = yield* Ref.get(active);
     if (O.isNone(pending)) return;
     const turn = yield* Ref.get(activeTurnId);
-    if (O.isNone(turn)) return yield* bufferCompletion(complete, pending.value);
-    if (turn.value === complete.turn.id) yield* Deferred.succeed(pending.value, complete.turn.status);
+    if (O.isNone(turn)) {
+      return yield* bufferCompletion(complete, pending.value);
+    }
+    if (turn.value === complete.turn.id) {
+      yield* Deferred.succeed(pending.value, complete.turn.status);
+    }
   });
   yield* client.handleExtNotification(
     "item/completed",
     S.Unknown,
     Effect.fnUntraced(function* (payload) {
       const item = S.decodeUnknownOption(CodexItem)(payload);
-      if (O.isSome(item)) yield* receiveItem(item.value);
+      if (O.isSome(item)) {
+        yield* receiveItem(item.value);
+      }
       yield* publish("update", { sessionId });
     })
   );
@@ -205,7 +225,9 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
     S.Unknown,
     Effect.fnUntraced(function* (payload) {
       const complete = S.decodeUnknownOption(CodexComplete)(payload);
-      if (O.isSome(complete)) yield* receiveCompletion(complete.value);
+      if (O.isSome(complete)) {
+        yield* receiveCompletion(complete.value);
+      }
       yield* publish("update", { sessionId });
     })
   );
@@ -234,10 +256,11 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
         clientInfo: { name: "beep-managed-session", version: "1" },
       })
       .pipe(transportFailure("initialize"), deadline("initialize"));
-    if (profile.provider === "grok")
+    if (profile.provider === "grok") {
       yield* client.agent
         .authenticate({ methodId: "cached_token", _meta: { headless: true } })
         .pipe(transportFailure("authenticate"), deadline("authenticate"));
+    }
     const started = yield* client.agent
       .createSession({
         cwd: profile.workspace,
@@ -269,7 +292,9 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
     )
   );
   const prompt = Effect.fn("ManagedSession.prompt")(function* (message: ManagedSessionMessage) {
-    if (yield* Ref.get(closed)) return yield* failure.make("prompt", "closed", "Owned runtime is closed");
+    if (yield* Ref.get(closed)) {
+      return yield* failure.make("prompt", "closed", "Owned runtime is closed");
+    }
     yield* Ref.set(chunks, "");
     yield* Ref.set(overflow, false);
     yield* Ref.set(earlyItems, []);
@@ -278,10 +303,11 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
     yield* Ref.set(active, O.some(pending));
     const settledTurn = yield* Ref.make(O.none<string>());
     const executeTurn = Effect.gen(function* () {
-      if (profile.provider !== "codex")
+      if (profile.provider !== "codex") {
         return (yield* client.agent
           .prompt({ sessionId, prompt: [{ type: "text", text: message.text }] })
           .pipe(transportFailure("prompt"))).stopReason;
+      }
       if (yield* Ref.get(hasCompletedTurn)) {
         const resumed = yield* request("thread/resume", {
           threadId: sessionId,
@@ -297,8 +323,9 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
             failure.make("prompt", "policy-mismatch", "Codex policy readback failed before turn dispatch")
           )
         );
-        if (resumed.thread.id !== sessionId)
+        if (resumed.thread.id !== sessionId) {
           return yield* failure.make("prompt", "policy-mismatch", "Codex resumed a different session identity");
+        }
       }
       const started = yield* request("turn/start", {
         threadId: sessionId,
@@ -316,13 +343,15 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
       yield* Ref.set(activeTurnId, O.some(started.turn.id));
       yield* publish("update", { sessionId, turnId: started.turn.id });
       for (const item of yield* Ref.getAndSet(earlyItems, [])) {
-        if (item.turnId === started.turn.id) yield* appendText(item.item.text);
+        if (item.turnId === started.turn.id) {
+          yield* appendText(item.item.text);
+        }
       }
-      const completed = A.findFirst(
-        yield* Ref.getAndSet(earlyComplete, []),
-        (completion) => completion.turn.id === started.turn.id
-      );
-      if (O.isSome(completed)) yield* Deferred.succeed(pending, completed.value.turn.status);
+      const gotAndSet = yield* Ref.getAndSet(earlyComplete, []);
+      const completed = A.findFirst(gotAndSet, (completion) => completion.turn.id === started.turn.id);
+      if (O.isSome(completed)) {
+        yield* Deferred.succeed(pending, completed.value.turn.status);
+      }
       return yield* Deferred.await(pending);
     }).pipe(
       Effect.ensuring(Effect.all([Ref.set(active, O.none()), Ref.set(activeTurnId, O.none())], { discard: true })),
@@ -341,25 +370,29 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
     }
     yield* Ref.set(hasCompletedTurn, true);
     const text = yield* Ref.get(chunks);
-    if (yield* Ref.get(overflow))
+    if (yield* Ref.get(overflow)) {
       return yield* failure.make("prompt", "provider-failure", "Model response exceeded the 1 MiB collection bound");
+    }
     if (profile.provider === "cursor" && Str.startsWith("Upgrade your plan to continue")(Str.trim(text))) {
       yield* close.pipe(Effect.ignore);
       return yield* failure.make("prompt", "access-blocked", "Existing subscription denied model access");
     }
-    const terminalEvidence = S.decodeUnknownOption(ManagedTerminalEvidence)({
+    const argument = S.decodeUnknownOption(ManagedTerminalEvidence);
+    const got1 = yield* Ref.get(settledTurn);
+    const terminalEvidence = argument({
       adapter: profile.provider,
       sessionId,
       messageId: message.messageId,
-      turnId: O.getOrUndefined(yield* Ref.get(settledTurn)),
+      turnId: O.getOrUndefined(got1),
       outcome: "delivered",
       stopReason,
     });
     return ManagedTurnResult.make({ messageId: message.messageId, text, stopReason, terminalEvidence });
   });
   const cancel = Effect.gen(function* () {
-    if (profile.provider !== "codex")
+    if (profile.provider !== "codex") {
       return yield* client.agent.cancel({ sessionId }).pipe(transportFailure("cancel"), deadline("cancel"));
+    }
     const turn = yield* Ref.get(activeTurnId);
     if (O.isNone(turn)) return;
     yield* request("turn/interrupt", { threadId: sessionId, turnId: turn.value });
@@ -371,11 +404,12 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
         .pipe(transportFailure("close"), Effect.ensuring(logStderrExcerpt("close")(stderrTail)));
       yield* publish("closed", {});
       const pending = yield* Ref.get(active);
-      if (O.isSome(pending))
+      if (O.isSome(pending)) {
         yield* Deferred.fail(
           pending.value,
           failure.make("prompt", "closed", "Owned runtime closed before terminal receipt")
         );
+      }
     }
   });
   yield* Effect.addFinalizer(() => close.pipe(Effect.ignore));
@@ -384,24 +418,32 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
     identity,
     events: Stream.fromPubSub(events),
     prompt: Effect.fn("ManagedSession.submit")(function* (message: ManagedSessionMessage) {
-      if (O.isSome(yield* Ref.get(active))) yield* publish("deferred", { messageId: message.messageId });
+      const got = yield* Ref.get(active);
+      if (O.isSome(got)) {
+        yield* publish("deferred", { messageId: message.messageId });
+      }
       return yield* prompt(message).pipe(Semaphore.withPermits(lock, 1));
     }),
     cancel,
     steer: Effect.fn("ManagedSession.steer")(function* (steering: ManagedSessionSteering) {
-      if (yield* Ref.get(closed)) return yield* failure.make("steer", "closed", "Owned runtime is closed");
-      if (profile.provider !== "codex")
+      if (yield* Ref.get(closed)) {
+        return yield* failure.make("steer", "closed", "Owned runtime is closed");
+      }
+      if (profile.provider !== "codex") {
         return yield* failure.make("steer", "unsupported", "Active steering is not qualified for this provider");
+      }
       const turn = yield* Ref.get(activeTurnId);
-      if (O.isNone(turn) || turn.value !== steering.expectedTurnId)
+      if (O.isNone(turn) || turn.value !== steering.expectedTurnId) {
         return yield* failure.make("steer", "policy-mismatch", "Steering target is not the owned active turn");
+      }
       const response = yield* request("turn/steer", {
         threadId: sessionId,
         expectedTurnId: steering.expectedTurnId,
         input: [{ type: "text", text: steering.message.text, text_elements: [] }],
       }).pipe(Effect.flatMap(decodeSteeredTurn), transportFailure("steer"));
-      if (response.turnId !== steering.expectedTurnId)
+      if (response.turnId !== steering.expectedTurnId) {
         return yield* failure.make("steer", "policy-mismatch", "Provider steering response changed turn identity");
+      }
     }),
     close,
   };

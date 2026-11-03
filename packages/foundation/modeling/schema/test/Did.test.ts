@@ -34,11 +34,16 @@ describe("Did", () => {
   it.effect(
     "accepts W3C DID Core syntax examples",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeDid("did:example:123456789abcdefghi")).toBe("did:example:123456789abcdefghi");
-      expect(yield* decodeDid("did:plc:ewvi7nxzyoun6zhxrhs64oiz")).toBe("did:plc:ewvi7nxzyoun6zhxrhs64oiz");
-      expect(yield* decodeDid("did:web:example.com")).toBe("did:web:example.com");
-      expect(yield* decodeDid("did:example:abc%2Fdef")).toBe("did:example:abc%2Fdef");
-      expect(yield* decodeDid("did:example:abc:def")).toBe("did:example:abc:def");
+      const decodedDid = yield* decodeDid("did:example:123456789abcdefghi");
+      expect(decodedDid).toBe("did:example:123456789abcdefghi");
+      const decodedDid1 = yield* decodeDid("did:plc:ewvi7nxzyoun6zhxrhs64oiz");
+      expect(decodedDid1).toBe("did:plc:ewvi7nxzyoun6zhxrhs64oiz");
+      const decodedDid2 = yield* decodeDid("did:web:example.com");
+      expect(decodedDid2).toBe("did:web:example.com");
+      const decodedDid3 = yield* decodeDid("did:example:abc%2Fdef");
+      expect(decodedDid3).toBe("did:example:abc%2Fdef");
+      const decodedDid4 = yield* decodeDid("did:example:abc:def");
+      expect(decodedDid4).toBe("did:example:abc:def");
     })
   );
 

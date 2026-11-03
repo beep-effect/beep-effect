@@ -5,7 +5,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -214,8 +214,11 @@ describe("@beep/box conflict detail", () => {
       const error = B.BoxError.fromUnknown("uploads.uploadFile", sdkFailure(body));
       return [
         encodeBoxError(error).pipe(Result.getOrThrow),
-        JSON.stringify(error),
-        JSON.stringify(B.BoxError.toDiagnostic(error)),
+        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(error), identity),
+        Result.getOrThrowWith(
+          S.encodeUnknownResult(S.fromJsonString(S.Unknown))(B.BoxError.toDiagnostic(error)),
+          identity
+        ),
         String(error),
         error.message,
       ];

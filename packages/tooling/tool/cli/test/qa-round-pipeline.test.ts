@@ -173,7 +173,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
         Effect.fnUntraced(function* (cwd) {
           const path = yield* Path.Path;
           const qaRoot = path.join(cwd, ".beep", "qa");
-          expect(yield* resolveRound(qaRoot, O.some(3))).toBe(3);
+          const resolvedRound = yield* resolveRound(qaRoot, O.some(3));
+          expect(resolvedRound).toBe(3);
         })
       )
     );
@@ -182,7 +183,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
       withTempCwd(
         Effect.fnUntraced(function* (cwd) {
           const { qaRoot } = yield* prepareRound(cwd, 1);
-          expect(yield* resolveRound(qaRoot, O.none())).toBe(2);
+          const resolvedRound1 = yield* resolveRound(qaRoot, O.none());
+          expect(resolvedRound1).toBe(2);
         })
       )
     );
@@ -191,7 +193,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
       withTempCwd(
         Effect.fnUntraced(function* (cwd) {
           const { qaRoot } = yield* prepareRound(cwd, 1);
-          expect(yield* resolveExistingRound(qaRoot, O.none())).toBe(1);
+          const resolvedExistingRound = yield* resolveExistingRound(qaRoot, O.none());
+          expect(resolvedExistingRound).toBe(1);
         })
       )
     );
@@ -394,7 +397,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           expect(rendered).toContain("# QA round 1 — report");
           expect(rendered).toContain("method: `beacon`");
           // The command must persist exactly what it returned.
-          expect(yield* fs.readFileString(layout.reportPath)).toBe(rendered);
+          const readFileString2 = yield* fs.readFileString(layout.reportPath);
+          expect(readFileString2).toBe(rendered);
         })
       )
     );
@@ -435,7 +439,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const path = yield* Path.Path;
           const { layout } = yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText3 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText3);
 
           const inventory = yield* runQaJudgeIngest(
             cwd,
@@ -457,7 +462,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const path = yield* Path.Path;
           yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText4 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText4);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
 
           yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }));
@@ -496,7 +502,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
             const error = yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(
               Effect.flip
             );
-            const lines = A.filter(yield* TestConsole.logLines, P.isString);
+            const logLines5 = yield* TestConsole.logLines;
+            const lines = A.filter(logLines5, P.isString);
             return { error, lines };
           }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
 
@@ -604,8 +611,10 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
               "  missing artifact: frames/ghost.png\n" +
               "  missing event id: 412",
           });
-          expect(yield* fs.exists(inventoryPath)).toBe(false);
-          expect(yield* fs.exists(inventoryMarkdownPath)).toBe(false);
+          const exists6 = yield* fs.exists(inventoryPath);
+          expect(exists6).toBe(false);
+          const exists7 = yield* fs.exists(inventoryMarkdownPath);
+          expect(exists7).toBe(false);
         })
       )
     );
@@ -643,7 +652,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const transcript = path.join(cwd, "judge-stdout.txt");
           const inventoryPath = path.join(layout.root, "inventory.json");
           const inventoryMarkdownPath = path.join(layout.root, "inventory.md");
-          yield* fs.writeFileString(transcript, yield* inventoryText(2));
+          const inventoryText8 = yield* inventoryText(2);
+          yield* fs.writeFileString(transcript, inventoryText8);
 
           const error = yield* runQaJudgeIngest(
             cwd,
@@ -651,8 +661,10 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           ).pipe(Effect.flip);
 
           expect(error.message).toBe("qa judge-ingest was asked for round 1 but the inventory declares round 2.");
-          expect(yield* fs.exists(inventoryPath)).toBe(false);
-          expect(yield* fs.exists(inventoryMarkdownPath)).toBe(false);
+          const exists9 = yield* fs.exists(inventoryPath);
+          expect(exists9).toBe(false);
+          const exists10 = yield* fs.exists(inventoryMarkdownPath);
+          expect(exists10).toBe(false);
         })
       )
     );
@@ -724,7 +736,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           Effect.map((error) => error.message),
           Effect.option
         );
-        const lines = A.filter(yield* TestConsole.logLines, P.isString);
+        const logLines11 = yield* TestConsole.logLines;
+        const lines = A.filter(logLines11, P.isString);
         return { failure, lines };
       },
       Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -784,10 +797,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const inventoryPath = path.join(layout.root, "inventory.json");
 
           for (const testCase of lintCases) {
-            yield* fs.writeFileString(
-              inventoryPath,
-              yield* inventoryBody(1, testCase.cite.path, testCase.cite.eventIds)
-            );
+            const inventoryBody12 = yield* inventoryBody(1, testCase.cite.path, testCase.cite.eventIds);
+            yield* fs.writeFileString(inventoryPath, inventoryBody12);
             const { failure, lines } = yield* lintRound1(cwd);
             const { receipt } = yield* certificateOf(layout.root);
             const inventoryBytes = yield* fs.readFile(inventoryPath);
@@ -817,7 +828,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const lint = () =>
             runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(Effect.flip);
 
-          yield* fs.writeFileString(inventoryPath, yield* inventoryBody(2, "frames/a.png", [1]));
+          const inventoryBody13 = yield* inventoryBody(2, "frames/a.png", [1]);
+          yield* fs.writeFileString(inventoryPath, inventoryBody13);
           const copied = yield* lint();
           const afterRound = (yield* certificateOf(layout.root)).receipt;
 
@@ -857,7 +869,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const path = yield* Path.Path;
           const { layout } = yield* prepareRound(cwd, 1);
           yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(Effect.flip);
-          expect(yield* fs.exists(path.join(layout.root, GATE_CERTIFICATE_FILE))).toBe(false);
+          const exists14 = yield* fs.exists(path.join(layout.root, GATE_CERTIFICATE_FILE));
+          expect(exists14).toBe(false);
         })
       )
     );
@@ -884,9 +897,11 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
             message:
               "qa judge inventory for round 1 cites evidence the round cannot back up.\n  missing artifact: frames/ghost.png",
           });
-          expect(yield* fs.exists(certificatePath)).toBe(false);
+          const exists15 = yield* fs.exists(certificatePath);
+          expect(exists15).toBe(false);
 
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText16 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText16);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
           const { receipt } = yield* certificateOf(layout.root);
           const inventoryBytes = yield* fs.readFile(path.join(layout.root, "inventory.json"));
@@ -905,7 +920,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const path = yield* Path.Path;
           const { layout } = yield* prepareRound(cwd, 1);
           const inventoryPath = path.join(layout.root, "inventory.json");
-          yield* fs.writeFileString(inventoryPath, yield* inventoryBody(1, "frames/ghost.png", [1]));
+          const inventoryBody17 = yield* inventoryBody(1, "frames/ghost.png", [1]);
+          yield* fs.writeFileString(inventoryPath, inventoryBody17);
           yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(Effect.flip);
           const first = yield* certificateOf(layout.root);
           const plan = (ids: A.NonEmptyReadonlyArray<string>) =>
@@ -913,15 +929,18 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
               GateCertificateApplyPlan.make({ certificate, checkIds: A.map(ids, (id) => GateId.make(id)) })
             );
 
-          const applied = yield* applyQaJudgeCertificatePlan(yield* plan(["cited-artifact-exists"]), first.bytes);
-          const unknown = yield* applyQaJudgeCertificatePlan(yield* plan(["not-a-qa-gate"]), first.bytes);
+          const plan18 = yield* plan(["cited-artifact-exists"]);
+          const applied = yield* applyQaJudgeCertificatePlan(plan18, first.bytes);
+          const plan19 = yield* plan(["not-a-qa-gate"]);
+          const unknown = yield* applyQaJudgeCertificatePlan(plan19, first.bytes);
 
           // A changed receipt: the same run re-certified after the inventory was fixed.
           yield* fs.makeDirectory(path.join(layout.root, "frames"), { recursive: true });
           yield* fs.writeFileString(path.join(layout.root, "frames", "ghost.png"), "frame");
           yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }));
           const second = yield* certificateOf(layout.root);
-          const stale = yield* applyQaJudgeCertificatePlan(yield* plan(["cited-artifact-exists"]), second.bytes);
+          const plan20 = yield* plan(["cited-artifact-exists"]);
+          const stale = yield* applyQaJudgeCertificatePlan(plan20, second.bytes);
 
           expect(applied).toMatchObject({
             checks: [{ checkId: "cited-artifact-exists", outcome: "failed" }],
@@ -982,10 +1001,13 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
         const failure = yield* withFailingCertificateWrites(
           runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }))
         ).pipe(Effect.flip, Effect.option);
+        const errorLines21 = yield* TestConsole.errorLines;
+        const argument = A.filter(errorLines21, P.isString);
+        const logLines1 = yield* TestConsole.logLines;
         return {
-          errorLines: A.filter(yield* TestConsole.errorLines, P.isString),
+          errorLines: argument,
           failure,
-          lines: A.filter(yield* TestConsole.logLines, P.isString),
+          lines: A.filter(logLines1, P.isString),
         };
       },
       Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -1016,7 +1038,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           expect(errorLines).toEqual([
             `qa judge-lint warning: qa judge could not write ${GATE_CERTIFICATE_FILE} into ${layout.root}. The run's own failure is reported instead.`,
           ]);
-          expect(yield* fs.exists(path.join(layout.root, GATE_CERTIFICATE_FILE))).toBe(false);
+          const exists22 = yield* fs.exists(path.join(layout.root, GATE_CERTIFICATE_FILE));
+          expect(exists22).toBe(false);
         })
       )
     );
@@ -1052,10 +1075,13 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
             const error = yield* withFailingCertificateWrites(
               runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }))
             ).pipe(Effect.flip);
+            const errorLines23 = yield* TestConsole.errorLines;
+            const argument1 = A.filter(errorLines23, P.isString);
+            const logLines2 = yield* TestConsole.logLines;
             return {
               error,
-              errorLines: A.filter(yield* TestConsole.errorLines, P.isString),
-              lines: A.filter(yield* TestConsole.logLines, P.isString),
+              errorLines: argument1,
+              lines: A.filter(logLines2, P.isString),
             };
           }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
 
@@ -1086,13 +1112,15 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const path = yield* Path.Path;
           const { layout } = yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText24 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText24);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
           const priorCertificate = yield* fs.readFileString(path.join(layout.root, GATE_CERTIFICATE_FILE));
 
           const { errorLines, failure, lines } = yield* lintWithConsole(cwd);
           // The atomic writer leaves the certificate already on disk intact.
-          expect(yield* fs.readFileString(path.join(layout.root, GATE_CERTIFICATE_FILE))).toBe(priorCertificate);
+          const readFileString25 = yield* fs.readFileString(path.join(layout.root, GATE_CERTIFICATE_FILE));
+          expect(readFileString25).toBe(priorCertificate);
 
           assertSome(
             O.map(failure, (error) => error.message),
@@ -1117,7 +1145,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const path = yield* Path.Path;
           const { layout } = yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText26 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText26);
 
           const failed = yield* withFailingCertificateWrites(
             runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }))
@@ -1128,7 +1157,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
             message: `qa judge-ingest could not write into ${layout.root}; the previous inventory and gate certificate were restored.`,
           });
           for (const name of ["inventory.json", "inventory.md", GATE_CERTIFICATE_FILE]) {
-            expect(yield* fs.exists(path.join(layout.root, name)), name).toBe(false);
+            const exists27 = yield* fs.exists(path.join(layout.root, name));
+            expect(exists27, name).toBe(false);
           }
         })
       )
@@ -1142,7 +1172,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const { layout } = yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
           const names = ["inventory.json", "inventory.md", GATE_CERTIFICATE_FILE];
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText28 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText28);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
           const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
 
@@ -1176,7 +1207,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           });
           expect(after).toEqual(before);
           const receipt = yield* decodeCertificate(after[2] ?? "");
-          const digest = yield* sha256(yield* fs.readFile(path.join(layout.root, "inventory.json")));
+          const readFile29 = yield* fs.readFile(path.join(layout.root, "inventory.json"));
+          const digest = yield* sha256(readFile29);
           expect(receipt.subject).toEqual([
             EvidenceSubject.make({ digest: EvidenceDigest.make({ sha256: digest }), name: "inventory.json" }),
           ]);
@@ -1193,7 +1225,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const path = yield* Path.Path;
           const { layout } = yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText30 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText30);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
           yield* fs.remove(layout.eventsPath);
           yield* fs.makeDirectory(layout.eventsPath);
@@ -1201,9 +1234,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const error = yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(
             Effect.flip
           );
-          const receipt = yield* decodeCertificate(
-            yield* fs.readFileString(path.join(layout.root, GATE_CERTIFICATE_FILE))
-          );
+          const readFileString31 = yield* fs.readFileString(path.join(layout.root, GATE_CERTIFICATE_FILE));
+          const receipt = yield* decodeCertificate(readFileString31);
 
           expect(error).toMatchObject({
             _tag: "QaCommandError",
@@ -1228,7 +1260,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const path = yield* Path.Path;
           const { layout } = yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText32 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText32);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
           const names = ["inventory.json", "inventory.md", GATE_CERTIFICATE_FILE];
           const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
@@ -1259,9 +1292,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
             _tag: "QaCommandError",
             message: `qa judge-ingest could not write into ${layout.root}; the previous inventory and gate certificate were restored.`,
           });
-          expect(yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)))).toEqual(
-            before
-          );
+          const forEach33 = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+          expect(forEach33).toEqual(before);
         })
       )
     );
@@ -1274,7 +1306,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const { layout } = yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
           const names = ["inventory.json", "inventory.md", GATE_CERTIFICATE_FILE];
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText34 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText34);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
           const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
 
@@ -1304,9 +1337,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
             _tag: "QaCommandError",
             message: `qa judge-ingest could not write into ${layout.root}; no file was changed.`,
           });
-          expect(yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)))).toEqual(
-            before
-          );
+          const forEach35 = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+          expect(forEach35).toEqual(before);
         })
       )
     );
@@ -1319,7 +1351,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const { layout } = yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
           const names = ["inventory.json", "inventory.md", GATE_CERTIFICATE_FILE];
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText36 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText36);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
           const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
           const replacement = yield* encodeJson({
@@ -1381,7 +1414,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const path = yield* Path.Path;
           const { layout } = yield* prepareRound(cwd, 1);
           const transcript = path.join(cwd, "judge-stdout.txt");
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText37 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText37);
           const committedFirst = yield* Deferred.make<void>();
           const proceed = yield* Deferred.make<void>();
 
@@ -1409,11 +1443,11 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const exit = yield* Fiber.await(fiber);
 
           const inventoryBytes = yield* fs.readFile(path.join(layout.root, "inventory.json"));
-          const receipt = yield* decodeCertificate(
-            yield* fs.readFileString(path.join(layout.root, GATE_CERTIFICATE_FILE))
-          );
+          const readFileString38 = yield* fs.readFileString(path.join(layout.root, GATE_CERTIFICATE_FILE));
+          const receipt = yield* decodeCertificate(readFileString38);
           expect(Exit.hasInterrupts(exit)).toBe(true);
-          expect(yield* fs.exists(path.join(layout.root, "inventory.md"))).toBe(true);
+          const exists39 = yield* fs.exists(path.join(layout.root, "inventory.md"));
+          expect(exists39).toBe(true);
           expect(receipt.subject).toEqual([
             EvidenceSubject.make({
               digest: EvidenceDigest.make({ sha256: yield* sha256(inventoryBytes) }),
@@ -1434,22 +1468,26 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const certificatePath = path.join(layout.root, GATE_CERTIFICATE_FILE);
           const inventoryPath = path.join(layout.root, "inventory.json");
           const lint = () => runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }));
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText40 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText40);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
           yield* lint();
-          expect(yield* fs.exists(certificatePath)).toBe(true);
+          const exists41 = yield* fs.exists(certificatePath);
+          expect(exists41).toBe(true);
 
           yield* fs.remove(inventoryPath);
           const missing = yield* lint().pipe(Effect.flip);
           expect(missing.message).toContain("first.");
-          expect(yield* fs.exists(certificatePath)).toBe(false);
+          const exists42 = yield* fs.exists(certificatePath);
+          expect(exists42).toBe(false);
 
           // An unremovable stale certificate is reported on stderr; the missing-inventory error stays.
           yield* fs.writeFileString(certificatePath, "{}");
           const observed = yield* Effect.flatMap(FileSystem.FileSystem, (base) =>
             Effect.gen(function* () {
               const error = yield* lint().pipe(Effect.flip);
-              return { error, errorLines: A.filter(yield* TestConsole.errorLines, P.isString) };
+              const errorLines43 = yield* TestConsole.errorLines;
+              return { error, errorLines: A.filter(errorLines43, P.isString) };
             }).pipe(
               Effect.provideServiceEffect(Console.Console, TestConsole.make),
               Effect.provideService(
@@ -1490,7 +1528,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const transcript = path.join(cwd, "judge-stdout.txt");
           const certificatePath = path.join(layout.root, GATE_CERTIFICATE_FILE);
           const inventoryPath = path.join(layout.root, "inventory.json");
-          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          const inventoryText44 = yield* inventoryText(1);
+          yield* fs.writeFileString(transcript, inventoryText44);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
           const before = yield* fs.readFileString(certificatePath);
 
@@ -1520,7 +1559,8 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
             _tag: "QaCommandError",
             message: `qa judge-lint could not read ${inventoryPath}; run \`bun run beep qa judge-ingest --round 1 --from <file>\` first.`,
           });
-          expect(yield* fs.readFileString(certificatePath)).toBe(before);
+          const readFileString45 = yield* fs.readFileString(certificatePath);
+          expect(readFileString45).toBe(before);
         })
       )
     );

@@ -29,7 +29,8 @@ describe("@beep/qa-capture witness bundling", { concurrent: false }, () => {
             expect(script).toContain("pointercancel");
             expect(script).toContain("pointer-cancel");
             // The pass-through spy preserves native compilation and counts builds.
-            expect(yield* witness.script).toBe(script);
+            const script1 = yield* witness.script;
+            expect(script1).toBe(script);
             expect(build).toHaveBeenCalledTimes(1);
           }),
         20000
@@ -61,7 +62,8 @@ describe("@beep/qa-capture witness bundling", { concurrent: false }, () => {
             expect(script).toContain("pointercancel");
             expect(script).toContain("pointer-cancel");
             // The pass-through spy preserves native compilation and counts builds.
-            expect(yield* witness.script).toBe(script);
+            const script2 = yield* witness.script;
+            expect(script2).toBe(script);
             expect(build).toHaveBeenCalledTimes(1);
           }),
         20000
@@ -73,7 +75,8 @@ describe("@beep/qa-capture witness bundling", { concurrent: false }, () => {
     it.effect("serves a fixed script through the test layer", () =>
       Effect.gen(function* () {
         const witness = yield* Witness;
-        expect(yield* witness.script).toBe("(()=>{})();");
+        const script3 = yield* witness.script;
+        expect(script3).toBe("(()=>{})();");
       })
     );
   });

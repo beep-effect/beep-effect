@@ -12,13 +12,14 @@ import { Str } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   InMemoryFileSystemHost,
@@ -1100,7 +1101,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Stdio from "effect/Stdio"
 import * as Stream from "effect/Stream"
-import { rootCommand } from ${JSON.stringify(rootCommandModule)}
+import { rootCommand } from ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(rootCommandModule), identity)}
 const project = (command) => ({
   name: command.name,
   alias: command.alias ?? null,

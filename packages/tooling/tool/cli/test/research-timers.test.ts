@@ -81,7 +81,8 @@ const failureMessage = <E extends { readonly message: string }>(result: Result.R
 const fixture = Effect.fn("ResearchTimersTest.fixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const directory = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "research-timers-test-" }));
+  const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "research-timers-test-" });
+  const directory = yield* fs.realPath(madeTempDirectoryScoped);
   const home = path.join(directory, "home");
   yield* fs.makeDirectory(home, { recursive: true });
   const unitDir = path.join(home, ".config", "systemd", "user");
@@ -92,7 +93,9 @@ const fixture = Effect.fn("ResearchTimersTest.fixture")(function* () {
   });
   const readUnit = (fileName: string) => fs.readFileString(path.join(unitDir, fileName));
   const execLine = Effect.fn("ResearchTimersTest.execLine")(function* (fileName: string) {
-    return A.findFirst(Str.split("\n")(yield* readUnit(fileName)), Str.startsWith("ExecStart="));
+    const argument = Str.split("\n");
+    const readUnit1 = yield* readUnit(fileName);
+    return A.findFirst(argument(readUnit1), Str.startsWith("ExecStart="));
   });
   const unitsPresent = Effect.forEach(UNIT_FILES, (fileName) => fs.exists(path.join(unitDir, fileName)));
   return { fs, path, home, unitDir, touch, readUnit, execLine, unitsPresent };
@@ -111,17 +114,21 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         const standalone = path.join(home, ".bun", "bin", "bun");
         expect(SystemdBunCandidate.literals).toEqual([".local/share/mise/shims/bun", ".bun/bin/bun"]);
         // Neither candidate: the running executable is the fallback.
-        expect(yield* resolveSystemdBunPath(home)).toBe(process.execPath);
+        const resolvedSystemdBunPath = yield* resolveSystemdBunPath(home);
+        expect(resolvedSystemdBunPath).toBe(process.execPath);
         yield* Effect.forEach([shim, standalone], touch);
         // Both executable: the shim wins because it follows the repo's pinned Bun.
-        expect(yield* resolveSystemdBunPath(home)).toBe(shim);
+        const resolvedSystemdBunPath1 = yield* resolveSystemdBunPath(home);
+        expect(resolvedSystemdBunPath1).toBe(shim);
         // A leftover without execute permission is skipped, not pinned.
         yield* fs.chmod(shim, 0o644);
-        expect(yield* resolveSystemdBunPath(home)).toBe(standalone);
+        const resolvedSystemdBunPath2 = yield* resolveSystemdBunPath(home);
+        expect(resolvedSystemdBunPath2).toBe(standalone);
         // So is a directory sitting where the executable should be.
         yield* fs.remove(standalone);
         yield* fs.makeDirectory(standalone);
-        expect(yield* resolveSystemdBunPath(home)).toBe(process.execPath);
+        const resolvedSystemdBunPath3 = yield* resolveSystemdBunPath(home);
+        expect(resolvedSystemdBunPath3).toBe(process.execPath);
         // A candidate this user cannot even reach is skipped rather than failing
         // the install, so an uninstall is never blocked by the probe either.
         yield* fs.remove(standalone, { recursive: true });
@@ -163,8 +170,10 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
           "research install-timers: enabled beep-research-daily.timer (*-*-* 21:00:00), beep-research-repo-card.timer (Sun *-*-* 20:30:00).",
           `research install-timers: secrets load from ${home}/.config/beep-research/env when present.`,
         ]);
-        expect(yield* unitsPresent).toEqual([true, true, true, true]);
-        expect(yield* readUnit("beep-research-daily.service")).toBe(
+        const unitsPresent4 = yield* unitsPresent;
+        expect(unitsPresent4).toEqual([true, true, true, true]);
+        const readUnit5 = yield* readUnit("beep-research-daily.service");
+        expect(readUnit5).toBe(
           A.join(
             [
               "[Unit]",
@@ -182,7 +191,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
             "\n"
           )
         );
-        expect(yield* readUnit("beep-research-daily.timer")).toBe(
+        const readUnit6 = yield* readUnit("beep-research-daily.timer");
+        expect(readUnit6).toBe(
           A.join(
             [
               "[Unit]",
@@ -199,7 +209,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
             "\n"
           )
         );
-        expect(yield* readUnit("beep-research-repo-card.service")).toBe(
+        const readUnit7 = yield* readUnit("beep-research-repo-card.service");
+        expect(readUnit7).toBe(
           A.join(
             [
               "[Unit]",
@@ -217,7 +228,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
             "\n"
           )
         );
-        expect(yield* readUnit("beep-research-repo-card.timer")).toBe(
+        const readUnit8 = yield* readUnit("beep-research-repo-card.timer");
+        expect(readUnit8).toBe(
           A.join(
             [
               "[Unit]",
@@ -251,14 +263,10 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
           )
         );
         assertSuccess(defaulted.result, undefined);
-        assertSome(
-          yield* execLine("beep-research-daily.service"),
-          `ExecStart="${shim}" run beep research daily --commit`
-        );
-        assertSome(
-          yield* execLine("beep-research-repo-card.service"),
-          `ExecStart="${shim}" run beep research repo-card`
-        );
+        const execLine9 = yield* execLine("beep-research-daily.service");
+        assertSome(execLine9, `ExecStart="${shim}" run beep research daily --commit`);
+        const execLine10 = yield* execLine("beep-research-repo-card.service");
+        assertSome(execLine10, `ExecStart="${shim}" run beep research repo-card`);
         // An explicit --bun-path is pinned as given, with `~/` expanded against HOME.
         const pinned = yield* captureOutput(
           runResearchInstallTimers({ bunPath: O.some("~/tools/bun"), page: O.none(), uninstall: false }).pipe(
@@ -267,10 +275,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
           )
         );
         assertSuccess(pinned.result, undefined);
-        assertSome(
-          yield* execLine("beep-research-daily.service"),
-          `ExecStart="${path.join(home, "tools", "bun")}" run beep research daily --commit`
-        );
+        const execLine11 = yield* execLine("beep-research-daily.service");
+        assertSome(execLine11, `ExecStart="${path.join(home, "tools", "bun")}" run beep research daily --commit`);
       })
     );
 
@@ -299,10 +305,12 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         );
         assertSome(failureTag(refusedBun.result), "ResearchCommandError");
         expect(systemctlCalls(systemctl)).toEqual([]);
-        expect(yield* fs.exists(unitDir)).toBe(false);
+        const exists12 = yield* fs.exists(unitDir);
+        expect(exists12).toBe(false);
         // The refinement is the single home of that rule: spaces pass because the
         // Bun path is rendered quoted; the rest systemd would rewrite.
-        expect(yield* decodeUnitPath("/opt/bun 1/bin/bun")).toBe("/opt/bun 1/bin/bun");
+        const decodedUnitPath = yield* decodeUnitPath("/opt/bun 1/bin/bun");
+        expect(decodedUnitPath).toBe("/opt/bun 1/bin/bun");
         yield* Effect.forEach(["/opt/%h/bun", "/opt/$HOME/bun", "/opt\\bun", "/opt/bun\n", ""], (bad) =>
           Effect.map(Effect.flip(decodeUnitPath(bad)), (failure) => strictEqual(failure._tag, "SchemaError"))
         );
@@ -320,7 +328,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
           )
         );
         assertSuccess(installed.result, undefined);
-        expect(yield* unitsPresent).toEqual([true, true, true, true]);
+        const unitsPresent13 = yield* unitsPresent;
+        expect(unitsPresent13).toEqual([true, true, true, true]);
         // The install paths are never read on the way out, so none of them can
         // keep an installed unit from being removed.
         const removeSystemctl = scriptedSystemctl();
@@ -338,7 +347,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
           "systemctl --user disable --now beep-research-repo-card.timer",
           "systemctl --user daemon-reload",
         ]);
-        expect(yield* unitsPresent).toEqual([false, false, false, false]);
+        const unitsPresent14 = yield* unitsPresent;
+        expect(unitsPresent14).toEqual([false, false, false, false]);
         // Nothing installed is nothing to undo: a second uninstall still reloads cleanly.
         const again = yield* captureOutput(
           runResearchInstallTimers({ bunPath: O.none(), page: O.none(), uninstall: true }).pipe(
@@ -391,13 +401,12 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
             ).pipe(withSystemctl(systemctl), withHome(home));
           const installed = yield* runCommand(["--bun-path", "/usr/bin/bun", "--page", PAGE_ID]);
           assertSuccess(installed.result, undefined);
-          assertSome(
-            yield* execLine("beep-research-daily.service"),
-            `ExecStart="/usr/bin/bun" run beep research daily --commit --page ${PAGE_ID}`
-          );
+          const execLine15 = yield* execLine("beep-research-daily.service");
+          assertSome(execLine15, `ExecStart="/usr/bin/bun" run beep research daily --commit --page ${PAGE_ID}`);
           const removed = yield* runCommand(["--uninstall"]);
           assertSuccess(removed.result, undefined);
-          expect(yield* unitsPresent).toEqual([false, false, false, false]);
+          const unitsPresent16 = yield* unitsPresent;
+          expect(unitsPresent16).toEqual([false, false, false, false]);
           expect(systemctlCalls(systemctl)).toEqual([
             "systemctl --user daemon-reload",
             "systemctl --user enable --now beep-research-daily.timer",
@@ -455,11 +464,13 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         expect(systemdUserUnitDir(path, home)).toBe(unitDir);
         expect(pipe(path, systemdUserUnitDir(home))).toBe(unitDir);
         const options = { home, fileName: "test.service" };
-        assertNone(yield* readInstalledSystemdUnit(options));
+        const readInstalledSystemdUnit17 = yield* readInstalledSystemdUnit(options);
+        assertNone(readInstalledSystemdUnit17);
         yield* fs.makeDirectory(unitDir, { recursive: true });
         yield* fs.writeFileString(path.join(unitDir, options.fileName), "[Service]\nWorkingDirectory= /clone \n");
+        const readInstalledSystemdUnit18 = yield* readInstalledSystemdUnit(options);
         assertSome(
-          yield* readInstalledSystemdUnit(options),
+          readInstalledSystemdUnit18,
           SystemdInstalledUnit.make({
             fileName: options.fileName,
             directives: [SystemdUnitDirective.make({ key: "WorkingDirectory", value: "/clone" })],
@@ -486,9 +497,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
               }).pipe(withSystemctl(), withHome(home))
             );
             assertSuccess(installed.result, undefined);
-            expect(Str.split(yield* readUnit("beep-research-daily.service"), "\n")).toContain(
-              `WorkingDirectory=${root}`
-            );
+            const readUnit19 = yield* readUnit("beep-research-daily.service");
+            expect(Str.split(readUnit19, "\n")).toContain(`WorkingDirectory=${root}`);
           })
         );
       })
@@ -509,7 +519,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
           }).pipe(withSystemctl(), withHome(home))
         );
         assertSome(O.map(failureMessage(refused.result), Str.includes("is not an existing directory")), true);
-        expect(yield* fs.exists(unitDir)).toBe(false);
+        const exists20 = yield* fs.exists(unitDir);
+        expect(exists20).toBe(false);
       })
     );
 
@@ -528,7 +539,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         );
         assertSome(failureTag(refused.result), "ResearchCommandError");
         assertSome(O.map(failureMessage(refused.result), Str.includes("is not an existing directory")), true);
-        expect(yield* fs.exists(unitDir)).toBe(false);
+        const exists21 = yield* fs.exists(unitDir);
+        expect(exists21).toBe(false);
         expect(systemctlCalls(systemctl)).toEqual([]);
       })
     );
@@ -549,7 +561,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         );
         assertSome(failureTag(refused.result), "ResearchCommandError");
         assertSome(O.map(failureMessage(refused.result), Str.includes("install first")), true);
-        expect(yield* fs.exists(unitDir)).toBe(false);
+        const exists22 = yield* fs.exists(unitDir);
+        expect(exists22).toBe(false);
         expect(systemctlCalls(systemctl)).toEqual([]);
       })
     );
@@ -585,17 +598,15 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
               }).pipe(withSystemctl(), withHome(home))
             );
             assertSuccess(refreshed.result, undefined);
+            const execLine23 = yield* execLine("beep-research-daily.service");
             assertSome(
-              yield* execLine("beep-research-daily.service"),
+              execLine23,
               `ExecStart="${shim}" run beep research daily --commit --page ${O.getOrElse(page, () => PAGE_ID)}`
             );
-            assertSome(
-              yield* execLine("beep-research-repo-card.service"),
-              `ExecStart="${shim}" run beep research repo-card`
-            );
-            expect(Str.split(yield* readUnit("beep-research-daily.service"), "\n")).toContain(
-              `WorkingDirectory=${root}`
-            );
+            const execLine24 = yield* execLine("beep-research-repo-card.service");
+            assertSome(execLine24, `ExecStart="${shim}" run beep research repo-card`);
+            const readUnit25 = yield* readUnit("beep-research-daily.service");
+            expect(Str.split(readUnit25, "\n")).toContain(`WorkingDirectory=${root}`);
           })
         );
       })
@@ -620,12 +631,12 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
           yield* touch(shim);
           const refreshed = yield* runCommand(["install-timers", "--refresh"]);
           assertSuccess(refreshed.result, undefined);
-          expect(yield* unitsPresent).toEqual([true, true, true, true]);
-          assertSome(
-            yield* execLine("beep-research-daily.service"),
-            `ExecStart="${shim}" run beep research daily --commit`
-          );
-          expect(Str.split(yield* readUnit("beep-research-daily.service"), "\n")).toContain(`WorkingDirectory=${root}`);
+          const unitsPresent26 = yield* unitsPresent;
+          expect(unitsPresent26).toEqual([true, true, true, true]);
+          const execLine27 = yield* execLine("beep-research-daily.service");
+          assertSome(execLine27, `ExecStart="${shim}" run beep research daily --commit`);
+          const readUnit28 = yield* readUnit("beep-research-daily.service");
+          expect(Str.split(readUnit28, "\n")).toContain(`WorkingDirectory=${root}`);
           expect(systemctlCalls(systemctl)).toEqual(
             A.flatten(
               A.replicate(

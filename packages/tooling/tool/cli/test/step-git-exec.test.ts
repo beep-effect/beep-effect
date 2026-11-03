@@ -461,7 +461,9 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 second
               target: string,
               options: Parameters<FileSystem.FileSystem["makeDirectory"]>[1]
             ) {
-              expect(target).toBe(path.join(yield* Ref.get(root), "nested depth", "ünïcode", "level-3", "repo"));
+              const expectation1 = expect(target);
+              const got3 = yield* Ref.get(root);
+              expectation1.toBe(path.join(got3, "nested depth", "ünïcode", "level-3", "repo"));
               expect(options).toEqual({ recursive: true });
               yield* Ref.set(faulted, true);
               if (mode === "cleanup failure") {
@@ -469,7 +471,9 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 second
                 yield* fs.writeFileString(path.join(directory, "cleanup-witness"), "retained\n");
                 yield* fs.chmod(directory, 0o000);
               }
-              if (mode === "interruption") return yield* Effect.interrupt;
+              if (mode === "interruption") {
+                return yield* Effect.interrupt;
+              }
               return yield* failure;
             }),
           });
@@ -493,9 +497,11 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 second
           }
           const directory = yield* Ref.get(root);
           expect(directory).not.toBe("");
-          expect(yield* Ref.get(faulted)).toBe(true);
+          const got1 = yield* Ref.get(faulted);
+          expect(got1).toBe(true);
           if (mode === "cleanup failure") {
-            const error = O.getOrThrow(yield* Ref.get(removalError));
+            const got2 = yield* Ref.get(removalError);
+            const error = O.getOrThrow(got2);
             assertInstanceOf(error.reason, PlatformError.SystemError);
             expect(error.reason._tag).toBe("PermissionDenied");
             expect(error.reason.method).toBe("remove");
@@ -516,9 +522,11 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 second
             expect(() =>
               assertExitFailure(Exit.failCause(Cause.combine(expected, Cause.fail("extra failure"))), expected)
             ).toThrow();
-            expect(yield* fs.exists(directory)).toBe(true);
+            const exists3 = yield* fs.exists(directory);
+            expect(exists3).toBe(true);
           } else {
-            expect(yield* fs.exists(directory)).toBe(false);
+            const exists4 = yield* fs.exists(directory);
+            expect(exists4).toBe(false);
           }
         })
       );
@@ -656,14 +664,18 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 second
               return directory;
             }),
             realPath: Effect.fnUntraced(function* (target: string) {
-              expect(target).toBe(yield* Ref.get(root));
+              const expectation2 = expect(target);
+              const got4 = yield* Ref.get(root);
+              expectation2.toBe(got4);
               yield* Ref.set(faulted, true);
               if (mode === "cleanup failure") {
                 const directory = yield* Ref.get(root);
                 yield* fs.writeFileString(path.join(directory, "cleanup-witness"), "retained\n");
                 yield* fs.chmod(directory, 0o000);
               }
-              if (mode === "interruption") return yield* Effect.interrupt;
+              if (mode === "interruption") {
+                return yield* Effect.interrupt;
+              }
               return yield* failure;
             }),
           });
@@ -687,9 +699,11 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 second
           }
           const directory = yield* Ref.get(root);
           expect(directory).not.toBe("");
-          expect(yield* Ref.get(faulted)).toBe(true);
+          const got5 = yield* Ref.get(faulted);
+          expect(got5).toBe(true);
           if (mode === "cleanup failure") {
-            const error = O.getOrThrow(yield* Ref.get(removalError));
+            const got6 = yield* Ref.get(removalError);
+            const error = O.getOrThrow(got6);
             assertInstanceOf(error.reason, PlatformError.SystemError);
             expect(error.reason._tag).toBe("PermissionDenied");
             expect(error.reason.method).toBe("remove");
@@ -710,9 +724,11 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 second
             expect(() =>
               assertExitFailure(Exit.failCause(Cause.combine(expected, Cause.fail("extra failure"))), expected)
             ).toThrow();
-            expect(yield* fs.exists(directory)).toBe(true);
+            const exists7 = yield* fs.exists(directory);
+            expect(exists7).toBe(true);
           } else {
-            expect(yield* fs.exists(directory)).toBe(false);
+            const exists8 = yield* fs.exists(directory);
+            expect(exists8).toBe(false);
           }
         })
       );
@@ -864,39 +880,52 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout:
         runGit(repo, ["-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "c2"]);
         const c2 = runGit(repo, ["rev-parse", "HEAD"]);
 
-        expect(yield* resolveGitCommit(repo, "HEAD", adapter)).toBe(c2);
-        expect(yield* resolveGitCommit(repo, "nope", adapter).pipe(Effect.flip)).toEqual({
+        const resolvedGitCommit = yield* resolveGitCommit(repo, "HEAD", adapter);
+        expect(resolvedGitCommit).toBe(c2);
+        const pipe9 = yield* resolveGitCommit(repo, "nope", adapter).pipe(Effect.flip);
+        expect(pipe9).toEqual({
           exitCode: 128,
           output: `unknown ref 'nope' in ${repo}`,
         });
-        expect(yield* resolveGitMergeBase(repo, c1, c2, adapter)).toBe(c1);
+        const resolvedGitMergeBase = yield* resolveGitMergeBase(repo, c1, c2, adapter);
+        expect(resolvedGitMergeBase).toBe(c1);
 
         const tree = yield* readGitTree(repo, c2, adapter, malformed);
         expect(A.map(tree, (entry) => entry.path)).toEqual(["src/b with space.ts", "src/moved.ts"]);
         expect(A.every(tree, (entry) => entry.objectType === "blob" && entry.mode === "100644")).toBe(true);
         // A subdirectory cwd still lists the whole tree, as `--full-tree` did.
-        expect(yield* readGitTree(path.join(repo, "src"), c2, adapter, malformed)).toEqual(tree);
+        const readGitTree10 = yield* readGitTree(path.join(repo, "src"), c2, adapter, malformed);
+        expect(readGitTree10).toEqual(tree);
 
-        expect(yield* readGitRenames(repo, c1, c2, [], adapter, malformed)).toEqual([
+        const readGitRenames11 = yield* readGitRenames(repo, c1, c2, [], adapter, malformed);
+        expect(readGitRenames11).toEqual([
           GitRenameEntry.make({ sourcePath: "src/a.ts", targetPath: "src/moved.ts", score: S.Natural.make(100) }),
         ]);
-        expect(yield* readGitRenames(repo, c1, c2, ["docs/"], adapter, malformed)).toEqual([]);
+        const readGitRenames12 = yield* readGitRenames(repo, c1, c2, ["docs/"], adapter, malformed);
+        expect(readGitRenames12).toEqual([]);
 
         yield* fs.writeFileString(path.join(repo, "src/moved.ts"), "changed\n");
         yield* fs.writeFileString(path.join(repo, "src/b with space.ts"), "changed\n");
         runGit(repo, ["add", "src/moved.ts"]);
         yield* fs.writeFileString(path.join(repo, "untracked.txt"), "u\n");
-        expect(yield* collectStagedPaths(repo, adapter)).toEqual(["src/moved.ts"]);
-        expect(yield* collectUnstagedPaths(repo, adapter)).toEqual(["src/b with space.ts"]);
-        expect(yield* collectUntrackedPaths(repo, adapter)).toEqual(["untracked.txt"]);
+        const collectStagedPaths13 = yield* collectStagedPaths(repo, adapter);
+        expect(collectStagedPaths13).toEqual(["src/moved.ts"]);
+        const collectUnstagedPaths14 = yield* collectUnstagedPaths(repo, adapter);
+        expect(collectUnstagedPaths14).toEqual(["src/b with space.ts"]);
+        const collectUntrackedPaths15 = yield* collectUntrackedPaths(repo, adapter);
+        expect(collectUntrackedPaths15).toEqual(["untracked.txt"]);
 
-        expect(yield* currentBranch(repo, adapter)).toBe("main");
+        const currentBranch16 = yield* currentBranch(repo, adapter);
+        expect(currentBranch16).toBe("main");
         runGit(repo, ["checkout", "--quiet", "--detach", "HEAD"]);
-        expect(yield* currentBranch(repo, adapter, "abbrev-ref")).toBe("HEAD");
-        expect(yield* currentBranch(repo, adapter, "show-current")).toBe("");
+        const currentBranch17 = yield* currentBranch(repo, adapter, "abbrev-ref");
+        expect(currentBranch17).toBe("HEAD");
+        const currentBranch18 = yield* currentBranch(repo, adapter, "show-current");
+        expect(currentBranch18).toBe("");
 
         const outside = yield* fs.makeTempDirectoryScoped({ prefix: "beep-git-readers-outside-" });
-        expect(yield* collectUntrackedPaths(outside, adapter).pipe(Effect.flip)).toEqual({
+        const pipe19 = yield* collectUntrackedPaths(outside, adapter).pipe(Effect.flip);
+        expect(pipe19).toEqual({
           exitCode: 128,
           output: `not a git repository: ${outside}`,
         });

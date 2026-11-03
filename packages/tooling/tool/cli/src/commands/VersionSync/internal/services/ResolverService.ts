@@ -150,7 +150,8 @@ const resolveEffectCategory = Effect.fn(function* (repoRoot: string, options: Ve
     EffectCatalogState.make({})
   );
 
-  return buildEffectReport(yield* withEffectReleaseCommit(effectState, options.skipNetwork));
+  const withEffectReleaseCommit1 = yield* withEffectReleaseCommit(effectState, options.skipNetwork);
+  return buildEffectReport(withEffectReleaseCommit1);
 });
 
 const resolveTurboCategory = Effect.fn(function* (
@@ -175,7 +176,8 @@ const resolve: ResolverServiceShape["resolve"] = Effect.fn(function* (repoRoot, 
   let nodeLocations = A.empty<VersionSyncUpdateLocation>();
 
   if (categorySelection.shouldCheck(options, "bun")) {
-    categories = A.appendAll(categories, A.fromOption(yield* resolveBunCategory(repoRoot, options)));
+    const resolvedBunCategory = yield* resolveBunCategory(repoRoot, options);
+    categories = A.appendAll(categories, A.fromOption(resolvedBunCategory));
   }
 
   if (categorySelection.shouldCheck(options, "node")) {
@@ -185,27 +187,29 @@ const resolve: ResolverServiceShape["resolve"] = Effect.fn(function* (repoRoot, 
   }
 
   if (categorySelection.shouldCheck(options, "docker")) {
-    categories = A.append(categories, yield* resolveDockerCategory(repoRoot, options));
+    const resolvedDockerCategory = yield* resolveDockerCategory(repoRoot, options);
+    categories = A.append(categories, resolvedDockerCategory);
   }
 
   if (categorySelection.shouldCheck(options, "biome")) {
-    categories = A.appendAll(
-      categories,
-      A.fromOption(
-        yield* resolveBiomeCategory(repoRoot, resolveInstalledToolVersion(repoRoot, "@biomejs/biome", lockfileRead))
-      )
+    const resolvedBiomeCategory = yield* resolveBiomeCategory(
+      repoRoot,
+      resolveInstalledToolVersion(repoRoot, "@biomejs/biome", lockfileRead)
     );
+    categories = A.appendAll(categories, A.fromOption(resolvedBiomeCategory));
   }
 
   if (categorySelection.shouldCheck(options, "effect")) {
-    categories = A.append(categories, yield* resolveEffectCategory(repoRoot, options));
+    const resolvedEffectCategory = yield* resolveEffectCategory(repoRoot, options);
+    categories = A.append(categories, resolvedEffectCategory);
   }
 
   if (categorySelection.shouldCheck(options, "turbo")) {
-    categories = A.appendAll(
-      categories,
-      A.fromOption(yield* resolveTurboCategory(repoRoot, resolveInstalledToolVersion(repoRoot, "turbo", lockfileRead)))
+    const resolvedTurboCategory = yield* resolveTurboCategory(
+      repoRoot,
+      resolveInstalledToolVersion(repoRoot, "turbo", lockfileRead)
     );
+    categories = A.appendAll(categories, A.fromOption(resolvedTurboCategory));
   }
 
   const report = VersionSyncReport.make({

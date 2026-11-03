@@ -19,6 +19,7 @@ import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vi
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -232,11 +233,14 @@ describe("installArgs", () => {
 
 describe("unresolvedSpecifiers", () => {
   it("lists workspace: and catalog: specifiers in runtime maps only", () => {
-    const manifest = JSON.stringify({
-      dependencies: { "@x/lib": "workspace:^", ajv: "^8.0.0" },
-      peerDependencies: { effect: "catalog:effect:peers" },
-      devDependencies: { "@x/tool": "workspace:*" },
-    });
+    const manifest = Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        dependencies: { "@x/lib": "workspace:^", ajv: "^8.0.0" },
+        peerDependencies: { effect: "catalog:effect:peers" },
+        devDependencies: { "@x/tool": "workspace:*" },
+      }),
+      identity
+    );
     assert.deepStrictEqual(
       unresolvedSpecifiers(manifest),
       Result.succeed(["dependencies.@x/lib: workspace:^", "peerDependencies.effect: catalog:effect:peers"])
@@ -246,10 +250,13 @@ describe("unresolvedSpecifiers", () => {
   });
 
   it("also lists link: and relative file: specifiers, which name a path only the workspace has", () => {
-    const manifest = JSON.stringify({
-      dependencies: { a: "link:../a", b: "file:../b", c: "file:./c.tgz", d: "file:/abs/d.tgz", e: "^1.0.0" },
-      optionalDependencies: { f: "file:f" },
-    });
+    const manifest = Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        dependencies: { a: "link:../a", b: "file:../b", c: "file:./c.tgz", d: "file:/abs/d.tgz", e: "^1.0.0" },
+        optionalDependencies: { f: "file:f" },
+      }),
+      identity
+    );
     assert.deepStrictEqual(
       unresolvedSpecifiers(manifest),
       Result.succeed([
@@ -265,7 +272,12 @@ describe("unresolvedSpecifiers", () => {
 describe("readPackedManifest", () => {
   it("reads the name and the bin names: a bin object's keys, a bin string's unscoped package name", () => {
     const read = (manifest: unknown) =>
-      Result.map(readPackedManifest(JSON.stringify(manifest)), (m) => [m.name, m.bins]);
+      Result.map(
+        readPackedManifest(
+          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(manifest), identity)
+        ),
+        (m) => [m.name, m.bins]
+      );
     assert.deepStrictEqual(
       read({ name: "@x/tool", bin: { tool: "./a.js", "tool-mcp": "./b.js" } }),
       Result.succeed(["@x/tool", ["tool", "tool-mcp"]])
@@ -332,8 +344,11 @@ describe("fileOverridesOf", () => {
 
   it("skips __proto__ and keeps constructor and prototype as own entries of a prototype-free map", () => {
     // JSON.parse makes `__proto__` an own key, as a YAML parse of the workspace file can.
-    const document: unknown = JSON.parse(
-      '{"overrides":{"__proto__":"file:../evil","constructor":"file:../ctor","prototype":"file:../proto"}}'
+    const document: unknown = Result.getOrThrowWith(
+      S.decodeResult(S.fromJsonString(S.Unknown))(
+        '{"overrides":{"__proto__":"file:../evil","constructor":"file:../ctor","prototype":"file:../proto"}}'
+      ),
+      identity
     );
     const out = fileOverridesOf(document);
     assert.deepStrictEqual(R.toEntries(out), [
@@ -363,17 +378,31 @@ describe("overridePath", () => {
 
 describe("binTargetOf", () => {
   it("finds a bin object's entry, or a bin string under the unscoped package name", () => {
-    const object = JSON.stringify({ name: "@x/carrier", bin: { tool: "./dist/tool.js", "tool-mcp": "./dist/mcp.js" } });
+    const object = Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        name: "@x/carrier",
+        bin: { tool: "./dist/tool.js", "tool-mcp": "./dist/mcp.js" },
+      }),
+      identity
+    );
     assert.strictEqual(binTargetOf(object, "tool-mcp"), "./dist/mcp.js");
     assert.isUndefined(binTargetOf(object, "carrier"));
     assert.isUndefined(binTargetOf(object, "toString"), "an inherited key is no bin");
-    const string = JSON.stringify({ name: "@x/tool", bin: "./cli.js" });
+    const string = Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/tool", bin: "./cli.js" }),
+      identity
+    );
     assert.strictEqual(binTargetOf(string, "tool"), "./cli.js");
     assert.isUndefined(binTargetOf(string, "@x/tool"));
   });
 
   it("a manifest without a bin, or not a JSON object, declares none", () => {
-    assert.isUndefined(binTargetOf(JSON.stringify({ name: "x" }), "x"));
+    assert.isUndefined(
+      binTargetOf(
+        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "x" }), identity),
+        "x"
+      )
+    );
     assert.isUndefined(binTargetOf("[]", "x"));
     assert.isUndefined(binTargetOf("{ nope", "x"));
   });
@@ -384,7 +413,9 @@ it.effect.prop(
   [Arbitrary.schema(ConsumerInput)],
   ([value]) =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(ConsumerInput)(yield* S.encodeEffect(ConsumerInput)(value));
+      const argument = S.decodeEffect(ConsumerInput);
+      const value1 = yield* S.encodeEffect(ConsumerInput)(value);
+      const decoded = yield* argument(value1);
       assert.isTrue(S.toEquivalence(ConsumerInput)(decoded, value));
     }),
   { arbitrary: fcRuns(50) }

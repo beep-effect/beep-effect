@@ -310,6 +310,7 @@ export const validateCommitMessage = Effect.fn("Yeet.validateCommitMessage")(fun
  */
 export const validateProofJobDetach = Effect.fn("Yeet.validateProofJobDetach")(function* (plan: boolean) {
   if (plan) return yield* YeetCommandError.make({ message: "--detach cannot be combined with --plan." });
-  if (O.isSome(yield* configStringOption("BEEP_YEET_JOB_ID")))
+  const configStringOption1 = yield* configStringOption("BEEP_YEET_JOB_ID");
+  if (O.isSome(configStringOption1))
     return yield* YeetCommandError.make({ message: "Cannot recursively --detach inside a proof job." });
 });

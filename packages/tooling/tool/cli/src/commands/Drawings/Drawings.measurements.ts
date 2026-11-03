@@ -16,10 +16,12 @@
 
 import { MARGINS_CM } from "@beep/technical-drawing";
 import { A, O, Str } from "@beep/utils";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as Order from "effect/Order";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import {
   CriticEdgeClearance,
   CriticFigureMeasurements,
@@ -251,7 +253,7 @@ export const strokeTableMarkdown = (input: {
     const extremes =
       A.length(lengths) === 0
         ? ""
-        : `\nShortest strokes: ${JSON.stringify(A.take(lengths, 5))}; longest: ${JSON.stringify(A.takeRight(lengths, 3))}.\n`;
+        : `\nShortest strokes: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(A.take(lengths, 5)), identity)}; longest: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(A.takeRight(lengths, 3)), identity)}.\n`;
     return A.join(
       [
         `\n## FIG ${figure.figure} (${figure.view}) — ${A.length(rows)} shading strokes; coverage ${figure.coverage}\n`,

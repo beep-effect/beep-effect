@@ -858,7 +858,8 @@ const recordAndConfirmInherited = Effect.fn("Yeet.recordAndConfirmInherited")(fu
       );
   // Recording takes time; confirm the whole gate against the recorded head and
   // attributions before allowing the caller to flip.
-  const afterRecord = decideYeetReadyGate(yield* (dependencies.read ?? readPullRequestForReady)(context), inherited);
+  const value1 = yield* (dependencies.read ?? readPullRequestForReady)(context);
+  const afterRecord = decideYeetReadyGate(value1, inherited);
   if (
     afterRecord._tag !== "flip" ||
     !O.contains(afterRecord.headSha, headSha) ||
@@ -960,10 +961,8 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       // or a new thread can land in between, even on the same head, so take
       // the whole gate read again immediately before the flip and require the
       // same verdict on the same head.
-      const confirmation = decideYeetReadyGate(
-        yield* (dependencies.read ?? readPullRequestForReady)(context),
-        inherited
-      );
+      const value2 = yield* (dependencies.read ?? readPullRequestForReady)(context);
+      const confirmation = decideYeetReadyGate(value2, inherited);
       const sameHead = O.getOrElse(headSha, () => "unknown");
       if (confirmation._tag !== "flip" || !O.contains(confirmation.headSha, sameHead)) {
         const reason = YeetReadyGateDecision.match(confirmation, {
@@ -1003,15 +1002,14 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       ]);
       // The head was pushed while the pull request was a draft, which
       // beep-reviewer ignores; a failed re-request only warns, the flip stands.
-      yield* Console.log(
-        yield* (dependencies.requestReview ?? pushReviewerRequest)(context, prNumber, sameHead).pipe(
-          Effect.catchTag("YeetCommandError", (cause) =>
-            Effect.succeed(
-              `[yeet] warning: could not create the beep-reviewer re-request: ${cause.message}; ${reviewerRequestManual(sameHead, context.branch)}`
-            )
+      const pipe3 = yield* (dependencies.requestReview ?? pushReviewerRequest)(context, prNumber, sameHead).pipe(
+        Effect.catchTag("YeetCommandError", (cause) =>
+          Effect.succeed(
+            `[yeet] warning: could not create the beep-reviewer re-request: ${cause.message}; ${reviewerRequestManual(sameHead, context.branch)}`
           )
         )
       );
+      yield* Console.log(pipe3);
       if (A.isReadonlyArrayNonEmpty(applied)) {
         yield* Console.log(`[yeet] recorded ${A.length(applied)} inherited red(s) in the PR body`);
       }

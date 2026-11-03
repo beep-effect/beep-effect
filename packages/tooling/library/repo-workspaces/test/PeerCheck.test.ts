@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // PeerCheck, including the differential oracle against `pnpm peers check --json`.
 //
 // The oracle is COMMITTED, not shelled out to. This package forbids new local
@@ -70,7 +71,11 @@ interface Row {
 }
 
 const order = (rows: ReadonlyArray<Row>): ReadonlyArray<Row> =>
-  [...rows].sort((a, b) => Str.localeCompare(JSON.stringify(b))(JSON.stringify(a)));
+  [...rows].sort((a, b) =>
+    Str.localeCompare(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(b), identity))(
+      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(a), identity)
+    )
+  );
 
 const ours = (rows: ReadonlyArray<UnsatisfiedPeer>): ReadonlyArray<Row> =>
   order(
@@ -132,7 +137,8 @@ const theirs = (dir: string, file = "peers-check.json"): ReadonlyArray<Row> => {
 describe("PeerCheck.run", () => {
   it.effect("agrees with pnpm peers check on a workspace mixing all four verdicts", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("mixed"));
+      const parsed1 = yield* parse("mixed");
+      const report = PeerCheck.run(parsed1);
       assert.isTrue(report.supported);
       assert.deepStrictEqual(ours(report.unsatisfied), theirs("mixed"));
     })
@@ -140,7 +146,8 @@ describe("PeerCheck.run", () => {
 
   it.effect("agrees with pnpm peers check on unresolvable peers, transitive ones included", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("missing"));
+      const parsed2 = yield* parse("missing");
+      const report = PeerCheck.run(parsed2);
       assert.isTrue(report.supported);
       assert.deepStrictEqual(ours(report.unsatisfied), theirs("missing"));
     })
@@ -148,7 +155,8 @@ describe("PeerCheck.run", () => {
 
   it.effect("reports an unmet required peer with the version that actually resolved", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("mixed"));
+      const parsed3 = yield* parse("mixed");
+      const report = PeerCheck.run(parsed3);
       const row = O.getOrUndefined(
         A.findFirst(report.unsatisfied, (r) => r.importer === "packages/unmet" && r.dependency === "react")
       );
@@ -166,7 +174,8 @@ describe("PeerCheck.run", () => {
 
   it.effect("distinguishes an unmet OPTIONAL peer, and keeps it out of `required`", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("mixed"));
+      const parsed4 = yield* parse("mixed");
+      const report = PeerCheck.run(parsed4);
       const row = O.getOrUndefined(
         A.findFirst(report.unsatisfied, (r) => r.importer === "packages/optional" && r.dependency === "redux")
       );
@@ -193,7 +202,8 @@ describe("PeerCheck.run", () => {
       // package) rather than emitting one row per parent chain. The oracle is
       // the decision here, not our preference, and this fixture exists because
       // no other one has two chains to a single peer-declaring package.
-      const report = PeerCheck.run(yield* parse("diamond"));
+      const parsed5 = yield* parse("diamond");
+      const report = PeerCheck.run(parsed5);
       assert.isTrue(report.supported);
       assert.deepStrictEqual(ours(report.unsatisfied), theirs("diamond"));
 
@@ -225,7 +235,8 @@ describe("PeerCheck.run", () => {
 
   it.effect("reports `found: null` for a peer nothing resolved, with no extra discriminant", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("missing"));
+      const parsed6 = yield* parse("missing");
+      const report = PeerCheck.run(parsed6);
       const rows = A.filter(report.unsatisfied, (r) => r.dependency === "react");
 
       assert.strictEqual(rows.length, 3);
@@ -243,7 +254,8 @@ describe("PeerCheck.run", () => {
 
   it.effect("finds nothing for a satisfied importer, and says so as a verdict", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("mixed"));
+      const parsed7 = yield* parse("mixed");
+      const report = PeerCheck.run(parsed7);
       assert.isUndefined(O.getOrUndefined(A.findFirst(report.unsatisfied, (r) => r.importer === "packages/ok")));
       // pnpm resolves peers from the workspace root, so this importer's
       // react-dom is satisfied by a SIBLING's react. A checker reasoning over
@@ -261,7 +273,8 @@ describe("PeerCheck.run", () => {
       // the only fixture that exercises that join productively — and it is
       // the common case, not an edge case: this repository's own lockfile has
       // a root importer with real dependencies.
-      const report = PeerCheck.run(yield* parse("rootimporter"));
+      const parsed8 = yield* parse("rootimporter");
+      const report = PeerCheck.run(parsed8);
       assert.isTrue(report.supported);
       assert.deepStrictEqual(report.unresolvedImporters, []);
       assert.deepStrictEqual(ours(report.unsatisfied), theirs("rootimporter"));
@@ -280,7 +293,8 @@ describe("PeerCheck.run", () => {
       // says so through its peer suffix. Joining on name+version alone cannot
       // tell them apart, and skipping would silently drop a real unmet peer —
       // which is what the oracle comparison above would then catch.
-      const report = PeerCheck.run(yield* parse("rootimporter"));
+      const parsed9 = yield* parse("rootimporter");
+      const report = PeerCheck.run(parsed9);
       const row = O.getOrUndefined(
         A.findFirst(report.unsatisfied, (r) => r.importer === "." && r.dependency === "react")
       );
@@ -301,7 +315,8 @@ describe("PeerCheck.run", () => {
       // was taken. Guessing the first would attribute one variant's unmet peer
       // to an importer that may have resolved the other — a fabricated finding,
       // which is worse than a missing one.
-      const report = PeerCheck.run(yield* parse("ambiguous"));
+      const parsed10 = yield* parse("ambiguous");
+      const report = PeerCheck.run(parsed10);
 
       assert.isUndefined(O.getOrUndefined(A.findFirst(report.unsatisfied, (r) => r.importer === ".")));
       // The importer still counts as resolvable — its react joined fine — so
@@ -317,8 +332,10 @@ describe("PeerCheck.run", () => {
       // The same workspace shape written by three managers. If any per-format
       // knowledge had leaked into PeerCheck, these two would not agree with
       // the pnpm verdict on the equivalent tree.
-      const npm = PeerCheck.run(yield* Lockfile.parse(fixture("peers/npm/package-lock.json"), { format: "npm" }));
-      const bun = PeerCheck.run(yield* Lockfile.parse(fixture("peers/bun/bun.lock"), { format: "bun" }));
+      const parsed11 = yield* Lockfile.parse(fixture("peers/npm/package-lock.json"), { format: "npm" });
+      const npm = PeerCheck.run(parsed11);
+      const parsed12 = yield* Lockfile.parse(fixture("peers/bun/bun.lock"), { format: "bun" });
+      const bun = PeerCheck.run(parsed12);
 
       for (const [name, report] of [
         ["npm", npm],
@@ -350,14 +367,17 @@ describe("PeerCheck.run", () => {
       // importer cannot be joined to instances. It is REPORTED, because a gate
       // that sees no rows for an importer is entitled to know whether that
       // means "clean" or "not looked at".
-      const npm = PeerCheck.run(yield* Lockfile.parse(fixture("peers/npm-root/package-lock.json"), { format: "npm" }));
+      const parsed13 = yield* Lockfile.parse(fixture("peers/npm-root/package-lock.json"), { format: "npm" });
+      const npm = PeerCheck.run(parsed13);
       assert.include(npm.unresolvedImporters, ".");
       // pnpm records the version, so it has no unresolvable importers.
-      const pnpm = PeerCheck.run(yield* parse("mixed"));
+      const parsed14 = yield* parse("mixed");
+      const pnpm = PeerCheck.run(parsed14);
       assert.deepStrictEqual(pnpm.unresolvedImporters, []);
       // A root with NO dependencies is legitimately clean, not unresolvable —
       // there is nothing to fail to resolve.
-      const rootless = PeerCheck.run(yield* Lockfile.parse(fixture("peers/npm/package-lock.json"), { format: "npm" }));
+      const parsed15 = yield* Lockfile.parse(fixture("peers/npm/package-lock.json"), { format: "npm" });
+      const rootless = PeerCheck.run(parsed15);
       assert.deepStrictEqual(rootless.unresolvedImporters, []);
     })
   );
@@ -368,7 +388,8 @@ describe("PeerCheck.run", () => {
       // not record them at all, and `pnpm peers check` does not report them
       // either. So this row exists under npm and has no pnpm counterpart —
       // a capability difference, not a disagreement.
-      const npm = PeerCheck.run(yield* Lockfile.parse(fixture("peers/npm/package-lock.json"), { format: "npm" }));
+      const parsed16 = yield* Lockfile.parse(fixture("peers/npm/package-lock.json"), { format: "npm" });
+      const npm = PeerCheck.run(parsed16);
       const own = O.getOrUndefined(
         A.findFirst(npm.required, (r) => r.importer === "packages/lib" && r.dependency === "react")
       );
@@ -409,7 +430,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
   it.effect("omitting the option always reports peerRulesNotApplied", () =>
     Effect.gen(function* () {
       // "Nobody looked" — the report may contain rows pnpm would suppress.
-      const report = PeerCheck.run(yield* parse("mixed"));
+      const parsed17 = yield* parse("mixed");
+      const report = PeerCheck.run(parsed17);
       assert.include(report.unverified, "peerRulesNotApplied");
     })
   );
@@ -419,10 +441,12 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // "I looked, and this workspace has none" — a different fact from the
       // test above, and it must produce a different result or a gate cannot
       // tell clean from unchecked.
-      const report = PeerCheck.run(yield* parse("mixed"), { peerDependencyRules: NoPeerDependencyRules });
+      const parsed18 = yield* parse("mixed");
+      const report = PeerCheck.run(parsed18, { peerDependencyRules: NoPeerDependencyRules });
       assert.notInclude(report.unverified, "peerRulesNotApplied");
       // The rows themselves are unchanged; only the verification state moves.
-      assert.strictEqual(report.required.length, PeerCheck.run(yield* parse("mixed")).required.length);
+      const parsed19 = yield* parse("mixed");
+      assert.strictEqual(report.required.length, PeerCheck.run(parsed19).required.length);
     })
   );
 
@@ -430,7 +454,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
     Effect.gen(function* () {
       // The overwhelmingly common shape — real `allowedVersions`, both list
       // axes empty — is fully applied and verified.
-      const report = PeerCheck.run(yield* parse("mixed"), {
+      const parsed20 = yield* parse("mixed");
+      const report = PeerCheck.run(parsed20, {
         peerDependencyRules: rules({ "react-dom>react": "17.0.2" }),
       });
       assert.notInclude(report.unverified, "peerRulesNotApplied");
@@ -439,14 +464,16 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("a rule suppresses the row pnpm suppresses", () =>
     Effect.gen(function* () {
-      const before = PeerCheck.run(yield* parse("mixed"), { peerDependencyRules: NoPeerDependencyRules });
+      const parsed21 = yield* parse("mixed");
+      const before = PeerCheck.run(parsed21, { peerDependencyRules: NoPeerDependencyRules });
       assert.isDefined(
         O.getOrUndefined(
           A.findFirst(before.required, (r) => r.importer === "packages/unmet" && r.dependency === "react")
         )
       );
 
-      const after = PeerCheck.run(yield* parse("mixed"), {
+      const parsed22 = yield* parse("mixed");
+      const after = PeerCheck.run(parsed22, {
         peerDependencyRules: rules({ "react-dom@18.3.1>react": "17.0.2" }),
       });
       assert.isUndefined(
@@ -463,7 +490,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // while the instance is 18.3.1. pnpm ignores the parent version, so
       // matching on it would suppress a strictly smaller set than pnpm does
       // and every row in the difference is a false positive.
-      const report = PeerCheck.run(yield* parse("mixed"), {
+      const parsed23 = yield* parse("mixed");
+      const report = PeerCheck.run(parsed23, {
         peerDependencyRules: rules({ "react-dom@99.0.0>react": "17.0.2" }),
       });
       assert.isUndefined(
@@ -480,7 +508,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // versioned keys into pnpm-workspace.yaml, a config-dependency plugin
       // injects unversioned ones. A matcher that only ever strips a version
       // passes the versioned test and fails this one.
-      const report = PeerCheck.run(yield* parse("mixed"), {
+      const parsed24 = yield* parse("mixed");
+      const report = PeerCheck.run(parsed24, {
         peerDependencyRules: rules({ "react-dom>react": "17.0.2" }),
       });
       assert.isUndefined(
@@ -496,7 +525,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // Wrong in exactly one way against the suppressing case: same peer, same
       // permitted version, different parent. Ignoring the parent version must
       // not become ignoring the parent.
-      const report = PeerCheck.run(yield* parse("mixed"), {
+      const parsed25 = yield* parse("mixed");
+      const report = PeerCheck.run(parsed25, {
         peerDependencyRules: rules({ "something-else@1.0.0>react": "17.0.2" }),
       });
       assert.isDefined(
@@ -509,7 +539,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("a rule permitting a DIFFERENT version leaves the row alone", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("mixed"), {
+      const parsed26 = yield* parse("mixed");
+      const report = PeerCheck.run(parsed26, {
         peerDependencyRules: rules({ "react-dom>react": "16.0.0" }),
       });
       assert.isDefined(
@@ -529,7 +560,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // nothing else, `pnpm peers check --json` reports it clean — the oracle
       // beside the lockfile IS that run. Skipping bare keys reports a row pnpm
       // suppresses while `rulesApplied` claims the policy was applied.
-      const report = PeerCheck.run(yield* parse("barerule"), {
+      const parsed27 = yield* parse("barerule");
+      const report = PeerCheck.run(parsed27, {
         peerDependencyRules: rules({ react: "17" }),
       });
       assert.isUndefined(O.getOrUndefined(A.findFirst(report.required, (r) => r.dependency === "react")));
@@ -545,7 +577,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // oracle is a SECOND pnpm run over the same workspace with `react: "16"`,
       // and pnpm reports the row — so "bare keys suppress unconditionally"
       // fails here while passing above.
-      const report = PeerCheck.run(yield* parse("barerule"), {
+      const parsed28 = yield* parse("barerule");
+      const report = PeerCheck.run(parsed28, {
         peerDependencyRules: rules({ react: "16" }),
       });
       assert.isDefined(O.getOrUndefined(A.findFirst(report.required, (r) => r.dependency === "react")));
@@ -558,7 +591,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // Wrong in the other single way: a permitting range, but the key names a
       // peer this row is not about. Matching bare keys must not become
       // matching every bare key.
-      const report = PeerCheck.run(yield* parse("barerule"), {
+      const parsed29 = yield* parse("barerule");
+      const report = PeerCheck.run(parsed29, {
         peerDependencyRules: rules({ redux: "17" }),
       });
       assert.isDefined(O.getOrUndefined(A.findFirst(report.required, (r) => r.dependency === "react")));
@@ -570,7 +604,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // `">react"` is neither spelling: a separator with an empty parent. It
       // is malformed, and a malformed rule must not degrade into the bare-key
       // case, which would silently widen suppression past what pnpm does.
-      const report = PeerCheck.run(yield* parse("barerule"), {
+      const parsed30 = yield* parse("barerule");
+      const report = PeerCheck.run(parsed30, {
         peerDependencyRules: rules({ ">react": "17" }),
       });
       assert.isDefined(O.getOrUndefined(A.findFirst(report.required, (r) => r.dependency === "react")));
@@ -585,7 +620,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // test pins the declining half ONLY — the name deliberately stops there,
       // because a name that also claimed the `unverified` half would outlive
       // the test below and go on advertising coverage nothing checks.
-      const report = PeerCheck.run(yield* parse("unnameable"), {
+      const parsed31 = yield* parse("unnameable");
+      const report = PeerCheck.run(parsed31, {
         peerDependencyRules: NoPeerDependencyRules,
       });
       assert.isUndefined(O.getOrUndefined(A.findFirst(report.required, (r) => r.dependency === "react")));
@@ -602,7 +638,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // row without saying why would turn a false positive into a false
       // negative. Two rules, two assertions — a single test asserting both
       // would go red for either, pinning neither.
-      const report = PeerCheck.run(yield* parse("unnameable"), {
+      const parsed32 = yield* parse("unnameable");
+      const report = PeerCheck.run(parsed32, {
         peerDependencyRules: NoPeerDependencyRules,
       });
       assert.include(report.unverified, "unresolvedEdge");
@@ -619,7 +656,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // whose peers are empty by design, so it declines to fabricate the row
       // and fails the report closed instead of presenting the silence as a
       // clean, verified bill of health.
-      const report = PeerCheck.run(yield* parse("linkdeep"), {
+      const parsed33 = yield* parse("linkdeep");
+      const report = PeerCheck.run(parsed33, {
         peerDependencyRules: NoPeerDependencyRules,
       });
       assert.isTrue(report.supported);
@@ -649,7 +687,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // Omitting the rules yields peerRulesNotApplied on every lockfile; the
       // link: marker must STILL be there too, or a gate that supplies rules
       // later would read the same tree as verified. Both reasons, one report.
-      const report = PeerCheck.run(yield* parse("linkdeep"));
+      const parsed34 = yield* parse("linkdeep");
+      const report = PeerCheck.run(parsed34);
       assert.include(report.unverified, "peerRulesNotApplied");
       assert.include(report.unverified, "unresolvedEdge");
     })
@@ -661,7 +700,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
   // run over the probe workspace, committed verbatim beside its lockfile.
   it.effect("joins a supplied linked parent's manifest peers, clearing the marker it replaced", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep"), {
+      const parsed35 = yield* parse("linkdeep");
+      const report = PeerCheck.run(parsed35, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA()],
       });
@@ -681,7 +721,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // edge: the target's manifest is still invisible, so the report
       // keeps saying so. Supplying the key is the assertion — its
       // CONTENTS are what decides which edges it answers for.
-      const report = PeerCheck.run(yield* parse("linkdeep"), {
+      const parsed36 = yield* parse("linkdeep");
+      const report = PeerCheck.run(parsed36, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA({ relativePath: "packages/elsewhere" })],
       });
@@ -699,7 +740,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // - `linkdeep-provided/`: react@18.3.1 as the CONSUMER's own
       //   dependency satisfies the linked parent's `^18.0.0` peer. pnpm
       //   reports the importer clean, and so must we.
-      const provided = PeerCheck.run(yield* parse("linkdeep-provided"), {
+      const parsed37 = yield* parse("linkdeep-provided");
+      const provided = PeerCheck.run(parsed37, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA()],
       });
@@ -711,7 +753,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       //   workspace-wide name lookup would have manufactured a clean
       //   report here — the false-negative shape this check exists to
       //   avoid.
-      const sibling = PeerCheck.run(yield* parse("linkdeep-sibling"), {
+      const parsed38 = yield* parse("linkdeep-sibling");
+      const sibling = PeerCheck.run(parsed38, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA()],
       });
@@ -720,7 +763,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
       // - `linkdeep-bad/`: the consumer's own react@17.0.2 is outside the
       //   range, which is a `bad` row carrying the version that resolved.
-      const bad = PeerCheck.run(yield* parse("linkdeep-bad"), {
+      const parsed39 = yield* parse("linkdeep-bad");
+      const bad = PeerCheck.run(parsed39, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA()],
       });
@@ -736,7 +780,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // it and the report becomes verified — pnpm calls this workspace
       // clean, and now so do we, for a reason (the manifest was read)
       // rather than by declining to look.
-      const report = PeerCheck.run(yield* parse("workspacepeer"), {
+      const parsed40 = yield* parse("workspacepeer");
+      const report = PeerCheck.run(parsed40, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [
           probeA({ name: "react", version: "18.3.1", relativePath: "packages/fakereact", peerDependencies: {} }),
@@ -755,7 +800,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
   // root depending on `probe-a: workspace:*` (README, `linkdeep-root/`).
   it.effect("walks a ROOT importer's covered link: target and agrees with pnpm", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep-root"), {
+      const parsed41 = yield* parse("linkdeep-root");
+      const report = PeerCheck.run(parsed41, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA()],
       });
@@ -770,7 +816,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
     Effect.gen(function* () {
       // The root's own react@17.0.2 is the provider pnpm judges against, so
       // the row is `bad` with that version rather than `missing`.
-      const report = PeerCheck.run(yield* parse("linkdeep-root-bad"), {
+      const parsed42 = yield* parse("linkdeep-root-bad");
+      const report = PeerCheck.run(parsed42, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA()],
       });
@@ -782,7 +829,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("keeps the marker for a ROOT importer's link: target the supplied set does not cover", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep-root"), {
+      const parsed43 = yield* parse("linkdeep-root");
+      const report = PeerCheck.run(parsed43, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA({ relativePath: "packages/elsewhere" })],
       });
@@ -872,7 +920,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
   // links the package root). Every savvy-web monorepo links this way.
   it.effect("covers a link: into a publish directory, and agrees with pnpm", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep-directory"), {
+      const parsed44 = yield* parse("linkdeep-directory");
+      const report = PeerCheck.run(parsed44, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA({ publishConfig: PublishConfig.make({ directory: "dist" }) })],
       });
@@ -884,7 +933,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("normalizes the publish directory spelling, and honours an explicit linkDirectory: true", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep-directory"), {
+      const parsed45 = yield* parse("linkdeep-directory");
+      const report = PeerCheck.run(parsed45, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [
           probeA({ publishConfig: PublishConfig.make({ directory: "./dist/", linkDirectory: true }) }),
@@ -897,7 +947,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("keeps the marker for a publish-directory link: when the manifests are omitted", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep-directory"), {
+      const parsed46 = yield* parse("linkdeep-directory");
+      const report = PeerCheck.run(parsed46, {
         peerDependencyRules: NoPeerDependencyRules,
       });
       assert.deepStrictEqual(report.unsatisfied, []);
@@ -909,7 +960,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
     Effect.gen(function* () {
       // The manifest disagrees with the lockfile about where the link
       // lands, so the supplied manifest does not describe this edge.
-      const report = PeerCheck.run(yield* parse("linkdeep-directory"), {
+      const parsed47 = yield* parse("linkdeep-directory");
+      const report = PeerCheck.run(parsed47, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA({ publishConfig: PublishConfig.make({ directory: "dist", linkDirectory: false }) })],
       });
@@ -919,7 +971,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("with linkDirectory: false, pnpm links the package root and the root spelling is covered", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep-directory-false"), {
+      const parsed48 = yield* parse("linkdeep-directory-false");
+      const report = PeerCheck.run(parsed48, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA({ publishConfig: PublishConfig.make({ directory: "dist", linkDirectory: false }) })],
       });
@@ -940,7 +993,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("judges a linked package's peers for its DIRECT consumer only (consumer's parent provides)", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkchain-parent-provides"), {
+      const parsed49 = yield* parse("linkchain-parent-provides");
+      const report = PeerCheck.run(parsed49, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: chainPackages(),
       });
@@ -954,7 +1008,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
     Effect.gen(function* () {
       // Only `b` has react: pnpm still reports the peer on `a`, whose own
       // dependencies lack it, and calls `b` clean.
-      const provided = PeerCheck.run(yield* parse("linkchain-importer-provides"), {
+      const parsed50 = yield* parse("linkchain-importer-provides");
+      const provided = PeerCheck.run(parsed50, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: chainPackages(),
       });
@@ -963,7 +1018,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       assert.deepStrictEqual(provided.unverified, []);
 
       // Nobody has react: still one row, on `a`, not a second one on `b`.
-      const none = PeerCheck.run(yield* parse("linkchain-none"), {
+      const parsed51 = yield* parse("linkchain-none");
+      const none = PeerCheck.run(parsed51, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: chainPackages(),
       });
@@ -974,7 +1030,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("attributes a linked package's registry dependency peers to its own importer only", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkchain-registry"), {
+      const parsed52 = yield* parse("linkchain-registry");
+      const report = PeerCheck.run(parsed52, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA({ name: "probe-c", relativePath: "packages/c", peerDependencies: {} })],
       });
@@ -989,14 +1046,16 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // `a` links `c`; supplying only `a` leaves that edge unjudged even
       // though `b`'s edge to `a` is covered — the outer walk no longer
       // reaches `c`, so nothing else can clear it.
-      const onlyA = PeerCheck.run(yield* parse("linkchain-none"), {
+      const parsed53 = yield* parse("linkchain-none");
+      const onlyA = PeerCheck.run(parsed53, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [chainA()],
       });
       assert.deepStrictEqual(onlyA.unverified, ["unresolvedEdge"]);
       // And supplying only `c` leaves `b`'s edge to `a` unjudged, while `a`'s
       // own walk still reports `c`'s peer.
-      const onlyC = PeerCheck.run(yield* parse("linkchain-none"), {
+      const parsed54 = yield* parse("linkchain-none");
+      const onlyC = PeerCheck.run(parsed54, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [chainC()],
       });
@@ -1015,7 +1074,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("resolves a catalog peer range that the provider satisfies", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep-provided"), {
+      const parsed55 = yield* parse("linkdeep-provided");
+      const report = PeerCheck.run(parsed55, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [catalogPeer],
         catalogs: peersCatalog,
@@ -1027,7 +1087,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("resolves the DEFAULT catalog for a bare `catalog:` peer range", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep-bad"), {
+      const parsed56 = yield* parse("linkdeep-bad");
+      const report = PeerCheck.run(parsed56, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA({ peerDependencies: { react: "catalog:" } })],
         catalogs: CatalogSet.make({ entries: { default: { react: "^18.0.0" } } }),
@@ -1041,7 +1102,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
     Effect.gen(function* () {
       // `linkdeep-bad/`: react@17.0.2 against the catalog's `^18.0.0` — the
       // oracle's `bad` row, `wantedRange` included, agrees row for row.
-      const bad = PeerCheck.run(yield* parse("linkdeep-bad"), {
+      const parsed57 = yield* parse("linkdeep-bad");
+      const bad = PeerCheck.run(parsed57, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [catalogPeer],
         catalogs: peersCatalog,
@@ -1052,7 +1114,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
       // With no provider at all the row needs no range arithmetic, but its
       // `wanted` is still the resolved range, as pnpm's is.
-      const missing = PeerCheck.run(yield* parse("linkdeep"), {
+      const parsed58 = yield* parse("linkdeep");
+      const missing = PeerCheck.run(parsed58, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [catalogPeer],
         catalogs: peersCatalog,
@@ -1064,7 +1127,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("fails closed on a catalog peer range the supplied catalogs do not name", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep-bad"), {
+      const parsed59 = yield* parse("linkdeep-bad");
+      const report = PeerCheck.run(parsed59, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [catalogPeer],
         catalogs: CatalogSet.make({ entries: { build: { react: "^18.0.0" } } }),
@@ -1079,7 +1143,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
     Effect.gen(function* () {
       // Presence is the assertion: with no catalogs supplied, nothing was
       // looked up, so a provider present cannot be judged against the peer.
-      const report = PeerCheck.run(yield* parse("linkdeep-bad"), {
+      const parsed60 = yield* parse("linkdeep-bad");
+      const report = PeerCheck.run(parsed60, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [catalogPeer],
       });
@@ -1089,7 +1154,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // A MISSING provider is still a fact about the graph, reportable
       // without the range: the row stands, echoing the raw specifier, and
       // the report is not marked because that peer WAS judged.
-      const missing = PeerCheck.run(yield* parse("linkdeep"), {
+      const parsed61 = yield* parse("linkdeep");
+      const missing = PeerCheck.run(parsed61, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [catalogPeer],
       });
@@ -1102,7 +1168,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("fails closed on a non-catalog protocol peer range such as `workspace:*`", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep-bad"), {
+      const parsed62 = yield* parse("linkdeep-bad");
+      const report = PeerCheck.run(parsed62, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA({ peerDependencies: { react: "workspace:*" } })],
         catalogs: peersCatalog,
@@ -1114,7 +1181,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 
   it.effect("fails closed when a catalog entry itself resolves to a protocol specifier", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("linkdeep-bad"), {
+      const parsed63 = yield* parse("linkdeep-bad");
+      const report = PeerCheck.run(parsed63, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [catalogPeer],
         catalogs: CatalogSet.make({ entries: { peers: { react: "workspace:^" } } }),
@@ -1140,7 +1208,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // to this model while `pnpm peers check` reads them from disk. Declining
       // the false row and failing closed on completeness are the two halves of
       // the honest answer, and this test pins both.
-      const report = PeerCheck.run(yield* parse("workspacepeer"), {
+      const parsed64 = yield* parse("workspacepeer");
+      const report = PeerCheck.run(parsed64, {
         peerDependencyRules: NoPeerDependencyRules,
       });
 
@@ -1167,7 +1236,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
       // `peerDependencyRules` is pnpm-only; npm and bun have no equivalent
       // suppression, so their computation is already complete. Supplying empty
       // rules must leave them verified.
-      const npm = PeerCheck.run(yield* Lockfile.parse(fixture("peers/npm/package-lock.json"), { format: "npm" }), {
+      const parsed65 = yield* Lockfile.parse(fixture("peers/npm/package-lock.json"), { format: "npm" });
+      const npm = PeerCheck.run(parsed65, {
         peerDependencyRules: NoPeerDependencyRules,
       });
       assert.deepStrictEqual(npm.unverified, []);
@@ -1194,7 +1264,8 @@ describe("PeerCheck.run — ignoreMissing and allowAny", () => {
     options: PeerCheckOptions.Input | undefined,
     file: string
   ) {
-    const report = PeerCheck.run(yield* parse(dir), options);
+    const parsed66 = yield* parse(dir);
+    const report = PeerCheck.run(parsed66, options);
     assert.isTrue(report.supported);
     // Supplied rules with these axes populated are FULLY applied, so the
     // report is verified. This is the claim the whole block earns.
@@ -1265,11 +1336,14 @@ describe("PeerCheck.run — ignoreMissing and allowAny", () => {
   // name each single-mutation failure so it fails one test, not a batch.
   it.effect("a pattern that matches no peer name leaves every row in place", () =>
     Effect.gen(function* () {
-      const before = PeerCheck.run(yield* parse("allowany"), { peerDependencyRules: NoPeerDependencyRules });
-      const after = PeerCheck.run(yield* parse("allowany"), withAllowAny(["reactx", "!*"]));
+      const parsed67 = yield* parse("allowany");
+      const before = PeerCheck.run(parsed67, { peerDependencyRules: NoPeerDependencyRules });
+      const parsed68 = yield* parse("allowany");
+      const after = PeerCheck.run(parsed68, withAllowAny(["reactx", "!*"]));
       assert.strictEqual(after.unsatisfied.length, before.unsatisfied.length);
       assert.isTrue(before.unsatisfied.length > 0);
-      const missing = PeerCheck.run(yield* parse("ignoremissing"), withIgnoreMissing(["redux"]));
+      const parsed69 = yield* parse("ignoremissing");
+      const missing = PeerCheck.run(parsed69, withIgnoreMissing(["redux"]));
       assert.strictEqual(missing.unsatisfied.length, 3);
     })
   );
@@ -1280,10 +1354,12 @@ describe("PeerCheck.run — ignoreMissing and allowAny", () => {
       // only rows with a version. Swapping the two predicates inside
       // `suppressedByRule` passes every single-axis oracle test whose other
       // axis is empty; this is what turns red.
-      const bad = PeerCheck.run(yield* parse("allowany"), withIgnoreMissing(["*"]));
+      const parsed70 = yield* parse("allowany");
+      const bad = PeerCheck.run(parsed70, withIgnoreMissing(["*"]));
       assert.strictEqual(bad.unsatisfied.length, 2);
       assert.isTrue(A.every(bad.unsatisfied, (r) => r.found !== null));
-      const missing = PeerCheck.run(yield* parse("ignoremissing"), withAllowAny(["*"]));
+      const parsed71 = yield* parse("ignoremissing");
+      const missing = PeerCheck.run(parsed71, withAllowAny(["*"]));
       assert.strictEqual(missing.unsatisfied.length, 3);
       assert.isTrue(A.every(missing.unsatisfied, (r) => r.found === null));
     })
@@ -1291,7 +1367,8 @@ describe("PeerCheck.run — ignoreMissing and allowAny", () => {
 
   it.effect("both axes populated at once compose: each hides only its own kind of row", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("allowany"), {
+      const parsed72 = yield* parse("allowany");
+      const report = PeerCheck.run(parsed72, {
         peerDependencyRules: { allowedVersions: {}, ignoreMissing: ["*"], allowAny: ["redux"] },
       });
       assert.deepStrictEqual(report.unverified, []);
@@ -1305,7 +1382,8 @@ describe("PeerCheck.run — ignoreMissing and allowAny", () => {
   it.effect("omitting the key still reports peerRulesNotApplied, whatever the lockfile", () =>
     Effect.gen(function* () {
       // Applying the list axes must not have loosened the presence rule.
-      const report = PeerCheck.run(yield* parse("allowany"));
+      const parsed73 = yield* parse("allowany");
+      const report = PeerCheck.run(parsed73);
       assert.deepStrictEqual(report.unverified, ["peerRulesNotApplied"]);
       assert.strictEqual(report.unsatisfied.length, 2);
     })
@@ -1514,7 +1592,8 @@ describe("PeerCheck.run — protocol-specifier provider versions", () => {
       for (const dir of ["filedep", "filedep-override", "filedep-tarball", "filedep-joined", "filedep-suffixed"]) {
         assert.deepStrictEqual(theirs(dir, "peers-check-pnpm-11.json"), [], dir);
         assert.isAbove(theirs(dir).length, 0, dir);
-        const report = PeerCheck.run(yield* parse(dir), {
+        const parsed74 = yield* parse(dir);
+        const report = PeerCheck.run(parsed74, {
           peerDependencyRules: NoPeerDependencyRules,
           workspacePackages: [probeA()],
         });
@@ -1526,7 +1605,8 @@ describe("PeerCheck.run — protocol-specifier provider versions", () => {
 
   it.effect("raises both reasons when neither the joined range nor the provider version can be named", () =>
     Effect.gen(function* () {
-      const report = PeerCheck.run(yield* parse("filedep-joined"), {
+      const parsed75 = yield* parse("filedep-joined");
+      const report = PeerCheck.run(parsed75, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA({ peerDependencies: { react: "workspace:*" } })],
       });
@@ -1551,7 +1631,8 @@ describe("PeerCheck.run — protocol-specifier provider versions", () => {
   it.effect("still accepts a workspace-row provider and still judges a semver provider", () =>
     Effect.gen(function* () {
       // A workspace row (placeholder 0.0.0) stays accepted on name alone.
-      const workspace = PeerCheck.run(yield* parse("workspacepeer"), {
+      const parsed76 = yield* parse("workspacepeer");
+      const workspace = PeerCheck.run(parsed76, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [
           probeA({ name: "react", version: "18.3.1", relativePath: "packages/fakereact", peerDependencies: {} }),
@@ -1562,10 +1643,12 @@ describe("PeerCheck.run — protocol-specifier provider versions", () => {
 
       // A semver provider is compared as before, on both the lockfile-row
       // path (`mixed/`) and the joined path (`linkdeep-bad/`).
-      const rows = PeerCheck.run(yield* parse("mixed"), { peerDependencyRules: NoPeerDependencyRules });
+      const parsed77 = yield* parse("mixed");
+      const rows = PeerCheck.run(parsed77, { peerDependencyRules: NoPeerDependencyRules });
       assert.deepStrictEqual(ours(rows.unsatisfied), theirs("mixed"));
       assert.deepStrictEqual(rows.unverified, []);
-      const joined = PeerCheck.run(yield* parse("linkdeep-bad"), {
+      const parsed78 = yield* parse("linkdeep-bad");
+      const joined = PeerCheck.run(parsed78, {
         peerDependencyRules: NoPeerDependencyRules,
         workspacePackages: [probeA()],
       });

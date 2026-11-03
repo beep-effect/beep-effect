@@ -55,8 +55,9 @@ const fixture = Effect.gen(function* () {
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ directory: "/tmp", prefix: "obs-owner-" });
   yield* fs.chmod(root, 0o700);
-  for (const name of ["workspace", "home", "enrollment", "collector"])
+  for (const name of ["workspace", "home", "enrollment", "collector"]) {
     yield* fs.makeDirectory(`${root}/${name}`, { mode: 0o700 });
+  }
   const profile = ManagedLaunchProfile.make({
     provider: "codex",
     executable: process.execPath,
@@ -144,20 +145,23 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
     Effect.gen(function* () {
       const f = yield* fixture;
       const session = yield* openAgentMessageSession(f.request);
-      expect(yield* session.process.isRunning).toBe(true);
+      const isRunning1 = yield* session.process.isRunning;
+      expect(isRunning1).toBe(true);
       expect(A.map((yield* f.claims.readOutbox(f.launchId)).submissions, (entry) => entry.fact._tag)).toEqual([
         "Prepared",
         "Started",
         "SessionBound",
       ]);
       yield* session.close;
-      expect(yield* session.process.isRunning).toBe(false);
+      const isRunning2 = yield* session.process.isRunning;
+      expect(isRunning2).toBe(false);
       const state = yield* f.claims.readOutbox(f.launchId);
       expect(state.submissions[3]?.fact).toEqual(
         ObservationLaunchFact.cases.Finished.make({ launchId: f.launchId, outcome: "cancelled" })
       );
       expect(state.receipts).toEqual([]);
-      expect(yield* openAgentMessageSession(f.request).pipe(Effect.flip)).toMatchObject({
+      const pipe3 = yield* openAgentMessageSession(f.request).pipe(Effect.flip);
+      expect(pipe3).toMatchObject({
         _tag: "ObservationClaimError",
         reason: "claimed",
       });
@@ -173,7 +177,9 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
     () =>
       Effect.gen(function* () {
         const f = yield* fixture;
-        if (f.enrollment.submission.fact._tag !== "Prepared") return yield* Effect.die("Expected prepared fixture");
+        if (f.enrollment.submission.fact._tag !== "Prepared") {
+          return yield* Effect.die("Expected prepared fixture");
+        }
         const requestDirectory = `${f.root}/request`;
         yield* f.fs.makeDirectory(requestDirectory, { mode: 0o700 });
         const policy = ObservationClaimPolicy.make({ ...f.enrollment.claims, directory: `${f.root}/new-claims` });
@@ -190,52 +196,67 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
           );
         yield* writeRequest(request);
         const target = `${f.root}/new-enrollment`;
-        expect(yield* enrollAgentObservation(requestDirectory, target).pipe(Effect.flip)).toMatchObject({
+        const pipe4 = yield* enrollAgentObservation(requestDirectory, target).pipe(Effect.flip);
+        expect(pipe4).toMatchObject({
           reason: "claim",
         });
-        expect(yield* f.fs.exists(target)).toBe(false);
+        const exists5 = yield* f.fs.exists(target);
+        expect(exists5).toBe(false);
         const initialized = yield* initializeAgentObservationClaims(requestDirectory);
         expect(initialized.operation).toBe("initialize-claims");
         const anchor = yield* f.fs.readFileString(`${policy.directory}/anchor.json`);
-        expect(yield* initializeAgentObservationClaims(requestDirectory).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* f.fs.readFileString(`${policy.directory}/anchor.json`)).toBe(anchor);
+        const pipe6 = yield* initializeAgentObservationClaims(requestDirectory).pipe(Effect.isFailure);
+        expect(pipe6).toBe(true);
+        const readFileString7 = yield* f.fs.readFileString(`${policy.directory}/anchor.json`);
+        expect(readFileString7).toBe(anchor);
         const partial = `${f.root}/partial-enrollment`;
         yield* f.fs.makeDirectory(partial, { mode: 0o700 });
         yield* f.fs.writeFileString(`${partial}/enrollment.json`, "", { mode: 0o600 });
-        expect(yield* enrollAgentObservation(requestDirectory, partial).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* f.fs.readFileString(`${partial}/enrollment.json`)).toBe("");
-        expect(
-          yield* enrollAgentObservation(requestDirectory, `${policy.directory}/nested`).pipe(Effect.isFailure)
-        ).toBe(true);
-        expect(yield* f.fs.exists(`${policy.directory}/nested`)).toBe(false);
+        const pipe8 = yield* enrollAgentObservation(requestDirectory, partial).pipe(Effect.isFailure);
+        expect(pipe8).toBe(true);
+        const readFileString9 = yield* f.fs.readFileString(`${partial}/enrollment.json`);
+        expect(readFileString9).toBe("");
+        const pipe10 = yield* enrollAgentObservation(requestDirectory, `${policy.directory}/nested`).pipe(
+          Effect.isFailure
+        );
+        expect(pipe10).toBe(true);
+        const exists11 = yield* f.fs.exists(`${policy.directory}/nested`);
+        expect(exists11).toBe(false);
         const enrolled = yield* enrollAgentObservation(requestDirectory, target);
         expect(enrolled.launchId).toBe(initialized.launchId);
         const original = yield* f.fs.readFileString(`${target}/enrollment.json`);
-        expect(yield* enrollAgentObservation(requestDirectory, target).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* f.fs.readFileString(`${target}/enrollment.json`)).toBe(original);
+        const pipe12 = yield* enrollAgentObservation(requestDirectory, target).pipe(Effect.isFailure);
+        expect(pipe12).toBe(true);
+        const readFileString13 = yield* f.fs.readFileString(`${target}/enrollment.json`);
+        expect(readFileString13).toBe(original);
         const session = yield* openAgentMessageSession(
           AgentObservationRequest.make({ ...f.request, enrollmentDirectory: O.some(target) })
         );
         yield* session.close;
         expect((yield* recoverAgentObservation(target, "status")).outbox.submissions).toHaveLength(4);
-        expect(
-          yield* enrollAgentObservation(requestDirectory, `${f.root}/another-enrollment`).pipe(Effect.flip)
-        ).toMatchObject({ reason: "claim" });
-        expect(yield* f.fs.exists(`${f.root}/another-enrollment`)).toBe(false);
+        const pipe14 = yield* enrollAgentObservation(requestDirectory, `${f.root}/another-enrollment`).pipe(
+          Effect.flip
+        );
+        expect(pipe14).toMatchObject({ reason: "claim" });
+        const exists15 = yield* f.fs.exists(`${f.root}/another-enrollment`);
+        expect(exists15).toBe(false);
         yield* writeRequest(
           AgentObservationProvisioning.make({
             ...request,
             destination: ObservationLaunchClientPolicy.make({ ...request.destination, namespaceId: id("f") }),
           })
         );
-        expect(yield* initializeAgentObservationClaims(requestDirectory).pipe(Effect.flip)).toMatchObject({
+        const pipe16 = yield* initializeAgentObservationClaims(requestDirectory).pipe(Effect.flip);
+        expect(pipe16).toMatchObject({
           reason: "identity",
         });
         yield* f.fs.writeFileString(`${requestDirectory}/request.json`, Str.repeat(32769)("X"));
-        expect(yield* initializeAgentObservationClaims(requestDirectory).pipe(Effect.flip)).toMatchObject({
+        const pipe17 = yield* initializeAgentObservationClaims(requestDirectory).pipe(Effect.flip);
+        expect(pipe17).toMatchObject({
           reason: "configuration",
         });
-        expect(yield* f.fs.readFileString(`${policy.directory}/anchor.json`)).toBe(anchor);
+        const readFileString18 = yield* f.fs.readFileString(`${policy.directory}/anchor.json`);
+        expect(readFileString18).toBe(anchor);
       }).pipe(TestClock.withLive)
   );
 
@@ -258,7 +279,8 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
       expect(status.outbox.receipts).toHaveLength(0);
       expect(status.backendVisibility).toBe("unknown");
       expect(status.processLiveness).toBe("unknown");
-      expect(yield* recover("reconcile").pipe(Effect.flip)).toMatchObject({ reason: "recovery" });
+      const pipe19 = yield* recover("reconcile").pipe(Effect.flip);
+      expect(pipe19).toMatchObject({ reason: "recovery" });
       expect((yield* recover("status")).outbox).toEqual(status.outbox);
       yield* f.write(
         AgentObservationEnrollment.make({
@@ -266,12 +288,16 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
           submission: ObservationLaunchSubmission.make({ ...f.enrollment.submission, evidenceEpoch: 1 }),
         })
       );
-      expect(yield* recover("reconcile").pipe(Effect.flip)).toMatchObject({ reason: "identity" });
+      const pipe20 = yield* recover("reconcile").pipe(Effect.flip);
+      expect(pipe20).toMatchObject({ reason: "identity" });
       yield* f.write(f.enrollment);
       yield* f.fs.writeFileString(`${f.root}/claims/receipt-0-0.json`, "", { mode: 0o600 });
-      expect(yield* recover("status").pipe(Effect.flip)).toMatchObject({ reason: "claim" });
-      expect(yield* f.fs.readFileString(`${f.root}/claims/receipt-0-0.json`)).toBe("");
-      expect(yield* Ref.get(count)).toBe(0);
+      const pipe21 = yield* recover("status").pipe(Effect.flip);
+      expect(pipe21).toMatchObject({ reason: "claim" });
+      const readFileString22 = yield* f.fs.readFileString(`${f.root}/claims/receipt-0-0.json`);
+      expect(readFileString22).toBe("");
+      const got = yield* Ref.get(count);
+      expect(got).toBe(0);
     }).pipe(TestClock.withLive)
   );
 
@@ -288,37 +314,38 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched),
           Effect.isFailure
         );
-      expect(
-        yield* open(
-          AgentObservationRequest.make({
-            ...f.request,
-            owner: AgentObservationOwner.make({ ...f.owner, generation: 2 }),
-          })
+      const open23 = yield* open(
+        AgentObservationRequest.make({
+          ...f.request,
+          owner: AgentObservationOwner.make({ ...f.owner, generation: 2 }),
+        })
+      );
+      expect(open23).toBe(true);
+      const pipe24 = yield* open(f.request).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromUnknown({ BEEP_AI_METRICS_HASH_SALT: "other-synthetic-salt" })
         )
-      ).toBe(true);
-      expect(
-        yield* open(f.request).pipe(
-          Effect.provideService(
-            ConfigProvider.ConfigProvider,
-            ConfigProvider.fromUnknown({ BEEP_AI_METRICS_HASH_SALT: "other-synthetic-salt" })
-          )
+      );
+      expect(pipe24).toBe(true);
+      const pipe25 = yield* open(f.request).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromUnknown({ BEEP_AI_METRICS_HASH_SALT: " " })
         )
-      ).toBe(true);
-      expect(
-        yield* open(f.request).pipe(
-          Effect.provideService(
-            ConfigProvider.ConfigProvider,
-            ConfigProvider.fromUnknown({ BEEP_AI_METRICS_HASH_SALT: " " })
-          )
-        )
-      ).toBe(true);
+      );
+      expect(pipe25).toBe(true);
       yield* f.fs.chmod(`${f.root}/enrollment/enrollment.json`, 0o644);
-      expect(yield* open(f.request)).toBe(true);
+      const open26 = yield* open(f.request);
+      expect(open26).toBe(true);
       yield* f.fs.chmod(`${f.root}/enrollment/enrollment.json`, 0o600);
       yield* f.write(AgentObservationEnrollment.make({ ...f.enrollment, ownerBinding: id("f") }));
-      expect(yield* open(f.request)).toBe(true);
+      const open27 = yield* open(f.request);
+      expect(open27).toBe(true);
       const prepared = f.enrollment.submission.fact;
-      if (prepared._tag !== "Prepared") return yield* Effect.die("Invalid synthetic preparation");
+      if (prepared._tag !== "Prepared") {
+        return yield* Effect.die("Invalid synthetic preparation");
+      }
       yield* f.write(
         AgentObservationEnrollment.make({
           ...f.enrollment,
@@ -328,16 +355,22 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
           }),
         })
       );
-      expect(yield* open(f.request)).toBe(true);
+      const open28 = yield* open(f.request);
+      expect(open28).toBe(true);
       yield* f.fs.writeFileString(`${f.root}/enrollment/enrollment.json`, Str.repeat(32769)("x"));
-      expect(yield* open(f.request)).toBe(true);
+      const open29 = yield* open(f.request);
+      expect(open29).toBe(true);
       yield* f.write(f.enrollment);
       yield* f.fs.rename(`${f.root}/claims`, `${f.root}/claims-held`);
-      expect(yield* open(f.request)).toBe(true);
-      expect(yield* f.fs.exists(`${f.root}/claims`)).toBe(false);
+      const open30 = yield* open(f.request);
+      expect(open30).toBe(true);
+      const exists31 = yield* f.fs.exists(`${f.root}/claims`);
+      expect(exists31).toBe(false);
       yield* f.fs.rename(`${f.root}/claims-held`, `${f.root}/claims`);
-      expect(yield* Ref.get(count)).toBe(0);
-      expect(yield* f.claims.snapshot).toEqual([]);
+      const got32 = yield* Ref.get(count);
+      expect(got32).toBe(0);
+      const snapshot33 = yield* f.claims.snapshot;
+      expect(snapshot33).toEqual([]);
     }).pipe(TestClock.withLive)
   );
 
@@ -349,18 +382,20 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
       const watched = ChildProcessSpawner.make((command) =>
         spawner.spawn(command).pipe(Effect.tap((child) => Ref.update(children, A.append(child))))
       );
-      expect(
-        yield* openAgentMessageSession(
-          AgentObservationRequest.make({
-            ...f.request,
-            profile: ManagedLaunchProfile.make({
-              ...f.profile,
-              prefixArgs: [...f.profile.prefixArgs, "--beep-fixture-mode=wrong-policy"],
-            }),
-          })
-        ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched), Effect.isFailure)
-      ).toBe(true);
-      for (const child of yield* Ref.get(children)) expect(yield* child.isRunning).toBe(false);
+      const pipe34 = yield* openAgentMessageSession(
+        AgentObservationRequest.make({
+          ...f.request,
+          profile: ManagedLaunchProfile.make({
+            ...f.profile,
+            prefixArgs: [...f.profile.prefixArgs, "--beep-fixture-mode=wrong-policy"],
+          }),
+        })
+      ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched), Effect.isFailure);
+      expect(pipe34).toBe(true);
+      for (const child of yield* Ref.get(children)) {
+        const isRunning3 = yield* child.isRunning;
+        expect(isRunning3).toBe(false);
+      }
       const state = yield* f.claims.readOutbox(f.launchId);
       expect(A.map(state.submissions, (entry) => entry.fact._tag)).toEqual(["Prepared", "Started", "Finished"]);
       expect(state.submissions[2]?.fact).toEqual(
@@ -373,7 +408,8 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
       const f = yield* fixture;
       const profileFile = `${f.root}/profile.json`;
       const grantFile = `${f.root}/grant.json`;
-      yield* f.fs.writeFileString(profileFile, yield* encodeManagedLaunchProfileJson(f.profile), { mode: 0o600 });
+      const encodedManagedLaunchProfileJson = yield* encodeManagedLaunchProfileJson(f.profile);
+      yield* f.fs.writeFileString(profileFile, encodedManagedLaunchProfileJson, { mode: 0o600 });
       const grant = LaunchGrant.make({
         grantId: "synthetic-grant",
         endpointId: f.owner.endpointId,
@@ -385,7 +421,8 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
         expiresAt: (yield* Clock.currentTimeMillis) + 60000,
         maxMessages: 1,
       });
-      yield* f.fs.writeFileString(grantFile, yield* encodeLaunchGrantJson(grant), {
+      const encodedLaunchGrantJson = yield* encodeLaunchGrantJson(grant);
+      yield* f.fs.writeFileString(grantFile, encodedLaunchGrantJson, {
         mode: 0o600,
       });
       const ready = yield* Deferred.make<void>();
@@ -427,7 +464,8 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
       expect((yield* f.claims.readOutbox(f.launchId)).submissions[3]?.fact).toEqual(
         ObservationLaunchFact.cases.Finished.make({ launchId: f.launchId, outcome: "cancelled" })
       );
-      expect(yield* execute.pipe(Effect.isFailure)).toBe(true);
+      const pipe35 = yield* execute.pipe(Effect.isFailure);
+      expect(pipe35).toBe(true);
     }).pipe(TestClock.withLive)
   );
 
@@ -444,7 +482,8 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
       );
       const actual = yield* Deferred.await(child);
       yield* actual.kill({ killSignal: "SIGKILL" });
-      expect(yield* actual.exitCode.pipe(Effect.isFailure)).toBe(true);
+      const pipe36 = yield* actual.exitCode.pipe(Effect.isFailure);
+      expect(pipe36).toBe(true);
       yield* session.close;
       expect((yield* f.claims.readOutbox(f.launchId)).submissions[3]?.fact).toEqual(
         ObservationLaunchFact.cases.Finished.make({ launchId: f.launchId, outcome: "unknown" })

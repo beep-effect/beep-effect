@@ -37,11 +37,13 @@ const program = Effect.gen(function* () {
   if (input !== "-") {
     const stat = yield* fs.stat(input);
     if (stat.size > 65536) return yield* Effect.die("Synthetic client input exceeded its bound");
-    submissions = yield* decodeObservationLaunchSubmissionRowsJson(yield* fs.readFileString(input));
+    const readFileString1 = yield* fs.readFileString(input);
+    submissions = yield* decodeObservationLaunchSubmissionRowsJson(readFileString1);
   }
   const receipts = yield* Effect.forEach(submissions, client.submit, { concurrency: 1 });
   const encode = encodeContextReceiptsRecordJson;
-  yield* Console.log(yield* encode({ context, receipts }));
+  const encoded = yield* encode({ context, receipts });
+  yield* Console.log(encoded);
 });
 NodeRuntime.runMain(
   NodeServices.layer.pipe(

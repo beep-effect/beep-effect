@@ -137,45 +137,63 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer,
         Ref.update(launches, (count) => count + 1).pipe(Effect.andThen(spawner.spawn(command)))
       );
       yield* f.fs.remove(f.filename);
-      expect(
-        yield* f.execute.pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched), Effect.isFailure)
-      ).toBe(true);
-      expect(yield* Ref.get(launches)).toBe(0);
+      const pipe1 = yield* f.execute.pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched),
+        Effect.isFailure
+      );
+      expect(pipe1).toBe(true);
+      const got = yield* Ref.get(launches);
+      expect(got).toBe(0);
       yield* f.write(f.profile);
       yield* f.fs.remove(f.grantFile);
-      expect(
-        yield* f.execute.pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched), Effect.isFailure)
-      ).toBe(true);
-      expect(yield* Ref.get(launches)).toBe(0);
+      const pipe2 = yield* f.execute.pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched),
+        Effect.isFailure
+      );
+      expect(pipe2).toBe(true);
+      const got3 = yield* Ref.get(launches);
+      expect(got3).toBe(0);
       yield* f.writeGrant(f.grant);
       yield* f.fs.chmod(f.grantFile, 0o644);
-      expect(
-        yield* f.execute.pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched), Effect.flip)
-      ).toMatchObject({ _tag: "RouterError", code: "policyMismatch" });
-      expect(yield* Ref.get(launches)).toBe(0);
+      const pipe4 = yield* f.execute.pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched),
+        Effect.flip
+      );
+      expect(pipe4).toMatchObject({ _tag: "RouterError", code: "policyMismatch" });
+      const got5 = yield* Ref.get(launches);
+      expect(got5).toBe(0);
       yield* f.fs.chmod(f.grantFile, 0o600);
       for (const sandboxWritablePaths of [[], [f.profile.workspace]]) {
         yield* f.write(ManagedLaunchProfile.make({ ...f.profile, provider: "grok", sandboxWritablePaths }));
-        expect(
-          yield* f.execute.pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched), Effect.flip)
-        ).toMatchObject({ _tag: "RouterError", code: "policyMismatch" });
-        expect(yield* Ref.get(launches)).toBe(0);
+        const pipe6 = yield* f.execute.pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched),
+          Effect.flip
+        );
+        expect(pipe6).toMatchObject({ _tag: "RouterError", code: "policyMismatch" });
+        const got7 = yield* Ref.get(launches);
+        expect(got7).toBe(0);
       }
       yield* f.write(f.profile);
       yield* f.write(f.profile);
       yield* f.fs.chmod(f.filename, 0o644);
-      expect(
-        yield* f.execute.pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched), Effect.flip)
-      ).toMatchObject({ _tag: "RouterError", code: "policyMismatch" });
-      expect(yield* Ref.get(launches)).toBe(0);
+      const pipe8 = yield* f.execute.pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched),
+        Effect.flip
+      );
+      expect(pipe8).toMatchObject({ _tag: "RouterError", code: "policyMismatch" });
+      const got9 = yield* Ref.get(launches);
+      expect(got9).toBe(0);
       yield* f.fs.chmod(f.filename, 0o600);
       yield* f.write(
         ManagedLaunchProfile.make({ ...f.profile, env: { ...f.profile.env, OPENAI_API_KEY: "synthetic-forbidden" } })
       );
-      expect(
-        yield* f.execute.pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched), Effect.flip)
-      ).toMatchObject({ _tag: "ManagedSessionError", reason: "invalid-profile" });
-      expect(yield* Ref.get(launches)).toBe(0);
+      const pipe10 = yield* f.execute.pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched),
+        Effect.flip
+      );
+      expect(pipe10).toMatchObject({ _tag: "ManagedSessionError", reason: "invalid-profile" });
+      const got11 = yield* Ref.get(launches);
+      expect(got11).toBe(0);
     })
   );
 
@@ -193,12 +211,16 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer,
       const watched = ChildProcessSpawner.make((command) =>
         spawner.spawn(command).pipe(Effect.tap((child) => Deferred.succeed(started, child)))
       );
-      expect(
-        yield* f.execute.pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched), Effect.flip)
-      ).toMatchObject({ _tag: "ManagedSessionError", reason: "policy-mismatch" });
-      expect(yield* (yield* Deferred.await(started)).isRunning).toBe(false);
+      const pipe12 = yield* f.execute.pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, watched),
+        Effect.flip
+      );
+      expect(pipe12).toMatchObject({ _tag: "ManagedSessionError", reason: "policy-mismatch" });
+      const isRunning13 = yield* (yield* Deferred.await(started)).isRunning;
+      expect(isRunning13).toBe(false);
       const context = yield* Layer.build(agentMessageStoreLayer(f.state));
-      expect(yield* Context.get(context, AgentMessageStore).endpoint("managed").pipe(Effect.isFailure)).toBe(true);
+      const pipe14 = yield* Context.get(context, AgentMessageStore).endpoint("managed").pipe(Effect.isFailure);
+      expect(pipe14).toBe(true);
     }).pipe(TestClock.withLive)
   );
 
@@ -251,7 +273,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer,
           backend: "codex-app-server-stdio",
         }
       );
-      expect(yield* child.isRunning).toBe(true);
+      const isRunning15 = yield* child.isRunning;
+      expect(isRunning15).toBe(true);
       yield* store.register(
         EndpointBinding.make({
           ...binding,
@@ -292,7 +315,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer,
         "sender-grant",
         now
       );
-      expect(yield* Deferred.await(rejected)).toMatchObject({
+      const await16 = yield* Deferred.await(rejected);
+      expect(await16).toMatchObject({
         messageId: "outside-conversation",
         status: "failed",
         sequence: 3,
@@ -313,13 +337,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer,
         }),
         now
       );
-      expect(yield* Deferred.await(delivered)).toMatchObject({
+      const await17 = yield* Deferred.await(delivered);
+      expect(await17).toMatchObject({
         messageId: "native-delivery",
         status: "delivered",
         sequence: 6,
       });
       expect((yield* store.receipts("native-delivery"))[2]?.status).toBe("delivered");
-      assertSome(yield* store.settlement("native-delivery"), {
+      const settlement18 = yield* store.settlement("native-delivery");
+      assertSome(settlement18, {
         adapter: "codex",
         sessionId: "owned-thread",
         messageId: "native-delivery",
@@ -327,7 +353,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer,
         outcome: "delivered",
         stopReason: "completed",
       });
-      assertNone(yield* store.settlement("outside-conversation"));
+      const settlement19 = yield* store.settlement("outside-conversation");
+      assertNone(settlement19);
       expect((yield* store.receipts("outside-conversation"))[2]?.status).toBe("failed");
       // Advance the persisted grant past expiry without waiting an hour of wall time.
       const sql = yield* makeAgentMessageSqliteClient(path.join(f.state, "messages.sqlite"));
@@ -351,7 +378,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer,
       const expiredReceipt = yield* Deferred.await(expired);
       expect(expiredReceipt).toMatchObject({ messageId: "expired-grant-delivery", status: "failed" });
       assertSome(expiredReceipt.detail, "invalidGrant: receiving grant expired or enrollment replaced.");
-      expect(yield* Fiber.join(fiber).pipe(Effect.flip)).toMatchObject({ code: "invalidGrant" });
+      const pipe20 = yield* Fiber.join(fiber).pipe(Effect.flip);
+      expect(pipe20).toMatchObject({ code: "invalidGrant" });
       const next = yield* store.accept(
         Envelope.make({
           ...expiredEnvelope,
@@ -362,7 +390,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer,
       );
       expect(next).toMatchObject({ messageId: "after-expired-grant", status: "accepted" });
       expect((yield* store.receipts("after-expired-grant"))[0]?.status).toBe("accepted");
-      expect(yield* child.isRunning).toBe(false);
+      const isRunning21 = yield* child.isRunning;
+      expect(isRunning21).toBe(false);
     }).pipe(TestClock.withLive)
   );
 });
@@ -478,7 +507,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
         (store) =>
           Effect.gen(function* () {
             const now = yield* Clock.currentTimeMillis;
-            const claim = O.getOrThrow(yield* store.claimNext("target", "target-owner", now, now + 30000));
+            const claimNext22 = yield* store.claimNext("target", "target-owner", now, now + 30000);
+            const claim = O.getOrThrow(claimNext22);
             const absent = ManagedTurnResult.make({
               messageId: claim.envelope.messageId,
               text: "",
@@ -506,11 +536,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             expect(failures[2]?.message).toBe(
               "Native response contradicts its terminal evidence; retain the dispatch hold."
             );
-            assertNone(yield* store.settlement(claim.envelope.messageId));
-            expect(A.map(yield* store.receipts(claim.envelope.messageId), (receipt) => receipt.status)).toEqual([
-              "accepted",
-              "claimed",
-            ]);
+            const settlement23 = yield* store.settlement(claim.envelope.messageId);
+            assertNone(settlement23);
+            const receipts24 = yield* store.receipts(claim.envelope.messageId);
+            expect(A.map(receipts24, (receipt) => receipt.status)).toEqual(["accepted", "claimed"]);
           }),
         "codex"
       )
@@ -540,7 +569,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
               to: { kind: "direct", endpointId: "native" },
             });
             yield* store.accept(envelope, now);
-            const claim = O.getOrThrow(yield* store.claimNext("native", "native-owner", now, now + 30000));
+            const claimNext25 = yield* store.claimNext("native", "native-owner", now, now + 30000);
+            const claim = O.getOrThrow(claimNext25);
             const evidence = ManagedTerminalEvidence.make({
               adapter: "codex",
               sessionId: "native-session",
@@ -572,17 +602,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             };
             const recording = yield* recordNativeSettlement(wrapped, claim, response).pipe(Effect.forkChild);
             yield* Deferred.await(attempted);
-            assertNone(yield* store.settlement(envelope.messageId));
-            expect(A.map(yield* store.receipts(envelope.messageId), (receipt) => receipt.status)).toEqual([
-              "accepted",
-              "claimed",
-            ]);
+            const settlement26 = yield* store.settlement(envelope.messageId);
+            assertNone(settlement26);
+            const receipts27 = yield* store.receipts(envelope.messageId);
+            expect(A.map(receipts27, (receipt) => receipt.status)).toEqual(["accepted", "claimed"]);
             yield* clock.adjust(Duration.millis(250));
             const status = yield* Fiber.join(recording);
             expect(status).toBe("delivered");
             expect(writes).toBe(2);
-            assertSome(yield* store.settlement(envelope.messageId), evidence);
-            expect((yield* store.complete(claim, status, yield* Clock.currentTimeMillis)).status).toBe("delivered");
+            const settlement28 = yield* store.settlement(envelope.messageId);
+            assertSome(settlement28, evidence);
+            const currentTimeMillis29 = yield* Clock.currentTimeMillis;
+            expect((yield* store.complete(claim, status, currentTimeMillis29)).status).toBe("delivered");
             const failure = RouterError.make({ code: "conflict", message: "Synthetic non-lock settlement failure." });
             let failures = 0;
             const rejected = yield* recordNativeSettlement(
@@ -638,15 +669,16 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
               Effect.forkChild
             );
             yield* clock.adjust(Duration.seconds(3));
-            expect(yield* Fiber.join(fiber).pipe(Effect.flip)).toEqual(invalid);
+            const pipe30 = yield* Fiber.join(fiber).pipe(Effect.flip);
+            expect(pipe30).toEqual(invalid);
             expect(completions).toBe(9);
             expect(submissions).toBe(1);
-            expect(A.map(yield* store.receipts("message"), (receipt) => receipt.status)).toEqual([
-              "accepted",
-              "claimed",
-            ]);
-            assertNone(yield* store.claimNext("target", "target-owner", 3000, 4000));
-            const logs = A.filter(A.drop(yield* TestConsole.logLines, priorLogs), S.is(S.String));
+            const receipts31 = yield* store.receipts("message");
+            expect(A.map(receipts31, (receipt) => receipt.status)).toEqual(["accepted", "claimed"]);
+            const claimNext32 = yield* store.claimNext("target", "target-owner", 3000, 4000);
+            assertNone(claimNext32);
+            const logLines33 = yield* TestConsole.logLines;
+            const logs = A.filter(A.drop(logLines33, priorLogs), S.is(S.String));
             expect(A.filterMap(logs, (line) => S.decodeResult(ReceiptJson)(line))).toEqual([]);
             expect(A.some(logs, Str.includes("receipt was not persisted"))).toBe(true);
           })
@@ -693,10 +725,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
             yield* Deferred.await(exhausted);
             expect(submits).toBe(1);
             expect(attempts).toBe(9);
-            expect(yield* child.isRunning).toBe(true);
-            assertNone(yield* store.claimNext("target", "target-owner", 3000, 183000));
+            const isRunning34 = yield* child.isRunning;
+            expect(isRunning34).toBe(true);
+            const claimNext35 = yield* store.claimNext("target", "target-owner", 3000, 183000);
+            assertNone(claimNext35);
             yield* Fiber.interrupt(fiber);
-            expect(yield* child.isRunning).toBe(false);
+            const isRunning36 = yield* child.isRunning;
+            expect(isRunning36).toBe(false);
           })
         )
       );
@@ -732,13 +767,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           yield* Deferred.await(recovered);
           expect(fiber.pollUnsafe()).toBeUndefined();
           expect(submissions).toBe(1);
-          expect(A.map(yield* store.receipts("message"), (receipt) => receipt.status)).toEqual([
-            "accepted",
-            "claimed",
-            "ambiguous",
-          ]);
+          const receipts37 = yield* store.receipts("message");
+          expect(A.map(receipts37, (receipt) => receipt.status)).toEqual(["accepted", "claimed", "ambiguous"]);
           const now = yield* Clock.currentTimeMillis;
-          assertNone(yield* store.claimNext("target", "target-owner", now + elapsed, now + elapsed + 1000));
+          const claimNext38 = yield* store.claimNext("target", "target-owner", now + elapsed, now + elapsed + 1000);
+          assertNone(claimNext38);
           yield* Fiber.interrupt(fiber);
         })
       ).pipe(TestClock.withLive)
@@ -802,7 +835,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
                         contention++;
                         const lock = yield* Deferred.await(lockedProcess);
                         yield* fs.writeFileString(`${checkpoint}.release`, "release", { mode: 0o600 });
-                        expect(Number(yield* lock.exitCode)).toBe(0);
+                        const exitCode39 = yield* lock.exitCode;
+                        expect(Number(exitCode39)).toBe(0);
                       })
                     : Effect.void
                 ),

@@ -278,5 +278,6 @@ export const makeObservationDeploymentProgram = Effect.fn("AIMetrics.observation
   });
   const request = yield* decodeObservationDeploymentRequestJson(text).pipe(Effect.mapError(refusal));
   const plan = yield* renderObservationDeployment(request);
-  yield* Console.log(yield* encodeObservationDeploymentPlanJson(plan).pipe(Effect.mapError(refusal)));
+  const pipe1 = yield* encodeObservationDeploymentPlanJson(plan).pipe(Effect.mapError(refusal));
+  yield* Console.log(pipe1);
 });

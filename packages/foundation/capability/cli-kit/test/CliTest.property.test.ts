@@ -17,7 +17,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(Sandbox)(value);
       const decoded = yield* S.decodeEffect(Sandbox)(encoded);
       assert.deepStrictEqual(decoded, value);
-      assert.deepStrictEqual(yield* S.encodeEffect(Sandbox)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(Sandbox)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -32,7 +33,8 @@ it.effect.prop(
       );
       const decoded = yield* S.decodeEffect(RunOptions)(encoded);
       assert.deepStrictEqual(decoded, value);
-      assert.deepStrictEqual(yield* S.encodeEffect(RunOptions)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(RunOptions)(decoded);
+      assert.deepStrictEqual(value2, encoded);
       for (const key of ["cwd", "env", "stdin"]) {
         assert.strictEqual(P.hasProperty(decoded, key), P.hasProperty(value, key));
       }
@@ -48,7 +50,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(RunResult)(value);
       const decoded = yield* S.decodeEffect(RunResult)(encoded);
       assert.deepStrictEqual(decoded, value);
-      assert.deepStrictEqual(yield* S.encodeEffect(RunResult)(decoded), encoded);
+      const value3 = yield* S.encodeEffect(RunResult)(decoded);
+      assert.deepStrictEqual(value3, encoded);
     }),
   runs
 );
@@ -60,7 +63,8 @@ it.effect("RunOptions retains absent and empty overrides and rejects explicit un
       const encoded = yield* S.encodeEffect(RunOptions)(
         RunOptions.make({ ...value, sandbox: Sandbox.make(value.sandbox) })
       );
-      assert.deepStrictEqual(yield* S.decodeEffect(RunOptions)(encoded), value);
+      const value4 = yield* S.decodeEffect(RunOptions)(encoded);
+      assert.deepStrictEqual(value4, value);
     }
     // EF-40: a present key holding `undefined` is rejected.
     for (const key of ["cwd", "env", "stdin"]) {

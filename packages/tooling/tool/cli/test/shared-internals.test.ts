@@ -17,7 +17,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow } from "effect/Function";
+import { flow, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
@@ -75,6 +75,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -126,7 +127,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           message: "m",
           remediation: "r",
         });
-        const decoded = decodeSchemaFirstPolicyFindingLine(yield* line(finding));
+        const line1 = yield* line(finding);
+        const decoded = decodeSchemaFirstPolicyFindingLine(line1);
         assertSome(
           O.map(decoded, (f) => f.severity),
           "error"
@@ -137,13 +139,16 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     it("represents both the 'warn' and 'warning' severity spellings", () => {
       expect(SchemaFirstPolicySeverity.is.warn("warn")).toBe(true);
       expect(SchemaFirstPolicySeverity.is.warning("warning")).toBe(true);
-      const warnLine = `${SchemaFirstPolicyIssuePrefix}${JSON.stringify({
-        category: "schema-first-policy",
-        ruleId: "native-runtime",
-        severity: "warn",
-        file: "a.ts",
-        message: "m",
-      })}`;
+      const warnLine = `${SchemaFirstPolicyIssuePrefix}${Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+          category: "schema-first-policy",
+          ruleId: "native-runtime",
+          severity: "warn",
+          file: "a.ts",
+          message: "m",
+        }),
+        identity
+      )}`;
       const decoded = decodeSchemaFirstPolicyFindingLine(warnLine);
       assertSome(
         O.map(decoded, (f) => f.severity),
@@ -152,12 +157,15 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     });
 
     it("decodes a line with severity and remediation omitted", () => {
-      const bare = `${SchemaFirstPolicyIssuePrefix}${JSON.stringify({
-        category: "schema-first-policy",
-        ruleId: "r",
-        file: "a.ts",
-        message: "m",
-      })}`;
+      const bare = `${SchemaFirstPolicyIssuePrefix}${Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+          category: "schema-first-policy",
+          ruleId: "r",
+          file: "a.ts",
+          message: "m",
+        }),
+        identity
+      )}`;
       const decoded = decodeSchemaFirstPolicyFindingLine(bare);
       decoded.pipe(O.isSome, assertTrue);
       if (O.isSome(decoded)) {
@@ -194,7 +202,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     it.effect("round-trips a value through JSON text", () =>
       Effect.gen(function* () {
         const text = yield* codec.encode({ x: 1, y: 2 });
-        expect(yield* codec.decode(text)).toEqual({ x: 1, y: 2 });
+        const decoded2 = yield* codec.decode(text);
+        expect(decoded2).toEqual({ x: 1, y: 2 });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -208,7 +217,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         const decode = decodeOrFail(Point, (error) => SharedInternalsTestError.make({ message: `bad: ${error._tag}` }));
         const exit = yield* Effect.exit(decode("not json"));
         expect(exit._tag).toBe("Failure");
-        expect(yield* decode('{"x":3,"y":4}')).toEqual({ x: 3, y: 4 });
+        const decoded3 = yield* decode('{"x":3,"y":4}');
+        expect(decoded3).toEqual({ x: 3, y: 4 });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
@@ -281,8 +291,10 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
             ConfigProvider.ConfigProvider,
             ConfigProvider.fromUnknown({ TOKEN: value })
           )(readOptionalConfigString("TOKEN"));
-        assertSome(yield* withProvider("first"), "first");
-        assertSome(yield* withProvider("second"), "second");
+        const withProvider4 = yield* withProvider("first");
+        assertSome(withProvider4, "first");
+        const withProvider5 = yield* withProvider("second");
+        assertSome(withProvider5, "second");
         const missing = Effect.provideService(
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromUnknown({})
@@ -360,9 +372,12 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("returns nothing for a non-turbo command", () =>
       Effect.gen(function* () {
-        expect(yield* overridesFor({}, "git", ["status"])).toEqual({});
-        expect(yield* overridesFor({}, "bunx", ["vitest", "run"])).toEqual({});
-        expect(yield* overridesFor({}, "op", ["run", "--", "bun", "run", "build"])).toEqual({});
+        const overridesFor6 = yield* overridesFor({}, "git", ["status"]);
+        expect(overridesFor6).toEqual({});
+        const overridesFor7 = yield* overridesFor({}, "bunx", ["vitest", "run"]);
+        expect(overridesFor7).toEqual({});
+        const overridesFor8 = yield* overridesFor({}, "op", ["run", "--", "bun", "run", "build"]);
+        expect(overridesFor8).toEqual({});
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -379,25 +394,23 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("guards the TUI on a direct turbo spawn with resolved credentials", () =>
       Effect.gen(function* () {
-        expect(
-          yield* overridesFor({ TURBO_TOKEN: "resolved", TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ }, "bunx", [
-            "turbo",
-            "run",
-            "check",
-          ])
-        ).toEqual({ TURBO_UI: "false" });
+        const overridesFor9 = yield* overridesFor(
+          { TURBO_TOKEN: "resolved", TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ },
+          "bunx",
+          ["turbo", "run", "check"]
+        );
+        expect(overridesFor9).toEqual({ TURBO_UI: "false" });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("scrubs unresolved references and pins the cache posture on a direct spawn", () =>
       Effect.gen(function* () {
-        expect(
-          yield* overridesFor(
-            { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: OP_REFERENCE, TURBO_CACHE: REMOTE_READ },
-            "bunx",
-            ["turbo", "run", "check"]
-          )
-        ).toStrictEqual({
+        const overridesFor10 = yield* overridesFor(
+          { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: OP_REFERENCE, TURBO_CACHE: REMOTE_READ },
+          "bunx",
+          ["turbo", "run", "check"]
+        );
+        expect(overridesFor10).toStrictEqual({
           TURBO_UI: "false",
           TURBO_API: undefined,
           TURBO_TOKEN: undefined,
@@ -409,21 +422,20 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("unsets unrelated unresolved references on a direct spawn and keeps literals", () =>
       Effect.gen(function* () {
-        expect(
-          yield* overridesFor(
-            {
-              PATH: "/fixture/bin",
-              SAFE_LITERAL: "fixture-value",
-              TURBO_TOKEN: "resolved",
-              TURBO_TEAM: "beep",
-              TURBO_CACHE: REMOTE_READ,
-              UNRELATED_SECRET: "op://fixture-vault/unrelated/secret",
-              UNRELATED_DATABASE_URL: "postgres://user:op://fixture-vault/database/password@db.test/database",
-            },
-            "bunx",
-            ["turbo", "run", "build"]
-          )
-        ).toStrictEqual({
+        const overridesFor11 = yield* overridesFor(
+          {
+            PATH: "/fixture/bin",
+            SAFE_LITERAL: "fixture-value",
+            TURBO_TOKEN: "resolved",
+            TURBO_TEAM: "beep",
+            TURBO_CACHE: REMOTE_READ,
+            UNRELATED_SECRET: "op://fixture-vault/unrelated/secret",
+            UNRELATED_DATABASE_URL: "postgres://user:op://fixture-vault/database/password@db.test/database",
+          },
+          "bunx",
+          ["turbo", "run", "build"]
+        );
+        expect(overridesFor11).toStrictEqual({
           UNRELATED_SECRET: undefined,
           UNRELATED_DATABASE_URL: undefined,
           TURBO_UI: "false",
@@ -454,7 +466,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         const args = opRunArgs(["run", "check"]);
 
         expect(turboCacheSecretSessionEnvironment(environment)).toStrictEqual(sanitized);
-        expect(yield* overridesFor(environment, "op", args)).toStrictEqual({ ...sanitized, TURBO_UI: "false" });
+        const overridesFor12 = yield* overridesFor(environment, "op", args);
+        expect(overridesFor12).toStrictEqual({ ...sanitized, TURBO_UI: "false" });
         expect(turboEnvExtendsAmbient("op", args)).toBe(false);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -463,7 +476,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       Effect.gen(function* () {
         const args = opRunArgs(["run", "coverage", "--", "--maxWorkers=1"]);
 
-        expect(yield* overridesFor({}, "op", args)).toEqual({ TURBO_UI: "false" });
+        const overridesFor13 = yield* overridesFor({}, "op", args);
+        expect(overridesFor13).toEqual({ TURBO_UI: "false" });
         expect(turboEnvExtendsAmbient("op", args)).toBe(false);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -601,14 +615,13 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
             cwd: "/repo",
           }),
         ]) {
-          expect(
-            yield* resolveTurboCacheStep(step, {
-              TURBO_API: "https://cache.example.test",
-              TURBO_TOKEN: "fixture-literal",
-              TURBO_TEAM: "fixture",
-              TURBO_CACHE: "local:rw,remote:r",
-            }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner))
-          ).toBe(step);
+          const pipe14 = yield* resolveTurboCacheStep(step, {
+            TURBO_API: "https://cache.example.test",
+            TURBO_TOKEN: "fixture-literal",
+            TURBO_TEAM: "fixture",
+            TURBO_CACHE: "local:rw,remote:r",
+          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+          expect(pipe14).toBe(step);
         }
       })
     );
@@ -621,15 +634,18 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromUnknown({})
         )(canUseTurboCacheSecretSession("/repo/cache-once")).pipe(provideSpawner(spawner));
-        expect(yield* probe).toBe(true);
-        expect(yield* probe).toBe(true);
+        const probe15 = yield* probe;
+        expect(probe15).toBe(true);
+        const probe16 = yield* probe;
+        expect(probe16).toBe(true);
         expect(spawner.spawns.length).toBe(1);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("refuses a session under CI without probing the op CLI", () =>
       Effect.gen(function* () {
-        expect(yield* sessionWith({ CI: "true" }, [{}])).toEqual({
+        const sessionWith17 = yield* sessionWith({ CI: "true" }, [{}]);
+        expect(sessionWith17).toEqual({
           usable: false,
           spawned: 0,
         });
@@ -638,15 +654,18 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("requires the cache references to resolve", () =>
       Effect.gen(function* () {
-        expect(yield* sessionWith({}, [{}])).toEqual({
+        const sessionWith18 = yield* sessionWith({}, [{}]);
+        expect(sessionWith18).toEqual({
           usable: true,
           spawned: 1,
         });
-        expect(yield* sessionWith({}, [{ exit: 1 }])).toEqual({
+        const sessionWith19 = yield* sessionWith({}, [{ exit: 1 }]);
+        expect(sessionWith19).toEqual({
           usable: false,
           spawned: 1,
         });
-        expect(yield* sessionWith({ CI: "false" }, [{ exit: 1 }])).toEqual({
+        const sessionWith20 = yield* sessionWith({ CI: "false" }, [{ exit: 1 }]);
+        expect(sessionWith20).toEqual({
           usable: false,
           spawned: 1,
         });
@@ -655,7 +674,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           method: "spawn",
           description: "reference probe failed",
         });
-        expect(yield* sessionWith({}, [probeFailure])).toEqual({
+        const sessionWith21 = yield* sessionWith({}, [probeFailure]);
+        expect(sessionWith21).toEqual({
           usable: false,
           spawned: 1,
         });
@@ -841,7 +861,8 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     it.effect("treats a spawn failure as an unavailable op CLI", () =>
       Effect.gen(function* () {
         const failure = PlatformError.badArgument({ module: "ChildProcess", method: "spawn", description: "ENOENT" });
-        expect(yield* sessionWith({}, [failure])).toEqual({ usable: false, spawned: 1 });
+        const sessionWith22 = yield* sessionWith({}, [failure]);
+        expect(sessionWith22).toEqual({ usable: false, spawned: 1 });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });

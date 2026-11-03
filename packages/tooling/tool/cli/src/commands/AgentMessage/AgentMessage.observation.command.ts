@@ -32,7 +32,8 @@ const run = (operation: AgentObservationRecovery["operation"]) =>
     { observationDir },
     Effect.fnUntraced(function* ({ observationDir }) {
       const report = yield* recoverAgentObservation(observationDir, operation);
-      yield* Console.log(yield* encodeAgentObservationRecoveryJson(report));
+      const encodedAgentObservationRecoveryJson = yield* encodeAgentObservationRecoveryJson(report);
+      yield* Console.log(encodedAgentObservationRecoveryJson);
     })
   );
 
@@ -46,7 +47,8 @@ const initialize = Command.make(
   { requestDir },
   Effect.fnUntraced(function* ({ requestDir }) {
     const receipt = yield* initializeAgentObservationClaims(requestDir);
-    yield* Console.log(yield* encodeAgentObservationProvisionedJson(receipt));
+    const encodedAgentObservationProvisionedJson = yield* encodeAgentObservationProvisionedJson(receipt);
+    yield* Console.log(encodedAgentObservationProvisionedJson);
   })
 ).pipe(Command.withDescription("Create a NEW independent claim store; never use as recovery for missing evidence"));
 const enroll = Command.make(
@@ -54,7 +56,8 @@ const enroll = Command.make(
   { requestDir, observationDir },
   Effect.fnUntraced(function* ({ requestDir, observationDir }) {
     const receipt = yield* enrollAgentObservation(requestDir, observationDir);
-    yield* Console.log(yield* encodeAgentObservationProvisionedJson(receipt));
+    const encodedAgentObservationProvisionedJson1 = yield* encodeAgentObservationProvisionedJson(receipt);
+    yield* Console.log(encodedAgentObservationProvisionedJson1);
   })
 ).pipe(
   Command.withDescription("Create a new enrollment against an existing claim store; never overwrite partial output")
@@ -66,7 +69,10 @@ const population = Command.make(
   { requestDir, observationDir, json: Flag.Boolean("json").pipe(Flag.withDefault(false)) },
   Effect.fnUntraced(function* ({ requestDir, observationDir, json }) {
     const report = yield* readAgentObservationPopulation(observationDir, requestDir);
-    if (json) return yield* Console.log(yield* encodeObservationClaimPopulationReportJson(report));
+    if (json) {
+      const encodedObservationClaimPopulationReportJson = yield* encodeObservationClaimPopulationReportJson(report);
+      return yield* Console.log(encodedObservationClaimPopulationReportJson);
+    }
     yield* Console.log(
       `Managed launch cohort: claims created in [${DateTime.formatIso(report.coverage.populationWindowStart)}, ${DateTime.formatIso(report.coverage.populationWindowEnd)})`
     );

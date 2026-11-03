@@ -558,7 +558,8 @@ export const runYeetInboxList = Effect.fn("Yeet.runInboxListCommand")(function* 
 > {
   const repoRoot = yield* locateRepoRoot();
   const view = yield* loadYeetInboxView(repoRoot);
-  yield* Console.log(yield* renderYeetInboxListOutput(view, options));
+  const renderYeetInboxListOutput1 = yield* renderYeetInboxListOutput(view, options);
+  yield* Console.log(renderYeetInboxListOutput1);
 });
 
 /**

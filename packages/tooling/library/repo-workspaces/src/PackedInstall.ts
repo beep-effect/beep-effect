@@ -1551,12 +1551,16 @@ const resolveReplacement = Effect.fnUntraced(function* (name: string, spec: stri
     .pipe(Effect.mapError((cause) => failure("Io", `could not inspect ${source}`, { package: name, cause })));
   if (info.type === "File" && Str.endsWith(".tgz")(source))
     return { name, source, kind: "tarball" } satisfies Replacement;
-  if (info.type !== "Directory") return yield* invalid(`${source} is neither a package directory nor a .tgz`);
+  if (info.type !== "Directory") {
+    return yield* invalid(`${source} is neither a package directory nor a .tgz`);
+  }
   const manifest = path.join(source, "package.json");
   const built = yield* fs
     .exists(manifest)
     .pipe(Effect.mapError((cause) => failure("Io", `could not inspect ${manifest}`, { package: name, cause })));
-  if (!built) return yield* invalid(`${source} has no package.json to pack`);
+  if (!built) {
+    return yield* invalid(`${source} has no package.json to pack`);
+  }
   return { name, source, kind: "directory" } satisfies Replacement;
 });
 
@@ -1596,7 +1600,8 @@ const planClosure: {
     // The root is read only when something needs it: a double that answers only listPackages still plans.
     const needsRoot = options.workspaceOverrides === true || A.some(requested, ([, spec]) => !path.isAbsolute(spec));
     const root = needsRoot ? (yield* discovery.info.pipe(Effect.mapError(discoveryFailed))).root : "/";
-    const linked = options.workspaceOverrides === true ? R.toEntries(yield* workspaceFileOverrides(root)) : [];
+    const linked =
+      options.workspaceOverrides === true ? yield* Effect.map(workspaceFileOverrides(root), R.toEntries) : [];
     // Explicit overrides come last, so they win over the workspace's own links.
     const wanted = MutableHashMap.fromIterable(A.appendAll(linked, requested));
     const packed = MutableHashSet.fromIterable(A.map(closure, (pkg) => pkg.name));
@@ -1688,11 +1693,11 @@ const pack = Effect.fn("PackedInstall.pack")(function* (
       )
     )
   );
-  if (!output.succeeded) return yield* packFailed(name, packer, output);
-  const found = A.filter(
-    yield* context.fs.readDirectory(destination).pipe(Effect.mapError(io(`could not list ${destination}`))),
-    Str.endsWith(".tgz")
-  );
+  if (!output.succeeded) {
+    return yield* packFailed(name, packer, output);
+  }
+  const pipe1 = yield* context.fs.readDirectory(destination).pipe(Effect.mapError(io(`could not list ${destination}`)));
+  const found = A.filter(pipe1, Str.endsWith(".tgz"));
   return yield* O.match(A.head(found), {
     onSome: (only) =>
       found.length === 1
@@ -1775,7 +1780,9 @@ const packWorkspacePackage = Effect.fnUntraced(function* (
 ) {
   const destination = context.path.join(context.scratch, "tarballs", String(index));
   const cwd = source === "source" ? pkg.path : context.path.join(pkg.path, source.directory);
-  if (source !== "source") yield* requireBuilt(context, pkg.name, cwd);
+  if (source !== "source") {
+    yield* requireBuilt(context, pkg.name, cwd);
+  }
   const tarball = yield* pack(context, pkg.name, cwd, source === "source" ? "pnpm" : "npm", destination, packTimeout);
   const manifest = yield* inspect(context, pkg.name, tarball, destination, true);
   return { name: pkg.name, tarball, manifest } satisfies PackedEntry;
@@ -2393,7 +2400,9 @@ export class PackedInstall {
     const packed = A.appendAll(workspacePacked, replacementPacked);
     const carrier = O.getOrThrow(A.head(packed));
     const rest = A.drop(packed, 1);
-    if (options.allowSharedBins !== true) yield* refuseSharedBins(carrier, rest);
+    if (options.allowSharedBins !== true) {
+      yield* refuseSharedBins(carrier, rest);
+    }
     const overrides = R.fromEntries(A.map(rest, ({ name, tarball }) => [name, tarball]));
 
     const consumers = yield* Effect.forEach(available, (manager) =>
@@ -2536,7 +2545,9 @@ const carrierCommand: {
         manager,
         ...O.getSomesStruct({ package: O.fromUndefinedOr(consumer.carrier) }),
       });
-    if (consumer.carrier === undefined) return yield* missing("cannot be found: this consumer records no carrier");
+    if (consumer.carrier === undefined) {
+      return yield* missing("cannot be found: this consumer records no carrier");
+    }
     const root = path.join(consumer.directory, "node_modules", ...Str.split("/")(consumer.carrier));
     const manifestPath = path.join(root, "package.json");
     const text = yield* fs
@@ -2553,12 +2564,16 @@ const carrierCommand: {
       return yield* failure("Io", `${manifestPath} is not a JSON object`, { manager, cause: manifest.failure });
     }
     const target = binTargetOf(text, name);
-    if (target === undefined) return yield* missing(`is not declared by ${consumer.carrier}`);
+    if (target === undefined) {
+      return yield* missing(`is not declared by ${consumer.carrier}`);
+    }
     const file = path.join(root, target);
     const present = yield* fs
       .exists(file)
       .pipe(Effect.mapError((cause) => failure("Io", `could not inspect ${file}`, { manager, cause })));
-    if (!present) return yield* missing(`points at ${file}, which does not exist`);
+    if (!present) {
+      return yield* missing(`points at ${file}, which does not exist`);
+    }
     return ChildProcess.make("node", [file, ...args], {
       cwd: options.cwd ?? consumer.directory,
       env: layeredEnv(consumer, options),

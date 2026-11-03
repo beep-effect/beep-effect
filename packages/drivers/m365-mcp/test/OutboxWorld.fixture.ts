@@ -58,7 +58,8 @@ export const digestOf = (seed: number): Sha256Hex => Sha256Hex.make(Str.repeat(6
 export const sha256Of = (content: Uint8Array): Effect.Effect<Sha256Hex, never, Digest.Digest> =>
   Effect.gen(function* () {
     const crypto = yield* Digest.Digest;
-    return Sha256Hex.make(Hex.encode(yield* crypto.digest(Digest.sha256, content)));
+    const digest1 = yield* crypto.digest(Digest.sha256, content);
+    return Sha256Hex.make(Hex.encode(digest1));
   });
 
 export const recipients = (addresses: ReadonlyArray<string>): ReadonlyArray<GraphRecipient> =>

@@ -34,7 +34,8 @@ it.effect.prop(
       );
       assert.strictEqual(recovered, input);
       assert.strictEqual(renderMarkdown([Doc.paragraph(recovered)], ctx), once);
-      const reparse = yield* Markdown.parse(yield* Markdown.stringify(parsed));
+      const stringify1 = yield* Markdown.stringify(parsed);
+      const reparse = yield* Markdown.parse(stringify1);
       const roundtrip = A.join(
         A.flatMap(reparse.children, (node) =>
           node.type === "paragraph"

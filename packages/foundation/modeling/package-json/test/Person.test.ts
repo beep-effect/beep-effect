@@ -23,7 +23,10 @@ describe("Person — own __proto__ extension fidelity", () => {
         assert.deepStrictEqual(R.get(rest, "__proto__"), O.some({ keep: 1 }));
         assert.strictEqual(Object.getPrototypeOf(rest), Object.prototype);
         assert.deepStrictEqual(R.keys(rest), ["__proto__", "team"]);
-        assert.strictEqual(yield* S.encodeUnknownEffect(json)(yield* S.encodeEffect(codec)(person)), text);
+        const argument = S.encodeUnknownEffect(json);
+        const value4 = yield* S.encodeEffect(codec)(person);
+        const value1 = yield* argument(value4);
+        assert.strictEqual(value1, text);
         Object.assign(person, { name: "Grace" } satisfies Partial<Person>);
         const encoded = yield* S.encodeEffect(codec)(person);
         assertTrue(P.isObject(encoded));
@@ -43,10 +46,8 @@ describe("Person.FromString", () => {
       assert.strictEqual(person.name, "Jane Doe");
       assert.strictEqual(person.email, "jane@x.com");
       assert.strictEqual(person.url, "https://x.com");
-      assert.strictEqual(
-        yield* S.encodeUnknownEffect(Person.FromString)(person),
-        "Jane Doe <jane@x.com> (https://x.com)"
-      );
+      const value2 = yield* S.encodeUnknownEffect(Person.FromString)(person);
+      assert.strictEqual(value2, "Jane Doe <jane@x.com> (https://x.com)");
     })
   );
 
@@ -65,7 +66,8 @@ describe("Person.FromValue", () => {
       const person = yield* S.decodeEffect(Person.FromValue)({ name: "Bob", email: "b@x.com" });
       assert.strictEqual(person.name, "Bob");
       assert.strictEqual(person.email, "b@x.com");
-      assert.deepStrictEqual(yield* S.encodeUnknownEffect(Person.FromValue)(person), {
+      const value3 = yield* S.encodeUnknownEffect(Person.FromValue)(person);
+      assert.deepStrictEqual(value3, {
         name: "Bob",
         email: "b@x.com",
       });
@@ -91,16 +93,15 @@ describe("Person wire-form preservation", () => {
 
   it.effect("re-encodes the shorthand string as a string, not an object", () =>
     Effect.gen(function* () {
-      assert.strictEqual(
-        yield* roundTrip("Ann Lee <ann@x.dev> (https://x.dev)"),
-        "Ann Lee <ann@x.dev> (https://x.dev)"
-      );
+      const roundTrip4 = yield* roundTrip("Ann Lee <ann@x.dev> (https://x.dev)");
+      assert.strictEqual(roundTrip4, "Ann Lee <ann@x.dev> (https://x.dev)");
     })
   );
 
   it.effect("re-encodes a bare-name shorthand as a string", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* roundTrip("Solo"), "Solo");
+      const roundTrip5 = yield* roundTrip("Solo");
+      assert.strictEqual(roundTrip5, "Solo");
     })
   );
 
@@ -108,13 +109,15 @@ describe("Person wire-form preservation", () => {
     Effect.gen(function* () {
       // Segment order and doubled spaces are not what the canonical
       // serializer would emit, so only verbatim replay reproduces them.
-      assert.strictEqual(yield* roundTrip("Ann  (https://x.dev)  <ann@x.dev>"), "Ann  (https://x.dev)  <ann@x.dev>");
+      const roundTrip6 = yield* roundTrip("Ann  (https://x.dev)  <ann@x.dev>");
+      assert.strictEqual(roundTrip6, "Ann  (https://x.dev)  <ann@x.dev>");
     })
   );
 
   it.effect("keeps unknown keys on the object form instead of dropping them", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* roundTrip({ name: "Dee", twitter: "@dee" }), { name: "Dee", twitter: "@dee" });
+      const roundTrip7 = yield* roundTrip({ name: "Dee", twitter: "@dee" });
+      assert.deepStrictEqual(roundTrip7, { name: "Dee", twitter: "@dee" });
     })
   );
 
@@ -129,7 +132,8 @@ describe("Person wire-form preservation", () => {
   it.effect("re-encodes a hand-built person canonically as an object", () =>
     Effect.gen(function* () {
       const person = Person.make({ name: "Ed", email: "ed@x.dev" });
-      assert.deepStrictEqual(yield* S.encodeUnknownEffect(Person.FromValue)(person), {
+      const value8 = yield* S.encodeUnknownEffect(Person.FromValue)(person);
+      assert.deepStrictEqual(value8, {
         name: "Ed",
         email: "ed@x.dev",
       });
@@ -144,7 +148,8 @@ describe("Person wire-form preservation", () => {
       const person = yield* S.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
       const edited = Person.make({ ...person, email: "new@x.dev" });
       assertNone(Person.wireStringOf(edited));
-      assert.deepStrictEqual(yield* S.encodeUnknownEffect(Person.FromValue)(edited), {
+      const value9 = yield* S.encodeUnknownEffect(Person.FromValue)(edited);
+      assert.deepStrictEqual(value9, {
         name: "Ann",
         email: "new@x.dev",
       });
@@ -157,7 +162,8 @@ describe("Person wire-form preservation", () => {
       // shorthand from the fields rather than replaying stale text.
       const person = yield* S.decodeEffect(Person.FromString)("Ann <ann@x.dev>");
       const edited = Person.make({ ...person, email: "new@x.dev" });
-      assert.strictEqual(yield* S.encodeUnknownEffect(Person.FromString)(edited), "Ann <new@x.dev>");
+      const value10 = yield* S.encodeUnknownEffect(Person.FromString)(edited);
+      assert.strictEqual(value10, "Ann <new@x.dev>");
     })
   );
 
@@ -256,7 +262,8 @@ describe("Person — stale wire provenance", () => {
     Effect.gen(function* () {
       const person = yield* S.decodeEffect(Person.FromString)("Ann <ann@x.dev>");
       Object.assign(person, { email: "new@x.dev" } satisfies Partial<Person>);
-      assert.strictEqual(yield* S.encodeUnknownEffect(Person.FromString)(person), "Ann <new@x.dev>");
+      const value11 = yield* S.encodeUnknownEffect(Person.FromString)(person);
+      assert.strictEqual(value11, "Ann <new@x.dev>");
     })
   );
 
@@ -264,7 +271,8 @@ describe("Person — stale wire provenance", () => {
     Effect.gen(function* () {
       const person = yield* S.decodeEffect(Person.FromValue)({ name: "Ann", email: "ann@x.dev" });
       Object.assign(person, { email: "new@x.dev" } satisfies Partial<Person>);
-      assert.deepStrictEqual<unknown>(yield* S.encodeUnknownEffect(Person.FromValue)(person), {
+      const value12 = yield* S.encodeUnknownEffect(Person.FromValue)(person);
+      assert.deepStrictEqual<unknown>(value12, {
         name: "Ann",
         email: "new@x.dev",
       });
@@ -277,7 +285,8 @@ describe("Person — stale wire provenance", () => {
     Effect.gen(function* () {
       const person = yield* S.decodeEffect(Person.FromValue)({ name: "Ann", twitter: "@ann" });
       Object.assign(person, { rest: { twitter: "@bea" } } satisfies Partial<Person>);
-      assert.deepStrictEqual<unknown>(yield* S.encodeUnknownEffect(Person.FromValue)(person), {
+      const value13 = yield* S.encodeUnknownEffect(Person.FromValue)(person);
+      assert.deepStrictEqual<unknown>(value13, {
         twitter: "@bea",
         name: "Ann",
       });
@@ -307,7 +316,8 @@ describe("Person — stale wire provenance", () => {
     Effect.gen(function* () {
       const person = yield* S.decodeEffect(Person.FromValue)("Ann <ann@x.dev>");
       Object.assign(person, { rest: {} } satisfies Partial<Person>);
-      assert.strictEqual(yield* S.encodeUnknownEffect(Person.FromValue)(person), "Ann <ann@x.dev>");
+      const value14 = yield* S.encodeUnknownEffect(Person.FromValue)(person);
+      assert.strictEqual(value14, "Ann <ann@x.dev>");
     })
   );
 
@@ -316,9 +326,11 @@ describe("Person — stale wire provenance", () => {
     // the provenance replay the WeakMap exists for. Key order included.
     Effect.gen(function* () {
       const shorthand = yield* S.decodeEffect(Person.FromValue)("Ann <ann@x.dev> (https://x.dev)");
-      assert.strictEqual(yield* S.encodeUnknownEffect(Person.FromValue)(shorthand), "Ann <ann@x.dev> (https://x.dev)");
+      const value15 = yield* S.encodeUnknownEffect(Person.FromValue)(shorthand);
+      assert.strictEqual(value15, "Ann <ann@x.dev> (https://x.dev)");
       const object = yield* S.decodeEffect(Person.FromValue)({ twitter: "@ann", name: "Ann" });
-      assert.deepStrictEqual<unknown>(yield* S.encodeUnknownEffect(Person.FromValue)(object), {
+      const value16 = yield* S.encodeUnknownEffect(Person.FromValue)(object);
+      assert.deepStrictEqual<unknown>(value16, {
         twitter: "@ann",
         name: "Ann",
       });
@@ -334,7 +346,8 @@ describe("Person shorthand property", () => {
       Effect.gen(function* () {
         const person = yield* S.decodeEffect(Person.FromString)(name);
         assert.strictEqual(person.name, name);
-        assert.strictEqual(yield* S.encodeEffect(Person.FromString)(person), name);
+        const value17 = yield* S.encodeEffect(Person.FromString)(person);
+        assert.strictEqual(value17, name);
       }),
     { arbitrary: fcRuns(50) }
   );

@@ -149,7 +149,8 @@ const installMatches = Effect.fn("SkillsMaterialize.installMatches")(function* (
   if (A.length(present) !== A.length(readings)) {
     return false;
   }
-  return Str.Equivalence(yield* installedTargetsHash(present, skill), expected);
+  const installedTargetsHash1 = yield* installedTargetsHash(present, skill);
+  return Str.Equivalence(installedTargetsHash1, expected);
 });
 
 const targetState = (reading: TargetReading, matches: (treeHash: Sha256Hex) => boolean): SkillMaterializeTargetState =>
@@ -218,7 +219,8 @@ export const reconstructVendoredSkill = Effect.fn("SkillsMaterialize.reconstruct
   const patches = yield* readVerifiedPatchSeries(repoRoot, skill, entry);
   let files: ReadonlyArray<SkillUpstreamContentFile> = content.files;
   for (const patch of patches) {
-    files = yield* applySkillPatch(patch.path, yield* decodePatchText(skill, patch), files);
+    const decodedPatchText = yield* decodePatchText(skill, patch);
+    files = yield* applySkillPatch(patch.path, decodedPatchText, files);
   }
   const effective = yield* computeSkillTree(files, `${skill}:effective`);
   if (!Str.Equivalence(effective.treeHash, entry.effective.treeHash)) {

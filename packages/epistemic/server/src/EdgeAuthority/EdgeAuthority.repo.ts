@@ -459,7 +459,8 @@ export const makeDrizzleEdgeAuthorityRepository = Effect.fn("Epistemic.EdgeAutho
       );
     }),
     readLatest: Effect.fn("Epistemic.EdgeAuthority.readLatest")(function* (logicalKey) {
-      const now = DateTime.toEpochMillis(yield* DateTime.now);
+      const now1 = yield* DateTime.now;
+      const now = DateTime.toEpochMillis(now1);
       return yield* readAsOfAt("readLatest", logicalKey, now, now);
     }),
     record: Effect.fn("Epistemic.EdgeAuthority.record")(function* (command) {

@@ -28,7 +28,9 @@ describe("TomlCodec property floor", () => {
     ([value]) =>
       Effect.gen(function* () {
         const encoded = yield* TomlCodec.stringify(value);
-        const decoded = yield* S.decodeUnknownEffect(Document)(yield* TomlCodec.parse(encoded));
+        const argument = S.decodeUnknownEffect(Document);
+        const parsed1 = yield* TomlCodec.parse(encoded);
+        const decoded = yield* argument(parsed1);
         assert.isTrue(equivalent(decoded, value));
       }),
     runs
@@ -44,8 +46,10 @@ describe("TomlCodec property floor", () => {
         const formatted = yield* TomlCodec.stringify(parsed);
         const reparsed = yield* TomlCodec.parse(formatted);
         assert.deepStrictEqual(reparsed, parsed);
-        assert.strictEqual(yield* TomlCodec.stringify(reparsed), formatted);
-        assert.isTrue(equivalent(yield* S.decodeUnknownEffect(Document)(reparsed), value));
+        const stringify1 = yield* TomlCodec.stringify(reparsed);
+        assert.strictEqual(stringify1, formatted);
+        const value2 = yield* S.decodeUnknownEffect(Document)(reparsed);
+        assert.isTrue(equivalent(value2, value));
       }),
     runs
   );

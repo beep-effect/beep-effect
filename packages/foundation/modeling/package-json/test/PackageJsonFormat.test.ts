@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // Decode-free canonical sort and format, in both shapes a downstream host
 // needs: `PackageJsonFormat.sortValue` (value→value) and
 // `PackageJsonFormat.formatToString` (bytes→bytes). The cases named "call-site
@@ -92,8 +93,11 @@ describe("PackageJsonFormat.sortValue (value in, value out)", () => {
 
   it("agrees with PackageJsonFormat.formatToString on ordering", () => {
     const value = { version: "1.0.0", scripts: { b: "2", a: "1" }, name: "p" };
-    const viaValue = `${JSON.stringify(PackageJsonFormat.sortValue(value), null, 2)}\n`;
-    assert.strictEqual(format(JSON.stringify(value)), viaValue);
+    const viaValue = `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(PackageJsonFormat.sortValue(value)), identity)}\n`;
+    assert.strictEqual(
+      format(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)),
+      viaValue
+    );
   });
 });
 

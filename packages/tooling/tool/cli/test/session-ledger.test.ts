@@ -88,7 +88,8 @@ const runGit = Effect.fn("SessionLedgerTest.runGit")(function* (cwd: string, arg
     stdout: "ignore",
     stderr: "inherit",
   });
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode1 = yield* handle.exitCode;
+  expect(exitCode1).toBe(0);
 });
 
 // A scratch clone whose origin names a GitHub repository, with a linked lane.
@@ -286,7 +287,8 @@ describe("session ledger service", () => {
             ConfigProvider.fromEnv({ env: { BEEP_SESSION_STATE_ROOT: root, HOME: root } })
           )
         );
-        expect(yield* ledger.list(repository)).toStrictEqual([]);
+        const list2 = yield* ledger.list(repository);
+        expect(list2).toStrictEqual([]);
         yield* ledger.append(row({ next: "first" }));
         yield* ledger.append(row({ next: "second", recordedAt: 1 }));
         const file = path.join(root, sessionLedgerFileName(repository));
@@ -310,16 +312,16 @@ describe("session ledger service", () => {
           )
         );
         yield* xdg.append(row());
-        expect(yield* fs.exists(path.join(root, "xdg", "beep", "sessions", sessionLedgerFileName(repository)))).toBe(
-          true
-        );
+        const exists3 = yield* fs.exists(path.join(root, "xdg", "beep", "sessions", sessionLedgerFileName(repository)));
+        expect(exists3).toBe(true);
         const home = yield* makeSessionLedgerLive().pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: { HOME: root } }))
         );
         yield* home.append(row());
-        expect(
-          yield* fs.exists(path.join(root, ".local", "state", "beep", "sessions", sessionLedgerFileName(repository)))
-        ).toBe(true);
+        const exists4 = yield* fs.exists(
+          path.join(root, ".local", "state", "beep", "sessions", sessionLedgerFileName(repository))
+        );
+        expect(exists4).toBe(true);
         const blocked = yield* makeSessionLedgerLive().pipe(
           Effect.provideService(
             ConfigProvider.ConfigProvider,
@@ -377,7 +379,8 @@ describe("beep session", () => {
           );
           expect(noted).toContain("[session] noted blocked for lane (feat/lane): operator merges");
           const file = path.join(stateRoot, sessionLedgerFileName(repository));
-          expect(decodeSessionLedger(yield* fs.readFileString(file)).rows[0]?.harness).toBe("codex");
+          const readFileString5 = yield* fs.readFileString(file);
+          expect(decodeSessionLedger(readFileString5).rows[0]?.harness).toBe("codex");
 
           const open = yield* captureOutput(withCwd(clone, runSession(["open"])));
           expect(open).toContain("1 live session(s) for beep-effect/beep-effect");
@@ -435,23 +438,22 @@ describe("beep session", () => {
           const fs = yield* FileSystem.FileSystem;
           const directory = `${clone}/goals/proposed/ops`;
           yield* fs.makeDirectory(directory, { recursive: true });
-          yield* fs.writeFileString(
-            `${directory}/manifest.json`,
-            yield* encodeGoalManifestJson(
-              GoalManifest.make({
-                initiative: { id: "proposed", status: "active" },
-                completionGate: {
-                  operator: "yeet",
-                  requiresPullRequest: true,
-                  requiresMergeable: true,
-                  statement: "Ship via yeet.",
-                  grandfathered: false,
-                  acceptanceEvidence: [{ kind: "yeet-verdict", ref: ".beep/yeet/verdict.json", gating: true }],
-                },
-                proposedCloseout: { status: "completed-retained", finalPullRequest: 1429 },
-              })
-            )
+          const argument = `${directory}/manifest.json`;
+          const encodedGoalManifestJson = yield* encodeGoalManifestJson(
+            GoalManifest.make({
+              initiative: { id: "proposed", status: "active" },
+              completionGate: {
+                operator: "yeet",
+                requiresPullRequest: true,
+                requiresMergeable: true,
+                statement: "Ship via yeet.",
+                grandfathered: false,
+                acceptanceEvidence: [{ kind: "yeet-verdict", ref: ".beep/yeet/verdict.json", gating: true }],
+              },
+              proposedCloseout: { status: "completed-retained", finalPullRequest: 1429 },
+            })
           );
+          yield* fs.writeFileString(argument, encodedGoalManifestJson);
           const output = yield* captureOutput(withCwd(clone, runSession(["open"])));
           // No receipt in this clone: the derived status names the proposal and says it is unverified.
           expect(output).toContain("[session:goal] proposed: completed-retained (proposed via #1429, unverified)");
@@ -687,8 +689,10 @@ describe("session ledger memory layer", () => {
         yield* ledger.append(row({ next: "ours" }));
         yield* ledger.append(elsewhere({ owner: "someone" }, "other owner"));
         yield* ledger.append(elsewhere({ name: "other" }, "other name"));
-        expect(A.map(yield* ledger.list(repository), (item) => item.next)).toStrictEqual(["ours"]);
-        expect(yield* ledger.list(PrRepository.make({ ...repository, name: "missing" }))).toStrictEqual([]);
+        const list6 = yield* ledger.list(repository);
+        expect(A.map(list6, (item) => item.next)).toStrictEqual(["ours"]);
+        const list7 = yield* ledger.list(PrRepository.make({ ...repository, name: "missing" }));
+        expect(list7).toStrictEqual([]);
       })
     );
   });

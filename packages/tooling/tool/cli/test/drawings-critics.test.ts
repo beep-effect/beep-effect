@@ -57,7 +57,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
-import { flow } from "effect/Function";
+import { flow, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -67,6 +67,7 @@ import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
@@ -206,7 +207,8 @@ describe("extractReportText", () => {
       const extracted = extractReportText({ route: "claude", text: envelope });
       assertSome(extracted, reportText);
       // The extracted text is the reviewer's report, not the envelope around it.
-      expect(yield* extracted.pipe(O.getOrThrow, decodeCriticReport)).toStrictEqual(report);
+      const pipe1 = yield* extracted.pipe(O.getOrThrow, decodeCriticReport);
+      expect(pipe1).toStrictEqual(report);
     })
   );
 
@@ -562,7 +564,8 @@ describe("claudeOutputLimit", () => {
   it.effect(
     "recognises a run that ended at the output-token cap, and the cap its message names",
     Effect.fnUntraced(function* () {
-      const seat = claudeOutputLimit(yield* encodeJson(outputCapEnvelope(OUTPUT_CAP_MESSAGE)));
+      const encodedJson = yield* encodeJson(outputCapEnvelope(OUTPUT_CAP_MESSAGE));
+      const seat = claudeOutputLimit(encodedJson);
       assertSome(
         O.map(seat, (s) => s.reason),
         "output-limit"
@@ -591,16 +594,20 @@ describe("claudeOutputLimit", () => {
   it.effect(
     "does not take a finished run or any other API error for the output limit",
     Effect.fnUntraced(function* () {
-      assertNone(
-        claudeOutputLimit(
-          yield* encodeJson({ type: "result", subtype: "success", is_error: false, result: opusReport })
-        )
-      );
-      assertNone(
-        claudeOutputLimit(
-          yield* encodeJson({ type: "result", subtype: "success", is_error: true, result: "API Error: 500" })
-        )
-      );
+      const encodedJson2 = yield* encodeJson({
+        type: "result",
+        subtype: "success",
+        is_error: false,
+        result: opusReport,
+      });
+      assertNone(claudeOutputLimit(encodedJson2));
+      const encodedJson3 = yield* encodeJson({
+        type: "result",
+        subtype: "success",
+        is_error: true,
+        result: "API Error: 500",
+      });
+      assertNone(claudeOutputLimit(encodedJson3));
       assertNone(claudeOutputLimit("not json"));
     })
   );
@@ -711,19 +718,25 @@ const stuckHandle = ChildProcessSpawner.makeHandle({
 // two pieces, as a pipe may split it, so the kept text shows the pieces were joined in order.
 const stalledStderrPieces = ["reading render/pg-1.png\n", "reading render/fig-1.svg\n"];
 const stalledStderr = A.join(stalledStderrPieces, "");
-const stalledStdout = JSON.stringify({
-  type: "result",
-  subtype: "success",
-  is_error: false,
-  result: JSON.stringify({
-    reviewer: "claude-fable-5.1",
-    verdict: "reject",
-    blockers: [],
-    priorAssessment: [],
-    findings: [{ ...finding("F-01"), relation: { kind: "new", of: null } }],
-    couldNotAssess: [],
+const stalledStdout = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    type: "result",
+    subtype: "success",
+    is_error: false,
+    result: Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        reviewer: "claude-fable-5.1",
+        verdict: "reject",
+        blockers: [],
+        priorAssessment: [],
+        findings: [{ ...finding("F-01"), relation: { kind: "new", of: null } }],
+        couldNotAssess: [],
+      }),
+      identity
+    ),
   }),
-});
+  identity
+);
 const stalledStdoutPieces = [Str.slice(0, 40)(stalledStdout), Str.slice(40)(stalledStdout)];
 
 // The pieces as a byte stream that then never ends, as a process that printed them and stalled.
@@ -745,14 +758,17 @@ const stalledHandle = ChildProcessSpawner.makeHandle({
   unref: Effect.succeed(Effect.void),
 });
 
-const opusReport = JSON.stringify({
-  reviewer: "claude-opus-5.5",
-  verdict: "accept",
-  blockers: [],
-  priorAssessment: [],
-  findings: [],
-  couldNotAssess: [],
-});
+const opusReport = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+    reviewer: "claude-opus-5.5",
+    verdict: "accept",
+    blockers: [],
+    priorAssessment: [],
+    findings: [],
+    couldNotAssess: [],
+  }),
+  identity
+);
 
 const flagValue = (args: ReadonlyArray<string>, flag: string) =>
   O.flatMap(
@@ -777,9 +793,24 @@ const seatOutput = (command: ChildProcess.StandardCommand): SeatOutput =>
     ),
     Match.when("claude", () =>
       O.contains(flagValue(commandArgs(command), "--model"), "claude-output-capped")
-        ? { stdout: JSON.stringify(outputCapEnvelope(OUTPUT_CAP_MESSAGE)), stderr: "", exitCode: 1 }
+        ? {
+            stdout: Result.getOrThrowWith(
+              S.encodeUnknownResult(S.fromJsonString(S.Unknown))(outputCapEnvelope(OUTPUT_CAP_MESSAGE)),
+              identity
+            ),
+            stderr: "",
+            exitCode: 1,
+          }
         : {
-            stdout: JSON.stringify({ type: "result", subtype: "success", is_error: false, result: opusReport }),
+            stdout: Result.getOrThrowWith(
+              S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+                type: "result",
+                subtype: "success",
+                is_error: false,
+                result: opusReport,
+              }),
+              identity
+            ),
             stderr: "",
             exitCode: 0,
           }
@@ -916,7 +947,8 @@ const runSeats = Effect.fnUntraced(function* (name: string, reviewers: ReadonlyA
     .pipe(Effect.forkChild);
   const record = yield* finishSequence(fiber, SEQUENCE_TEST_MINUTES);
   const outcomes = A.map(record.runs, (run) => [run.reviewer.name, run.exitCode, O.getOrNull(run.report)] as const);
-  const priorFiles = A.sort(yield* fs.readDirectory(path.join(loopDir, "prior")), Order.String);
+  const readDirectory4 = yield* fs.readDirectory(path.join(loopDir, "prior"));
+  const priorFiles = A.sort(readDirectory4, Order.String);
   const allFindings = yield* fs.readFileString(path.join(loopDir, "ALL-FINDINGS.md"));
   const loop = yield* fs.readFileString(path.join(loopDir, "loop.json")).pipe(Effect.flatMap(decodeCriticLoopRecord));
   const summary = yield* critics.summary(loopDir);
@@ -950,7 +982,8 @@ describe("critic sequence seats", () => {
         expect(run.allFindings).toContain(missing);
         expect(run.summary).toContain(missing);
         // the summary opus read names the missing seat; nothing points it at a grok report
-        expect(yield* fs.readFileString(path.join(run.packDir, "prior", "SUMMARY.md"))).toContain(missing);
+        const readFileString5 = yield* fs.readFileString(path.join(run.packDir, "prior", "SUMMARY.md"));
+        expect(readFileString5).toContain(missing);
         expect(run.opusPrompt).toContain("Review the drawing set.");
         expect(run.opusPrompt).not.toContain("grok-4.7.json");
         expect(run.opusPrompt).toContain("render/MEASUREMENTS.md");
@@ -971,7 +1004,8 @@ describe("critic sequence seats", () => {
         assertNone(O.flatMap(A.head(run.record.runs), (grok) => grok.unavailable));
         expect(run.allFindings).not.toContain("did not run");
         expect(run.summary).not.toContain("did not run");
-        expect(yield* fs.readFileString(path.join(run.loopDir, "grok-4.7.log"))).toContain("401 Unauthorized");
+        const readFileString6 = yield* fs.readFileString(path.join(run.loopDir, "grok-4.7.log"));
+        expect(readFileString6).toContain("401 Unauthorized");
       })
     );
 
@@ -1000,7 +1034,8 @@ describe("critic sequence seats", () => {
           "claude-fable-5.1 (ids F-…) did not finish: the seat ran past its 5-minute limit and was stopped. It wrote no report; there are no F- findings to assess.";
         expect(run.allFindings).toContain(missing);
         expect(run.summary).toContain(missing);
-        expect(yield* fs.readFileString(path.join(run.packDir, "prior", "SUMMARY.md"))).toContain(missing);
+        const readFileString7 = yield* fs.readFileString(path.join(run.packDir, "prior", "SUMMARY.md"));
+        expect(readFileString7).toContain(missing);
         expect(criticRunLine(fable)).toBe(
           "1. claude-fable-5.1: stopped at its time limit, no report (the seat ran past its 5-minute limit and was stopped)"
         );
@@ -1008,8 +1043,10 @@ describe("critic sequence seats", () => {
         // a seat that ignores SIGTERM is killed, so stopping it cannot hold the sequence
         assertSome(MutableHashMap.get(spawnedForceKill, `${run.packDir} claude`), "30 seconds");
         // the stopped seat's log and raw output are written even though it printed nothing
-        expect(yield* fs.readFileString(path.join(run.loopDir, "claude-fable-5.1.log"))).toBe("");
-        expect(yield* fs.readFileString(path.join(run.loopDir, "claude-fable-5.1.raw"))).toBe("");
+        const readFileString8 = yield* fs.readFileString(path.join(run.loopDir, "claude-fable-5.1.log"));
+        expect(readFileString8).toBe("");
+        const readFileString9 = yield* fs.readFileString(path.join(run.loopDir, "claude-fable-5.1.raw"));
+        expect(readFileString9).toBe("");
       })
     );
 
@@ -1031,8 +1068,10 @@ describe("critic sequence seats", () => {
         expect(fable.findings).toBe(0);
         assertNone(fable.reportSha256);
         // what the seat printed before it stalled is kept, in order, named as an exited seat's output is
-        expect(yield* fs.readFileString(path.join(run.loopDir, "claude-fable-5.1.log"))).toBe(stalledStderr);
-        expect(yield* fs.readFileString(path.join(run.loopDir, "claude-fable-5.1.raw"))).toBe(stalledStdout);
+        const readFileString10 = yield* fs.readFileString(path.join(run.loopDir, "claude-fable-5.1.log"));
+        expect(readFileString10).toBe(stalledStderr);
+        const readFileString11 = yield* fs.readFileString(path.join(run.loopDir, "claude-fable-5.1.raw"));
+        expect(readFileString11).toBe(stalledStdout);
         // what it printed is a whole report with F-01, so only the time limit keeps it out of the loop
         const printed = yield* extractReportText({ route: "claude", text: stalledStdout }).pipe(
           O.getOrThrow,
@@ -1040,11 +1079,13 @@ describe("critic sequence seats", () => {
         );
         expect(A.map(printed.findings, (found) => found.id)).toStrictEqual(["F-01"]);
         // the report envelope it printed was never decoded: no report file, nothing in prior/, no F-01
-        expect(yield* fs.exists(path.join(run.loopDir, "claude-fable-5.1.json"))).toBe(false);
+        const exists12 = yield* fs.exists(path.join(run.loopDir, "claude-fable-5.1.json"));
+        expect(exists12).toBe(false);
         expect(run.priorFiles).toStrictEqual(["2-claude-opus-5.5.json"]);
         expect(run.allFindings).not.toContain("F-01");
         expect(run.opusPrompt).not.toContain("F-01");
-        expect(yield* fs.readFileString(path.join(run.packDir, "prior", "SUMMARY.md"))).not.toContain("F-01");
+        const readFileString13 = yield* fs.readFileString(path.join(run.packDir, "prior", "SUMMARY.md"));
+        expect(readFileString13).not.toContain("F-01");
       })
     );
 
@@ -1098,9 +1139,11 @@ describe("critic sequence seats", () => {
           "claude-fable-5.1 (ids F-…) did not finish: claude ended the run with api_error max_output_tokens: one response ran past the 64000 output-token cap. It wrote no report; there are no F- findings to assess.";
         expect(run.allFindings).toContain(missing);
         expect(run.summary).toContain(missing);
-        expect(yield* fs.readFileString(path.join(run.packDir, "prior", "SUMMARY.md"))).toContain(missing);
+        const readFileString14 = yield* fs.readFileString(path.join(run.packDir, "prior", "SUMMARY.md"));
+        expect(readFileString14).toContain(missing);
         // the raw output stays beside the record for the operator
-        expect(yield* fs.readFileString(path.join(run.loopDir, "claude-fable-5.1.raw"))).toContain("max_output_tokens");
+        const readFileString15 = yield* fs.readFileString(path.join(run.loopDir, "claude-fable-5.1.raw"));
+        expect(readFileString15).toContain("max_output_tokens");
         // every claude seat runs with an output and a thinking cap
         expect(R.keys(run.opusEnv)).toEqual(expect.arrayContaining(R.keys(CRITIC_CLAUDE_LIMITS)));
       })
@@ -1291,7 +1334,9 @@ describe("PDF measurements codec properties", () => {
     Effect.fnUntraced(function* ([pdf]) {
       const codec = S.fromJsonString(CriticPdfMeasurements);
       const equivalent = S.toEquivalence(CriticPdfMeasurements);
-      const roundTrip = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(pdf));
+      const argument1 = S.decodeEffect(codec);
+      const value1 = yield* S.encodeEffect(codec)(pdf);
+      const roundTrip = yield* argument1(value1);
       expect(equivalent(roundTrip, pdf)).toBe(true);
       expect(roundTrip.containerDiscovery).toBe(pdf.containerDiscovery);
       const encoded = yield* S.encodeEffect(CriticPdfMeasurements)(pdf);
@@ -1342,7 +1387,8 @@ describe("MEASUREMENTS.md", () => {
       );
       expect(markdown).toContain("| FIG. 1 & 2 | DejaVu Sans | 12 | 107.95 | 268.111 | middle |");
       const json = yield* encodeCriticMeasurements(measurements);
-      expect(yield* decodeCriticMeasurements(json)).toEqual(measurements);
+      const decodedCriticMeasurements = yield* decodeCriticMeasurements(json);
+      expect(decodedCriticMeasurements).toEqual(measurements);
       expect(measurements.pdf.containerDiscovery).toBe("complete");
       const legacyPdf = yield* S.decodeEffect(CriticPdfMeasurements)({
         file: "render/sheets.pdf",
@@ -1372,7 +1418,9 @@ describe("MEASUREMENTS.md", () => {
             ? "Undecodable streams: none."
             : "Undecodable streams: none among inspected streams; global stream inspection is incomplete."
         );
-        expect(yield* decodeCriticMeasurements(yield* encodeCriticMeasurements(incomplete))).toEqual(incomplete);
+        const encodedCriticMeasurements = yield* encodeCriticMeasurements(incomplete);
+        const decodedCriticMeasurements16 = yield* decodeCriticMeasurements(encodedCriticMeasurements);
+        expect(decodedCriticMeasurements16).toEqual(incomplete);
       }
     })
   );

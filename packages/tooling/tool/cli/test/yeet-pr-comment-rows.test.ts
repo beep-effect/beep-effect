@@ -143,7 +143,8 @@ const writeState = Effect.fnUntraced(function* (
   const path = yield* Path.Path;
   const statePath = yield* yeetMonitorCommentStatePath(context, consumer);
   yield* fs.makeDirectory(path.dirname(statePath), { recursive: true });
-  yield* fs.writeFileString(statePath, yield* YeetMonitorCommentStateJson.encode(state));
+  const encoded = yield* YeetMonitorCommentStateJson.encode(state);
+  yield* fs.writeFileString(statePath, encoded);
 });
 
 const issueCursor = (context: RepoRunContext, consumer: YeetMonitorCommentConsumer) =>
@@ -281,7 +282,9 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("per-consumer comment waterma
         ]);
         const shared = yield* yeetMonitorCommentStatePath(context);
         const untilReady = yield* yeetMonitorCommentStatePath(context, "until-ready");
-        expect(shared).toBe(yield* yeetMonitorCommentStatePath(context, "shared"));
+        const expectation = expect(shared);
+        const yeetMonitorCommentStatePath1 = yield* yeetMonitorCommentStatePath(context, "shared");
+        expectation.toBe(yeetMonitorCommentStatePath1);
         expect(path.basename(shared)).toBe("monitor-comments.json");
         expect(path.dirname(untilReady)).toBe(path.dirname(shared));
         expect(untilReady).not.toBe(shared);
@@ -298,8 +301,10 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("per-consumer comment waterma
 
         // The until-ready consumer reads and advances only its own position.
         yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT);
-        assertSome(yield* issueCursor(context, "until-ready"), [AFTER_SUBMIT, 50]);
-        assertSome(yield* issueCursor(context, "shared"), [SHARED_AT, 1]);
+        const issueCursor1 = yield* issueCursor(context, "until-ready");
+        assertSome(issueCursor1, [AFTER_SUBMIT, 50]);
+        const issueCursor2 = yield* issueCursor(context, "shared");
+        assertSome(issueCursor2, [SHARED_AT, 1]);
 
         // A `--watch` on the same branch still sees the comment the rows consumed,
         // and acknowledging it there leaves the until-ready position alone.
@@ -310,8 +315,10 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("per-consumer comment waterma
         const watch = yield* openYeetMonitorCommentStream(context, PR);
         const seen = yield* pollAndAcknowledgeShared(context, watch);
         expect(seen).toStrictEqual([50, 51]);
-        assertSome(yield* issueCursor(context, "shared"), [LATER, 51]);
-        assertSome(yield* issueCursor(context, "until-ready"), [AFTER_SUBMIT, 50]);
+        const issueCursor3 = yield* issueCursor(context, "shared");
+        assertSome(issueCursor3, [LATER, 51]);
+        const issueCursor4 = yield* issueCursor(context, "until-ready");
+        assertSome(issueCursor4, [AFTER_SUBMIT, 50]);
       })
     )
   );
@@ -325,21 +332,27 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("per-consumer comment waterma
         yield* writeState(context, "shared", stateAt(SHARED_AT, 1));
         yield* Ref.set(payloads, { ...noPayloads, issues: [issue(60, "reviewer", BEFORE_SUBMIT)] });
 
-        expect(yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT)).toStrictEqual([]);
-        expect(yield* commentRows(root)).toStrictEqual([]);
-        assertSome(yield* issueCursor(context, "until-ready"), [SUBMITTED_AT, 0]);
+        const pollYeetPrCommentRows5 = yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT);
+        expect(pollYeetPrCommentRows5).toStrictEqual([]);
+        const commentRows6 = yield* commentRows(root);
+        expect(commentRows6).toStrictEqual([]);
+        const issueCursor7 = yield* issueCursor(context, "until-ready");
+        assertSome(issueCursor7, [SUBMITTED_AT, 0]);
 
         // The until-merged replay's first namespaced run prints only its start
         // line and makes no GitHub read. The block shares one TestConsole, so
         // read only the lines the replay printed.
         const before = A.length(spawner.spawns);
-        const logged = A.length(yield* TestConsole.logLines);
+        const logLines8 = yield* TestConsole.logLines;
+        const logged = A.length(logLines8);
         yield* replayYeetMonitorComments(context, PR, "until-merged");
         expect(A.length(spawner.spawns)).toBe(before);
-        const printed = A.join(A.map(A.drop(yield* TestConsole.logLines, logged), String), "\n");
+        const logLines9 = yield* TestConsole.logLines;
+        const printed = A.join(A.map(A.drop(logLines9, logged), String), "\n");
         expect(printed).toContain(`[yeet] comment replay: no watermark for #${PR}`);
         expect(printed).not.toContain("Please rebase onto main.");
-        assertSome(yield* issueCursor(context, "shared"), [SHARED_AT, 1]);
+        const issueCursor10 = yield* issueCursor(context, "shared");
+        assertSome(issueCursor10, [SHARED_AT, 1]);
       })
     )
   );
@@ -352,8 +365,10 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("per-consumer comment waterma
         yield* writeState(context, "shared", stateAt(LATER, 70));
         yield* Ref.set(payloads, { ...noPayloads, issues: [issue(69, "reviewer", AFTER_SUBMIT)] });
 
-        expect(yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT)).toStrictEqual([]);
-        assertSome(yield* issueCursor(context, "until-ready"), [LATER, 70]);
+        const pollYeetPrCommentRows11 = yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT);
+        expect(pollYeetPrCommentRows11).toStrictEqual([]);
+        const issueCursor12 = yield* issueCursor(context, "until-ready");
+        assertSome(issueCursor12, [LATER, 70]);
       })
     )
   );
@@ -379,13 +394,15 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("until-ready comment rows", (
           [81, "issue", "P1"],
           [82, "review-body", "P1"],
         ]);
-        expect(A.map(yield* commentRows(root), (row) => row.id)).toStrictEqual(A.map(appended, (row) => row.id));
+        const commentRows13 = yield* commentRows(root);
+        expect(A.map(commentRows13, (row) => row.id)).toStrictEqual(A.map(appended, (row) => row.id));
         const [first] = appended;
         expect(first?.capsule.link).toBe(`https://github.com/o/r/pull/${PR}#issuecomment-81`);
         expect(first?.capsule.headSha).toBe(HEAD);
         expect(first?.ts).toBe(POLLED_AT);
         // Every collection advanced past everything it read, rows or not.
-        assertSome(yield* issueCursor(context, "until-ready"), [AFTER_SUBMIT, 81]);
+        const issueCursor14 = yield* issueCursor(context, "until-ready");
+        assertSome(issueCursor14, [AFTER_SUBMIT, 81]);
       })
     )
   );
@@ -422,18 +439,28 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("until-ready comment rows", (
         yield* Ref.set(payloads, { ...noPayloads, issues: [issue(100, "reviewer", AFTER_SUBMIT)] });
 
         const [row] = yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT);
-        if (row === undefined) return yield* Effect.die("expected one comment row");
-        expect(row.id).toBe(yield* yeetPrCommentRowId(row.capsule));
+        if (row === undefined) {
+          return yield* Effect.die("expected one comment row");
+        }
+        const expectation1 = expect(row.id);
+        const yeetPrCommentRowId2 = yield* yeetPrCommentRowId(row.capsule);
+        expectation1.toBe(yeetPrCommentRowId2);
 
         // The next poll reads nothing new past the watermark.
-        expect(yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT)).toStrictEqual([]);
+        const pollYeetPrCommentRows15 = yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT);
+        expect(pollYeetPrCommentRows15).toStrictEqual([]);
         // Losing the position re-reads the comment, and a push moved the head:
         // the id is keyed on the comment, not the head, so nothing is appended.
-        yield* fs.remove(yield* yeetMonitorCommentStatePath(context, "until-ready"));
-        expect(yield* pollYeetPrCommentRows(context, windowFor(SUBMITTED_AT, "fedcba9876"), POLLED_AT)).toStrictEqual(
-          []
+        const yeetMonitorCommentStatePath16 = yield* yeetMonitorCommentStatePath(context, "until-ready");
+        yield* fs.remove(yeetMonitorCommentStatePath16);
+        const pollYeetPrCommentRows17 = yield* pollYeetPrCommentRows(
+          context,
+          windowFor(SUBMITTED_AT, "fedcba9876"),
+          POLLED_AT
         );
-        expect(A.map(yield* commentRows(root), (value) => value.id)).toStrictEqual([row.id]);
+        expect(pollYeetPrCommentRows17).toStrictEqual([]);
+        const commentRows18 = yield* commentRows(root);
+        expect(A.map(commentRows18, (value) => value.id)).toStrictEqual([row.id]);
       })
     )
   );

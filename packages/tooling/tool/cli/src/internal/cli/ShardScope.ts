@@ -137,7 +137,8 @@ export const resolveShardScope = Effect.fn("ShardScope.resolve")(function* (
 ): Effect.fn.Return<ShardScope, RepoWorkspacesError | PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = toPosixPath(yield* fs.realPath(repoRoot));
+  const realPath1 = yield* fs.realPath(repoRoot);
+  const root = toPosixPath(realPath1);
   const workspaces = yield* workspaceDirectories(root);
   const resolveOwner = (candidate: string): O.Option<ShardScopeOwner> => {
     const owner = ownerOf(path.resolve(root, candidate));

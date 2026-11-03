@@ -16,7 +16,8 @@ const roundTrip = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -74,15 +75,14 @@ describe("catalog parser fidelity", () => {
         const json = yield* S.encodeEffect(JsonValue)({ catalogs: normalized.entries });
         const parsed = yield* CatalogSet.fromManifestWorkspaces(json);
         assert.deepStrictEqual(parsed.entries, normalized.entries);
-        const reparsed = yield* CatalogSet.fromManifestWorkspaces(
-          yield* S.encodeEffect(JsonValue)({ catalogs: parsed.entries })
-        );
+        const value2 = yield* S.encodeEffect(JsonValue)({ catalogs: parsed.entries });
+        const reparsed = yield* CatalogSet.fromManifestWorkspaces(value2);
         assert.deepStrictEqual(reparsed.entries, parsed.entries);
-        const yamlParsed = yield* CatalogSet.fromWorkspaceYaml(yield* Yaml.stringify({ catalogs: normalized.entries }));
+        const stringify3 = yield* Yaml.stringify({ catalogs: normalized.entries });
+        const yamlParsed = yield* CatalogSet.fromWorkspaceYaml(stringify3);
         assert.deepStrictEqual(yamlParsed.entries, normalized.entries);
-        const yamlReparsed = yield* CatalogSet.fromWorkspaceYaml(
-          yield* Yaml.stringify({ catalogs: yamlParsed.entries })
-        );
+        const stringify4 = yield* Yaml.stringify({ catalogs: yamlParsed.entries });
+        const yamlReparsed = yield* CatalogSet.fromWorkspaceYaml(stringify4);
         assert.deepStrictEqual(yamlReparsed.entries, yamlParsed.entries);
       }),
     runs

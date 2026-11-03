@@ -3,7 +3,7 @@ import { Markdown } from "@beep/markdown/Markdown";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -276,13 +276,17 @@ describe("Render.markdown: headings and paragraphs", () => {
           cases++;
           const parsed = Markdown.parseResult(Render.markdown([Doc.paragraph(text)], ctx));
           if (parsed._tag !== "Success") {
-            failures.push(`${JSON.stringify(text)}: parse failed`);
+            failures.push(
+              `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)}: parse failed`
+            );
             return;
           }
           const node = parsed.success;
           const ok = kids(node).length === 1 && kids(node)[0]?.type === "paragraph" && textOf(node) === expected;
           if (!ok && failures.length < 5)
-            failures.push(`${JSON.stringify(text)} -> ${JSON.stringify(A.map(kids(node), (n) => n.type))}`);
+            failures.push(
+              `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)} -> ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(A.map(kids(node), (n) => n.type)), identity)}`
+            );
         };
         for (const text of upTo(alphabet, 6)) check(text);
         // A fixed-seed generator: the same multi-line texts every run.
@@ -517,14 +521,17 @@ describe("Render.markdown: tables", () => {
         ],
         ctx
       );
-      const rows = kids(tableOf(yield* parse(markdown))).slice(1);
+      const parsed1 = yield* parse(markdown);
+      const rows = kids(tableOf(parsed1)).slice(1);
       assert.strictEqual(rows.length, codes.length);
       const failures = A.flatMap(codes, (c, index) => {
         const cells = kids(rows[index]);
         const got = A.map(cells, textOf);
         return got.length === 2 && got[0] === c && got[1] === "z"
           ? []
-          : [`${JSON.stringify(c)} -> ${JSON.stringify(got)}`];
+          : [
+              `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(c), identity)} -> ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(got), identity)}`,
+            ];
       });
       assert.deepStrictEqual(failures.slice(0, 5), []);
     })
@@ -549,7 +556,8 @@ describe("Render.markdown: tables", () => {
             ],
             ctx
           );
-          const table = tableOf(yield* parse(markdown));
+          const parsed2 = yield* parse(markdown);
+          const table = tableOf(parsed2);
           const rows = kids(table).slice(1);
           if (rows.length !== batch.length)
             failures.push(`batch ${start}: ${rows.length} rows, wanted ${batch.length}`);
@@ -561,7 +569,9 @@ describe("Render.markdown: tables", () => {
             const clean = A.every(types, (t) => ["tableRow", "tableCell", "text", "html"].includes(t));
             if (got?.length !== 1 || got[0] !== expected || !clean) {
               if (failures.length < 5)
-                failures.push(`${JSON.stringify(cell)} -> ${JSON.stringify(got)} ${JSON.stringify(types)}`);
+                failures.push(
+                  `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(cell), identity)} -> ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(got), identity)} ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(types), identity)}`
+                );
             }
           });
         }
@@ -573,13 +583,15 @@ describe("Render.markdown: tables", () => {
 
   it.effect("pads a short row and widens for a long one, and has an empty header when none is given", () =>
     Effect.gen(function* () {
-      const padded = tableOf(yield* treeOf([Doc.table([{ header: "a" }, { header: "b" }], [["1"], ["1", "2", "3"]])]));
+      const treeOf3 = yield* treeOf([Doc.table([{ header: "a" }, { header: "b" }], [["1"], ["1", "2", "3"]])]);
+      const padded = tableOf(treeOf3);
       assert.deepStrictEqual(cellTexts(padded), [
         ["a", "b", ""],
         ["1", "", ""],
         ["1", "2", "3"],
       ]);
-      const headerless = tableOf(yield* treeOf([Doc.table([{ header: [] }, { header: [] }], [["x", "y"]])]));
+      const treeOf4 = yield* treeOf([Doc.table([{ header: [] }, { header: [] }], [["x", "y"]])]);
+      const headerless = tableOf(treeOf4);
       assert.deepStrictEqual(cellTexts(headerless), [
         ["", ""],
         ["x", "y"],
@@ -643,7 +655,8 @@ describe("Render.markdown: code, diff, collapsible and callout", () => {
       const out = yield* render([Doc.codeBlock("x", "ts\u001B[31m")]);
       assert.notInclude(out, ESC);
       assert.notMatch(out, /[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/);
-      assert.strictEqual(kids(yield* parse(out))[0]?.type, "code");
+      const parsed5 = yield* parse(out);
+      assert.strictEqual(kids(parsed5)[0]?.type, "code");
     })
   );
 
@@ -1037,9 +1050,8 @@ describe("Render.markdown: lists, trees and counts", () => {
 
   it.effect("Counts as a row is a table of one row: a header of the counter labels over their numbers", () =>
     Effect.gen(function* () {
-      const table = tableOf(
-        yield* treeOf([Doc.counts({ label: "Widgets", counters, durationMs: 61000, layout: "row" })])
-      );
+      const treeOf6 = yield* treeOf([Doc.counts({ label: "Widgets", counters, durationMs: 61000, layout: "row" })]);
+      const table = tableOf(treeOf6);
       assert.deepStrictEqual(cellTexts(table), [
         ["passed", "failed", "duration"], // every column named; the label goes above the table
         ["3/4", "1", "1m 1s"],
@@ -1235,21 +1247,19 @@ describe("Render.markdown: okfit's trial (verbatim, link suffix, counts share, a
         Doc.counter(Status.core, "failure", { key: "error", label: "errors", n: 2 }),
         Doc.counter(Status.core, "warning", { key: "warning", label: "warnings", n: 1 }),
       ];
-      assert.strictEqual(
-        textOf(yield* treeOf([Doc.counts({ layout: "inline", counters, share: false })])),
-        "2 errors, 1 warnings"
-      );
+      const treeOf7 = yield* treeOf([Doc.counts({ layout: "inline", counters, share: false })]);
+      assert.strictEqual(textOf(treeOf7), "2 errors, 1 warnings");
     })
   );
 
   it.effect("an annotation renders nothing, and adds no blank block", () =>
     Effect.gen(function* () {
       const annotation = Doc.annotation({ level: "error" }, "x");
-      assert.strictEqual(yield* render([annotation]), "");
-      assert.strictEqual(
-        yield* render([Doc.paragraph("a"), annotation, Doc.paragraph("b")]),
-        yield* render([Doc.paragraph("a"), Doc.paragraph("b")])
-      );
+      const render8 = yield* render([annotation]);
+      assert.strictEqual(render8, "");
+      const render9 = yield* render([Doc.paragraph("a"), annotation, Doc.paragraph("b")]);
+      const render12 = yield* render([Doc.paragraph("a"), Doc.paragraph("b")]);
+      assert.strictEqual(render9, render12);
     })
   );
 });
@@ -1365,7 +1375,8 @@ describe("Render.markdown: reporter blocks (parsed back)", () => {
   it.effect("diffText is a diff fence holding the text as given", () =>
     Effect.gen(function* () {
       const unified = "@@ -1 +1 @@\n-old\n+new\n context ```";
-      const code = kids(yield* treeOf([Doc.diffText(unified)]))[0];
+      const treeOf10 = yield* treeOf([Doc.diffText(unified)]);
+      const code = kids(treeOf10)[0];
       assert.strictEqual(code?.type, "code");
       assert.strictEqual(code?.lang, "diff");
       assert.strictEqual(Str.replace(/\n$/, "")(code?.value ?? ""), unified);
@@ -1388,7 +1399,8 @@ describe("Render.markdown: emphasis, list caps, counts headers, link fallbacks a
     Effect.gen(function* () {
       const out = yield* render([Doc.paragraph("a", Doc.em("b"), "c")]);
       assert.strictEqual(out, "a*b*c");
-      const paragraph = kids(yield* parse(out))[0];
+      const parsed11 = yield* parse(out);
+      const paragraph = kids(parsed11)[0];
       assert.deepStrictEqual(
         A.map(kids(paragraph), (n) => n.type),
         ["text", "emphasis", "text"]

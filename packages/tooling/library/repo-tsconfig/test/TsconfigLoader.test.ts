@@ -4,7 +4,10 @@ import { assert, describe, it, layer } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tracer from "effect/Tracer";
 import { fixtureLayer, tree } from "./support/fixtures.ts";
@@ -283,8 +286,10 @@ layer(
   it.effect("a source-only pattern blocks the tsconfig.json fallback, as tsc does", () =>
     Effect.gen(function* () {
       // `./src/tsconfig.json` does not exist; tsc lets exports block the fallback (W3-c).
-      assertNone(yield* resolveExtendsTarget("src-exp/tsconfig", "/proj/tsconfig.json"));
-      assertNone(yield* resolveExtendsTarget("src-exp/tsconfig.json", "/proj/tsconfig.json"));
+      const resolvedExtendsTarget = yield* resolveExtendsTarget("src-exp/tsconfig", "/proj/tsconfig.json");
+      assertNone(resolvedExtendsTarget);
+      const resolvedExtendsTarget1 = yield* resolveExtendsTarget("src-exp/tsconfig.json", "/proj/tsconfig.json");
+      assertNone(resolvedExtendsTarget1);
     })
   );
 
@@ -469,7 +474,10 @@ describe("resolveExports", () => {
   });
 
   it("skips a __proto__ condition key", () => {
-    const exports = JSON.parse('{".":{"__proto__":"./evil.json","default":"./safe.json"}}');
+    const exports = Result.getOrThrowWith(
+      S.decodeResult(S.fromJsonString(S.Unknown))('{".":{"__proto__":"./evil.json","default":"./safe.json"}}'),
+      identity
+    );
     assert.deepStrictEqual(resolveExports(exports, "."), walked("./safe.json"));
   });
 
@@ -560,7 +568,8 @@ layer(
       assert.deepStrictEqual(resolved.compilerOptions, { strict: true, outDir: "/proj/out", declaration: true });
       // The same document resolved at its own path equals resolve() of that path.
       const fromDisk = yield* TsconfigLoader.resolve("/proj/base.json");
-      assert.deepStrictEqual(yield* TsconfigLoader.resolveDocument(document, "/proj/base.json"), fromDisk);
+      const resolvedDocument = yield* TsconfigLoader.resolveDocument(document, "/proj/base.json");
+      assert.deepStrictEqual(resolvedDocument, fromDisk);
       const reread = yield* Effect.flip(TsconfigLoader.resolve("/proj/app/tsconfig.json"));
       assert.strictEqual(reread._tag, "TsconfigParseError");
     })

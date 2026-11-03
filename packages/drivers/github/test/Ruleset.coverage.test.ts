@@ -28,7 +28,8 @@ describe("Ruleset test-double behavior", () => {
         const cause = yield* exit.pipe(Exit.getCause, Effect.fromOption);
         assertExitFailure(exit, cause);
         const defect = yield* cause.pipe(Cause.findDefect, Effect.fromResult);
-        assert.deepStrictEqual(yield* S.decodeUnknownEffect(DefectFields)(defect), {
+        const value = yield* S.decodeUnknownEffect(DefectFields)(defect);
+        assert.deepStrictEqual(value, {
           _tag: "UnstubbedMemberError",
           message: "Ruleset.makeTest: list() was called but not stubbed — pass an override.",
         });
@@ -72,13 +73,16 @@ describe("Ruleset test-double behavior", () => {
       Effect.gen(function* () {
         const start = calls.length;
         const service = yield* Ruleset;
-        assert.strictEqual(yield* service.upsert({ name: "main", target: "branch", enforcement: "active" }), undefined);
-        assert.deepStrictEqual(yield* service.list, [
-          RulesetInfo.make({ id: 7, name: "main", source_type: "Repository" }),
-        ]);
-        assert.strictEqual(yield* service.delete(7), undefined);
-        assert.strictEqual(yield* service.teamId("ops"), 42);
-        assert.strictEqual(yield* service.roleId("admin"), 7);
+        const upsert1 = yield* service.upsert({ name: "main", target: "branch", enforcement: "active" });
+        assert.strictEqual(upsert1, undefined);
+        const list2 = yield* service.list;
+        assert.deepStrictEqual(list2, [RulesetInfo.make({ id: 7, name: "main", source_type: "Repository" })]);
+        const delete3 = yield* service.delete(7);
+        assert.strictEqual(delete3, undefined);
+        const teamId4 = yield* service.teamId("ops");
+        assert.strictEqual(teamId4, 42);
+        const roleId5 = yield* service.roleId("admin");
+        assert.strictEqual(roleId5, 7);
         assert.deepStrictEqual(calls.slice(start), [
           ["upsert", "main", "branch", "active"],
           ["delete", 7],
@@ -96,10 +100,8 @@ describe("Ruleset malformed role response", () => {
     it.effect("rejects a matching role whose id is malformed instead of returning it", () =>
       Effect.gen(function* () {
         const service = yield* Ruleset;
-        assertFailure(
-          yield* Effect.result(service.roleId("admin")),
-          GitHubError.decode("Ruleset.roleId", "organization role id was not a number")
-        );
+        const result6 = yield* Effect.result(service.roleId("admin"));
+        assertFailure(result6, GitHubError.decode("Ruleset.roleId", "organization role id was not a number"));
         assert.strictEqual(script.calls.at(-1)?.path, "/orgs/acme/organization-roles");
         assert.strictEqual(script.calls.at(-1)?.method, "GET");
       })

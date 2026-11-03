@@ -17,7 +17,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(equivalent(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -62,7 +63,8 @@ layer(
         yield* fs.writeFileString("/prop/load/tsconfig.json", formatted);
         const reparsed = yield* TsconfigLoader.load("/prop/load/tsconfig.json");
         assertTrue(S.toEquivalence(TsconfigJsonFromString)(reparsed, parsed));
-        assert.strictEqual(yield* S.encodeEffect(TsconfigJsonFromString)(reparsed), formatted);
+        const value2 = yield* S.encodeEffect(TsconfigJsonFromString)(reparsed);
+        assert.strictEqual(value2, formatted);
       }),
     runs
   );
@@ -74,10 +76,8 @@ layer(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        yield* fs.writeFileString(
-          "/prop/resolve/tsconfig.json",
-          yield* S.encodeEffect(TsconfigJsonFromString)({ compilerOptions: options })
-        );
+        const value3 = yield* S.encodeEffect(TsconfigJsonFromString)({ compilerOptions: options });
+        yield* fs.writeFileString("/prop/resolve/tsconfig.json", value3);
         const resolved = yield* TsconfigLoader.resolve("/prop/resolve/tsconfig.json");
         const absolutized = ResolvedTsconfig.absolutize({ compilerOptions: options }, "/prop/resolve", path.resolve);
         const expected = ResolvedTsconfig.substituteConfigDir(
@@ -93,11 +93,10 @@ layer(
           "/prop/resolve"
         );
         assertTrue(S.toEquivalence(ResolvedTsconfig)(resolved, expected));
-        assert.deepStrictEqual(yield* TsconfigLoader.resolve("/prop/resolve/tsconfig.json"), resolved);
-        assert.deepStrictEqual(
-          yield* TsconfigLoader.compilerOptions("/prop/resolve/tsconfig.json"),
-          resolved.compilerOptions
-        );
+        const resolved4 = yield* TsconfigLoader.resolve("/prop/resolve/tsconfig.json");
+        assert.deepStrictEqual(resolved4, resolved);
+        const compilerOptions5 = yield* TsconfigLoader.compilerOptions("/prop/resolve/tsconfig.json");
+        assert.deepStrictEqual(compilerOptions5, resolved.compilerOptions);
       }),
     runs
   );

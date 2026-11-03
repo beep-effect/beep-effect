@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 /**
  * `beep models` — check every routing surface against one operator manifest.
  *
@@ -23,6 +24,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
@@ -155,10 +157,13 @@ const renderFinding = (entry: DriftFinding): string =>
   `models: ${entry.kind} ${entry.targetId} [${entry.locator._tag}] ${entry.path}` +
   pipe(
     entry.current,
-    O.map((current) => ` current=${JSON.stringify(current)}`),
+    O.map(
+      (current) =>
+        ` current=${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(current), identity)}`
+    ),
     O.getOrElse(() => "")
   ) +
-  ` expected=${JSON.stringify(entry.expected)}`;
+  ` expected=${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(entry.expected), identity)}`;
 
 // An offline run leaves `diff` empty on purpose, so the counts would read as
 // "catalog stable" to an operator. Say which of the two it is.

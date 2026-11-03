@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 /**
  * The `api_key_required` envelope and its protocol translation.
  *
@@ -26,6 +27,7 @@
 import { $McpKitId } from "@beep/identity/packages";
 import { CallToolResult } from "effect/ai/McpSchema";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { SourceAuthRegistration } from "./SourceAuth.ts";
 
@@ -223,7 +225,15 @@ export const translateApiKeyRequired = (payload: ToolHandlerPayload): O.Option<C
         // the success value, not this failure.
         CallToolResult.make({
           isError: false,
-          content: [{ type: "text", text: JSON.stringify(payload.encodedResult) }],
+          content: [
+            {
+              type: "text",
+              text: Result.getOrThrowWith(
+                S.encodeUnknownResult(S.fromJsonString(S.Unknown))(payload.encodedResult),
+                identity
+              ),
+            },
+          ],
         })
       )
     : O.none();

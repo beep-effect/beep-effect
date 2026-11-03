@@ -16,6 +16,9 @@ import {
 } from "@beep/toml/internal/scanner";
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "@beep/toml/TomlDateTime";
 import { assert, describe, it } from "@effect/vitest";
+import { identity } from "effect/Function";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { TomlErrorCodeRaw } from "@beep/toml/internal/diagnostics";
 
 /** Assert `fn` throws a RawTomlError with `code` (and `offset`, when given). */
@@ -39,7 +42,9 @@ function assertScanError(fn: () => unknown, code: TomlErrorCodeRaw, offset?: num
 function classifyInstance<T>(token: string, ctor: abstract new (...args: never[]) => T): T {
   const value = classifyValueToken(token, 0);
   if (!(value instanceof ctor)) {
-    throw new Error(`expected ${JSON.stringify(token)} to classify as a datetime instance`);
+    throw new Error(
+      `expected ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(token), identity)} to classify as a datetime instance`
+    );
   }
   return value;
 }
@@ -391,8 +396,16 @@ describe("scanner", () => {
         ["12#c", "12", 2],
       ] as const) {
         const result = scanValueToken(source, 0);
-        assert.strictEqual(result.value, value, `token of ${JSON.stringify(source)}`);
-        assert.strictEqual(result.end, end, `end of ${JSON.stringify(source)}`);
+        assert.strictEqual(
+          result.value,
+          value,
+          `token of ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)}`
+        );
+        assert.strictEqual(
+          result.end,
+          end,
+          `end of ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)}`
+        );
       }
     });
     it("extends a date token across a single space into the time part", () => {

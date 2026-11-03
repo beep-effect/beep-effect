@@ -11,7 +11,17 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Atom from "effect/reactivity/Atom";
+import * as S from "effect/Schema";
 import type { JSX } from "react";
+
+class CodeBlockViewOperationError extends S.TaggedError<
+  CodeBlockViewOperationError,
+  { readonly brand: unique symbol }
+>()(
+  "CodeBlockViewOperationError",
+  { cause: S.Defect({ includeStack: true }) },
+  { description: "A failed external operation in code-block-view.tsx." }
+) {}
 
 const COPIED_FOR = Duration.millis(1_500);
 
@@ -32,7 +42,10 @@ const copyRuntime = Atom.runtime(Layer.empty);
 const copyFn = Atom.family((code: string) =>
   copyRuntime.fn<void>()(
     Effect.fnUntraced(function* (_, get) {
-      yield* Effect.tryPromise(() => navigator.clipboard.writeText(code)).pipe(
+      yield* Effect.tryPromise({
+        try: () => navigator.clipboard.writeText(code),
+        catch: (cause) => CodeBlockViewOperationError.make({ cause }),
+      }).pipe(
         Effect.andThen(() => Effect.sync(() => get.set(copiedAtom(code), true))),
         Effect.andThen(() => Effect.sleep(COPIED_FOR)),
         Effect.andThen(() => Effect.sync(() => get.set(copiedAtom(code), false))),

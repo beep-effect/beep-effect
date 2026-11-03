@@ -4,8 +4,11 @@ import { expect } from "@effect/vitest";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
@@ -32,7 +35,7 @@ const harness = (conversionStatus: number, expectedStatus: number, expectedText:
 globalThis.fetch = async () => new Response(JSON.stringify({
   id: 123, slug: "beep-knowledge-mint-2", client_id: "fixture-client", pem: "${PLACEHOLDER}"
 }), { status: ${conversionStatus}, headers: { "content-type": "application/json" } });
-const { makeKnowledgeMintHandler } = await import(${JSON.stringify(bootstrapUrl)});
+const { makeKnowledgeMintHandler } = await import(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(bootstrapUrl), identity)});
 const Effect = await import("effect/Effect");
 const { FetchHttpClient } = await import("effect/http");
 const handle = makeKnowledgeMintHandler("fixture-state", JSON.stringify({ name: "beep-knowledge-mint" }));
@@ -44,7 +47,7 @@ if ((await get("http://localhost:8787/callback?code=fixture-code&state=wrong")).
 const callback = await get("http://127.0.0.1:8787/callback?code=fixture-code&state=fixture-state");
 const text = await callback.text();
 if (callback.status !== ${expectedStatus}) process.exit(93);
-if (!text.includes(${JSON.stringify(expectedText)})) process.exit(94);
+if (!text.includes(${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(expectedText), identity)})) process.exit(94);
 if (text.includes("placeholder-only") || text.includes("fixture-client")) process.exit(95);
 if ((await get("http://localhost:8787/callback?code=fixture-code&state=fixture-state")).status !== 400) process.exit(96);
 process.exit(0);

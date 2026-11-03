@@ -77,12 +77,26 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seco
         );
         yield* fs.writeFileString(file, contents);
         const environment = { HOME: root, XDG_CONFIG_HOME: root };
-        expect(yield* loadHostTurboCacheDefaults({}, false, "git@github.com:beep-effect/beep-effect.git")).toEqual({});
-        expect(
-          yield* loadHostTurboCacheDefaults({ HOME: root }, false, "git@github.com:beep-effect/beep-effect.git")
-        ).toEqual({});
-        expect(yield* loadHostTurboCacheDefaults(environment, false, "git@github.com:private/fork.git")).toEqual({});
-        expect(yield* loadHostTurboCacheDefaults(environment, false, "")).toEqual({});
+        const loadedHostTurboCacheDefaults = yield* loadHostTurboCacheDefaults(
+          {},
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults).toEqual({});
+        const loadedHostTurboCacheDefaults1 = yield* loadHostTurboCacheDefaults(
+          { HOME: root },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults1).toEqual({});
+        const loadedHostTurboCacheDefaults2 = yield* loadHostTurboCacheDefaults(
+          environment,
+          false,
+          "git@github.com:private/fork.git"
+        );
+        expect(loadedHostTurboCacheDefaults2).toEqual({});
+        const loadedHostTurboCacheDefaults3 = yield* loadHostTurboCacheDefaults(environment, false, "");
+        expect(loadedHostTurboCacheDefaults3).toEqual({});
         const defaults = yield* loadHostTurboCacheDefaults(
           environment,
           false,
@@ -96,13 +110,12 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seco
           TURBO_CACHE: "local:rw,remote:rw",
           BEEP_TURBO_TRUSTED_WRITER: "true",
         });
-        expect(
-          yield* loadHostTurboCacheDefaults(
-            { ...environment, TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/other/signing" },
-            false,
-            "git@github.com:beep-effect/beep-effect.git"
-          )
-        ).toEqual({});
+        const loadedHostTurboCacheDefaults4 = yield* loadHostTurboCacheDefaults(
+          { ...environment, TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/other/signing" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults4).toEqual({});
         const inherited = {
           ...environment,
           ...defaults,
@@ -110,54 +123,55 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seco
           BEEP_TURBO_TRUSTED_WRITER: "false",
           BEEP_TURBO_HOST_CACHE_MANAGED: "true",
         };
-        expect(
-          yield* loadHostTurboCacheDefaults(inherited, false, "git@github.com:beep-effect/beep-effect.git")
-        ).toEqual(defaults);
-        expect(
-          yield* loadHostTurboCacheDefaults(
-            { ...inherited, TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/other/signing" },
-            false,
-            "git@github.com:beep-effect/beep-effect.git"
-          )
-        ).toEqual({});
+        const loadedHostTurboCacheDefaults5 = yield* loadHostTurboCacheDefaults(
+          inherited,
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults5).toEqual(defaults);
+        const loadedHostTurboCacheDefaults6 = yield* loadHostTurboCacheDefaults(
+          { ...inherited, TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/other/signing" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults6).toEqual({});
         for (const override of [
           { BEEP_TURBO_HOST_CACHE_MANAGED: "false" },
           { BEEP_TURBO_HOST_CACHE_DISABLED: "true" },
           { TURBO_TOKEN: "op://fixture/other/bearer" },
           { TURBO_CACHE: "local:rw" },
         ]) {
-          expect(
-            yield* loadHostTurboCacheDefaults(
-              { ...inherited, ...override },
-              false,
-              "git@github.com:beep-effect/beep-effect.git"
-            )
-          ).toEqual({});
+          const loadedHostTurboCacheDefaults7 = yield* loadHostTurboCacheDefaults(
+            { ...inherited, ...override },
+            false,
+            "git@github.com:beep-effect/beep-effect.git"
+          );
+          expect(loadedHostTurboCacheDefaults7).toEqual({});
         }
-        expect(
-          yield* loadHostTurboCacheDefaults(environment, true, "git@github.com:beep-effect/beep-effect.git")
-        ).toEqual({});
-        expect(
-          yield* loadHostTurboCacheDefaults(
-            { ...environment, TURBO_CACHE: "local:rw" },
-            false,
-            "git@github.com:beep-effect/beep-effect.git"
-          )
-        ).toEqual({});
-        expect(
-          yield* loadHostTurboCacheDefaults(
-            { ...environment, TURBO_API: "https://explicit.test" },
-            false,
-            "git@github.com:beep-effect/beep-effect.git"
-          )
-        ).toEqual({});
-        expect(
-          yield* loadHostTurboCacheDefaults(
-            { ...environment, BEEP_TURBO_HOST_CACHE_DISABLED: "true" },
-            false,
-            "git@github.com:beep-effect/beep-effect.git"
-          )
-        ).toEqual({});
+        const loadedHostTurboCacheDefaults8 = yield* loadHostTurboCacheDefaults(
+          environment,
+          true,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults8).toEqual({});
+        const loadedHostTurboCacheDefaults9 = yield* loadHostTurboCacheDefaults(
+          { ...environment, TURBO_CACHE: "local:rw" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults9).toEqual({});
+        const loadedHostTurboCacheDefaults10 = yield* loadHostTurboCacheDefaults(
+          { ...environment, TURBO_API: "https://explicit.test" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults10).toEqual({});
+        const loadedHostTurboCacheDefaults11 = yield* loadHostTurboCacheDefaults(
+          { ...environment, BEEP_TURBO_HOST_CACHE_DISABLED: "true" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults11).toEqual({});
         for (const invalid of [
           Str.replace("op://fixture/cache/bearer", "raw-fixture-token")(contents),
           Str.replace("http://127.0.0.1:9427", "https://external.test")(contents),
@@ -165,14 +179,20 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seco
           "TURBO_API=http://127.0.0.1:9427",
         ]) {
           yield* fs.writeFileString(file, invalid);
-          expect(
-            yield* loadHostTurboCacheDefaults(environment, false, "git@github.com:beep-effect/beep-effect.git")
-          ).toEqual({});
+          const loadedHostTurboCacheDefaults12 = yield* loadHostTurboCacheDefaults(
+            environment,
+            false,
+            "git@github.com:beep-effect/beep-effect.git"
+          );
+          expect(loadedHostTurboCacheDefaults12).toEqual({});
         }
         yield* fs.remove(file);
-        expect(
-          yield* loadHostTurboCacheDefaults(environment, false, "git@github.com:beep-effect/beep-effect.git")
-        ).toEqual({});
+        const loadedHostTurboCacheDefaults13 = yield* loadHostTurboCacheDefaults(
+          environment,
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(loadedHostTurboCacheDefaults13).toEqual({});
       })
     );
   }
@@ -287,9 +307,12 @@ describe("turbo cache plan resolution", () => {
 
   it.effect("prefers the CI verdict over an explicit cache argument", () =>
     Effect.gen(function* () {
-      expect(resolveTurboCachePlan(completeEnvironment, { args: ["--force"], ci: true })).toEqual(
-        yield* decodeTurboCachePlanEffect({ _tag: "caller-controlled", reason: "ci" })
-      );
+      const expectation = expect(resolveTurboCachePlan(completeEnvironment, { args: ["--force"], ci: true }));
+      const decodedTurboCachePlanEffect = yield* decodeTurboCachePlanEffect({
+        _tag: "caller-controlled",
+        reason: "ci",
+      });
+      expectation.toEqual(decodedTurboCachePlanEffect);
     })
   );
 });
@@ -504,7 +527,9 @@ describe("shared turbo cache directory", () => {
   it.effect("round-trips a plan that carries the directory", () =>
     Effect.gen(function* () {
       const plan = resolveTurboCachePlan(withHome(TurboCacheEnvironment.make({})), { args: [], ci: false });
-      expect(yield* decodeTurboCachePlanJson(yield* encodeTurboCachePlanJson(plan))).toEqual(plan);
+      const encodedTurboCachePlanJson = yield* encodeTurboCachePlanJson(plan);
+      const decodedTurboCachePlanJson = yield* decodeTurboCachePlanJson(encodedTurboCachePlanJson);
+      expect(decodedTurboCachePlanJson).toEqual(plan);
     })
   );
 });

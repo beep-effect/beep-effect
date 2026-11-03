@@ -18,10 +18,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage private fi
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
+      const root = yield* fs.realPath(madeTempDirectoryScoped);
       yield* fs.chmod(root, 0o700);
       const directory = path.join(root, "router");
-      expect(yield* query(directory)).toEqual([]);
+      const query1 = yield* query(directory);
+      expect(query1).toEqual([]);
       expect((yield* fs.stat(directory)).mode & 0o077).toBe(0);
       expect((yield* fs.stat(path.join(directory, "messages.sqlite"))).mode & 0o077).toBe(0);
     })
@@ -30,20 +32,23 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage private fi
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped2 = yield* fs.makeTempDirectoryScoped();
+      const root = yield* fs.realPath(madeTempDirectoryScoped2);
       yield* fs.chmod(root, 0o700);
       const directory = path.join(root, "fresh-router");
       const results = yield* Effect.all([query(directory), query(directory)], { concurrency: "unbounded" });
       expect(results).toEqual([[], []]);
       expect((yield* fs.stat(path.join(directory, "messages.sqlite"))).mode & 0o077).toBe(0);
-      expect(yield* query(directory)).toEqual([]);
+      const query3 = yield* query(directory);
+      expect(query3).toEqual([]);
     })
   );
   it.effect("refuses shared directory and grant file permissions", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped4 = yield* fs.makeTempDirectoryScoped();
+      const root = yield* fs.realPath(madeTempDirectoryScoped4);
       yield* fs.chmod(root, 0o755);
       expect((yield* Effect.flip(requirePrivateAgentPath(root, "Directory")))._tag).toBe("RouterError");
       yield* fs.chmod(root, 0o700);
@@ -51,14 +56,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage private fi
       yield* fs.writeFileString(grant, "{}", { mode: 0o644 });
       expect((yield* Effect.flip(requirePrivateAgentPath(grant, "File")))._tag).toBe("RouterError");
       yield* fs.chmod(grant, 0o600);
-      expect(yield* requirePrivateAgentPath(grant, "File")).toBe(grant);
+      const requirePrivateAgentPath5 = yield* requirePrivateAgentPath(grant, "File");
+      expect(requirePrivateAgentPath5).toBe(grant);
     })
   );
   it.effect("rejects symlinks before database creation", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped6 = yield* fs.makeTempDirectoryScoped();
+      const root = yield* fs.realPath(madeTempDirectoryScoped6);
       yield* fs.chmod(root, 0o700);
       const directory = path.join(root, "actual");
       yield* fs.makeDirectory(directory, { mode: 0o700 });
@@ -71,14 +78,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("AgentMessage private fi
       yield* fs.symlink(file, link);
       expect((yield* Effect.flip(requirePrivateAgentPath(link, "File")))._tag).toBe("RouterError");
       expect((yield* Effect.flip(query(alias)))._tag).toBe("RouterError");
-      expect(yield* fs.exists(path.join(directory, "messages.sqlite"))).toBe(false);
+      const exists7 = yield* fs.exists(path.join(directory, "messages.sqlite"));
+      expect(exists7).toBe(false);
     })
   );
   it.effect("rejects shared existing databases and relative state directories", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const madeTempDirectoryScoped8 = yield* fs.makeTempDirectoryScoped();
+      const root = yield* fs.realPath(madeTempDirectoryScoped8);
       yield* fs.chmod(root, 0o700);
       yield* fs.writeFileString(path.join(root, "messages.sqlite"), "", { mode: 0o644 });
       expect((yield* Effect.flip(query(root)))._tag).toBe("RouterError");

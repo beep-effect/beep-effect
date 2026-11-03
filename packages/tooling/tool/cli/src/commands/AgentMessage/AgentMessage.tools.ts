@@ -228,10 +228,12 @@ export const agentMessageHandlersLayer = (grantId: string) =>
     Effect.gen(function* () {
       const store = yield* AgentMessageStore;
       const grant = Effect.gen(function* () {
-        return yield* store.validateGrant(grantId, yield* Clock.currentTimeMillis);
+        const currentTimeMillis1 = yield* Clock.currentTimeMillis;
+        return yield* store.validateGrant(grantId, currentTimeMillis1);
       });
       const visible = Effect.fn("AgentMessage.visible")(function* (messageId: string, authority: LaunchGrant) {
-        yield* store.scopedReceipts(messageId, grantId, yield* Clock.currentTimeMillis);
+        const currentTimeMillis2 = yield* Clock.currentTimeMillis;
+        yield* store.scopedReceipts(messageId, grantId, currentTimeMillis2);
         const message = yield* store.message(messageId);
         if (
           message.repositoryScope !== authority.repositoryScope ||
@@ -296,23 +298,22 @@ export const agentMessageHandlersLayer = (grantId: string) =>
           );
         }),
         agent_message_inbox: Effect.fn("AgentMessage.toolInbox")(function* () {
-          return yield* store.scopedInbox(grantId, yield* Clock.currentTimeMillis);
+          const currentTimeMillis3 = yield* Clock.currentTimeMillis;
+          return yield* store.scopedInbox(grantId, currentTimeMillis3);
         }),
         agent_message_acknowledge: Effect.fn("AgentMessage.toolAcknowledge")(function* (input) {
           const authority = yield* grant;
           yield* visible(input.messageId, authority);
-          return yield* store.acknowledge(
-            input.messageId,
-            authority.endpointId,
-            yield* Clock.currentTimeMillis,
-            O.some(grantId)
-          );
+          const currentTimeMillis4 = yield* Clock.currentTimeMillis;
+          return yield* store.acknowledge(input.messageId, authority.endpointId, currentTimeMillis4, O.some(grantId));
         }),
         agent_message_inspect: Effect.fn("AgentMessage.toolInspect")(function* (input) {
-          return yield* store.scopedReceipts(input.messageId, grantId, yield* Clock.currentTimeMillis);
+          const currentTimeMillis5 = yield* Clock.currentTimeMillis;
+          return yield* store.scopedReceipts(input.messageId, grantId, currentTimeMillis5);
         }),
         agent_message_discover: Effect.fn("AgentMessage.toolDiscover")(function* () {
-          return yield* store.scopedEndpoints(grantId, yield* Clock.currentTimeMillis);
+          const currentTimeMillis6 = yield* Clock.currentTimeMillis;
+          return yield* store.scopedEndpoints(grantId, currentTimeMillis6);
         }),
       });
     }).pipe(Effect.withSpan("AgentMessage.toolHandlers"))

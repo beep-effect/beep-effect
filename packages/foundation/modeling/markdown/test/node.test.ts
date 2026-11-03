@@ -792,7 +792,10 @@ describe("node schema-derived properties", () => {
       Effect.gen(function* () {
         const schema = S.Union([Code, Text, InlineCode, Html, Definition, FootnoteReference]);
         assert.isTrue(S.is(schema)(node));
-        assert.deepStrictEqual(yield* S.decodeEffect(schema)(yield* S.encodeEffect(schema)(node)), node);
+        const argument = S.decodeEffect(schema);
+        const value2 = yield* S.encodeEffect(schema)(node);
+        const value1 = yield* argument(value2);
+        assert.deepStrictEqual(value1, node);
       }),
     runs
   );

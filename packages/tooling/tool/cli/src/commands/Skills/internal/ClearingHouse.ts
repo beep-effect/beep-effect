@@ -150,10 +150,8 @@ const isSetAside = Str.endsWith(".previous");
 const sweepLeftovers = Effect.fn("ClearingHouse.sweepLeftovers")(function* (workDir: string, skill: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const entries = A.filter(
-    yield* fs.readDirectory(workDir).pipe(Effect.orElseSucceed(A.empty<string>)),
-    Str.startsWith(`${skill}.`)
-  );
+  const pipe1 = yield* fs.readDirectory(workDir).pipe(Effect.orElseSucceed(A.empty<string>));
+  const entries = A.filter(pipe1, Str.startsWith(`${skill}.`));
   const setAside = A.map(A.filter(entries, isSetAside), (entry) => path.join(workDir, entry));
   if (A.isReadonlyArrayNonEmpty(setAside)) {
     return yield* SkillsCommandError.make({
@@ -213,7 +211,8 @@ const restore = Effect.fn("ClearingHouse.restore")(function* (swaps: ReadonlyArr
 
 const restoreAfter = (swaps: Ref.Ref<Array<Swap>>, skill: string) =>
   Effect.fnUntraced(function* (error: SkillsCommandError) {
-    const stranded = yield* restore(yield* Ref.get(swaps));
+    const got = yield* Ref.get(swaps);
+    const stranded = yield* restore(got);
     return yield* A.isReadonlyArrayNonEmpty(stranded)
       ? SkillsCommandError.make({
           ...OptionUtils.getSomesStruct({ cause: O.fromUndefinedOr(error.cause) }),
@@ -281,8 +280,9 @@ export const publishSkillTree = Effect.fn("ClearingHouse.publishSkillTree")(func
       })
     )
   );
+  const got2 = yield* Ref.get(swaps);
   yield* Effect.forEach(
-    A.getSomes(A.map(yield* Ref.get(swaps), (swap) => swap.previous)),
+    A.getSomes(A.map(got2, (swap) => swap.previous)),
     (previous) => fs.remove(previous, { recursive: true, force: true }).pipe(Effect.ignore),
     { discard: true }
   );

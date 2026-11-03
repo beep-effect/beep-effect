@@ -100,8 +100,9 @@ const validateSignedProducerApproval = Effect.fn("Producer.validateSignedApprova
         runtimeKeyDigest: execution.runtimeKeys[binding.channel],
       }) ||
       contract.pins.toolchain !== execution.runtimeKeys.stable
-    )
+    ) {
       return yield* CacheCommandError.new("Producer approval differs from its reviewed signed execution profile.");
+    }
   }
 });
 
@@ -124,10 +125,11 @@ export const validateCacheProducerApproval = Effect.fn("Producer.validateApprova
   if (
     Str.endsWith("-private-loopback-signed-v1")(contract.key.profile) &&
     (O.isNone(contract.signedExecution) || O.isNone(contract.activation))
-  )
+  ) {
     return yield* CacheCommandError.new(
       "Signed producer approval requires a reviewed execution profile and activation."
     );
+  }
   const sourceConfiguration = O.match(contract.signedExecution, {
     onNone: () => contract.pins.configuration,
     onSome: (execution) => execution.sourceConfiguration,
@@ -142,8 +144,9 @@ export const validateCacheProducerApproval = Effect.fn("Producer.validateApprova
     !S.toEquivalence(CacheClientPin)(binding.client, contract.clients[binding.channel]) ||
     binding.configurationDigest !== sourceConfiguration ||
     binding.toolchainDigest !== sourceToolchain
-  )
+  ) {
     return yield* CacheCommandError.new("Producer approval's full policy differs from its fixed binding.");
+  }
   yield* validateSignedProducerApproval(approval);
 });
 
@@ -180,10 +183,11 @@ export const validateCacheProducerBundle = Effect.fn("Producer.validateBundle")(
     protocolClient.namespace === pilot.client.namespace ||
     A.some(pilot.comparisons, (pair) => pair.client.namespace === protocolClient.namespace) ||
     A.some(pilot.comparisons, (pair) => O.isNone(pair.protection.issuerMaterialDenied))
-  )
+  ) {
     return yield* CacheCommandError.new(
       "Producer bundle lacks independently pinned conformance or persistent issuer protection."
     );
+  }
   return bundle;
 });
 const bindingDigest = Effect.fn("Producer.bindingDigest")(function* (expected: CacheProducerBinding) {
@@ -208,17 +212,19 @@ export const validateCacheProducerBinding = Effect.fn("Producer.validateCachePro
 ) {
   yield* validateCacheProducerBundle(bundle, expected.protocolClient);
   const receipt = bundle.pilot;
-  if (O.isSome(expected.uploadApproval) !== O.isSome(bundle.upload))
+  if (O.isSome(expected.uploadApproval) !== O.isSome(bundle.upload)) {
     return yield* CacheCommandError.new("Producer upload presence differs from its independently approved target.");
+  }
   if (
     O.isSome(expected.uploadApproval) !== O.isSome(bundle.adapterRuntime) ||
     (O.isSome(expected.uploadApproval) &&
       O.isSome(bundle.adapterRuntime) &&
       expected.uploadApproval.value.targetSha256 !== bundle.adapterRuntime.value.targetSha256)
-  )
+  ) {
     return yield* CacheCommandError.new(
       "Producer backend lifecycle differs from its independently approved upload target."
     );
+  }
   if (
     receipt.sourceRevision !== expected.sourceRevision ||
     receipt.channel !== expected.channel ||
@@ -230,8 +236,9 @@ export const validateCacheProducerBinding = Effect.fn("Producer.validateCachePro
     receipt.signedConfigurationDigest !== expected.signedConfigurationDigest ||
     receipt.toolchainDigest !== expected.toolchainDigest ||
     receipt.signedRootConfiguration !== expected.signedRootConfiguration
-  )
+  ) {
     return yield* CacheCommandError.new("Producer receipt differs from the trusted live binding.");
+  }
 });
 
 const makeIssuer = Effect.fn("Producer.makeIssuer")(function* (
@@ -298,8 +305,9 @@ const makeIssuer = Effect.fn("Producer.makeIssuer")(function* (
       envelope.body.expiresAtMs <= now ||
       envelope.body.expiresAtMs <= envelope.body.issuedAtMs ||
       envelope.body.expiresAtMs - envelope.body.issuedAtMs > maxLifetimeMs
-    )
+    ) {
       return yield* CacheCommandError.new("Producer issuer, binding or validity period is invalid.");
+    }
     const body = yield* encodeBody(envelope.body);
     const signature = yield* S.decodeEffect(S.Uint8ArrayFromHex)(envelope.mac);
     const validMac = yield* Effect.tryPromise({
@@ -312,9 +320,12 @@ const makeIssuer = Effect.fn("Producer.makeIssuer")(function* (
         ),
       catch: () => CacheCommandError.new("Cannot verify producer authentication."),
     });
-    if (!validMac) return yield* CacheCommandError.new("Producer envelope authentication is invalid.");
-    if (envelope.body.payloadSha256 !== (yield* payloadDigest(receipt)))
+    if (!validMac) {
+      return yield* CacheCommandError.new("Producer envelope authentication is invalid.");
+    }
+    if (envelope.body.payloadSha256 !== (yield* payloadDigest(receipt))) {
       return yield* CacheCommandError.new("Producer payload differs from its authenticated observation.");
+    }
     yield* validateCacheProducerBinding(receipt, trusted);
     return receipt;
   });
@@ -345,7 +356,8 @@ export const makeCacheProducerIssuer = Effect.fn("Producer.makeCacheProducerIssu
   expected: CacheProducerBinding
 ) {
   const crypto = yield* SecureRandom.SecureRandom;
-  return yield* makeIssuer(expected, Redacted.make(yield* crypto.randomBytes(64)));
+  const randomBytes1 = yield* crypto.randomBytes(64);
+  return yield* makeIssuer(expected, Redacted.make(randomBytes1));
 });
 
 /**
@@ -367,8 +379,9 @@ export const inspectCacheProducerDirectory = Effect.fn("Producer.inspectIssuerDi
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const uid = currentEffectiveUserIdOption();
-  if (O.isNone(uid) || !path.isAbsolute(directory) || (yield* fs.realPath(directory)) !== path.resolve(directory))
+  if (O.isNone(uid) || !path.isAbsolute(directory) || (yield* fs.realPath(directory)) !== path.resolve(directory)) {
     return yield* CacheCommandError.new("Producer store requires a canonical absolute path and an effective uid.");
+  }
   yield* validatePrivateCoordinationDirectory(directory, {
     effectiveUserId: uid,
     label: "Producer store",
@@ -405,8 +418,9 @@ export const assertCacheProducerPrivateLocation = Effect.fn("Producer.privateLoc
   const path = yield* Path.Path;
   const source = yield* fs.realPath(root);
   const destination = path.resolve(directory);
-  if (!path.isAbsolute(directory) || destination === source || Str.startsWith(`${source}${path.sep}`)(destination))
+  if (!path.isAbsolute(directory) || destination === source || Str.startsWith(`${source}${path.sep}`)(destination)) {
     return yield* CacheCommandError.new("Producer private location must be absolute and outside its checkout.");
+  }
 }, CacheCommandError.mapError("Cannot approve the private producer location."));
 
 /**
@@ -437,8 +451,9 @@ export const inspectCacheProducerFile = Effect.fn("Producer.inspectPrivateFile")
     (info.mode & 0o777) !== 0o600 ||
     !O.contains(info.uid, uid) ||
     !O.contains(info.nlink, BigInt(1))
-  )
+  ) {
     return yield* CacheCommandError.new(diagnostic);
+  }
   return info;
 });
 
@@ -451,11 +466,13 @@ const readPrivateProducerMaterial = Effect.fn("Producer.readPrivateMaterial")(fu
   const file = path.join(directory, name);
   const diagnostic = "Producer material must be a private single-link approval-bound file.";
   const info = yield* inspectCacheProducerFile(file, uid, diagnostic);
-  if (info.size !== BigInt(persistedMaterialBytes))
+  if (info.size !== BigInt(persistedMaterialBytes)) {
     return yield* CacheCommandError.new("Producer material must be a private single-link approval-bound file.");
+  }
   const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(persistedMaterialBytes));
-  if (O.isNone(read.contents) || read.contents.value.length !== persistedMaterialBytes)
+  if (O.isNone(read.contents) || read.contents.value.length !== persistedMaterialBytes) {
     return yield* CacheCommandError.new("Producer material is unavailable.");
+  }
   return Redacted.make(read.contents.value);
 });
 
@@ -464,7 +481,9 @@ const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(function* (d
   const uid = yield* inspectCacheProducerDirectory(directory);
   // readDirectory detects even a dangling revocation marker; errors fail closed.
   const entries = yield* fs.readDirectory(directory);
-  if (A.contains(entries, "revoked")) return yield* CacheCommandError.new("Producer issuer is revoked.");
+  if (A.contains(entries, "revoked")) {
+    return yield* CacheCommandError.new("Producer issuer is revoked.");
+  }
   return yield* readPrivateProducerMaterial(directory, "issuer.key", uid);
 }, CacheCommandError.mapError("Producer store is unavailable, unsafe or revoked."));
 
@@ -496,16 +515,18 @@ export const openCacheProducerIssuer = Effect.fn("Producer.openCacheProducerIssu
   const trusted = yield* encodeBinding(expected).pipe(Effect.flatMap(decodeBinding));
   const material = yield* readIssuerMaterial(directory);
   const approved = Hex.encode(Redacted.value(material).slice(64));
-  if (approved !== (yield* bindingDigest(trusted)))
+  if (approved !== (yield* bindingDigest(trusted))) {
     return yield* CacheCommandError.new("Producer store was approved for a different workflow or computation binding.");
+  }
   const identity = yield* material.pipe(Redacted.value, digest);
   const issuer = yield* makeIssuer(trusted, material);
   const active = Effect.gen(function* () {
     const current = yield* readIssuerMaterial(directory);
-    if ((yield* current.pipe(Redacted.value, digest)) !== identity)
+    if ((yield* current.pipe(Redacted.value, digest)) !== identity) {
       return yield* CacheCommandError.new(
         "Producer material changed; reopen with independently trusted configuration."
       );
+    }
   });
   return {
     issue: Effect.fn("Producer.persistentIssue")(function* (receipt: CacheProducerBundle) {
@@ -534,9 +555,13 @@ const readPrivateProducerRecord = Effect.fn("Producer.readPrivateRecord")(functi
   const limit = 16384;
   const diagnostic = `Producer ${description} must be a bounded private single-link file.`;
   const info = yield* inspectCacheProducerFile(file, uid, diagnostic);
-  if (info.size === BigInt(0) || info.size > BigInt(limit)) return yield* CacheCommandError.new(diagnostic);
+  if (info.size === BigInt(0) || info.size > BigInt(limit)) {
+    return yield* CacheCommandError.new(diagnostic);
+  }
   const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(limit));
-  if (O.isNone(read.contents)) return yield* CacheCommandError.new(`Producer ${description} is unavailable.`);
+  if (O.isNone(read.contents)) {
+    return yield* CacheCommandError.new(`Producer ${description} is unavailable.`);
+  }
   const bytes = read.contents.value;
   const text = yield* Effect.try({
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
@@ -616,8 +641,9 @@ export const readCacheProducerProvisioning = Effect.fn("Producer.readProvisionin
   const uid = yield* inspectCacheProducerDirectory(directory);
   const fs = yield* FileSystem.FileSystem;
   const entries = yield* fs.readDirectory(directory);
-  if (A.some(["issuer.key", "revoked"], (name) => A.contains(entries, name)))
+  if (A.some(["issuer.key", "revoked"], (name) => A.contains(entries, name))) {
     return yield* CacheCommandError.new("Provisioning inputs must be separate from an issuer store.");
+  }
   const approval = yield* readIssuerApproval(directory);
   const profile = yield* readPrivateProducerRecord(
     directory,
@@ -626,7 +652,7 @@ export const readCacheProducerProvisioning = Effect.fn("Producer.readProvisionin
     decodeExecutionProfile
   );
   const material = A.contains(entries, "issuer.material")
-    ? O.some(yield* readPrivateProducerMaterial(directory, "issuer.material", uid))
+    ? yield* Effect.asSome(readPrivateProducerMaterial(directory, "issuer.material", uid))
     : O.none();
   return Tuple.make(approval, profile, material);
 }, CacheCommandError.mapError("Cannot read independently selected producer provisioning inputs."));
@@ -697,8 +723,9 @@ export const openCacheProducerVerifier = Effect.fn("Producer.openCacheProducerVe
       receipt: CacheProducerBundle
     ) {
       const current = yield* readIssuerApproval(directory);
-      if (!S.toEquivalence(CacheProducerApproval)(current, trusted))
+      if (!S.toEquivalence(CacheProducerApproval)(current, trusted)) {
         return yield* CacheCommandError.new("Producer approval changed after verification opened.");
+      }
       yield* issuer.verify(envelope, receipt);
       return current;
     }),
@@ -736,10 +763,11 @@ export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCache
   contract: CacheTaskContract,
   transferred: O.Option<Redacted.Redacted<Uint8Array>> = O.none()
 ) {
-  if (O.exists(transferred, (value) => Redacted.value(value).length !== persistedMaterialBytes))
+  if (O.exists(transferred, (value) => Redacted.value(value).length !== persistedMaterialBytes)) {
     return yield* CacheCommandError.new(
       "Transferred producer material differs from its independently approved binding."
     );
+  }
   const supplied = O.map(transferred, (value) => Redacted.make(new Uint8Array(Redacted.value(value))));
   const approval = yield* encodeApproval(CacheProducerApproval.make({ binding: expected, contract })).pipe(
     Effect.flatMap(decodeApproval)
@@ -748,7 +776,9 @@ export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCache
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const crypto = yield* SecureRandom.SecureRandom;
-  if (!path.isAbsolute(directory)) return yield* CacheCommandError.new("Producer store path must be absolute.");
+  if (!path.isAbsolute(directory)) {
+    return yield* CacheCommandError.new("Producer store path must be absolute.");
+  }
   const trusted = approval.binding;
   const approvedHex = yield* bindingDigest(trusted);
   if (
@@ -756,15 +786,18 @@ export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCache
       const bytes = Redacted.value(value);
       return Hex.encode(bytes.slice(64)) !== approvedHex;
     })
-  )
+  ) {
     return yield* CacheCommandError.new(
       "Transferred producer material differs from its independently approved binding."
     );
+  }
   return yield* Effect.acquireUseRelease(
     fs.makeDirectory(directory, { mode: 0o700 }),
     Effect.fnUntraced(function* () {
       yield* inspectCacheProducerDirectory(directory);
-      yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeApproval(approval), {
+      const argument = path.join(directory, "approval.json");
+      const encodedApproval = yield* encodeApproval(approval);
+      yield* fs.writeFileString(argument, encodedApproval, {
         flag: "wx",
         mode: 0o600,
       });
@@ -774,7 +807,8 @@ export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCache
           Effect.fnUntraced(function* () {
             const approved = yield* decodeBindingBytes(approvedHex);
             const bytes = new Uint8Array(persistedMaterialBytes);
-            bytes.set(yield* crypto.randomBytes(64));
+            const randomBytes2 = yield* crypto.randomBytes(64);
+            bytes.set(randomBytes2);
             bytes.set(approved, 64);
             return Redacted.make(bytes);
           })

@@ -7,6 +7,7 @@ import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 // scanAudience reads argv by hand, mirroring core's lexer. This differential test is what pins that mirror: it runs
 // core's REAL parser over a set of edge argvs, reads the parsed audience flags back out, and requires the scan to
 // agree. A change in core's lexer or boolean spellings fails here instead of silently drifting.
@@ -120,11 +121,14 @@ it.layer(parserServices, { timeout: "30 seconds" })("scanAudience agrees with co
   }
 
   for (const [argv, counted] of rejected) {
-    it.effect(`core rejects ${A.join(argv, " ")}; the scan counts only ${JSON.stringify(counted)}`, () =>
-      Effect.gen(function* () {
-        assert.isUndefined(yield* parsedBy(argv), "core should have refused this argv");
-        assert.deepStrictEqual(scanAudience(argv).given, counted);
-      })
+    it.effect(
+      `core rejects ${A.join(argv, " ")}; the scan counts only ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(counted), identity)}`,
+      () =>
+        Effect.gen(function* () {
+          const parsedBy1 = yield* parsedBy(argv);
+          assert.isUndefined(parsedBy1, "core should have refused this argv");
+          assert.deepStrictEqual(scanAudience(argv).given, counted);
+        })
     );
   }
 });

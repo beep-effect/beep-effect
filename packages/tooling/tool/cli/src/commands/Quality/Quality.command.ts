@@ -903,7 +903,9 @@ const runGithubCheckLaneGroup = Effect.fn("QualityScriptCommands.runGithubCheckL
   QualityTaskConfigurationError | QualityTaskGroupFailed,
   QualityScriptEnvironment | Digest.Digest
 > {
-  const width = concurrency ?? githubCheckTierConcurrency("pre-push", yield* qualityConcurrencyPlan);
+  const width =
+    concurrency ??
+    (yield* Effect.map(qualityConcurrencyPlan, (value) => githubCheckTierConcurrency("pre-push", value)));
   yield* runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy, width);
 });
 
@@ -922,7 +924,8 @@ const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
   // Pre-push lanes run `prePushLanes` wide inside each run of consecutive
   // same-wave lanes; exclusive lanes (Turbo graphs, coverage, integration,
   // codegen) still run alone.
-  const width = githubCheckTierConcurrency("pre-push", yield* qualityConcurrencyPlan);
+  const qualityConcurrencyPlan1 = yield* qualityConcurrencyPlan;
+  const width = githubCheckTierConcurrency("pre-push", qualityConcurrencyPlan1);
   yield* runQualityTaskGithubCheckLaneWaves(
     label,
     githubCheckOrderedLaneWaves(waveOrder.order(lanes)),
@@ -1208,15 +1211,18 @@ const runCheapGates = Effect.fn("QualityScriptCommands.runCheapGates")(function*
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
   QualityScriptEnvironment | Digest.Digest
 > {
+  const githubCheckChangesetStatusLanes2 = yield* githubCheckChangesetStatusLanes(repoRoot);
   const changesetStatusLanes = A.map(
-    yield* githubCheckChangesetStatusLanes(repoRoot),
+    githubCheckChangesetStatusLanes2,
     githubCheckLanePlan.githubCheckLaneInTier("cheap-gates")
   );
+  const argument = [...changesetStatusLanes, ...githubCheckCheapGateLanes(repoRoot)];
+  const qualityConcurrencyPlan2 = yield* qualityConcurrencyPlan;
   yield* runGithubCheckLaneGroup(
     "github-checks:cheap-gates",
-    [...changesetStatusLanes, ...githubCheckCheapGateLanes(repoRoot)],
+    argument,
     "collect-all",
-    githubCheckTierConcurrency("cheap-gates", yield* qualityConcurrencyPlan)
+    githubCheckTierConcurrency("cheap-gates", qualityConcurrencyPlan2)
   );
 });
 
@@ -2068,6 +2074,7 @@ const extractEffectTsgoRuleCellCode = (cell: unknown): O.Option<string> =>
 
 const extractEffectTsgoRuleNameFromRow = flow(
   decodeEffectTsgoRuleRowOption,
+  O.filter((row) => !pipe(A.get(row.td, 1), O.filter(S.is(S.String)), O.exists(Str.startsWith("Deprecated:")))),
   O.flatMap((decodedRow) => A.head(decodedRow.td)),
   O.flatMap(extractEffectTsgoRuleCellCode)
 );
@@ -2679,15 +2686,12 @@ const collectGitVisiblePaths = Effect.fn("QualityScriptCommands.collectGitVisibl
   QualityScriptCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const visiblePaths = HashSet.fromIterable(
-    gitPathListFromNulOutput(
-      yield* runGitRawOutput(
-        repoRoot,
-        ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-        jsdocGitErrorAdapter
-      )
-    )
+  const resultGitRawOutput = yield* runGitRawOutput(
+    repoRoot,
+    ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+    jsdocGitErrorAdapter
   );
+  const visiblePaths = HashSet.fromIterable(gitPathListFromNulOutput(resultGitRawOutput));
   // A listing that misses the base config came from the wrong work tree (a git-less copy nested in
   // another checkout), and filtering by it would pass every scan vacuously.
   if (!HashSet.has(visiblePaths, "tsconfig.base.json")) {
@@ -2713,8 +2717,11 @@ const collectWorkspaceTsconfigProfileDiagnostics = Effect.fn(
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const pipe3 = yield* fs
+    .readDirectory(repoRoot)
+    .pipe(QualityScriptCommandError.mapError(`Failed to read ${repoRoot}.`));
   const rootTsconfigFiles = pipe(
-    yield* fs.readDirectory(repoRoot).pipe(QualityScriptCommandError.mapError(`Failed to read ${repoRoot}.`)),
+    pipe3,
     A.filter(isTsconfigFileName),
     A.map((name) => path.join(repoRoot, name))
   );

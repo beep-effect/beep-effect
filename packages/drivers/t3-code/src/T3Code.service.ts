@@ -236,11 +236,8 @@ const make = Effect.fn("T3Code.make")(function* (input: T3CodeConfig) {
   return {
     readConfiguration: Effect.fn("T3Code.readConfiguration")(function* (threadId: string) {
       yield* threadInput(threadId, "configuration");
-      return yield* correlated(
-        yield* call("t3_thread_configuration", { threadId }, T3CodeConfiguration, "configuration"),
-        threadId,
-        "configuration"
-      );
+      const call1 = yield* call("t3_thread_configuration", { threadId }, T3CodeConfiguration, "configuration");
+      return yield* correlated(call1, threadId, "configuration");
     }),
     readProject: Effect.fn("T3Code.readProject")(function* (projectId: string) {
       yield* threadInput(projectId, "project");
@@ -262,29 +259,28 @@ const make = Effect.fn("T3Code.make")(function* (input: T3CodeConfig) {
       yield* threadInput(threadId, "send");
       yield* decodePrompt(message).pipe(Effect.mapError(() => invalid("send")));
       yield* decodeRequestKey(clientRequestId).pipe(Effect.mapError(() => invalid("send")));
-      return yield* correlated(
-        yield* call("t3_thread_send", { threadId, message, clientRequestId, mode: "queue" }, T3CodeSend, "send", true),
-        threadId,
+      const call2 = yield* call(
+        "t3_thread_send",
+        { threadId, message, clientRequestId, mode: "queue" },
+        T3CodeSend,
         "send",
         true
       );
+      return yield* correlated(call2, threadId, "send", true);
     }),
     waitExactRun: Effect.fn("T3Code.waitExactRun")(function* (threadId: string, runId: string, timeoutMs: number) {
       yield* threadInput(threadId, "wait");
       yield* threadInput(runId, "wait");
       yield* decodeTimeout(timeoutMs).pipe(Effect.mapError(() => invalid("wait")));
-      const value = yield* correlated(
-        yield* call(
-          "t3_thread_wait",
-          { threadId, runId, timeoutMs },
-          T3CodeWait,
-          "wait",
-          false,
-          timeoutMs + config.timeoutMs
-        ),
-        threadId,
-        "wait"
+      const call3 = yield* call(
+        "t3_thread_wait",
+        { threadId, runId, timeoutMs },
+        T3CodeWait,
+        "wait",
+        false,
+        timeoutMs + config.timeoutMs
       );
+      const value = yield* correlated(call3, threadId, "wait");
       return value.runId === runId ? value : yield* failure("wait", "identity-mismatch");
     }),
     interruptExactRun: Effect.fn("T3Code.interruptExactRun")(function* (
@@ -295,12 +291,14 @@ const make = Effect.fn("T3Code.make")(function* (input: T3CodeConfig) {
       yield* threadInput(threadId, "interrupt");
       yield* threadInput(runId, "interrupt");
       yield* decodeRequestKey(clientRequestId).pipe(Effect.mapError(() => invalid("interrupt")));
-      const value = yield* correlated(
-        yield* call("t3_thread_interrupt", { threadId, runId, clientRequestId }, T3CodeInterrupt, "interrupt", true),
-        threadId,
+      const call4 = yield* call(
+        "t3_thread_interrupt",
+        { threadId, runId, clientRequestId },
+        T3CodeInterrupt,
         "interrupt",
         true
       );
+      const value = yield* correlated(call4, threadId, "interrupt", true);
       return value.runId === runId ? value : yield* failure("interrupt", "identity-mismatch", true);
     }),
   } satisfies Operations;

@@ -360,9 +360,8 @@ const inspectGoalReflection = Effect.fnUntraced(function* (
   const reflectionsDir = path.join(GOALS_DIR, slug, ...REFLECTIONS_SUBDIR);
   const reflectionsDirExists = yield* fs.exists(reflectionsDir).pipe(Effect.orElseSucceed(thunkFalse));
   const reflectionFiles = reflectionsDirExists
-    ? pipe(
-        yield* fs.readDirectory(reflectionsDir).pipe(Effect.orElseSucceed(A.empty<string>)),
-        A.filter(reflectionFileNameIsArtifact)
+    ? yield* Effect.map(fs.readDirectory(reflectionsDir).pipe(Effect.orElseSucceed(A.empty<string>)), (value) =>
+        pipe(value, A.filter(reflectionFileNameIsArtifact))
       )
     : A.empty<string>();
   const blocking = yield* validateReflectionFiles(slug, reflectionsDir, reflectionFiles);

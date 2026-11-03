@@ -345,8 +345,9 @@ export const collectWorkspacePackageJsonFiles = Effect.fn("ChangesetGraph.collec
   ChangesetGraphError,
   FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
+  const readWorkspacePatterns1 = yield* readWorkspacePatterns(repoRoot);
   const workspaceManifests = yield* GlobSet.compile(
-    A.map(yield* readWorkspacePatterns(repoRoot), packageJsonGlobForWorkspacePattern)
+    A.map(readWorkspacePatterns1, packageJsonGlobForWorkspacePattern)
   ).pipe(Effect.mapError((error) => ChangesetGraphError.new(error, error.message)));
   const output = yield* collectGitOutput(repoRoot, ["ls-files", "-z", "--", ...gitTrackedPackageJsonPathspecs]);
 
@@ -369,7 +370,8 @@ const collectWorkspacePackages = Effect.fn("ChangesetGraph.collectWorkspacePacka
     packageJsonFiles,
     Effect.fn(function* (file) {
       const filePath = path.join(repoRoot, file);
-      const document = yield* readChangesetGraphWorkspaceManifest(yield* readPackageJsonText(filePath), filePath);
+      const readPackageJsonText2 = yield* readPackageJsonText(filePath);
+      const document = yield* readChangesetGraphWorkspaceManifest(readPackageJsonText2, filePath);
       if (P.isUndefined(document.name)) {
         return yield* ChangesetGraphError.make({
           message: `Workspace package manifest ${file} does not declare a package name.`,

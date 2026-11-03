@@ -64,8 +64,11 @@ const walk = Effect.fn("Provenance.walk")(function* (
   for (const name of yield* fs.readDirectory(canonical).pipe(Effect.mapError(fail))) {
     const file = yield* resolveWithinRoot(boundary, path.join(canonical, name), "Walk path escapes root");
     const info = yield* fs.stat(file).pipe(Effect.mapError(fail));
-    if (info.type === "Directory") yield* walk(boundary, file, visit, visited);
-    else if (info.type === "File") yield* visit(file, info);
+    if (info.type === "Directory") {
+      yield* walk(boundary, file, visit, visited);
+    } else if (info.type === "File") {
+      yield* visit(file, info);
+    }
   }
 });
 const readOptional = Effect.fn("Provenance.readOptional")(function* (root: string, candidate: string) {
@@ -158,8 +161,9 @@ const appendProvenance = (output: string, file: string, lines: ReadonlyArray<str
   writeProvenance(output, file, `${A.join(lines, "\n")}\n`, true);
 const childrenRoot = Effect.fn("Provenance.childrenRoot")(function* (root: string, tree: string) {
   const path = yield* Path.Path;
-  if (tree === "." || tree === ".." || /[/\\\0]/.test(tree))
+  if (tree === "." || tree === ".." || /[/\\\0]/.test(tree)) {
     return yield* CorpusCommandError.make({ message: "Tree must be one directory name." });
+  }
   return yield* checked(root, path.join(root, "staging", tree, "children"));
 });
 
@@ -273,7 +277,8 @@ const readAttachments = Effect.fn("Provenance.readAttachments")(function* (root:
   const attachmentDir = path.join(directory, "Attachments");
   if (!(yield* fs.exists(attachmentDir).pipe(Effect.mapError(fail)))) return [];
   const names = yield* fs.readDirectory(attachmentDir).pipe(Effect.mapError(fail));
-  return A.getSomes(yield* Effect.forEach(names, (name) => readAttachment(root, attachmentDir, name)));
+  const forEach1 = yield* Effect.forEach(names, (name) => readAttachment(root, attachmentDir, name));
+  return A.getSomes(forEach1);
 });
 const readBody = Effect.fn("Provenance.readBody")(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -326,7 +331,8 @@ const indexTree = Effect.fn("Provenance.indexTree")(function* (
       const artifactIndex = artifactIndexOption.value;
       const artifact = Str.replace(/\.export$/, "")(parts[artifactIndex] ?? "");
       sources = HashSet.add(sources, artifact);
-      const headers = parseOutlookHeaders(yield* fs.readFileString(file).pipe(Effect.mapError(fail)));
+      const pipe2 = yield* fs.readFileString(file).pipe(Effect.mapError(fail));
+      const headers = parseOutlookHeaders(pipe2);
       const outlook = yield* decodeOutlook(headers);
       const transport = yield* readOptional(root, path.join(directory, "InternetHeaders.txt")).pipe(
         Effect.mapError(fail)
@@ -442,17 +448,21 @@ const capture = Effect.fn("Provenance.capture")(function* (
   ).pipe(Effect.mapError(fail));
 });
 const sniffBatch = Effect.fn("Provenance.sniffBatch")(function* (batch: ReadonlyArray<string>, command: string) {
-  if (O.isSome(A.findFirst(batch, (file) => /[\r\n\0]/.test(file))))
+  if (O.isSome(A.findFirst(batch, (file) => /[\r\n\0]/.test(file)))) {
     return yield* CorpusCommandError.make({ message: "file(1) batch paths cannot contain line breaks or NUL." });
+  }
   const input = `${A.join(batch, "\n")}\n`;
   const mime = yield* capture(command, ["-b", "--mime-type", "--print0", "-f", "-"], input);
   const ext = yield* capture(command, ["-b", "--extension", "--print0", "-f", "-"], input);
-  if (mime.code !== 0 || ext.code !== 0) return yield* CorpusCommandError.make({ message: "file(1) batch failed." });
+  if (mime.code !== 0 || ext.code !== 0) {
+    return yield* CorpusCommandError.make({ message: "file(1) batch failed." });
+  }
   // With -b, file(1) emits verdict lines; --print0 adds filename NULs only without -b.
   const mimes = Str.split(Str.trim(mime.stdout), /\0?\r?\n/);
   const extensions = Str.split(Str.trim(ext.stdout), /\0?\r?\n/);
-  if (mimes.length !== batch.length || extensions.length !== batch.length)
+  if (mimes.length !== batch.length || extensions.length !== batch.length) {
     return yield* CorpusCommandError.make({ message: "file(1) output count does not match input batch." });
+  }
   return A.map(batch, (file, i) =>
     P.MagicSniffResult.make({
       path: file,
@@ -465,7 +475,8 @@ const sniffBatch = Effect.fn("Provenance.sniffBatch")(function* (batch: Readonly
   );
 });
 const sniff = Effect.fn("Provenance.sniff")(function* (paths: ReadonlyArray<string>, command: string) {
-  return A.flatten(yield* Effect.forEach(A.chunksOf(paths, 2000), (batch) => sniffBatch(batch, command)));
+  const forEach3 = yield* Effect.forEach(A.chunksOf(paths, 2000), (batch) => sniffBatch(batch, command));
+  return A.flatten(forEach3);
 });
 /**
  * Byte-only file identification through `file(1)`.
@@ -730,7 +741,9 @@ const normalizeTag = (value: unknown) =>
   decodeTagText(value).pipe(O.map((tag) => (isTagTextList(tag) ? A.join(tag, "; ") : `${tag}`)));
 const metadataVersion = Effect.fn("Provenance.metadataVersion")(function* (command: string) {
   const result = yield* capture(command, ["-ver"]);
-  if (result.code !== 0) return yield* CorpusCommandError.make({ message: "exiftool version lookup failed." });
+  if (result.code !== 0) {
+    return yield* CorpusCommandError.make({ message: "exiftool version lookup failed." });
+  }
   return Str.trim(result.stdout);
 });
 const decodeNaturalOption = S.decodeOption(S.Natural);
@@ -759,8 +772,9 @@ const readBatch = Effect.fn("Provenance.readBatch")(function* (
   if (paths.length === 0) return [];
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  if (A.some(paths, (file) => /[\r\n\0]/.test(file)))
+  if (A.some(paths, (file) => /[\r\n\0]/.test(file))) {
     return yield* CorpusCommandError.make({ message: "exiftool argfile paths cannot contain line breaks or NUL." });
+  }
   return yield* Effect.scoped(
     Effect.gen(function* () {
       const argfile = yield* fs.makeTempFileScoped({ prefix: "beep-metadata-" });
@@ -879,11 +893,9 @@ export const indexMailExportTrees = Effect.fn("Provenance.indexMailExportTrees")
         }, Effect.provide(context))
       );
       const summary = P.MailMessageIndexSummary.make({ ...counts, tree, generatedAt: yield* now });
-      yield* writeProvenance(
-        output,
-        path.join(output, `messages-${tree}.summary.json`),
-        yield* P.MailMessageIndexSummaryJson.encode(summary).pipe(Effect.mapError(fail))
-      );
+      const argument = path.join(output, `messages-${tree}.summary.json`);
+      const pipe1 = yield* P.MailMessageIndexSummaryJson.encode(summary).pipe(Effect.mapError(fail));
+      yield* writeProvenance(output, argument, pipe1);
       return summary;
     })
   );
@@ -935,7 +947,9 @@ const undoAttachments = Effect.fn("Provenance.undoAttachments")(function* (
   let scannedFiles = 0;
   let proposedRenames = 0;
 
-  if (options.journalPath === undefined) return yield* CorpusCommandError.make({ message: "Undo requires --journal." });
+  if (options.journalPath === undefined) {
+    return yield* CorpusCommandError.make({ message: "Undo requires --journal." });
+  }
   const inputPath = yield* checked(options.corpusRoot, path.resolve(options.corpusRoot, options.journalPath));
   const rows = yield* journal.readAll(inputPath);
   for (const row of A.reverse(rows)) {
@@ -987,13 +1001,16 @@ const applyProposal = Effect.fn("Provenance.applyProposal")(function* (
 ) {
   const path = yield* Path.Path;
   const journal = yield* AttachmentRepairJournal;
-  if (row.proposedFileName === undefined) return yield* CorpusCommandError.make({ message: "Missing proposed name." });
+  if (row.proposedFileName === undefined) {
+    return yield* CorpusCommandError.make({ message: "Missing proposed name." });
+  }
   // Only the POSIX separator and NUL are unsafe here: pffexport keeps Windows
   // backslashes inside attachment names, and the rename stays in one directory.
-  if (/[/\0]/.test(row.proposedFileName))
+  if (/[/\0]/.test(row.proposedFileName)) {
     return yield* CorpusCommandError.make({
       message: `Unsafe magic extension proposal for ${row.relativePath} -> ${row.proposedFileName}`,
     });
+  }
   const target = path.join(path.dirname(path.join(root, row.relativePath)), row.proposedFileName);
   const outcome = yield* renameChecked(root, path.join(root, row.relativePath), target, row.sizeBytes);
   yield* journal.append(
@@ -1101,11 +1118,9 @@ export const repairAttachmentExtensions = Effect.fn("Provenance.repairAttachment
     byMime,
     byOutcome,
   });
-  yield* writeProvenance(
-    output,
-    path.join(output, `attachments-${options.mode}.summary.json`),
-    yield* P.AttachmentRepairSummaryJson.encode(summary).pipe(Effect.mapError(fail))
-  );
+  const argument1 = path.join(output, `attachments-${options.mode}.summary.json`);
+  const pipe3 = yield* P.AttachmentRepairSummaryJson.encode(summary).pipe(Effect.mapError(fail));
+  yield* writeProvenance(output, argument1, pipe3);
   return summary;
 });
 
@@ -1116,7 +1131,7 @@ const writeMetadataBatches = Effect.fn("Provenance.writeMetadataBatches")(functi
   counts: { fileCount: number; errorCount: number; withAuthor: number; withCreateDate: number },
   byFileType: Record<string, number>
 ) {
-  for (const batch of batches)
+  for (const batch of batches) {
     for (const row of batch) {
       counts.fileCount++;
       counts.errorCount += Number(row.status === "error");
@@ -1127,6 +1142,7 @@ const writeMetadataBatches = Effect.fn("Provenance.writeMetadataBatches")(functi
         yield* P.MetadataCensusRecordJson.encode(row).pipe(Effect.mapError(fail)),
       ]);
     }
+  }
 });
 
 /**
@@ -1144,8 +1160,9 @@ const writeMetadataBatches = Effect.fn("Provenance.writeMetadataBatches")(functi
 export const runMetadataCensus = Effect.fn("Provenance.runMetadataCensus")(function* (
   options: P.MetadataCensusOptions
 ) {
-  if (options.batchSize < 1 || options.concurrency < 1)
+  if (options.batchSize < 1 || options.concurrency < 1) {
     return yield* CorpusCommandError.make({ message: "Batch size and concurrency must be positive." });
+  }
   const path = yield* Path.Path;
   const reader = yield* FileMetadataCensusReader;
   const output = yield* outputRoot(options.corpusRoot, options.outputDir);
@@ -1186,10 +1203,8 @@ export const runMetadataCensus = Effect.fn("Provenance.runMetadataCensus")(funct
     okCount: counts.fileCount - counts.errorCount,
     byFileType,
   });
-  yield* writeProvenance(
-    output,
-    path.join(output, "metadata.summary.json"),
-    yield* P.MetadataCensusSummaryJson.encode(summary).pipe(Effect.mapError(fail))
-  );
+  const argument2 = path.join(output, "metadata.summary.json");
+  const pipe4 = yield* P.MetadataCensusSummaryJson.encode(summary).pipe(Effect.mapError(fail));
+  yield* writeProvenance(output, argument2, pipe4);
   return summary;
 });

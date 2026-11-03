@@ -233,12 +233,13 @@ describe("lane-reds", () => {
         const sibling = path.join(root, "lane-b");
         yield* fs.makeDirectory(current);
         yield* fs.makeDirectory(sibling);
+        const now1 = yield* DateTime.now;
         const capsule = YeetFailureCapsule.make({
           bucket: "fail",
           headSha: "abc123",
           lane: "Check / Coverage",
           link: null,
-          observedAt: DateTime.formatIso(yield* DateTime.now),
+          observedAt: DateTime.formatIso(now1),
           prNumber: 1817,
           state: "FAILURE",
           workflow: null,
@@ -388,7 +389,8 @@ describe("since-last-check", () => {
           "lane-a",
           "lane-b",
         ]);
-        expectClean(yield* encodeParcelEnvelopeJson(first));
+        const encodedParcelEnvelopeJson = yield* encodeParcelEnvelopeJson(first);
+        expectClean(encodedParcelEnvelopeJson);
 
         const cursorDir = path.join(root, "state", "cursors", "github.com__beep-effect__beep-effect");
         const cursor = yield* fs
@@ -398,7 +400,8 @@ describe("since-last-check", () => {
           DateTime.toEpochMillis(DateTime.subtract(now, { minutes: 1 }))
         );
         // The write renamed its temporary file over the cursor; none is left behind.
-        expect(yield* fs.readDirectory(cursorDir)).toEqual(["session-2.json"]);
+        const readDirectory2 = yield* fs.readDirectory(cursorDir);
+        expect(readDirectory2).toEqual(["session-2.json"]);
 
         const second = yield* read("session-2");
         expect(second.receipt.total).toBe(0);

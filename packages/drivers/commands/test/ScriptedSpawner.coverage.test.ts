@@ -21,16 +21,16 @@ it.effect("scripted handles accept kill, drain additional input fds and expose e
     const handle = yield* service.spawn(ChildProcess.make("tool"));
     yield* handle.kill();
     yield* Stream.run(Stream.make(new Uint8Array([1, 2])), handle.getInputFd(3));
-    assert.deepStrictEqual(yield* Stream.runCollect(handle.getOutputFd(4)), []);
-    assert.strictEqual(yield* Stream.run(Stream.make(new Uint8Array([3])), handle.stdin), undefined);
-    assert.strictEqual(
-      yield* Stream.runFold(
-        Stream.decodeText(handle.all),
-        () => "",
-        (text, part) => text + part
-      ),
-      "outerr"
+    const resultCollect = yield* Stream.runCollect(handle.getOutputFd(4));
+    assert.deepStrictEqual(resultCollect, []);
+    const result = yield* Stream.run(Stream.make(new Uint8Array([3])), handle.stdin);
+    assert.strictEqual(result, undefined);
+    const resultFold = yield* Stream.runFold(
+      Stream.decodeText(handle.all),
+      () => "",
+      (text, part) => text + part
     );
+    assert.strictEqual(resultFold, "outerr");
   }).pipe(withLayer(spawner.layer));
 });
 

@@ -72,7 +72,8 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
           const session = yield* sessions.open(profile, {
             started: Effect.fn("SessionObserverTest.started")(function* (process: ManagedSessionProcess) {
               assert.isAbove(process.pid, 0);
-              assert.isTrue(yield* process.isRunning.pipe(Effect.orDie));
+              const pipe1 = yield* process.isRunning.pipe(Effect.orDie);
+              assert.isTrue(pipe1);
               yield* Deferred.succeed(spawned, process);
               yield* Ref.update(order, (events) => [...events, "started"]);
             }),
@@ -82,10 +83,12 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
               yield* Ref.update(order, (events) => [...events, "bound"]);
             }),
           });
-          assert.deepEqual(yield* Ref.get(order), ["started", "bound"]);
+          const got = yield* Ref.get(order);
+          assert.deepEqual(got, ["started", "bound"]);
           assert.equal(session.process.pid, (yield* Deferred.await(spawned)).pid);
           yield* session.close;
-          assert.isFalse(yield* session.process.isRunning);
+          const isRunning2 = yield* session.process.isRunning;
+          assert.isFalse(isRunning2);
         }
       })
     );
@@ -102,12 +105,15 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
               operation: "synthetic-observer",
               message: "PRIVATE-OBSERVER-CANARY",
             });
+            const syntheticProfile3 = yield* syntheticProfile(provider);
             const result = yield* sessions
-              .open(yield* syntheticProfile(provider), {
+              .open(syntheticProfile3, {
                 started: Effect.fn("SessionObserverTest.started")(function* (process: ManagedSessionProcess) {
                   yield* Deferred.succeed(spawned, process);
                   yield* Ref.update(counts, (value) => ({ ...value, started: value.started + 1 }));
-                  if (phase === "started") return yield* rejected;
+                  if (phase === "started") {
+                    return yield* rejected;
+                  }
                 }),
                 bound: () =>
                   Ref.update(counts, (value) => ({ ...value, bound: value.bound + 1 })).pipe(
@@ -117,9 +123,11 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
               .pipe(Effect.flip);
             assert.equal(result.operation, `observe-${phase}`);
             assert.notInclude(result.message, "PRIVATE-OBSERVER-CANARY");
-            assert.deepEqual(yield* Ref.get(counts), { started: 1, bound: phase === "started" ? 0 : 1 });
+            const got4 = yield* Ref.get(counts);
+            assert.deepEqual(got4, { started: 1, bound: phase === "started" ? 0 : 1 });
             // This assertion runs while the caller scope is still alive.
-            assert.isFalse(yield* (yield* Deferred.await(spawned)).isRunning);
+            const isRunning5 = yield* (yield* Deferred.await(spawned)).isRunning;
+            assert.isFalse(isRunning5);
           }
         })
       );
@@ -129,15 +137,19 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
       Effect.gen(function* () {
         const spawned = yield* Deferred.make<ManagedSessionProcess>();
         const bound = yield* Ref.make(0);
-        const result = yield* (yield* AiProviderCliSession)
-          .open(yield* syntheticProfile("codex", "wrong-policy"), {
+        const argument = yield* AiProviderCliSession;
+        const syntheticProfile1 = yield* syntheticProfile("codex", "wrong-policy");
+        const result = yield* argument
+          .open(syntheticProfile1, {
             started: (process) => Deferred.succeed(spawned, process).pipe(Effect.asVoid),
             bound: () => Ref.update(bound, (count) => count + 1),
           })
           .pipe(Effect.flip);
         assert.equal(result.reason, "policy-mismatch");
-        assert.equal(yield* Ref.get(bound), 0);
-        assert.isFalse(yield* (yield* Deferred.await(spawned)).isRunning);
+        const got6 = yield* Ref.get(bound);
+        assert.equal(got6, 0);
+        const isRunning7 = yield* (yield* Deferred.await(spawned)).isRunning;
+        assert.isFalse(isRunning7);
       })
     );
 
@@ -183,9 +195,11 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
             assert.equal(rejected.reason, "invalid-profile");
             assert.notInclude(rejected.message, "synthetic-private-value");
           }
-          assert.equal(yield* fs.exists(profile.profileRoot), false);
+          const exists8 = yield* fs.exists(profile.profileRoot);
+          assert.equal(exists8, false);
         }
-        assert.equal(yield* Ref.get(launches), 0);
+        const got9 = yield* Ref.get(launches);
+        assert.equal(got9, 0);
       })
     );
 
@@ -215,7 +229,8 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
         assert.equal(later.reason, "closed");
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        assert.equal(yield* fs.readFileString(path.join(profile.profileRoot, "received-prompt")), "first");
+        const readFileString10 = yield* fs.readFileString(path.join(profile.profileRoot, "received-prompt"));
+        assert.equal(readFileString10, "first");
         yield* session.close;
         yield* session.close;
         yield* Effect.yieldNow;
@@ -253,7 +268,8 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
         assert.equal((yield* Fiber.join(waiting)).reason, "closed");
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        assert.equal(yield* fs.readFileString(path.join(profile.profileRoot, "received-prompt")), "first");
+        const readFileString11 = yield* fs.readFileString(path.join(profile.profileRoot, "received-prompt"));
+        assert.equal(readFileString11, "first");
       }).pipe(Effect.timeout("5 seconds"), TestClock.withLive)
     );
 
@@ -295,27 +311,32 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
           });
           const session = yield* (yield* AiProviderCliSession).open(profile);
           // Exact equality rules out the generation-2 negotiation fields `info` and `capabilities`.
-          assert.deepStrictEqual(yield* received(profile, "initialize"), {
+          const received12 = yield* received(profile, "initialize");
+          assert.deepStrictEqual(received12, {
             protocolVersion: 1,
             clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false },
             clientInfo: { name: "beep-managed-session", version: "1" },
           });
-          assert.deepStrictEqual(yield* received(profile, "session-new"), {
+          const received13 = yield* received(profile, "session-new");
+          assert.deepStrictEqual(received13, {
             cwd: profile.workspace,
             mcpServers: [
               { name: "peer", command: "synthetic-mcp", args: ["--stdio"], env: [{ name: "MODE", value: "fixture" }] },
             ],
           });
-          if (provider === "grok")
-            assert.deepStrictEqual(yield* received(profile, "authenticate"), {
+          if (provider === "grok") {
+            const received2 = yield* received(profile, "authenticate");
+            assert.deepStrictEqual(received2, {
               methodId: "cached_token",
               _meta: { headless: true },
             });
-          else
-            assert.deepStrictEqual(yield* received(profile, "session-set_mode"), {
+          } else {
+            const received3 = yield* received(profile, "session-set_mode");
+            assert.deepStrictEqual(received3, {
               sessionId: session.identity.sessionId,
               modeId: "ask",
             });
+          }
           yield* session.close;
         }
       })
@@ -362,7 +383,9 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
     it.effect(
       "cancels Grok and refuses unqualified active steering",
       Effect.fnUntraced(function* () {
-        const session = yield* (yield* AiProviderCliSession).open(yield* syntheticProfile("grok"));
+        const argument1 = yield* AiProviderCliSession;
+        const syntheticProfile4 = yield* syntheticProfile("grok");
+        const session = yield* argument1.open(syntheticProfile4);
         const error = yield* session
           .steer(
             ManagedSessionSteering.make({
@@ -405,7 +428,9 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
       it.effect(
         `fences Codex ${mode} without replaying`,
         Effect.fnUntraced(function* () {
-          const session = yield* (yield* AiProviderCliSession).open(yield* syntheticProfile("codex", mode));
+          const argument2 = yield* AiProviderCliSession;
+          const syntheticProfile5 = yield* syntheticProfile("codex", mode);
+          const session = yield* argument2.open(syntheticProfile5);
           const first = yield* session
             .prompt(ManagedSessionMessage.make({ messageId: "first", text: "synthetic" }))
             .pipe(Effect.result);
@@ -430,7 +455,8 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
         `classifies Claude ${mode} without replay`,
         Effect.fnUntraced(function* () {
           const sessions = yield* AiProviderCliSession;
-          const session = yield* sessions.open(yield* syntheticProfile("claude", mode));
+          const syntheticProfile14 = yield* syntheticProfile("claude", mode);
+          const session = yield* sessions.open(syntheticProfile14);
           const result = yield* session
             .prompt(ManagedSessionMessage.make({ messageId: "case", text: "synthetic" }))
             .pipe(Effect.result);
@@ -468,7 +494,8 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
         `rejects ${provider} ${mode} readback`,
         Effect.fnUntraced(function* () {
           const sessions = yield* AiProviderCliSession;
-          const error = yield* sessions.open(yield* syntheticProfile(provider, mode)).pipe(Effect.flip);
+          const syntheticProfile15 = yield* syntheticProfile(provider, mode);
+          const error = yield* sessions.open(syntheticProfile15).pipe(Effect.flip);
           assert.equal(error.reason, "policy-mismatch");
         })
       );
@@ -528,10 +555,14 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
           const sessions = yield* AiProviderCliSession;
           const error = yield* sessions.open(changed).pipe(Effect.flip);
           assert.equal(error.reason, "invalid-profile");
-          if (invalid === "codex-existing")
-            assert.equal(yield* fs.readFileString(path.join(profile.profileRoot, ".codex/config.toml")), "retained");
-          if (invalid === "claude-existing")
-            assert.equal(yield* fs.readFileString(path.join(profile.profileRoot, "managed-mcp.json")), "retained");
+          if (invalid === "codex-existing") {
+            const readFileString6 = yield* fs.readFileString(path.join(profile.profileRoot, ".codex/config.toml"));
+            assert.equal(readFileString6, "retained");
+          }
+          if (invalid === "claude-existing") {
+            const readFileString7 = yield* fs.readFileString(path.join(profile.profileRoot, "managed-mcp.json"));
+            assert.equal(readFileString7, "retained");
+          }
         })
       );
     }
@@ -624,7 +655,8 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
     it.effect("retains Claude terminal evidence when a successful result omits printable text", () =>
       Effect.gen(function* () {
         const sessions = yield* AiProviderCliSession;
-        const session = yield* sessions.open(yield* syntheticProfile("claude", "empty-result"));
+        const syntheticProfile16 = yield* syntheticProfile("claude", "empty-result");
+        const session = yield* sessions.open(syntheticProfile16);
         const result = yield* session.prompt(
           ManagedSessionMessage.make({ messageId: "empty-result", text: "synthetic-only" })
         );
@@ -832,9 +864,14 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
           const workspace = path.join(root, "workspace");
           const state = path.join(root, "state");
           yield* fs.makeDirectory(workspace);
-          if (invalid === "file") yield* fs.writeFileString(state, "synthetic", { mode: 0o600 });
-          else yield* fs.makeDirectory(state, { mode: invalid === "public-directory" ? 0o755 : 0o700 });
-          if (invalid === "public-directory") yield* fs.chmod(state, 0o755);
+          if (invalid === "file") {
+            yield* fs.writeFileString(state, "synthetic", { mode: 0o600 });
+          } else {
+            yield* fs.makeDirectory(state, { mode: invalid === "public-directory" ? 0o755 : 0o700 });
+          }
+          if (invalid === "public-directory") {
+            yield* fs.chmod(state, 0o755);
+          }
           if (invalid === "existing-config") {
             yield* fs.makeDirectory(path.join(home, ".grok"), { recursive: true });
             yield* fs.writeFileString(path.join(home, ".grok/sandbox.toml"), "retained-synthetic", { mode: 0o600 });
@@ -856,8 +893,10 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
             )
             .pipe(Effect.flip);
           assert.equal(error.reason, "invalid-profile");
-          if (invalid === "existing-config")
-            assert.equal(yield* fs.readFileString(path.join(home, ".grok/sandbox.toml")), "retained-synthetic");
+          if (invalid === "existing-config") {
+            const readFileString8 = yield* fs.readFileString(path.join(home, ".grok/sandbox.toml"));
+            assert.equal(readFileString8, "retained-synthetic");
+          }
         })
       );
     }
@@ -928,15 +967,20 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
               .pipe(Effect.flip);
             assert.equal(stale.reason, "policy-mismatch");
             const applyControl = Effect.fn("SyntheticSession.applyControl")(function* () {
-              if (control === "steer")
+              if (control === "steer") {
                 yield* session.steer(
                   ManagedSessionSteering.make({
                     expectedTurnId: turnId,
                     message: ManagedSessionMessage.make({ messageId: "steering", text: "bounded-synthetic" }),
                   })
                 );
-              if (control === "cancel") yield* session.cancel;
-              if (control === "timeout") yield* TestClock.adjust("2 minutes");
+              }
+              if (control === "cancel") {
+                yield* session.cancel;
+              }
+              if (control === "timeout") {
+                yield* TestClock.adjust("2 minutes");
+              }
             });
             yield* applyControl();
             const result = yield* Fiber.join(running);
@@ -1028,8 +1072,9 @@ for (const stop of ["timeout", "interrupt"] as const) {
         const sessions = yield* AiProviderCliSession;
         const spawned = yield* Deferred.make<ManagedSessionProcess>();
         const count = yield* Ref.make(0);
+        const syntheticProfile17 = yield* syntheticProfile("codex");
         const opening = yield* sessions
-          .open(yield* syntheticProfile("codex"), {
+          .open(syntheticProfile17, {
             started: (process) =>
               Deferred.succeed(spawned, process).pipe(
                 Effect.andThen(Ref.update(count, (n) => n + 1)),
@@ -1044,9 +1089,13 @@ for (const stop of ["timeout", "interrupt"] as const) {
           const error = yield* Fiber.join(opening);
           assert.equal(error.reason, "timeout");
           assert.equal(error.operation, "observe-started");
-        } else yield* Fiber.interrupt(opening);
-        assert.equal(yield* Ref.get(count), 1);
-        assert.isFalse(yield* process.isRunning);
+        } else {
+          yield* Fiber.interrupt(opening);
+        }
+        const got18 = yield* Ref.get(count);
+        assert.equal(got18, 1);
+        const isRunning19 = yield* process.isRunning;
+        assert.isFalse(isRunning19);
       })
     )
   );

@@ -67,7 +67,8 @@ it.layer(layer, { timeout: "30 seconds" })("Independent claim populations", (it)
       yield* TestClock.setTime(2000);
       // Started is later than the claim window; the report must explicitly describe a cohort.
       yield* claims.appendObservation(started(input));
-      const before = yield* readObservationClaimPopulation(f.policy, yield* request(), f.uid);
+      const request1 = yield* request();
+      const before = yield* readObservationClaimPopulation(f.policy, request1, f.uid);
       expect(before.evidence.scope).toBe("claims-created-in-window");
       expect(before.rows[0]).toMatchObject({
         claims: [input.fact.launchId],
@@ -94,7 +95,8 @@ it.layer(layer, { timeout: "30 seconds" })("Independent claim populations", (it)
       yield* claims.reconcile(input.fact.launchId, (submission) =>
         backend.record(submission.fact, submission.evidenceEpoch)
       );
-      const after = yield* readObservationClaimPopulation(f.policy, yield* request(), f.uid);
+      const request2 = yield* request();
+      const after = yield* readObservationClaimPopulation(f.policy, request2, f.uid);
       expect(reconcileObservationCoverage(after.coverage).routes[0]?.launches).toMatchObject({
         _tag: "Compared",
         expected: 1,
@@ -117,7 +119,8 @@ it.layer(layer, { timeout: "30 seconds" })("Independent claim populations", (it)
       yield* claims.runOnce(claimSubmission(), () => Effect.void);
       yield* TestClock.setTime(1000);
       yield* claims.runOnce(claimSubmission("2"), () => Effect.void);
-      const report = yield* readObservationClaimPopulation(f.policy, yield* request(), f.uid);
+      const request3 = yield* request();
+      const report = yield* readObservationClaimPopulation(f.policy, request3, f.uid);
       expect(report.rows[0]?.claims).toEqual([claimId("1")]);
       expect(report.rows[0]?.unresolvedStarts).toEqual([claimId("1")]);
       expect(report.coverage.inventory.routes[0]?.knownLaunches).toEqual({ _tag: "Unknown" });
@@ -133,23 +136,24 @@ it.layer(layer, { timeout: "30 seconds" })("Independent claim populations", (it)
       yield* TestClock.setTime(0);
       const f = yield* claimFixture();
       yield* TestClock.setTime(1000);
-      const empty = yield* readObservationClaimPopulation(f.policy, yield* request(), f.uid);
+      const request4 = yield* request();
+      const empty = yield* readObservationClaimPopulation(f.policy, request4, f.uid);
       expect(empty.coverage.inventory.routes[0]?.knownLaunches).toMatchObject({ _tag: "Enumerated", ids: [] });
       expect(empty.coverage.inventory.routes[1]?.knownLaunches).toEqual({ _tag: "Unknown" });
-      expect(
-        yield* readObservationClaimPopulation(f.policy, yield* request("codex-cli", claimId("f")), f.uid).pipe(
-          Effect.flip
-        )
-      ).toMatchObject({ reason: "boundary" });
+      const request11 = yield* request("codex-cli", claimId("f"));
+      const pipe5 = yield* readObservationClaimPopulation(f.policy, request11, f.uid).pipe(Effect.flip);
+      expect(pipe5).toMatchObject({ reason: "boundary" });
       yield* TestClock.setTime(0);
       const claims = yield* makeObservationClaims(f.policy, f.uid);
       yield* claims.runOnce(claimSubmission(), () => Effect.void);
       yield* TestClock.setTime(1000);
-      expect(
-        yield* readObservationClaimPopulation(f.policy, yield* request("grok"), f.uid).pipe(Effect.flip)
-      ).toMatchObject({ reason: "identity" });
+      const request12 = yield* request("grok");
+      const pipe6 = yield* readObservationClaimPopulation(f.policy, request12, f.uid).pipe(Effect.flip);
+      expect(pipe6).toMatchObject({ reason: "identity" });
       yield* f.fs.writeFileString(`${f.policy.directory}/receipt-0-0.json`, "", { mode: 0o600 });
-      expect(yield* readObservationClaimPopulation(f.policy, yield* request(), f.uid).pipe(Effect.flip)).toMatchObject({
+      const request13 = yield* request();
+      const pipe7 = yield* readObservationClaimPopulation(f.policy, request13, f.uid).pipe(Effect.flip);
+      expect(pipe7).toMatchObject({
         reason: "integrity",
       });
     })
@@ -167,7 +171,9 @@ it.layer(layer, { timeout: "30 seconds" })("Independent claim populations", (it)
         lstat: Effect.fn("PopulationTest.lstat")(function* (path) {
           if (path === `${f.policy.directory}/claim-1.json`) {
             const n = yield* Ref.updateAndGet(count, (n) => n + 1);
-            if (n === 2) yield* original.runOnce(claimSubmission("2"), () => Effect.void).pipe(Effect.orDie);
+            if (n === 2) {
+              yield* original.runOnce(claimSubmission("2"), () => Effect.void).pipe(Effect.orDie);
+            }
           }
           return yield* f.fs.lstat(path);
         }),
@@ -175,21 +181,22 @@ it.layer(layer, { timeout: "30 seconds" })("Independent claim populations", (it)
       const raced = yield* makeObservationClaims(f.policy, f.uid).pipe(
         Effect.provideService(FileSystem.FileSystem, watched)
       );
-      expect(yield* raced.snapshotOutboxes.pipe(Effect.flip)).toMatchObject({ reason: "contended" });
-      yield* f.fs.writeFileString(
-        `${f.policy.directory}/claim-1.json`,
-        yield* f.fs.readFileString(`${f.policy.directory}/claim-0.json`),
-        { mode: 0o600 }
-      );
-      expect(yield* original.snapshotOutboxes.pipe(Effect.flip)).toMatchObject({ reason: "integrity" });
+      const pipe8 = yield* raced.snapshotOutboxes.pipe(Effect.flip);
+      expect(pipe8).toMatchObject({ reason: "contended" });
+      const argument = `${f.policy.directory}/claim-1.json`;
+      const readFileString1 = yield* f.fs.readFileString(`${f.policy.directory}/claim-0.json`);
+      yield* f.fs.writeFileString(argument, readFileString1, { mode: 0o600 });
+      const pipe9 = yield* original.snapshotOutboxes.pipe(Effect.flip);
+      expect(pipe9).toMatchObject({ reason: "integrity" });
     })
   );
   it.effect("reads a full store with a linear descriptor budget", () =>
     Effect.gen(function* () {
       const f = yield* claimFixture(16);
       const writer = yield* makeObservationClaims(f.policy, f.uid);
-      for (const digit of A.fromIterable("0123456789abcdef"))
+      for (const digit of A.fromIterable("0123456789abcdef")) {
         yield* writer.runOnce(claimSubmission(digit), () => Effect.void);
+      }
       const opened = yield* Ref.make(0);
       const watched = FileSystem.FileSystem.of({
         ...f.fs,
@@ -200,8 +207,10 @@ it.layer(layer, { timeout: "30 seconds" })("Independent claim populations", (it)
       const reader = yield* makeObservationClaims(f.policy, f.uid).pipe(
         Effect.provideService(FileSystem.FileSystem, watched)
       );
-      expect(yield* reader.snapshotOutboxes).toHaveLength(16);
-      expect(yield* Ref.get(opened)).toBeLessThanOrEqual(160);
+      const snapshotOutboxes10 = yield* reader.snapshotOutboxes;
+      expect(snapshotOutboxes10).toHaveLength(16);
+      const got = yield* Ref.get(opened);
+      expect(got).toBeLessThanOrEqual(160);
     })
   );
 });

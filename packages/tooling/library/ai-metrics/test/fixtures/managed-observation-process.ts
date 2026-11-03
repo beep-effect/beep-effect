@@ -174,15 +174,14 @@ const program = Effect.gen(function* () {
           );
           if (!(yield* Ref.get(lostAck))) return yield* Effect.die("Synthetic lost acknowledgment was not exercised");
           const outbox = yield* claims.readOutbox(launchId);
-          yield* Console.log(
-            yield* encodeReceiptsChildStoppedRecordJson({
-              receipts: yield* Ref.get(receipts),
-              childStopped: true,
-              syntheticOnly: true,
-              lostAcknowledgment: true,
-              outboxReceipts: outbox.receipts.length,
-            })
-          );
+          const encodedReceiptsChildStoppedRecordJson = yield* encodeReceiptsChildStoppedRecordJson({
+            receipts: yield* Ref.get(receipts),
+            childStopped: true,
+            syntheticOnly: true,
+            lostAcknowledgment: true,
+            outboxReceipts: outbox.receipts.length,
+          });
+          yield* Console.log(encodedReceiptsChildStoppedRecordJson);
         })
     )
     .pipe(
@@ -191,13 +190,12 @@ const program = Effect.gen(function* () {
           ? Effect.gen(function* () {
               const recovered = yield* claims.reconcile(launchId, client.submit);
               const state = yield* claims.readOutbox(launchId);
-              yield* Console.log(
-                yield* encodeRefusedReceiptsRecordJson({
-                  refused: "claimed",
-                  receipts: recovered,
-                  outboxReceipts: state.receipts.length,
-                })
-              );
+              const encodedRefusedReceiptsRecordJson = yield* encodeRefusedReceiptsRecordJson({
+                refused: "claimed",
+                receipts: recovered,
+                outboxReceipts: state.receipts.length,
+              });
+              yield* Console.log(encodedRefusedReceiptsRecordJson);
             })
           : Effect.fail(error)
       )

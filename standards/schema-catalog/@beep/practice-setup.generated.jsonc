@@ -15,6 +15,7 @@
     {"file":"apps/practice-setup/src/Setup.models.ts","symbol":"StepDone","kind":"struct-const","owner":"@beep/practice-setup","identity":"StepDone","description":"A bootstrapper step that ran and did its job."},
     {"file":"apps/practice-setup/src/Setup.models.ts","symbol":"StepFailed","kind":"struct-const","owner":"@beep/practice-setup","identity":"StepFailed","description":"A bootstrapper step that failed; later steps do not run."},
     {"file":"apps/practice-setup/src/Setup.models.ts","symbol":"StepOutcome","kind":"tagged-union","owner":"@beep/practice-setup","identity":"StepOutcome","description":"The outcome of one bootstrapper step."},
-    {"file":"apps/practice-setup/src/Setup.models.ts","symbol":"StepSkipped","kind":"struct-const","owner":"@beep/practice-setup","identity":"StepSkipped","description":"A bootstrapper step with nothing to do."}
+    {"file":"apps/practice-setup/src/Setup.models.ts","symbol":"StepSkipped","kind":"struct-const","owner":"@beep/practice-setup","identity":"StepSkipped","description":"A bootstrapper step with nothing to do."},
+    {"file":"apps/practice-setup/src/build.ts","symbol":"embeddedEntrySource","kind":"codec","owner":"@beep/practice-setup"}
   ]
 }

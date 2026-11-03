@@ -16,9 +16,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
@@ -318,7 +319,7 @@ export const buildBackfillManifestText: {
       ...optionalProp("grandfatheredNote", O.fromUndefinedOr(backfill.grandfatheredNote)),
     },
   };
-  return `${JSON.stringify(manifest, null, 2)}\n`;
+  return `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(manifest), identity)}\n`;
 });
 
 /**
@@ -459,7 +460,9 @@ const planSupersededByEdits = (manifest: Readonly<Record<string, unknown>>, edit
   const packetSlug = pipe(
     stringField(supersededBy.value, "packet"),
     O.map(slugFromPacketPath),
-    O.getOrElse(() => JSON.stringify(supersededBy.value))
+    O.getOrElse(() =>
+      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(supersededBy.value), identity)
+    )
   );
   edit(["supersededBy"], packetSlug, `normalize object supersededBy -> "${packetSlug}"`);
   if (O.isSome(stringField(manifest, "supersededNote"))) {

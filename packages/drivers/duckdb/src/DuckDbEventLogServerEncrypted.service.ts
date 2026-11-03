@@ -102,10 +102,9 @@ export const makeStorage = Effect.fn("DuckDbEventLogServerEncrypted.makeStorage"
 
       const resources = yield* RcMap.make({
         lookup: Effect.fnUntraced(function* (scopeKey: string) {
-          const scopeHash = Str.slice(
-            0,
-            16
-          )(yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(scopeKey)));
+          const argument = Str.slice(0, 16);
+          const digestHex1 = yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(scopeKey));
+          const scopeHash = argument(digestHex1);
           const table = `${tablePrefix}_${scopeHash}`;
           const tableSql = sql(table);
           const idsTableSql = sql(`${table}_ids`);

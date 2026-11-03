@@ -3,7 +3,9 @@ import { splitFrame } from "@beep/cli-kit/internal/splitFrame";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 /** The regular expression `splitFrame` replaced, kept here as the oracle for its exact behaviour. */
@@ -49,8 +51,14 @@ describe("splitFrame", () => {
     for (const raw of upTo(alphabet, 6)) {
       const got = splitFrame(raw);
       const want = legacy(raw);
-      if (JSON.stringify(got) !== JSON.stringify(want) && differences.length < 5) {
-        differences.push(`${JSON.stringify(raw)}: ${JSON.stringify(got)} vs ${JSON.stringify(want)}`);
+      if (
+        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(got), identity) !==
+          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(want), identity) &&
+        differences.length < 5
+      ) {
+        differences.push(
+          `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(raw), identity)}: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(got), identity)} vs ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(want), identity)}`
+        );
       }
     }
     assert.deepStrictEqual(differences, []);

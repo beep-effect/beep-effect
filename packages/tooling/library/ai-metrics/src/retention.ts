@@ -1001,8 +1001,9 @@ const readRetentionPlan = Effect.fn("AiMetrics.retention.readPlan")(function* (i
     input.dataRoot,
     (item, entry) => A.contains(ingestRunIds, entry) || withinWindow(item.modifiedAtEpochMillis)
   );
+  const listDirectoryFiles1 = yield* listDirectoryFiles(input.dataRoot, "reports");
   const reportItems = pipe(
-    yield* listDirectoryFiles(input.dataRoot, "reports"),
+    listDirectoryFiles1,
     A.filter((item) => withinWindow(item.modifiedAtEpochMillis))
   );
 

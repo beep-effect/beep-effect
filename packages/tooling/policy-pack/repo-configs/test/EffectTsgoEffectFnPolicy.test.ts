@@ -33,7 +33,7 @@ const effectTsgoCliPath = NodeURL.fileURLToPath(
 const RootCatalog = S.Struct({
   catalog: S.Struct({ tsrs: S.String, "@effect/tsgo": S.String }),
 });
-const decodeRootCatalog = flow(S.decodeUnknownResult(S.fromJsonString(RootCatalog)), Result.getOrThrow);
+const decodeRootCatalog = flow(S.decodeResult(S.fromJsonString(RootCatalog)), Result.getOrThrow);
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = Layer.mergeAll(PlatformLayer, NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer)));
@@ -187,14 +187,15 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
         const tscRs = yield* runCommand(process.execPath, [tsrsBinPath, "--version"], repoRoot);
         const context = `tsrs --version: stdout=${Str.takeLeft(tscRs.stdout, 2048)}; stderr=${Str.takeLeft(tscRs.stderr, 2048)}`;
         expect(tscRs.exitCode, context).toBe(0);
-        const { catalog } = decodeRootCatalog(yield* fs.readFileString(rootManifestPath));
+        const readFileString1 = yield* fs.readFileString(rootManifestPath);
+        const { catalog } = decodeRootCatalog(readFileString1);
         // tsrs pins its own upstream TypeScript (7.1.0-beta as of 0.20.1, the version tag names it) and
         // `effect-tsgo patch --tsrs` replaces its binary with the Effect build of that exact tsrs
         // version, so the reported build carries the @effect/tsgo suffix and the installed tsrs version.
         expect(catalog.tsrs).toMatch(/^\d+\.\d+\.\d+-ts7\.\d+\.\d+(?:-[0-9A-Za-z.]+)?$/u);
-        expect(catalog["@effect/tsgo"]).toBe("0.63.0");
+        expect(catalog["@effect/tsgo"]).toBe("0.64.1");
         expect(tscRs.stdout, context).toMatch(
-          /^Version 7\.1\.0-beta\+effect-tsgo\.0\.63\.0 \(tsrs 0\.20\.1-ts7\.1\.0-beta,/u
+          /^Version 7\.1\.0-beta\+effect-tsgo\.0\.64\.1 \(tsrs 0\.20\.1-ts7\.1\.0-beta,/u
         );
         expect(tscRs.stdout, context).toContain(`+effect-tsgo.${catalog["@effect/tsgo"]} (tsrs ${catalog.tsrs},`);
       })
@@ -242,6 +243,7 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
       );
       expect(result.exitCode, `${result.stdout}\n${result.stderr}`).toBe(0);
       expect(`${result.stdout}\n${result.stderr}`).not.toContain("unknownRuleName");
+      expect(`${result.stdout}\n${result.stderr}`).not.toContain("deprecatedRuleName");
     })
   );
   it.effect("fails tsrs on Effect rule findings and on TypeScript errors alike", () =>

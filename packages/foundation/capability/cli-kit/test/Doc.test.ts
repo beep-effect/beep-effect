@@ -3,7 +3,8 @@ import * as DocModel from "@beep/cli-kit/Doc";
 import { LinkTarget } from "@beep/cli-kit/LinkTarget";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Block, Counter, Inline } from "@beep/cli-kit";
 
@@ -426,7 +427,11 @@ describe("Doc: the reporter blocks are readonly schema-valid plain data", () => 
       Doc.table([{ header: "h" }], [["c"]], { style: "pipe" }),
       Doc.counts({ layout: "inline", counters: [], suffix: "across 3 files" }),
     ];
-    for (const node of nodes) assert.isTrue(isDocumentData(node), JSON.stringify(node));
+    for (const node of nodes)
+      assert.isTrue(
+        isDocumentData(node),
+        Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(node), identity)
+      );
     assert.deepStrictEqual(Doc.strong("a"), { _tag: "Strong", content: [{ _tag: "Text", value: "a" }] });
     assert.deepStrictEqual(Doc.em("a"), { _tag: "Emphasis", content: [{ _tag: "Text", value: "a" }] });
     assert.deepStrictEqual(Doc.file("/a.ts"), { _tag: "File", path: "/a.ts" });

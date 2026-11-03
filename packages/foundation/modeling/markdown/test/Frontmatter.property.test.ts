@@ -24,7 +24,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -56,7 +57,8 @@ it.effect.prop(
       const captured = yield* MarkdownDocument.parse(source, MarkdownParseOptions.make({ frontmatter: true }));
       const decoded = yield* MarkdownFrontmatter.schema(Meta, JsonFrontmatter)(captured);
       assert.isTrue(S.toEquivalence(Meta)(decoded, value));
-      assert.strictEqual(yield* write(captured, decoded), source);
+      const write2 = yield* write(captured, decoded);
+      assert.strictEqual(write2, source);
     }),
   runs
 );

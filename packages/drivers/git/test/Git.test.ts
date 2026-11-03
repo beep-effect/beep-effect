@@ -28,7 +28,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
-import { flow } from "effect/Function";
+import { flow, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -380,7 +380,8 @@ describe("Git", () => {
           const git = yield* Git;
           return yield* git.isAncestor(cwd, "feat/git", "main");
         });
-        assert.isFalse(yield* run(program, () => ({ exit: 1 })));
+        const result1 = yield* run(program, () => ({ exit: 1 }));
+        assert.isFalse(result1);
       })
     );
 
@@ -1051,19 +1052,21 @@ describe("Git", () => {
     }
 
     for (const diffFilter of ["", "Q", "A-M", "ACMR "]) {
-      it.effect(`refuses diffFilter ${JSON.stringify(diffFilter)} before spawning`, () =>
-        Effect.gen(function* () {
-          const program = Effect.gen(function* () {
-            const git = yield* Git;
-            return yield* git.nameStatus(cwd, { base: "HEAD", diffFilter });
-          });
-          const failure = yield* Effect.flip(run(program, neverSpawn));
-          assert.instanceOf(failure, GitCommandError);
-          if (S.is(GitCommandError)(failure)) {
-            assert.strictEqual(failure.kind, "refused");
-            assert.include(failure.detail, "diff filter");
-          }
-        })
+      it.effect(
+        `refuses diffFilter ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(diffFilter), identity)} before spawning`,
+        () =>
+          Effect.gen(function* () {
+            const program = Effect.gen(function* () {
+              const git = yield* Git;
+              return yield* git.nameStatus(cwd, { base: "HEAD", diffFilter });
+            });
+            const failure = yield* Effect.flip(run(program, neverSpawn));
+            assert.instanceOf(failure, GitCommandError);
+            if (S.is(GitCommandError)(failure)) {
+              assert.strictEqual(failure.kind, "refused");
+              assert.include(failure.detail, "diff filter");
+            }
+          })
       );
     }
 
@@ -1527,14 +1530,10 @@ describe("Git", () => {
           const git = yield* Git;
           return yield* git.revParse(cwd, "HEAD");
         });
-        assert.strictEqual(
-          yield* runWith(bounded, program, () => ({ stdout: Str.repeat(16)("a"), exit: 0 })),
-          Str.repeat(16)("a")
-        );
-        assert.strictEqual(
-          yield* run(program, () => ({ stdout: Str.repeat(1024)("a"), exit: 0 })),
-          Str.repeat(1024)("a")
-        );
+        const resultWith = yield* runWith(bounded, program, () => ({ stdout: Str.repeat(16)("a"), exit: 0 }));
+        assert.strictEqual(resultWith, Str.repeat(16)("a"));
+        const result2 = yield* run(program, () => ({ stdout: Str.repeat(1024)("a"), exit: 0 }));
+        assert.strictEqual(result2, Str.repeat(1024)("a"));
       })
     );
 
@@ -1798,11 +1797,13 @@ describe("Git", () => {
             const git = yield* Git;
             return yield* git.commonDir(cwd);
           });
-          assert.strictEqual(yield* run(program, () => ({ stdout: `${path}\n`, exit: 0 })), path);
-          assert.strictEqual(
-            yield* run(program, () => ({ stdout: Str.endsWith("\n")(path) ? `${path}\n` : path, exit: 0 })),
-            path
-          );
+          const result3 = yield* run(program, () => ({ stdout: `${path}\n`, exit: 0 }));
+          assert.strictEqual(result3, path);
+          const result4 = yield* run(program, () => ({
+            stdout: Str.endsWith("\n")(path) ? `${path}\n` : path,
+            exit: 0,
+          }));
+          assert.strictEqual(result4, path);
         }
       })
     );

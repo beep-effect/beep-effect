@@ -81,7 +81,8 @@ describe("REST actor type", () => {
 
   it.effect("reads a Bot-typed author under a plain login as a bot and builds no comment capsule for it", () =>
     Effect.gen(function* () {
-      const comment = normalizeYeetMonitorIssueCommentForTesting(yield* decodeIssue(issue(2, copilot)));
+      const decodedIssue = yield* decodeIssue(issue(2, copilot));
+      const comment = normalizeYeetMonitorIssueCommentForTesting(decodedIssue);
       strictEqual(comment.author, "Copilot");
       assertSome(comment.authorType, "Bot");
       assertTrue(yeetMonitorCommentFromBot(comment));
@@ -91,7 +92,8 @@ describe("REST actor type", () => {
 
   it.effect("reads a Bot-typed review body under a plain login as a bot", () =>
     Effect.gen(function* () {
-      const body = normalizeYeetMonitorReviewBodyForTesting(yield* decodeReview(review(3, copilot)));
+      const decodedReview = yield* decodeReview(review(3, copilot));
+      const body = normalizeYeetMonitorReviewBodyForTesting(decodedReview);
       assertSome(O.map(body, yeetMonitorCommentFromBot), true);
       assertNone(O.flatMap(body, (value) => yeetPrCommentCapsule(value, window)));
     })
@@ -99,7 +101,8 @@ describe("REST actor type", () => {
 
   it.effect("still reads a User-typed author as a person", () =>
     Effect.gen(function* () {
-      const comment = normalizeYeetMonitorIssueCommentForTesting(yield* decodeIssue(issue(4, person)));
+      const decodedIssue1 = yield* decodeIssue(issue(4, person));
+      const comment = normalizeYeetMonitorIssueCommentForTesting(decodedIssue1);
       assertFalse(yeetMonitorCommentFromBot(comment));
       assertSome(
         O.map(yeetPrCommentCapsule(comment, window), (capsule) => capsule.author),

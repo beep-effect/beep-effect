@@ -360,7 +360,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   // Same lazy read the status gate takes: the review window is read only once
   // it is the last criterion standing, and an unknown window stays unmet.
   const reviewWindow = yeetReviewWindowDue(unwindowed)
-    ? O.some(yield* readYeetReviewWindow(context, { prNumber: view.number, headSha: view.headRefOid }))
+    ? yield* Effect.asSome(readYeetReviewWindow(context, { prNumber: view.number, headSha: view.headRefOid }))
     : O.none();
   const criteria = YeetMergeReadyCriteria.make({
     ...unwindowed,
@@ -870,7 +870,8 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
     const now = yield* config.now ?? DateTime.now;
     const millis = DateTime.toEpochMillis(now);
     if (O.isNone(head) || head.value.headSha !== snapshot.headSha) {
-      head = O.some(yield* newWatchSettleState(context, config, snapshot, millis));
+      const newWatchSettleState1 = yield* newWatchSettleState(context, config, snapshot, millis);
+      head = O.some(newWatchSettleState1);
     }
     const step = yield* advanceWatchSettleState(O.getOrThrow(head), snapshot, millis);
     const settleAt = (state: WatchSettleState): YeetSettleVerdict =>
@@ -920,7 +921,9 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
   // The opening poll drains the gap since the last session's watermark, so a
   // comment posted while nothing was watching becomes this session's first
   // batch instead of silently aging.
-  let settleTicks = advanceSettleTicks(O.none(), yield* emitWatchCommentRows(context, current, comments));
+  const argument = O.none();
+  const emitWatchCommentRows1 = yield* emitWatchCommentRows(context, current, comments);
+  let settleTicks = advanceSettleTicks(argument, emitWatchCommentRows1);
 
   while (true) {
     const end = watchStreamEnd(untilEvent, current, emptyPolls, settleTicks);
@@ -941,7 +944,8 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
     }
     current = advanced.value.snapshot;
     emptyPolls = advanced.value.emptyPolls;
-    settleTicks = advanceSettleTicks(settleTicks, yield* emitWatchCommentRows(context, current, comments));
+    const emitWatchCommentRows2 = yield* emitWatchCommentRows(context, current, comments);
+    settleTicks = advanceSettleTicks(settleTicks, emitWatchCommentRows2);
   }
 });
 

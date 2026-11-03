@@ -47,7 +47,8 @@ const mergeDriverScenario = Effect.fnUntraced(function* () {
   const [generated, , generatedStderr] = yield* run(driverPath, [ancestor, current, other, "tsconfig.json"]);
   expect(generated).not.toBe(0);
   expect(generatedStderr).toContain("left tsconfig.json conflicted");
-  expect(yield* fs.readFileString(current)).toBe("current\n");
+  const readFileString1 = yield* fs.readFileString(current);
+  expect(readFileString1).toBe("current\n");
 
   const [refused, , refusedStderr] = yield* run(driverPath, [ancestor, current, other, "bun.lock"]);
   expect(refused).not.toBe(0);
@@ -152,9 +153,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 sec
           }
           const directory = yield* Ref.get(root);
           expect(directory).not.toBe("");
-          expect(yield* Ref.get(faulted)).toBe(true);
+          const got = yield* Ref.get(faulted);
+          expect(got).toBe(true);
           if (mode === "cleanup failure") {
-            const error = O.getOrThrow(yield* Ref.get(removalError));
+            const got2 = yield* Ref.get(removalError);
+            const error = O.getOrThrow(got2);
             assertInstanceOf(error.reason, PlatformError.SystemError);
             expect(error.reason._tag).toBe("PermissionDenied");
             expect(error.reason.method).toBe("remove");
@@ -175,9 +178,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 sec
             expect(() =>
               assertExitFailure(Exit.failCause(Cause.combine(expected, Cause.fail("extra failure"))), expected)
             ).toThrow();
-            expect(yield* fs.exists(directory)).toBe(true);
+            const exists3 = yield* fs.exists(directory);
+            expect(exists3).toBe(true);
           } else {
-            expect(yield* fs.exists(directory)).toBe(false);
+            const exists4 = yield* fs.exists(directory);
+            expect(exists4).toBe(false);
           }
         })
       );

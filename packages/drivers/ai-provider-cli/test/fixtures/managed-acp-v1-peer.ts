@@ -110,7 +110,8 @@ export const runManagedV1Peer = (
     ) {
       const protocol = yield* transport;
       const payload = yield* encodePermissionRequest(request);
-      return yield* decodePermissionResponse(yield* protocol.request("session/request_permission", payload));
+      const request1 = yield* protocol.request("session/request_permission", payload);
+      return yield* decodePermissionResponse(request1);
     });
     const sendText = Effect.fn("ManagedV1Peer.sendText")(function* (sessionId: string, text: string) {
       const protocol = yield* transport;

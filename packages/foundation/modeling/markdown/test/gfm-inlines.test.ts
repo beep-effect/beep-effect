@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // Unit coverage for the two GFM inline constructs: strikethrough (`~`/`~~`)
 // and autolink literals (`www.`, `http(s)`/`ftp`, and email/`mailto:`/`xmpp:`).
 //
@@ -9,6 +10,8 @@
 import { parseBlocks } from "@beep/markdown/internal/blockParser";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { PhrasingContent } from "@beep/markdown/MarkdownNode";
 
@@ -28,11 +31,11 @@ const sketch = (nodes: ReadonlyArray<PhrasingContent>): string =>
     A.map(nodes, (node) => {
       switch (node.type) {
         case "text":
-          return JSON.stringify(node.value);
+          return Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(node.value), identity);
         case "inlineCode":
-          return `code${JSON.stringify(node.value)}`;
+          return `code${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(node.value), identity)}`;
         case "html":
-          return `html${JSON.stringify(node.value)}`;
+          return `html${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(node.value), identity)}`;
         case "link":
           return `link(${node.url})[${sketch(node.children)}]`;
         case "image":

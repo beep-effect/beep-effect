@@ -394,11 +394,14 @@ describe("@beep/workspace-server WorkspaceSourceTextResolver", () => {
         const second = yield* resolve(identityFor(identityInput));
         expect(first.text).toBe(canonicalText);
         expect(second.text).toBe(canonicalText);
-        expect(yield* Ref.get(extractionCount)).toBe(1);
-        yield* fs.writeFile(sourcePath, yield* Effect.promise(() => makeDocx("Drifted source")));
+        const got = yield* Ref.get(extractionCount);
+        expect(got).toBe(1);
+        const promise1 = yield* Effect.promise(() => makeDocx("Drifted source"));
+        yield* fs.writeFile(sourcePath, promise1);
         const drift = yield* resolve(identity).pipe(Effect.flip);
         expect(drift.reason).toBe("source-digest-mismatch");
-        expect(yield* Ref.get(extractionCount)).toBe(1);
+        const got2 = yield* Ref.get(extractionCount);
+        expect(got2).toBe(1);
       })
     );
   });

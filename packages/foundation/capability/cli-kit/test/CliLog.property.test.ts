@@ -38,7 +38,8 @@ it.effect("CliLogStatusOptions keeps exact optional keys and plain construction"
       const encoded = yield* S.encodeUnknownEffect(CliLogStatusOptions)(value);
       const decoded = yield* S.decodeEffect(CliLogStatusOptions)(encoded);
       assert.deepStrictEqual(decoded, value);
-      assert.deepStrictEqual(yield* S.encodeEffect(CliLogStatusOptions)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(CliLogStatusOptions)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }
     // EF-40: a present key holding `undefined` is rejected.
     for (const value of [
@@ -63,7 +64,8 @@ it.effect("CliLogFile encodes two valid keys as the explicit path without changi
     assert.deepStrictEqual(encoded, { path: original.path });
     const decoded = yield* S.decodeEffect(CliLogFile)(encoded);
     assert.deepStrictEqual(decoded, { path: original.path });
-    assert.deepStrictEqual(yield* S.encodeEffect(CliLogFile)(decoded), encoded);
+    const value2 = yield* S.encodeEffect(CliLogFile)(decoded);
+    assert.deepStrictEqual(value2, encoded);
   })
 );
 
@@ -75,7 +77,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(CliLogFile)(value);
       const decoded = yield* S.decodeEffect(CliLogFile)(encoded);
       assert.deepStrictEqual(decoded, value);
-      assert.deepStrictEqual(yield* S.encodeEffect(CliLogFile)(decoded), encoded);
+      const value3 = yield* S.encodeEffect(CliLogFile)(decoded);
+      assert.deepStrictEqual(value3, encoded);
     }),
   runs
 );
@@ -84,7 +87,8 @@ it.effect("CliLogFile keeps empty paths and variable names without adding a disc
   Effect.gen(function* () {
     for (const value of [{ path: "" }, { envVar: "" }]) {
       const encoded = yield* S.encodeEffect(CliLogFile)(value);
-      assert.deepStrictEqual(yield* S.decodeEffect(CliLogFile)(encoded), value);
+      const value4 = yield* S.decodeEffect(CliLogFile)(encoded);
+      assert.deepStrictEqual(value4, value);
     }
   })
 );
@@ -110,8 +114,12 @@ it.layer(CliLog.layer({ format: "json", level: "Info", plainLogger: false, neutr
         const value = yield* S.decodeEffect(Record)(lines[0] ?? "");
         assert.strictEqual(value.message, text);
         const encoded = yield* S.encodeEffect(Record)(value);
-        assert.deepStrictEqual(yield* S.decodeEffect(Record)(encoded), value);
-        assert.strictEqual(yield* S.encodeEffect(Record)(yield* S.decodeEffect(Record)(encoded)), encoded);
+        const value5 = yield* S.decodeEffect(Record)(encoded);
+        assert.deepStrictEqual(value5, value);
+        const argument = S.encodeEffect(Record);
+        const value7 = yield* S.decodeEffect(Record)(encoded);
+        const value6 = yield* argument(value7);
+        assert.strictEqual(value6, encoded);
         assert.isFalse(Str.includes("##[")(lines[0] ?? ""));
       }),
     runs

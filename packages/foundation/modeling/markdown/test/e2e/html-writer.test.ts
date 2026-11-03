@@ -28,7 +28,10 @@ import {
 } from "@beep/markdown/MarkdownNode";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { applyTagfilter, escapeXml, normalizeLabel, normalizeUri, renderHtml } from "../support/htmlWriter.ts";
 import { normalizeHtml } from "../support/normalizeHtml.ts";
 
@@ -913,7 +916,7 @@ describe("normalizeHtml", () => {
     ];
 
     for (const [input, expected] of cases) {
-      it(`normalizes ${JSON.stringify(input)}`, () => {
+      it(`normalizes ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(input), identity)}`, () => {
         assert.strictEqual(normalizeHtml(input), expected);
       });
     }

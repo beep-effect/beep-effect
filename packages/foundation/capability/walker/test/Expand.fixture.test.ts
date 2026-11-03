@@ -59,7 +59,8 @@ layer(platformWith(tree, { unreadable: HashSet.make("/fx/unrelated") }), { timeo
   (it) => {
     it.effect("does not traverse unrelated directories for a statically rooted pattern", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* compileAndExpand("src/**/*.ts", { cwd: "/fx", glob: defaults }), srcFiles);
+        const compileAndExpand1 = yield* compileAndExpand("src/**/*.ts", { cwd: "/fx", glob: defaults });
+        assert.deepStrictEqual(compileAndExpand1, srcFiles);
       })
     );
   }
@@ -68,15 +69,18 @@ layer(platformWith(tree, { unreadable: HashSet.make("/fx/unrelated") }), { timeo
 layer(platformWith(tree, options), { timeout: "10 seconds" })("compileAndExpand, retired Glob cases", (it) => {
   it.effect("returns only files for a globstar over directories", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* compileAndExpand("src/**", { cwd: "/fx", glob: defaults }), srcFiles);
+      const compileAndExpand2 = yield* compileAndExpand("src/**", { cwd: "/fx", glob: defaults });
+      assert.deepStrictEqual(compileAndExpand2, srcFiles);
     })
   );
 
   it.effect("treats percent-encoded and fragment characters as filesystem text", () =>
     Effect.gen(function* () {
       const expand = compileAndExpand({ cwd: "/fx", glob: defaults });
-      assert.deepStrictEqual(yield* expand("%2F/*.ts"), ["%2F/literal.ts"]);
-      assert.deepStrictEqual(yield* expand("symbols*/*.ts"), ["symbols#%/literal.ts"]);
+      const expand3 = yield* expand("%2F/*.ts");
+      assert.deepStrictEqual(expand3, ["%2F/literal.ts"]);
+      const expand4 = yield* expand("symbols*/*.ts");
+      assert.deepStrictEqual(expand4, ["symbols#%/literal.ts"]);
     })
   );
 

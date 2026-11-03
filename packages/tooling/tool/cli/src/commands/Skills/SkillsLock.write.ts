@@ -432,7 +432,8 @@ const publish = Effect.fn("SkillsLock.publish")(function* (
       .writeFileString(paths.lockStage, lockText, { flag: "wx" })
       .pipe(SkillsCommandError.mapError(`Refusing to stage: ${paths.lockStage} already exists.`, paths.lockStage));
     yield* requireSkillsLockUnchanged(paths.lockPath, plan.lockSha256);
-    yield* Ref.set(createdTarget, yield* swapPatchTree(paths, A.isReadonlyArrayNonEmpty(patchFiles) || carriedLedger));
+    const swapPatchTree1 = yield* swapPatchTree(paths, A.isReadonlyArrayNonEmpty(patchFiles) || carriedLedger);
+    yield* Ref.set(createdTarget, swapPatchTree1);
     yield* fs
       .rename(paths.lockStage, paths.lockPath)
       .pipe(SkillsCommandError.mapError(`Failed to publish ${SKILLS_LOCK_PATH}.`, paths.lockPath));

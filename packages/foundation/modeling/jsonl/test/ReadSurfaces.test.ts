@@ -21,8 +21,9 @@ it.effect("query tiles history, resumes at boundaries and skips a partial cursor
     const two = yield* journal.append("noted", { round: 2, label: "b" });
     yield* journal.append("noted", { round: 3, label: "c" });
     assert.strictEqual(two.line.offset, one.line.end);
+    const resultCollect = yield* Stream.runCollect(journal.query());
     assert.deepStrictEqual(
-      A.map(yield* Stream.runCollect(journal.query()), (row) => row.data),
+      A.map(resultCollect, (row) => row.data),
       [
         { round: 1, label: "a" },
         { round: 2, label: "b" },
@@ -36,7 +37,8 @@ it.effect("query tiles history, resumes at boundaries and skips a partial cursor
         [2, 3]
       );
     }
-    assert.deepStrictEqual(yield* Stream.runCollect(journal.query({ events: [] })), []);
+    const resultCollect1 = yield* Stream.runCollect(journal.query({ events: [] }));
+    assert.deepStrictEqual(resultCollect1, []);
   })
 );
 it.effect("time slices are inclusive at from and exclusive at to", () =>
@@ -73,7 +75,8 @@ it.effect("frame filters skip invalid payloads while an unfiltered read reports 
     );
     const journal = yield* open(fs);
     assert.strictEqual((yield* Stream.runCollect(journal.query({ events: ["noted"] }))).length, 1);
-    assert.deepStrictEqual(yield* Stream.runCollect(journal.query({ scopes: ["absent"] })), []);
+    const resultCollect2 = yield* Stream.runCollect(journal.query({ scopes: ["absent"] }));
+    assert.deepStrictEqual(resultCollect2, []);
     assertFailure(
       (yield* journal.query().pipe(Stream.runCollect, Effect.result)).pipe(Result.mapError((error) => error._tag)),
       "InvalidData"
@@ -90,11 +93,13 @@ it.effect("live changes end on a terminal event excluded by the filter", () =>
       .pipe(Stream.runCollect, Effect.forkChild({ startImmediately: true }));
     yield* journal.append("noted", { round: 1, label: "a" });
     yield* journal.append("ended", null);
+    const join3 = yield* Fiber.join(reader);
     assert.deepStrictEqual(
-      A.map(yield* Fiber.join(reader), (row) => row.data.round),
+      A.map(join3, (row) => row.data.round),
       [1]
     );
-    assert.deepStrictEqual(yield* Stream.runCollect(journal.changes()), []);
+    const resultCollect4 = yield* Stream.runCollect(journal.changes());
+    assert.deepStrictEqual(resultCollect4, []);
   })
 );
 it.effect("cursor replay and live appends form one projection", () =>
@@ -109,7 +114,8 @@ it.effect("cursor replay and live appends form one projection", () =>
       .pipe(Stream.runCollect, Effect.forkChild({ startImmediately: true }));
     yield* journal.append("noted", { round: 3, label: "a" });
     yield* journal.append("ended", null);
-    assert.deepStrictEqual(yield* Fiber.join(reader), [0, 2, 5]);
+    const join5 = yield* Fiber.join(reader);
+    assert.deepStrictEqual(join5, [0, 2, 5]);
   })
 );
 
@@ -168,12 +174,14 @@ it.effect("a query reads only the size it statted even if an append lands during
     yield* Deferred.await(gate.entered);
     yield* externalAppend(fs, line(2));
     yield* Deferred.succeed(gate.release, undefined);
+    const join6 = yield* Fiber.join(reading);
     assert.deepStrictEqual(
-      A.map(yield* Fiber.join(reading), (row) => row.data.round),
+      A.map(join6, (row) => row.data.round),
       [1]
     );
+    const resultCollect7 = yield* Stream.runCollect(journal.query({ events: ["noted"] }));
     assert.deepStrictEqual(
-      A.map(yield* Stream.runCollect(journal.query({ events: ["noted"] })), (row) => row.data.round),
+      A.map(resultCollect7, (row) => row.data.round),
       [1, 2]
     );
   })
@@ -192,8 +200,9 @@ it.effect("an append during replay is delivered exactly once at the live join", 
     yield* journal.append("noted", { round: 2, label: "during" });
     yield* Deferred.succeed(gate.release, undefined);
     yield* journal.append("ended", null);
+    const join8 = yield* Fiber.join(reading);
     assert.deepStrictEqual(
-      A.map(yield* Fiber.join(reading), (row) => row.data.round),
+      A.map(join8, (row) => row.data.round),
       [1, 2]
     );
   })

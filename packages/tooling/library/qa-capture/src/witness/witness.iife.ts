@@ -20,8 +20,10 @@
  */
 
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 // Module-local structural declarations of the browser surface this script
@@ -288,7 +290,7 @@ declare const decodeURIComponent: (value: string) => string;
   const flush = (): void => flushWith(false);
 
   const record = (event: { readonly [key: string]: unknown }): void => {
-    buffer[buffer.length] = JSON.stringify(event);
+    buffer[buffer.length] = Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(event), identity);
     if (buffer.length >= config.maxBatch) {
       flush();
     }

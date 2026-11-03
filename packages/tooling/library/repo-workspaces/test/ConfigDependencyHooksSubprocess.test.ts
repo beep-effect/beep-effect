@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // Parent-side plumbing of `ConfigDependencyHooks.layerSubprocess`, over the
 // public `ScriptedSpawner` double from `@effected/commands`.
 //
@@ -48,13 +49,17 @@ const pnpmfileUrlOf = (name: string): string => `file://${pnpmfileOf(name)}`;
 /** The installed `.pnpm-config` tree, every entry at `1.0.0`. */
 const installed = R.fromEntries(
   A.flatMap(INSTALLED, (name) => [
-    [`${ROOT}/node_modules/.pnpm-config/${name}/package.json`, JSON.stringify({ name, version: "1.0.0" })],
+    [
+      `${ROOT}/node_modules/.pnpm-config/${name}/package.json`,
+      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name, version: "1.0.0" }), identity),
+    ],
     [pnpmfileOf(name), "export const hooks = {};\n"],
   ])
 );
 
 /** A payload the subprocess protocol would print, framed as the final stdout line. */
-const emitted = (payload: unknown, noise = ""): string => `${noise}\n${JSON.stringify(payload)}\n`;
+const emitted = (payload: unknown, noise = ""): string =>
+  `${noise}\n${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(payload), identity)}\n`;
 
 /** The layer under test over a scripted spawner, plus the spawn log. */
 const harness = (script: Parameters<typeof ScriptedSpawner.make>[0]) => {

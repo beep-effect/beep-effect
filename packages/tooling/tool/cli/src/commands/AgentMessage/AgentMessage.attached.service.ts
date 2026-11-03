@@ -81,8 +81,9 @@ const validateObservedRun = Effect.fn("AgentMessage.attachedObservedRun")(functi
   after: T3CodeRead
 ) {
   const run = A.findFirst(after.recentRuns, (run) => run.runId === runId);
-  if (O.isNone(run))
+  if (O.isNone(run)) {
     return yield* failure("Attached T3 exact run did not settle under the expected host configuration.");
+  }
   if (
     run.value.status !== "completed" ||
     run.value.providerInstanceId !== profile.expectedConfiguration.modelSelection.instanceId ||
@@ -115,8 +116,9 @@ export const verifyAttachedT3 = Effect.fn("AgentMessage.verifyAttachedT3")(funct
   const t3 = yield* T3Code;
   const fs = yield* FileSystem.FileSystem;
   const configuration = yield* t3.readConfiguration(profile.threadId);
-  if (!Equal.equals(configuration, profile.expectedConfiguration))
+  if (!Equal.equals(configuration, profile.expectedConfiguration)) {
     return yield* failure("Attached T3 host configuration changed.");
+  }
   const read = yield* t3.read(profile.threadId);
   const thread = read.thread;
   yield* validateHostIdentity(profile, configuration, thread);
@@ -158,7 +160,8 @@ export const makeAttachedT3Dispatch = Effect.fn("AgentMessage.attachedDispatch")
   const endpointKey = yield* sha256Hex(profile.endpointId);
   const checkpoint = path.join(stateDir, `t3-${endpointKey}.json`);
   const record = Effect.fn("AgentMessage.attachedCorrelation")(function* (value: unknown) {
-    yield* fs.writeFileString(checkpoint, yield* encodeCorrelation(value), { mode: 0o600 });
+    const encodedCorrelation = yield* encodeCorrelation(value);
+    yield* fs.writeFileString(checkpoint, encodedCorrelation, { mode: 0o600 });
   });
   const receivingGrant = Effect.fn("AgentMessage.attachedReceivingGrant")(function* () {
     const current = yield* store.endpoint(profile.endpointId);
@@ -169,8 +172,11 @@ export const makeAttachedT3Dispatch = Effect.fn("AgentMessage.attachedDispatch")
     ) {
       return yield* failure("Attached enrollment changed before submission.");
     }
-    const grantFile = yield* S.decodeEffect(GrantJson)(yield* fs.readFileString(profile.grantFile));
-    const grant = yield* store.validateGrant(grantFile.grantId, yield* Clock.currentTimeMillis);
+    const argument = S.decodeEffect(GrantJson);
+    const readFileString1 = yield* fs.readFileString(profile.grantFile);
+    const grantFile = yield* argument(readFileString1);
+    const currentTimeMillis1 = yield* Clock.currentTimeMillis;
+    const grant = yield* store.validateGrant(grantFile.grantId, currentTimeMillis1);
     if (
       grant.endpointId !== profile.endpointId ||
       grant.ownerId !== profile.ownerId ||
@@ -227,8 +233,9 @@ export const makeAttachedT3Dispatch = Effect.fn("AgentMessage.attachedDispatch")
   });
   const prepare = Effect.fn("AgentMessage.attachedPrepare")(function* (claim: Claim) {
     const grant = yield* receivingGrant();
-    if (!receivingGrantAllows(grant, claim.envelope))
+    if (!receivingGrantAllows(grant, claim.envelope)) {
       return yield* failure("Attached peer grant does not authorize the queued message.");
+    }
     yield* verifyAttachedT3(profile, false).pipe(
       Effect.provideService(T3Code, t3),
       Effect.provideService(FileSystem.FileSystem, fs)
@@ -256,8 +263,9 @@ export const makeAttachedT3Dispatch = Effect.fn("AgentMessage.attachedDispatch")
       nativeMessageId: result.messageId,
       runId: result.runId,
     });
-    if (result.threadId !== profile.threadId)
+    if (result.threadId !== profile.threadId) {
       return yield* failure("Attached T3 submission returned another thread; reconcile the original request.");
+    }
     yield* reconcileCompletion(claim, result.runId, clientRequestId);
     return "delivered";
   });

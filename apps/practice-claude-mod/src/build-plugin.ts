@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { identity } from "effect/Function";
 
 /**
  * Builds the practice plugin into `dist/`: a directory marketplace
@@ -17,6 +18,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -50,7 +52,8 @@ export class PluginBuildFailed extends S.TaggedError<PluginBuildFailed, { readon
   $I.annote("PluginBuildFailed", { description: "Bundling the plugin's hooks module failed." })
 ) {}
 
-const json = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`;
+const json = (value: unknown): string =>
+  `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(value), identity)}\n`;
 
 const bundle = (entry: string, outfile: string) =>
   Effect.tryPromise({

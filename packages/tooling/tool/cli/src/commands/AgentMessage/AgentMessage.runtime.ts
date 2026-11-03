@@ -80,19 +80,20 @@ export const recordNativeSettlement = Effect.fn("AgentMessage.recordNativeSettle
   claim: Claim,
   response: ManagedTurnResult
 ): Effect.fn.Return<"delivered", RouterError> {
-  if (response.messageId !== claim.envelope.messageId || O.isNone(response.terminalEvidence))
+  if (response.messageId !== claim.envelope.messageId || O.isNone(response.terminalEvidence)) {
     return yield* RouterError.make({
       code: "conflict",
       message: "Native response lacks original correlated terminal evidence; retain the dispatch hold.",
     });
-  if (response.stopReason !== response.terminalEvidence.value.stopReason)
+  }
+  if (response.stopReason !== response.terminalEvidence.value.stopReason) {
     return yield* RouterError.make({
       code: "conflict",
       message: "Native response contradicts its terminal evidence; retain the dispatch hold.",
     });
-  yield* retryMailboxLock(
-    store.recordSettlement(claim, response.terminalEvidence.value, yield* Clock.currentTimeMillis)
-  );
+  }
+  const currentTimeMillis1 = yield* Clock.currentTimeMillis;
+  yield* retryMailboxLock(store.recordSettlement(claim, response.terminalEvidence.value, currentTimeMillis1));
   return "delivered";
 });
 const ownsReceivingGrant = (
@@ -187,7 +188,9 @@ export const makeAgentMessageCompletion: {
       at,
       O.isSome(invalid) ? O.some("invalidGrant: receiving grant expired or enrollment replaced.") : detail
     );
-    if (O.isNone(invalid)) return yield* operation;
+    if (O.isNone(invalid)) {
+      return yield* operation;
+    }
     const receipt = yield* retryMailboxLock(operation).pipe(
       Effect.catch((storageFailure) =>
         Effect.logWarning(
@@ -196,7 +199,8 @@ export const makeAgentMessageCompletion: {
         ).pipe(Effect.andThen(invalid.value))
       )
     );
-    yield* Console.log(yield* S.encodeEffect(ReceiptJson)(receipt));
+    const value2 = yield* S.encodeEffect(ReceiptJson)(receipt);
+    yield* Console.log(value2);
     return yield* invalid.value;
   })
 );
@@ -248,7 +252,10 @@ export const runAgentMessageDispatchLoop = Effect.fn("AgentMessage.dispatchLoop"
       at + Duration.toMillis(Duration.minutes(3)),
       () => Clock.currentTimeMillis
     );
-    if (O.isSome(receipt)) yield* Console.log(yield* S.encodeEffect(ReceiptJson)(receipt.value));
+    if (O.isSome(receipt)) {
+      const value1 = yield* S.encodeEffect(ReceiptJson)(receipt.value);
+      yield* Console.log(value1);
+    }
   }).pipe(
     Effect.catchTag("RouterError", (error) =>
       isMailboxLockTimeout(error)
@@ -315,9 +322,13 @@ export const agentMessageServeCommand = Command.make(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       yield* requirePrivateAgentPath(profileFile, "File");
-      const profile = yield* S.decodeEffect(ProfileJson)(yield* fs.readFileString(profileFile));
+      const argument = S.decodeEffect(ProfileJson);
+      const readFileString2 = yield* fs.readFileString(profileFile);
+      const profile = yield* argument(readFileString2);
       yield* requirePrivateAgentPath(grantFile, "File");
-      const expectedGrant = yield* S.decodeEffect(GrantJson)(yield* fs.readFileString(grantFile));
+      const argument1 = S.decodeEffect(GrantJson);
+      const readFileString3 = yield* fs.readFileString(grantFile);
+      const expectedGrant = yield* argument1(readFileString3);
       if (!ownsReceivingGrant(expectedGrant, endpointId, ownerId, generation, repositoryScope)) {
         return yield* RouterError.make({
           code: "invalidGrant",
@@ -394,7 +405,8 @@ export const agentMessageServeCommand = Command.make(
       const store = yield* AgentMessageStore;
       yield* store.register(binding);
       yield* store.registerGrant(expectedGrant);
-      yield* store.validateGrant(expectedGrant.grantId, yield* Clock.currentTimeMillis);
+      const currentTimeMillis3 = yield* Clock.currentTimeMillis;
+      yield* store.validateGrant(expectedGrant.grantId, currentTimeMillis3);
       const invalidReceivingGrant = yield* Ref.make(O.none<RouterError>());
       const submit = Effect.fn("AgentMessage.nativeSubmit")(function* (claim: Claim) {
         const current = yield* store.endpoint(endpointId);
@@ -408,7 +420,8 @@ export const agentMessageServeCommand = Command.make(
             message: "Native ownership or policy changed before inference.",
           });
         }
-        const receivingGrant = yield* store.validateGrant(expectedGrant.grantId, yield* Clock.currentTimeMillis).pipe(
+        const currentTimeMillis4 = yield* Clock.currentTimeMillis;
+        const receivingGrant = yield* store.validateGrant(expectedGrant.grantId, currentTimeMillis4).pipe(
           Effect.asSome,
           Effect.catchTag("RouterError", (error) =>
             error.code === "invalidGrant"
@@ -448,7 +461,8 @@ export const agentMessageServeCommand = Command.make(
           );
         return yield* recordNativeSettlement(store, claim, response);
       });
-      yield* Console.log(yield* S.encodeEffect(BindingJson)(binding));
+      const value5 = yield* S.encodeEffect(BindingJson)(binding);
+      yield* Console.log(value5);
       const complete = makeAgentMessageCompletion(store, invalidReceivingGrant);
       return yield* runAgentMessageDispatchLoop(endpointId, ownerId).pipe(
         Effect.provideService(EndpointDispatch, { submit }),

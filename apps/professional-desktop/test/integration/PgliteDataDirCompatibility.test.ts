@@ -112,7 +112,8 @@ const backupNames = Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.backu
   dataDirName: string
 ) {
   const fs = yield* FileSystem.FileSystem;
-  return A.filter(yield* fs.readDirectory(rootDir), (entry) => Str.startsWith(`${dataDirName}.pre-inprocess-`)(entry));
+  const readDirectory1 = yield* fs.readDirectory(rootDir);
+  return A.filter(readDirectory1, (entry) => Str.startsWith(`${dataDirName}.pre-inprocess-`)(entry));
 });
 
 it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds" })(
@@ -145,7 +146,8 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
             Effect.provideService(FileSystem.FileSystem, isolatedFileSystem)
           );
 
-          expect(yield* fs.readDirectory(extensionTempRoot)).toEqual([]);
+          const readDirectory2 = yield* fs.readDirectory(extensionTempRoot);
+          expect(readDirectory2).toEqual([]);
         }),
         { timeout: 90_000 }
       );
@@ -163,10 +165,13 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
           const shouldMarkDataDir = yield* ensureCompatibleChatDbDataDir(dataDir);
 
           expect(shouldMarkDataDir).toBe(true);
-          expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);
+          const exists3 = yield* fs.exists(markerPath(path, dataDir));
+          expect(exists3).toBe(false);
           yield* markCompatibleChatDbDataDir(dataDir);
-          expect(yield* fs.exists(markerPath(path, dataDir))).toBe(true);
-          expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
+          const exists4 = yield* fs.exists(markerPath(path, dataDir));
+          expect(exists4).toBe(true);
+          const backupNames5 = yield* backupNames(rootDir, "chat-db");
+          expect(backupNames5).toEqual([]);
         })
       );
 
@@ -186,8 +191,10 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
           const shouldMarkDataDir = yield* ensureCompatibleChatDbDataDir(dataDir);
 
           expect(shouldMarkDataDir).toBe(false);
-          expect(yield* fs.readFileString(retainedPath)).toBe("still here");
-          expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
+          const readFileString6 = yield* fs.readFileString(retainedPath);
+          expect(readFileString6).toBe("still here");
+          const backupNames7 = yield* backupNames(rootDir, "chat-db");
+          expect(backupNames7).toEqual([]);
         }),
         { timeout: 90_000 }
       );
@@ -205,9 +212,12 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
           const result = yield* ensureCompatibleChatDbDataDir(dataDir).pipe(Effect.exit);
 
           pipe(result, Exit.isFailure, assertTrue);
-          expect(yield* fs.exists(markerPath(path, dataDir))).toBe(true);
-          expect(yield* fs.exists(path.join(dataDir, "PG_VERSION"))).toBe(true);
-          expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
+          const exists8 = yield* fs.exists(markerPath(path, dataDir));
+          expect(exists8).toBe(true);
+          const exists9 = yield* fs.exists(path.join(dataDir, "PG_VERSION"));
+          expect(exists9).toBe(true);
+          const backupNames10 = yield* backupNames(rootDir, "chat-db");
+          expect(backupNames10).toEqual([]);
         }),
         { timeout: 90_000 }
       );
@@ -224,11 +234,15 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
           const shouldMarkDataDir = yield* ensureCompatibleChatDbDataDir(dataDir);
 
           expect(shouldMarkDataDir).toBe(true);
-          expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);
+          const exists11 = yield* fs.exists(markerPath(path, dataDir));
+          expect(exists11).toBe(false);
           yield* markCompatibleChatDbDataDir(dataDir);
-          expect(yield* fs.exists(markerPath(path, dataDir))).toBe(true);
-          expect(yield* readPgliteFixture(dataDir)).toEqual(["keep me"]);
-          expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
+          const exists12 = yield* fs.exists(markerPath(path, dataDir));
+          expect(exists12).toBe(true);
+          const readPgliteFixture13 = yield* readPgliteFixture(dataDir);
+          expect(readPgliteFixture13).toEqual(["keep me"]);
+          const backupNames14 = yield* backupNames(rootDir, "chat-db");
+          expect(backupNames14).toEqual([]);
         }),
         { timeout: 90_000 }
       );
@@ -245,9 +259,12 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
           const result = yield* ensureCompatibleChatDbDataDir(dataDir).pipe(Effect.exit);
 
           pipe(result, Exit.isFailure, assertTrue);
-          expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);
-          expect(yield* fs.exists(path.join(dataDir, "PG_VERSION"))).toBe(true);
-          expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
+          const exists15 = yield* fs.exists(markerPath(path, dataDir));
+          expect(exists15).toBe(false);
+          const exists16 = yield* fs.exists(path.join(dataDir, "PG_VERSION"));
+          expect(exists16).toBe(true);
+          const backupNames17 = yield* backupNames(rootDir, "chat-db");
+          expect(backupNames17).toEqual([]);
         }),
         { timeout: 90_000 }
       );
@@ -268,10 +285,13 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
           const backups = yield* backupNames(rootDir, "chat-db");
           expect(shouldMarkDataDir).toBe(true);
           expect(backups).toHaveLength(1);
-          expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);
-          expect(yield* fs.readFileString(path.join(rootDir, backups[0]!, "legacy.txt"))).toBe("legacy contents");
+          const exists18 = yield* fs.exists(markerPath(path, dataDir));
+          expect(exists18).toBe(false);
+          const readFileString19 = yield* fs.readFileString(path.join(rootDir, backups[0]!, "legacy.txt"));
+          expect(readFileString19).toBe("legacy contents");
           yield* markCompatibleChatDbDataDir(dataDir);
-          expect(yield* fs.exists(markerPath(path, dataDir))).toBe(true);
+          const exists20 = yield* fs.exists(markerPath(path, dataDir));
+          expect(exists20).toBe(true);
         })
       );
 
@@ -307,10 +327,13 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
 
           const rootDir = yield* Deferred.await(entered);
           strictEqual((yield* fs.stat(path.join(rootDir, "chat-db"))).mode & 0o777, 0);
-          assertTrue(yield* fs.exists(rootDir));
+          const exists21 = yield* fs.exists(rootDir);
+          assertTrue(exists21);
           yield* Fiber.interrupt(child);
-          strictEqual(yield* Deferred.await(modeBeforeCleanup), 0o700);
-          assertFalse(yield* fs.exists(rootDir));
+          const await22 = yield* Deferred.await(modeBeforeCleanup);
+          strictEqual(await22, 0o700);
+          const exists23 = yield* fs.exists(rootDir);
+          assertFalse(exists23);
         })
       );
 
@@ -330,8 +353,10 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
           );
 
           pipe(result, Exit.isFailure, assertTrue);
-          expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);
-          expect(yield* backupNames(rootDir, "chat-db")).toEqual([]);
+          const exists24 = yield* fs.exists(markerPath(path, dataDir));
+          expect(exists24).toBe(false);
+          const backupNames25 = yield* backupNames(rootDir, "chat-db");
+          expect(backupNames25).toEqual([]);
         })
       );
     });
@@ -345,7 +370,8 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
           const rootDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-chat-db-production-layer-" });
           const dataDir = path.join(rootDir, "chat-db");
 
-          expect(yield* fs.exists(markerPath(path, dataDir))).toBe(false);
+          const exists26 = yield* fs.exists(markerPath(path, dataDir));
+          expect(exists26).toBe(false);
 
           yield* PgliteDrizzleLive.pipe(
             Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ CHAT_DB_PATH: dataDir }))),
@@ -354,7 +380,8 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
             Effect.scoped
           );
 
-          expect(yield* fs.exists(markerPath(path, dataDir))).toBe(true);
+          const exists27 = yield* fs.exists(markerPath(path, dataDir));
+          expect(exists27).toBe(true);
           yield* Effect.gen(function* () {
             const context = yield* Layer.build(makeBundledPgliteLayer({ dataDir, relaxedDurability: true }));
             const sql = Context.get(context, SqlClient.SqlClient).withoutTransforms();

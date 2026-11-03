@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The string-level frontmatter surface: split raw source at the closed fence
 // grammar without parsing anything, and join back byte-exactly.
 
@@ -6,6 +7,7 @@ import { Markdown, MarkdownParseOptions } from "@beep/markdown/Markdown";
 import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const split = FrontmatterSource.split;
@@ -171,7 +173,11 @@ describe("FrontmatterSource", () => {
         "---\nunclosed, so body verbatim\n",
         "",
       ]) {
-        assert.strictEqual(join(split(source)), source, JSON.stringify(source));
+        assert.strictEqual(
+          join(split(source)),
+          source,
+          Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(source), identity)
+        );
       }
     });
 

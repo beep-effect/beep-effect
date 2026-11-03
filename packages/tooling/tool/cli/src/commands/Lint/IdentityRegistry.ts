@@ -116,13 +116,15 @@ const collectSourceFiles = Effect.fn("IdentityRegistry.collectSourceFiles")(func
         continue;
       }
 
-      files = A.appendAll(files, yield* walk(path.join(currentPath, entry)));
+      const walk1 = yield* walk(path.join(currentPath, entry));
+      files = A.appendAll(files, walk1);
     }
 
     return files;
   });
 
-  return A.sort(yield* walk(sourceRoot), Order.String);
+  const walk2 = yield* walk(sourceRoot);
+  return A.sort(walk2, Order.String);
 });
 
 const isIdentityRootModuleSpecifier = (specifier: string): boolean =>
@@ -403,13 +405,12 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
     : labsBefore.success;
 
   const registryContent = yield* fs.readFileString(identityPackagesAbsolutePath);
-  const violations = A.appendAll(
-    A.appendAll(
-      registrySlugViolations(registryContent, slugs, identityPackagesFilePath),
-      labsSegmentViolations(labsState, identityPackagesFilePath)
-    ),
-    yield* collectLocalRootViolations(repoRoot, slugsToDirs)
+  const argument = A.appendAll(
+    registrySlugViolations(registryContent, slugs, identityPackagesFilePath),
+    labsSegmentViolations(labsState, identityPackagesFilePath)
   );
+  const collectLocalRootViolations1 = yield* collectLocalRootViolations(repoRoot, slugsToDirs);
+  const violations = A.appendAll(argument, collectLocalRootViolations1);
 
   if (A.isReadonlyArrayNonEmpty(violations)) {
     return yield* reportViolations(violations);

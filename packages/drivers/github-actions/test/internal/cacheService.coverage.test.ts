@@ -17,36 +17,33 @@ it.effect("cache RPCs reject absent upload URLs and unconfirmed finalization and
       }),
       refused: (detail) => detail,
     });
-    assertFailure(
-      yield* Effect.result(reserveUpload(client({ ok: true }), "key", "version")),
-      "CreateCacheEntry returned no upload url"
-    );
-    assertSome(
-      yield* reserveUpload("key", "version")(client({ ok: true, signedUploadUrl: "https://upload" })),
-      "https://upload"
-    );
-    assertNone(yield* reserveUpload(client(CONFLICT), "key", "version"));
-    for (const response of [CONFLICT, { ok: false }])
-      assertFailure(
-        yield* Effect.result(finalizeUpload("key", "version", 12n)(client(response))),
-        "FinalizeCacheEntryUpload did not confirm the upload"
-      );
+    const result1 = yield* Effect.result(reserveUpload(client({ ok: true }), "key", "version"));
+    assertFailure(result1, "CreateCacheEntry returned no upload url");
+    const value = yield* reserveUpload("key", "version")(client({ ok: true, signedUploadUrl: "https://upload" }));
+    assertSome(value, "https://upload");
+    const reserveUpload2 = yield* reserveUpload(client(CONFLICT), "key", "version");
+    assertNone(reserveUpload2);
+    for (const response of [CONFLICT, { ok: false }]) {
+      const result2 = yield* Effect.result(finalizeUpload("key", "version", 12n)(client(response)));
+      assertFailure(result2, "FinalizeCacheEntryUpload did not confirm the upload");
+    }
     yield* finalizeUpload(client({ ok: true }), "key", "version", 12);
     assert.deepStrictEqual(calls[calls.length - 1], {
       method: "FinalizeCacheEntryUpload",
       body: { key: "key", version: "version", size_bytes: "12" },
     });
-    assertNone(yield* lookupDownload(client(CONFLICT), "key", [], "version"));
-    assertNone(yield* lookupDownload(client({ ok: false }), "key", [], "version"));
-    assertNone(yield* lookupDownload(client({ ok: true }), "key", [], "version"));
-    assertSome(
-      yield* lookupDownload(
-        "key",
-        ["fallback"],
-        "version"
-      )(client({ ok: true, signedDownloadUrl: "https://download", matchedKey: "fallback" })),
-      CacheHit.make({ url: "https://download", matchedKey: "fallback" })
-    );
+    const lookupDownload3 = yield* lookupDownload(client(CONFLICT), "key", [], "version");
+    assertNone(lookupDownload3);
+    const lookupDownload4 = yield* lookupDownload(client({ ok: false }), "key", [], "version");
+    assertNone(lookupDownload4);
+    const lookupDownload5 = yield* lookupDownload(client({ ok: true }), "key", [], "version");
+    assertNone(lookupDownload5);
+    const value6 = yield* lookupDownload(
+      "key",
+      ["fallback"],
+      "version"
+    )(client({ ok: true, signedDownloadUrl: "https://download", matchedKey: "fallback" }));
+    assertSome(value6, CacheHit.make({ url: "https://download", matchedKey: "fallback" }));
   })
 );
 
@@ -54,8 +51,10 @@ it.effect("cache hit schema requires matchedKey while accepting explicit undefin
   Effect.gen(function* () {
     for (const matchedKey of ["fallback", undefined]) {
       const hit = { url: "", matchedKey } satisfies CacheHit.Encoded;
-      assert.deepStrictEqual(yield* S.decodeEffect(CacheHit)(hit), hit);
-      assert.deepStrictEqual(yield* S.encodeEffect(CacheHit)(CacheHit.make(hit)), hit);
+      const value7 = yield* S.decodeEffect(CacheHit)(hit);
+      assert.deepStrictEqual(value7, hit);
+      const value8 = yield* S.encodeEffect(CacheHit)(CacheHit.make(hit));
+      assert.deepStrictEqual(value8, hit);
     }
     assert.isFalse(S.is(CacheHit)({ url: "https://download" }));
     assert.isFalse(S.is(CacheHit)({ url: "https://download", matchedKey: 1 }));
@@ -73,30 +72,32 @@ it.effect("upload outcome matching constructs refusal only for rejected response
         return detail;
       },
     });
-    assertNone(yield* reserveUpload(client(CONFLICT), "key", "version"));
-    assertSome(
-      yield* reserveUpload(client({ ok: true, signedUploadUrl: "https://upload" }), "key", "version"),
-      "https://upload"
+    const reserveUpload9 = yield* reserveUpload(client(CONFLICT), "key", "version");
+    assertNone(reserveUpload9);
+    const reserveUpload10 = yield* reserveUpload(
+      client({ ok: true, signedUploadUrl: "https://upload" }),
+      "key",
+      "version"
     );
+    assertSome(reserveUpload10, "https://upload");
     yield* finalizeUpload(client({ ok: true }), "key", "version", 0);
     assert.strictEqual(refusals, 0);
     for (const response of [
       { ok: false, signedUploadUrl: "https://upload" },
       { ok: true, signedUploadUrl: "" },
     ]) {
-      assertFailure(
-        yield* Effect.result(reserveUpload(client(response), "key", "version")),
-        "CreateCacheEntry returned no upload url"
-      );
+      const result11 = yield* Effect.result(reserveUpload(client(response), "key", "version"));
+      assertFailure(result11, "CreateCacheEntry returned no upload url");
     }
-    assertFailure(
-      yield* Effect.result(finalizeUpload(client(CONFLICT), "key", "version", 0)),
-      "FinalizeCacheEntryUpload did not confirm the upload"
-    );
+    const result12 = yield* Effect.result(finalizeUpload(client(CONFLICT), "key", "version", 0));
+    assertFailure(result12, "FinalizeCacheEntryUpload did not confirm the upload");
     assert.strictEqual(refusals, 3);
-    assertSome(
-      yield* lookupDownload(client({ ok: true, signedDownloadUrl: "https://download" }), "key", [], "version"),
-      CacheHit.make({ url: "https://download", matchedKey: undefined })
+    const lookupDownload13 = yield* lookupDownload(
+      client({ ok: true, signedDownloadUrl: "https://download" }),
+      "key",
+      [],
+      "version"
     );
+    assertSome(lookupDownload13, CacheHit.make({ url: "https://download", matchedKey: undefined }));
   })
 );

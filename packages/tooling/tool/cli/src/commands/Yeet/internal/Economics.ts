@@ -589,10 +589,12 @@ const checkoutOrder = Order.mapInput(Order.String, (checkout: EconomicsCheckout)
 // symlinked checkout or run directory is skipped rather than read through.
 const isRealDirectory = Effect.fnUntraced(function* (entry: string) {
   const fs = yield* FileSystem.FileSystem;
-  if (O.isSome(yield* fs.readLink(entry).pipe(Effect.option))) {
+  const pipe1 = yield* fs.readLink(entry).pipe(Effect.option);
+  if (O.isSome(pipe1)) {
     return false;
   }
-  return O.exists(yield* fs.stat(entry).pipe(Effect.option), (info) => Str.Equivalence(info.type, "Directory"));
+  const pipe2 = yield* fs.stat(entry).pipe(Effect.option);
+  return O.exists(pipe2, (info) => Str.Equivalence(info.type, "Directory"));
 });
 
 // Whether the entry itself exists, a dangling symlink included.
@@ -615,9 +617,8 @@ const listDirectory = Effect.fnUntraced(function* (directory: string) {
 // directories; stray files and symlinks are skipped without being counted.
 const realDirectoryNames = Effect.fnUntraced(function* (directory: string, keep: (name: string) => boolean) {
   const path = yield* Path.Path;
-  return yield* Effect.filter(A.filter(yield* listDirectory(directory), keep), (name) =>
-    isRealDirectory(path.join(directory, name))
-  );
+  const listDirectory3 = yield* listDirectory(directory);
+  return yield* Effect.filter(A.filter(listDirectory3, keep), (name) => isRealDirectory(path.join(directory, name)));
 });
 
 // A linked worktree's `.git` file holds `gitdir: <clone>/.git/worktrees/<name>`.
@@ -647,7 +648,8 @@ const cloneRootOf = Effect.fnUntraced(function* (checkout: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const gitPath = path.join(checkout, GIT_METADATA_NAME);
-  const kind = O.map(yield* fs.stat(gitPath).pipe(Effect.option), (info) => info.type);
+  const pipe4 = yield* fs.stat(gitPath).pipe(Effect.option);
+  const kind = O.map(pipe4, (info) => info.type);
   if (O.contains(kind, "Directory")) {
     return O.some(checkout);
   }
@@ -665,8 +667,9 @@ const cloneRootOf = Effect.fnUntraced(function* (checkout: string) {
 const projectsRootOf = Effect.fnUntraced(function* (repoRoot: string) {
   const path = yield* Path.Path;
   const parent = path.dirname(repoRoot);
+  const cloneRootOf5 = yield* cloneRootOf(repoRoot);
   return O.getOrElse(
-    O.map(yield* cloneRootOf(repoRoot), (clone) => path.dirname(clone)),
+    O.map(cloneRootOf5, (clone) => path.dirname(clone)),
     () => (Str.endsWith(WORKTREES_ROOT_SUFFIX)(path.basename(parent)) ? path.dirname(parent) : parent)
   );
 });
@@ -702,7 +705,12 @@ const resolveScopeRoots = Effect.fnUntraced(function* (request: EconomicsScopeRe
   const path = yield* Path.Path;
   const repoRoot = path.resolve(request.repoRoot);
   const projectsRoot = yield* projectsRootOf(repoRoot);
-  const roots = request.fleet ? A.dedupe(A.prepend(yield* fleetCandidates(projectsRoot), repoRoot)) : A.of(repoRoot);
+  const roots = request.fleet
+    ? yield* Effect.map(
+        Effect.map(fleetCandidates(projectsRoot), (value) => A.prepend(value, repoRoot)),
+        A.dedupe
+      )
+    : A.of(repoRoot);
   return { repoRoot, projectsRoot, roots };
 });
 
@@ -769,7 +777,8 @@ const readCheckoutJournals = Effect.fnUntraced(function* (
     checkout.runsDirectory,
     (name) => O.isNone(runId) || O.contains(runId, name)
   );
-  return A.getSomes(yield* Effect.forEach(runIds, (id) => readRunJournal(checkout, id, inFlightAttemptId)));
+  const forEach6 = yield* Effect.forEach(runIds, (id) => readRunJournal(checkout, id, inFlightAttemptId));
+  return A.getSomes(forEach6);
 });
 
 const readEconomicsJournals = Effect.fn("Yeet.Economics.read")(function* (
@@ -1685,7 +1694,9 @@ const reportFor = Effect.fnUntraced(function* (
   journals: ReadonlyArray<EconomicsJournal>,
   ledgers: ReadonlyArray<ReviewLaneLedger>
 ) {
-  return buildYeetEconomicsReport(journals, scopeFor(request, journals), yield* DateTime.now, ledgers);
+  const argument = scopeFor(request, journals);
+  const now1 = yield* DateTime.now;
+  return buildYeetEconomicsReport(journals, argument, now1, ledgers);
 });
 
 const locateRepoRoot: Effect.Effect<string, YeetEconomicsError, FileSystem.FileSystem> = findRepoRoot().pipe(

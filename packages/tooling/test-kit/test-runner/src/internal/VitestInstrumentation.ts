@@ -127,7 +127,8 @@ const startTestLifecycle = Effect.fnUntraced(function* (
 
   if (propertyRun !== undefined && isFirstPropertyTrial && shouldTrace) {
     const currentLoggers = yield* Logger.CurrentLoggers;
-    const runInContext = Effect.runPromiseWith(yield* Effect.context<never>());
+    const context1 = yield* Effect.context<never>();
+    const runInContext = Effect.runPromiseWith(context1);
     propertyRun.finish = O.some(() =>
       runInContext(
         monotonicMillis.pipe(

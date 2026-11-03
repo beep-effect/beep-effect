@@ -123,7 +123,8 @@ it.effect.prop(
         decoded,
         A.map(rows, (row) => EffectVitestCensusRow.make(row))
       );
-      deepStrictEqual(yield* encodeCensusJson(decoded), encoded);
+      const encodedCensusJson = yield* encodeCensusJson(decoded);
+      deepStrictEqual(encodedCensusJson, encoded);
     }),
   { arbitrary: fcRuns(25) }
 );
@@ -563,10 +564,12 @@ const occurrences = Effect.fnUntraced(function* (body: string) {
     "identity.test.ts",
     `import { Effect } from "effect"; import { it } from "@effect/vitest"; ${body}`
   );
-  return A.filter(
-    yield* detectEffectVitestFindings(source, "packages/example/test/identity.test.ts", "@beep/example"),
-    (row) => row.ruleId === "EV001"
+  const detectEffectVitestFindings1 = yield* detectEffectVitestFindings(
+    source,
+    "packages/example/test/identity.test.ts",
+    "@beep/example"
   );
+  return A.filter(detectEffectVitestFindings1, (row) => row.ruleId === "EV001");
 });
 const withException = (rows: ReadonlyArray<EffectVitestFinding>) =>
   EffectVitestInventoryDocument.make({
@@ -591,7 +594,8 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       const preserved = preserveEffectVitestExceptions(reordered, O.some(withException(before)));
       assertTrue(preserved[0]?.status === "open");
       assertTrue(preserved[1]?.status === "exception");
-      const remaining = preserveEffectVitestExceptions(yield* occurrences(b), O.some(withException(before)));
+      const occurrences2 = yield* occurrences(b);
+      const remaining = preserveEffectVitestExceptions(occurrences2, O.some(withException(before)));
       assertTrue(remaining[0]?.status === "open");
     })
   );
@@ -652,8 +656,13 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
           "\n"
         )
       );
+      const detectEffectVitestFindings3 = yield* detectEffectVitestFindings(
+        source,
+        "packages/example/test/agent-message.test.ts",
+        "@beep/example"
+      );
       const live = A.filter(
-        yield* detectEffectVitestFindings(source, "packages/example/test/agent-message.test.ts", "@beep/example"),
+        detectEffectVitestFindings3,
         (row) => row.ruleId === "EV002" && O.contains(row.symbol, "query")
       );
       assertTrue(live.length === 2);
@@ -710,7 +719,8 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       const base = finding(4, "Fx.runSync(program)");
       assertTrue(isEffectVitestFinding(base));
       assertFalse(isEffectVitestFinding({ ...base, occurrence: O.some("v2:not-a-digest") }));
-      assertTrue(A.every(yield* occurrences('it("x", () => Effect.runSync(program));'), isEffectVitestFinding));
+      const occurrences4 = yield* occurrences('it("x", () => Effect.runSync(program));');
+      assertTrue(A.every(occurrences4, isEffectVitestFinding));
     })
   );
 
@@ -764,10 +774,12 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       for (const { body, expected } of vectors) {
         const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
         const source = project.createSourceFile("anchor.test.tsx", prefix + body);
-        const row = A.findFirst(
-          yield* detectEffectVitestFindings(source, "packages/example/test/anchor.test.tsx", "@beep/example"),
-          (finding) => finding.ruleId === "EV001"
+        const detectEffectVitestFindings5 = yield* detectEffectVitestFindings(
+          source,
+          "packages/example/test/anchor.test.tsx",
+          "@beep/example"
         );
+        const row = A.findFirst(detectEffectVitestFindings5, (finding) => finding.ruleId === "EV001");
         assertSome(
           O.flatMap(row, (finding) => finding.occurrence),
           expected

@@ -44,6 +44,7 @@ it.effect("synthetic documents materialize unrecorded semantic violations", () =
   Effect.gen(function* () {
     const parsed = yield* TomlDocument.parse("a=1\na=2\n");
     const synthetic = TomlDocument.make({ source: parsed.source, expressions: parsed.expressions, diagnostics: [] });
-    assertFailure(yield* Effect.result(synthetic.toValue()), TomlParseError.make({ diagnostics: parsed.diagnostics }));
+    const result1 = yield* Effect.result(synthetic.toValue());
+    assertFailure(result1, TomlParseError.make({ diagnostics: parsed.diagnostics }));
   })
 );

@@ -78,7 +78,8 @@ const fixture = Effect.fn("NativeDeliveryTest.fixture")(function* (timeoutMillis
   const receipt = yield* native.acceptBatch(batch);
   const context = yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 }));
   const server = Context.get(context, HttpServer.HttpServer);
-  const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
+  const build1 = yield* Layer.build(NodeHttpClient.layerNodeHttp);
+  const client = Context.get(build1, HttpClient.HttpClient);
   const policy = NativeDeliveryPolicy.make({
     endpoint: Redacted.make(`${HttpServer.formatAddress(server.address)}/v1/traces`),
     project: "synthetic-proof",
@@ -97,7 +98,9 @@ const fixture = Effect.fn("NativeDeliveryTest.fixture")(function* (timeoutMillis
   const received = yield* Deferred.make<void>();
   const sql = yield* SqlClient.SqlClient;
   const first = batch.spans[0];
-  if (first === undefined) return yield* Effect.die("Invalid synthetic fixture");
+  if (first === undefined) {
+    return yield* Effect.die("Invalid synthetic fixture");
+  }
   const serve = <E, R>(reply: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>) =>
     server.serve(
       Effect.gen(function* () {
@@ -106,7 +109,9 @@ const fixture = Effect.fn("NativeDeliveryTest.fixture")(function* (timeoutMillis
         expect(attempts.length).toBeGreaterThan(0);
         const request = yield* HttpServerRequest.HttpServerRequest;
         expect(request.headers["content-type"]).toBe("application/x-protobuf");
-        const wire = new TextDecoder().decode(yield* request.arrayBuffer);
+        const argument = new TextDecoder();
+        const arrayBuffer1 = yield* request.arrayBuffer;
+        const wire = argument.decode(arrayBuffer1);
         expect(wire).not.toContain("private-prompt");
         expect(wire).not.toContain("private-synthetic-command");
         expect(wire).toContain("synthetic-proof");
@@ -142,10 +147,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     Effect.gen(function* () {
       const f = yield* fixture();
       yield* f.serve(response());
-      expect(yield* f.send()).toMatchObject({ _tag: "Recorded", outcome: { _tag: "Accepted" } });
-      expect(yield* f.send()).toEqual({ _tag: "ExistingAttempt", attemptId: id("d") });
-      expect(yield* Ref.get(f.calls)).toBe(1);
-      expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({
+      const send2 = yield* f.send();
+      expect(send2).toMatchObject({ _tag: "Recorded", outcome: { _tag: "Accepted" } });
+      const send3 = yield* f.send();
+      expect(send3).toEqual({ _tag: "ExistingAttempt", attemptId: id("d") });
+      const got = yield* Ref.get(f.calls);
+      expect(got).toBe(1);
+      const state4 = yield* f.ledger.state(f.first.eventId);
+      expect(state4).toMatchObject({
         value: { state: "accepted-unverified", attempts: 1 },
       });
     })
@@ -156,8 +165,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     Effect.gen(function* () {
       const f = yield* fixture();
       yield* f.serve(response(new Uint8Array([10, 2, 8, 1])));
-      expect(yield* f.send()).toMatchObject({ outcome: { _tag: "Partial", rejectedCount: 1 } });
-      expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({
+      const send5 = yield* f.send();
+      expect(send5).toMatchObject({ outcome: { _tag: "Partial", rejectedCount: 1 } });
+      const state6 = yield* f.ledger.state(f.first.eventId);
+      expect(state6).toMatchObject({
         value: { state: "unresolved", ambiguousAttempts: 1 },
       });
     })
@@ -181,9 +192,11 @@ for (const status of [503, 400, 302])
           _tag: "Recorded",
           outcome: { _tag: status === 503 ? "Retryable" : status === 400 ? "Rejected" : "Unknown" },
         });
-        expect(yield* Ref.get(f.calls)).toBe(1);
+        const got7 = yield* Ref.get(f.calls);
+        expect(got7).toBe(1);
         const facts = yield* f.sql`SELECT payload FROM observation_delivery_results`;
-        expect(yield* encodeJsonValue(facts)).not.toContain("private-server-detail");
+        const encodedJsonValue = yield* encodeJsonValue(facts);
+        expect(encodedJsonValue).not.toContain("private-server-detail");
       })
     )
   );
@@ -202,8 +215,10 @@ for (const malformed of [true, false])
                 )
               )
         );
-        expect(yield* f.send()).toMatchObject({ outcome: { _tag: "Unknown", reason: "invalid-response" } });
-        expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({ value: { state: "unresolved" } });
+        const send8 = yield* f.send();
+        expect(send8).toMatchObject({ outcome: { _tag: "Unknown", reason: "invalid-response" } });
+        const state9 = yield* f.ledger.state(f.first.eventId);
+        expect(state9).toMatchObject({ value: { state: "unresolved" } });
       })
     )
   );
@@ -215,10 +230,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const sending = yield* Effect.forkChild(f.send());
       yield* Deferred.await(f.received);
       expect((yield* f.send("e").pipe(Effect.flip)).reason).toBe("busy");
-      expect(yield* Fiber.join(sending)).toMatchObject({
+      const join10 = yield* Fiber.join(sending);
+      expect(join10).toMatchObject({
         outcome: { _tag: "Unknown", reason: "timed-out" },
       });
-      expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({ value: { state: "unresolved", attempts: 1 } });
+      const state11 = yield* f.ledger.state(f.first.eventId);
+      expect(state11).toMatchObject({ value: { state: "unresolved", attempts: 1 } });
     })
   )
 );
@@ -231,11 +248,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* Deferred.await(f.received);
       yield* Fiber.interrupt(sending);
       const facts = yield* f.sql`SELECT payload FROM observation_delivery_results`;
-      expect(yield* encodeJsonValue(facts)).toContain("interrupted");
-      expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({ value: { state: "unresolved" } });
+      const encodedJsonValue12 = yield* encodeJsonValue(facts);
+      expect(encodedJsonValue12).toContain("interrupted");
+      const state13 = yield* f.ledger.state(f.first.eventId);
+      expect(state13).toMatchObject({ value: { state: "unresolved" } });
       yield* f.sql`CREATE TRIGGER synthetic_result_failure BEFORE INSERT ON observation_delivery_results BEGIN SELECT RAISE(ABORT,'synthetic'); END`;
       expect((yield* f.send("e").pipe(Effect.flip)).reason).toBe("storage");
-      expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({ value: { state: "unresolved", attempts: 2 } });
+      const state14 = yield* f.ledger.state(f.first.eventId);
+      expect(state14).toMatchObject({ value: { state: "unresolved", attempts: 2 } });
     })
   )
 );
@@ -260,13 +280,13 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         "https://user:password@example.com/v1/traces",
         "https://example.com/v1/traces?token=private",
       ]) {
-        expect(
-          yield* nativeDeliveryTargetId(
-            NativeDeliveryPolicy.make({ ...f.policy, endpoint: Redacted.make(endpoint) })
-          ).pipe(Effect.flip)
-        ).toMatchObject({ reason: "configuration" });
+        const pipe15 = yield* nativeDeliveryTargetId(
+          NativeDeliveryPolicy.make({ ...f.policy, endpoint: Redacted.make(endpoint) })
+        ).pipe(Effect.flip);
+        expect(pipe15).toMatchObject({ reason: "configuration" });
       }
-      expect(yield* Ref.get(f.calls)).toBe(0);
+      const got16 = yield* Ref.get(f.calls);
+      expect(got16).toBe(0);
     })
   )
 );

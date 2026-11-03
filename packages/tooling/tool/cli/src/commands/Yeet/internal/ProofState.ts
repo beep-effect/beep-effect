@@ -783,10 +783,11 @@ interface ObservedProofLockState {
 const observeProofLockState = Effect.fn("Yeet.observeProofLockState")(function* (
   lockPath: string
 ): Effect.fn.Return<ObservedProofLockState, YeetCommandError, FileSystem.FileSystem> {
-  const text = O.getOrElse(
-    yield* readProofCoordinationFile(lockPath, `Failed to inspect Yeet proof lock at ${lockPath}.`),
-    () => ""
+  const readProofCoordinationFile1 = yield* readProofCoordinationFile(
+    lockPath,
+    `Failed to inspect Yeet proof lock at ${lockPath}.`
   );
+  const text = O.getOrElse(readProofCoordinationFile1, () => "");
   const state = yield* decodeProofLockState(text).pipe(Effect.asSome, Effect.orElseSucceed(O.none<YeetProofLockState>));
   const legacyState = O.isNone(state)
     ? yield* decodeProofLockStateV2(text).pipe(Effect.asSome, Effect.orElseSucceed(O.none<YeetProofLockStateV2>))
@@ -1076,11 +1077,13 @@ const prepareFullProofLockLeaseAt = Effect.fn("Yeet.prepareFullProofLockLeaseAt"
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
 > {
+  const argument = proofCommandForSteps(proofSteps);
+  const processStartIdentityForPid1 = yield* processStartIdentityForPid(process.pid);
   return yield* prepareFullProofLockLeaseForCommandAt(
     lockPath,
     context,
-    proofCommandForSteps(proofSteps),
-    O.getOrElse(yield* processStartIdentityForPid(process.pid), () => "")
+    argument,
+    O.getOrElse(processStartIdentityForPid1, () => "")
   );
 });
 
@@ -1389,7 +1392,8 @@ export const retireFullProofLockOrObserveAtPath = Effect.fn("Yeet.retireFullProo
   if (yield* tryClaimProofLockExclusive(lockPath, retirementText)) {
     return O.some(true);
   }
-  return yield* retireObservedProofLock(lockPath, retirementText, yield* observeProofLockState(lockPath));
+  const observeProofLockState2 = yield* observeProofLockState(lockPath);
+  return yield* retireObservedProofLock(lockPath, retirementText, observeProofLockState2);
 });
 
 const acquireFullProofFallbackLockOrObserveAtPathWithProcessStart = Effect.fn(
@@ -1460,11 +1464,12 @@ export const acquireFullProofFallbackLockOrObserveAtPath = Effect.fn(
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
 > {
+  const processStartIdentityForPid3 = yield* processStartIdentityForPid(process.pid);
   return yield* acquireFullProofFallbackLockOrObserveAtPathWithProcessStart(
     lockPath,
     context,
     command,
-    yield* processStartIdentityForPid(process.pid)
+    processStartIdentityForPid3
   );
 });
 
@@ -1871,7 +1876,8 @@ export const verifiedHeadInstallReceiptRefusals = Effect.fn("Yeet.verifiedHeadIn
 > {
   const state = yield* loadVerifiedState(context);
   const receipt = O.fromUndefinedOr(state.installReceipt);
-  const current = yield* collectHeadInstallInputs(context.repoRoot, yield* currentCommitSha(context));
+  const currentCommitSha4 = yield* currentCommitSha(context);
+  const current = yield* collectHeadInstallInputs(context.repoRoot, currentCommitSha4);
   const now = yield* DateTime.now;
   return { receipt, refusals: headInstallReceiptRefusals(receipt, current, now) };
 });

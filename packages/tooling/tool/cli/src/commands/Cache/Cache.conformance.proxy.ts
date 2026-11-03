@@ -561,7 +561,8 @@ const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHa
       return yield* reject(503);
     const delivered = yield* respond(request, fault, parsed.team, parsed.hash, body);
     yield* recordUpload(request, parsed, body, delivered);
-    const neverWritten = !HashSet.has(yield* Ref.get(written), parsed.key);
+    const got = yield* Ref.get(written);
+    const neverWritten = !HashSet.has(got, parsed.key);
     const finished = yield* Clock.currentTimeMillis;
     const exchange = yield* proxyExchange({
       request,

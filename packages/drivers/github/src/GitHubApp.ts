@@ -969,7 +969,9 @@ const makeApp: {
             // Only the HTTP wait is restored above. Own a received string credential
             // while masked, even if its other fields fail decoding or decoding yields.
             const observed = S.decodeUnknownOption(ObservedCredential)(minted);
-            if (O.isSome(observed)) yield* observe(Redacted.make(observed.value.token));
+            if (O.isSome(observed)) {
+              yield* observe(Redacted.make(observed.value.token));
+            }
             return yield* restore(
               Effect.gen(function* () {
                 const wire = yield* S.decodeUnknownEffect(TokenResponse)(minted);
@@ -1014,7 +1016,9 @@ const makeApp: {
           .request("GET /users/{username}", { username: `${slug}[bot]` })
           .pipe(Effect.option);
         const bot = O.isSome(user)
-          ? O.some(yield* S.decodeEffect(BotResponse)(user.value).pipe(Effect.mapError(decodeFailure("identity"))))
+          ? yield* Effect.asSome(
+              S.decodeEffect(BotResponse)(user.value).pipe(Effect.mapError(decodeFailure("identity")))
+            )
           : O.none();
         return yield* S.decodeEffect(AppIdentity)({
           slug,
@@ -1442,7 +1446,9 @@ const makeRotatingClient: {
     });
     const fresh = Effect.uninterruptibleMask(
       Effect.fnUntraced(function* (restore) {
-        if (yield* Ref.get(closed)) return yield* Effect.interrupt;
+        if (yield* Ref.get(closed)) {
+          return yield* Effect.interrupt;
+        }
         const fiber = yield* Effect.forkChild(refresh, { uninterruptible: false });
         yield* Ref.set(inFlight, O.some(fiber));
         return yield* restore(Fiber.join(fiber)).pipe(
@@ -1458,7 +1464,9 @@ const makeRotatingClient: {
       Effect.fnUntraced(function* () {
         yield* Ref.set(closed, true);
         const active = yield* Ref.get(inFlight);
-        if (O.isSome(active)) yield* Fiber.interrupt(active.value);
+        if (O.isSome(active)) {
+          yield* Fiber.interrupt(active.value);
+        }
         yield* revokeHeld;
         yield* Ref.set(owned, O.none());
       })

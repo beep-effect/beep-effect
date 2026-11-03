@@ -87,11 +87,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const [a, b, c] = [id("a"), id("b"), id("c")];
       const ids = [a, b, c];
       const reserve = journal.reserveSources(TranscriptScheduleInput.make({ candidates: ids, limit: 3 }));
-      expect(yield* reserve).toEqual(ids);
+      const reserve1 = yield* reserve;
+      expect(reserve1).toEqual(ids);
       // An interrupted sweep that never attempted a source leaves the schedule in place.
-      expect(yield* reserve).toEqual(ids);
+      const reserve2 = yield* reserve;
+      expect(reserve2).toEqual(ids);
       yield* journal.recordAttempt(a);
-      expect(yield* reserve).toEqual([b, c, a]);
+      const reserve3 = yield* reserve;
+      expect(reserve3).toEqual([b, c, a]);
     })
   )
 );
@@ -154,17 +157,18 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("rejects duplicate path aliases and wrong namespaces before initializing a journal", () =>
     Effect.gen(function* () {
       const { dir, config, input } = yield* fixture();
-      expect(yield* runTranscriptSweep(config, input([`${dir}/a`, `${dir}/./a`])).pipe(Effect.flip)).toMatchObject({
+      const pipe4 = yield* runTranscriptSweep(config, input([`${dir}/a`, `${dir}/./a`])).pipe(Effect.flip);
+      expect(pipe4).toMatchObject({
         reason: "configuration",
       });
-      expect(
-        yield* runTranscriptSweep(
-          config,
-          TranscriptSweepInput.make({ ...input([]), hashSalt: Redacted.make("different") })
-        ).pipe(Effect.flip)
-      ).toMatchObject({ reason: "namespace" });
+      const pipe5 = yield* runTranscriptSweep(
+        config,
+        TranscriptSweepInput.make({ ...input([]), hashSalt: Redacted.make("different") })
+      ).pipe(Effect.flip);
+      expect(pipe5).toMatchObject({ reason: "namespace" });
       const sql = yield* SqlClient.SqlClient;
-      expect(yield* sql`SELECT name FROM sqlite_master WHERE type='table'`).toEqual([]);
+      const value = yield* sql`SELECT name FROM sqlite_master WHERE type='table'`;
+      expect(value).toEqual([]);
     })
   )
 );

@@ -14,7 +14,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -66,7 +67,8 @@ it.layer(FileLayer, { timeout: "30 seconds" })((it) => {
         const read = yield* file.read("/property/package.json");
         assert.isTrue(S.toEquivalence(Package)(pkg, read));
         yield* file.write("/property/package.json", read);
-        assert.strictEqual(yield* fs.readFileString("/property/package.json"), text);
+        const readFileString2 = yield* fs.readFileString("/property/package.json");
+        assert.strictEqual(readFileString2, text);
       }),
     runs
   );

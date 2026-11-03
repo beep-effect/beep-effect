@@ -21,10 +21,12 @@ import * as Toolkit from "effect/ai/Toolkit";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { identity } from "effect/Function";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tracer from "effect/Tracer";
 import { fixtureHost } from "./fixtures/FixtureHost.ts";
@@ -215,7 +217,10 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
 // into the first text content part.
 const callerReport = <A = string>(result: { readonly content: ReadonlyArray<unknown> }): A => {
   const [first] = result.content;
-  return JSON.parse((first as { readonly text: string }).text) as A;
+  return Result.getOrThrowWith(
+    S.decodeResult(S.fromJsonString(S.Unknown))((first as { readonly text: string }).text),
+    identity
+  ) as A;
 };
 
 // Direct `server.callTool` is rc.117's stateful-only seam: it mints a caller

@@ -215,7 +215,8 @@ export const readObservationClaimPopulation = Effect.fn("AiMetrics.readObservati
     captureFinishedAt,
     outboxes,
   });
-  const evidenceId = yield* hashPublicTextSha256(yield* encodeObservationClaimPopulationEvidenceJson(evidence));
+  const encodedObservationClaimPopulationEvidenceJson = yield* encodeObservationClaimPopulationEvidenceJson(evidence);
+  const evidenceId = yield* hashPublicTextSha256(encodedObservationClaimPopulationEvidenceJson);
   const rows = A.map(request.routeIds, (routeId) => {
     const cohort = A.filter(
       outboxes,

@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // `WorkspacePatterns.read` is tested directly, and deliberately so.
 //
 // Its two read failures are NOT distinguishable through `WorkspaceDiscovery`:
@@ -15,19 +16,25 @@ import { WorkspacePatternReadError, WorkspacePatterns } from "@beep/repo-workspa
 import { assert, describe, it, layer } from "@effect/vitest";
 import { assertInstanceOf, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { platform, platformWith } from "./support/fixtures.ts";
 import type { Tree } from "./support/fixtures.ts";
 
 const tree: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
-  "/repo/package.json": JSON.stringify({ name: "root", workspaces: ["apps/*"] }),
+  "/repo/package.json": Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", workspaces: ["apps/*"] }),
+    identity
+  ),
 };
 
 describe("WorkspacePatterns.read — the happy paths", () => {
   layer(platform(tree), { timeout: "30 seconds" })((it) => {
     it.effect("prefers pnpm-workspace.yaml over the manifest workspaces field", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* WorkspacePatterns.read("/repo"), ["packages/*"]);
+        const read1 = yield* WorkspacePatterns.read("/repo");
+        assert.deepStrictEqual(read1, ["packages/*"]);
       })
     );
   });
@@ -37,13 +44,17 @@ describe("WorkspacePatterns.read — a pnpm-workspace.yaml with no packages key 
   layer(
     platform({
       "/repo/pnpm-workspace.yaml": "onlyBuiltDependencies:\n  - esbuild\n",
-      "/repo/package.json": JSON.stringify({ name: "root", workspaces: ["apps/*"] }),
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", workspaces: ["apps/*"] }),
+        identity
+      ),
     }),
     { timeout: "30 seconds" }
   )((it) => {
     it.effect("reads the manifest workspaces field", () =>
       Effect.gen(function* () {
-        assert.deepStrictEqual(yield* WorkspacePatterns.read("/repo"), ["apps/*"]);
+        const read2 = yield* WorkspacePatterns.read("/repo");
+        assert.deepStrictEqual(read2, ["apps/*"]);
       })
     );
   });
@@ -54,7 +65,8 @@ describe("WorkspacePatterns.read — an absent config is not an error", () => {
     it.effect("a standalone directory declares no patterns", () =>
       Effect.gen(function* () {
         // ABSENT is a real, distinguishable condition. Only UNREADABLE is the bug.
-        assert.deepStrictEqual(yield* WorkspacePatterns.read("/repo"), []);
+        const read3 = yield* WorkspacePatterns.read("/repo");
+        assert.deepStrictEqual(read3, []);
       })
     );
   });
@@ -85,7 +97,10 @@ describe("WorkspacePatterns.read — an unreadable package.json", () => {
   layer(
     platformWith({ unreadableFiles: ["/repo/package.json"] })({
       "/repo/pnpm-workspace.yaml": "onlyBuiltDependencies:\n  - esbuild\n",
-      "/repo/package.json": JSON.stringify({ name: "root", workspaces: ["apps/*"] }),
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", workspaces: ["apps/*"] }),
+        identity
+      ),
     }),
     { timeout: "30 seconds" }
   )((it) => {
@@ -129,33 +144,60 @@ describe("WorkspacePatterns — the public leaf's failure is the kit's tagged er
 // carries, none for a scalar, the way `WorkspaceDiscovery` always has. These
 // cases are the inverted pins of that rejection.
 describe("WorkspacePatterns — a malformed `workspaces` field reads as no patterns", () => {
-  layer(platform({ "/repo/package.json": JSON.stringify({ name: "root", workspaces: 7 }) }), {
-    timeout: "30 seconds",
-  })((it) => {
+  layer(
+    platform({
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", workspaces: 7 }),
+        identity
+      ),
+    }),
+    {
+      timeout: "30 seconds",
+    }
+  )((it) => {
     it.effect("a scalar `workspaces` is an empty list, not a failure", () =>
       Effect.gen(function* () {
-        deepStrictEqual(yield* WorkspacePatterns.read("/repo"), []);
+        const read4 = yield* WorkspacePatterns.read("/repo");
+        deepStrictEqual(read4, []);
       })
     );
   });
 
   layer(
-    platform({ "/repo/package.json": JSON.stringify({ name: "root", workspaces: { catalog: { effect: "4.0.0" } } }) }),
+    platform({
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+          name: "root",
+          workspaces: { catalog: { effect: "4.0.0" } },
+        }),
+        identity
+      ),
+    }),
     { timeout: "30 seconds" }
   )((it) => {
     it.effect("a catalog-only object form declares no workspace packages", () =>
       Effect.gen(function* () {
-        deepStrictEqual(yield* WorkspacePatterns.read("/repo"), []);
+        const read5 = yield* WorkspacePatterns.read("/repo");
+        deepStrictEqual(read5, []);
       })
     );
   });
 
-  layer(platform({ "/repo/package.json": JSON.stringify({ name: "root", workspaces: ["packages/*", 42, null] }) }), {
-    timeout: "30 seconds",
-  })((it) => {
+  layer(
+    platform({
+      "/repo/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", workspaces: ["packages/*", 42, null] }),
+        identity
+      ),
+    }),
+    {
+      timeout: "30 seconds",
+    }
+  )((it) => {
     it.effect("non-string entries are dropped, not rejected", () =>
       Effect.gen(function* () {
-        deepStrictEqual(yield* WorkspacePatterns.read("/repo"), ["packages/*"]);
+        const read6 = yield* WorkspacePatterns.read("/repo");
+        deepStrictEqual(read6, ["packages/*"]);
       })
     );
   });

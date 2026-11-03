@@ -228,7 +228,8 @@ const roundTrips = Effect.fn("settleTest.roundTrips")(function* <Schema extends 
     Effect.fnUntraced(function* (value) {
       const encoded = yield* S.encodeEffect(schema)(value);
       const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
-      expect(yield* S.encodeEffect(schema)(decoded)).toEqual(encoded);
+      const value1 = yield* S.encodeEffect(schema)(decoded);
+      expect(value1).toEqual(encoded);
     })
   );
 });
@@ -632,7 +633,8 @@ describe("B7 settle contracts", () => {
   ] as const) {
     it.effect(`parses duration ${value}`, () =>
       Effect.gen(function* () {
-        expect(yield* yeetMonitorDurationMillis(value)).toBe(millis);
+        const yeetMonitorDurationMillis2 = yield* yeetMonitorDurationMillis(value);
+        expect(yeetMonitorDurationMillis2).toBe(millis);
       })
     );
   }
@@ -655,10 +657,12 @@ describe("B7 settle contracts", () => {
               O.map(result, (value) => value.contexts),
               ["Lint"]
             );
-            expect(yield* TestConsole.errorLines).toHaveLength(0);
+            const errorLines3 = yield* TestConsole.errorLines;
+            expect(errorLines3).toHaveLength(0);
           } else {
             assertNone(result);
-            expect(yield* TestConsole.errorLines).toHaveLength(1);
+            const errorLines4 = yield* TestConsole.errorLines;
+            expect(errorLines4).toHaveLength(1);
           }
           expect(A.map(spawner.spawns, (spawn) => spawn.args)).toEqual([rulesetArgs]);
         }).pipe(provideLegacyGh, Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
@@ -687,11 +691,15 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
           }).pipe(Effect.tap(() => Ref.set(done, true)));
           const fiber = yield* Effect.forkChild(program);
           yield* TestClock.adjust("999 millis");
-          expect(yield* Ref.get(done)).toBe(false);
+          const got = yield* Ref.get(done);
+          expect(got).toBe(false);
           yield* TestClock.adjust("1 millis");
-          expect(yield* Fiber.join(fiber)).toBe("settle-timeout");
-          expect(yield* Ref.get(calls)).toBe(2);
-          expect(yield* Ref.get(reads)).toBe(1);
+          const join5 = yield* Fiber.join(fiber);
+          expect(join5).toBe("settle-timeout");
+          const got6 = yield* Ref.get(calls);
+          expect(got6).toBe(2);
+          const got7 = yield* Ref.get(reads);
+          expect(got7).toBe(1);
           const fs = yield* FileSystem.FileSystem;
           const saved = yield* fs
             .readFileString(`${root}/status.json`)
@@ -704,7 +712,8 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
             O.flatMap(saved.timeline, (timeline) => timeline.pushedAt),
             at
           );
-          expect(A.join(A.map(yield* TestConsole.logLines, String), "\n")).toContain("missing: Heavy / Check");
+          const logLines8 = yield* TestConsole.logLines;
+          expect(A.join(A.map(logLines8, String), "\n")).toContain("missing: Heavy / Check");
         })
       )
   );
@@ -718,7 +727,8 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
         Effect.gen(function* () {
           yield* TestClock.setTime(0);
           // The layer shares one TestConsole across tests: read only this test's lines.
-          const priorLines = A.length(yield* TestConsole.logLines);
+          const logLines9 = yield* TestConsole.logLines;
+          const priorLines = A.length(logLines9);
           const ownLines = TestConsole.logLines.pipe(
             Effect.map((lines) => A.join(A.map(A.drop(lines, priorLines), String), "\n"))
           );
@@ -811,20 +821,26 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
           // Three held polls span 200ms against a 50ms budget: a held head never times out,
           // and it sleeps the full interval instead of racing the exhausted budget.
           yield* TestClock.adjust("250 millis");
-          expect(yield* Ref.get(calls)).toBe(3);
+          const got10 = yield* Ref.get(calls);
+          expect(got10).toBe(3);
           const heldLines = yield* ownLines;
           expect(heldLines).toContain(
             "settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 200ms (not counted toward the 50ms settle timeout)"
           );
           expect(heldLines).not.toContain("settle-timeout");
           yield* TestClock.adjust("100 millis");
-          expect(yield* Fiber.join(fiber)).toBe("ready");
-          expect(yield* Ref.get(calls)).toBe(5);
-          expect(yield* Ref.get(closeouts)).toBe(1);
+          const join11 = yield* Fiber.join(fiber);
+          expect(join11).toBe("ready");
+          const got12 = yield* Ref.get(calls);
+          expect(got12).toBe(5);
+          const got13 = yield* Ref.get(closeouts);
+          expect(got13).toBe(1);
           // One push-time read per head through the capture, never per poll; the merge-base diff
           // runs through `Git.changedFiles` (W2b) and is counted on the `Git` double below.
-          expect(A.map(yield* Ref.get(captures), (args) => args[0])).toEqual(["api"]);
-          expect(yield* Ref.get(diffs)).toBe(1);
+          const got14 = yield* Ref.get(captures);
+          expect(A.map(got14, (args) => args[0])).toEqual(["api"]);
+          const got15 = yield* Ref.get(diffs);
+          expect(got15).toBe(1);
           const lines = yield* ownLines;
           expect(lines).toContain("[yeet] heavy admission: hold → run");
           // The closeout runs inside the same poll, so the reason moves straight to settled.
@@ -898,13 +914,18 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
           Effect.forkChild
         );
         yield* TestClock.adjust("300 millis");
-        expect(yield* Fiber.join(fiber)).toBe("merged");
-        expect(yield* Ref.get(reads)).toBe(2);
+        const join16 = yield* Fiber.join(fiber);
+        expect(join16).toBe("merged");
+        const got17 = yield* Ref.get(reads);
+        expect(got17).toBe(2);
         // Two heads × (pushedAt read through the capture + merge-base diff through `Git`, W2b): both
         // are once per head.
-        expect(yield* Ref.get(captures)).toBe(2);
-        expect(yield* Ref.get(diffs)).toBe(2);
-        expect(yield* Ref.get(sweeps)).toBe(1);
+        const got18 = yield* Ref.get(captures);
+        expect(got18).toBe(2);
+        const got19 = yield* Ref.get(diffs);
+        expect(got19).toBe(2);
+        const got20 = yield* Ref.get(sweeps);
+        expect(got20).toBe(1);
         const fs = yield* FileSystem.FileSystem;
         const saved = yield* fs
           .readFileString(`${root}/status.json`)
@@ -1261,7 +1282,8 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
         }).pipe(provideLegacyGh, Effect.provideServiceEffect(Git, Git.make), provideSpawner(runner));
         expect(terminal).toBe("closed");
         expect(A.length(A.filter(runner.spawns, (spawn) => isRerun(spawn.args)))).toBe(1);
-        expect(A.join(A.map(yield* TestConsole.logLines, String), "\n")).toContain("rerun budget spent");
+        const logLines21 = yield* TestConsole.logLines;
+        expect(A.join(A.map(logLines21, String), "\n")).toContain("rerun budget spent");
       })
     )
   );
@@ -1283,13 +1305,17 @@ it.layer(platform, { timeout: "30 seconds" })("B7 sleep after a spent registrati
         });
         const fiber = yield* Effect.forkChild(program);
         yield* TestClock.adjust("1000 millis");
-        expect(yield* Ref.get(calls)).toBe(1);
+        const got22 = yield* Ref.get(calls);
+        expect(got22).toBe(1);
         yield* TestClock.adjust("28999 millis");
-        expect(yield* Ref.get(calls)).toBe(1);
+        const got23 = yield* Ref.get(calls);
+        expect(got23).toBe(1);
         yield* TestClock.adjust("1 millis");
-        expect(yield* Ref.get(calls)).toBe(2);
+        const got24 = yield* Ref.get(calls);
+        expect(got24).toBe(2);
         yield* TestClock.adjust("30 seconds");
-        expect(yield* Ref.get(calls)).toBe(3);
+        const got25 = yield* Ref.get(calls);
+        expect(got25).toBe(3);
         yield* Fiber.interrupt(fiber);
       })
     )
@@ -1312,10 +1338,13 @@ it.layer(platform, { timeout: "30 seconds" })("B7 sleep after a spent registrati
         });
         const fiber = yield* Effect.forkChild(program);
         yield* TestClock.adjust("999 millis");
-        expect(yield* Ref.get(calls)).toBe(1);
+        const got26 = yield* Ref.get(calls);
+        expect(got26).toBe(1);
         yield* TestClock.adjust("1 millis");
-        expect(yield* Fiber.join(fiber)).toBe("settle-timeout");
-        expect(yield* Ref.get(calls)).toBe(2);
+        const join27 = yield* Fiber.join(fiber);
+        expect(join27).toBe("settle-timeout");
+        const got28 = yield* Ref.get(calls);
+        expect(got28).toBe(2);
       })
     )
   );

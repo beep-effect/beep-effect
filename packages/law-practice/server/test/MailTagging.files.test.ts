@@ -125,13 +125,16 @@ describe("MailTagging file-backed state", () => {
         const ledger = yield* TagLedger;
         const fs = yield* FileSystem.FileSystem;
 
-        expect(yield* ledger.records).toStrictEqual([]);
+        const records1 = yield* ledger.records;
+        expect(records1).toStrictEqual([]);
 
         yield* ledger.append(applied);
         yield* ledger.append(undone);
-        const text = yield* fs.readFileString(yield* stateFile("tag-ledger.jsonl"));
+        const stateFile2 = yield* stateFile("tag-ledger.jsonl");
+        const text = yield* fs.readFileString(stateFile2);
 
-        expect(sameRecords(yield* ledger.records, [applied, undone])).toBe(true);
+        const records3 = yield* ledger.records;
+        expect(sameRecords(records3, [applied, undone])).toBe(true);
         expect(A.filter(Str.split(text, "\n"), Str.isNonEmpty)).toHaveLength(2);
         expect(Str.endsWith("\n")(text)).toBe(true);
       })
@@ -171,7 +174,9 @@ describe("MailTagging file-backed state", () => {
 
         expect(sameFilings(records, [intent, filing])).toBe(true);
         expect(A.map(records, (record) => record._tag)).toStrictEqual(["FilingIntended", "FilingCompleted"]);
-        expect(yield* fs.exists(yield* stateFile("filing-ledger.jsonl"))).toBe(true);
+        const stateFile10 = yield* stateFile("filing-ledger.jsonl");
+        const exists4 = yield* fs.exists(stateFile10);
+        expect(exists4).toBe(true);
       })
     );
   });
@@ -183,7 +188,8 @@ describe("MailTagging file-backed state", () => {
         const ledger = yield* TagLedger;
         const fs = yield* FileSystem.FileSystem;
         yield* ledger.append(applied);
-        yield* fs.writeFileString(yield* stateFile("tag-ledger.jsonl"), '{"secret":"do-not-echo"}\n', { flag: "a" });
+        const stateFile5 = yield* stateFile("tag-ledger.jsonl");
+        yield* fs.writeFileString(stateFile5, '{"secret":"do-not-echo"}\n', { flag: "a" });
         yield* ledger.append(undone);
         const error = yield* Effect.flip(ledger.records);
 
@@ -217,7 +223,9 @@ describe("MailTagging file-backed state", () => {
           "tag-ledger.jsonl encode failed",
         ]);
         assertNone(error.cause);
-        expect(yield* fs.exists(yield* stateFile("tag-ledger.jsonl"))).toBe(false);
+        const stateFile11 = yield* stateFile("tag-ledger.jsonl");
+        const exists6 = yield* fs.exists(stateFile11);
+        expect(exists6).toBe(false);
       })
     );
 
@@ -226,7 +234,8 @@ describe("MailTagging file-backed state", () => {
       Effect.fnUntraced(function* () {
         const ledger = yield* FilingLedger;
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.makeDirectory(yield* stateFile("filing-ledger.jsonl"), { recursive: true });
+        const stateFile7 = yield* stateFile("filing-ledger.jsonl");
+        yield* fs.makeDirectory(stateFile7, { recursive: true });
         const appendError = yield* Effect.flip(ledger.append(filing));
         const readError = yield* Effect.flip(ledger.records);
 
@@ -252,14 +261,16 @@ describe("MailTagging file-backed state", () => {
         const fs = yield* FileSystem.FileSystem;
         const target = yield* stateFile("checkpoint.json");
 
-        assertNone(yield* store.load);
+        const loaded8 = yield* store.load;
+        assertNone(loaded8);
 
         yield* store.save(checkpoint(2));
         yield* store.save(checkpoint(5));
         const loaded = yield* store.load;
 
         expect(A.map(O.toArray(loaded), (saved) => sameCheckpoint(saved, checkpoint(5)))).toStrictEqual([true]);
-        expect(yield* fs.exists(`${target}.tmp`)).toBe(false);
+        const exists9 = yield* fs.exists(`${target}.tmp`);
+        expect(exists9).toBe(false);
 
         yield* fs.writeFileString(target, "{not json");
         const error = yield* Effect.flip(store.load);

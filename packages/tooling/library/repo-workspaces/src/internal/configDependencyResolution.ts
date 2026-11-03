@@ -226,7 +226,8 @@ const entriesOf: {
     dir: string
   ): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError, LadderServices> {
     const fs = yield* FileSystem.FileSystem;
-    return O.getOrElse(yield* ioOrNone(path, fs.readDirectory(dir)), A.empty<string>);
+    const ioOrNone1 = yield* ioOrNone(path, fs.readDirectory(dir));
+    return O.getOrElse(ioOrNone1, A.empty<string>);
   })
 );
 
@@ -299,7 +300,8 @@ const pnpmConfigEntries = Effect.fnUntraced(function* (
   base: string
 ): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError, LadderServices> {
   const path = yield* Path.Path;
-  const nested = yield* Effect.forEach(yield* entriesOf(root, base), (entry) =>
+  const entriesOf2 = yield* entriesOf(root, base);
+  const nested = yield* Effect.forEach(entriesOf2, (entry) =>
     Str.startsWith("@")(entry)
       ? Effect.map(
           entriesOf(root, path.join(base, entry)),
@@ -320,7 +322,8 @@ const storesFromLinks = Effect.fn("ConfigDependencyResolution.storesFromLinks")(
 ): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError, LadderServices> {
   const path = yield* Path.Path;
   const base = pnpmConfigDir(path, root);
-  const resolved = yield* Effect.forEach(yield* pnpmConfigEntries(root, base), (candidate) =>
+  const pnpmConfigEntries3 = yield* pnpmConfigEntries(root, base);
+  const resolved = yield* Effect.forEach(pnpmConfigEntries3, (candidate) =>
     realPathOf(root, path.join(base, candidate))
   );
   return A.getSomes(A.map(A.getSomes(resolved), (target) => storeOfLinkedPath(path, target)));
@@ -384,7 +387,8 @@ const storesFromEnvironment = Effect.fn("ConfigDependencyResolution.storesFromEn
   root: string
 ): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError, LadderServices> {
   const path = yield* Path.Path;
-  const expanded = yield* Effect.forEach(yield* environmentStoreRoots(), (storeRoot) =>
+  const environmentStoreRoots4 = yield* environmentStoreRoots();
+  const expanded = yield* Effect.forEach(environmentStoreRoots4, (storeRoot) =>
     // A plain `.sort()` orders `v10 < v11 < v9`, and since the first store
     // holding a version answers, a pnpm upgrade that left `v10` beside `v11`
     // would otherwise replay the stale copy without a word.
@@ -488,9 +492,8 @@ const findInStores: {
     const path = yield* Path.Path;
     for (const store of stores) {
       const versionDir = path.join(store, "links", name, declared);
-      const candidates = A.map(yield* entriesOf(name, versionDir), (hash) =>
-        path.join(versionDir, hash, "node_modules", name)
-      );
+      const entriesOf5 = yield* entriesOf(name, versionDir);
+      const candidates = A.map(entriesOf5, (hash) => path.join(versionDir, hash, "node_modules", name));
       const matches = yield* Effect.filter(candidates, (dir) =>
         Effect.map(manifestVersion(name, dir), carries(declared))
       );

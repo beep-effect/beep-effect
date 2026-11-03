@@ -370,7 +370,8 @@ const optionalDigest = (present: boolean, bytes: Uint8Array) =>
 const withWriterTag = Effect.fnUntraced(function* (step: WireStep) {
   const explicit = O.fromUndefinedOr(step.headers?.["x-artifact-tag"]);
   if (step.method !== "PUT" || (step.untagged ?? false) || O.isSome(explicit)) return { step, sentTag: explicit };
-  const tag = Base64.encode(yield* randomBytes(32));
+  const randomBytes1 = yield* randomBytes(32);
+  const tag = Base64.encode(randomBytes1);
   return { step: { ...step, headers: { ...step.headers, "x-artifact-tag": tag } }, sentTag: O.some(tag) };
 });
 
@@ -659,12 +660,8 @@ const contentTypes: WireCase = Effect.fnUntraced(function* (context: WireContext
   );
   if (succeeded(other)) {
     const download = yield* run(readStep("reader-get-text-plain", "reader", "GET", valid(hash)));
-    expectStrict(
-      recorder,
-      "non-octet-accepted-exactly",
-      sameBody(download, yield* hashBytes(body)),
-      statusText(download)
-    );
+    const hashBytes2 = yield* hashBytes(body);
+    expectStrict(recorder, "non-octet-accepted-exactly", sameBody(download, hashBytes2), statusText(download));
   } else {
     const existence = yield* run(
       readStep("writer-head-text-plain", "writer", "HEAD", valid(hash), { neverWritten: true })
@@ -761,15 +758,15 @@ const optionalRoute = (
   Effect.fnUntraced(function* (context: WireContext, recorder: Recorder) {
     const written = yield* writeArtifact(context, recorder, "writer-put-seed", 24);
     const unwritten = yield* freshHash;
-    const reply = yield* sendTracked(
-      context,
-      recorder
-    )({
+    const argument = sendTracked(context, recorder);
+    const argument1 = new TextEncoder();
+    const payload1 = yield* payload(written.hash, unwritten);
+    const reply = yield* argument({
       label,
       role: "reader",
       method: "POST",
       route,
-      body: new TextEncoder().encode(yield* payload(written.hash, unwritten)),
+      body: argument1.encode(payload1),
       contentType: "application/json",
     });
     if (O.exists(reply.status, isOptionalAbsence)) {
@@ -1008,7 +1005,8 @@ const artifactHashes: WireCase = Effect.fnUntraced(function* (context: WireConte
   const run = sendTracked(context, recorder);
   const body = yield* randomBytes(32);
   for (const shape of A.map(hashShapes(""), ([name]) => name)) {
-    const probes = hashShapes(yield* freshHash);
+    const freshHash3 = yield* freshHash;
+    const probes = hashShapes(freshHash3);
     const [, hash, resolved] = A.findFirst(probes, ([name]) => name === shape).pipe(O.getOrThrow);
     const write = yield* run(putStep(`writer-put-hash-${shape}`, "writer", hash, body));
     expectPolicy(recorder, `hash-${shape}-write-fails-closed`, rejected(write), statusText(write));
@@ -1037,9 +1035,8 @@ const readFaults: WireCase = Effect.fnUntraced(function* (context: WireContext, 
     const reply = yield* run(readStep(`${role}-get-written`, role, "GET", valid(written.hash)));
     expectStrict(recorder, `${role}-auth-distinct-from-miss`, denied(reply), statusText(reply));
   }
-  const miss = yield* run(
-    readStep("reader-get-unwritten", "reader", "GET", valid(yield* freshHash), { neverWritten: true })
-  );
+  const freshHash4 = yield* freshHash;
+  const miss = yield* run(readStep("reader-get-unwritten", "reader", "GET", valid(freshHash4), { neverWritten: true }));
   expectStrict(recorder, "genuine-miss-404", missing(miss), statusText(miss));
   const hit = yield* run(readStep("reader-get-written", "reader", "GET", valid(written.hash)));
   expectStrict(recorder, "authorized-hit", sameBody(hit, written.digest), statusText(hit));
@@ -1072,7 +1069,8 @@ const writeFaults: WireCase = Effect.fnUntraced(function* (context: WireContext,
     putStep("writer-put-untagged", "writer", valid(unsignedHash), unsignedBody, { untagged: true })
   );
   const unsignedRead = yield* run(readStep("reader-get-untagged", "reader", "GET", valid(unsignedHash)));
-  const readable = !succeeded(unsigned) || sameBody(unsignedRead, yield* hashBytes(unsignedBody));
+  const readable =
+    !succeeded(unsigned) || (yield* Effect.map(hashBytes(unsignedBody), (value) => sameBody(unsignedRead, value)));
   expectPolicy(
     recorder,
     "untagged-write-readable",

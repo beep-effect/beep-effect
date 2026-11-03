@@ -22,7 +22,8 @@ describe("formatting navigation and regional fallbacks", () => {
     ([value]) =>
       Effect.gen(function* () {
         const text = yield* YamlFormat.modifyToString("items:\n- name: old\n", ["items", 0, "name"], value);
-        assert.deepStrictEqual(yield* Yaml.parse(text), { items: [{ name: value }] });
+        const parsed = yield* Yaml.parse(text);
+        assert.deepStrictEqual(parsed, { items: [{ name: value }] });
         const formatted = YamlFormat.formatToString(text);
         assert.strictEqual(YamlFormat.formatToString(formatted), formatted);
       }),
@@ -41,9 +42,11 @@ describe("formatting navigation and regional fallbacks", () => {
           2,
           YamlStringifyOptions.make({ indent: 2 })
         );
-        assert.deepStrictEqual(yield* Yaml.parse(text), { items: [{ name: 2 }] });
+        const parsed1 = yield* Yaml.parse(text);
+        assert.deepStrictEqual(parsed1, { items: [{ name: 2 }] });
         const regional = yield* YamlFormat.modifyToString("items: [{name: old}]\n", path, 2);
-        assert.deepStrictEqual(yield* Yaml.parse(regional), { items: [{ name: 2 }] });
+        const parsed2 = yield* Yaml.parse(regional);
+        assert.deepStrictEqual(parsed2, { items: [{ name: 2 }] });
       }
       for (const [input, path, value] of [
         ["a: [1]\n", ["a"], 2],
@@ -53,7 +56,8 @@ describe("formatting navigation and regional fallbacks", () => {
         ["a: old\n", ["a"], -0],
       ] as const) {
         const text = yield* YamlFormat.modifyToString(input, path, value);
-        assert.deepStrictEqual(yield* Yaml.parse(text), { a: value === 0 ? 0 : value });
+        const parsed3 = yield* Yaml.parse(text);
+        assert.deepStrictEqual(parsed3, { a: value === 0 ? 0 : value });
       }
       const folded = yield* YamlFormat.modifyToString(
         "a: old\n",
@@ -61,14 +65,16 @@ describe("formatting navigation and regional fallbacks", () => {
         "one two three four five six",
         YamlStringifyOptions.make({ lineWidth: 5 })
       );
-      assert.deepStrictEqual(yield* Yaml.parse(folded), { a: "one two three four five six" });
+      const parsed4 = yield* Yaml.parse(folded);
+      assert.deepStrictEqual(parsed4, { a: "one two three four five six" });
       const failure = yield* Effect.flip(YamlFormat.modifyToString("? a\n", ["a", "b"], 1));
       assert.deepStrictEqual(
         A.map(failure.diagnostics, (d) => d.code),
         ["PathNotFound"]
       );
       const untouched = "a: [1]\n";
-      assert.strictEqual(yield* YamlFormat.modifyToString(untouched, ["a", 5], undefined), untouched);
+      const modifyToString5 = yield* YamlFormat.modifyToString(untouched, ["a", 5], undefined);
+      assert.strictEqual(modifyToString5, untouched);
       const fraction = yield* Effect.exit(YamlFormat.modifyToString("a: [1]\n", ["a", 0.5, "b"], 1));
       assertSome(
         Option.flatMap(

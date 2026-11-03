@@ -1093,7 +1093,8 @@ export const planSweep = Effect.fn("Yeet.planSweep")(function* (
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const createdAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  return buildSweepPlan(yield* observeSweepGitState(context), createdAt);
+  const observeSweepGitState1 = yield* observeSweepGitState(context);
+  return buildSweepPlan(observeSweepGitState1, createdAt);
 });
 
 const isPermissionDenial = (output: string): boolean => {
@@ -1643,7 +1644,8 @@ export const sweepReportPath = Effect.fn("Yeet.sweepReportPath")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<string, never, Path.Path> {
   const path = yield* Path.Path;
-  return path.join(yield* artifactDirForContext(context), sweepReportFileName);
+  const artifactDirForContext2 = yield* artifactDirForContext(context);
+  return path.join(artifactDirForContext2, sweepReportFileName);
 });
 
 /**
@@ -1707,7 +1709,8 @@ export const executeSweep = Effect.fn("Yeet.executeSweep")(function* (
   const encoded = yield* SweepReportJson.encode(report).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode the yeet sweep report."))
   );
-  yield* writeTextFile(yield* sweepReportPath(context), encoded);
+  const sweepReportPath3 = yield* sweepReportPath(context);
+  yield* writeTextFile(sweepReportPath3, encoded);
   // Every sweep entrypoint (sweep, sweep --retire, merge, monitor
   // --until-merged) passes here, so this is where the session ledger learns
   // the checkout's work is done: a retired lane, whose gate already proved

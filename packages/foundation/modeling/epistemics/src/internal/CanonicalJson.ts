@@ -12,7 +12,10 @@
  * @since 0.0.0
  */
 import { A, P, R } from "@beep/utils";
+import { identity } from "effect/Function";
 import * as Order from "effect/Order";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 const isScalar: P.Predicate<unknown> = P.some([P.isNull, P.isNumber, P.isBoolean, P.isString]);
 
@@ -30,7 +33,7 @@ const byKeyAscending = Order.mapInput(Order.String, ([key]: CanonicalEntry) => k
  */
 export const canonicalJson = (value: unknown): string => {
   if (isScalar(value)) {
-    return JSON.stringify(value);
+    return Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity);
   }
   if (A.isArray(value)) {
     return `[${A.join(A.map(value, canonicalJson), ",")}]`;
@@ -41,7 +44,11 @@ export const canonicalJson = (value: unknown): string => {
   );
   const entries = A.sort(defined, byKeyAscending);
   return `{${A.join(
-    A.map(entries, ([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`),
+    A.map(
+      entries,
+      ([key, entry]) =>
+        `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(key), identity)}:${canonicalJson(entry)}`
+    ),
     ","
   )}}`;
 };

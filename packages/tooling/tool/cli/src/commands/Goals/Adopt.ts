@@ -21,12 +21,13 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -117,7 +118,8 @@ const walkEntries = Effect.fn("Goals.walkPacketEntries")(function* (root: string
   let files = A.empty<PacketSnapshotFile>();
   for (const entry of A.sort(entries, Order.String)) {
     const entryRelative = relative === "" ? entry : `${relative}/${entry}`;
-    files = A.appendAll(files, yield* walkEntry(root, entryRelative));
+    const walkEntry1 = yield* walkEntry(root, entryRelative);
+    files = A.appendAll(files, walkEntry1);
   }
   return files;
 });
@@ -232,7 +234,7 @@ const seededManifestPayload = (input: {
       status: "pending",
     })),
   };
-  return `${JSON.stringify(document, null, 2)}\n`;
+  return `${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }))(document), identity)}\n`;
 };
 
 const inferArchetype = (files: ReadonlyArray<PacketSnapshotFile>): PhaseArchetype => {

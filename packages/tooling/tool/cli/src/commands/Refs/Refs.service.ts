@@ -277,7 +277,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
     function* (home, checkoutRoot, root) {
       const manifest = yield* readManifest();
       // Refuse redirected links before cloning anything into the reference root.
-      if (O.isSome(yield* fs.readLink(path.join(checkoutRoot, ".repos")).pipe(Effect.option)))
+      const pipe1 = yield* fs.readLink(path.join(checkoutRoot, ".repos")).pipe(Effect.option);
+      if (O.isSome(pipe1))
         return yield* ReferenceWorkspaceError.make({
           path: checkoutRoot,
           message: "Refusing a symlinked .repos directory.",
@@ -355,9 +356,10 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
         );
         reports = HashMap.set(reports, member.name, memberReport);
       }
+      const now2 = yield* DateTime.now;
       const status = RefsRefreshStatus.make({
         schemaVersion: "beep-refs-refresh/v2",
-        timestamp: DateTime.formatIso(yield* DateTime.now),
+        timestamp: DateTime.formatIso(now2),
         root,
         members: A.getSomes(A.map(manifest.members, (member) => HashMap.get(reports, member.name))),
       });
@@ -439,7 +441,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
   const renderTimerUnits: ReferenceWorkspaceShape["renderTimerUnits"] = Effect.fn(
     "ReferenceWorkspace.renderTimerUnits"
   )(function* (home, root, calendar, bunPath) {
-    return yield* renderFor(yield* timerOptions(home, root, calendar, bunPath));
+    const timerOptions3 = yield* timerOptions(home, root, calendar, bunPath);
+    return yield* renderFor(timerOptions3);
   });
   const installFor = Effect.fn("ReferenceWorkspace.installFor")(
     function* (options: RefsTimerOptions) {
@@ -464,7 +467,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
   );
   const installTimer: ReferenceWorkspaceShape["installTimer"] = Effect.fn("ReferenceWorkspace.installTimer")(
     function* (home, root, calendar, bunPath) {
-      return yield* installFor(yield* timerOptions(home, root, calendar, bunPath));
+      const timerOptions4 = yield* timerOptions(home, root, calendar, bunPath);
+      return yield* installFor(timerOptions4);
     }
   );
   const refreshTimer: ReferenceWorkspaceShape["refreshTimer"] = Effect.fn("ReferenceWorkspace.refreshTimer")(

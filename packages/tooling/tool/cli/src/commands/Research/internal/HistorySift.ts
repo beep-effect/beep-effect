@@ -141,7 +141,8 @@ export const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
   const databasePath = yield* catalogDbPath(options.vaultRoot);
   const seen = yield* loadSeenUrls(databasePath);
   const profiles = yield* discoverProfiles(options.browser);
-  const nowMillis = DateTime.toEpochMillis(yield* DateTime.now);
+  const now1 = yield* DateTime.now;
+  const nowMillis = DateTime.toEpochMillis(now1);
   const cutoff = unixSecondsToChromeMicros(nowMillis / 1000 - options.sinceDays * 86_400);
 
   const collection: SiftCollection = {
@@ -162,7 +163,8 @@ export const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
     })
   );
 
-  const capturedAt = DateTime.formatIso(yield* DateTime.now);
+  const now2 = yield* DateTime.now;
+  const capturedAt = DateTime.formatIso(now2);
   const cards: Array<CardPersistRow> = yield* Effect.forEach(
     collection.byUrlNorm.pipe(MutableHashMap.values, A.fromIterable),
     Effect.fnUntraced(function* (candidate) {

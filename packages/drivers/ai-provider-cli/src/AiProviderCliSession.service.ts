@@ -96,7 +96,8 @@ const open = Effect.fn("AiProviderCliSession.open")(
   (profile: ManagedLaunchProfile, observer?: ManagedSessionObserver) =>
     Effect.uninterruptibleMask(
       Effect.fnUntraced(function* (restore) {
-        const scope = yield* Scope.fork(yield* Scope.Scope);
+        const Scope1 = yield* Scope.Scope;
+        const scope = yield* Scope.fork(Scope1);
         const acquire = Effect.gen(function* () {
           const session = yield* openNative(profile, observer);
           if (observer !== undefined)

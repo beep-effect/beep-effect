@@ -208,7 +208,7 @@ const makeSkillFingerprints = Effect.fnUntraced(function* () {
     // and its children listed. None for any other kind of entry.
     const describe = Effect.fnUntraced(function* (relative: string, absolute: string) {
       const link = yield* fs.readLink(absolute).pipe(Effect.option);
-      if (O.isSome(link))
+      if (O.isSome(link)) {
         return O.some({
           entry: SkillTreeEntry.make({
             path: relative,
@@ -218,6 +218,7 @@ const makeSkillFingerprints = Effect.fnUntraced(function* () {
           }),
           children: A.empty<string>(),
         });
+      }
       const info = yield* fs.stat(absolute).pipe(io("Cannot inspect a skill tree entry.", absolute));
       const mode = info.mode & 0o7777;
       if (info.type === "File") {
@@ -239,12 +240,12 @@ const makeSkillFingerprints = Effect.fnUntraced(function* () {
       }
       return true;
     });
-    return (yield* visit(".")) ? O.some(yield* treeDigest(entries)) : O.none<SkillDirectoryDigest>();
+    return (yield* visit(".")) ? yield* Effect.asSome(treeDigest(entries)) : O.none<SkillDirectoryDigest>();
   });
 
   const observe = Effect.fnUntraced(function* (entry: string, kind: SkillPublicationKind) {
-    if (O.isSome(yield* fs.readLink(entry).pipe(Effect.option)))
-      return Observation.cases.foreign.make({ detail: "is a symbolic link" });
+    const pipe1 = yield* fs.readLink(entry).pipe(Effect.option);
+    if (O.isSome(pipe1)) return Observation.cases.foreign.make({ detail: "is a symbolic link" });
     const info = yield* fs.stat(entry).pipe(Effect.option);
     if (O.isNone(info)) return Observation.cases.absent.make({});
     if (kind === "file") {
@@ -255,7 +256,8 @@ const makeSkillFingerprints = Effect.fnUntraced(function* () {
       });
     }
     if (info.value.type !== "Directory") return Observation.cases.foreign.make({ detail: "is not a directory" });
-    return O.match(yield* walk(entry), {
+    const walk2 = yield* walk(entry);
+    return O.match(walk2, {
       onNone: () => Observation.cases.foreign.make({ detail: "holds an entry that is not a file, directory or link" }),
       onSome: (digest) => Observation.cases.present.make({ digest }),
     });
@@ -393,12 +395,13 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
       )
     );
     const { capability } = qualification;
-    if (capability._tag === "unsupported")
+    if (capability._tag === "unsupported") {
       return yield* failure(
         `Atomic exchange unsupported on the target filesystem (${capability.reason}: ${capability.detail}); refusing skill publication before backup.`,
         "exchange-unsupported",
         target
       );
+    }
     return modelsExchangeIdentityKey(qualification.identity);
   });
 
@@ -550,8 +553,9 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
         (sameDigest(observation.digest, publication.staged) ||
           O.exists(publication.preimage, (preimage) => sameDigest(preimage, observation.digest))));
     const staging = yield* observe(publication.staging, publication.kind);
-    if (live.success === "intended" && staging._tag === "present" && !known(staging))
+    if (live.success === "intended" && staging._tag === "present" && !known(staging)) {
       return yield* returnDisplaced(publication, staging.digest.hash);
+    }
     if (!known(staging)) return refuse("foreign-artifact", "The stage holds foreign content.");
     yield* discard(publication.staging);
     yield* Effect.forEach(O.toArray(publication.partial), discard, { discard: true });
@@ -603,10 +607,9 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
     Effect.scoped(
       Effect.gen(function* () {
         if (!(yield* recoveryLock(root, id))) return SkillRecoveryResult.cases.skipped.make({ reason: "lock-held" });
+        const readJournal3 = yield* readJournal(root, `${id}.json`);
         const fresh = O.filter(
-          O.flatMap(yield* readJournal(root, `${id}.json`), (journal) =>
-            O.liftPredicate(journal.publication, isTracked)
-          ),
+          O.flatMap(readJournal3, (journal) => O.liftPredicate(journal.publication, isTracked)),
           (publication) => eligible(publication.state)
         );
         if (O.isNone(fresh)) return SkillRecoveryResult.cases.skipped.make({ reason: "settled" });
@@ -645,15 +648,12 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
     const journals = journalsOf(root);
     if (!(yield* fs.exists(journals).pipe(io("Cannot inspect skill publication journals.", journals))))
       return A.empty<SkillRecoveryReport>();
-    const entries = A.sort(
-      A.filter(
-        yield* fs.readDirectory(journals).pipe(io("Cannot list skill publication journals.", journals)),
-        Str.endsWith(".json")
-      ),
-      Order.String
-    );
-    const decoded = A.getSomes(yield* Effect.forEach(entries, (entry) => readJournal(root, entry)));
-    return A.getSomes(yield* Effect.forEach(decoded, (journal) => recoverJournal(root, journal, scope)));
+    const pipe4 = yield* fs.readDirectory(journals).pipe(io("Cannot list skill publication journals.", journals));
+    const entries = A.sort(A.filter(pipe4, Str.endsWith(".json")), Order.String);
+    const forEach5 = yield* Effect.forEach(entries, (entry) => readJournal(root, entry));
+    const decoded = A.getSomes(forEach5);
+    const forEach6 = yield* Effect.forEach(decoded, (journal) => recoverJournal(root, journal, scope));
+    return A.getSomes(forEach6);
   });
 
   const assertNoDrift = Effect.fnUntraced(function* (
@@ -666,7 +666,9 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
       current._tag === "present"
         ? O.exists(preimage, (digest) => sameDigest(digest, current.digest))
         : current._tag === "absent" && O.isNone(preimage);
-    if (!unchanged) return yield* failure("Skill projection drifted after planning.", "drift", target);
+    if (!unchanged) {
+      return yield* failure("Skill projection drifted after planning.", "drift", target);
+    }
   });
 
   // A publication that fails before its move into place never touched the
@@ -693,12 +695,13 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
         "PlatformError",
         Effect.fnUntraced(function* (error) {
           const occupied = error.reason._tag === "AlreadyExists" || (yield* observe(target, kind))._tag !== "absent";
-          if (occupied)
+          if (occupied) {
             return yield* failure(
               "A competing writer created the skill target; nothing was replaced.",
               "competing-writer",
               target
             );
+          }
           return yield* SkillPublicationError.make({
             message: `Cannot create the skill target (${error.reason._tag}): ${error.message}`,
             target,
@@ -725,7 +728,7 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
     }
   ) {
     const { kind, preimage, staged, target } = request;
-    const filesystem = O.isSome(preimage) ? O.some(yield* requireExchange(target)) : O.none<string>();
+    const filesystem = O.isSome(preimage) ? yield* Effect.asSome(requireExchange(target)) : O.none<string>();
     const backups = backupsOf(root);
     yield* fs
       .makeDirectory(journalsOf(root), { recursive: true, mode: 0o700 })
@@ -788,12 +791,13 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
             );
           }
           const live = yield* observe(target, kind);
-          if (live._tag !== "present" || !sameDigest(live.digest, staged))
+          if (live._tag !== "present" || !sameDigest(live.digest, staged)) {
             return yield* failure(
               "Skill target changed after replacement; recovery state retained.",
               undefined,
               target
             );
+          }
           yield* advance(ModelsPublicationState.cases.verified.make({}));
         })
       );
@@ -825,8 +829,9 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
     for (const file of files) {
       const destination = path.resolve(partial, file.path);
       const relative = path.relative(partial, destination);
-      if (Str.isEmpty(relative) || path.isAbsolute(relative) || Str.startsWith("..")(relative))
+      if (Str.isEmpty(relative) || path.isAbsolute(relative) || Str.startsWith("..")(relative)) {
         return yield* failure("Refusing a remote skill file outside its staged tree.", undefined, target);
+      }
       yield* fs.makeDirectory(path.dirname(destination), { recursive: true }).pipe(stageError);
       yield* fs.writeFile(destination, asArrayBufferView(file.bytes), { flag: "wx" }).pipe(stageError);
       yield* fs.chmod(destination, plannedFileMode).pipe(stageError);
@@ -868,12 +873,13 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
     yield* fs.rename(partial, staging).pipe(io("Cannot publish staged remote skill.", target));
     yield* ledger.syncDirectory(path.dirname(target));
     const written = yield* observe(staging, "directory");
-    if (written._tag !== "present" || !sameDigest(written.digest, staged))
+    if (written._tag !== "present" || !sameDigest(written.digest, staged)) {
       return yield* failure(
         `Staged skill tree differs from the planned tree${stagedTreeMismatch(written, staged)}.`,
         undefined,
         target
       );
+    }
   });
 
   // What a publication replaces: none when the target already holds the
@@ -884,8 +890,9 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
     staged: SkillContentDigest
   ) {
     const current = yield* observe(target, kind);
-    if (current._tag === "foreign")
+    if (current._tag === "foreign") {
       return yield* failure(`Refusing a skill ${kind} target that ${current.detail}.`, undefined, target);
+    }
     if (current._tag === "absent") return O.some(O.none<SkillContentDigest>());
     return sameDigest(current.digest, staged) ? O.none() : O.some(O.some(current.digest));
   });
@@ -920,8 +927,9 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
             : plannedFileMode;
           yield* fs.chmod(staging, mode & 0o7777).pipe(io("Cannot preserve projection permissions.", target));
           const written = yield* observe(staging, "file");
-          if (written._tag !== "present" || !sameDigest(written.digest, staged))
+          if (written._tag !== "present" || !sameDigest(written.digest, staged)) {
             return yield* failure("Staged skill projection differs from the planned content.", undefined, target);
+          }
         }),
       });
     }
@@ -1021,6 +1029,6 @@ export const skillTreeDigest = Effect.fn("SkillPublisher.treeDigest")(function* 
   const info = yield* fs.stat(directory).pipe(Effect.option);
   const isTree =
     O.exists(info, (entry) => entry.type === "Directory") &&
-    O.isNone(yield* fs.readLink(directory).pipe(Effect.option));
+    (yield* Effect.map(fs.readLink(directory).pipe(Effect.option), O.isNone));
   return isTree ? yield* walk(directory) : O.none<SkillDirectoryDigest>();
 });

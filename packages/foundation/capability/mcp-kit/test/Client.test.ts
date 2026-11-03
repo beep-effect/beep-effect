@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 /**
  * `@beep/mcp-kit/client`: wire helpers, the event-stream unwrap, and the two
  * protocol layers driven against the fixture host over HTTP and stdio.
@@ -45,6 +46,7 @@ import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as Queue from "effect/Queue";
+import * as Result from "effect/Result";
 import * as RpcClient from "effect/rpc/RpcClient";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -160,7 +162,10 @@ describe("layerProtocolHttp", () => {
     Effect.map(
       request.body._tag === "Uint8Array" ? Effect.succeed(request.body.body) : Effect.die("unexpected body"),
       (bytes) => {
-        const frame = JSON.parse(new TextDecoder().decode(bytes)) as { readonly id: number; readonly method: string };
+        const frame = Result.getOrThrowWith(
+          S.decodeResult(S.fromJsonString(S.Unknown))(new TextDecoder().decode(bytes)),
+          identity
+        ) as { readonly id: number; readonly method: string };
         const events = [
           { jsonrpc: "2.0", method: "notifications/progress", params: { progressToken: 1, progress: 1 } },
           {
@@ -176,7 +181,11 @@ describe("layerProtocolHttp", () => {
           request,
           new Response(
             A.join(
-              A.map(events, (event) => `data: ${JSON.stringify(event)}\n\n`),
+              A.map(
+                events,
+                (event) =>
+                  `data: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(event), identity)}\n\n`
+              ),
               ""
             ),
             {
@@ -221,7 +230,8 @@ describe("layerProtocolHttp", () => {
             sent.method === "server/discover"
               ? JsonRpcMessage.make({ id, result: { supportedVersions: ["2026-07-28"], capabilities: {} } })
               : JsonRpcMessage.make({ id, error: { code: -32603, message: "host said no" } });
-          return HttpClientResponse.fromWeb(request, new Response(yield* encodeFrameBody(body), { status: 200 }));
+          const encodedFrameBody = yield* encodeFrameBody(body);
+          return HttpClientResponse.fromWeb(request, new Response(encodedFrameBody, { status: 200 }));
         })
       );
       const protocol = yield* Layer.build(
@@ -328,7 +338,8 @@ describe("layerProtocolNdjson", () => {
       const second = yield* Queue.take(written);
       assert.include(second, '"method":"tools/list"');
       yield* Fiber.interrupt(echo);
-      assert.isFalse(yield* Deferred.isDone(answered));
+      const isDone1 = yield* Deferred.isDone(answered);
+      assert.isFalse(isDone1);
     })
   );
 });
@@ -341,7 +352,13 @@ describe("layerProtocolHttp headers", () => {
       // RpcClient allocated for this call.
       const recordingClient = HttpClient.make((request) => {
         seen.push(request.headers);
-        const sent = request.body._tag === "Uint8Array" ? JSON.parse(new TextDecoder().decode(request.body.body)) : {};
+        const sent =
+          request.body._tag === "Uint8Array"
+            ? Result.getOrThrowWith(
+                S.decodeResult(S.fromJsonString(S.Unknown))(new TextDecoder().decode(request.body.body)),
+                identity
+              )
+            : {};
         const frame = JsonRpcMessage.make({
           id: (sent as { readonly id: number }).id,
           result: { supportedVersions: ["2026-07-28"], capabilities: {} },
@@ -349,7 +366,10 @@ describe("layerProtocolHttp headers", () => {
         return Effect.succeed(
           HttpClientResponse.fromWeb(
             request,
-            new Response(JSON.stringify(frame), { status: 200, headers: { "content-type": "application/json" } })
+            new Response(Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(frame), identity), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            })
           )
         );
       });

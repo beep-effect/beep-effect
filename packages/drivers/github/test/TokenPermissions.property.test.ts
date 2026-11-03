@@ -24,7 +24,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -50,9 +51,10 @@ it.effect.prop(
       assert.deepStrictEqual(parsed.granted, R.filter(input, S.is(PermissionLevel)));
       assert.deepStrictEqual(TokenPermissions.fromGitHub(parsed.granted).granted, parsed.granted);
       const json = S.fromJsonString(GitHubPermissions);
-      const reparsed = TokenPermissions.fromGitHub(
-        yield* S.decodeEffect(json)(yield* S.encodeEffect(json)(parsed.granted))
-      );
+      const argument = S.decodeEffect(json);
+      const value3 = yield* S.encodeEffect(json)(parsed.granted);
+      const value2 = yield* argument(value3);
+      const reparsed = TokenPermissions.fromGitHub(value2);
       assert.isTrue(S.toEquivalence(TokenPermissions)(reparsed, parsed));
       assert.strictEqual(R.has(reparsed.granted, "__proto__"), true);
       assert.deepStrictEqual(R.get(reparsed.granted, "__proto__"), O.some("admin"));

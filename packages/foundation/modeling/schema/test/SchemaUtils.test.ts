@@ -23,9 +23,12 @@ describe("BoolKeyDefaultFalse and BoolKeyDefaultTrue", () => {
   it.effect(
     "default missing keys on decode and encode the decoded booleans",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeBoolKeySettingsEffect({})).toEqual({ visible: false, enabled: true });
-      expect(yield* decodeBoolKeySettingsEffect({ visible: true })).toEqual({ visible: true, enabled: true });
-      expect(yield* encodeBoolKeySettingsEffect({ visible: false, enabled: true })).toEqual({
+      const decodedBoolKeySettingsEffect = yield* decodeBoolKeySettingsEffect({});
+      expect(decodedBoolKeySettingsEffect).toEqual({ visible: false, enabled: true });
+      const decodedBoolKeySettingsEffect1 = yield* decodeBoolKeySettingsEffect({ visible: true });
+      expect(decodedBoolKeySettingsEffect1).toEqual({ visible: true, enabled: true });
+      const encodedBoolKeySettingsEffect = yield* encodeBoolKeySettingsEffect({ visible: false, enabled: true });
+      expect(encodedBoolKeySettingsEffect).toEqual({
         visible: false,
         enabled: true,
       });

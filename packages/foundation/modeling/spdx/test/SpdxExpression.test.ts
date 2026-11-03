@@ -16,6 +16,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -106,20 +107,23 @@ describe("SpdxExpression", () => {
     it(`validates ${s} synchronously`, () => assert.isTrue(isValidExpression(s)));
   }
   for (const s of INVALID) {
-    it.effect(`rejects ${JSON.stringify(s)} as a typed error`, () =>
-      Effect.gen(function* () {
-        const exit = yield* Effect.exit(SpdxExpression.parse(s));
-        const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
-        // Preserve runtime tracing metadata while checking the expected typed failure.
-        assertExitFailure(
-          exit,
-          Cause.annotate(Cause.fail(InvalidSpdxExpressionError.make({ input: s })), Cause.annotations(cause))
-        );
-        // discriminate a typed failure from a defect
-        assert.isFalse(Cause.hasDies(exit.cause));
-      })
+    it.effect(
+      `rejects ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(s), identity)} as a typed error`,
+      () =>
+        Effect.gen(function* () {
+          const exit = yield* Effect.exit(SpdxExpression.parse(s));
+          const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
+          // Preserve runtime tracing metadata while checking the expected typed failure.
+          assertExitFailure(
+            exit,
+            Cause.annotate(Cause.fail(InvalidSpdxExpressionError.make({ input: s })), Cause.annotations(cause))
+          );
+          // discriminate a typed failure from a defect
+          assert.isFalse(Cause.hasDies(exit.cause));
+        })
     );
-    it(`invalidates ${JSON.stringify(s)} synchronously`, () => assert.isFalse(isValidExpression(s)));
+    it(`invalidates ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(s), identity)} synchronously`, () =>
+      assert.isFalse(isValidExpression(s)));
   }
   it.effect("fails invalid input with the typed InvalidSpdxExpressionError", () =>
     Effect.gen(function* () {

@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The re-parse equivalence property — what "canonical stringify" means
 // operationally: for EVERY vendored conformance example, parsing the
 // example, stringifying the tree and parsing the emission again must yield a
@@ -20,6 +21,8 @@
 import { parseBlocks } from "@beep/markdown/internal/blockParser";
 import { stringifyTree } from "@beep/markdown/internal/stringify";
 import { assert, describe, it } from "@effect/vitest";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { loadGfmExtensionsExamples, loadGfmSpecExtensionExamples, loadSpecExamples } from "../support/corpus.ts";
 import { renderHtml } from "../support/htmlWriter.ts";
@@ -57,7 +60,7 @@ const runCorpus = (
         assert.strictEqual(
           after,
           before,
-          `stringify round-trip diverged.\nsource:  ${JSON.stringify(example.markdown)}\nemitted: ${JSON.stringify(emitted)}`
+          `stringify round-trip diverged.\nsource:  ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(example.markdown), identity)}\nemitted: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(emitted), identity)}`
         );
       });
     }

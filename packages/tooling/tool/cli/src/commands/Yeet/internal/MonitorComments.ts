@@ -1588,7 +1588,8 @@ const seedCommentWatermark = Effect.fnUntraced(function* (
   const cursor = YeetMonitorCommentCursor.make({ createdAt: windowStart, id: 0 });
   const start = YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor, reviewBody: cursor });
   if (YeetMonitorCommentConsumer.is.shared(consumer)) return start;
-  return mergeWatermarks(yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber), start);
+  const loadedYeetMonitorCommentWatermark = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
+  return mergeWatermarks(loadedYeetMonitorCommentWatermark, start);
 });
 
 /**
@@ -1858,7 +1859,8 @@ export const replayYeetMonitorComments = Effect.fn("Yeet.replayMonitorComments")
 > {
   const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber, consumer);
   const watermarkRef = yield* openYeetMonitorCommentStream(context, pullRequestNumber, consumer);
-  const since = earliestWatermarkAt(yield* Ref.get(watermarkRef));
+  const got = yield* Ref.get(watermarkRef);
+  const since = earliestWatermarkAt(got);
   if (O.isNone(persisted)) {
     return yield* Console.log(renderYeetMonitorCommentReplayStart(pullRequestNumber, since));
   }

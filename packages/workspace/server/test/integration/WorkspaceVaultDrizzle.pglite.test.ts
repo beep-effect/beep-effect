@@ -58,8 +58,16 @@ if (!shouldRunPgliteIntegration) {
 
           // The first call inserts the row at version 1; the move updates one
           // column and must still advance the optimistic token.
-          yield* store.setVaultRoot(yield* decodeSetWorkspaceVaultInput({ vaultRootPath: first, workspaceId: 9 }));
-          yield* store.setVaultRoot(yield* decodeSetWorkspaceVaultInput({ vaultRootPath: second, workspaceId: 9 }));
+          const decodedSetWorkspaceVaultInput = yield* decodeSetWorkspaceVaultInput({
+            vaultRootPath: first,
+            workspaceId: 9,
+          });
+          yield* store.setVaultRoot(decodedSetWorkspaceVaultInput);
+          const decodedSetWorkspaceVaultInput1 = yield* decodeSetWorkspaceVaultInput({
+            vaultRootPath: second,
+            workspaceId: 9,
+          });
+          yield* store.setVaultRoot(decodedSetWorkspaceVaultInput1);
 
           const rows = yield* db
             .select({ rowVersion: DbSchema.workspace.rowVersion, vaultRootPath: DbSchema.workspace.vaultRootPath })

@@ -981,7 +981,8 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     );
     return { duckCounts, graph };
   }).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath: duckDbPath })));
-  const builtAt = DateTime.formatIso(yield* DateTime.now);
+  const now1 = yield* DateTime.now;
+  const builtAt = DateTime.formatIso(now1);
   const counts = PracticeKgCounts.make({
     documents: S.Natural.make(duckCounts.documents),
     edges: S.Natural.make(A.length(graph.edges)),

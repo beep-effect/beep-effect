@@ -20,7 +20,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(CompileAndExpandOptions)(value);
       const decoded = yield* S.decodeEffect(CompileAndExpandOptions)(encoded);
       assertTrue(S.toEquivalence(CompileAndExpandOptions)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(CompileAndExpandOptions)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(CompileAndExpandOptions)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );
@@ -35,7 +36,8 @@ it.effect.prop(
       assertTrue(S.toEquivalence(GlobExpansionError)(decoded, value));
       assert.strictEqual(decoded.stage, value.stage);
       assert.strictEqual(decoded.message, value.message);
-      assert.deepStrictEqual(yield* S.encodeEffect(GlobExpansionError)(decoded), encoded);
+      const value2 = yield* S.encodeEffect(GlobExpansionError)(decoded);
+      assert.deepStrictEqual(value2, encoded);
     }),
   runs
 );
@@ -68,7 +70,8 @@ it.layer(
         );
         const actual = yield* compileAndExpand(source, { cwd: "/repo", glob });
         assert.deepStrictEqual(actual, expected);
-        assert.deepStrictEqual(yield* compileAndExpand({ cwd: "/repo", glob })(source), actual);
+        const value3 = yield* compileAndExpand({ cwd: "/repo", glob })(source);
+        assert.deepStrictEqual(value3, actual);
       }),
     runs
   );

@@ -22,7 +22,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assert.isTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -70,7 +71,8 @@ for (const dialect of ["commonmark", "gfm"] as const) {
           normalizeHtml(renderHtml(decoded, { gfm: dialect === "gfm" })),
           normalizeHtml(renderHtml(root, { gfm: dialect === "gfm" }))
         );
-        assert.strictEqual(yield* S.encodeEffect(codec)(decoded), encoded);
+        const value2 = yield* S.encodeEffect(codec)(decoded);
+        assert.strictEqual(value2, encoded);
       }),
     runs
   );
@@ -91,7 +93,8 @@ it.effect.prop(
         normalizeHtml(renderHtml(decoded, { gfm: true })),
         normalizeHtml(renderHtml(root, { gfm: true }))
       );
-      assert.strictEqual(yield* S.encodeEffect(defaultCodec)(decoded), encoded);
+      const value3 = yield* S.encodeEffect(defaultCodec)(decoded);
+      assert.strictEqual(value3, encoded);
     }),
   runs
 );
@@ -105,7 +108,8 @@ it.effect.prop(
       const root = yield* Markdown.parse(render(sample), options);
       const formatted = yield* Markdown.stringify(root);
       const reparsed = yield* Markdown.parse(formatted, options);
-      assert.strictEqual(yield* Markdown.stringify(reparsed), formatted);
+      const stringify4 = yield* Markdown.stringify(reparsed);
+      assert.strictEqual(stringify4, formatted);
       assert.strictEqual(
         normalizeHtml(renderHtml(reparsed, { gfm: dialect === "gfm" })),
         normalizeHtml(renderHtml(root, { gfm: dialect === "gfm" }))
@@ -130,7 +134,8 @@ it.effect.prop(
       const reparsed = Root.make({
         children: [Paragraph.make({ children: yield* Markdown.parsePhrasing(formatted, options) })],
       });
-      assert.strictEqual(yield* Markdown.stringify(reparsed), formatted);
+      const stringify5 = yield* Markdown.stringify(reparsed);
+      assert.strictEqual(stringify5, formatted);
       assert.strictEqual(
         normalizeHtml(renderHtml(reparsed, { gfm: dialect === "gfm" })),
         normalizeHtml(renderHtml(root, { gfm: dialect === "gfm" }))

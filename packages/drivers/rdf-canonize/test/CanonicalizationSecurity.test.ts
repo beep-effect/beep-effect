@@ -95,12 +95,11 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
         );
         canonizeMock.mockImplementation(actual.canonize);
         const service = yield* CanonicalizationService;
-        yield* service.canonicalize(
-          yield* decodeCanonicalizeDatasetRequest({
-            algorithm: "rdfc-1.0",
-            dataset: yield* encodeDataset(dataset),
-          })
-        );
+        const decodedCanonicalizeDatasetRequest = yield* decodeCanonicalizeDatasetRequest({
+          algorithm: "rdfc-1.0",
+          dataset: yield* encodeDataset(dataset),
+        });
+        yield* service.canonicalize(decodedCanonicalizeDatasetRequest);
         expect(canonizeMock).toHaveBeenCalledTimes(1);
         const call = canonizeMock.mock.calls[0];
         expect(call).toBeDefined();
@@ -130,12 +129,11 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
     it.effect("canonicalizes lexical requests without changing result encoded shape", () =>
       Effect.gen(function* () {
         const service = yield* CanonicalizationService;
-        const result = yield* service.canonicalize(
-          yield* decodeCanonicalizeDatasetRequest({
-            algorithm: "lexical-sort-v1",
-            dataset: yield* encodeDataset(dataset),
-          })
-        );
+        const decodedCanonicalizeDatasetRequest1 = yield* decodeCanonicalizeDatasetRequest({
+          algorithm: "lexical-sort-v1",
+          dataset: yield* encodeDataset(dataset),
+        });
+        const result = yield* service.canonicalize(decodedCanonicalizeDatasetRequest1);
         yield* expectEncodedRoundTrip(CanonicalDatasetResult, result);
         expect(result.canonicalText).toContain("<https://example.com/people/alice>");
       })
@@ -153,7 +151,8 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
         Effect.gen(function* () {
           const encoded = yield* encodeCanonicalizeDatasetRequest(request);
           const decoded = yield* decodeCanonicalizeDatasetRequest(encoded);
-          expect(yield* encodeCanonicalizeDatasetRequest(decoded)).toEqual(encoded);
+          const encodedCanonicalizeDatasetRequest = yield* encodeCanonicalizeDatasetRequest(decoded);
+          expect(encodedCanonicalizeDatasetRequest).toEqual(encoded);
         }),
       { arbitrary: fcRuns(5), timeout: 30000 }
     );

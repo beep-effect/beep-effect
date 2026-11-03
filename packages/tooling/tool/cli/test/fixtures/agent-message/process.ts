@@ -81,7 +81,8 @@ const program = Effect.scoped(
       const input = yield* Config.String("BEEP_MESSAGE_FIXTURE_ENVELOPE");
       const request = yield* fs.readFileString(input).pipe(Effect.flatMap(decodeAmbiguityResolutionJson));
       const receipt = yield* store.resolveAmbiguity(request, 202);
-      yield* writeCheckpoint(checkpoint, yield* encodeReceiptJson(receipt));
+      const encodedReceiptJson = yield* encodeReceiptJson(receipt);
+      yield* writeCheckpoint(checkpoint, encodedReceiptJson);
       return yield* Effect.never;
     }
     if (stage === "accept") {

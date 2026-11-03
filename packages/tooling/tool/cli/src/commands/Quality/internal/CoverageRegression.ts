@@ -18,7 +18,7 @@ import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, flow, pipe } from "effect/Function";
+import { dual, flow, identity, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
 import * as Match from "effect/Match";
@@ -2287,14 +2287,13 @@ const readPreviousBaseline = Effect.fn("CoverageRegression.readPreviousBaseline"
     return O.none();
   }
 
-  return O.some(
-    yield* readArtifact({
-      path: baselinePath,
-      schema: CoverageRegressionBaselineDocument,
-      onReadError: baselineReadError,
-      onDecodeError: baselineDecodeError,
-    })
-  );
+  const readArtifact1 = yield* readArtifact({
+    path: baselinePath,
+    schema: CoverageRegressionBaselineDocument,
+    onReadError: baselineReadError,
+    onDecodeError: baselineDecodeError,
+  });
+  return O.some(readArtifact1);
 });
 
 const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* (
@@ -2674,15 +2673,17 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     // run replaced every row of every package it touched — including files the
     // change set never went near.
     const writePlan = O.isSome(currentPrevious)
-      ? O.some(
-          planCoverageBaselineWrite(
-            currentPrevious.value.packages,
-            entries,
-            yield* collectCoverageBaselineChangeSet(repoRoot),
-            CoverageBaselineWriteOptions.make({
-              replaceAll,
-              carryUnmeasured: scoped,
-            })
+      ? yield* Effect.asSome(
+          Effect.map(collectCoverageBaselineChangeSet(repoRoot), (value) =>
+            planCoverageBaselineWrite(
+              currentPrevious.value.packages,
+              entries,
+              value,
+              CoverageBaselineWriteOptions.make({
+                replaceAll,
+                carryUnmeasured: scoped,
+              })
+            )
           )
         )
       : O.none<CoverageBaselineWritePlan>();
@@ -3953,10 +3954,14 @@ export const renderCoverageMeasuredRowProposals = (result: CoverageComparisonRes
       ...A.map(
         proposals,
         (proposal) =>
-          `  ${JSON.stringify(proposal.packageName)} ${O.match(proposal.filePath, {
-            onNone: () => "totals",
-            onSome: (filePath) => `files[${JSON.stringify(filePath)}]`,
-          })}: ${Result.match(encodeCoverageFileBaseline(proposal.row), {
+          `  ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(proposal.packageName), identity)} ${O.match(
+            proposal.filePath,
+            {
+              onNone: () => "totals",
+              onSome: (filePath) =>
+                `files[${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(filePath), identity)}]`,
+            }
+          )}: ${Result.match(encodeCoverageFileBaseline(proposal.row), {
             onFailure: (error) => `[cannot encode measured row: ${error.message}]`,
             onSuccess: (encoded) => encoded,
           })}`

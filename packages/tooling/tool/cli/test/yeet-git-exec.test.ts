@@ -119,7 +119,8 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
       const { origin, work, git, commit } = yield* fixture();
       const c1 = yield* commit(origin, "next.txt");
       yield* refreshBaseRef(work, "origin/main");
-      expect(yield* git(work, "rev-parse", "refs/remotes/origin/main")).toBe(c1);
+      const git1 = yield* git(work, "rev-parse", "refs/remotes/origin/main");
+      expect(git1).toBe(c1);
     })
   );
 
@@ -171,8 +172,10 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
   it.effect("currentYeetBranch and currentCommitSha read the checkout", () =>
     Effect.gen(function* () {
       const { c0, context } = yield* fixture();
-      expect(yield* currentYeetBranch(context.repoRoot)).toBe("feature");
-      expect(yield* currentCommitSha(context)).toBe(c0);
+      const currentYeetBranch2 = yield* currentYeetBranch(context.repoRoot);
+      expect(currentYeetBranch2).toBe("feature");
+      const currentCommitSha3 = yield* currentCommitSha(context);
+      expect(currentCommitSha3).toBe(c0);
     })
   );
 
@@ -224,12 +227,8 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
       yield* git(work, "add", "staged.txt");
       yield* fs.writeFileString(path.join(work, "base.txt"), "edited\n");
       yield* fs.writeFileString(path.join(work, "untracked.txt"), "untracked\n");
-      expect(yield* collectYeetGateInputPaths(context)).toEqual([
-        "base.txt",
-        "committed.txt",
-        "staged.txt",
-        "untracked.txt",
-      ]);
+      const collectYeetGateInputPaths4 = yield* collectYeetGateInputPaths(context);
+      expect(collectYeetGateInputPaths4).toEqual(["base.txt", "committed.txt", "staged.txt", "untracked.txt"]);
     })
   );
 
@@ -271,7 +270,8 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
     Effect.gen(function* () {
       const { work, context, commit } = yield* fixture();
       yield* commit(work, "bun.lock");
-      expect(yield* lockfileChangedSinceBase(context)).toBe(true);
+      const lockfileChangedSinceBase5 = yield* lockfileChangedSinceBase(context);
+      expect(lockfileChangedSinceBase5).toBe(true);
     })
   );
 
@@ -279,14 +279,18 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
     Effect.gen(function* () {
       const { work, context, commit } = yield* fixture();
       yield* commit(work, "other.txt");
-      expect(yield* lockfileChangedSinceBase(context)).toBe(false);
+      const lockfileChangedSinceBase6 = yield* lockfileChangedSinceBase(context);
+      expect(lockfileChangedSinceBase6).toBe(false);
     })
   );
 
   it.effect("lockfileChangedSinceBase is false when the diff cannot run", () =>
     Effect.gen(function* () {
       const { context } = yield* fixture();
-      expect(yield* lockfileChangedSinceBase(RepoRunContext.make({ ...context, base: "nope" }))).toBe(false);
+      const lockfileChangedSinceBase7 = yield* lockfileChangedSinceBase(
+        RepoRunContext.make({ ...context, base: "nope" })
+      );
+      expect(lockfileChangedSinceBase7).toBe(false);
     })
   );
 
@@ -294,7 +298,8 @@ it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a 
     Effect.gen(function* () {
       const { work, c0 } = yield* fixture();
       const git = yield* patientGit;
-      expect(yield* git.revParse(work, "HEAD")).toBe(c0);
+      const revParse8 = yield* git.revParse(work, "HEAD");
+      expect(revParse8).toBe(c0);
     })
   );
 

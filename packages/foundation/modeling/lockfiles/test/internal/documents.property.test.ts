@@ -19,7 +19,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
         assertTrue(S.toEquivalence(schema)(decoded, value));
-        assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+        const value1 = yield* S.encodeEffect(schema)(decoded);
+        assert.deepStrictEqual(value1, encoded);
       }),
     runs
   );
@@ -38,9 +39,12 @@ it.effect.prop(
       assert.deepStrictEqual(selected.document, value);
       assert.deepStrictEqual(stream.main, value);
       const canonical = yield* Yaml.stringify(selected.document);
-      assert.strictEqual(yield* Yaml.stringify((yield* selectSoleDocument(canonical)).document), canonical);
-      assert.deepStrictEqual(yield* selectSoleDocument(canonical), selected);
-      assert.deepStrictEqual(yield* splitPnpmStream(canonical), stream);
+      const stringify2 = yield* Yaml.stringify((yield* selectSoleDocument(canonical)).document);
+      assert.strictEqual(stringify2, canonical);
+      const selectSoleDocument3 = yield* selectSoleDocument(canonical);
+      assert.deepStrictEqual(selectSoleDocument3, selected);
+      const splitPnpmStream4 = yield* splitPnpmStream(canonical);
+      assert.deepStrictEqual(splitPnpmStream4, stream);
     }),
   runs
 );
@@ -60,7 +64,8 @@ it.effect.prop(
       assert.strictEqual(canonical, text);
       const reparsed = yield* splitPnpmStream(canonical);
       assert.deepStrictEqual(reparsed, split);
-      assert.strictEqual(yield* render(reparsed.preamble, reparsed.main), canonical);
+      const render5 = yield* render(reparsed.preamble, reparsed.main);
+      assert.strictEqual(render5, canonical);
     }),
   runs
 );

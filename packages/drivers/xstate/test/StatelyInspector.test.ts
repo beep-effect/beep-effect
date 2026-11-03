@@ -8,9 +8,10 @@ import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import { Deployments, deploymentsSucceeding, releaseMachine } from "./fixtures/Release.machine.ts";
@@ -34,7 +35,14 @@ const makeRecordingCreate = (recorder: Recorder): CreateInspector => {
   const transport: Transport = {
     ready: true,
     send: (message) => {
-      recorder.messages.push(JSON.parse(JSON.stringify(message)) as RecordedMessage);
+      recorder.messages.push(
+        Result.getOrThrowWith(
+          S.decodeResult(S.fromJsonString(S.Unknown))(
+            Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(message), identity)
+          ),
+          identity
+        ) as RecordedMessage
+      );
     },
     onMessage: () => () => {},
     onReady: (handler) => {
@@ -93,7 +101,8 @@ describe("StatelyInspector", () => {
         );
         expect(snapshotValues).toContain("deploying");
         expect(snapshotValues).toContain("deployed");
-        expect(yield* S.encodeUnknownEffect(UnknownJson)(recorder.messages)).not.toContain("sensitive-reviewer-marker");
+        const value1 = yield* S.encodeUnknownEffect(UnknownJson)(recorder.messages);
+        expect(value1).not.toContain("sensitive-reviewer-marker");
         expect(recorder.destroyed).toBe(0);
       }).pipe(Effect.provideService(Deployments, deploymentsSucceeding))
     );

@@ -114,10 +114,10 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
       const jobs = A.flatMap(GOLD_SUBSETS, (subset) =>
         A.map(reference.subsets[subset], (paperId) => Tuple.make(paperId, subset))
       );
-      const files = A.sort(
-        yield* Effect.forEach(jobs, ([paperId, subset]) => readCoveredFile(paperId, subset), { concurrency: 4 }),
-        GoldArtifactSemantics.fileOrder
-      );
+      const forEach1 = yield* Effect.forEach(jobs, ([paperId, subset]) => readCoveredFile(paperId, subset), {
+        concurrency: 4,
+      });
+      const files = A.sort(forEach1, GoldArtifactSemantics.fileOrder);
       const digest = yield* contentDigest(S.Array(GoldFileEncoded))(files).pipe(
         Effect.provideService(Digest.Digest, crypto),
         Effect.mapError(() => unavailable("digest-failed", "The covered gold-v1 files could not be hashed."))

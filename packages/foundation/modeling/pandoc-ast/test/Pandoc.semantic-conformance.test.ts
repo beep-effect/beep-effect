@@ -67,7 +67,8 @@ describe("Pandoc current constructor semantic conformance", () => {
         "definitionList",
         "figure",
       ]);
-      expect(yield* encodePandocJson(semantic)).toEqual(wire);
+      const encodedPandocJson = yield* encodePandocJson(semantic);
+      expect(encodedPandocJson).toEqual(wire);
     })
   );
 
@@ -123,7 +124,8 @@ describe("Pandoc current constructor semantic conformance", () => {
         children: [{ format: "HTML", text: "<em>Exact</em>" }],
       });
       expect(semantic.blocks[1]).toMatchObject({ format: "LaTeX", text: "\\newpage" });
-      expect(yield* encodePandocJson(semantic)).toEqual(wire);
+      const encodedPandocJson1 = yield* encodePandocJson(semantic);
+      expect(encodedPandocJson1).toEqual(wire);
     })
   );
 
@@ -288,7 +290,8 @@ describe("Pandoc conformance facade", () => {
       if (result._tag === "invalid") {
         expect(result.issues).toEqual([]);
         assertNone(result.wire);
-        expect(yield* encodePandocConformanceResult(result)).not.toHaveProperty("wire");
+        const encodedPandocConformanceResult = yield* encodePandocConformanceResult(result);
+        expect(encodedPandocConformanceResult).not.toHaveProperty("wire");
       }
     })
   );

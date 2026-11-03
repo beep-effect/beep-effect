@@ -129,8 +129,10 @@ describe("the one CI rule", () => {
           Effect.provideService(CurrentRuntimeEnv, RuntimeEnv.fromRecord(snapshot)),
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(ambient))
         );
-      assertTrue(yield* withSnapshot({ CI: "1" }, {}));
-      assertFalse(yield* withSnapshot({}, { CI: "true" }));
+      const withSnapshot1 = yield* withSnapshot({ CI: "1" }, {});
+      assertTrue(withSnapshot1);
+      const withSnapshot2 = yield* withSnapshot({}, { CI: "true" });
+      assertFalse(withSnapshot2);
     })
   );
 

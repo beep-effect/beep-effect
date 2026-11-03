@@ -142,7 +142,8 @@ describe("T3 owned legacy MCP driver", () => {
     "reads owned timeline provenance and pagination with bounded tool arguments",
     Effect.fnUntraced(function* () {
       const fake = yield* fixture(goodTool(observed));
-      expect(yield* fake.t3.read("owned")).toMatchObject(observed);
+      const read1 = yield* fake.t3.read("owned");
+      expect(read1).toMatchObject(observed);
       const frames = yield* Ref.get(fake.frames);
       expect(A.length(frames)).toBe(3);
       assertSome(
@@ -162,7 +163,8 @@ describe("T3 owned legacy MCP driver", () => {
       expect(error.operation).toBe("read");
       expect(error.reason).toBe("identity-mismatch");
       expect(error.submission).toBe("not-submitted");
-      expect(A.length(yield* Ref.get(fake.frames))).toBe(3);
+      const got = yield* Ref.get(fake.frames);
+      expect(A.length(got)).toBe(3);
     })
   );
   for (const { name, result } of [
@@ -181,8 +183,10 @@ describe("T3 owned legacy MCP driver", () => {
         expect(error.operation).toBe("read");
         expect(error.reason).toBe("protocol");
         expect(error.submission).toBe("not-submitted");
-        expect(yield* encodeJson(error)).not.toContain("private");
-        expect(A.length(yield* Ref.get(fake.frames))).toBe(3);
+        const encodedJson = yield* encodeJson(error);
+        expect(encodedJson).not.toContain("private");
+        const got2 = yield* Ref.get(fake.frames);
+        expect(A.length(got2)).toBe(3);
       })
     );
   }
@@ -202,7 +206,8 @@ describe("T3 owned legacy MCP driver", () => {
       const fake = yield* fixture(goodTool(sent));
       const result = yield* fake.t3.sendQueued("owned", "synthetic peer message", "stable-key");
       expect(result.delivery).toBe("queued");
-      const last = A.last(yield* Ref.get(fake.frames));
+      const got3 = yield* Ref.get(fake.frames);
+      const last = A.last(got3);
       assertSome(
         O.map(last, (frame) => frame.params),
         {

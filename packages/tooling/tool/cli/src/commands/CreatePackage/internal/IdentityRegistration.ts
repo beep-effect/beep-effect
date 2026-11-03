@@ -60,7 +60,8 @@ export const IDENTITY_PACKAGES_EXPORT_PATH = ["src", "packages.ts"] as const;
  */
 const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
   const path = yield* Path.Path;
-  const identityWorkspaceDir = HashMap.get(yield* workspaceDirectories(repoRoot), IDENTITY_PACKAGE_NAME);
+  const workspaceDirectories1 = yield* workspaceDirectories(repoRoot);
+  const identityWorkspaceDir = HashMap.get(workspaceDirectories1, IDENTITY_PACKAGE_NAME);
 
   if (O.isNone(identityWorkspaceDir)) {
     return yield* DomainError.make({

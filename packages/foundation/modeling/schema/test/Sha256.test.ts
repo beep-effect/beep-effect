@@ -29,7 +29,8 @@ describe("Sha256Hex", () => {
   it.effect(
     "accepts canonical lowercase digests",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownSha256HexEffect(knownDigest)).toBe(knownDigest);
+      const decodedUnknownSha256HexEffect = yield* decodeUnknownSha256HexEffect(knownDigest);
+      expect(decodedUnknownSha256HexEffect).toBe(knownDigest);
     })
   );
 
@@ -37,7 +38,8 @@ describe("Sha256Hex", () => {
     "derives canonical digest examples from the source schema",
     [arbitrary],
     Effect.fnUntraced(function* ([digest]) {
-      expect(yield* decodeUnknownSha256HexEffect(digest)).toBe(digest);
+      const decodedUnknownSha256HexEffect1 = yield* decodeUnknownSha256HexEffect(digest);
+      expect(decodedUnknownSha256HexEffect1).toBe(digest);
       expect(digest).toHaveLength(64);
       expect(digest).toMatch(/^[0-9a-f]{64}$/);
 
@@ -92,14 +94,16 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("Sha256HexFromBytes", (it) =
     Effect.fnUntraced(function* () {
       const input = new TextEncoder().encode("beep");
 
-      expect(yield* decodeUnknownSha256HexFromBytes(input)).toBe(knownDigest);
+      const decodedUnknownSha256HexFromBytes = yield* decodeUnknownSha256HexFromBytes(input);
+      expect(decodedUnknownSha256HexFromBytes).toBe(knownDigest);
     })
   );
 
   it.effect(
     "hashes empty bytes to the canonical empty SHA-256 digest",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownSha256HexFromBytes(new Uint8Array())).toBe(emptyDigest);
+      const decodedUnknownSha256HexFromBytes2 = yield* decodeUnknownSha256HexFromBytes(new Uint8Array());
+      expect(decodedUnknownSha256HexFromBytes2).toBe(emptyDigest);
     })
   );
 
@@ -117,7 +121,8 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("Sha256HexFromHexBytes", (it
   it.effect(
     "decodes hex-encoded bytes into a canonical lowercase SHA-256 hex digest",
     Effect.fnUntraced(function* () {
-      expect(yield* decodeUnknownSha256HexFromHexBytes("62656570")).toBe(knownDigest);
+      const decodedUnknownSha256HexFromHexBytes = yield* decodeUnknownSha256HexFromHexBytes("62656570");
+      expect(decodedUnknownSha256HexFromHexBytes).toBe(knownDigest);
     })
   );
 

@@ -56,7 +56,9 @@ export const agentMessageAttachT3Command = Command.make(
   Effect.fnUntraced(function* ({ stateDir, profileFile }) {
     const fs = yield* FileSystem.FileSystem;
     yield* requirePrivateAgentPath(profileFile, "File");
-    const profile = yield* S.decodeEffect(ProfileJson)(yield* fs.readFileString(profileFile));
+    const argument = S.decodeEffect(ProfileJson);
+    const readFileString2 = yield* fs.readFileString(profileFile);
+    const profile = yield* argument(readFileString2);
     const configuration = profile.expectedConfiguration;
     const pinnedModel = profile.provider === "codex" ? "gpt-6.1-sol" : "claude-opus-5-5";
     const effortKey = profile.provider === "codex" ? "reasoningEffort" : "effort";
@@ -79,20 +81,20 @@ export const agentMessageAttachT3Command = Command.make(
     yield* requirePrivateAgentPath(profile.oauthCredentialFile, "File");
     yield* requirePrivateAgentPath(profile.grantFile, "File");
     yield* requirePrivateAgentPath(profile.peerExecutable, "File");
-    const bearer = Redacted.make(Str.trim(yield* fs.readFileString(profile.oauthCredentialFile)));
+    const readFileString1 = yield* fs.readFileString(profile.oauthCredentialFile);
+    const bearer = Redacted.make(Str.trim(readFileString1));
     const connection = T3Code.layer(T3CodeConfig.make({ url: profile.url, bearer, timeoutMs: 30000 }));
     return yield* Effect.gen(function* () {
       const connectionContext = yield* Layer.build(connection);
       return yield* Effect.gen(function* () {
         yield* verifyAttachedT3(profile, true);
-        const policyFingerprint = yield* sha256Hex(
-          yield* encodeConfig({
-            configuration,
-            sourceCommit: profile.sourceCommit,
-            serverVersion: profile.serverVersion,
-            artifactDigest: profile.artifactDigest,
-          })
-        );
+        const encodedConfig = yield* encodeConfig({
+          configuration,
+          sourceCommit: profile.sourceCommit,
+          serverVersion: profile.serverVersion,
+          artifactDigest: profile.artifactDigest,
+        });
+        const policyFingerprint = yield* sha256Hex(encodedConfig);
         const binding = yield* S.decodeEffect(EndpointBinding)({
           endpointId: profile.endpointId,
           participantId: profile.participantId,
@@ -127,7 +129,8 @@ export const agentMessageAttachT3Command = Command.make(
         const store = yield* AgentMessageStore;
         yield* store.register(binding);
         const dispatch = yield* makeAttachedT3Dispatch(profile, stateDir);
-        yield* Console.log(yield* encodeBinding(binding));
+        const encodedBinding = yield* encodeBinding(binding);
+        yield* Console.log(encodedBinding);
         return yield* runAgentMessageDispatchLoop(profile.endpointId, profile.ownerId).pipe(
           Effect.provideService(EndpointDispatch, dispatch)
         );

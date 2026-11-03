@@ -307,7 +307,8 @@ const prepareFixture = Effect.fn("CloudBootstrapDeniedHostTest.prepareFixture")(
   yield* fs.writeFileString(path.join(root, "bun.lock"), "fixture lock\n");
   yield* fs.writeFileString(path.join(root, "package.json"), "{}\n");
   yield* fs.writeFileString(path.join(root, "scripts/prune-tsgo-backups.mjs"), "\n");
-  const nodeVersion = Str.trim(yield* fs.readFileString(path.join(root, ".nvmrc")));
+  const readFileString1 = yield* fs.readFileString(path.join(root, ".nvmrc"));
+  const nodeVersion = Str.trim(readFileString1);
   const nodeBin = path.join(root, "node-src", `node-v${nodeVersion}-linux-x64`, "bin");
   yield* fs.makeDirectory(nodeBin, { recursive: true });
   for (const name of ["node", "npm", "npx"]) {
@@ -328,7 +329,8 @@ const prepareFixture = Effect.fn("CloudBootstrapDeniedHostTest.prepareFixture")(
     stdout: "ignore",
     stderr: "inherit",
   });
-  expect(yield* archives.exitCode).toBe(0);
+  const exitCode2 = yield* archives.exitCode;
+  expect(exitCode2).toBe(0);
   return { root, bin, home };
 });
 
@@ -388,9 +390,11 @@ const expectUntouched = Effect.fn("CloudBootstrapDeniedHostTest.expectUntouched"
     path.join(fixture.home, ".bashrc"),
     path.join(fixture.root, "node_modules"),
   ]) {
-    expect(yield* fs.exists(target), target).toBe(false);
+    const exists3 = yield* fs.exists(target);
+    expect(exists3, target).toBe(false);
   }
-  expect(yield* fs.readDirectory(path.join(fixture.root, "cache/beep/cloud-bootstrap"))).toEqual([]);
+  const readDirectory4 = yield* fs.readDirectory(path.join(fixture.root, "cache/beep/cloud-bootstrap"));
+  expect(readDirectory4).toEqual([]);
 });
 
 const remedy = (hosts: string) =>
@@ -457,7 +461,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap require
         denyLate: "nodejs.org",
         denyLateAfter: "github.com",
       });
-      expect(yield* fs.exists(path.join(fixture.root, "failed.github.com"))).toBe(true);
+      const exists5 = yield* fs.exists(path.join(fixture.root, "failed.github.com"));
+      expect(exists5).toBe(true);
       expect(result.exitCode, result.stderr).toBe(78);
       expect(result.stderr).toContain("download or checksum failed");
       expect(result.stderr).toContain(remedy("nodejs.org"));
@@ -535,15 +540,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap require
       const first = yield* runBootstrap(fixture, { bun: "pinned", node: "stale" });
       expect(first.exitCode, first.stderr).toBe(0);
       expect(first.stdout).toContain("ready: bun");
-      const events = A.filter(
-        Str.split("\n")(yield* fs.readFileString(path.join(fixture.root, "events"))),
-        Str.isNonEmpty
-      );
+      const argument = Str.split("\n");
+      const readFileString2 = yield* fs.readFileString(path.join(fixture.root, "events"));
+      const events = A.filter(argument(readFileString2), Str.isNonEmpty);
       expect(events).toContain("curl nodejs.org");
       expect(events).toContain("bun-install");
       expect(events).toContain("bun-run-prepare");
       expect(A.some(events, Str.startsWith("curl github.com"))).toBe(false);
-      expect(yield* fs.exists(path.join(fixture.root, "node_modules/.beep-cloud-bootstrap.lock.sha256"))).toBe(true);
+      const exists6 = yield* fs.exists(path.join(fixture.root, "node_modules/.beep-cloud-bootstrap.lock.sha256"));
+      expect(exists6).toBe(true);
 
       yield* fs.writeFileString(path.join(fixture.root, "events"), "");
       const second = yield* runBootstrap(fixture, { bun: "pinned", node: "stale" });
@@ -568,7 +573,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       const fixture = yield* prepareFixture();
       const result = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned" });
       expect(result.exitCode, result.stderr).toBe(0);
-      expect(yield* readEvents(fixture.root)).not.toContain("fetch ");
+      const readEvents7 = yield* readEvents(fixture.root);
+      expect(readEvents7).not.toContain("fetch ");
       expect(result.stdout).toContain(
         `publication tools: ready (typos ${TYPOS_VERSION}, gitleaks ${GITLEAKS_VERSION})`
       );
@@ -587,7 +593,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
         tool404: "typos",
       });
       expect(result.exitCode, result.stderr).toBe(0);
-      expect(yield* readEvents(fixture.root)).toContain("fetch https://github.com/crate-ci/typos/");
+      const readEvents8 = yield* readEvents(fixture.root);
+      expect(readEvents8).toContain("fetch https://github.com/crate-ci/typos/");
       expect(result.stderr).toMatch(/typos \S+ download or checksum failed \(exit 22\); not installed\./);
       expect(result.stdout).toContain("typos missing");
       expect(result.stderr).toContain(`publication tools: NOT ready (missing typos ${TYPOS_VERSION})`);
@@ -612,7 +619,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
         `fetch https://github.com/gitleaks/gitleaks/releases/download/v${gitleaksVersion}/gitleaks_${gitleaksVersion}_linux_x64.tar.gz`
       );
       for (const tool of ["typos", "gitleaks"]) {
-        expect(yield* fs.exists(path.join(fixture.home, ".bun/bin", tool)), tool).toBe(true);
+        const exists9 = yield* fs.exists(path.join(fixture.home, ".bun/bin", tool));
+        expect(exists9, tool).toBe(true);
       }
       expect(first.stdout).toContain(`publication tools: ready (typos ${typosVersion}, gitleaks ${gitleaksVersion})`);
 
@@ -620,7 +628,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       yield* fs.writeFileString(path.join(fixture.root, "events"), "");
       const second = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", typos: "stale", gitleaks: "stale" });
       expect(second.exitCode, second.stderr).toBe(0);
-      expect(yield* readEvents(fixture.root)).not.toContain("fetch ");
+      const readEvents10 = yield* readEvents(fixture.root);
+      expect(readEvents10).not.toContain("fetch ");
       expect(second.stdout).toContain("publication tools: ready");
     })
   );
@@ -638,7 +647,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       expect(result.stderr).toContain("publication tools: NOT ready");
       expect(result.stdout).not.toContain("publication tools: ready");
       for (const tool of ["typos", "gitleaks"]) {
-        expect(yield* fs.exists(path.join(fixture.home, ".bun/bin", tool)), tool).toBe(false);
+        const exists11 = yield* fs.exists(path.join(fixture.home, ".bun/bin", tool));
+        expect(exists11, tool).toBe(false);
       }
     })
   );
@@ -697,13 +707,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
     const events = yield* readEvents(fixture.root);
     expect(events).toContain("bun-install");
     expect(events).toContain("bun-run-prepare");
-    expect(yield* fs.exists(path.join(fixture.home, ".bashrc"))).toBe(true);
+    const exists12 = yield* fs.exists(path.join(fixture.home, ".bashrc"));
+    expect(exists12).toBe(true);
     expect(result.stdout).toContain("ready: bun");
   });
   const stagedLeftovers = Effect.fn("CloudBootstrapDeniedHostTest.stagedLeftovers")(function* (home: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    return A.filter(yield* fs.readDirectory(path.join(home, ".bun/bin")), Str.startsWith(".typos."));
+    const readDirectory13 = yield* fs.readDirectory(path.join(home, ".bun/bin"));
+    return A.filter(readDirectory13, Str.startsWith(".typos."));
   });
 
   for (const [name, scenario, warning] of [
@@ -719,8 +731,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
         const result = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", ...scenario });
         yield* expectCorePrepared(fixture, result);
         expect(result.stderr).toContain(warning);
-        expect(yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"))).toBe(OLD_TYPOS);
-        expect(yield* stagedLeftovers(fixture.home)).toEqual([]);
+        const readFileString14 = yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"));
+        expect(readFileString14).toBe(OLD_TYPOS);
+        const stagedLeftovers15 = yield* stagedLeftovers(fixture.home);
+        expect(stagedLeftovers15).toEqual([]);
         expect(result.stderr).toContain(`publication tools: NOT ready (missing typos ${TYPOS_VERSION})`);
       })
     );
@@ -755,10 +769,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       });
       yield* expectCorePrepared(fixture, result);
       // The link was attempted on either branch (direct ln or sudo -n ln).
-      expect(yield* readEvents(fixture.root)).toMatch(/^ln -sf \S+\/\.bun\/bin\/typos \/usr\/local\/bin\/typos$/m);
+      const readEvents16 = yield* readEvents(fixture.root);
+      expect(readEvents16).toMatch(/^ln -sf \S+\/\.bun\/bin\/typos \/usr\/local\/bin\/typos$/m);
       expect(result.stderr).toContain("typos: installed in");
       expect(result.stderr).toContain("but the global link failed");
-      expect(yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"))).not.toBe(OLD_TYPOS);
+      const readFileString17 = yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"));
+      expect(readFileString17).not.toBe(OLD_TYPOS);
       expect(result.stdout).toContain("publication tools: ready");
     })
   );
@@ -768,7 +784,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       const fixture = yield* prepareFixture({ fixturePins: true });
       const result = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", typos: "stale", gitleaks: "stale" });
       expect(result.exitCode, result.stderr).toBe(0);
-      const extractions = A.filter(Str.split("\n")(yield* readEvents(fixture.root)), Str.startsWith("tar -xzf"));
+      const argument1 = Str.split("\n");
+      const readEvents3 = yield* readEvents(fixture.root);
+      const extractions = A.filter(argument1(readEvents3), Str.startsWith("tar -xzf"));
       expect(extractions.length).toBe(2);
       for (const line of extractions) {
         expect(line).toContain("--no-same-owner --no-same-permissions");
@@ -794,10 +812,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       expect(result.stderr).toContain("typos: copy into");
       expect(result.stderr).toMatch(/typos: could not remove staged file \S+\/\.typos\.\S+; retrying at exit\./);
       expect(result.stderr).toMatch(/WARN: could not remove staged file \S+\/\.typos\./);
-      expect(yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"))).toBe(OLD_TYPOS);
+      const readFileString18 = yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"));
+      expect(readFileString18).toBe(OLD_TYPOS);
       expect(result.stderr).toContain(`publication tools: NOT ready (missing typos ${TYPOS_VERSION})`);
       // The trap's failed retry did not skip the run-directory cleanup.
-      expect(yield* fs.readDirectory(path.join(fixture.root, "cache/beep/cloud-bootstrap"))).toEqual([]);
+      const readDirectory19 = yield* fs.readDirectory(path.join(fixture.root, "cache/beep/cloud-bootstrap"));
+      expect(readDirectory19).toEqual([]);
     })
   );
 
@@ -812,8 +832,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       const result = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", typos: "stale" });
       yield* expectCorePrepared(fixture, result);
       expect(result.stderr).toContain("typos: rename into");
-      expect(yield* fs.readDirectory(target)).toEqual(["keep"]);
-      expect(yield* stagedLeftovers(fixture.home)).toEqual([]);
+      const readDirectory20 = yield* fs.readDirectory(target);
+      expect(readDirectory20).toEqual(["keep"]);
+      const stagedLeftovers21 = yield* stagedLeftovers(fixture.home);
+      expect(stagedLeftovers21).toEqual([]);
       expect(result.stderr).toContain(`publication tools: NOT ready (missing typos ${TYPOS_VERSION})`);
     })
   );
@@ -829,7 +851,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       yield* fs.symlink(linkedDir, path.join(fixture.home, ".bun/bin/typos"));
       const result = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", typos: "stale" });
       yield* expectCorePrepared(fixture, result);
-      expect(yield* fs.readDirectory(linkedDir)).toEqual([]);
+      const readDirectory22 = yield* fs.readDirectory(linkedDir);
+      expect(readDirectory22).toEqual([]);
       const info = yield* fs.stat(path.join(fixture.home, ".bun/bin/typos"));
       expect(info.type).toBe("File");
       expect(result.stdout).toContain("publication tools: ready");
@@ -851,9 +874,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       expect(result.stderr).toContain("bootstrap-status=143");
       // The EXIT trap, not the rename-failure branch, did the cleanup.
       expect(result.stderr).not.toContain("typos: rename into");
-      expect(yield* stagedLeftovers(fixture.home)).toEqual([]);
-      expect(yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"))).toBe(OLD_TYPOS);
-      expect(yield* fs.readDirectory(path.join(fixture.root, "cache/beep/cloud-bootstrap"))).toEqual([]);
+      const stagedLeftovers23 = yield* stagedLeftovers(fixture.home);
+      expect(stagedLeftovers23).toEqual([]);
+      const readFileString24 = yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"));
+      expect(readFileString24).toBe(OLD_TYPOS);
+      const readDirectory25 = yield* fs.readDirectory(path.join(fixture.root, "cache/beep/cloud-bootstrap"));
+      expect(readDirectory25).toEqual([]);
     })
   );
 });

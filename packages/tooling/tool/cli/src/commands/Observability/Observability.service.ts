@@ -201,7 +201,9 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     const absolute = path.join(repoRoot, relativePath);
     const exists = yield* fs.exists(absolute).pipe(Effect.mapError(failure(relativePath, "Failed to stat file.")));
     const current = exists
-      ? O.some(yield* fs.readFileString(absolute).pipe(Effect.mapError(failure(relativePath, "Failed to read file."))))
+      ? yield* Effect.asSome(
+          fs.readFileString(absolute).pipe(Effect.mapError(failure(relativePath, "Failed to read file.")))
+        )
       : O.none<string>();
     const content = yield* next(current);
     if (O.contains(current, content)) {
@@ -260,7 +262,7 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     scopePaths?: ReadonlyArray<string> | undefined
   ) {
     const scope = O.fromNullishOr(scopePaths).pipe(O.filter(A.isReadonlyArrayNonEmpty));
-    const scoped = O.isSome(scope) ? O.some(yield* resolveScope(scope.value)) : O.none();
+    const scoped = O.isSome(scope) ? yield* Effect.asSome(resolveScope(scope.value)) : O.none();
     const harvested = yield* O.match(scoped, {
       onNone: () => harvest,
       onSome: ({ includes }) => harvestFiles(includes),

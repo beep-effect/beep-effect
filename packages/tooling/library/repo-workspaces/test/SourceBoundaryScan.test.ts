@@ -48,7 +48,8 @@ describe("SourceBoundary.scan over a virtual tree", () => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           assert.strictEqual((yield* fs.stat("/repo/src/loop")).type, "Directory");
-          assert.strictEqual(yield* fs.realPath("/repo/src/loop"), "/repo/src");
+          const realPath1 = yield* fs.realPath("/repo/src/loop");
+          assert.strictEqual(realPath1, "/repo/src");
         })
       );
 
@@ -134,7 +135,8 @@ describe("SourceBoundary.scan over a virtual tree", () => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           // Positive control: the seed really is a link whose target stat cannot reach.
-          assert.strictEqual(yield* fs.readLink("/repo/src/dangling.ts"), "/repo/gone.ts");
+          const readLink2 = yield* fs.readLink("/repo/src/dangling.ts");
+          assert.strictEqual(readLink2, "/repo/gone.ts");
           const stat = yield* Effect.flip(fs.stat("/repo/src/dangling.ts"));
           assert.strictEqual(stat.reason._tag, "NotFound");
           const scan = yield* SourceBoundary.scan({ root: "/repo/src", rules: RULES });

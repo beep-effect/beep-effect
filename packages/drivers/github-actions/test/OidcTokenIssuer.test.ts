@@ -398,7 +398,8 @@ describe("OidcTokenIssuer", () => {
             assert.fail("expected workflow claims");
           }
           assert.strictEqual(decoded.job_workflow_ref, CLAIMS.job_workflow_ref);
-          assert.deepStrictEqual(yield* issuer.claims(), CLAIMS);
+          const claims1 = yield* issuer.claims();
+          assert.deepStrictEqual(claims1, CLAIMS);
         })
       );
     });

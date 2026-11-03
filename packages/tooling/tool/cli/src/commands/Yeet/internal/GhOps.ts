@@ -1069,7 +1069,8 @@ export const recordInheritedRedsInPullRequestBody = Effect.fn("YeetGh.recordInhe
   entries: ReadonlyArray<YeetReadyInheritedRed>,
   headSha: string
 ) {
-  return yield* recordInheritedRedsWithRest(yield* GithubRest, prNumber, entries, headSha);
+  const GithubRest1 = yield* GithubRest;
+  return yield* recordInheritedRedsWithRest(GithubRest1, prNumber, entries, headSha);
 }, withYeetGh(O.none()));
 
 const report = (exitCode: number) => (message: string) => failWithReportedExit(message, exitCode);

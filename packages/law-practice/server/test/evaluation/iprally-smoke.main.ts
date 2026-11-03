@@ -69,7 +69,9 @@ const smokeInputJson = S.fromJsonString(SmokeInput);
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const filename = yield* Config.String("IPRALLY_SMOKE_INPUT");
-  const input = yield* S.decodeEffect(smokeInputJson)(yield* fs.readFileString(filename));
+  const argument = S.decodeEffect(smokeInputJson);
+  const readFileString1 = yield* fs.readFileString(filename);
+  const input = yield* argument(readFileString1);
   const common = {
     sourceId: input.sourceId,
     country: input.country,
@@ -101,7 +103,8 @@ const program = Effect.gen(function* () {
         ),
     })
   );
-  yield* Console.log(yield* encode(result));
+  const encoded = yield* encode(result);
+  yield* Console.log(encoded);
 });
 
 const unavailable = Layer.succeed(UsptoClaims, {

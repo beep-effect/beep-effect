@@ -125,9 +125,11 @@ layer(NodeServices.layer, { timeout: "5 seconds" })("Lint security", (it) => {
         }
         const directory = yield* Ref.get(root);
         expect(directory).not.toBe("");
-        expect(yield* Ref.get(faulted)).toBe(true);
+        const got = yield* Ref.get(faulted);
+        expect(got).toBe(true);
         if (mode === "cleanup failure") {
-          const error = O.getOrThrow(yield* Ref.get(removalError));
+          const got1 = yield* Ref.get(removalError);
+          const error = O.getOrThrow(got1);
           assertInstanceOf(error.reason, PlatformError.SystemError);
           expect(error.reason._tag).toBe("PermissionDenied");
           expect(error.reason.method).toBe("remove");
@@ -148,9 +150,11 @@ layer(NodeServices.layer, { timeout: "5 seconds" })("Lint security", (it) => {
           expect(() =>
             assertExitFailure(Exit.failCause(Cause.combine(expected, Cause.fail("extra failure"))), expected)
           ).toThrow();
-          expect(yield* fs.exists(directory)).toBe(true);
+          const exists2 = yield* fs.exists(directory);
+          expect(exists2).toBe(true);
         } else {
-          expect(yield* fs.exists(directory)).toBe(false);
+          const exists3 = yield* fs.exists(directory);
+          expect(exists3).toBe(false);
         }
       })
     );

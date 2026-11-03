@@ -349,7 +349,8 @@ export const runEcosystemPolarityCheck = Effect.fn("EcosystemPolarity.runEcosyst
   let violations = A.empty<EcosystemPolarityViolation>();
 
   for (const member of members) {
-    violations = A.appendAll(violations, yield* manifestViolations(member, repoRoot));
+    const manifestViolations1 = yield* manifestViolations(member, repoRoot);
+    violations = A.appendAll(violations, manifestViolations1);
     const sources = yield* sourceViolations(member, repoRoot);
     scannedSourceFiles += sources.scannedSourceFiles;
     violations = A.appendAll(violations, sources.violations);

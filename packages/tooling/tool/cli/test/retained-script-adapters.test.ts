@@ -308,7 +308,8 @@ const holdStaleCloudRuns = Effect.fn("RetainedScriptAdaptersTest.holdStaleCloudR
       stdout: "ignore",
       stderr: "ignore",
     });
-    expect(yield* touch.exitCode).toBe(0);
+    const exitCode1 = yield* touch.exitCode;
+    expect(exitCode1).toBe(0);
   }
   const owner = yield* ChildProcess.make(
     "flock",
@@ -375,9 +376,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
           { concurrency: "unbounded" }
         );
         expect(exitCode).toBe(scenario.exitCode);
-        expect(yield* fs.exists(path.join(root, "worker-ready")), stderr).toBe(true);
+        const exists2 = yield* fs.exists(path.join(root, "worker-ready"));
+        expect(exists2, stderr).toBe(true);
         if (scenario.phase === "cleanup" || scenario.phase === "exit-cleanup") {
-          expect(yield* fs.exists(path.join(root, "repeated-signal"))).toBe(true);
+          const exists3 = yield* fs.exists(path.join(root, "repeated-signal"));
+          expect(exists3).toBe(true);
         }
         if (scenario.signal === "") {
           expect(stderr).toContain(
@@ -387,11 +390,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
         expect(stderr).not.toContain("missing download bounds");
         const events = yield* fs.readFileString(path.join(root, "events"));
         assertCloudDownloadEvents(scenario, events, stderr);
-        expect(A.sort(yield* fs.readDirectory(path.join(root, "cache/beep/cloud-bootstrap")), Str.Order)).toEqual(
-          checkStaleRuns ? ["run.active", "run.legacy"] : []
-        );
-        expect(yield* fs.exists(path.join(home, ".bun"))).toBe(false);
-        expect(yield* fs.exists(path.join(root, "node_modules"))).toBe(false);
+        const readDirectory4 = yield* fs.readDirectory(path.join(root, "cache/beep/cloud-bootstrap"));
+        expect(A.sort(readDirectory4, Str.Order)).toEqual(checkStaleRuns ? ["run.active", "run.legacy"] : []);
+        const exists5 = yield* fs.exists(path.join(home, ".bun"));
+        expect(exists5).toBe(false);
+        const exists6 = yield* fs.exists(path.join(root, "node_modules"));
+        expect(exists6).toBe(false);
       })
     );
   }
@@ -418,12 +422,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
       expect((yield* run("node", "prune-tsgo-backups.mjs", root)).exitCode).toBe(0);
       for (const name of ["native", "typescript-linux-x64"]) {
         const lib = path.join(root, "node_modules", "@typescript", name, "lib");
-        expect(yield* fs.exists(path.join(lib, "tsc.original.1"))).toBe(false);
-        expect(yield* fs.exists(path.join(lib, "tsc.original.12"))).toBe(false);
-        expect(yield* fs.exists(path.join(lib, "tsc.patched"))).toBe(false);
-        expect(yield* fs.readFileString(path.join(lib, "tsc.original"))).toBe("tsc.original");
-        expect(yield* fs.readFileString(path.join(lib, "tsc.original.old"))).toBe("tsc.original.old");
-        expect(yield* fs.readFileString(path.join(lib, "tsc"))).toBe("tsc");
+        const exists7 = yield* fs.exists(path.join(lib, "tsc.original.1"));
+        expect(exists7).toBe(false);
+        const exists8 = yield* fs.exists(path.join(lib, "tsc.original.12"));
+        expect(exists8).toBe(false);
+        const exists9 = yield* fs.exists(path.join(lib, "tsc.patched"));
+        expect(exists9).toBe(false);
+        const readFileString10 = yield* fs.readFileString(path.join(lib, "tsc.original"));
+        expect(readFileString10).toBe("tsc.original");
+        const readFileString11 = yield* fs.readFileString(path.join(lib, "tsc.original.old"));
+        expect(readFileString11).toBe("tsc.original.old");
+        const readFileString12 = yield* fs.readFileString(path.join(lib, "tsc"));
+        expect(readFileString12).toBe("tsc");
       }
       expect((yield* run("node", "prune-tsgo-backups.mjs", root)).exitCode).toBe(0);
     })
@@ -434,7 +444,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "tsgo-prune-noop-" });
-      expect(yield* run("node", "prune-tsgo-backups.mjs", root)).toEqual({ exitCode: 0, stdout: "", stderr: "" });
+      const result13 = yield* run("node", "prune-tsgo-backups.mjs", root);
+      expect(result13).toEqual({ exitCode: 0, stdout: "", stderr: "" });
       yield* fs.makeDirectory(path.join(root, "node_modules"));
       yield* fs.writeFileString(path.join(root, "node_modules", "@typescript"), "not a directory");
       const failed = yield* run("node", "prune-tsgo-backups.mjs", root);
@@ -457,13 +468,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
       yield* fs.symlink(path.join(root, "sources.list"), path.join(sources, "linked.list"));
       const result = yield* run("bash", "ci-prune-apt-sources.sh", root, [sources]);
       expect(result.exitCode, result.stderr).toBe(0);
-      expect(yield* fs.exists(path.join(sources, "vendor.list"))).toBe(false);
-      expect(yield* fs.exists(path.join(sources, "vendor.sources"))).toBe(false);
+      const exists14 = yield* fs.exists(path.join(sources, "vendor.list"));
+      expect(exists14).toBe(false);
+      const exists15 = yield* fs.exists(path.join(sources, "vendor.sources"));
+      expect(exists15).toBe(false);
       for (const file of ["ubuntu.sources", "README", "nested/keep.list"]) {
-        expect(yield* fs.readFileString(path.join(sources, file))).toBe(file);
+        const readFileString16 = yield* fs.readFileString(path.join(sources, file));
+        expect(readFileString16).toBe(file);
       }
-      expect(yield* fs.readFileString(path.join(root, "sources.list"))).toBe("archive");
-      expect(yield* fs.readLink(path.join(sources, "linked.list"))).toBe(path.join(root, "sources.list"));
+      const readFileString17 = yield* fs.readFileString(path.join(root, "sources.list"));
+      expect(readFileString17).toBe("archive");
+      const readLink18 = yield* fs.readLink(path.join(sources, "linked.list"));
+      expect(readLink18).toBe(path.join(root, "sources.list"));
       expect((yield* run("bash", "ci-prune-apt-sources.sh", root, [sources])).exitCode).toBe(0);
       expect((yield* run("bash", "ci-prune-apt-sources.sh", root, [path.join(root, "missing")])).exitCode).not.toBe(0);
     })

@@ -135,7 +135,8 @@ describe("AnthropicTurnKernel", () => {
           finishPart(21, 13),
         ];
 
-        const events = A.fromIterable(yield* runTurn);
+        const resultTurn = yield* runTurn;
+        const events = A.fromIterable(resultTurn);
 
         expect(A.map(events, (event) => event.type)).toEqual(["block", "block", "finalization"]);
         expect(events[0]).toMatchObject({
@@ -175,7 +176,8 @@ describe("AnthropicTurnKernel", () => {
           Effect.flip
         );
 
-        expect(yield* Ref.get(observed)).toEqual(["block"]);
+        const got = yield* Ref.get(observed);
+        expect(got).toEqual(["block"]);
         expect(error).toBeInstanceOf(TurnGenerationError);
         expect(error.message).toBe("Anthropic assistant turn completed without provider model or token usage metadata");
       })
@@ -196,7 +198,8 @@ describe("AnthropicTurnKernel", () => {
         providerState.repairInputTokens = 5;
         providerState.repairOutputTokens = 3;
 
-        const events = A.fromIterable(yield* runTurn);
+        const resultTurn1 = yield* runTurn;
+        const events = A.fromIterable(resultTurn1);
 
         expect(A.map(events, (event) => event.type)).toEqual(["block", "block", "finalization"]);
         expect(events[0]).toMatchObject({

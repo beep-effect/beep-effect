@@ -81,7 +81,9 @@ it.layer(layer, { timeout: "30 seconds" })((it) =>
       const recovered = yield* reopened.reconcile(input.fact.launchId, (submission) =>
         facts.record(submission.fact, submission.evidenceEpoch)
       );
-      expect(recovered).toEqual(yield* facts.read(input.fact.launchId, 0));
+      const expectation = expect(recovered);
+      const read1 = yield* facts.read(input.fact.launchId, 0);
+      expectation.toEqual(read1);
       yield* reopened.appendObservation(bound);
       yield* reopened.appendObservation(finished);
       const complete = yield* reopened.reconcile(input.fact.launchId, (submission) =>
@@ -97,7 +99,8 @@ it.layer(layer, { timeout: "30 seconds" })((it) =>
       expect((yield* reopened.runOnce(input, () => Ref.update(count, (n) => n + 1)).pipe(Effect.flip)).reason).toBe(
         "claimed"
       );
-      expect(yield* Ref.get(count)).toBe(1);
+      const got = yield* Ref.get(count);
+      expect(got).toBe(1);
     })
   )
 );
@@ -118,7 +121,8 @@ it.layer(memoryLayer, { timeout: "30 seconds" })((it) =>
             .pipe(Effect.flip)).reason
         ).toBe("configuration");
         yield* claims.appendObservation(started);
-        expect(yield* claims.appendObservation(started)).toEqual(started);
+        const appendObservation1 = yield* claims.appendObservation(started);
+        expect(appendObservation1).toEqual(started);
         expect(
           (yield* claims
             .appendObservation(
@@ -203,7 +207,8 @@ it.layer(layer, { timeout: "30 seconds" })((it) =>
           .reconcile(input.fact.launchId, (submission) => facts.record(submission.fact, submission.evidenceEpoch))
           .pipe(Effect.flip)).reason
       ).toBe("integrity");
-      expect(yield* facts.read(input.fact.launchId, 0)).toEqual([]);
+      const read2 = yield* facts.read(input.fact.launchId, 0);
+      expect(read2).toEqual([]);
       expect((yield* claims.runOnce(input, () => Effect.void).pipe(Effect.flip)).reason).toBe("claimed");
     })
   )
@@ -237,11 +242,15 @@ it.layer(memoryLayer, { timeout: "30 seconds" })((it) =>
       yield* claims.runOnce(input, () => Effect.void);
       yield* claims.appendObservation(started);
       yield* f.fs.writeFileString(`${f.policy.directory}/receipt-0-0.json`, "", { mode: 0o600 });
-      expect(yield* claims.appendObservation(bound)).toEqual(bound);
-      expect(yield* claims.appendObservation(finished)).toEqual(finished);
-      expect(yield* claims.appendObservation(finished)).toEqual(finished);
+      const appendObservation3 = yield* claims.appendObservation(bound);
+      expect(appendObservation3).toEqual(bound);
+      const appendObservation4 = yield* claims.appendObservation(finished);
+      expect(appendObservation4).toEqual(finished);
+      const appendObservation5 = yield* claims.appendObservation(finished);
+      expect(appendObservation5).toEqual(finished);
       expect((yield* claims.readOutbox(input.fact.launchId).pipe(Effect.flip)).reason).toBe("integrity");
-      expect(yield* f.fs.readFileString(`${f.policy.directory}/receipt-0-0.json`)).toBe("");
+      const readFileString6 = yield* f.fs.readFileString(`${f.policy.directory}/receipt-0-0.json`);
+      expect(readFileString6).toBe("");
     })
   )
 );

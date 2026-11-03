@@ -542,7 +542,8 @@ const downloadArtifact = Effect.fn("Files.PersonMatchModelStore.downloadArtifact
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const client = HttpClient.followRedirects(yield* HttpClient.HttpClient, 5);
+  const HttpClient1 = yield* HttpClient.HttpClient;
+  const client = HttpClient.followRedirects(HttpClient1, 5);
   const stagingDirectory = yield* fs
     .makeTempDirectory({ directory: modelRoot, prefix: `.beep-${artifact.component}-` })
     .pipe(

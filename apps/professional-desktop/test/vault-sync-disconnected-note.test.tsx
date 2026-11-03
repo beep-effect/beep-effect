@@ -69,8 +69,9 @@ describe("vault sync panel", () => {
   it.effect(
     "announces a completed sync action without showing an error",
     Effect.fnUntraced(function* () {
+      const statusWith1 = yield* statusWith(true, O.none());
       const { container } = renderWithStatus(
-        yield* statusWith(true, O.none()),
+        statusWith1,
         AsyncResult.success(noConflicts),
         VaultSyncPanelState.cases.succeeded.make({ message: "Vault sync completed." })
       );
@@ -86,8 +87,9 @@ describe("vault sync panel", () => {
   it.effect(
     "announces a failed sync action while allowing another attempt",
     Effect.fnUntraced(function* () {
+      const statusWith2 = yield* statusWith(true, O.none());
       const { container } = renderWithStatus(
-        yield* statusWith(true, O.none()),
+        statusWith2,
         AsyncResult.success(noConflicts),
         VaultSyncPanelState.cases.failed.make({ message: "The sync request failed safely." })
       );
@@ -103,7 +105,8 @@ describe("vault sync panel", () => {
   it.effect(
     "lists both supported credential modes when credentials are missing",
     Effect.fnUntraced(function* () {
-      const { container } = renderWithStatus(yield* statusWith(false, O.some("credentials-missing")));
+      const statusWith3 = yield* statusWith(false, O.some("credentials-missing"));
+      const { container } = renderWithStatus(statusWith3);
       const screen = within(container);
 
       expect(screen.getByTestId("vault-sync-connection")).toHaveTextContent("disconnected");
@@ -117,7 +120,8 @@ describe("vault sync panel", () => {
   it.effect(
     "never blames configuration when the probe failed with a token present",
     Effect.fnUntraced(function* () {
-      const { container } = renderWithStatus(yield* statusWith(false, O.some("probe-failed")));
+      const statusWith4 = yield* statusWith(false, O.some("probe-failed"));
+      const { container } = renderWithStatus(statusWith4);
       const screen = within(container);
 
       const note = screen.getByTestId("vault-sync-setup-note");
@@ -131,7 +135,8 @@ describe("vault sync panel", () => {
   it.effect(
     "splits the auth-failed fix by auth mode instead of blaming expiry under CCG",
     Effect.fnUntraced(function* () {
-      const { container } = renderWithStatus(yield* statusWith(false, O.some("auth-failed")));
+      const statusWith5 = yield* statusWith(false, O.some("auth-failed"));
+      const { container } = renderWithStatus(statusWith5);
       const screen = within(container);
 
       const note = screen.getByTestId("vault-sync-setup-note");
@@ -147,7 +152,8 @@ describe("vault sync panel", () => {
   it.effect(
     "points at the mirror root folder when it cannot be listed or created",
     Effect.fnUntraced(function* () {
-      const { container } = renderWithStatus(yield* statusWith(false, O.some("root-unreachable")));
+      const statusWith6 = yield* statusWith(false, O.some("root-unreachable"));
+      const { container } = renderWithStatus(statusWith6);
       const screen = within(container);
 
       const note = screen.getByTestId("vault-sync-setup-note");
@@ -160,7 +166,8 @@ describe("vault sync panel", () => {
   it.effect(
     "asks for a short retry when Box is rate limiting or unreachable",
     Effect.fnUntraced(function* () {
-      const { container } = renderWithStatus(yield* statusWith(false, O.some("transient")));
+      const statusWith7 = yield* statusWith(false, O.some("transient"));
+      const { container } = renderWithStatus(statusWith7);
       const screen = within(container);
 
       const note = screen.getByTestId("vault-sync-setup-note");
@@ -184,7 +191,7 @@ describe("vault sync panel", () => {
             [DesktopSyncClient.runtime.layer, clientLayer],
             [
               vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID),
-              AsyncResult.success(yield* statusWith(false, O.some("transient"))),
+              yield* Effect.map(statusWith(false, O.some("transient")), AsyncResult.success),
             ],
             [vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID), AsyncResult.success(noConflicts)],
           ]}
@@ -205,7 +212,8 @@ describe("vault sync panel", () => {
       // Totality over the reason union: a new member without panel copy must
       // fail here, not silently fall through to a blank panel.
       for (const reason of DmsMirrorDisconnectReason.literals) {
-        const { container, unmount } = renderWithStatus(yield* statusWith(false, O.some(reason)));
+        const statusWith8 = yield* statusWith(false, O.some(reason));
+        const { container, unmount } = renderWithStatus(statusWith8);
         expect(within(container).getByTestId("vault-sync-setup-note")).toBeInTheDocument();
         unmount();
       }
@@ -215,9 +223,8 @@ describe("vault sync panel", () => {
   it.effect(
     "shows when the probe last asked Box so a retry visibly moves the panel",
     Effect.fnUntraced(function* () {
-      const { container } = renderWithStatus(
-        yield* statusWith(false, O.some("probe-failed"), O.some("2026-08-26T12:00:00.000Z"))
-      );
+      const statusWith9 = yield* statusWith(false, O.some("probe-failed"), O.some("2026-08-26T12:00:00.000Z"));
+      const { container } = renderWithStatus(statusWith9);
       const screen = within(container);
 
       expect(screen.getByTestId("vault-sync-probed-at")).toHaveTextContent("Last checked");
@@ -229,7 +236,8 @@ describe("vault sync panel", () => {
     Effect.fnUntraced(function* () {
       // An older sidecar can report connected: false without a reason; claiming
       // the token is unset would be the exact lie this panel was fixed for.
-      const { container } = renderWithStatus(yield* statusWith(false, O.none()));
+      const statusWith10 = yield* statusWith(false, O.none());
+      const { container } = renderWithStatus(statusWith10);
       const screen = within(container);
 
       const note = screen.getByTestId("vault-sync-setup-note");
@@ -243,7 +251,8 @@ describe("vault sync panel", () => {
   it.effect(
     "shows no setup note while connected and enables the sync trigger",
     Effect.fnUntraced(function* () {
-      const { container } = renderWithStatus(yield* statusWith(true, O.none()));
+      const statusWith11 = yield* statusWith(true, O.none());
+      const { container } = renderWithStatus(statusWith11);
       const screen = within(container);
 
       expect(screen.getByTestId("vault-sync-connection")).toHaveTextContent("connected");
@@ -258,7 +267,8 @@ describe("vault sync panel", () => {
       const conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown> = AsyncResult.fail(
         "conflicts unavailable"
       );
-      const { container } = renderWithStatus(yield* statusWith(true, O.none()), conflicts);
+      const statusWith12 = yield* statusWith(true, O.none());
+      const { container } = renderWithStatus(statusWith12, conflicts);
       const screen = within(container);
 
       expect(screen.getByTestId("vault-sync-conflicts-failed")).toHaveTextContent(

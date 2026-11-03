@@ -107,7 +107,8 @@ export const versionSyncCommand = Command.make(
 
     const program = Effect.gen(function* () {
       if (checkRuntime) {
-        const version = yield* checkBunRuntimeVersion(yield* findRepoRoot());
+        const foundRepoRoot = yield* findRepoRoot();
+        const version = yield* checkBunRuntimeVersion(foundRepoRoot);
         yield* Console.log(`bun-version: .bun-version=${version}; bun --version=${version}`);
         return;
       }

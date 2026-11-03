@@ -59,7 +59,8 @@ const connectAs = Effect.fnUntraced(function* (login: string) {
     url: yield* endpoint,
     headers: { [TAILSCALE_LOGIN_HEADER]: login, authorization: `Bearer ${Redacted.value(API_TOKEN)}` },
   });
-  return yield* connect.pipe(Effect.provideContext(yield* Layer.build(layerProtocolHttp(options))));
+  const build1 = yield* Layer.build(layerProtocolHttp(options));
+  return yield* connect.pipe(Effect.provideContext(build1));
 });
 
 const decodeOpenItems = S.decodeUnknownEffect(OpenItems);
@@ -179,7 +180,8 @@ describe("@beep/practice-review-hub", () => {
         expect(before).toStrictEqual(["kg-answer", "question"]);
         expect([answered.isError, lock.isError]).toStrictEqual([false, false]);
         expect(after).toStrictEqual([]);
-        expect(yield* Effect.all([codeOf(locked), codeOf(unknownOption)])).toStrictEqual(["locked", "unknown-option"]);
+        const all2 = yield* Effect.all([codeOf(locked), codeOf(unknownOption)]);
+        expect(all2).toStrictEqual(["locked", "unknown-option"]);
       })
     );
   });

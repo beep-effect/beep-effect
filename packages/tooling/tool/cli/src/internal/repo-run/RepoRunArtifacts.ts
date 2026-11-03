@@ -33,7 +33,9 @@ export const repoRunSafeArtifactName: (value: string) => string = flow(
 );
 
 const artifactNameHash = Effect.fnUntraced(function* (value: string) {
-  return Str.takeLeft(12)(yield* sha256Hex(value));
+  const argument = Str.takeLeft(12);
+  const sha256Hex1 = yield* sha256Hex(value);
+  return argument(sha256Hex1);
 });
 
 /**

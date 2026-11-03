@@ -680,11 +680,13 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
   | Digest.Digest
   | Git
 > {
-  const resolved = yield* resolvePullRequestTitle(context, message, yield* branchCommitRange(context));
+  const branchCommitRange1 = yield* branchCommitRange(context);
+  const resolved = yield* resolvePullRequestTitle(context, message, branchCommitRange1);
   const title = resolved.title;
   yield* Console.log(`[yeet] --pr: title from ${resolved.source}: ${title}`);
   const bodyPath = yield* runOutputPathForContext(context, "pr-body.md");
-  yield* writeTextFile(bodyPath, yield* buildPrBody(context, recorder));
+  const buildPrBody2 = yield* buildPrBody(context, recorder);
+  yield* writeTextFile(bodyPath, buildPrBody2);
   const draft = O.exists(prStep, (step) => A.contains(step.args, "--draft"));
   const base = yield* resolveDefaultBranchViaRest(context, capture);
   const result = yield* capture(
@@ -771,7 +773,8 @@ const syncExistingPullRequestTitle = Effect.fn("Yeet.syncExistingPullRequestTitl
       message: `pull request #${existing.number} keeps its title`,
     });
   }
-  const resolved = yield* resolvePullRequestTitle(context, message, yield* branchCommitRange(context)).pipe(
+  const branchCommitRange3 = yield* branchCommitRange(context);
+  const resolved = yield* resolvePullRequestTitle(context, message, branchCommitRange3).pipe(
     Effect.asSome,
     Effect.catchTag("YeetCommandError", (error) =>
       Effect.as(Console.error(`[yeet] warning: ${error.message}`), O.none())

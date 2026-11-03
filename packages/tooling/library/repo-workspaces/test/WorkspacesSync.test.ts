@@ -1,3 +1,4 @@
+import { identity } from "effect/Function";
 // The synchronous escape hatch takes CONSUMER-SUPPLIED operations. These tests
 // drive it over `@effected/memfs`' node-shaped sync port (`handle.sync`), which
 // throws node's exact errno on a miss — so nothing below exists on disk, and a
@@ -30,6 +31,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { hostPath } from "./support/hostPath.ts";
@@ -45,8 +47,14 @@ const memOps = (seed: Readonly<Record<string, string>>): WorkspacesSyncOptions =
 describe("getWorkspacePackagesSync — hostile manifests", () => {
   const ops = memOps({
     "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
-    "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", private: true }),
-    "/repo/packages/good/package.json": JSON.stringify({ name: "@x/good", version: "1.0.0" }),
+    "/repo/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", private: true }),
+      identity
+    ),
+    "/repo/packages/good/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@x/good", version: "1.0.0" }),
+      identity
+    ),
     // The hostile manifests. Each is VALID JSON that does not decode to an
     // object, which is the case a `raw === undefined` guard does not cover:
     // `JSON.parse` returns `null` / a number / a string, never `undefined`.
@@ -100,7 +108,10 @@ describe("findWorkspaceRootSync", () => {
     const ops = memOps({
       "/hostile/package.json": "null",
       "/hostile/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
-      "/hostile/packages/a/package.json": JSON.stringify({ name: "@h/a", version: "1.0.0" }),
+      "/hostile/packages/a/package.json": Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@h/a", version: "1.0.0" }),
+        identity
+      ),
     });
     assert.strictEqual(findWorkspaceRootSync("/hostile/packages/a", ops), "/hostile");
     // And enumeration over that root still works, skipping the null root manifest.
@@ -133,8 +144,14 @@ const treeOfDepth = (depth: number) => {
   );
   return MemoryFileSystem.makeSync({
     "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/**'\n",
-    "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0" }),
-    [`/repo/packages/${segments}deep/package.json`]: JSON.stringify({ name: "@d/deep", version: "1.0.0" }),
+    "/repo/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0" }),
+      identity
+    ),
+    [`/repo/packages/${segments}deep/package.json`]: Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@d/deep", version: "1.0.0" }),
+      identity
+    ),
   });
 };
 
@@ -223,13 +240,22 @@ describe("the sync hatch and the Effect enumerator agree at the depth boundary",
 describe("getWorkspacePackagesSync over pure in-memory ops (no ambient Node fs)", () => {
   const ops = memOps({
     "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
-    "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", private: true }),
-    "/repo/packages/a/package.json": JSON.stringify({
-      name: "@mem/a",
-      version: "2.0.0",
-      scripts: { build: "tsc" },
-    }),
-    "/repo/packages/b/package.json": JSON.stringify({ name: "@mem/b", version: "3.0.0" }),
+    "/repo/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", private: true }),
+      identity
+    ),
+    "/repo/packages/a/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
+        name: "@mem/a",
+        version: "2.0.0",
+        scripts: { build: "tsc" },
+      }),
+      identity
+    ),
+    "/repo/packages/b/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@mem/b", version: "3.0.0" }),
+      identity
+    ),
   });
 
   it("enumerates the virtual workspace", () => {
@@ -258,9 +284,18 @@ describe("findWorkspaceRootSync — stopAt over a nested checkout", () => {
   const CWD = "/outer/checkout";
   const files: Record<string, string> = {
     "/outer/pnpm-workspace.yaml": "packages:\n  - 'pkgs/*'\n",
-    "/outer/package.json": JSON.stringify({ name: "outer-root", version: "0.0.0", private: true }),
-    "/outer/pkgs/other/package.json": JSON.stringify({ name: "other", version: "1.0.0" }),
-    "/outer/checkout/package.json": JSON.stringify({ name: "checkout", version: "1.0.0" }),
+    "/outer/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "outer-root", version: "0.0.0", private: true }),
+      identity
+    ),
+    "/outer/pkgs/other/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "other", version: "1.0.0" }),
+      identity
+    ),
+    "/outer/checkout/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "checkout", version: "1.0.0" }),
+      identity
+    ),
   };
   const ops = memOps(files);
 
@@ -319,10 +354,22 @@ describe("findWorkspaceRootSync — stopAt over a nested checkout", () => {
 describe("getWorkspacePackagesSync — exclusions", () => {
   const ops = memOps({
     "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/**'\n  - '!packages/private-*'\n",
-    "/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", private: true }),
-    "/repo/packages/alpha/package.json": JSON.stringify({ name: "@mem/alpha", version: "1.0.0" }),
-    "/repo/packages/private-thing/package.json": JSON.stringify({ name: "@mem/private", version: "1.0.0" }),
-    "/repo/packages/private-thing/nested/package.json": JSON.stringify({ name: "@mem/nested", version: "1.0.0" }),
+    "/repo/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", private: true }),
+      identity
+    ),
+    "/repo/packages/alpha/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@mem/alpha", version: "1.0.0" }),
+      identity
+    ),
+    "/repo/packages/private-thing/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@mem/private", version: "1.0.0" }),
+      identity
+    ),
+    "/repo/packages/private-thing/nested/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@mem/nested", version: "1.0.0" }),
+      identity
+    ),
   });
 
   it("a leading-bang pattern excludes the package the includes matched", () => {
@@ -361,8 +408,14 @@ const win32Shim = (port: SyncFileSystem): SyncFileSystem => {
 describe("WorkspacesSync with a win32 SyncPath", () => {
   const handle = MemoryFileSystem.makeSync({
     "/C:/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
-    "/C:/repo/package.json": JSON.stringify({ name: "root", version: "0.0.0", private: true }),
-    "/C:/repo/packages/a/package.json": JSON.stringify({ name: "@win/a", version: "1.0.0" }),
+    "/C:/repo/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "root", version: "0.0.0", private: true }),
+      identity
+    ),
+    "/C:/repo/packages/a/package.json": Result.getOrThrowWith(
+      S.encodeUnknownResult(S.fromJsonString(S.Unknown))({ name: "@win/a", version: "1.0.0" }),
+      identity
+    ),
   });
   const ops: WorkspacesSyncOptions = { fileSystem: win32Shim(handle.sync), path: hostPath.win32 };
 

@@ -3,7 +3,9 @@ import { nearest256, paintStyle } from "@beep/cli-kit/internal/ansi";
 import { Style as StyleSchema } from "@beep/cli-kit/Token";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
@@ -64,13 +66,16 @@ describe("Token.defaults and Token.resolve", () => {
   });
 
   it("an override replaces one token and leaves the rest, and never touches the defaults", () => {
-    const before = JSON.stringify(Token.defaults);
+    const before = Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(Token.defaults), identity);
     const overrides = { success: { fg: "#00ff00", bold: true } } as const;
     assert.deepStrictEqual(Token.resolve("success", overrides), overrides.success);
     for (const token of A.filter(TOKENS, (name) => name !== "success")) {
       assert.deepStrictEqual(Token.resolve(token, overrides), Token.defaults[token], token);
     }
-    assert.strictEqual(JSON.stringify(Token.defaults), before);
+    assert.strictEqual(
+      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(Token.defaults), identity),
+      before
+    );
   });
 
   it("a name that is not a token, including an Object.prototype member, is the empty style", () => {
@@ -80,7 +85,15 @@ describe("Token.defaults and Token.resolve", () => {
   });
 
   it("an override named like a prototype member does not leak into another token", () => {
-    assert.deepStrictEqual(Token.resolve("info", JSON.parse('{"__proto__":{"fg":"red"}}')), Token.defaults.info);
+    assert.deepStrictEqual(
+      Token.resolve(
+        "info",
+        deliberatelyInvalid<Parameters<typeof Token.resolve>[1]>(
+          Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))('{"__proto__":{"fg":"red"}}'), identity)
+        )
+      ),
+      Token.defaults.info
+    );
   });
 });
 

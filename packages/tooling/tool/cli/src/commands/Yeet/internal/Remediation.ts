@@ -1254,8 +1254,9 @@ export const stampYeetWaveRedSet = Effect.fn("Yeet.stampYeetWaveRedSet")(functio
   redSetKey: string,
   at: string
 ): Effect.fn.Return<O.Option<string>, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
+  const loadedYeetRemediationWave = yield* loadYeetRemediationWave(repoRoot);
   const pinned = O.filter(
-    yield* loadYeetRemediationWave(repoRoot),
+    loadedYeetRemediationWave,
     (wave) => wave.headSha === head.headSha && wave.prNumber === head.prNumber
   );
   if (O.isNone(pinned)) return O.none<string>();

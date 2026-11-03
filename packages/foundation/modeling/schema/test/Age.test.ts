@@ -5,7 +5,8 @@ import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeAge = S.decodeEffect(Age);
@@ -23,7 +24,8 @@ describe("Age", () => {
       for (const value of [1, 42, 150]) {
         const age = yield* decodeAge(value);
         expect(age).toBe(value);
-        expect(yield* encodeAge(age)).toBe(value);
+        const encodedAge = yield* encodeAge(age);
+        expect(encodedAge).toBe(value);
       }
     })
   );
@@ -32,8 +34,12 @@ describe("Age", () => {
     "rejects out-of-range, fractional, and non-numeric ages",
     Effect.fnUntraced(function* () {
       for (const value of [-1, 0, 151, 1.5, "42"]) {
-        pipe(yield* Effect.exit(decodeUnknownAge(value)), Exit.isFailure, (failed) =>
-          assertTrue(failed, `Invalid Age input: ${JSON.stringify(value)}`)
+        const exit1 = yield* Effect.exit(decodeUnknownAge(value));
+        pipe(exit1, Exit.isFailure, (failed) =>
+          assertTrue(
+            failed,
+            `Invalid Age input: ${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value), identity)}`
+          )
         );
       }
     })

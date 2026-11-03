@@ -25,10 +25,11 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
@@ -525,7 +526,9 @@ describe("PackageJson schema", () => {
 
       expect(text).toContain('"beep"');
       expect(text).toContain('"resolutions#"');
-      expect(decodePackageJson(JSON.parse(text)).beep).toEqual({ family: "ecosystem" });
+      expect(
+        decodePackageJson(Result.getOrThrowWith(S.decodeResult(S.fromJsonString(S.Unknown))(text), identity)).beep
+      ).toEqual({ family: "ecosystem" });
     });
 
     it.effect(
@@ -541,7 +544,8 @@ describe("PackageJson schema", () => {
         assertTrue(S.is(PackageJson)(decoded));
         expect(decoded.beep).toEqual({ family: "ecosystem" });
         assertSome(HashMap.get(decoded.dependencies, "effect"), "catalog:");
-        expect(yield* S.encodeEffect(PackageJson.schema)(decoded)).toEqual({
+        const value1 = yield* S.encodeEffect(PackageJson.schema)(decoded);
+        expect(value1).toEqual({
           name: "pkg",
           beep: { family: "ecosystem" },
           dependencies: { effect: "catalog:" },
@@ -1253,7 +1257,8 @@ describe("PackageJson schema", () => {
       Effect.fn(function* () {
         const pretty = yield* encodePackageJsonPrettyEffect({ name: "@beep/example", private: true });
         expect(pretty).toContain("\n");
-        expect(yield* decodeUnknownJsonString(pretty)).toEqual({ name: "@beep/example", private: true });
+        const decodedUnknownJsonString = yield* decodeUnknownJsonString(pretty);
+        expect(decodedUnknownJsonString).toEqual({ name: "@beep/example", private: true });
       })
     );
   });

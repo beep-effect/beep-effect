@@ -15,7 +15,8 @@ it.effect.prop(
       const encoded = yield* S.encodeEffect(commentsSpacingOptions)(value);
       const decoded = yield* S.decodeEffect(commentsSpacingOptions)(encoded);
       assert.isTrue(S.toEquivalence(commentsSpacingOptions)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(commentsSpacingOptions)(decoded), encoded);
+      const value1 = yield* S.encodeEffect(commentsSpacingOptions)(decoded);
+      assert.deepStrictEqual(value1, encoded);
     }),
   runs
 );

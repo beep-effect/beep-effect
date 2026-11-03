@@ -309,10 +309,12 @@ export const buildCacheConformanceCorpus = Effect.fn("CacheConformance.buildCorp
     return yield* CacheCommandError.new(
       `Vendored OpenAPI digest ${openapiSha256} does not match the pinned ${CacheConformancePaths.specSha256}.`
     );
-  const document = yield* decodeJson(yield* decodeCacheExperimentText(openapiBytes));
+  const decodedCacheExperimentText = yield* decodeCacheExperimentText(openapiBytes);
+  const document = yield* decodeJson(decodedCacheExperimentText);
   const operations = yield* deriveOperations(document);
   const planBytes = yield* readCacheExperimentBytes(root, CacheConformancePaths.plan);
-  const plan = yield* decodePlanJson(yield* decodeCacheExperimentText(planBytes));
+  const decodedCacheExperimentText1 = yield* decodeCacheExperimentText(planBytes);
+  const plan = yield* decodePlanJson(decodedCacheExperimentText1);
   if (plan.cases.length !== caseTable.length)
     return yield* CacheCommandError.new(
       `Plan has ${plan.cases.length} cases; the hand-authored table has ${caseTable.length}.`
@@ -383,7 +385,8 @@ export const syncCacheConformanceCorpus = Effect.fn("CacheConformance.syncCorpus
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const rendered = yield* renderCacheConformanceCorpus(yield* buildCacheConformanceCorpus(root));
+  const buildCacheConformanceCorpus2 = yield* buildCacheConformanceCorpus(root);
+  const rendered = yield* renderCacheConformanceCorpus(buildCacheConformanceCorpus2);
   const target = path.join(root, CacheConformancePaths.corpus);
   if (!check) {
     yield* fs.writeFileString(target, rendered);

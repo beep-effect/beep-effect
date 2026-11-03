@@ -10,8 +10,11 @@ import { assert, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { MemoryFileSystemSeed } from "@beep/memfs/MemoryFileSystem";
 import type { FetchConfigDependency } from "@beep/repo-workspaces/internal/configDependencyFetch";
 
@@ -137,17 +140,19 @@ it.layer(
 
 for (const text of ["storeDir: [", "null", "storeDir: 42", 'storeDir: ""']) {
   it.layer(counted({ [`${ROOT}/node_modules/.modules.yaml`]: text }).layer, { timeout: "30 seconds" })((it) => {
-    it.effect(`malformed and unusable modules YAML contributes no store (${JSON.stringify(text)})`, () =>
-      Effect.gen(function* () {
-        const failure = yield* Effect.flip(
-          resolvePnpmfiles({ config: "1.0.0" }, undefined, () =>
-            Effect.fail(FetchFailure.make({ reason: "integrityMismatch", message: "pins disagree" }))
-          )(ROOT)
-        );
-        assert.strictEqual(failure.reason, "integrityMismatch");
-        assert.include(failure.cause instanceof Error ? failure.cause.message : "", "pins disagree");
-        assert.notInclude(failure.cause instanceof Error ? failure.cause.message : "", "pnpm add --config");
-      })
+    it.effect(
+      `malformed and unusable modules YAML contributes no store (${Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(text), identity)})`,
+      () =>
+        Effect.gen(function* () {
+          const failure = yield* Effect.flip(
+            resolvePnpmfiles({ config: "1.0.0" }, undefined, () =>
+              Effect.fail(FetchFailure.make({ reason: "integrityMismatch", message: "pins disagree" }))
+            )(ROOT)
+          );
+          assert.strictEqual(failure.reason, "integrityMismatch");
+          assert.include(failure.cause instanceof Error ? failure.cause.message : "", "pins disagree");
+          assert.notInclude(failure.cause instanceof Error ? failure.cause.message : "", "pnpm add --config");
+        })
     );
   });
 }

@@ -195,7 +195,9 @@ const make = Effect.gen(function* () {
   const env = yield* ActionEnvironment;
   const fs = yield* FileSystem.FileSystem;
   const outputs = yield* ActionOutputs;
-  const lineEnding = Bool.match(O.contains("Windows")(yield* env.getOptional("RUNNER_OS")), {
+  const argument = O.contains("Windows");
+  const gotOptional = yield* env.getOptional("RUNNER_OS");
+  const lineEnding = Bool.match(argument(gotOptional), {
     onTrue: () => "\r\n" as const,
     onFalse: () => "\n" as const,
   });

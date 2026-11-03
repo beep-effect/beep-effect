@@ -9,7 +9,7 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as F from "effect/Function";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as Runtime from "effect/Runtime";
@@ -61,7 +61,10 @@ describe("Cancelled", () => {
 
   it("the exit-code marker is not an own enumerable property: a JSON dump or logger dump does not carry it", () => {
     const cancelled = Cancelled.make({ reason: "escape" });
-    assert.notInclude(JSON.stringify(cancelled), "errorExitCode");
+    assert.notInclude(
+      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(cancelled), identity),
+      "errorExitCode"
+    );
     assert.notInclude(A.join(Struct.keys(cancelled), ","), "errorExitCode");
     // But core still finds it: `in` sees a prototype getter, and the code is read through it.
     assert.isTrue(Runtime.errorExitCode in cancelled);
@@ -133,7 +136,10 @@ describe("the fixed lines are the errors' own message", () => {
       _tag: "Cancelled",
       reason: "escape",
     });
-    assert.notInclude(JSON.stringify(decoded), CANCELLED);
+    assert.notInclude(
+      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(decoded), identity),
+      CANCELLED
+    );
     assert.isTrue(Equal.equals(decoded, Cancelled.make({ reason: "escape" })));
     assert.notInclude(A.join(Struct.keys(NotInteractive.make()), ","), "message");
   });
@@ -161,7 +167,10 @@ describe("NotInteractive", () => {
 
   it("its exit-code marker is not an own enumerable property either", () => {
     const error = NotInteractive.make();
-    assert.notInclude(JSON.stringify(error), "errorExitCode");
+    assert.notInclude(
+      Result.getOrThrowWith(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(error), identity),
+      "errorExitCode"
+    );
     assert.isTrue(Runtime.errorExitCode in error);
     assert.strictEqual(Runtime.getErrorExitCode(error), 64);
   });
@@ -201,11 +210,12 @@ describe("CliRuntime.defaultRender", () => {
         );
         return err;
       });
-      assert.deepStrictEqual(yield* run2(Cancelled.make({ reason: "interrupt" })), ["cancelled; nothing written"]);
-      assert.deepStrictEqual(yield* run2(NotInteractive.make()), [
-        "not interactive: run in a terminal or pass the flag",
-      ]);
-      assert.deepStrictEqual(yield* run2("other"), ["tool: other"]);
+      const run21 = yield* run2(Cancelled.make({ reason: "interrupt" }));
+      assert.deepStrictEqual(run21, ["cancelled; nothing written"]);
+      const run22 = yield* run2(NotInteractive.make());
+      assert.deepStrictEqual(run22, ["not interactive: run in a terminal or pass the flag"]);
+      const run23 = yield* run2("other");
+      assert.deepStrictEqual(run23, ["tool: other"]);
     })
   );
 });

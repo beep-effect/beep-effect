@@ -14,11 +14,13 @@
  * @since 0.0.0
  */
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { CI_LANE_ID_VALUES } from "./CiLane.ts";
 import { CHANGE_ATOM_KIND_VALUES, CheckFootprint } from "./Route.schemas.ts";
 import type { CiLaneId } from "./CiLane.ts";
@@ -127,15 +129,18 @@ export const routeFootprintList = (): ReadonlyArray<CheckFootprint> =>
  * @since 0.0.0
  */
 export const routeFootprintCanonicalJson = (): string =>
-  JSON.stringify(
-    A.map(routeFootprintList(), (footprint) => ({
-      lane: footprint.lane,
-      kinds: A.filter(CHANGE_ATOM_KIND_VALUES, (kind) => A.contains(footprint.kinds, kind)),
-      propagation: footprint.propagation,
-      transformer: footprint.transformer,
-      external: footprint.external,
-      fixtures: footprint.fixtures,
-    }))
+  Result.getOrThrowWith(
+    S.encodeUnknownResult(S.fromJsonString(S.Unknown))(
+      A.map(routeFootprintList(), (footprint) => ({
+        lane: footprint.lane,
+        kinds: A.filter(CHANGE_ATOM_KIND_VALUES, (kind) => A.contains(footprint.kinds, kind)),
+        propagation: footprint.propagation,
+        transformer: footprint.transformer,
+        external: footprint.external,
+        fixtures: footprint.fixtures,
+      }))
+    ),
+    identity
   );
 
 // The external lanes, each seeded with an empty kind set: required before any atom is read.

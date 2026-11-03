@@ -347,7 +347,9 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
       });
       const markedSource = Effect.fnUntraced(function* (repoRoot: string, source: string) {
         if (!isDoctestSourcePath(source)) return false;
-        return Str.includes(doctestSourceMarker)(yield* fs.readFileString(path.join(repoRoot, source)));
+        const argument = Str.includes(doctestSourceMarker);
+        const readFileString1 = yield* fs.readFileString(path.join(repoRoot, source));
+        return argument(readFileString1);
       });
       const collectBypasses = Effect.fnUntraced(function* (
         repoRoot: string,
@@ -432,7 +434,9 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
                 .pipe(Effect.flatMap((scripts) => jsonStringifyPretty({ ...manifest, scripts })))}\n`
             : text;
         const didWrite = rendered !== text;
-        if (didWrite) yield* fs.writeFileString(file, rendered);
+        if (didWrite) {
+          yield* fs.writeFileString(file, rendered);
+        }
         const effective = write ? expected : actual;
         const rows = [...diffBlock(effective, expected), ...conflicts];
         return { manifestPath, rows, implDrift: implementationDrift(effective), written: didWrite };

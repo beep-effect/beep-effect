@@ -297,7 +297,9 @@ export const makeConnection = Effect.fnUntraced(function* (options: ConnectionOp
     );
   const sessionSnapshot = gate.withLock(
     Effect.gen(function* () {
-      if (snapshot.pipe(MutableRef.get, O.isNone)) yield* refreshSession;
+      if (snapshot.pipe(MutableRef.get, O.isNone)) {
+        yield* refreshSession;
+      }
       return yield* O.match(MutableRef.get(snapshot), {
         onNone: () => Effect.die("Missing session snapshot"),
         onSome: (exit) => (Exit.isSuccess(exit) ? Effect.succeed(exit.value) : Effect.failCause(exit.cause)),
@@ -327,8 +329,8 @@ export const makeConnection = Effect.fnUntraced(function* (options: ConnectionOp
   const prepareCacheTTL = options.prepareCacheTTL;
   const cache =
     options.prepareCacheSize > 0
-      ? O.some(
-          yield* ScopedCache.makeWith({
+      ? yield* Effect.asSome(
+          ScopedCache.makeWith({
             lookup,
             capacity: options.prepareCacheSize,
             timeToLive: (exit) => (Exit.isSuccess(exit) ? prepareCacheTTL : Duration.zero),

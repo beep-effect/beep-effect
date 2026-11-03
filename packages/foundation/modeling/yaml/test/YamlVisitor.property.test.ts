@@ -22,11 +22,11 @@ describe("YamlVisitor parsing properties", () => {
         assert.strictEqual(YamlFormat.formatToString(formatted), formatted);
         const parsed = yield* Yaml.parse(text);
         const roundTrip = yield* Yaml.stringify(parsed);
-        assert.deepStrictEqual(yield* Yaml.parse(roundTrip), parsed);
-        assert.deepStrictEqual(
-          yield* Stream.runCollect(YamlVisitor.visit(roundTrip)),
-          yield* Stream.runCollect(YamlVisitor.visit(text))
-        );
+        const parsed1 = yield* Yaml.parse(roundTrip);
+        assert.deepStrictEqual(parsed1, parsed);
+        const resultCollect = yield* Stream.runCollect(YamlVisitor.visit(roundTrip));
+        const resultCollect2 = yield* Stream.runCollect(YamlVisitor.visit(text));
+        assert.deepStrictEqual(resultCollect, resultCollect2);
       }),
     runs
   );

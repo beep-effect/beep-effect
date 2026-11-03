@@ -640,8 +640,9 @@ export const buildExplorationProjection = Effect.fn("Explore.buildExplorationPro
   const store = yield* PacketEventStore;
   const root = repoRoot ?? (yield* findRepoRoot());
   const explorationsRoot = path.join(root, "explorations");
+  const readDirectory1 = yield* fs.readDirectory(explorationsRoot);
   const entries = pipe(
-    yield* fs.readDirectory(explorationsRoot),
+    readDirectory1,
     A.filter((entry) => !Str.startsWith("_")(entry)),
     A.sort(Order.String)
   );

@@ -60,7 +60,8 @@ describe("SyncCursor entity", () => {
       assertNone(decoded.lastEventId);
       assertNone(decoded.lastError);
       expect(decoded.status).toBe("active");
-      expect(yield* encodeSyncCursor(decoded)).toStrictEqual({
+      const encodedSyncCursor = yield* encodeSyncCursor(decoded);
+      expect(encodedSyncCursor).toStrictEqual({
         ...freshCursorRow,
         deletedAt: null,
         deletedByPrincipal: null,

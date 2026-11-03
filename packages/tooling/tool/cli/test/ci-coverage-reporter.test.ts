@@ -159,7 +159,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
             "Coverage runtime receipt must be relative to the test cwd."
           )
         );
-        expect(yield* fs.exists(destination)).toBe(false);
+        const exists1 = yield* fs.exists(destination);
+        expect(exists1).toBe(false);
       })
     );
 
@@ -212,7 +213,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
           expect(receipt.testRuntime).toBe(runtime);
           expect(receipt.success).toBe(true);
           expect(receipt.provider).toBe("istanbul");
-          expect(yield* f.fs.exists(f.path.join(f.root, "coverage/coverage-final.json"))).toBe(true);
+          const exists2 = yield* f.fs.exists(f.path.join(f.root, "coverage/coverage-final.json"));
+          expect(exists2).toBe(true);
           expect(Str.includes(`RUNTIME_PROOF:${runtime}:${receipt.runtimeVersion}`)(result.output)).toBe(true);
         })
       );
@@ -229,7 +231,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         expect(receipt.testRuntime).toBe("node");
         expect(receipt.provider).toBe("v8");
         expect(receipt.success).toBe(true);
-        expect(yield* f.fs.exists(f.path.join(f.root, "coverage/coverage-final.json"))).toBe(true);
+        const exists3 = yield* f.fs.exists(f.path.join(f.root, "coverage/coverage-final.json"));
+        expect(exists3).toBe(true);
       })
     );
 
@@ -259,7 +262,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         const f = yield* fixture(true);
         const result = yield* f.run("bun", "");
         expect(result.exitCode).not.toBe(0);
-        expect(yield* f.fs.exists(f.path.join(f.root, "coverage/runtime.json"))).toBe(false);
+        const exists4 = yield* f.fs.exists(f.path.join(f.root, "coverage/runtime.json"));
+        expect(exists4).toBe(false);
       })
     );
 
@@ -268,7 +272,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         const f = yield* fixture(true);
         const result = yield* f.run("bun", "invocation-1", f.path.join(f.root, "absolute.json"));
         expect(result.exitCode).not.toBe(0);
-        expect(yield* f.fs.exists(f.path.join(f.root, "absolute.json"))).toBe(false);
+        const exists5 = yield* f.fs.exists(f.path.join(f.root, "absolute.json"));
+        expect(exists5).toBe(false);
       })
     );
 
@@ -282,7 +287,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         yield* fs.symlink(outside, f.path.join(f.root, "receipts"));
         const result = yield* f.run("bun", "invocation-1", "receipts/runtime.json");
         expect(result.exitCode).not.toBe(0);
-        expect(yield* fs.readFileString(target)).toBe("preserve");
+        const readFileString6 = yield* fs.readFileString(target);
+        expect(readFileString6).toBe("preserve");
       })
     );
 
@@ -294,7 +300,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         const original = yield* f.fs.readFileString(f.path.join(f.root, "receipts/runtime.json"));
         const second = yield* f.run("bun", "invocation-2", "receipts/runtime.json");
         expect(second.exitCode).not.toBe(0);
-        expect(yield* f.fs.readFileString(f.path.join(f.root, "receipts/runtime.json"))).toBe(original);
+        const readFileString7 = yield* f.fs.readFileString(f.path.join(f.root, "receipts/runtime.json"));
+        expect(readFileString7).toBe(original);
       })
     );
   }

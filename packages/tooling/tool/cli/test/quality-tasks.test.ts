@@ -269,7 +269,8 @@ const runGit = Effect.fn("QualityTasksTest.runGit")(function* (repoRoot: string,
     stdout: "ignore",
     stderr: "ignore",
   });
-  assert.strictEqual(yield* handle.exitCode, 0);
+  const exitCode1 = yield* handle.exitCode;
+  assert.strictEqual(exitCode1, 0);
 });
 const coveragePercentages = (value: number) => ({
   lines: Percentage.make(value),
@@ -350,23 +351,21 @@ const writeIntegrationWorkspace = Effect.fnUntraced(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  yield* fs.writeFileString(
-    path.join(repositoryPath, "package.json"),
-    yield* encodeJson({ name: "@beep/test-root", private: true, workspaces })
-  );
+  const argument1 = path.join(repositoryPath, "package.json");
+  const encodedJson1 = yield* encodeJson({ name: "@beep/test-root", private: true, workspaces });
+  yield* fs.writeFileString(argument1, encodedJson1);
   yield* Effect.forEach(
     packageDirs,
     Effect.fnUntraced(function* (packageDir) {
       const absoluteDir = path.join(repositoryPath, packageDir);
       yield* fs.makeDirectory(absoluteDir, { recursive: true });
-      yield* fs.writeFileString(
-        path.join(absoluteDir, "package.json"),
-        yield* encodeJson({
-          name: `@beep/${Str.replaceAll("/", "-")(packageDir)}`,
-          private: true,
-          scripts: { "test:integration": "vitest run test/integration" },
-        })
-      );
+      const argument2 = path.join(absoluteDir, "package.json");
+      const encodedJson2 = yield* encodeJson({
+        name: `@beep/${Str.replaceAll("/", "-")(packageDir)}`,
+        private: true,
+        scripts: { "test:integration": "vitest run test/integration" },
+      });
+      yield* fs.writeFileString(argument2, encodedJson2);
     }),
     { discard: true }
   );
@@ -776,27 +775,25 @@ const coverageArtifactPlanRepository = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-plan-" });
-  yield* fs.writeFileString(
-    path.join(root, "package.json"),
-    yield* encodeJson({
-      name: "@beep/plan-root",
-      private: true,
-      workspaces: ["packages/*"],
-    })
-  );
+  const argument3 = path.join(root, "package.json");
+  const encodedJson3 = yield* encodeJson({
+    name: "@beep/plan-root",
+    private: true,
+    workspaces: ["packages/*"],
+  });
+  yield* fs.writeFileString(argument3, encodedJson3);
   yield* Effect.forEach(
     ["covered", "bare"],
     Effect.fnUntraced(function* (name) {
       const dir = path.join(root, "packages", name);
       yield* fs.makeDirectory(dir, { recursive: true });
-      yield* fs.writeFileString(
-        path.join(dir, "package.json"),
-        yield* encodeJson({
-          name: `@beep/${name}`,
-          private: true,
-          scripts: name === "covered" ? { coverage: "vitest run --coverage" } : { test: "vitest run" },
-        })
-      );
+      const argument4 = path.join(dir, "package.json");
+      const encodedJson4 = yield* encodeJson({
+        name: `@beep/${name}`,
+        private: true,
+        scripts: name === "covered" ? { coverage: "vitest run --coverage" } : { test: "vitest run" },
+      });
+      yield* fs.writeFileString(argument4, encodedJson4);
     })
   );
   yield* runGit(root, ["init"]);
@@ -932,7 +929,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(spawnedLines(spawner)).toEqual([
               "bun audit --audit-level=high --ignore=GHSA-active --ignore=GHSA-vfj7-8cjw-p6xm",
             ]);
-            expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain("GHSA-expired");
+            const logLines2 = yield* TestConsole.logLines;
+            expect(A.join(A.filter(logLines2, isString), "\n")).toContain("GHSA-expired");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -1821,7 +1819,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("decodes the failure policy and wave report schemas", () =>
       Effect.gen(function* () {
-        expect(yield* decodeGithubCheckFailurePolicy("fail-fast")).toBe("fail-fast");
+        const decodedGithubCheckFailurePolicy = yield* decodeGithubCheckFailurePolicy("fail-fast");
+        expect(decodedGithubCheckFailurePolicy).toBe("fail-fast");
         const report = yield* decodeGithubCheckRunReport({
           failurePolicy: "collect-all",
           lanes: [
@@ -1934,8 +1933,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         yield* runQualityTaskGithubCheckLaneWaves("pre-push", [], "fail-fast");
         yield* runQualityTaskStreamingLaneGroup("ci:local", []);
+        const logLines3 = yield* TestConsole.logLines;
         const reportLines = pipe(
-          yield* TestConsole.logLines,
+          logLines3,
           A.filter(isString),
           A.filter(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX))
         );
@@ -1968,8 +1968,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           cwd: tempDir,
         });
         yield* runQualityTaskStreamingLaneGroup("ci:local", [["lint", wrapper, O.none()]]);
+        const logLines4 = yield* TestConsole.logLines;
         const report = yield* pipe(
-          yield* TestConsole.logLines,
+          logLines4,
           A.filter(isString),
           A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
           O.getOrThrow,
@@ -2013,15 +2014,17 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             ["check", bunScriptStep("ci:check", "process.exit(0)"), O.none()],
           ])
         );
+        const readFileString5 = yield* fs.readFileString(ledger);
         const rows = yield* pipe(
-          yield* fs.readFileString(ledger),
+          readFileString5,
           Str.split("\n"),
           A.filter(Str.isNonEmpty),
           Effect.forEach((line) => decodeTurboLaneLedgerRow(line))
         );
         expect(rows).toEqual([{ _tag: "closed", attempted: 0 }]);
         // A closed ledger with nothing declared folds to no digest rather than an empty one.
-        assertNone(yield* readTurboLaneLedger(ledger));
+        const readTurboLaneLedger6 = yield* readTurboLaneLedger(ledger);
+        assertNone(readTurboLaneLedger6);
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -2051,7 +2054,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             },
           ],
         });
-        yield* fs.writeFileString(path.join(bin, "summary.json"), yield* encodeTurboRunSummary(summary));
+        const argument5 = path.join(bin, "summary.json");
+        const encodedTurboRunSummary = yield* encodeTurboRunSummary(summary);
+        yield* fs.writeFileString(argument5, encodedTurboRunSummary);
         const fakeBunx = path.join(bin, "bun");
         yield* fs.writeFileString(
           fakeBunx,
@@ -2076,14 +2081,17 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           ledger,
           runQualityTaskStreamingLaneGroup("ci:local", [["lint", direct, O.none()]])
         );
-        const expected = yield* Effect.fromOption(yield* turboLaneDigestFromSummary(summary, ["lint:typos"]));
+        const turboLaneDigestFromSummary7 = yield* turboLaneDigestFromSummary(summary, ["lint:typos"]);
+        const expected = yield* Effect.fromOption(turboLaneDigestFromSummary7);
         // The child declared the step's digest and closed the ledger with that one attempt.
+        const readTurboLaneLedger8 = yield* readTurboLaneLedger(ledger);
         assertSome(
-          O.map(yield* readTurboLaneLedger(ledger), (digest) => digest.digest),
+          O.map(readTurboLaneLedger8, (digest) => digest.digest),
           expected.digest
         );
+        const logLines9 = yield* TestConsole.logLines;
         const report = yield* pipe(
-          yield* TestConsole.logLines,
+          logLines9,
           A.filter(isString),
           A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
           O.getOrThrow,
@@ -2127,7 +2135,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 },
               ],
             });
-            yield* fs.writeFileString(path.join(bin, "summary.json"), yield* encodeTurboRunSummary(summary));
+            const argument6 = path.join(bin, "summary.json");
+            const encodedTurboRunSummary5 = yield* encodeTurboRunSummary(summary);
+            yield* fs.writeFileString(argument6, encodedTurboRunSummary5);
             // A stand-in Cache launcher leaves the summary its governed Turbo child would write, then fails.
             const fakeBun = path.join(bin, "bun");
             yield* fs.writeFileString(
@@ -2160,11 +2170,13 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               runQualityTaskStreamingLaneGroup("ci:local", [["check", direct, O.none()]])
             ).pipe(Effect.flip, TestClock.withLive);
             expect(failure._tag).toBe("QualityTaskGroupFailed");
-            const expected = yield* Effect.fromOption(yield* turboLaneDigestFromSummary(summary, ["check"]));
+            const turboLaneDigestFromSummary10 = yield* turboLaneDigestFromSummary(summary, ["check"]);
+            const expected = yield* Effect.fromOption(turboLaneDigestFromSummary10);
 
             // The child wrote the red step's declared row, then closed the ledger with that attempt counted.
+            const readFileString11 = yield* fs.readFileString(ledger);
             const rows = yield* pipe(
-              yield* fs.readFileString(ledger),
+              readFileString11,
               Str.split("\n"),
               A.filter(Str.isNonEmpty),
               Effect.forEach((line) => decodeTurboLaneLedgerRow(line))
@@ -2179,8 +2191,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               )
             ).toEqual([`declared=${expected.digest}`, "closed=1"]);
 
+            const logLines12 = yield* TestConsole.logLines;
             const report = yield* pipe(
-              yield* TestConsole.logLines,
+              logLines12,
               A.filter(isString),
               A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
               O.getOrThrow,
@@ -2236,14 +2249,16 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             ])
           )
         );
-        const lines = pipe(yield* fs.readFileString(artifactPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+        const readFileString13 = yield* fs.readFileString(artifactPath);
+        const lines = pipe(readFileString13, Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(lines).toHaveLength(2);
         const report = yield* pipe(A.get(lines, 1), O.getOrThrow, decodeQualityTaskLaneRunReportJson);
         expect(report.schemaVersion).toBe("quality-task-lane-run/v1");
         assertSome(report.parentLaneId, "full:02-ci-parity");
         expect(A.map(report.lanes, (lane) => lane.id)).toEqual(["check"]);
+        const logLines14 = yield* TestConsole.logLines;
         const emitted = pipe(
-          yield* TestConsole.logLines,
+          logLines14,
           A.filter(isString),
           A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
           O.getOrThrow
@@ -2291,8 +2306,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           )
         );
 
+        const logLines15 = yield* TestConsole.logLines;
         const emitted = pipe(
-          yield* TestConsole.logLines,
+          logLines15,
           A.filter(isString),
           A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
           O.getOrThrow
@@ -2340,8 +2356,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           { discard: true }
         );
 
+        const logLines16 = yield* TestConsole.logLines;
         const reportLines = pipe(
-          yield* TestConsole.logLines,
+          logLines16,
           A.filter(isString),
           A.filter(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX))
         );
@@ -2472,7 +2489,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         [ReportArbitrary],
         flow(
           Effect.fnUntraced(function* ([report]) {
-            const decoded = yield* decodeGithubCheckRunReportEffect(yield* encodeGithubCheckRunReportEffect(report));
+            const encodedGithubCheckRunReportEffect = yield* encodeGithubCheckRunReportEffect(report);
+            const decoded = yield* decodeGithubCheckRunReportEffect(encodedGithubCheckRunReportEffect);
             expect(decoded.schemaVersion).toBe("github-check-run/v1");
             expect(decoded.failurePolicy).toBe(report.failurePolicy);
             expect(A.map(decoded.lanes, (lane) => lane.id)).toEqual(A.map(report.lanes, (lane) => lane.id));
@@ -2714,7 +2732,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               ["pool:tail", "not-run-early-stop"],
             ]);
             expect(A.map(failures, (failure) => failure.label)).toEqual(["pool:red"]);
-            expect(yield* fs.exists(tailMarker)).toBe(false);
+            const exists17 = yield* fs.exists(tailMarker);
+            expect(exists17).toBe(false);
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -2905,12 +2924,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["reused"]);
             const shadow = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "shadow", run);
             expect(A.map(shadow.report.lanes, (result) => result.status)).toEqual(["passed"]);
-            expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+            const readFileString18 = yield* fs.readFileString(markerPath);
+            expect(readFileString18).toBe("run\nrun\n");
 
             yield* fs.writeFileString(path.join(tempRoot, "README.md"), "# changed\n");
             const invalidated = yield* runWithLaneProof;
             expect(A.map(invalidated.report.lanes, (result) => result.status)).toEqual(["passed"]);
-            expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\nrun\n");
+            const readFileString19 = yield* fs.readFileString(markerPath);
+            expect(readFileString19).toBe("run\nrun\nrun\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3049,13 +3070,15 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(A.map(first.report.lanes, (result) => result.status)).toEqual(A.replicate("passed", 6));
             // One hash before the first wave plus one fence per wave: 3, where
             // the per-lane start and persist hashes cost 12.
-            expect(Str.split(Str.trim(yield* fs.readFileString(hashLog)), "\n")).toHaveLength(3);
+            const readFileString20 = yield* fs.readFileString(hashLog);
+            expect(Str.split(Str.trim(readFileString20), "\n")).toHaveLength(3);
 
             const second = yield* counted;
             expect(A.map(second.report.lanes, (result) => result.status)).toEqual(A.replicate("reused", 6));
             // All reused: the up-front hash plus the preflight refresh the heavy
             // wave reads; the last wave persists nothing and skips its fence.
-            expect(Str.split(Str.trim(yield* fs.readFileString(hashLog)), "\n")).toHaveLength(5);
+            const readFileString21 = yield* fs.readFileString(hashLog);
+            expect(Str.split(Str.trim(readFileString21), "\n")).toHaveLength(5);
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3097,7 +3120,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             );
 
             expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(["passed", "passed"]);
-            expect(yield* fs.exists(hashLog)).toBe(false);
+            const exists22 = yield* fs.exists(hashLog);
+            expect(exists22).toBe(false);
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3142,7 +3166,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             // The mutator moved the tree inside the wave, so the quiet lane's
             // proof is fenced out too, and nothing is reused on the rerun.
             expect(A.map(second.report.lanes, (lane) => lane.status)).toEqual(["passed", "passed"]);
-            expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "quiet.txt"))).toBe("quiet\nquiet\n");
+            const readFileString23 = yield* fs.readFileString(path.join(tempRoot, ".beep", "quiet.txt"));
+            expect(readFileString23).toBe("quiet\nquiet\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3177,7 +3202,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["passed"]);
             expect(A.map((yield* atRuns("100")).report.lanes, (result) => result.status)).toEqual(["reused"]);
             expect(A.map((yield* atRuns("400")).report.lanes, (result) => result.status)).toEqual(["passed"]);
-            expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+            const readFileString24 = yield* fs.readFileString(markerPath);
+            expect(readFileString24).toBe("run\nrun\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3229,9 +3255,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 expect(A.map(initial.report.lanes, (result) => result.status)).toEqual(["passed"]);
                 expect(A.map(repeated.report.lanes, (result) => result.status)).toEqual(["reused"]);
                 expect(A.map(changed.report.lanes, (result) => result.status)).toEqual(["passed"]);
-                expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "ambient-marker.txt"))).toBe(
-                  `${before}\n${after}\n`
-                );
+                const readFileString25 = yield* fs.readFileString(path.join(tempRoot, ".beep", "ambient-marker.txt"));
+                expect(readFileString25).toBe(`${before}\n${after}\n`);
               }),
               { concurrency: 1, discard: true }
             );
@@ -3270,7 +3295,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(A.map((yield* withGoldenMode("0")).report.lanes, (result) => result.status)).toEqual(["passed"]);
             expect(A.map((yield* withGoldenMode("0")).report.lanes, (result) => result.status)).toEqual(["reused"]);
             expect(A.map((yield* withGoldenMode("1")).report.lanes, (result) => result.status)).toEqual(["passed"]);
-            expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+            const readFileString26 = yield* fs.readFileString(markerPath);
+            expect(readFileString26).toBe("run\nrun\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3317,8 +3343,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 )
               );
 
-            expect(yield* hashAtConcurrency("2")).toBe(yield* hashAtConcurrency("2"));
-            expect(yield* hashAtConcurrency("2")).not.toBe(yield* hashAtConcurrency("3"));
+            const hashAtConcurrency27 = yield* hashAtConcurrency("2");
+            const expectation1 = expect(hashAtConcurrency27);
+            const hashAtConcurrency6 = yield* hashAtConcurrency("2");
+            expectation1.toBe(hashAtConcurrency6);
+            const hashAtConcurrency28 = yield* hashAtConcurrency("2");
+            const argument7 = expect(hashAtConcurrency28).not;
+            const hashAtConcurrency7 = yield* hashAtConcurrency("3");
+            argument7.toBe(hashAtConcurrency7);
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3361,7 +3393,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 )
               );
 
-            expect(yield* hashAtGoldenMode("0")).toBe(yield* hashAtGoldenMode("1"));
+            const hashAtGoldenMode29 = yield* hashAtGoldenMode("0");
+            const expectation2 = expect(hashAtGoldenMode29);
+            const hashAtGoldenMode8 = yield* hashAtGoldenMode("1");
+            expectation2.toBe(hashAtGoldenMode8);
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3399,7 +3434,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
             expect(A.map((yield* withMissingBase).report.lanes, (result) => result.status)).toEqual(["passed"]);
             expect(A.map((yield* withMissingBase).report.lanes, (result) => result.status)).toEqual(["passed"]);
-            expect(yield* fs.readFileString(markerPath)).toBe("run\nrun\n");
+            const readFileString30 = yield* fs.readFileString(markerPath);
+            expect(readFileString30).toBe("run\nrun\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3435,7 +3471,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["passed", "passed"]);
             const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
             expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["reused", "reused"]);
-            expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "lanes.txt"))).toBe("preflight\nheavy\n");
+            const readFileString31 = yield* fs.readFileString(path.join(tempRoot, ".beep", "lanes.txt"));
+            expect(readFileString31).toBe("preflight\nheavy\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3492,12 +3529,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
             const rewritten = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
             expect(A.map(rewritten.report.lanes, (result) => result.status)).toEqual(["passed", "passed"]);
-            expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "secrets-history.txt"))).toBe(
-              "secrets\nsecrets\n"
-            );
-            expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "commitlint-history.txt"))).toBe(
-              "commitlint\ncommitlint\n"
-            );
+            const readFileString32 = yield* fs.readFileString(path.join(tempRoot, ".beep", "secrets-history.txt"));
+            expect(readFileString32).toBe("secrets\nsecrets\n");
+            const readFileString33 = yield* fs.readFileString(path.join(tempRoot, ".beep", "commitlint-history.txt"));
+            expect(readFileString33).toBe("commitlint\ncommitlint\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3546,9 +3581,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const afterMutation = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", runMutatingWaves);
 
             expect(A.map(afterMutation.report.lanes, (result) => result.status)).toEqual(["passed", "passed"]);
-            expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "heavy-after-mutation.txt"))).toBe(
-              "heavy\nheavy\n"
-            );
+            const readFileString34 = yield* fs.readFileString(path.join(tempRoot, ".beep", "heavy-after-mutation.txt"));
+            expect(readFileString34).toBe("heavy\nheavy\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3582,7 +3616,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
             expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["passed"]);
             expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["passed"]);
-            expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "security.txt"))).toBe("security\nsecurity\n");
+            const readFileString35 = yield* fs.readFileString(path.join(tempRoot, ".beep", "security.txt"));
+            expect(readFileString35).toBe("security\nsecurity\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3617,7 +3652,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* fs.writeFileString(path.join(tempRoot, "README.md"), "# baseline\n");
             const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
             expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["passed"]);
-            expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "mutation.txt"))).toBe("run\nrun\n");
+            const readFileString36 = yield* fs.readFileString(path.join(tempRoot, ".beep", "mutation.txt"));
+            expect(readFileString36).toBe("run\nrun\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3655,7 +3691,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const second = yield* withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "active", run);
             expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["passed"]);
             expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["reused"]);
-            expect(yield* fs.readFileString(path.join(worktreeRoot, ".beep", "worktree.txt"))).toBe("run\n");
+            const readFileString37 = yield* fs.readFileString(path.join(worktreeRoot, ".beep", "worktree.txt"));
+            expect(readFileString37).toBe("run\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3691,7 +3728,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(A.map(first.report.lanes, (result) => result.status)).toEqual(["failed"]);
             expect(A.map(second.report.lanes, (result) => result.status)).toEqual(["passed"]);
             expect(A.map(third.report.lanes, (result) => result.status)).toEqual(["reused"]);
-            expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "failure.txt"))).toBe("run\n");
+            const readFileString38 = yield* fs.readFileString(path.join(tempRoot, ".beep", "failure.txt"));
+            expect(readFileString38).toBe("run\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3777,8 +3815,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         expect(O.getOrThrow(runOf("lint:allowlist").startedAt) < O.getOrThrow(runOf("goals:index-check").endedAt)).toBe(
           true
         );
+        const readFileString39 = yield* fs.readFileString(artifactPath);
         const journaled = yield* Effect.forEach(
-          pipe(yield* fs.readFileString(artifactPath), Str.split("\n"), A.filter(Str.isNonEmpty)),
+          pipe(readFileString39, Str.split("\n"), A.filter(Str.isNonEmpty)),
           (line) => decodeQualityTaskLaneRunReportJson(line)
         );
         expect(A.flatMap(journaled, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual(laneIds);
@@ -3849,7 +3888,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 TestClock.withLive,
                 Effect.tap(
                   Effect.fnUntraced(function* () {
-                    const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
+                    const logLines40 = yield* testConsole.logLines;
+                    const logText = A.join(A.filter(logLines40, isString), "\n");
                     expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
                     expect(logText).toContain('"failurePolicy":"collect-all"');
                     expect(logText).toContain('"status":"passed"');
@@ -3900,7 +3940,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 TestClock.withLive,
                 Effect.tap(
                   Effect.fnUntraced(function* () {
-                    const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
+                    const logLines41 = yield* testConsole.logLines;
+                    const logText = A.join(A.filter(logLines41, isString), "\n");
                     expect(logText).toContain("[github-checks] quality: skipped changeset status on main push");
                     expect(spawnedPolicyCommands(spawner)).not.toContain(policyCommandKey(changesetStatusCommand));
                     expect(
@@ -3961,7 +4002,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 }
 
                 expect(spawnedPolicyCommands(spawner)).toContain(policyCommandKey(lastCommand));
-                const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
+                const logLines42 = yield* testConsole.logLines;
+                const logText = A.join(A.filter(logLines42, isString), "\n");
                 expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
                 expect(logText).toContain('"failurePolicy":"collect-all"');
                 expect(logText).toContain('"id":"repo-sanity:tsconfig-sync","stage":"repo-sanity","status":"failed"');
@@ -4957,7 +4999,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
           exit.pipe(Exit.isSuccess, assertTrue);
 
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          const logLines43 = yield* TestConsole.logLines;
+          const logText = A.join(A.filter(logLines43, isString), "\n");
           // Derived from the same plan the runtime executes: a lint policy step
           // added on another branch must not break this assertion when the two
           // land together in a merge.
@@ -5495,14 +5538,15 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       "decodes per-file summary entries into stable repo-relative baseline paths",
       flow(
         Effect.fnUntraced(function* () {
+          const encodedJson = yield* encodeJson({
+            total: vitestCoverageMetrics(20, 15, 75),
+            "/repo/packages/existing/src/Absolute.ts": vitestCoverageMetrics(10, 10, 100),
+            "src/Relative.ts": vitestCoverageMetrics(10, 5, 50),
+          });
           const baseline = yield* coveragePackageBaselineFromSummaryForTesting(
             "/repo",
             "/repo/packages/existing",
-            yield* encodeJson({
-              total: vitestCoverageMetrics(20, 15, 75),
-              "/repo/packages/existing/src/Absolute.ts": vitestCoverageMetrics(10, 10, 100),
-              "src/Relative.ts": vitestCoverageMetrics(10, 5, 50),
-            })
+            encodedJson
           );
           const files = baseline.files;
 
@@ -5524,14 +5568,15 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       "derives Istanbul-compatible percentages from trusted counts instead of the reported pct field",
       flow(
         Effect.fnUntraced(function* () {
+          const encodedJson44 = yield* encodeJson({
+            total: vitestCoverageMetrics(10, 0, 100),
+            "src/Fractional.ts": vitestCoverageMetrics(134, 115, 100),
+            "src/NoSubjects.ts": vitestCoverageMetrics(0, 0, "Unknown"),
+          });
           const baseline = yield* coveragePackageBaselineFromSummaryForTesting(
             "/repo",
             "/repo/packages/existing",
-            yield* encodeJson({
-              total: vitestCoverageMetrics(10, 0, 100),
-              "src/Fractional.ts": vitestCoverageMetrics(134, 115, 100),
-              "src/NoSubjects.ts": vitestCoverageMetrics(0, 0, "Unknown"),
-            })
+            encodedJson44
           );
           const fractional = baseline.files["packages/existing/src/Fractional.ts"];
           const noSubjects = baseline.files["packages/existing/src/NoSubjects.ts"];
@@ -5559,15 +5604,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const messages = yield* Effect.forEach(
             orders,
             Effect.fnUntraced(function* (rawPaths) {
+              const encodedJson45 = yield* encodeJson({
+                total: vitestCoverageMetrics(10, 10, 100),
+                ...R.fromEntries(A.map(rawPaths, (rawPath) => [rawPath, vitestCoverageMetrics(10, 10, 100)])),
+              });
               const error = yield* Effect.flip(
-                coveragePackageBaselineFromSummaryForTesting(
-                  "/repo",
-                  "/repo/packages/existing",
-                  yield* encodeJson({
-                    total: vitestCoverageMetrics(10, 10, 100),
-                    ...R.fromEntries(A.map(rawPaths, (rawPath) => [rawPath, vitestCoverageMetrics(10, 10, 100)])),
-                  })
-                )
+                coveragePackageBaselineFromSummaryForTesting("/repo", "/repo/packages/existing", encodedJson45)
               );
               return error.message;
             })
@@ -5588,15 +5630,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* Effect.forEach(
             ["\u0000", "\u001B", "\u007F", "\u0085"],
             Effect.fnUntraced(function* (control) {
+              const encodedJson46 = yield* encodeJson({
+                total: vitestCoverageMetrics(10, 10, 100),
+                [`src/Unsafe${control}Name.ts`]: vitestCoverageMetrics(10, 10, 100),
+              });
               const error = yield* Effect.flip(
-                coveragePackageBaselineFromSummaryForTesting(
-                  "/repo",
-                  "/repo/packages/existing",
-                  yield* encodeJson({
-                    total: vitestCoverageMetrics(10, 10, 100),
-                    [`src/Unsafe${control}Name.ts`]: vitestCoverageMetrics(10, 10, 100),
-                  })
-                )
+                coveragePackageBaselineFromSummaryForTesting("/repo", "/repo/packages/existing", encodedJson46)
               );
 
               assert.include(error.message, "without control characters");
@@ -5614,17 +5653,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       flow(
         Effect.fnUntraced(function* () {
           const invalidPct = Str.repeat(20_000)("x");
+          const encodedJson47 = yield* encodeJson({
+            total: {
+              ...vitestCoverageMetrics(10, 10, 100),
+              lines: { total: 10, covered: 10, skipped: 0, pct: invalidPct },
+            },
+          });
           const error = yield* Effect.flip(
-            coveragePackageBaselineFromSummaryForTesting(
-              "/repo",
-              "/repo/packages/existing",
-              yield* encodeJson({
-                total: {
-                  ...vitestCoverageMetrics(10, 10, 100),
-                  lines: { total: 10, covered: 10, skipped: 0, pct: invalidPct },
-                },
-              })
-            )
+            coveragePackageBaselineFromSummaryForTesting("/repo", "/repo/packages/existing", encodedJson47)
           );
 
           assert.isTrue(isDomainError(error));
@@ -5660,12 +5696,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* Effect.forEach(
             invalidSummaries,
             Effect.fnUntraced(function* ({ label, summary }) {
+              const encodedJson48 = yield* encodeJson({ total: valid, "src/Index.ts": summary });
               const decoded = yield* Effect.exit(
-                coveragePackageBaselineFromSummaryForTesting(
-                  "/repo",
-                  "/repo/packages/existing",
-                  yield* encodeJson({ total: valid, "src/Index.ts": summary })
-                )
+                coveragePackageBaselineFromSummaryForTesting("/repo", "/repo/packages/existing", encodedJson48)
               );
               assertTrue(Exit.isFailure(decoded), `Expected ${label} to fail summary decoding`);
             }),
@@ -5859,28 +5892,24 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
               yield* fs.makeDirectory(coverageDirectory, { recursive: true });
               yield* fs.makeDirectory(standardsDirectory, { recursive: true });
-              yield* fs.writeFileString(
-                path.join(repoRoot, "package.json"),
-                yield* encodeJson({ name: "@beep/existing", scripts: { coverage: "vitest" } })
-              );
-              yield* fs.writeFileString(
-                path.join(coverageDirectory, "coverage-summary.json"),
-                yield* encodeJson({
-                  total: vitestCoverageMetrics(10, 8, 80),
-                  "src/Index.ts": vitestCoverageMetrics(10, 8, 80),
-                })
-              );
-              yield* fs.writeFileString(
-                baselinePath,
-                yield* encodeJson({
-                  schema_version: 1,
-                  generated_at: "2026-07-06T00:00:00.000Z",
-                  git_sha: "legacy-sha",
-                  command: "bun run coverage:baseline:write",
-                  epsilon: 0.001,
-                  packages: { "@beep/existing": { path: "." } },
-                })
-              );
+              const argument8 = path.join(repoRoot, "package.json");
+              const encodedJson9 = yield* encodeJson({ name: "@beep/existing", scripts: { coverage: "vitest" } });
+              yield* fs.writeFileString(argument8, encodedJson9);
+              const argument9 = path.join(coverageDirectory, "coverage-summary.json");
+              const encodedJson10 = yield* encodeJson({
+                total: vitestCoverageMetrics(10, 8, 80),
+                "src/Index.ts": vitestCoverageMetrics(10, 8, 80),
+              });
+              yield* fs.writeFileString(argument9, encodedJson10);
+              const encodedJson49 = yield* encodeJson({
+                schema_version: 1,
+                generated_at: "2026-07-06T00:00:00.000Z",
+                git_sha: "legacy-sha",
+                command: "bun run coverage:baseline:write",
+                epsilon: 0.001,
+                packages: { "@beep/existing": { path: "." } },
+              });
+              yield* fs.writeFileString(baselinePath, encodedJson49);
 
               const scopedExit = yield* Effect.exit(writeCoverageRegressionBaseline(repoRoot, true));
               scopedExit.pipe(Exit.isFailure, assertTrue);
@@ -5888,20 +5917,18 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 assert.include(Cause.pretty(scopedExit.cause), "schema version 1 requires a full");
               }
 
-              yield* fs.writeFileString(
-                baselinePath,
-                yield* encodeJson({
-                  schema_version: 1,
-                  generated_at: "2026-07-06T00:00:00.000Z",
-                  git_sha: "legacy-sha",
-                  command: "bun run coverage:baseline:write",
-                  epsilon: 0.001,
-                  minimum: { lines: 71, statements: 72, branches: 51, functions: 61 },
-                  exemptions: { "@beep/exempt": "Named migration exemption." },
-                  follow_ups: { "@beep/debt": "Named migration follow-up." },
-                  packages: { "@beep/existing": { path: "." } },
-                })
-              );
+              const encodedJson50 = yield* encodeJson({
+                schema_version: 1,
+                generated_at: "2026-07-06T00:00:00.000Z",
+                git_sha: "legacy-sha",
+                command: "bun run coverage:baseline:write",
+                epsilon: 0.001,
+                minimum: { lines: 71, statements: 72, branches: 51, functions: 61 },
+                exemptions: { "@beep/exempt": "Named migration exemption." },
+                follow_ups: { "@beep/debt": "Named migration follow-up." },
+                packages: { "@beep/existing": { path: "." } },
+              });
+              yield* fs.writeFileString(baselinePath, encodedJson50);
 
               yield* runGit(repoRoot, ["init"]);
               yield* runGit(repoRoot, ["config", "user.email", "coverage@example.invalid"]);
@@ -5911,9 +5938,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               yield* runGit(repoRoot, ["commit", "-m", "test: seed coverage fixture"]);
               yield* writeCoverageRegressionBaseline(repoRoot, false);
 
-              const migrated = yield* decodeCoverageRegressionBaselineJsoncForTesting(
-                yield* fs.readFileString(baselinePath)
-              );
+              const readFileString51 = yield* fs.readFileString(baselinePath);
+              const migrated = yield* decodeCoverageRegressionBaselineJsoncForTesting(readFileString51);
               assert.strictEqual(migrated.schema_version, 2);
               assert.strictEqual(migrated.minimum.lines, 71);
               assert.strictEqual(migrated.minimum.statements, 72);
@@ -5959,36 +5985,39 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
               yield* fs.makeDirectory(coverageDirectory, { recursive: true });
               yield* fs.makeDirectory(standardsDirectory, { recursive: true });
-              yield* fs.writeFileString(
-                path.join(repoRoot, "package.json"),
-                yield* encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
-              );
-              yield* fs.writeFileString(
-                path.join(packageDir, "package.json"),
-                yield* encodeJson({ name: "@beep/existing", private: true, scripts: { coverage: "vitest" } })
-              );
+              const argument10 = path.join(repoRoot, "package.json");
+              const encodedJson11 = yield* encodeJson({
+                name: "@beep/test-root",
+                private: true,
+                workspaces: ["packages/*"],
+              });
+              yield* fs.writeFileString(argument10, encodedJson11);
+              const argument11 = path.join(packageDir, "package.json");
+              const encodedJson12 = yield* encodeJson({
+                name: "@beep/existing",
+                private: true,
+                scripts: { coverage: "vitest" },
+              });
+              yield* fs.writeFileString(argument11, encodedJson12);
               yield* fs.writeFileString(sourcePath, "export const value = 1;\n");
-              yield* fs.writeFileString(
-                path.join(coverageDirectory, "coverage-summary.json"),
-                yield* encodeJson({
-                  total: vitestCoverageMetrics(10, 9, 90),
-                  "src/Index.ts": vitestCoverageMetrics(10, 9, 90),
-                })
-              );
-              yield* fs.writeFileString(
-                baselinePath,
-                yield* encodeJson({
-                  schema_version: 2,
-                  generated_at: "2026-07-06T00:00:00.000Z",
-                  git_sha: "committed-sha",
-                  command: "bun run coverage:baseline:write",
-                  epsilon: 0.001,
-                  minimum: coveragePercentages(0),
-                  exemptions: {},
-                  follow_ups: {},
-                  packages: { "@beep/existing": committedRow },
-                })
-              );
+              const argument12 = path.join(coverageDirectory, "coverage-summary.json");
+              const encodedJson13 = yield* encodeJson({
+                total: vitestCoverageMetrics(10, 9, 90),
+                "src/Index.ts": vitestCoverageMetrics(10, 9, 90),
+              });
+              yield* fs.writeFileString(argument12, encodedJson13);
+              const encodedJson52 = yield* encodeJson({
+                schema_version: 2,
+                generated_at: "2026-07-06T00:00:00.000Z",
+                git_sha: "committed-sha",
+                command: "bun run coverage:baseline:write",
+                epsilon: 0.001,
+                minimum: coveragePercentages(0),
+                exemptions: {},
+                follow_ups: {},
+                packages: { "@beep/existing": committedRow },
+              });
+              yield* fs.writeFileString(baselinePath, encodedJson52);
 
               yield* runGit(repoRoot, ["init"]);
               yield* runGit(repoRoot, ["config", "user.email", "coverage@example.invalid"]);
@@ -5997,8 +6026,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               yield* runGit(repoRoot, ["add", "--all"]);
               yield* runGit(repoRoot, ["commit", "-m", "test: seed unchanged coverage fixture"]);
 
-              expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, [])).toMatchObject({ _tag: "noop" });
-              expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, ["package.json"])).toMatchObject({
+              const planWorkspaceCoverageAffectedScope53 = yield* planWorkspaceCoverageAffectedScope(repoRoot, []);
+              expect(planWorkspaceCoverageAffectedScope53).toMatchObject({ _tag: "noop" });
+              const planWorkspaceCoverageAffectedScope54 = yield* planWorkspaceCoverageAffectedScope(repoRoot, [
+                "package.json",
+              ]);
+              expect(planWorkspaceCoverageAffectedScope54).toMatchObject({
                 _tag: "full",
               });
 
@@ -6008,16 +6041,17 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   ConfigProvider.fromUnknown({ TURBO_SCM_BASE: "origin/main" })
                 )
               );
-              const heldBaseline = yield* decodeCoverageRegressionBaselineJsoncForTesting(
-                yield* fs.readFileString(baselinePath)
-              );
+              const readFileString55 = yield* fs.readFileString(baselinePath);
+              const heldBaseline = yield* decodeCoverageRegressionBaselineJsoncForTesting(readFileString55);
               expect(heldBaseline.generated_at).toBe("2026-07-06T00:00:00.000Z");
               expect(heldBaseline.git_sha).toBe("committed-sha");
               expect(heldBaseline.packages["@beep/existing"]).toEqual(committedRow);
-              expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
+              const logLines56 = yield* TestConsole.logLines;
+              expect(A.join(A.filter(logLines56, isString), "\n")).toContain(
                 "replaced 0 changed package(s), added 0, held 1 unchanged package(s) at committed rows, pruned 0 (base: dirty worktree only)"
               );
-              expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
+              const logLines57 = yield* TestConsole.logLines;
+              expect(A.join(A.filter(logLines57, isString), "\n")).toContain(
                 "[coverage-ratchet] TURBO_SCM_BASE origin/main does not resolve here; falling back to origin/main merge-base or dirty-worktree files only"
               );
 
@@ -6031,9 +6065,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   ConfigProvider.fromUnknown({ TURBO_SCM_BASE: "origin/main" })
                 )
               );
-              const replacedBaseline = yield* decodeCoverageRegressionBaselineJsoncForTesting(
-                yield* fs.readFileString(baselinePath)
-              );
+              const readFileString58 = yield* fs.readFileString(baselinePath);
+              const replacedBaseline = yield* decodeCoverageRegressionBaselineJsoncForTesting(readFileString58);
               expect(replacedBaseline.generated_at).not.toBe("2026-07-06T00:00:00.000Z");
               expect(replacedBaseline.git_sha).not.toBe("committed-sha");
               expect(replacedBaseline.packages["@beep/existing"]?.lines).toBe(90);
@@ -6041,7 +6074,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               expect(replacedBaseline.packages["@beep/existing"]?.files).toEqual({
                 "packages/existing/src/Index.ts": coverageFileBaseline(90, 1),
               });
-              expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
+              const logLines59 = yield* TestConsole.logLines;
+              expect(A.join(A.filter(logLines59, isString), "\n")).toContain(
                 "replaced 1 changed package(s), added 0, held 0 unchanged package(s) at committed rows, pruned 0 (base: dirty worktree only)"
               );
             })
@@ -6318,28 +6352,24 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const path = yield* Path.Path;
             const repoRoot = process.cwd();
             const writePackage = Effect.fnUntraced(function* (dir: string, manifest: Record<string, unknown>) {
-              return yield* fs
-                .makeDirectory(path.join(repoRoot, dir), { recursive: true })
-                .pipe(
-                  Effect.andThen(
-                    fs.writeFileString(path.join(repoRoot, dir, "package.json"), yield* encodeJson(manifest))
-                  )
-                );
+              const argument13 = fs.makeDirectory(path.join(repoRoot, dir), { recursive: true });
+              const argument14 = path.join(repoRoot, dir, "package.json");
+              const encodedJson14 = yield* encodeJson(manifest);
+              return yield* argument13.pipe(Effect.andThen(fs.writeFileString(argument14, encodedJson14)));
             });
 
             // The root carries the aggregate `coverage` script and a workspace
             // dependency, exactly the shape that would otherwise make it a
             // dependent of nearly every package.
-            yield* fs.writeFileString(
-              path.join(repoRoot, "package.json"),
-              yield* encodeJson({
-                name: "@beep/root",
-                private: true,
-                workspaces: ["packages/*"],
-                scripts: { coverage: "beep-cli coverage" },
-                devDependencies: { "@beep/a": "workspace:*" },
-              })
-            );
+            const argument15 = path.join(repoRoot, "package.json");
+            const encodedJson15 = yield* encodeJson({
+              name: "@beep/root",
+              private: true,
+              workspaces: ["packages/*"],
+              scripts: { coverage: "beep-cli coverage" },
+              devDependencies: { "@beep/a": "workspace:*" },
+            });
+            yield* fs.writeFileString(argument15, encodedJson15);
             yield* writePackage("packages/a", {
               name: "@beep/a",
               scripts: { coverage: "vitest" },
@@ -6362,7 +6392,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               ["@beep/a"],
             ]);
 
-            expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, ["packages/b/src/B.ts"])).toEqual({
+            const planWorkspaceCoverageAffectedScope60 = yield* planWorkspaceCoverageAffectedScope(repoRoot, [
+              "packages/b/src/B.ts",
+            ]);
+            expect(planWorkspaceCoverageAffectedScope60).toEqual({
               _tag: "selected",
               packageNames: ["@beep/a", "@beep/b"],
               dependentPackageNames: ["@beep/a"],
@@ -6404,7 +6437,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               ).toEqual({ "@beep/a": "replaced", "@beep/b": "replaced" });
             }
 
-            expect(yield* planWorkspaceCoverageAffectedScope(repoRoot, ["packages/c/src/C.ts"])).toEqual({
+            const planWorkspaceCoverageAffectedScope61 = yield* planWorkspaceCoverageAffectedScope(repoRoot, [
+              "packages/c/src/C.ts",
+            ]);
+            expect(planWorkspaceCoverageAffectedScope61).toEqual({
               _tag: "selected",
               packageNames: ["@beep/a"],
               dependentPackageNames: ["@beep/a"],
@@ -6685,7 +6721,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               encodeCoverageRegressionBaseline(document).pipe(
                 Effect.flatMap(
                   Effect.fnUntraced(function* (encoded) {
-                    return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                    const encodedJson62 = yield* encodeJson(encoded);
+                    return yield* fs.writeFileString(baselinePath, encodedJson62);
                   })
                 )
               );
@@ -6701,19 +6738,23 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* runGit(repoRoot, ["add", "--all"]);
             yield* runGit(repoRoot, ["commit", "-m", "initial"]);
             yield* writeBaseline(withRows({ "@beep/a": coveragePackageBaseline("packages/a") }));
-            assertNone(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD"));
+            const coverageBaselineRowDeltaFromBase63 = yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD");
+            assertNone(coverageBaselineRowDeltaFromBase63);
 
             yield* runGit(repoRoot, ["add", "--all"]);
             yield* runGit(repoRoot, ["commit", "-m", "baseline"]);
             const delta = (present: ReadonlyArray<string>) =>
               O.some(CoverageBaselineRowDelta.make({ present, removed: [] }));
-            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(delta([]));
+            const coverageBaselineRowDeltaFromBase64 = yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD");
+            expect(coverageBaselineRowDeltaFromBase64).toEqual(delta([]));
 
             yield* writeBaseline(withRows({ "@beep/a": coveragePackageBaseline("packages/a", 61) }));
-            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD")).toEqual(delta(["@beep/a"]));
+            const coverageBaselineRowDeltaFromBase65 = yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD");
+            expect(coverageBaselineRowDeltaFromBase65).toEqual(delta(["@beep/a"]));
 
             yield* fs.writeFileString(baselinePath, "{ not jsonc");
-            assertNone(yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD"));
+            const coverageBaselineRowDeltaFromBase66 = yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD");
+            assertNone(coverageBaselineRowDeltaFromBase66);
 
             // The diff anchors on the merge base, not the base ref's tip: rows
             // that `main` changed after the branch diverged are not attributed
@@ -6732,7 +6773,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* runGit(repoRoot, ["commit", "-m", "trunk adds z"]);
             yield* runGit(repoRoot, ["checkout", "-q", "feature"]);
             yield* writeBaseline(withRows({ "@beep/a": coveragePackageBaseline("packages/a", 61) }));
-            expect(yield* coverageBaselineRowDeltaFromBase(repoRoot, "trunk")).toEqual(delta(["@beep/a"]));
+            const coverageBaselineRowDeltaFromBase67 = yield* coverageBaselineRowDeltaFromBase(repoRoot, "trunk");
+            expect(coverageBaselineRowDeltaFromBase67).toEqual(delta(["@beep/a"]));
           })
         ).pipe(
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -6753,7 +6795,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               encodeCoverageRegressionBaseline(document).pipe(
                 Effect.flatMap(
                   Effect.fnUntraced(function* (encoded) {
-                    return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                    const encodedJson68 = yield* encodeJson(encoded);
+                    return yield* fs.writeFileString(baselinePath, encodedJson68);
                   })
                 )
               );
@@ -6835,7 +6878,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             ).pipe(
               Effect.flatMap(
                 Effect.fnUntraced(function* (encoded) {
-                  return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                  const encodedJson69 = yield* encodeJson(encoded);
+                  return yield* fs.writeFileString(baselinePath, encodedJson69);
                 })
               )
             );
@@ -6865,7 +6909,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* encodeCoverageRegressionBaseline(coverageRegressionBaseline).pipe(
               Effect.flatMap(
                 Effect.fnUntraced(function* (encoded) {
-                  return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                  const encodedJson70 = yield* encodeJson(encoded);
+                  return yield* fs.writeFileString(baselinePath, encodedJson70);
                 })
               )
             );
@@ -7368,7 +7413,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 encodeCoverageRegressionBaseline(document).pipe(
                   Effect.flatMap(
                     Effect.fnUntraced(function* (encoded) {
-                      return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                      const encodedJson71 = yield* encodeJson(encoded);
+                      return yield* fs.writeFileString(baselinePath, encodedJson71);
                     })
                   )
                 );
@@ -7382,18 +7428,24 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               yield* fs.makeDirectory(path.join(repoRoot, "packages/touched/src"), { recursive: true });
               yield* fs.makeDirectory(path.join(repoRoot, "packages/untouched/src"), { recursive: true });
               yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
-              yield* fs.writeFileString(
-                path.join(repoRoot, "package.json"),
-                yield* encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
-              );
+              const argument16 = path.join(repoRoot, "package.json");
+              const encodedJson16 = yield* encodeJson({
+                name: "@beep/test-root",
+                private: true,
+                workspaces: ["packages/*"],
+              });
+              yield* fs.writeFileString(argument16, encodedJson16);
               yield* Effect.forEach(
                 ["touched", "untouched"],
                 Effect.fnUntraced(function* (name) {
+                  const argument17 = path.join(repoRoot, `packages/${name}/package.json`);
+                  const encodedJson17 = yield* encodeJson({
+                    name: `@beep/${name}`,
+                    private: true,
+                    scripts: { coverage: "vitest" },
+                  });
                   return yield* Effect.all([
-                    fs.writeFileString(
-                      path.join(repoRoot, `packages/${name}/package.json`),
-                      yield* encodeJson({ name: `@beep/${name}`, private: true, scripts: { coverage: "vitest" } })
-                    ),
+                    fs.writeFileString(argument17, encodedJson17),
                     fs.writeFileString(path.join(repoRoot, `packages/${name}/src/Index.ts`), "export const v = 1;\n"),
                   ]);
                 })
@@ -7483,21 +7535,28 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               encodeCoverageRegressionBaseline(document).pipe(
                 Effect.flatMap(
                   Effect.fnUntraced(function* (encoded) {
-                    return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                    const encodedJson72 = yield* encodeJson(encoded);
+                    return yield* fs.writeFileString(baselinePath, encodedJson72);
                   })
                 )
               );
 
             yield* fs.makeDirectory(path.join(repoRoot, "packages/existing/src"), { recursive: true });
             yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
-            yield* fs.writeFileString(
-              path.join(repoRoot, "package.json"),
-              yield* encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
-            );
-            yield* fs.writeFileString(
-              path.join(repoRoot, "packages/existing/package.json"),
-              yield* encodeJson({ name: "@beep/existing", private: true, scripts: { coverage: "vitest" } })
-            );
+            const argument18 = path.join(repoRoot, "package.json");
+            const encodedJson18 = yield* encodeJson({
+              name: "@beep/test-root",
+              private: true,
+              workspaces: ["packages/*"],
+            });
+            yield* fs.writeFileString(argument18, encodedJson18);
+            const argument19 = path.join(repoRoot, "packages/existing/package.json");
+            const encodedJson19 = yield* encodeJson({
+              name: "@beep/existing",
+              private: true,
+              scripts: { coverage: "vitest" },
+            });
+            yield* fs.writeFileString(argument19, encodedJson19);
             yield* fs.writeFileString(path.join(repoRoot, "packages/existing/src/Index.ts"), "export const v = 1;\n");
             yield* writeBaseline(
               withRows({
@@ -8534,7 +8593,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* fs.writeFileString(filePath, fileWith("packageDocumentation"));
           yield* runJSDocModuleTagsCheck();
 
-          expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
+          const logLines73 = yield* TestConsole.logLines;
+          expect(A.join(A.filter(logLines73, isString), "\n")).toContain(
             "[check:jsdoc-module-tags] verified tracked fileoverview comments do not use @module"
           );
         })
@@ -8556,27 +8616,34 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
           yield* fs.makeDirectory(coveredCoverage, { recursive: true });
           yield* fs.makeDirectory(bareCoverage, { recursive: true });
-          yield* fs.writeFileString(
-            path.join(repoRoot, "package.json"),
-            yield* encodeJson({ name: "@beep/clean-root", private: true, workspaces: ["packages/*"] })
-          );
-          yield* fs.writeFileString(
-            path.join(repoRoot, "packages/covered/package.json"),
-            yield* encodeJson({ name: "@beep/covered", private: true, scripts: { coverage: "vitest" } })
-          );
-          yield* fs.writeFileString(
-            path.join(repoRoot, "packages/bare/package.json"),
-            yield* encodeJson({ name: "@beep/bare", private: true })
-          );
+          const argument20 = path.join(repoRoot, "package.json");
+          const encodedJson20 = yield* encodeJson({
+            name: "@beep/clean-root",
+            private: true,
+            workspaces: ["packages/*"],
+          });
+          yield* fs.writeFileString(argument20, encodedJson20);
+          const argument21 = path.join(repoRoot, "packages/covered/package.json");
+          const encodedJson21 = yield* encodeJson({
+            name: "@beep/covered",
+            private: true,
+            scripts: { coverage: "vitest" },
+          });
+          yield* fs.writeFileString(argument21, encodedJson21);
+          const argument22 = path.join(repoRoot, "packages/bare/package.json");
+          const encodedJson22 = yield* encodeJson({ name: "@beep/bare", private: true });
+          yield* fs.writeFileString(argument22, encodedJson22);
           yield* fs.writeFileString(path.join(coveredCoverage, "coverage-summary.json"), "{}\n");
           yield* fs.writeFileString(path.join(bareCoverage, "coverage-summary.json"), "{}\n");
 
           yield* cleanCoverageRegressionOutputs(repoRoot);
 
-          expect(yield* fs.exists(coveredCoverage)).toBe(false);
+          const exists74 = yield* fs.exists(coveredCoverage);
+          expect(exists74).toBe(false);
           // A package without a coverage script owns no coverage output the
           // ratchet reads, so the cleaner leaves it alone.
-          expect(yield* fs.exists(bareCoverage)).toBe(true);
+          const exists75 = yield* fs.exists(bareCoverage);
+          expect(exists75).toBe(true);
         })
       ).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -9007,7 +9074,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             2
           );
 
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          const logLines76 = yield* TestConsole.logLines;
+          const logText = A.join(A.filter(logLines76, isString), "\n");
           expect(logText).toContain("[beep-cli] test:group: running 2 step(s) with concurrency 2");
           expect(logText).toContain("[beep-cli] test:slow: bun -e await Bun.sleep(20); console.log('slow')");
           expect(logText).toContain("[beep-cli] test:fast: bun -e console.log('fast')");
@@ -9035,7 +9103,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             1
           );
 
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          const logLines77 = yield* TestConsole.logLines;
+          const logText = A.join(A.filter(logLines77, isString), "\n");
           expect(logText).toContain(`[beep-cli] output truncated after ${8 * 1024 * 1024} characters`);
           expect(Str.length(logText)).toBeLessThan(8 * 1024 * 1024 + 8_192);
         })
@@ -9071,14 +9140,16 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             }
           }
 
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          const logLines78 = yield* TestConsole.logLines;
+          const logText = A.join(A.filter(logLines78, isString), "\n");
           expectSubstringBefore(
             logText,
             "[beep-cli] test:first output:\nfirst failed",
             "[beep-cli] test:second output:\nsecond failed"
           );
 
-          const errorText = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
+          const errorLines79 = yield* TestConsole.errorLines;
+          const errorText = A.join(A.filter(errorLines79, isString), "\n");
           expect(errorText).toContain("[beep-cli] test:group: failed 2 step(s)");
           expect(errorText).toContain("[beep-cli]   test:first: exit 7");
           expect(errorText).toContain("[beep-cli]     command: bun -e console.log('first failed'); process.exit(7)");
@@ -9104,7 +9175,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             ])
           );
 
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          const logLines80 = yield* TestConsole.logLines;
+          const logText = A.join(A.filter(logLines80, isString), "\n");
           // Captured stdout and stderr are replayed together, after the command line and before the outcome line.
           const commandAt = O.getOrThrow(Str.indexOf("[beep-cli] test:loud: bun -e")(logText));
           const outputAt = O.getOrThrow(Str.indexOf("buffered line one")(logText));
@@ -9144,7 +9216,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             ])
           );
 
-          expect(yield* fs.exists(markerPath)).toBe(true);
+          const exists81 = yield* fs.exists(markerPath);
+          expect(exists81).toBe(true);
           assertTrue(exit._tag === "Failure");
           if (Exit.isFailure(exit)) {
             const failure = Cause.squash(exit.cause);
@@ -9155,11 +9228,13 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             }
           }
 
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          const logLines82 = yield* TestConsole.logLines;
+          const logText = A.join(A.filter(logLines82, isString), "\n");
           expect(logText).toContain("[beep-cli] test:stream: running 2 streaming step(s)");
           expectSubstringBefore(logText, "[beep-cli] test:first:", "[beep-cli] test:second:");
 
-          const errorText = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
+          const errorLines83 = yield* TestConsole.errorLines;
+          const errorText = A.join(A.filter(errorLines83, isString), "\n");
           expect(errorText).toContain("[beep-cli] test:stream: failed 1 step(s)");
           expect(errorText).toContain("[beep-cli]   test:first: exit 7");
           expect(errorText).toContain("[beep-cli]     command: bun -e process.exit(7)");
@@ -9217,9 +9292,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             "@beep/quarantine-fixture#build",
             "@beep/ui#build",
           ]);
-          expect(yield* fs.readFileString(statePath)).toBe("5");
+          const readFileString84 = yield* fs.readFileString(statePath);
+          expect(readFileString84).toBe("5");
 
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          const logLines85 = yield* TestConsole.logLines;
+          const logText = A.join(A.filter(logLines85, isString), "\n");
           expect(logText).toContain(
             "[flake-quarantine] test:quarantine-waves: lane rerun failed with exit 2; checking for another quarantinable task"
           );
@@ -9274,10 +9351,13 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
 
           assertTrue(exit._tag === "Failure");
-          expect(yield* fs.readFileString(statePath)).toBe("3");
-          expect(yield* fs.exists(path.join(process.cwd(), FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH))).toBe(false);
+          const readFileString86 = yield* fs.readFileString(statePath);
+          expect(readFileString86).toBe("3");
+          const exists87 = yield* fs.exists(path.join(process.cwd(), FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH));
+          expect(exists87).toBe(false);
 
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          const logLines88 = yield* TestConsole.logLines;
+          const logText = A.join(A.filter(logLines88, isString), "\n");
           expect(logText).toContain(
             "[flake-quarantine] test:quarantine-repeat: lane rerun repeated the flake for @beep/quarantine-fixture#build; keeping failure hard"
           );
@@ -9381,7 +9461,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(commandLog).toContain("lint:roadmap-refs");
       expect(commandLog).toContain("lint:typos");
 
-      const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+      const logLines89 = yield* TestConsole.logLines;
+      const logText = A.join(A.filter(logLines89, isString), "\n");
       expect(logText).toContain(`[beep-cli] lint:policy: running ${lintStepCount} ordered step(s)`);
 
       return {
@@ -9480,38 +9561,35 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const plainPackageDir = path.join(tmpDir, "packages", "plain");
           const integrationPackageDir = path.join(tmpDir, "apps", "integration");
 
-          yield* fs.writeFileString(
-            path.join(tmpDir, "package.json"),
-            yield* encodeJson({
-              name: "@beep/test-root",
-              private: true,
-              workspaces: {
-                packages: ["packages/*", "apps/*"],
-              },
-            })
-          );
+          const argument23 = path.join(tmpDir, "package.json");
+          const encodedJson23 = yield* encodeJson({
+            name: "@beep/test-root",
+            private: true,
+            workspaces: {
+              packages: ["packages/*", "apps/*"],
+            },
+          });
+          yield* fs.writeFileString(argument23, encodedJson23);
           yield* fs.makeDirectory(plainPackageDir, { recursive: true });
-          yield* fs.writeFileString(
-            path.join(plainPackageDir, "package.json"),
-            yield* encodeJson({
-              name: "@beep/plain",
-              private: true,
-              scripts: {
-                test: "vitest",
-              },
-            })
-          );
+          const argument24 = path.join(plainPackageDir, "package.json");
+          const encodedJson24 = yield* encodeJson({
+            name: "@beep/plain",
+            private: true,
+            scripts: {
+              test: "vitest",
+            },
+          });
+          yield* fs.writeFileString(argument24, encodedJson24);
           yield* fs.makeDirectory(integrationPackageDir, { recursive: true });
-          yield* fs.writeFileString(
-            path.join(integrationPackageDir, "package.json"),
-            yield* encodeJson({
-              name: "@beep/integration",
-              private: true,
-              scripts: {
-                "test:integration": "vitest run test/integration",
-              },
-            })
-          );
+          const argument25 = path.join(integrationPackageDir, "package.json");
+          const encodedJson25 = yield* encodeJson({
+            name: "@beep/integration",
+            private: true,
+            scripts: {
+              "test:integration": "vitest run test/integration",
+            },
+          });
+          yield* fs.writeFileString(argument25, encodedJson25);
 
           const integrationFilters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
 
@@ -9534,14 +9612,13 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
           // The object form's `packages` is optional (a Bun root may carry only
           // `catalog`); the retired projection required it and failed the read.
-          yield* fs.writeFileString(
-            path.join(tmpDir, "package.json"),
-            yield* encodeJson({
-              name: "@beep/test-root",
-              private: true,
-              workspaces: { catalog: { effect: "4.0.0" } },
-            })
-          );
+          const argument26 = path.join(tmpDir, "package.json");
+          const encodedJson26 = yield* encodeJson({
+            name: "@beep/test-root",
+            private: true,
+            workspaces: { catalog: { effect: "4.0.0" } },
+          });
+          yield* fs.writeFileString(argument26, encodedJson26);
 
           const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
 
@@ -9627,25 +9704,23 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const tmpDir = process.cwd();
           const packageDir = path.join(tmpDir, "packages", "empty");
 
-          yield* fs.writeFileString(
-            path.join(tmpDir, "package.json"),
-            yield* encodeJson({
-              name: "@beep/test-root",
-              private: true,
-              workspaces: ["packages/*"],
-            })
-          );
+          const argument27 = path.join(tmpDir, "package.json");
+          const encodedJson27 = yield* encodeJson({
+            name: "@beep/test-root",
+            private: true,
+            workspaces: ["packages/*"],
+          });
+          yield* fs.writeFileString(argument27, encodedJson27);
           yield* fs.makeDirectory(packageDir, { recursive: true });
-          yield* fs.writeFileString(
-            path.join(packageDir, "package.json"),
-            yield* encodeJson({
-              name: "@beep/empty",
-              private: true,
-              scripts: {
-                lint: "beep-cli lint",
-              },
-            })
-          );
+          const argument28 = path.join(packageDir, "package.json");
+          const encodedJson28 = yield* encodeJson({
+            name: "@beep/empty",
+            private: true,
+            scripts: {
+              lint: "beep-cli lint",
+            },
+          });
+          yield* fs.writeFileString(argument28, encodedJson28);
 
           process.cwd = () => packageDir;
           yield* runQualityTask(getInvocation(["lint"]));
@@ -9925,18 +10000,25 @@ describe("documentation input digest", () => {
           [`${source}/package.json`, "{}"],
           [`${source}/src/rules/docs.ts`, "export {}"],
         ];
-        for (const [file, content] of fixtures) yield* fs.writeFileString(`${root}/${file}`, content);
+        for (const [file, content] of fixtures) {
+          yield* fs.writeFileString(`${root}/${file}`, content);
+        }
         const initial = yield* rootDocsCacheKey(root);
         expect(initial).toMatch(/^[0-9a-f]{16}$/);
-        expect(yield* rootDocsCacheKey(root)).toBe(initial);
+        const rootDocsCacheKey90 = yield* rootDocsCacheKey(root);
+        expect(rootDocsCacheKey90).toBe(initial);
         yield* fs.writeFileString(`${root}/unrelated.ts`, "export {}");
-        expect(yield* rootDocsCacheKey(root)).toBe(initial);
+        const rootDocsCacheKey91 = yield* rootDocsCacheKey(root);
+        expect(rootDocsCacheKey91).toBe(initial);
         for (const file of [".oxlintrc.docs.json", "tsdoc.json", "bun.lock", `${source}/src/rules/docs.ts`]) {
           const before = yield* rootDocsCacheKey(root);
           yield* fs.writeFileString(`${root}/${file}`, "changed");
-          expect(yield* rootDocsCacheKey(root)).not.toBe(before);
+          const rootDocsCacheKey92 = yield* rootDocsCacheKey(root);
+          expect(rootDocsCacheKey92).not.toBe(before);
         }
-        expect(yield* rootDocsCacheKey(yield* fs.makeTempDirectoryScoped())).toBe("unkeyed");
+        const madeTempDirectoryScoped109 = yield* fs.makeTempDirectoryScoped();
+        const rootDocsCacheKey93 = yield* rootDocsCacheKey(madeTempDirectoryScoped109);
+        expect(rootDocsCacheKey93).toBe("unkeyed");
       })
     );
   });
@@ -10000,7 +10082,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = path.join(yield* fs.makeTempDirectoryScoped({ prefix: "quality-plan-admission-" }), "runtime");
+        const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "quality-plan-admission-" });
+        const root = path.join(madeTempDirectoryScoped, "runtime");
         const plan = yield* withoutCiEffect(
           resolveLiveQualityConcurrencyPlan().pipe(
             Effect.provideService(MemoryStats, idleStats),
@@ -10018,7 +10101,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const blocker = path.join(yield* fs.makeTempDirectoryScoped({ prefix: "quality-plan-blocked-" }), "runtime");
+        const madeTempDirectoryScoped94 = yield* fs.makeTempDirectoryScoped({ prefix: "quality-plan-blocked-" });
+        const blocker = path.join(madeTempDirectoryScoped94, "runtime");
         yield* fs.writeFileString(blocker, "not a directory");
         const plan = yield* withoutCiEffect(
           resolveLiveQualityConcurrencyPlan().pipe(
@@ -10092,20 +10176,30 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })("lane-proof reuse across Yeet
 
   it.effect("reads only a full SHA as a pinned base", () =>
     Effect.gen(function* () {
-      assertSome(
-        yield* withEnvVarEffect("BEEP_YEET_PROOF_BASE", Str.repeat(40)("a"), Effect.sync(pinnedLaneProofBaseSha)),
-        Str.repeat(40)("a")
+      const withEnvVarEffect95 = yield* withEnvVarEffect(
+        "BEEP_YEET_PROOF_BASE",
+        Str.repeat(40)("a"),
+        Effect.sync(pinnedLaneProofBaseSha)
       );
-      assertNone(yield* withEnvVarEffect("BEEP_YEET_PROOF_BASE", "origin/main", Effect.sync(pinnedLaneProofBaseSha)));
+      assertSome(withEnvVarEffect95, Str.repeat(40)("a"));
+      const withEnvVarEffect96 = yield* withEnvVarEffect(
+        "BEEP_YEET_PROOF_BASE",
+        "origin/main",
+        Effect.sync(pinnedLaneProofBaseSha)
+      );
+      assertNone(withEnvVarEffect96);
     })
   );
 
   it.effect("reuses the cheap-gates proof in the pre-push tier despite the per-tier parent id", () =>
     Effect.gen(function* () {
       const { repoRoot, base } = yield* fixture("lane-proof-cross-tier-");
-      expect(yield* runTier(repoRoot, "cheap-gates", base)).toEqual(["passed"]);
-      expect(yield* runTier(repoRoot, "pre-push", base)).toEqual(["reused"]);
-      expect(yield* logged).toContain("[lane-proof] reusing exact lane proof: fallow:health");
+      const resultTier = yield* runTier(repoRoot, "cheap-gates", base);
+      expect(resultTier).toEqual(["passed"]);
+      const resultTier97 = yield* runTier(repoRoot, "pre-push", base);
+      expect(resultTier97).toEqual(["reused"]);
+      const logged98 = yield* logged;
+      expect(logged98).toContain("[lane-proof] reusing exact lane proof: fallow:health");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -10114,19 +10208,25 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })("lane-proof reuse across Yeet
       const { repoRoot, base } = yield* fixture("lane-proof-env-changed-");
       const run = (marker: string) =>
         withEnvVarEffect("LANE_PROOF_TEST_MARKER", marker, runTier(repoRoot, "pre-push", base));
-      expect(yield* run("one")).toEqual(["passed"]);
-      expect(yield* run("two")).toEqual(["passed"]);
-      expect(yield* logged).toContain("[lane-proof] not reusing fallow:health: environment changed");
+      const result99 = yield* run("one");
+      expect(result99).toEqual(["passed"]);
+      const result100 = yield* run("two");
+      expect(result100).toEqual(["passed"]);
+      const logged101 = yield* logged;
+      expect(logged101).toContain("[lane-proof] not reusing fallow:health: environment changed");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
   it.effect("refuses a proof recorded against another pinned base", () =>
     Effect.gen(function* () {
       const { repoRoot, base } = yield* fixture("lane-proof-base-moved-");
-      expect(yield* runTier(repoRoot, "cheap-gates", base)).toEqual(["passed"]);
+      const resultTier102 = yield* runTier(repoRoot, "cheap-gates", base);
+      expect(resultTier102).toEqual(["passed"]);
       const moved = yield* moveOriginMain(repoRoot, base);
-      expect(yield* runTier(repoRoot, "pre-push", moved)).toEqual(["passed"]);
-      expect(yield* logged).toContain(
+      const resultTier103 = yield* runTier(repoRoot, "pre-push", moved);
+      expect(resultTier103).toEqual(["passed"]);
+      const logged104 = yield* logged;
+      expect(logged104).toContain(
         `[lane-proof] not reusing fallow:health: base moved (${Str.takeLeft(base, 12)} -> ${Str.takeLeft(moved, 12)})`
       );
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -10136,8 +10236,10 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })("lane-proof reuse across Yeet
     Effect.gen(function* () {
       const { repoRoot, base } = yield* fixture("lane-proof-pin-moved-");
       const moved = yield* moveOriginMain(repoRoot, base);
-      expect(yield* runTier(repoRoot, "pre-push", base)).toEqual(["passed"]);
-      expect(yield* logged).toContain(
+      const resultTier105 = yield* runTier(repoRoot, "pre-push", base);
+      expect(resultTier105).toEqual(["passed"]);
+      const logged106 = yield* logged;
+      expect(logged106).toContain(
         `[lane-proof] reuse disabled: origin/main moved from the run's pinned base ${Str.takeLeft(base, 12)} to ${Str.takeLeft(moved, 12)}`
       );
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -10148,7 +10250,8 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })("lane-proof reuse across Yeet
       // The fixture has no `origin` remote, so a fetch would fail.
       const { repoRoot, base } = yield* fixture("lane-proof-pinned-fetch-");
       yield* withEnvVarEffect("BEEP_YEET_PROOF_BASE", base, ensureOriginMainForTesting(repoRoot));
-      expect(yield* logged).toContain(`[github-checks] origin/main pinned at ${Str.takeLeft(base, 12)}`);
+      const logged107 = yield* logged;
+      expect(logged107).toContain(`[github-checks] origin/main pinned at ${Str.takeLeft(base, 12)}`);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -10161,7 +10264,8 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })("lane-proof reuse across Yeet
         ensureOriginMainForTesting(repoRoot)
       ).pipe(Effect.flip);
       expect(failure.message).not.toBe("");
-      expect(yield* logged).toContain("not the parent run's pinned base 000000000000; refreshing");
+      const logged108 = yield* logged;
+      expect(logged108).toContain("not the parent run's pinned base 000000000000; refreshing");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 });

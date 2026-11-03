@@ -491,30 +491,32 @@ const resolveSkillDestination = Effect.fn("Skills.resolveDestination")(function*
   let ancestor = path.resolve(destination);
   let suffix = "";
   while (!(yield* fs.exists(ancestor).pipe(SkillsCommandError.mapError("Cannot inspect skill destination.")))) {
-    if (O.isSome(yield* fs.readLink(ancestor).pipe(Effect.option)))
+    const pipe1 = yield* fs.readLink(ancestor).pipe(Effect.option);
+    if (O.isSome(pipe1)) {
       return yield* SkillsCommandError.make({
         message: "Refusing dangling skill destination link.",
         file: destination,
       });
+    }
     suffix = path.join(path.basename(ancestor), suffix);
     const parent = path.dirname(ancestor);
-    if (parent === ancestor)
+    if (parent === ancestor) {
       return yield* SkillsCommandError.make({
         message: "Cannot resolve skill destination ancestor.",
         file: destination,
       });
+    }
     ancestor = parent;
   }
-  const canonical = path.resolve(
-    yield* fs.realPath(ancestor).pipe(SkillsCommandError.mapError("Cannot resolve skill destination.")),
-    suffix
-  );
+  const pipe2 = yield* fs.realPath(ancestor).pipe(SkillsCommandError.mapError("Cannot resolve skill destination."));
+  const canonical = path.resolve(pipe2, suffix);
   const relative = path.relative(root, canonical);
-  if (relative === ".." || Str.startsWith(`..${path.sep}`)(relative) || path.isAbsolute(relative))
+  if (relative === ".." || Str.startsWith(`..${path.sep}`)(relative) || path.isAbsolute(relative)) {
     return yield* SkillsCommandError.make({
       message: "Refusing skill destination outside repository root.",
       file: destination,
     });
+  }
   return canonical;
 });
 
@@ -562,7 +564,8 @@ const readSkillFiles = Effect.fn("Skills.readSkillFiles")(function* (
         .pipe(SkillsCommandError.mapError(`Failed to stat ${absoluteEntry}.`, absoluteEntry));
 
       if (stat.type === "Directory") {
-        files = A.appendAll(files, yield* walk(absoluteEntry));
+        const walk3 = yield* walk(absoluteEntry);
+        files = A.appendAll(files, walk3);
         continue;
       }
 
@@ -593,7 +596,8 @@ const hashSkillDirectory = Effect.fn("Skills.hashSkillDirectory")(function* (
   if (files.length === 0) {
     return O.none();
   }
-  return O.some(yield* hashSkillFiles(files, name));
+  const hashSkillFiles4 = yield* hashSkillFiles(files, name);
+  return O.some(hashSkillFiles4);
 });
 
 const fetchResponseBytes = Effect.fn("Skills.fetchResponseBytes")(function* (
@@ -1205,7 +1209,9 @@ const evaluateLockDriftV2 = Effect.fnUntraced(function* (
     return O.none<SkillDrift>();
   }
   if (mode === "write") {
-    yield* writeStringFile(path.join(repoRoot, SKILLS_LOCK_PATH), yield* renderSkillsLockDocumentText(desired));
+    const argument = path.join(repoRoot, SKILLS_LOCK_PATH);
+    const renderSkillsLockDocumentText1 = yield* renderSkillsLockDocumentText(desired);
+    yield* writeStringFile(argument, renderSkillsLockDocumentText1);
   }
   return O.some<SkillDrift>({ _tag: "LockDrift" });
 });
@@ -1302,10 +1308,13 @@ const updateSkills = Effect.fn("Skills.updateSkills")(function* (options: {
   // Preflight all destinations before any update writes a backup or projection.
   yield* resolveSkillDestination(repoRoot, path.join(repoRoot, CODEX_CONFIG_PATH));
   yield* resolveSkillDestination(repoRoot, path.join(repoRoot, SKILLS_LOCK_PATH));
-  if (options.mode === "write") yield* recoverBeforeWrite(repoRoot);
+  if (options.mode === "write") {
+    yield* recoverBeforeWrite(repoRoot);
+  }
   const lock = yield* readLockV2(repoRoot);
   yield* refuseVendoredRefetch(lock, options.skill);
-  const sources = yield* floatingSources(lock, yield* resolveSourcesToFetch(options.skill));
+  const resolvedSourcesToFetch = yield* resolveSourcesToFetch(options.skill);
+  const sources = yield* floatingSources(lock, resolvedSourcesToFetch);
   yield* Effect.forEach(
     sources,
     (source) => resolveSkillDestination(repoRoot, path.join(repoRoot, CLAUDE_SKILLS_DIR, source.name)),
@@ -1320,9 +1329,11 @@ const updateSkills = Effect.fn("Skills.updateSkills")(function* (options: {
     R.fromEntries
   );
   const remoteDrift = yield* evaluateRemoteSkillDrift(repoRoot, fetchedSnapshots, options.mode);
+  const argument1 = path.join(repoRoot, CLAUDE_SKILLS_DIR);
+  const listInstalledSkillNames2 = yield* listInstalledSkillNames(repoRoot);
   const frontmatterReport = yield* checkInstalledSkills(
-    path.join(repoRoot, CLAUDE_SKILLS_DIR),
-    yield* listInstalledSkillNames(repoRoot),
+    argument1,
+    listInstalledSkillNames2,
     HashSet.fromIterable(A.map(remoteSkillSources, (source) => source.name))
   );
   const lockDrift = yield* evaluateLockState(repoRoot, lock, snapshotsByName, options.mode);
@@ -1413,10 +1424,11 @@ export const runSkillsRecover = Effect.fn("Skills.runSkillsRecover")(function* (
     yield* Console.log(`- ${renderSkillRecoveryReport(report)}`);
   }
   const refused = A.filter(reports, (report) => report.result._tag === "refused");
-  if (A.isReadonlyArrayNonEmpty(refused))
+  if (A.isReadonlyArrayNonEmpty(refused)) {
     return yield* SkillPublicationError.make({
       message: `${A.length(refused)} skill publication(s) refused recovery; every artifact is kept.`,
     });
+  }
   return reports;
 });
 

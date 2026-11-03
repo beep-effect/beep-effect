@@ -40,7 +40,8 @@ const makeReviewQueue = (log: VerdictLogShape, writeLock: Semaphore.Semaphore): 
   });
 
   const openItems = Effect.fn("ReviewQueue.openItems")(function* (items: ReadonlyArray<ReviewItem>) {
-    const latest = latestVerdictByItem(yield* log.rows);
+    const rows1 = yield* log.rows;
+    const latest = latestVerdictByItem(rows1);
     // Questions close by answer, not verdict; the question loop owns them.
     return A.filter(items, (item) => !isQuestion(item) && !O.exists(HashMap.get(latest, item.itemId), isFinalVerdict));
   });

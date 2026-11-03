@@ -172,12 +172,16 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
               yield* sql`SELECT substr(payload,1,4097) AS payload FROM observation_reclamation_config WHERE singleton=1`.pipe(
                 Effect.flatMap(decodeArguments)
               );
-            if (rows[0].payload !== policyJson) return yield* failure("configuration");
+            if (rows[0].payload !== policyJson) {
+              return yield* failure("configuration");
+            }
             const [reserved] =
               yield* sql`SELECT ((SELECT COUNT(*) FROM observation_intake_pages)+(SELECT COUNT(*) FROM observation_page_dispositions)) AS n`.pipe(
                 Effect.flatMap(decodeArguments2)
               );
-            if (reserved.n > policy.maxDispositions) return yield* failure("capacity");
+            if (reserved.n > policy.maxDispositions) {
+              return yield* failure("capacity");
+            }
           })
         );
         const enroll = Effect.fn("AiMetrics.reclamation.enroll")(function* (receiptId: Sha256Hex, expiry: boolean) {
@@ -185,8 +189,9 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
           if (
             Result.isFailure(result) &&
             !(expiry && S.is(DeliveryLedgerError)(result.failure) && result.failure.reason === "capacity")
-          )
+          ) {
             return yield* result.failure;
+          }
         });
         const verifyNativeOwner = Effect.fnUntraced(function* (
           eventId: Sha256Hex,
@@ -197,8 +202,9 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
             yield* sql`SELECT n.payload_hash AS digest,p.receipt_id AS "registeredOwner" FROM observation_native_events n LEFT JOIN observation_delivery_pages p ON p.receipt_id=n.receipt_id WHERE n.event_id=${eventId}`.pipe(
               Effect.flatMap(decodeArguments3)
             );
-          if (original[0].digest !== digest || (original[0].registeredOwner !== null && !registered))
+          if (original[0].digest !== digest || (original[0].registeredOwner !== null && !registered)) {
             return yield* failure("storage");
+          }
         });
         const verifyMember = Effect.fn("AiMetrics.reclamation.verifyMember")(function* (
           eventId: Sha256Hex,
@@ -209,27 +215,36 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
             yield* sql`SELECT payload_hash AS digest FROM observation_delivery_events WHERE event_id=${eventId}`.pipe(
               Effect.flatMap(decodeDigestRecordRows)
             );
-          if (rows[0] !== undefined && rows[0].digest !== digest) return yield* failure("storage");
+          if (rows[0] !== undefined && rows[0].digest !== digest) {
+            return yield* failure("storage");
+          }
           if (rows[0] === undefined) {
             const [orphans] =
               yield* sql`SELECT ((SELECT COUNT(*) FROM observation_delivery_attempt_events WHERE event_id=${eventId})+(SELECT COUNT(*) FROM observation_delivery_visibility WHERE event_id=${eventId})+(SELECT COUNT(*) FROM observation_delivery_queries WHERE event_id=${eventId})) AS n`.pipe(
                 Effect.flatMap(decodeArguments2)
               );
-            if (orphans.n > 0) return yield* failure("storage");
+            if (orphans.n > 0) {
+              return yield* failure("storage");
+            }
           }
-          if (native) yield* verifyNativeOwner(eventId, digest, rows[0] !== undefined);
+          if (native) {
+            yield* verifyNativeOwner(eventId, digest, rows[0] !== undefined);
+          }
         });
         const nativeEventIds = Effect.fnUntraced(function* (receiptId: Sha256Hex) {
           const receipt = yield* native.receipt(receiptId);
           const batch = yield* native.readBatch(receiptId);
           // Revalidate the canonical index even for previously registered pages.
           yield* native.readNewEvents(receiptId);
-          if (O.isNone(receipt) || O.isNone(batch)) return yield* failure("storage");
+          if (O.isNone(receipt) || O.isNone(batch)) {
+            return yield* failure("storage");
+          }
           for (const [index, span] of batch.value.spans.entries()) {
             if (A.contains(receipt.value.conflictIndices, index) || A.contains(receipt.value.expiredIndices, index))
               continue;
             const payload = yield* encodeNativeTraceMetadataJson(span);
-            yield* verifyMember(span.eventId, yield* hashPublicTextSha256(payload), true);
+            const hashPublicTextSha2561 = yield* hashPublicTextSha256(payload);
+            yield* verifyMember(span.eventId, hashPublicTextSha2561, true);
           }
           return A.dedupe(
             A.map(
@@ -249,8 +264,9 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
                 ? `transcript-acceptance/v1:${intakeConfig.hostId}:${intakeConfig.namespaceId}:${row.payload}`
                 : `transcript-acceptance/v2:${intakeConfig.hostId}:${intakeConfig.namespaceId}:${row.evidenceEpoch}:${row.payload}`
             )) !== receiptId
-          )
+          ) {
             return yield* failure("storage");
+          }
         });
         const transcriptEventIds = Effect.fnUntraced(function* (receiptId: Sha256Hex, row: IntakeRow) {
           yield* verifyTranscriptReceipt(receiptId, row);
@@ -261,7 +277,9 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
             const payload = yield* encodeTranscriptFrameJson(frame);
             const digest = yield* hashPublicTextSha256(payload);
             const prior = HashMap.get(identities, frame.occurrenceId);
-            if (O.isSome(prior) && prior.value !== digest) return yield* failure("storage");
+            if (O.isSome(prior) && prior.value !== digest) {
+              return yield* failure("storage");
+            }
             identities = HashMap.set(identities, frame.occurrenceId, digest);
             yield* verifyMember(frame.occurrenceId, digest, false);
           }
@@ -294,7 +312,9 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
           registered: boolean
         ) {
           if (mode === "verified") return EventAssessment.Enum.waiting;
-          if (!nativeSource && registered) return yield* failure("storage");
+          if (!nativeSource && registered) {
+            return yield* failure("storage");
+          }
           return EventAssessment.Enum.unenrolled;
         });
         const assessEvent = Effect.fnUntraced(function* (
@@ -306,7 +326,9 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
           states: ReturnType<typeof emptyStates>
         ) {
           const state = yield* ledger.state(eventId);
-          if (O.isNone(state)) return yield* assessMissingEvent(mode, nativeSource, registered);
+          if (O.isNone(state)) {
+            return yield* assessMissingEvent(mode, nativeSource, registered);
+          }
           if (mode === "verified" && state.value.state !== "visible") return EventAssessment.Enum.waiting;
           states[eventCountKey(state.value.state)] += 1;
           const recent =
@@ -329,8 +351,9 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
           let unenrolledReferences = 0;
           const states = emptyStates();
           for (const eventId of eventIds) {
-            if (mode === "expiry" && nativeSource)
+            if (mode === "expiry" && nativeSource) {
               attemptedOwners = yield* enrollOriginalOwner(eventId, attemptedOwners);
+            }
             const assessment = yield* assessEvent(eventId, mode, nativeSource, registered, now, states);
             if (assessment === EventAssessment.Enum.waiting) return O.none<ReclamationPopulation>();
             if (assessment === EventAssessment.Enum.unenrolled) unenrolledReferences += 1;
@@ -343,12 +366,13 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
           registered: boolean
         ) {
           const unenrolledNativeOwnership = Str.startsWith("native:")(sourceKey)
-            ? O.some(
-                yield* readUnenrolledNativeOwnership(receiptId).pipe(Effect.provideService(SqlClient.SqlClient, sql))
+            ? yield* Effect.asSome(
+                readUnenrolledNativeOwnership(receiptId).pipe(Effect.provideService(SqlClient.SqlClient, sql))
               )
             : O.none();
-          if (registered && O.isSome(unenrolledNativeOwnership) && unenrolledNativeOwnership.value.count > 0)
+          if (registered && O.isSome(unenrolledNativeOwnership) && unenrolledNativeOwnership.value.count > 0) {
             return yield* failure("storage");
+          }
           return unenrolledNativeOwnership;
         });
         const commitDisposition = Effect.fnUntraced(function* (
@@ -363,7 +387,9 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
           const count = yield* sql`SELECT COUNT(*) AS n FROM observation_page_dispositions`.pipe(
             Effect.flatMap(decodeArguments2)
           );
-          if (count[0].n >= policy.maxDispositions) return yield* failure("capacity");
+          if (count[0].n >= policy.maxDispositions) {
+            return yield* failure("capacity");
+          }
           const unenrolledNativeOwnership = yield* readNativeOwnership(receiptId, row.sourceKey, registered);
           const page = TranscriptAcceptance.make({
             receiptId,
@@ -407,7 +433,9 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
           safe(
             sql.withTransaction(
               Effect.gen(function* () {
-                if (mode === "expiry" && O.isNone(policy.expireAfterMillis)) return yield* failure("configuration");
+                if (mode === "expiry" && O.isNone(policy.expireAfterMillis)) {
+                  return yield* failure("configuration");
+                }
                 const prior = yield* base.readDisposition(receiptId);
                 if (O.isSome(prior)) return prior;
                 const rows =
@@ -415,7 +443,9 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
                     Effect.flatMap(decodeValueSourceKeyRecordRows)
                   );
                 const row = rows[0];
-                if (row === undefined) return yield* failure("unknown-page");
+                if (row === undefined) {
+                  return yield* failure("unknown-page");
+                }
                 const now = yield* Clock.currentTimeMillis;
                 const minAge =
                   mode === "expiry"

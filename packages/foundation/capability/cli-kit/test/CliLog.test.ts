@@ -11,12 +11,13 @@ import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Result from "effect/Result";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
@@ -110,13 +111,19 @@ const pretty = (lines: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.filter(lines, (line) => /^\d\d:\d\d:\d\d\.\d{3} /.test(line));
 
 const json = (line: string): { level: string; message: unknown; annotations: Record<string, unknown> } =>
-  JSON.parse(line);
+  Result.getOrThrowWith(
+    S.decodeResult(
+      S.fromJsonString(S.Struct({ level: S.String, message: S.Unknown, annotations: S.Record(S.String, S.Unknown) }))
+    )(line),
+    identity
+  );
 
 it.layer(platformServices, { timeout: "30 seconds" })((it) => {
   describe("CliLog.Level", () => {
     it.effect("defaults to None", () =>
       Effect.gen(function* () {
-        assert.strictEqual(yield* CliLog.Level, "None");
+        const Level1 = yield* CliLog.Level;
+        assert.strictEqual(Level1, "None");
       })
     );
   });
@@ -564,11 +571,14 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
     it.effect("false never neutralizes, and true always does even with nothing captured", () =>
       Effect.gen(function* () {
-        assert.isNotEmpty(commands(yield* written(hosted(false))), "false leaves the command");
+        const written2 = yield* written(hosted(false));
+        assert.isNotEmpty(commands(written2), "false leaves the command");
         const bare = CliLog.layer({ level: "Info", format: "json", plainLogger: false, neutralize: true });
-        assert.deepStrictEqual(commands(yield* written(bare)), []);
+        const written3 = yield* written(bare);
+        assert.deepStrictEqual(commands(written3), []);
         const control = CliLog.layer({ level: "Info", format: "json", plainLogger: false });
-        assert.isNotEmpty(commands(yield* written(control)), "control: off Actions, nothing captured, not neutralized");
+        const written4 = yield* written(control);
+        assert.isNotEmpty(commands(written4), "control: off Actions, nothing captured, not neutralized");
       })
     );
   });
@@ -606,16 +616,19 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const overridden = CliLog.layer({ level: "Info", format: "json", runtimeEnv: local }).pipe(
           Layer.provide(captured)
         );
-        assert.isNotEmpty(commands(yield* written(overridden)), "the option said not Actions");
+        const written5 = yield* written(overridden);
+        assert.isNotEmpty(commands(written5), "the option said not Actions");
         const capturedOnly = CliLog.layer({ level: "Info", format: "json" }).pipe(Layer.provide(captured));
-        assert.deepStrictEqual(commands(yield* written(capturedOnly)), [], "control: the capture alone neutralizes");
+        const written6 = yield* written(capturedOnly);
+        assert.deepStrictEqual(commands(written6), [], "control: the capture alone neutralizes");
       })
     );
 
     it.effect("the logging fiber's own CurrentRuntimeEnv still beats it", () =>
       Effect.gen(function* () {
         const layer = CliLog.layer({ level: "Info", format: "json", runtimeEnv: actions });
-        assert.isNotEmpty(commands(yield* written(layer, local)), "the fiber said not Actions");
+        const written7 = yield* written(layer, local);
+        assert.isNotEmpty(commands(written7), "the fiber said not Actions");
       })
     );
   });

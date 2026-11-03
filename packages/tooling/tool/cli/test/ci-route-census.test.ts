@@ -228,7 +228,8 @@ describe("route head fetch", () => {
         }),
       });
 
-      expect(yield* ensure(["a1", "b2", "c3", "d4"])).toEqual(["d4"]);
+      const ensure1 = yield* ensure(["a1", "b2", "c3", "d4"]);
+      expect(ensure1).toEqual(["d4"]);
       const log = yield* Ref.get(calls);
       expect(A.take(log, 3)).toEqual(["check a1,b2,c3,d4", "fetch pull refs", "check a1,b2,c3,d4"]);
       expect(
@@ -242,12 +243,16 @@ describe("route head fetch", () => {
 
       // Every head already local: one object-store check, no network.
       yield* Ref.set(calls, []);
-      expect(yield* ensure(["a1", "b2", "c3"])).toEqual([]);
-      expect(yield* Ref.get(calls)).toEqual(["check a1,b2,c3"]);
+      const ensure2 = yield* ensure(["a1", "b2", "c3"]);
+      expect(ensure2).toEqual([]);
+      const got = yield* Ref.get(calls);
+      expect(got).toEqual(["check a1,b2,c3"]);
 
       yield* Ref.set(calls, []);
-      expect(yield* ensure([])).toEqual([]);
-      expect(yield* Ref.get(calls)).toEqual([]);
+      const ensure3 = yield* ensure([]);
+      expect(ensure3).toEqual([]);
+      const got4 = yield* Ref.get(calls);
+      expect(got4).toEqual([]);
     })
   );
 });
@@ -277,7 +282,9 @@ it.layer(planLayer, { timeout: "30 seconds" })("verification route plan", (it) =
       expect(A.every(plan.selected, (selection) => A.contains(selection.selectedBy, "unknown"))).toBe(true);
       expect(plan.skipped).toEqual([]);
       expect(plan.affectedPackages).toEqual(["base:affected", "head:affected"]);
-      expect(plan.footprintDigest).toBe(yield* sha256Hex(routeFootprintCanonicalJson()));
+      const expectation = expect(plan.footprintDigest);
+      const sha256Hex1 = yield* sha256Hex(routeFootprintCanonicalJson());
+      expectation.toBe(sha256Hex1);
     })
   );
 
@@ -307,13 +314,16 @@ it.layer(NodeCrypto.layer)("route census", (it) => {
         gitLayer({ p1: "m1", x2: "m1" }, [], ensured)
       );
 
-      expect(yield* Ref.get(ensured)).toEqual([["p1", "x2"]]);
+      const got5 = yield* Ref.get(ensured);
+      expect(got5).toEqual([["p1", "x2"]]);
       expect(census.heads).toBe(2);
       expect(census.classifiedHeads).toBe(2);
       expect(census.unknownAtomShare).toBe(0.25);
       expect(census.unresolvedHeads).toBe(0);
       expect(census.corpusSha256).toBe("c0ffee");
-      expect(census.footprintDigest).toBe(yield* sha256Hex(routeFootprintCanonicalJson()));
+      const expectation1 = expect(census.footprintDigest);
+      const sha256Hex2 = yield* sha256Hex(routeFootprintCanonicalJson());
+      expectation1.toBe(sha256Hex2);
       // p1 (pure pkg:catalog): lint 60 s + 30 s shards, check 120 s; the PR Size
       // Label job has no lane and the untimed Test Unit shard has no cost.
       // x2 (mixed): lint 40 s + 10 s over two attempts (one head), check 90 s.
@@ -371,7 +381,8 @@ it.layer(NodeCrypto.layer)("route census", (it) => {
         gitLayer({ p1: "m1" }, [], ensured, ["x2"])
       );
 
-      expect(yield* Ref.get(ensured)).toEqual([["p1", "x2"]]);
+      const got6 = yield* Ref.get(ensured);
+      expect(got6).toEqual([["p1", "x2"]]);
       expect(census.heads).toBe(2);
       expect(census.unresolvedHeads).toBe(1);
       expect(census.unknownAtomShare).toBe(0.5);
@@ -473,7 +484,8 @@ describe("route replay", () => {
       );
 
       // Pull-request heads first, then the main candidates for base evidence.
-      expect(yield* Ref.get(ensured)).toEqual([
+      const got7 = yield* Ref.get(ensured);
+      expect(got7).toEqual([
         ["a1", "b2", "c3"],
         ["m2", "m1", "m0"],
       ]);

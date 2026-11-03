@@ -477,21 +477,28 @@ it.layer(platform, { timeout: "30 seconds" })("attached --until-ready on a chang
       const second = yield* runUntilReady(root, [red(2)], "attached");
       strictEqual(second, "wave");
       strictEqual(yeetMonitorExitFor(second).exitCode, 2);
+      const checkFailedRows1 = yield* checkFailedRows(root);
       deepStrictEqual(
-        A.map(yield* checkFailedRows(root), (row) => row.id),
+        A.map(checkFailedRows1, (row) => row.id),
         [lint.id]
       );
-      strictEqual(yield* waveLinesSince(start), 2);
-      assertInclude(yield* printed, `[yeet] wave on PR #7: 1 new P0/P1 inbox row(s): P0 Lint`);
-      assertInclude(yield* printed, `[${lint.id}]`);
+      const waveLinesSince2 = yield* waveLinesSince(start);
+      strictEqual(waveLinesSince2, 2);
+      const printed3 = yield* printed;
+      assertInclude(printed3, `[yeet] wave on PR #7: 1 new P0/P1 inbox row(s): P0 Lint`);
+      const printed4 = yield* printed;
+      assertInclude(printed4, `[${lint.id}]`);
+      const loadedYeetRemediationWave = yield* loadYeetRemediationWave(root);
       assertSome(
-        O.flatMap(yield* loadYeetRemediationWave(root), (wave) => wave.redSetKey),
+        O.flatMap(loadedYeetRemediationWave, (wave) => wave.redSetKey),
         yeetWaveRedSetKey([red(2)])
       );
 
       // The same red set again is not a new wave: the loop runs until the PR closes.
-      strictEqual(yield* runUntilReady(root, [red(2)], "attached"), "closed");
-      strictEqual(yield* waveLinesSince(start), 2);
+      const resultUntilReady = yield* runUntilReady(root, [red(2)], "attached");
+      strictEqual(resultUntilReady, "closed");
+      const waveLinesSince5 = yield* waveLinesSince(start);
+      strictEqual(waveLinesSince5, 2);
       // Handing the wave back never acknowledges it.
       assertFalse((yield* readYeetAckState(root, lint.id)).acked);
     })
@@ -501,10 +508,13 @@ it.layer(platform, { timeout: "30 seconds" })("attached --until-ready on a chang
     Effect.gen(function* () {
       const root = yield* checkout;
       const start = yield* waveLineCount;
-      strictEqual(yield* runUntilReady(root, [red(1), red(1, "Check")], "attached"), "wave");
+      const resultUntilReady6 = yield* runUntilReady(root, [red(1), red(1, "Check")], "attached");
+      strictEqual(resultUntilReady6, "wave");
       // Check's rerun went green; Lint is the same red on the same run.
-      strictEqual(yield* runUntilReady(root, [red(1), green("Check")], "attached"), "closed");
-      strictEqual(yield* waveLinesSince(start), 1);
+      const resultUntilReady7 = yield* runUntilReady(root, [red(1), green("Check")], "attached");
+      strictEqual(resultUntilReady7, "closed");
+      const waveLinesSince8 = yield* waveLinesSince(start);
+      strictEqual(waveLinesSince8, 1);
     })
   );
 
@@ -512,15 +522,20 @@ it.layer(platform, { timeout: "30 seconds" })("attached --until-ready on a chang
     Effect.gen(function* () {
       const root = yield* checkout;
       const start = yield* waveLineCount;
-      strictEqual(yield* runUntilReady(root, [red(1, "Vercel", false), green("Lint")], "attached"), "closed");
+      const resultUntilReady9 = yield* runUntilReady(root, [red(1, "Vercel", false), green("Lint")], "attached");
+      strictEqual(resultUntilReady9, "closed");
+      const checkFailedRows10 = yield* checkFailedRows(root);
       deepStrictEqual(
-        A.map(yield* checkFailedRows(root), (row) => [row.capsule.lane, row.severity]),
+        A.map(checkFailedRows10, (row) => [row.capsule.lane, row.severity]),
         [["Vercel", "P1"]]
       );
-      strictEqual(yield* waveLinesSince(start), 0);
+      const waveLinesSince11 = yield* waveLinesSince(start);
+      strictEqual(waveLinesSince11, 0);
       // Its rerun coming back red does not wake either: the wave key counts required reds only.
-      strictEqual(yield* runUntilReady(root, [red(2, "Vercel", false), green("Lint")], "attached"), "closed");
-      strictEqual(yield* waveLinesSince(start), 0);
+      const resultUntilReady12 = yield* runUntilReady(root, [red(2, "Vercel", false), green("Lint")], "attached");
+      strictEqual(resultUntilReady12, "closed");
+      const waveLinesSince13 = yield* waveLinesSince(start);
+      strictEqual(waveLinesSince13, 0);
     })
   );
 
@@ -528,11 +543,14 @@ it.layer(platform, { timeout: "30 seconds" })("attached --until-ready on a chang
     Effect.gen(function* () {
       const root = yield* checkout;
       yield* failedRow(root, red(1, "Vercel", false), "P1");
-      assertNone(yield* loadYeetPrWave(root, 7, HashSet.empty()));
+      const loadedYeetPrWave = yield* loadYeetPrWave(root, 7, HashSet.empty());
+      assertNone(loadedYeetPrWave);
       const comment = yield* commentRow(root, 44);
-      assertSome(waveIds(yield* loadYeetPrWave(root, 7, HashSet.empty())), [comment.id]);
+      const loadedYeetPrWave14 = yield* loadYeetPrWave(root, 7, HashSet.empty());
+      assertSome(waveIds(loadedYeetPrWave14), [comment.id]);
       const lint = yield* failedRow(root, red(1), "P0");
-      assertSome(waveIds(yield* loadYeetPrWave(root, 7, HashSet.make(comment.id))), [lint.id]);
+      const loadedYeetPrWave15 = yield* loadYeetPrWave(root, 7, HashSet.make(comment.id));
+      assertSome(waveIds(loadedYeetPrWave15), [lint.id]);
     })
   );
 });
@@ -601,7 +619,8 @@ it.layer(platform, { timeout: "30 seconds" })("job wait on a changed red set", (
       const launcher = yield* ProofJobLauncher.make(root);
       const bind = binder(launcher, jobId);
 
-      strictEqual(yield* runUntilReady(root, [red(1)], "detached", bind), "closed");
+      const resultUntilReady16 = yield* runUntilReady(root, [red(1)], "detached", bind);
+      strictEqual(resultUntilReady16, "closed");
       const first = yield* launcher.wait(jobId, awaitReturn);
       strictEqual(exitOf(first), 2);
       const [lint] = yield* checkFailedRows(root);
@@ -609,18 +628,21 @@ it.layer(platform, { timeout: "30 seconds" })("job wait on a changed red set", (
       deepStrictEqual(first.kind === "wave" ? A.map(first.wave.entries, (entry) => entry.row.id) : [], [lint.id]);
 
       // The same head's Lint failed again on a new run: no new row, a new wave.
-      strictEqual(yield* runUntilReady(root, [red(2)], "detached", bind), "closed");
+      const resultUntilReady17 = yield* runUntilReady(root, [red(2)], "detached", bind);
+      strictEqual(resultUntilReady17, "closed");
       const second = yield* launcher.wait(jobId, awaitReturn);
       strictEqual(exitOf(second), 2);
       // The same gate line: the same live row, handed back again.
       deepStrictEqual(gateLineOf(second, jobId), gateLineOf(first, jobId));
+      const read18 = yield* launcher.read(jobId);
       assertSome(
-        O.flatMap(yield* launcher.read(jobId), (record) => record.returnedWaveRedSetKey),
+        O.flatMap(read18, (record) => record.returnedWaveRedSetKey),
         yeetWaveRedSetKey([red(2)])
       );
 
       // Unchanged red set: the re-run waits past it.
-      strictEqual(yield* runUntilReady(root, [red(2)], "detached", bind), "closed");
+      const resultUntilReady19 = yield* runUntilReady(root, [red(2)], "detached", bind);
+      strictEqual(resultUntilReady19, "closed");
       yield* waitTimesOut(launcher, jobId, quick);
       assertFalse((yield* readYeetAckState(root, lint.id)).acked);
     })
@@ -634,7 +656,8 @@ it.layer(platform, { timeout: "30 seconds" })("job wait on a changed red set", (
       const bind = binder(launcher, jobId);
 
       // A rate-limited Vercel deployment: optional, a P1 row, never a wave.
-      strictEqual(yield* runUntilReady(root, [red(1, "Vercel", false), green("Lint")], "detached", bind), "closed");
+      const resultUntilReady20 = yield* runUntilReady(root, [red(1, "Vercel", false), green("Lint")], "detached", bind);
+      strictEqual(resultUntilReady20, "closed");
       yield* waitTimesOut(launcher, jobId, quick);
 
       const comment = yield* commentRow(root, 45);
@@ -642,7 +665,8 @@ it.layer(platform, { timeout: "30 seconds" })("job wait on a changed red set", (
       strictEqual(exitOf(woken), 2);
       deepStrictEqual(woken.kind === "wave" ? A.map(woken.wave.entries, (entry) => entry.row.id) : [], [comment.id]);
 
-      strictEqual(yield* runUntilReady(root, [red(1, "Vercel", false), red(1)], "detached", bind), "closed");
+      const resultUntilReady21 = yield* runUntilReady(root, [red(1, "Vercel", false), red(1)], "detached", bind);
+      strictEqual(resultUntilReady21, "closed");
       const required = yield* launcher.wait(jobId, awaitReturn);
       strictEqual(exitOf(required), 2);
       deepStrictEqual(
