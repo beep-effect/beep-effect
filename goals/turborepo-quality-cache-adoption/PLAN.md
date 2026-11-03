@@ -787,3 +787,21 @@ It measures no speed-up from those repairs or from Turbo; the Test Unit gain
 from re-binning remains unobserved. The accepted source has no final full-week
 window-4 verdict. Consume that owner report and the real post-repair window
 before claiming measured value or warming benefits. No competing census ran.
+
+
+### Three explicit freshness boundaries: 2026-11-03
+
+The [source review](research/explicit-fresh-boundaries-review-2026-11-03.json)
+resolves three more current whole-task boundaries. The website's portless Vite
+server must remain a running service; its Biome `--write` fixer must perform
+source mutation; the Bun vulnerability audit needs current advisory data and
+ignore-expiry evaluation. Each already has effective caching disabled. The
+review rechecks the census's 458 source bindings and compares six relevant
+files with accepted Git source. No task body or security query ran.
+
+There are now 204 source-reviewed keep-fresh dispositions and 2,232 pending
+computations out of 2,436. The website build/lint and audit policy fingerprint
+remain separate pending qualification candidates. The 201-row checkpoint is
+historical; its report remains unchanged and the new report names the prior
+population's exact Git revision and hash. No task qualification, cache setting,
+feature decision or whole-goal acceptance changed.

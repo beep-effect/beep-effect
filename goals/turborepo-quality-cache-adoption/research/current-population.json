@@ -7732,8 +7732,13 @@
         "repository-dispatch"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "required-live-security-verdict",
+        "scope": "whole-task",
+        "review": "research/explicit-fresh-boundaries-review-2026-11-03.json"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -13788,8 +13793,13 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "persistent-development-service",
+        "scope": "whole-task",
+        "review": "research/explicit-fresh-boundaries-review-2026-11-03.json"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -13839,8 +13849,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/explicit-fresh-boundaries-review-2026-11-03.json",
+        "pureCounterpart": "@beep/beep-effect-web#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {

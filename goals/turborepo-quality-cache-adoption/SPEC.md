@@ -758,3 +758,21 @@ measures no speed-up from those repairs or Turbo. The missing final full-week
 verdict is not an implied pass. Reverse this
 registration through Git to the retained population and reports. Historical
 receipts and qualification evidence keep their original source and authority.
+
+
+### Explicit service, fixer and live-audit boundaries, 2026-11-03
+
+- Keep `@beep/beep-effect-web#dev` fresh: its portless Vite process is a
+  persistent service. Cached completion cannot restore the running server.
+- Keep `@beep/beep-effect-web#lint:fix` fresh: its literal alias reaches
+  `biome check . --write`, whose source mutation must execute.
+- Keep `//#repo-sanity:bun-audit` fresh: its existing owner reads current time
+  for ignore expiry and invokes the live vulnerability audit. Source identity
+  cannot establish that the external advisory set is unchanged. The lane-proof
+  owner already explicitly excludes this lane from reuse.
+- Existing effective caching is disabled for all three. Review and qualify
+  their named pure prerequisites independently; these whole-task decisions
+  confer no prerequisite or hosted-status authority. The source-bound review
+  records the six-file accepted-Git comparison and unchanged qualification ledger.
+- Reverse only these three population decisions using the report's prior Git
+  revision. No runtime setting or trust boundary needs reversal.

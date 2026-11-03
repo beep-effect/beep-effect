@@ -862,3 +862,16 @@ observed schema difference changed the matrix and next qualification work.
   a benefit claim. This preview measures no repair or Turbo speed-up; the
   Test Unit re-bin gain remains unobserved. Correct the plan, receipt and PR
   description together, retaining the owning source hashes and measurements.
+
+
+### 2026-11-03 — Explicit wrappers left in the disposition queue
+
+The accepted-source inventory still listed the website dev server, its fixer
+and the live Bun audit as pending even though their literal commands and
+existing disabled-cache configuration support whole-task freshness. A changed
+workspace script-map digest is not a semantic task review. The new explicit
+freshness report resolves these three aliases against their implementations,
+effective configuration and accepted source bytes. During each population
+reconciliation, enumerate remaining service/fixer/audit candidates and follow
+the actual command before carrying a disposition forward. Their pure
+prerequisites still need qualification; this review changes no runtime setting.
