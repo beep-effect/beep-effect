@@ -3,7 +3,7 @@
 - id: `skills-patch-series-presence`
 - exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
 - corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
-- file:line: `packages/tooling/library/ai-sync/src/Skills.schemas.ts:721`
+- file:line: `packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts:721`
 - symbol: `SkillPatches`
 - members: `required`, `series`
 - evidence: E3 at `Skills.service.ts:762-788` — `required` is derived from the same ordered series' nonemptiness; E2 at `Skills.render.ts:174-176` reads the pair as that relation.

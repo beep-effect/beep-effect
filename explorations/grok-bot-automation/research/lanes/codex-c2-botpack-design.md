@@ -276,7 +276,7 @@ For v1 repo-authored packs:
 - A hosted test receipt proves which commit/digests were actually read; a profile description is not proof.
 - Receipts live outside the repo by default under `.beep/bots/receipts/<slug>/` in the dedicated execution clone or an operator-configured durable state directory. Only domain-approved report artifacts are proposed for commit.
 
-For a future imported pack, add a separate `bots-lock.json` only after a real second source exists. Model it on the richer `skills-lock/v2` separation of upstream snapshot, license, provenance, patch series, and effective tree (`packages/tooling/library/ai-sync/src/Skills.schemas.ts:769-843,941-972`). Do not overload the current v1 skills lock and do not invent lock machinery for one repo-local pack.
+For a future imported pack, add a separate `bots-lock.json` only after a real second source exists. Model it on the richer `skills-lock/v2` separation of upstream snapshot, license, provenance, patch series, and effective tree (`packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts:769-843,941-972`). Do not overload the current v1 skills lock and do not invent lock machinery for one repo-local pack.
 
 Every receipt records:
 
@@ -509,7 +509,7 @@ Primary repo doctrine and current implementation:
 - `packages/tooling/tool/cli/src/commands/Research/internal/Timers.ts:1-8,39-65,88-164`
 - `packages/tooling/tool/cli/src/commands/Research/Research.service.ts:143-190`
 - `packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts:30-35,688-721,809-849`
-- `packages/tooling/library/ai-sync/src/Skills.schemas.ts:769-843,941-972`
+- `packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts:769-843,941-972`
 
 Upstream pstack/benny evidence:
 

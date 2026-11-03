@@ -99,7 +99,7 @@ QaEvidenceRef { eventIds: Array<SequenceNumber>; frameRange: Option<[Int, Int]> 
 ```
 
 Evidence: `QaEvidenceRef` fields are at
-`packages/tooling/library/qa-capture/src/QaInventory.schemas.ts:258-285`; `QaFinding` and its nonempty
+`packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts:258-285`; `QaFinding` and its nonempty
 evidence invariant are at `:347-394`; severity is exactly `P0 | P1 | P2`, with P0 blocking, P1
 required, P2 non-required (`:25-49`); evidence kind is the five-member domain at `:127-145`.
 `isRequiredSeverity` maps P0/P1 to true and P2 to false; the whole-struct filter requires exact count
@@ -353,7 +353,7 @@ existing `QaCommandError`, so no new error crosses the command boundary
 ## 6. RISKS / UNKNOWNS (decision + recommendation)
 
 1. **Absolute paths:** `QaEvidenceRef.path` is only `S.String` despite “round-relative” docs
-   (`packages/tooling/library/qa-capture/src/QaInventory.schemas.ts:234-240,276-279`), and the current
+   (`packages/tooling/tool/cli/src/commands/Qa/Inventory.schemas.ts:234-240,276-279`), and the current
    resolver appears to accept an absolute existing file already under canonical root. **Recommend:**
    characterize and preserve in parity; tightening to relative-only is a separately approved behavior change.
 2. **Linked aliases:** exact lexical/canonical equality rejects even an in-root symlink, but QA has no

@@ -80,7 +80,7 @@ Archive the following eight current qualified rows and their current designs tog
 | --- | --- |
 | `sync-data-to-ts-run-mode` | Descriptor/callback family described above; no actual paired Boolean data owner. |
 | `r2-tooling-sweep-plan-operator-handoff` | `Yeet/internal/Sweep.schemas.ts:150–160`: id, required action string, required `Array<SweepPrecondition>`, sole requiresOperator Boolean. `preconditions.satisfied` is a child value/aggregate, not a second direct member. |
-| `skills-patch-series-presence` | `packages/tooling/library/ai-sync/src/Skills.schemas.ts:719–728`: sole required Boolean, required SHA-256 patchSetHash and required `Array<SkillPatch>` series. Empty/nonempty series is not optional-payload presence. |
+| `skills-patch-series-presence` | `Skills/Skills.schemas.ts:719–728`: sole required Boolean, required SHA-256 patchSetHash and required `Array<SkillPatch>` series. Empty/nonempty series is not optional-payload presence. |
 | `data-sync-target-changed-files` | `SyncDataToTs/SyncDataToTs.schemas.ts:376–393`: sole changed Boolean, required changedFiles/fileResults arrays and other full payloads. Array emptiness and child result Booleans are not sibling Boolean members. |
 | `research-capture-outcome` | `Research/Research.schemas.ts:638–648`: sole skipped Boolean; cardPath, id and title are all required strings. Empty sentinel strings are not Option/nullable fields. |
 | `worktree-process-scan-completion` | `Worktree/Fleet.service.ts:450–455`: counts map, required scanned/unreadable numbers and sole complete Boolean. Zero/nonzero count predicates are invented axes. |
@@ -206,7 +206,7 @@ Row SHA-256 below hashes the exact current JSONL line bytes, excluding its termi
 | `r25-cli-yeet-ack-state` | WITHDRAW D1 (out of net) | `packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts:350` | `88bc295c13ab052756edb3dcb17edbdde06ee4b86633e7fe7b0a2bd79fc5f14f` | `none` |
 | `r25-cli-yeet-shared-options-ci-parity-no-fail-fast` | RETAIN D1 | `packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts:472` | `c255df8e9669f59efcf462d23c3fb4c4f556112a2732a99d63d222e2282eaf56` | `none` |
 | `yeet-prepared-publish-commit` | RETAIN Q | `packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:760` | `77701f556eecb7f5519caae5dcb2da903b008c5addd44c88c386b22689a26738` | `be69e91002b5768165af6312cd10a2e398b51851df68a17ad782f448b48ce856` |
-| `skills-patch-series-presence` | ARCHIVE Q + design (out of net) | `packages/tooling/library/ai-sync/src/Skills.schemas.ts:721` | `8c2e83f6376a929b938c2372dcb7b7b6d5cce16d0d7b5e4dd1f9c2450f3ece5a` | `b61f518a8d49c0d667c8f2c30fe7cc67fc4607138c2a1e76e6dd1800c5b1095d` |
+| `skills-patch-series-presence` | ARCHIVE Q + design (out of net) | `packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts:721` | `8c2e83f6376a929b938c2372dcb7b7b6d5cce16d0d7b5e4dd1f9c2450f3ece5a` | `b61f518a8d49c0d667c8f2c30fe7cc67fc4607138c2a1e76e6dd1800c5b1095d` |
 | `data-sync-target-changed-files` | ARCHIVE Q + design (out of net) | `packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts:380` | `43bf562439345877627735b4001e7a3fa11dd941e0ee776ba2de55c8366c5603` | `32f5f9f3555fbe000961d1b58e9f57f69c45addb75f8dd70932ba77f2e75467a` |
 | `research-capture-outcome` | ARCHIVE Q + design (out of net) | `packages/tooling/tool/cli/src/commands/Research/Research.schemas.ts:642` | `56a4be365e9b25b1bcefdcb861e82a7c9e1915e71fdc5cd74e143ba61923cffd` | `760551a28cb07cbd504f898fa33515f1e0d6ca70435ccd85fe2734285ba8599b` |
 | `worktree-fleet-epoch-target` | RETAIN Q | `packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts:1051` | `2439fb9881e3f9a8e2ffd66280b95b7ceae19e998a19e2ec60e3968c1b754a2c` | `1794afb7eb798e7c8efa2afb1e15600dc5217832879d4618c78b984a923bdad7` |
@@ -265,7 +265,7 @@ All source/test hashes below were compared with `git show HEAD:<path>` and match
 | `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts` | `d51dbc61dd796eea95f0cbc89f9b3659f5b4dfca929f91da0f1cec0d40742520` |
 | `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts` | `8d8caf2239f934e2e6890fcaa311c163b23e1f5c248e356cce58ae720929f6c1` |
 | `packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts` | `24b28ee40f1150e6be578df7f4de09467d4aed34db71fd0b09c4396aad1493b4` |
-| `packages/tooling/library/ai-sync/src/Skills.schemas.ts` | `6cfa634fcd34a6fc445c56935f4ee7bc825857e89b304ca8ed3ef0cdc7268998` |
+| `packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts` | `6cfa634fcd34a6fc445c56935f4ee7bc825857e89b304ca8ed3ef0cdc7268998` |
 | `packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.command.ts` | `45633209ac7f362a01e3833ae7f857ddd1662c2b1d12f6fd8790846aaefb7df1` |
 | `packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts` | `dcf14a7b61c5e6f708857f0b4decbf4f58eb09896163da8645c2799838e3bc68` |
 | `packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/FreeLawProject.ts` | `6273df74bcb052e78550756d0df337a349f01d41ca4419c3040d417bf95ee72e` |

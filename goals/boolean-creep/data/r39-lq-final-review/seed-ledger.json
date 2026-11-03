@@ -551,7 +551,7 @@
   },
   {
     "id": "models-catalog-availability",
-    "file": "packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts",
+    "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
     "symbol": "CatalogAvailability",
     "status": "disqualified",
     "historicalLine": 868,
@@ -581,7 +581,7 @@
   },
   {
     "id": "upstream-thinking-support",
-    "file": "packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts",
+    "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
     "symbol": "UpstreamThinkingSupport",
     "status": "disqualified",
     "historicalLine": 324,
@@ -591,7 +591,7 @@
   },
   {
     "id": "grok-model-info-flags",
-    "file": "packages/tooling/library/ai-sync/src/ModelCatalog.schemas.ts",
+    "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
     "symbol": "GrokModelInfo",
     "status": "disqualified",
     "historicalLine": 706,

@@ -445,7 +445,7 @@ CLI-generated and deterministic, so the fuzzy-match and hidden-second-LLM rungs
 (`:196-265`, hardcoded `claude-sonnet-4-6` at `:251`) solve a problem beep does
 not have.
 
-**Lands in:** `packages/tooling/library/qa-capture/src/QaInventory.schemas.ts` (`QaCriterion`, per-criterion
+**Lands in:** `commands/Qa/Inventory.schemas.ts` (`QaCriterion`, per-criterion
 verdicts), `commands/Qa/JudgePack.ts` (per-criterion bundles),
 `commands/Qa/JudgeIngest.ts` (bounded fan-in).
 
@@ -496,7 +496,7 @@ with the neutral set enforced by the scorer rather than judge prose (fixing
 LAB's own soft spot, map-task-census §9); a closure verdict per criterion
 ("the inventory asserts no finding outside this set").
 
-**Lands in:** `packages/tooling/library/qa-capture/src/QaInventory.schemas.ts`, `commands/Qa/JudgeCheck.ts`.
+**Lands in:** `commands/Qa/Inventory.schemas.ts`, `commands/Qa/JudgeCheck.ts`.
 
 ### #5 — Dual-judge on clean rounds only
 

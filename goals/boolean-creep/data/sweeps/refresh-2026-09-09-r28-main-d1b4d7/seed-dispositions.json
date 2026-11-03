@@ -3749,7 +3749,7 @@
       "presentAtFrozenHead": true,
       "comparisonOnlyNoSemanticRescan": true
     },
-    "packages/tooling/library/ai-sync/src/Skills.schemas.ts": {
+    "packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts": {
       "oldSourceSha256": "6cfa634fcd34a6fc445c56935f4ee7bc825857e89b304ca8ed3ef0cdc7268998",
       "sourceSha256": "6cfa634fcd34a6fc445c56935f4ee7bc825857e89b304ca8ed3ef0cdc7268998",
       "workingSha256": "6cfa634fcd34a6fc445c56935f4ee7bc825857e89b304ca8ed3ef0cdc7268998",
@@ -38208,7 +38208,7 @@
     },
     {
       "id": "skills-patch-series-presence",
-      "file": "packages/tooling/library/ai-sync/src/Skills.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts",
       "symbol": "SkillPatches",
       "seedLine": 721,
       "seedStatus": "designed",
@@ -38221,7 +38221,7 @@
       "coverage": "installed-source-backed-adjudication",
       "coverageReason": "Bound actual installed integration and exact prior-row archive override primary footer assertions.",
       "lane": "r28-cli-commands-r-z",
-      "originalOwnerSourceHashKey": "packages/tooling/library/ai-sync/src/Skills.schemas.ts",
+      "originalOwnerSourceHashKey": "packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts",
       "seedRationaleSha256": "2b9aed3025753c30d24b4bb664f9ed3a25dccc0ac471acc5a3601473619091c1",
       "explicitAuditedRetentionReceipts": [],
       "installedArchiveEvidence": [
@@ -38244,12 +38244,12 @@
             {
               "line": 83,
               "section": "full-owner scope withdrawals beyond the footer list",
-              "excerpt": "| `skills-patch-series-presence` | `packages/tooling/library/ai-sync/src/Skills.schemas.ts:719–728`: sole required Boolean, required SHA-256 patchSetHash and required `Array<SkillPatch>` series. Empty/nonempty series is not optional-payload presence. |"
+              "excerpt": "| `skills-patch-series-presence` | `Skills/Skills.schemas.ts:719–728`: sole required Boolean, required SHA-256 patchSetHash and required `Array<SkillPatch>` series. Empty/nonempty series is not optional-payload presence. |"
             },
             {
               "line": 209,
               "section": "complete frozen-seed disposition and byte receipts",
-              "excerpt": "| `skills-patch-series-presence` | ARCHIVE Q + design (out of net) | `packages/tooling/library/ai-sync/src/Skills.schemas.ts:721` | `8c2e83f6376a929b938c2372dcb7b7b6d5cce16d0d7b5e4dd1f9c2450f3ece5a` | `b61f518a8d49c0d667c8f2c30fe7cc67fc4607138c2a1e76e6dd1800c5b1095d` |"
+              "excerpt": "| `skills-patch-series-presence` | ARCHIVE Q + design (out of net) | `packages/tooling/tool/cli/src/commands/Skills/Skills.schemas.ts:721` | `8c2e83f6376a929b938c2372dcb7b7b6d5cce16d0d7b5e4dd1f9c2450f3ece5a` | `b61f518a8d49c0d667c8f2c30fe7cc67fc4607138c2a1e76e6dd1800c5b1095d` |"
             }
           ]
         }
