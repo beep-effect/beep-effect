@@ -1185,6 +1185,27 @@ describe("yeet status snapshot rendering and encoding", () => {
     expect(unavailableSummary).toContain("checks: not checked");
   });
 
+  it("labels an incomplete check read instead of rendering missing counts as zero", () => {
+    const unread = YeetStatusRemote.make({
+      ...remote,
+      requiredCheckCount: 15,
+      failingRequiredCheckCount: 0,
+      pendingRequiredCheckCount: 0,
+      readFailure: O.some(YeetCommandError.make({ message: "Complete check capture unavailable" })),
+    });
+    const summary = renderYeetStatusSummary(
+      YeetStatusSnapshot.make({
+        ...snapshot,
+        remote: unread,
+        mergeReady: deriveYeetMergeReady(closeout, unread),
+      })
+    );
+
+    expect(summary).toContain("checks: incomplete remote read; retry before assessing readiness");
+    expect(summary).not.toContain("15 required (0 failing");
+    expect(summary).toContain("merge-ready: no, blocked on required-checks-green");
+  });
+
   it.effect("round-trips through the status JSON codec instead of leaking Option runtime objects", () =>
     Effect.gen(function* () {
       const json = yield* YeetStatusSnapshotJson.encode(snapshot);

@@ -1275,7 +1275,8 @@ producer activation, qualification and whole-goal acceptance remain unchanged.
 
 The shared status/completion readiness policy consumes the existing typed remote
 read failure. A passing required-only view cannot establish a complete check
-census; unknown optional checks keep the checks criterion held. Preserve the
+census; unknown optional checks keep the checks criterion held and the summary
+labels the incomplete read instead of displaying absent counts as zero. Preserve the
 current attribution, required-context, thread, exact-head and review-window
 checks. A complete later read can recover without a persistent failure latch.
 Reverse the isolated policy and regression-test change through Git. No stored

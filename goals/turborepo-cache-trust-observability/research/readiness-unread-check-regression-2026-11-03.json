@@ -21,11 +21,12 @@
     "actualRollupSha256": "73d958ebe640f25789c1cd30e09de1c55d827e0119f6076a9c52bb4479a645fd"
   },
   "cause": "The remote collector retains a typed readFailure for an incomplete census, but the shared merge-readiness policy did not consume it and treated absent optional/all-check counts as zero.",
-  "repair": "Require readFailure=None in the shared check-readiness criterion. Preserve counts, attribution, required-context policy and exact-head review/window gates.",
+  "repair": "Require readFailure=None in the shared check-readiness criterion. Preserve counts, attribution, required-context policy and exact-head review/window gates. Render the incomplete read explicitly instead of displaying unknown counts as zero.",
   "regressionsAuthored": [
     "Required-only pass plus unavailable complete census holds.",
     "Zero counts do not override a retained read failure.",
-    "A later complete successful read recovers."
+    "A later complete successful read recovers.",
+    "Incomplete check capture is labeled in the rendered summary, not displayed as zero optional checks."
   ],
   "localTestsExecuted": false,
   "hostedProof": "pending",
