@@ -189,7 +189,12 @@ export class ClaimInputCollection extends S.Opaque<ClaimInputCollection, { reado
     )
 ) {}
 
-const normalizationOutcome = LiteralKit(["normalized", "extraction-failed", "normalization-failed"]);
+const normalizationOutcome = LiteralKit(["normalized", "extraction-failed", "normalization-failed"]).pipe(
+  $I.annoteSchema("ClaimInputNormalizationOutcome", {
+    description:
+      "A preserved source record normalized, failed extraction, or failed claim normalization; no case implies checking.",
+  })
+);
 
 /**
  * Per-record normalization outcome, without claiming dependency completeness or checking.
