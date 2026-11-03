@@ -1009,6 +1009,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
 );
 
 // One scripted completed run: `output` on stdout, exiting `exitCode`.
+const encodeJsonText = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const reply = (output: string, exitCode = 0) => ({ stdout: output, exit: exitCode });
 const mockSpawner = ScriptedSpawner.make((command) => reply("[]", command === "gh" ? 1 : 0));
 const readyPlatform = Layer.provideMerge(
@@ -1053,9 +1054,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   const fallbackRunner = (lookup: string, lookupExit = 0, comments = "[]", restStatus = "OPEN") =>
     ScriptedSpawner.make(fallbackScript(lookup, lookupExit, comments, restStatus));
   const restFound = Result.getOrThrow(
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
-      restPullRequest({ number: 42, head: { ref: "feature/ready-gate", sha: "abc1234def" } }),
-    ])
+    encodeJsonText([restPullRequest({ number: 42, head: { ref: "feature/ready-gate", sha: "abc1234def" } })])
   );
 
   it.effect("recovers the ready read through REST while GraphQL is rate limited", () =>
