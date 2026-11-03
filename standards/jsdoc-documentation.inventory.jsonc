@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-03T00:57:20.336Z",
+  "generatedAt": "2026-11-03T01:53:41.452Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3600,
-    "publicExports": 25565,
+    "publicExports": 25566,
     "openModules": 115,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -451537,7 +451537,7 @@
         "srcDir": "src",
         "sourceFileCount": 502,
         "publicModuleCount": 499,
-        "publicExportCount": 4706
+        "publicExportCount": 4707
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -458225,7 +458225,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 9,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -526523,12 +526523,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "PolicyRootFileRoute",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-234-policyrootfileroute",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "PolicyCliLayout",
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
-          "line": 232,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-232-policyclilayout",
+          "line": 274,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-274-policyclilayout",
           "currentTags": [
             "@category",
             "@since"
@@ -526549,8 +526571,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
-          "line": 266,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-266-policycommandnode",
+          "line": 308,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-308-policycommandnode",
           "currentTags": [
             "@category",
             "@since"
@@ -526571,8 +526593,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
-          "line": 294,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-294-policyclosure",
+          "line": 336,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-336-policyclosure",
           "currentTags": [
             "@category",
             "@since"
@@ -526593,8 +526615,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 325,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-325-computepolicyfingerprint",
+          "line": 319,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-319-computepolicyfingerprint",
           "currentTags": [
             "@category",
             "@since"
@@ -526615,8 +526637,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 761,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-761-policytoolsfingerprintpolicy",
+          "line": 749,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-749-policytoolsfingerprintpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -526637,8 +526659,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 836,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-836-lintpolicyfingerprintcommand",
+          "line": 824,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-824-lintpolicyfingerprintcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -546236,8 +546258,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2155,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2155-qualitytasklanerun",
+          "line": 2167,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2167-qualitytasklanerun",
           "currentTags": [
             "@category",
             "@since"
@@ -546258,8 +546280,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2193,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2193-qualitytasklanerunreport",
+          "line": 2206,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2206-qualitytasklanerunreport",
           "currentTags": [
             "@category",
             "@since"
@@ -546280,8 +546302,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2225,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2225-githubchecklanerun",
+          "line": 2238,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2238-githubchecklanerun",
           "currentTags": [
             "@category",
             "@since"
@@ -546302,8 +546324,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 2257,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2257-githubcheckrunreport",
+          "line": 2270,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-2270-githubcheckrunreport",
           "currentTags": [
             "@category",
             "@since"
