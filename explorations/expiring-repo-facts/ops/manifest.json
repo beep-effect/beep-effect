@@ -8,7 +8,7 @@
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": ["goals/hold-ledger", "goals/wake-service"],
+      "goals": ["goals/hold-ledger", "retired:wake-service"],
       "docs": [],
       "supersededBy": null
     },

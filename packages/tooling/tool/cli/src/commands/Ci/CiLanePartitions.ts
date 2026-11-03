@@ -591,7 +591,6 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/practice-setup",
       "@beep/uspto",
       "@beep/mcpb-kit",
-      "@beep/t3-code",
       "@beep/beep-effect-web",
     ],
   }),

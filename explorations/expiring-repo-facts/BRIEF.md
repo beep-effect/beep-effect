@@ -49,7 +49,7 @@ flowchart LR
     H -->|"reconciler arms watches"| W["Wake service (workstation daemon)<br/>timers, npm, gh-run, pr-checks"]
     W -->|"signal fired or deadline"| P["Tier 1 probe<br/>control must fail, candidate,<br/>pinned runtime, two passes"]
     D["deps:update"] -->|"due probes first"| P
-    P -->|"verdict flipped"| R["agent-message-router<br/>one wake, no duplicates"]
+    P -->|"verdict flipped"| R["wake route (then agent-message-router, now T3 scheduled tasks)<br/>one wake, no duplicates"]
     R --> O{"live orchestrator?"}
     O -->|"yes"| L["orchestrator launches lane"]
     O -->|"no"| X["dispatcher: Junie if credits,<br/>else Opus, Codex, Cursor, grok<br/>(quota failures only)"]
@@ -94,7 +94,8 @@ flowchart LR
     limits.
   - A reconciler arms one watch per live hold, re-arms watches when their
     14-day cap expires, and fails lint when a live hold has no armed watch.
-  - Wakes are messages through `agent-message-router`. A wake goes to the live
+  - Wakes are messages through `agent-message-router` (retired 2026-11-02; see
+    DECISIONS.md). A wake goes to the live
     orchestrator. If none is live, a dispatcher launches a headless lane
     through `@beep/ai-provider-cli`:
     - Junie first, while JetBrains credits remain;

@@ -47,10 +47,12 @@ sequence-break worker or its evidence.
   the operator can see and stop the work. A Codex Desktop thread wins over a
   Claude Desktop session when both are inherited. If the child also owns a
   Ghostty terminal, the Ghostty surface wins over the parent route.
-- **T3 Code and Grok:** there is no automatic integration in this hook. T3's
-  workspace activation does not guarantee the original task, and Grok needs its
-  own event adapter. Agents already covered by the Claude/Codex hooks retain
-  origin labels when hosted elsewhere.
+- **T3 Code and Grok:** there is no automatic integration in this hook. A
+  T3-launched session already surfaces its permission prompt in the T3 thread
+  (an orchestrator sees it as `hasPendingQuestion` / `pendingApproval` on
+  `task_status` and `t3_thread_wait`), so the hook adds nothing there; Grok
+  needs its own event adapter. Agents already covered by the Claude/Codex hooks
+  retain origin labels when hosted elsewhere.
 
 A launcher that already knows the session can also supply it explicitly:
 `BEEP_SEQUENCE_BREAK_OPEN_URI` accepts `claude://code/continue?session=local_<id>`

@@ -1,0 +1,217 @@
+{
+  "schemaVersion": "cache-protected-producer-workflow-preparation/v1",
+  "recordedAt": "2026-11-03T04:30:36.984554+00:00",
+  "sourceBaseRevision": "e9cccd0b5bfc9a390eca249ff7e9f11ce604691d",
+  "status": "source-prepared-unexecuted",
+  "authority": "Closed workflow wiring only. No installed issuer, runtime credential delivery, protected execution, published observation, qualification or whole-goal acceptance.",
+  "sourceBindings": [
+    {
+      "path": ".github/workflows/cache-producer.yml",
+      "sha256": "714fa8de27634764dc9ef5386ea09e9ee032928ad7c2763e859c340020e076cd"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "c3d569426d8aaad27f313338f11679d72c7ef9ef822b83dba36ed0b20b52f233"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
+      "sha256": "b660c164f1ced45cff1de93ff8f2ba1f7fbfbf8089adc3eb017dd29331f78d18"
+    }
+  ],
+  "route": {
+    "caller": ".github/workflows/cache-producer.yml",
+    "callee": ".github/workflows/heavy.yml@main",
+    "mode": "producer_execution",
+    "default": false,
+    "channels": ["stable", "canary"],
+    "repository": "beep-effect/beep-effect",
+    "ref": "refs/heads/main",
+    "event": "workflow_dispatch",
+    "protectedEnvironment": "turbo-cache-write",
+    "callerInputs": ["channel enum only"],
+    "namedSecretsForwarded": 11,
+    "inheritAllSecrets": false,
+    "ordinaryQualityContextsPreserved": true,
+    "otherOperationalModesMutuallyExclusive": true,
+    "channelSecretValuesForwarded": 3,
+    "sharedSecretValuesForwarded": 5,
+    "unselectedChannelValues": "Explicit empty strings before reusable workflow invocation"
+  },
+  "execution": {
+    "independentSelection": "Explicit enable plus exact per-channel source SHA and independently selected candidate run/artifact/binary digest. Missing or malformed values refuse before private setup.",
+    "privateRoot": "$HOME/.cache/beep/cache-producer-trial-v1",
+    "privateRootExclusive": true,
+    "candidateDownload": "Immutable reviewed download-artifact action, exact artifact ID/run, digest mismatch is an error; binary hash and four current source-input hashes checked before issuer delivery.",
+    "request": "Fixed @beep/identity#lint activation preview, materialized dependencies, two same-source registered sibling worktrees and the complete selection; no arbitrary command or caller request file.",
+    "nativeClients": "Accepted stable/current-canary binary hashes; canary archive integrity and bounded single-member extraction precede any native execution.",
+    "installer": "Existing producer-install --from-environment with three step-only redacted records. No producer-provision or self-derived approval.",
+    "runtime": "Only the execution step receives trial storage/signing/reader/writer capabilities; native/backend mount and environment separation remain owned by the existing executor.",
+    "privatePublication": "Existing producer-publish receives only its two storage credentials and the saved issued observation. Publication cannot rerun matrices.",
+    "publicArtifact": "cache-producer-<run>-<attempt>, exactly one cache-producer.json, at most 64 KiB, one-day retention. Complete observation stays private in approved R2.",
+    "cleanup": "Frozen private output and exact sibling worktree/input paths; no forced worktree removal, no wildcard retirement of unrelated data.",
+    "channelSelection": "Use static individual secret references with both stable and canary channel guards plus an empty terminal value. Missing stable material cannot fall through to canary. Variable-key selection remains independent."
+  },
+  "bounds": {
+    "concurrentJobs": 1,
+    "existingRunnerJobMinutes": 60,
+    "outerProducerMinutes": 50,
+    "comparisonMinutes": 20,
+    "protocolMinutes": 15,
+    "uploadMinutes": 10,
+    "candidateArtifactBytes": 16777216,
+    "candidateManifestBytes": 65536,
+    "publicReportBytes": 65536,
+    "artifactRetentionDays": 1,
+    "nativeArchiveBytes": 67108864,
+    "nativeExecutableBytes": 67108864,
+    "combinedHostedWorkflowTextBytes": 46380,
+    "hostedWorkflowTextLimitBytes": 65536,
+    "existingTrialStorageAndOperationLimitsExpanded": false,
+    "newRunnerCapacity": false
+  },
+  "verification": {
+    "syntax": {
+      "scope": "YAML, Bash and embedded Python syntax only. No workflow step, network transfer, credential load, tool installation or repository test executed.",
+      "shellCount": 15,
+      "pythonCount": 5,
+      "checked": [
+        "Allocate isolated build scratch",
+        "Ensure native host compiler and ELF inspection tools",
+        "Install pinned portable build tools",
+        "Build pinned portable candidate",
+        "Remove only this job's build scratch",
+        "Require independent frozen trial selection",
+        "Reserve exclusive private trial directory",
+        "Ensure native sandbox trial dependency",
+        "Verify selected candidate before issuer delivery",
+        "Prepare fixed full-pilot inputs without credentials",
+        "Install independently approved issuer only",
+        "Execute closed signed trial and retain private observation",
+        "Publish issued observation using storage capabilities only",
+        "Check bounded public digest report",
+        "Remove only this trial's private files and worktrees"
+      ]
+    },
+    "authoredControls": [
+      "Main repository/ref/event/caller and channel guards",
+      "Named caller secret forwarding and optional declarations preserving ordinary callers",
+      "No trial capability on setup, download, preparation, validation or cleanup",
+      "Candidate checks before issuer installation; fixed complete selection",
+      "Storage-only private publication; digest-only bounded public artifact",
+      "Seven actual Bash selection cases authored for hosted CI: one accepted shape and six early refusals"
+    ],
+    "controlsExecutedLocally": false,
+    "localPackageVerify": "not run under the operator push-first/no competing local proof instruction",
+    "hostedProof": "pending on the submitted component head",
+    "asciiProfile": "Single inherited em dash comment normalized; ASCII and existing combined 64-KiB bound asserted without changing executable lanes or verifier."
+  },
+  "primaryReferences": [
+    {
+      "url": "https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows",
+      "observedAt": "2026-11-03",
+      "finding": "Environment secrets must be forwarded by name or inherited; the called job selects its environment. This component uses explicit names."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/actions/download-artifact/9000827ccba6bdab643e8b6fd33ac0654aef8333/action.yml",
+      "finding": "Pinned action exposes exact artifact IDs, cross-run token/run selection and digest-mismatch error behavior."
+    }
+  ],
+  "activation": {
+    "enabledVariableChanged": false,
+    "approvalOrRuntimeRecordsInstalled": false,
+    "issuerMaterialCreatedOrTransferred": false,
+    "trialSecretsChanged": false,
+    "protectedWorkflowDispatched": false,
+    "cloudOrCacheServiceChanged": false
+  },
+  "remaining": [
+    "Fresh exact-head hosted package/workflow proof and all reviews.",
+    "Authenticated candidate artifact inspection and separately selected source/tool/profile/target/epoch approval.",
+    "Live existing environment branch-policy verification before named secret/variable installation.",
+    "Retain the off-runner verification store and independently selected approval; transfer only approved issuer material, without verifier-only API credentials.",
+    "Real protected stable/canary full matrices, R2 publication, independent fetch/acceptance and exact-object cleanup.",
+    "Every deployed trust/capability/epoch/warm-process/rollback/telemetry, computation qualification, measured rollout and actual representative-window gate.",
+    "All nine trust-goal acceptance criteria remain unproven."
+  ],
+  "reversal": "Keep the enable variable unset/false and remove this optional caller/mode. Preserve ordinary Heavy contexts, existing environment protections, bucket/grants/cache services, independent verifier and all historical receipts.",
+  "acceptedMainIntegration": {
+    "revision": "f9654ae19315316a1cf66aa89b4f0f7bd022f7d0",
+    "mergeCommit": "8857a45143fac00170e70ca00e0ccdfe14507716",
+    "priorNativeEvidenceRebound": false
+  },
+  "candidateBuildFailure": {
+    "path": "research/candidate-host-compiler-failure-2026-11-03.json",
+    "sha256": "a940ec237cc825936d6a1a55d4124dec0fdb544ff22e69d945bc125854b16bc1",
+    "repair": "Check/install cc, ld and readelf before compiling host build scripts, record their actual executable/version identities, preserve all existing build limits.",
+    "newBuildExecuted": false
+  },
+  "reviewRepair": {
+    "scope": "Source inspection found a duplicate execution guard and conflicting exact-text expectations across the three authored policy tests. Remove the redundant guard and make all three expectations identical; no execution policy or acceptance requirement weakened.",
+    "localTestsExecuted": false
+  },
+  "ciRepair": {
+    "recordedAt": "2026-11-03T05:21:54.021919+00:00",
+    "failedHead": "4dc02e6431e0461b5a14d9c3e34c94cae0fd98e7",
+    "runId": 41581616480,
+    "unitJob": 125737739513,
+    "unitFailure": "Pruning command assertion rejected the valid indented bash invocation. Match only an actual standalone bare or bash command and preserve order; authored comment, echo and reversed-order refusals.",
+    "fallowJob": 125737739562,
+    "fallowArtifactId": 13205803344,
+    "fallowArtifactSha256": "924de6a0748fa61178aba03e6ffdf7fdcdf487d514d7f99344b09d8540740f90",
+    "fallowFailure": "New producer-capability test cognitive complexity 19 exceeds unchanged threshold 8. Separate route metadata from capability boundaries and flatten env checks, retaining every assertion.",
+    "downstream": "Test Unit summary failed because its shard failed; Coverage Regression refused UNIT_RESULT=failure before comparison. No coverage floor changed or claimed passed.",
+    "localProofExecuted": false,
+    "hostedRepairProof": "pending"
+  },
+  "secondFallowRepair": {
+    "recordedAt": "2026-11-03T05:31:09.116846+00:00",
+    "failedHead": "9c4ac1dbcdd9c0a008d9a92eef4d9b66dfbfe4e4",
+    "runId": 41583610462,
+    "jobId": 125744245787,
+    "artifactId": 13207141393,
+    "artifactSha256": "c42ebcb2094c99603786dbc1bbb9ba0a5f5fc3e80c30bf8c113dab209e51994d",
+    "diagnostic": {
+      "cognitive": 7,
+      "cyclomatic": 13,
+      "crap": 49.5,
+      "coverageSource": "estimated"
+    },
+    "repair": "Separate approved capability delivery from unprivileged-step/public-artifact cleanup assertions. Retain every check; reject both dot and bracket secret lookups on unprivileged environment values.",
+    "healthFinding": "The same complexity finding also blocks the health envelope.",
+    "thresholdsOrBaselinesChanged": false,
+    "localTestsExecuted": false,
+    "hostedProof": "pending"
+  },
+  "lintPolicyRepair": {
+    "recordedAt": "2026-11-03T05:56:07.142490+00:00",
+    "failedHead": "e6472d940435440c267434737f8aa95504e52321",
+    "runId": 41584463472,
+    "jobId": 125747400599,
+    "effectVitest": "Use assertSome with the independently expected direct named secret-reference value. The existing secretReference helper is specific to push-only delivery and is not valid for the manual caller. Selection-shell refusals additionally require exact exit 0/1.",
+    "knowledgeReferences": "Two introduced actionable host-path findings on the fixed temporary root and its cleanup comparator. Use one fixed HOME-cache path, preserving exclusive creation, ownership and exact cleanup; no exemption or baseline change.",
+    "syntax": "Both workflows and 15 Bash / 5 Python bodies parse; no workflow body, local quality gate or test suite executed.",
+    "hostedProof": "pending"
+  },
+  "manualSecretExpectationRepair": {
+    "recordedAt": "2026-11-03T06:10:45.409471+00:00",
+    "failedHead": "0ef3a9ea8c850ec59c0953da50596a935037c5fa",
+    "runId": 41587001295,
+    "jobId": 125754733602,
+    "logSha256": "e7ff7428155c4b4bfe65910fb67166028f9f7c849900f8f0b1c891f692e9a4de",
+    "diagnostic": "The reused helper adds a push-only event condition, while the protected manual caller correctly forwards the direct named secret reference.",
+    "repair": "Keep assertSome and restore the independent exact direct reference as its payload expectation. Leave the existing push-only helper and workflow delivery policy intact.",
+    "localTestsExecuted": false,
+    "hostedProof": "pending"
+  },
+  "staticSecretReview": {
+    "recordedAt": "2026-11-03T06:56:10.092743+00:00",
+    "threads": [
+      "https://github.com/beep-effect/beep-effect/pull/2650#discussion_r4451691062",
+      "https://github.com/beep-effect/beep-effect/pull/2650#discussion_r4451691072"
+    ],
+    "repair": "Use static, independently channel-guarded installer references; caller empties the other channel before Heavy receives any values. Scan nonprivileged env/with/run strings for dotted/indexed secret references including whitespace.",
+    "localTestsExecuted": false,
+    "hostedProof": "pending",
+    "activationChanged": false
+  }
+}
