@@ -1337,3 +1337,58 @@ and a fleet read would spend the GraphQL budget); inferring dispositions from re
 …" is prose, not a declaration; `unknown` is the honest value and the operator sees how many); keeping
 body-less reviews out because the comment stream drops them (an approval with nothing to say is still
 a review of that head); a closed reviewer set without `bot` (Copilot and GitHub Actions review too).
+
+## 2026-11-03 — The first disagreement and the sample restart (ruling 83, proposed by the resume lane; the merge of its PR is the lock)
+
+Context: on 2026-11-03 `proof-report --since 2026-09-28T15:09:39Z` in the owning clone read 100/200
+attempts, 49/10 branches and **1 disagreement**. The rows involved all carry one key on lane
+`repo-sanity:tsconfig-sync` (`//#config-sync:check`, a cacheable root task) on branch `@slop/11-2-26`
+in the primary clone:
+
+- attempt `d3810a91` (2026-11-02T23:50Z) passed and recorded the fact;
+- attempt `a01337f8` (2026-11-03T00:39Z) failed in 3.8 s on head `62c3f652`, diff fingerprint
+  `96a296d2`, the same key: the hit-versus-failed row ruling 72 makes observable;
+- attempt `0cdd2519` (00:46Z) passed on the same head, the same diff fingerprint and the same key.
+
+Attribution (the orchestrator's, checked against the run journals): at about 23:51Z
+`/beep-biome-json-*/` was added to the primary clone's shared `.git/info/exclude`, alongside the
+`@slop` snapshot excludes, to hide a leftover `beep-biome-json-*` directory from a killed
+tsconfig-sync run. `renderBiomeJson` stages every rendered file in a `beep-biome-json-*` directory
+under the repository root and hands the path to Biome, which honours VCS ignore files. The staged
+`docgen.json` became "provided but ignored", the render failed, and `repo-sanity:tsconfig-sync`
+failed in every lane of that clone. Linked worktrees share the clone's `info/exclude`, which is why
+an unrelated lane's local coverage run on the same evening failed 32 tests with the same Biome
+message. The line was removed at about 00:4xZ, and the 00:46Z attempt passed. The deciding input,
+`.git/info/exclude`, is outside Turbo's hash, so the key could not move. Ruling 7 counted it
+exactly as designed: reuse would have served a pass on inputs that were failing.
+
+**Ruling 83 (C4-8) — a tool given a path the repository owns must not read ambient VCS ignore
+state, and the enforcement sample restarts at this ruling's merge instant.**
+
+- *The fix.* `renderBiomeJson` and the codegen-kit formatter run Biome with
+  `--vcs-use-ignore-file=false`; the configuration's own `files` rules still apply.
+  `renderBiomeJsonAt(repoRoot, …)` carries the root explicitly, so the case is testable.
+- *Must-fail fixture* (`packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts`): a
+  root whose `.git/info/exclude` holds `/beep-biome-json-*/` must still render. A control run of
+  Biome without the flag on a staged file under the same exclude must exit non-zero, so the fixture
+  fails when the flag is dropped (checked by removing it).
+- *The audit.* The other ambient-ignore readers in cacheable lanes are the `git ls-files --cached
+  --others --exclude-standard` scanners (JSDoc ratchet and inventory, Fallow, Doctest). They are
+  aligned with Turbo's own untracked-file view by the repository's scanner law, so an exclude rule
+  moves their input set and the hash together; `Cache.fingerprint` already folds `info/exclude`
+  into its census. The defect class is narrower: a tool handed an explicit path that Turbo does not
+  track (a staging file, a generated output), where an ignore rule turns success into failure.
+  Both such call sites are fixed here.
+- *The sample.* Rows recorded before this merge sampled a world where a clone-local file could
+  decide the lane. Ruling 80's resume condition now reads `proof-report --since <ruling 83's
+  merge instant>`, with the bar unchanged (200 attempts, 10 branches, 0 disagreements, 0 malformed
+  rows, every C5 fixture green). The 2026-09-28 window keeps its one disagreement on the record;
+  it is closed, not erased.
+
+Rejected: folding `.git/info/exclude` into the proof epoch (it is per clone and edited by hand, so
+every hand edit would invalidate every fact, and the tool would still fail on the staged file);
+staging outside the repository root with an explicit config path (Biome then resolves the file
+against no project root and applies the configuration's `files` rules to a foreign path, a second
+behaviour to keep honest); dismissing the row as environmental and keeping the window (the bar's
+"zero" is the evidence; a disagreement explained away is a criterion that cannot fail, which
+ruling 72 rejected); a calendar restart (ruling 7 counts events).
