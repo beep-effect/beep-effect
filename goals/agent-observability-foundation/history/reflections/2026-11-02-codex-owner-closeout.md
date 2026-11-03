@@ -57,3 +57,18 @@ Recovery remains held and all seven real-harness populations remain Unknown.
 - **HIGH:** A successful command, a merged PR and verified completion are distinct.
 - **HIGH:** Preserve failed evidence and exact time boundaries across recovery.
 - **MEDIUM:** Identify the active merge caller before releasing another final.
+
+## Final checkpoint addendum
+
+PR2644 also merged before the private positive readiness record. Its forty
+check runs eventually succeeded, including Lint Policy after merge, but the
+canonical result remains unknown. The operator elected to keep the pre-merge
+rule and leave the final checkpoint merge to this chat. The live README and
+PLAN had retained an obsolete final ID; the valid hosted review finding was
+fixed and resolved, and all live entry points are now updated together.
+
+The next comparison records eleven baseline identity moves with preserved
+values and two additional identities. It does not present renamed source as
+byte-identical or turn historical tests into current executions. Archive the
+actual positive checkpoint before owner merge and preserve the prior unknown
+result. CI capacity waiting stays distinct from code execution and agent latency.
