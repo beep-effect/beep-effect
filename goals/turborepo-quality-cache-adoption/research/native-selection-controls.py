@@ -1,15 +1,20 @@
 """Assert pinned native selection semantics in disposable local-only workspaces.
 
-Run with python3 from any directory. Raw native output remains in the ignored
-.beep directory; the compact report contains no absolute paths or environment
-values. This is feature evidence, not repository-task qualification or rollout.
+Run with python3, --output pointing to a new report, and optional --pins and
+--stable arguments. The default pins retain the historical client pair. Raw
+native output remains in a unique ignored .beep directory; the compact report
+contains no absolute paths or environment values. This is feature evidence,
+not repository-task qualification or rollout.
 """
 
+import argparse
+import ast
 import datetime
 import hashlib
 import json
 import os
 import shutil
+import selectors
 import signal
 import subprocess
 import sys
@@ -23,15 +28,47 @@ if sys.flags.optimize:
     )
     raise SystemExit(64)
 
+assert sys.platform == "linux", "Selection controls require Linux native clients"
+os.umask(0o077)
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--output", type=Path, required=True)
+parser.add_argument("--pins", type=Path, help="Reviewed pin manifest within this checkout")
+parser.add_argument("--stable", type=Path)
+args = parser.parse_args()
+assert not args.output.exists(), "Existing reports are refused"
 repo = Path(__file__).resolve().parents[3]
-base = repo / ".beep/native-selection-controls"
-base.mkdir(mode=0o700, parents=True, exist_ok=True)
-base.chmod(0o700)
+research = Path(__file__).resolve().parent
+pins_path = (args.pins or research / "current-client-pins.json").resolve()
+try:
+    pins_path.relative_to(repo)
+except ValueError:
+    raise SystemExit("Pin manifest must be within the checkout.") from None
+harness = research / "native-future-flag-availability.py"
+harness_bytes = harness.read_bytes()
+function = next(
+    node for node in ast.parse(harness_bytes.decode("utf-8")).body
+    if isinstance(node, ast.FunctionDef) and node.name == "run_bounded"
+)
+capture = {
+    "time": time, "os": os, "selectors": selectors,
+    "signal": signal, "subprocess": subprocess, "start": time.monotonic(),
+}
+exec(compile(ast.Module(body=[function], type_ignores=[]), str(harness), "exec"), capture)
+timeout = Path("/usr/bin/timeout")
+assert timeout.is_file(), "The bounded process wrapper is required"
+base_root = repo / ".beep/native-selection-controls"
+base_root.mkdir(mode=0o700, parents=True, exist_ok=True)
+base_root.chmod(0o700)
+base = Path(tempfile.mkdtemp(prefix="raw-", dir=base_root))
 cache = Path.home() / ".cache/beep/turbo-selection-controls"
 cache.mkdir(mode=0o700, parents=True, exist_ok=True)
 deadline = time.monotonic() + 180
 
 
+# Keep the historical extraction contract for the five sibling drivers.
+# Their AST loaders supply only time/subprocess/os/signal/deadline, including
+# Cargo applicability's reviewed eight-MiB stdout adaptation. Current selection
+# controls use invoke_bounded below; immutable historical reports keep their pins.
 def invoke(command, cwd, environment):
     """Capture one owned process group within the remaining experiment budget."""
     remaining = deadline - time.monotonic()
@@ -58,6 +95,17 @@ def invoke(command, cwd, environment):
     return process.returncode, stdout, stderr
 
 
+def invoke_bounded(command, cwd, environment):
+    """Capture one owned process group within the remaining experiment budget."""
+    remaining = deadline - time.monotonic()
+    assert remaining > 0, "Selection controls exceeded their three-minute budget"
+    capture["command"] = ["--signal=KILL", f"{min(10, remaining):.6f}s", *command]
+    result = capture["run_bounded"](timeout, cwd, environment)
+    assert result[0] != -signal.SIGKILL, "Owned selection process group exceeded its deadline"
+    assert time.monotonic() < deadline, "Selection controls exceeded their three-minute budget"
+    return result
+
+
 bun_name = shutil.which("bun")
 assert bun_name, "Bun is required"
 bun = Path(
@@ -70,15 +118,25 @@ bun_version = subprocess.check_output(
     [str(bun), "--version"], timeout=5, text=True
 ).strip()
 assert bun_version == (repo / ".bun-version").read_text().strip(), "Bun pin changed"
-pins = json.loads(
-    (
-        repo
-        / "goals/turborepo-quality-cache-adoption/research/current-client-pins.json"
-    ).read_text()
-)
+pins_bytes = pins_path.read_bytes()
+pins = json.loads(pins_bytes)
+source_paths = [Path(__file__).resolve(), pins_path, harness, repo / ".bun-version"]
+captured_sources = {pins_path: pins_bytes, harness: harness_bytes}
+source_bindings = {
+    path.relative_to(repo).as_posix(): hashlib.sha256(
+        captured_sources[path] if path in captured_sources else path.read_bytes()
+    ).hexdigest()
+    for path in source_paths
+}
+assert all(
+    hashlib.sha256((repo / path).read_bytes()).hexdigest() == digest
+    for path, digest in source_bindings.items()
+), "Selection sources changed before controls"
+timeout_digest = hashlib.sha256(timeout.read_bytes()).hexdigest()
 clients = {
-    "stable": repo / "node_modules/@turbo/linux-64/bin/turbo",
-    "canary": Path.home() / ".cache/beep/turbo-goals-clients/2.11.9-canary.1/turbo",
+    "stable": args.stable or repo / "node_modules/@turbo/linux-64/bin/turbo",
+    "canary": Path.home() / ".cache/beep/turbo-goals-clients"
+    / pins["canary"]["packageVersion"] / "turbo",
 }
 fixed_flags = {
     "globalConfiguration": True,
@@ -133,7 +191,7 @@ for channel, binary in clients.items():
             "NO_COLOR": "1",
             "BUN_INSTALL_CACHE_DIR": str(root / "bun-cache"),
         }
-        code, stdout, _ = invoke(
+        code, stdout, _ = invoke_bounded(
             [str(binary), "--skip-infer", "--version"], root, environment
         )
         observed_versions[channel] = stdout.decode().strip()
@@ -176,7 +234,7 @@ for channel, binary in clients.items():
             if package == "app":
                 manifest["dependencies"]["empty"] = "workspace:*"
             (directory / "package.json").write_text(json.dumps(manifest) + "\n")
-        code, _, _ = invoke(
+        code, _, _ = invoke_bounded(
             [
                 str(bun),
                 "--no-env-file",
@@ -213,7 +271,7 @@ for channel, binary in clients.items():
             )
             for label, arguments in cases:
                 key = channel + "-" + str(strict).lower() + "-" + label
-                dry_code, dry_stdout, dry_stderr = invoke(
+                dry_code, dry_stdout, dry_stderr = invoke_bounded(
                     [str(binary), "--skip-infer", "run", *arguments, "--dry=json"],
                     root,
                     environment,
@@ -225,7 +283,7 @@ for channel, binary in clients.items():
                 ]:
                     marker.unlink()
                 summaries_before = set((root / ".turbo/runs").glob("*.json"))
-                run_code, run_stdout, run_stderr = invoke(
+                run_code, run_stdout, run_stderr = invoke_bounded(
                     [
                         str(binary),
                         "--skip-infer",
@@ -422,6 +480,11 @@ assert len(rows) == 44 and all(not root.exists() for root in fixture_roots)
 assert hashlib.sha256(bun.read_bytes()).hexdigest() == bun_digest, (
     "Bun changed during controls"
 )
+assert all(
+    hashlib.sha256((repo / path).read_bytes()).hexdigest() == digest
+    for path, digest in source_bindings.items()
+), "Selection sources changed during controls"
+assert hashlib.sha256(timeout.read_bytes()).hexdigest() == timeout_digest, "Process wrapper changed"
 report = {
     "schemaVersion": "cache-native-selection-controls/v1",
     "recordedAt": datetime.datetime.now(datetime.UTC).isoformat(),
@@ -430,6 +493,9 @@ report = {
         "path": "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py",
         "sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
     },
+    "sourceBindings": source_bindings,
+    "rawDirectory": base.relative_to(repo).as_posix(),
+    "processWrapper": {"name": "GNU timeout", "sha256": timeout_digest},
     "clients": {
         channel: {
             "reportedVersion": observed_versions[channel],
@@ -449,12 +515,13 @@ report = {
         "Linux synthetic four-workspace profile; current repository task/entrypoint and cohort review remains necessary.",
         "Only strictTaskEntrypointSelection changes; all tasks disable cache and executions allow local transport only.",
         "Finite environment, private homes, offline lockfile setup with lifecycle scripts disabled; no credentials or remote cache.",
-        "One MiB per captured stream, ten seconds per owned process group and three minutes total.",
+        "Streaming collection bounds stdout to one MiB and stderr to 64 KiB; ten seconds per owned process group and three minutes total.",
         "A zero exit with no selected command is not execution evidence. Explicit task and graph-only requests intentionally retain commandless graph nodes.",
         "No repository configuration, qualification, infrastructure or production setting is changed.",
     ],
 }
-(base / "report.json").write_text(json.dumps(report, indent=2) + "\n")
+with args.output.open("x") as output:
+    output.write(json.dumps(report, indent=2) + "\n")
 print(
     "44 native selection cases passed across both pins; 88 dry/execution invocations. All owned fixtures removed."
 )

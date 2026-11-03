@@ -829,6 +829,162 @@ it.layer(
       (yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
+  it.effect("binds contained directory aliases, nested structure and independently inventoried bytes", () =>
+    Effect.gen(function* () {
+      const { root, fs, path, source } = yield* fixture();
+      const alias = path.join(root, "packages/fixture/alias");
+      yield* fs.makeDirectory(path.join(root, "packages/fixture/src/nested"));
+      yield* fs.writeFileString(path.join(root, "packages/fixture/src/nested/data.txt"), "nested fixture\n");
+      yield* fs.symlink("src", alias);
+      const original = yield* collectCacheProducerWorkflowFiles(root);
+      const directory = A.findFirst(original, (file) => file.path === "packages/fixture/alias");
+      directory.pipe(O.isSome, assertTrue);
+      if (O.isSome(directory)) {
+        expect(directory.value.mode & 0o170000).toBe(0o040000);
+        assertSome(directory.value.linkTarget, "src");
+      }
+      const regular = A.findFirst(original, (file) => file.path === "packages/fixture/src/main.ts");
+      regular.pipe(O.isSome, assertTrue);
+      if (O.isSome(regular)) expect(regular.value.mode & 0o170000).toBe(0o100000);
+      yield* fs.writeFileString(source, "export const value = 2;\n");
+      expect(yield* collectCacheProducerWorkflowFiles(root)).not.toEqual(original);
+      yield* fs.writeFileString(path.join(root, "packages/fixture/src/nested/new.txt"), "new member\n");
+      const changed = yield* collectCacheProducerWorkflowFiles(root);
+      expect(A.findFirst(changed, (file) => file.path === "packages/fixture/alias")).not.toEqual(directory);
+      const nested = path.join(root, "packages/fixture/src/nested");
+      yield* fs.chmod(nested, 0o755);
+      const beforeMode = yield* collectCacheProducerWorkflowFiles(root);
+      yield* fs.chmod(nested, 0o700);
+      expect(yield* collectCacheProducerWorkflowFiles(root)).not.toEqual(beforeMode);
+    })
+  );
+  it.effect("records declared child aliases without following directory cycles", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+      yield* fs.symlink(".", path.join(root, "packages/fixture/src/self"));
+      yield* fs.symlink("main.ts", path.join(root, "packages/fixture/src/linked.ts"));
+      const files = yield* collectCacheProducerWorkflowFiles(root);
+      expect(files).toHaveLength(4);
+      assertTrue(A.some(files, (file) => file.path === "packages/fixture/src/self"));
+    })
+  );
+  it.effect("rejects a directory alias outside the checkout before scanning that directory", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      const outside = path.join(path.dirname(root), "outside-directory");
+      yield* fs.makeDirectory(outside);
+      yield* fs.writeFileString(path.join(outside, "private.txt"), "outside fixture bytes");
+      yield* fs.symlink("../../../outside-directory", path.join(root, "packages/fixture/alias"));
+      const readDirectory = vi.spyOn(fs, "readDirectory");
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toContain("must stay inside its canonical checkout");
+      expect(readDirectory).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("rejects ignored files and undeclared directories under directory aliases", () =>
+    Effect.gen(function* () {
+      for (const member of ["ignored.ts", "empty-directory"]) {
+        const { root, fs, path } = yield* fixture();
+        yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+        const hidden = path.join(root, "packages/fixture/src", member);
+        if (member === "ignored.ts") yield* fs.writeFileString(hidden, "ignored override\n");
+        else yield* fs.makeDirectory(hidden);
+        const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+        expect(error.message).toContain("undeclared");
+      }
+    })
+  );
+  it.effect("rejects an escaping child alias even when its directory alias is contained", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      yield* fs.writeFileString(path.join(path.dirname(root), "outside.ts"), "outside fixture bytes");
+      yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+      yield* fs.symlink("../../../../outside.ts", path.join(root, "packages/fixture/src/escape.ts"));
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toContain("must stay inside its canonical checkout");
+    })
+  );
+  it.effect("rejects a named pipe under a directory alias without reading its payload", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+      const created = yield* StepExec.runCaptured({
+        command: "/usr/bin/mkfifo",
+        args: [path.join(root, "packages/fixture/src/pipe")],
+        cwd: root,
+        extendEnv: false,
+        env: { PATH: "/usr/bin" },
+        source: "all",
+      });
+      expect(created.exitCode).toBe(0);
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toContain("unsupported filesystem entry");
+    })
+  );
+  it.effect("rejects a directory target replaced after its type was inspected", () =>
+    Effect.gen(function* () {
+      const { root, fs, path, git } = yield* fixture();
+      const target = path.join(root, "packages/fixture/src");
+      const outside = path.join(path.dirname(root), "outside-directory");
+      yield* git(["rm", "packages/fixture/src/main.ts"]);
+      yield* fs.makeDirectory(target, { recursive: true });
+      yield* fs.makeDirectory(outside);
+      yield* fs.writeFileString(path.join(outside, "private.txt"), "outside fixture bytes");
+      yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+      const readDirectory = vi.spyOn(fs, "readDirectory");
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          stat: (file) =>
+            fs
+              .stat(file)
+              .pipe(
+                Effect.tap(() =>
+                  file === target
+                    ? fs
+                        .rename(target, path.join(root, "original-src"))
+                        .pipe(Effect.andThen(fs.symlink(outside, target)))
+                    : Effect.void
+                )
+              ),
+        }),
+        Effect.flip
+      );
+      expect(error.message).toContain("escaped its canonical checkout location");
+      expect(readDirectory).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("bounds directory entries independently of the declared leaf inventory", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+      yield* Effect.forEach(
+        A.range(0, 999),
+        (directory) =>
+          Effect.gen(function* () {
+            const nested = path.join(root, "packages/fixture/src", `directory-${directory}`);
+            yield* fs.makeDirectory(nested);
+            yield* Effect.forEach(A.range(0, 18), (file) => fs.writeFileString(path.join(nested, `${file}.ts`), ""), {
+              concurrency: 4,
+              discard: true,
+            });
+          }),
+        { concurrency: 8, discard: true }
+      );
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toContain("Workflow directory alias exceeded its entry bound");
+    })
+  );
+  it.effect("rejects a tracked source replaced by a directory without a declared alias", () =>
+    Effect.gen(function* () {
+      const { root, fs, source } = yield* fixture();
+      yield* fs.remove(source);
+      yield* fs.makeDirectory(source);
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toContain("Workflow source directory requires a declared relative alias");
+    })
+  );
   it.effect("rejects absolute source aliases even when the target stays inside the checkout", () =>
     Effect.gen(function* () {
       const { root, fs, path, source } = yield* fixture();

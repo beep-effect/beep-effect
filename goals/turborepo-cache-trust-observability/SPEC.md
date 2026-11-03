@@ -1050,3 +1050,25 @@ dependency seed must upload before the change, strengthening the stored-artifact
 invalidation control. Preserve old source-bound observations and excluded ledger
 rows; this is no qualification or production activation. Revert all three
 expectation sites and the current fixture together if reversing the repair.
+
+### Bind contained source directory aliases, 2026-11-02
+
+- Actual protected inspection reached the admitted Heavy runner, then failed when
+  a declared relative YAML fixture alias resolved to a directory. The collector
+  tried to read that directory as a file. Keep that failed run as execution
+  evidence; the routing repair itself worked.
+- Bind the complete bounded directory tree and canonical target using a
+  domain-separated manifest. Every regular file or child alias must also appear
+  in the declared source inventory. That inventory independently binds its
+  contents or relative target; do not omit fixture trees or follow child aliases
+  recursively. Nested directories require a declared descendant.
+- Preserve checkout containment, absolute-alias refusal, no-follow file reads,
+  source-list stability, clean execution profile and existing byte/entry limits.
+  Bind complete POSIX modes to distinguish directories, files and aliases as well
+  as permissions. Directory manifests have an explicit 20,000-entry ceiling.
+- Obtain a fresh inspection and independent implementation approval after this
+  source change. Existing reports remain historical; their approvals do not
+  authorize the changed collector. No producer upload, signing activation or
+  ordinary R2 service change is included.
+- Reverse by reverting this collector change and retaining inspection refusal;
+  preserve prior observations, private credentials and the existing cache.

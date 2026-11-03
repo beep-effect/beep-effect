@@ -1222,3 +1222,18 @@ separate source-literal-only diagnostic without weakening the assertion.
 The [new source-bound checkpoint](research/accepted-input-ordinary-native-checkpoint-2026-11-02.json) retains complete ordinary stable and canary runs from supervisor `6fc0a6cf62` and frozen task source `930758e06b`. Both pass all four capture controls, four non-execution controls, seven mutations, ten shadows, three fresh pairs and three signed producer/replay pairs, including positive actual selected-task overlap. Whole-command wall times are 121.598 and 190.190 seconds, including admission and orchestration. The changed package-lint seed follows the accepted root deprecation ownership; no deadline, overlap, signature, source or wire guard was weakened.
 
 All earlier failures remain, including the short generic exit whose cause remains unattributed. The diagnostic-only pass is separate from these ordinary runs. Earlier `68834` receipts retain their original bytes and validator source. The new source and lint workload differ from that older experiment, so the elapsed-time reduction is not a matched R2/cache-savings result. No live protected producer/R2 execution, production signing, current-main adoption, qualification or whole-goal acceptance is established.
+
+### Contained source directory aliases, 2026-11-02
+
+Protected inspection run `41413340460`, job `125171205116`, reached its admitted
+runner and failed in source collection. The declared YAML fixture alias
+`tags/alias/V55R` resolves to a directory, and other declared fixture aliases
+cover nested trees. Bind those complete contained trees with a bounded,
+domain-separated structure/mode manifest while keeping every leaf in the
+independent declared inventory. Keep absolute/outside aliases, ignored entries,
+unsupported filesystem objects and changed inventories refused.
+
+The [collector checkpoint](research/source-directory-alias-checkpoint-2026-11-02.json)
+records focused controls and real-tree replay separately from actual protected
+inspection. A new main inspection and independent approval remain required; no
+whole-goal criterion or production configuration is changed.
