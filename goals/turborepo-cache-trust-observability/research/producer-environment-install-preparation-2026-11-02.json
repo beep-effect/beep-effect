@@ -6,7 +6,7 @@
   "sourceBindings": [
     {
       "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-      "sha256": "8215b9d6f278438aeb5118bc8169663ddb4c4907f2a721288cca96970f2499de"
+      "sha256": "b5fed4a449d723d736ab6b22ee907f5b83396d7e99843d60a33316ed9dbfe177"
     },
     {
       "path": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
@@ -39,7 +39,7 @@
   },
   "verification": {
     "targetedFormatting": "completed",
-    "normalGitHooks": "pending",
+    "normalGitHooks": "passed on source commit 1c21ef7c80; hook organized imports; binding refreshed afterward",
     "packageVerify": "not run per operator push-only instruction",
     "localYeetVerifyPublishFinalCheck": "not run",
     "hostedChecks": "not started; wait for consolidated prerequisite landing order"
@@ -58,5 +58,11 @@
     "Fixed protected workflow and step-scoped secret delivery outside every worker mount.",
     "Current portable executable source/digest and real runner qualification.",
     "Real bounded signed R2 production/publication/acceptance, capability/epoch/rollback/telemetry controls and representative windows."
+  ],
+  "priorSourceBindingsBeforeCommitHook": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "8215b9d6f278438aeb5118bc8169663ddb4c4907f2a721288cca96970f2499de"
+    }
   ]
 }
