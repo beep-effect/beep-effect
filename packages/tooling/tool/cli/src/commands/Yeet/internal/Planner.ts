@@ -381,6 +381,9 @@ const proofLanesForTier = (context: RepoRunContext, tier: YeetProofTier): Readon
     "review-fix": A.empty<GithubCheckLaneSpec>,
   });
 
+const proofBaseForLanes = (context: RepoRunContext): string =>
+  context.base === "origin/main" && context.baseSha !== undefined ? context.baseSha : context.base;
+
 const proofStep = (context: RepoRunContext, tier: YeetProofTier, collectAll: boolean): RepoPlanStep => {
   const proof = proofDefinitionForTier(tier);
   const proofArgs = proofArgsForTier(context, tier, collectAll, proof.args);
@@ -393,7 +396,10 @@ const proofStep = (context: RepoRunContext, tier: YeetProofTier, collectAll: boo
       ...(step.env ?? {}),
       // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv, which Biome cannot read. Owner: @beep/repo-cli. Exit: Biome reads turbo global.* declarations, or the name joins allowedEnvVars (#1855).
       BEEP_YEET_LANE_PROOF_MODE: Bun.env.BEEP_YEET_LANE_PROOF_MODE ?? "active",
-      BEEP_YEET_PROOF_BASE: context.base,
+      // The pinned SHA, so every tier of the run identifies lanes against one
+      // base and the batteries skip their own `origin/main` refetch. Lanes
+      // read `origin/main` by name, so any other base stays a ref.
+      BEEP_YEET_PROOF_BASE: proofBaseForLanes(context),
     },
     waves: A.map(
       tier === "full"
@@ -409,6 +415,47 @@ const fullProofSteps = (context: RepoRunContext, collectAll: boolean): ReadonlyA
   proofStep(context, "full", collectAll),
 ];
 
+/**
+ * Environment the CI parity battery runs under: the hosted pull-request
+ * posture, with credentials blanked and the remote Turbo cache off.
+ *
+ * **Details**
+ *
+ * These keys are also the posture half of a proof step's environment
+ * identity, so a lane proven under another posture is never reused for the
+ * parity battery.
+ *
+ * **Example** (Read the parity posture)
+ *
+ * ```ts
+ * import { CI_PARITY_POSTURE_ENV } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(CI_PARITY_POSTURE_ENV.CI) // "true"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const CI_PARITY_POSTURE_ENV: Readonly<Record<string, string | undefined>> = {
+  AUTH_SECRET: undefined,
+  BEEP_TEST_DATABASE_DRIVER: undefined,
+  BEEP_TEST_DATABASE_URL: undefined,
+  BETTER_AUTH_SECRET: undefined,
+  BETTER_AUTH_URL: undefined,
+  CI: "true",
+  DATABASE_URL: undefined,
+  DATABASE_URL_UNPOOLED: undefined,
+  EMAIL_RESEND_API_KEY: undefined,
+  GITHUB_ACTIONS: "true",
+  LIVEBLOCKS_SECRET_KEY: undefined,
+  SECURITY_TRUSTED_ORIGINS: undefined,
+  TURBO_API: undefined,
+  TURBO_CACHE: "local:rw",
+  TURBO_LOG_ORDER: "stream",
+  TURBO_TEAM: undefined,
+  TURBO_TOKEN: undefined,
+};
+
 const ciParityStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: CI_PARITY_STEP_ID,
@@ -421,25 +468,7 @@ const ciParityStep = (context: RepoRunContext): RepoPlanStep =>
     mutability: "readonly",
     resume: "never",
     verification: "installed-merge-preview-pr-posture",
-    env: {
-      AUTH_SECRET: undefined,
-      BEEP_TEST_DATABASE_DRIVER: undefined,
-      BEEP_TEST_DATABASE_URL: undefined,
-      BETTER_AUTH_SECRET: undefined,
-      BETTER_AUTH_URL: undefined,
-      CI: "true",
-      DATABASE_URL: undefined,
-      DATABASE_URL_UNPOOLED: undefined,
-      EMAIL_RESEND_API_KEY: undefined,
-      GITHUB_ACTIONS: "true",
-      LIVEBLOCKS_SECRET_KEY: undefined,
-      SECURITY_TRUSTED_ORIGINS: undefined,
-      TURBO_API: undefined,
-      TURBO_CACHE: "local:rw",
-      TURBO_LOG_ORDER: "stream",
-      TURBO_TEAM: undefined,
-      TURBO_TOKEN: undefined,
-    },
+    env: { ...CI_PARITY_POSTURE_ENV },
   });
 
 const repairCheapGateStep = (context: RepoRunContext): RepoPlanStep => {

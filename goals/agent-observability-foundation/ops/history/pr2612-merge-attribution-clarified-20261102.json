@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "observation-attribution-clarification/v1",
+  "recordedAt": "2026-11-03T03:30:12.988766+00:00",
+  "packet": "agent-observability-foundation",
+  "pullRequest": 2612,
+  "priorObservation": "pr2612-completion-unsatisfied-20261103.json",
+  "clarification": "The operator subsequently confirmed personally initiating the merge using the kriegcloud account. Earlier unknown initiating-person-or-chat observations describe the information available when they were recorded.",
+  "completionOutcomeUnchanged": "unsatisfied",
+  "historicalEvidenceUnchanged": true,
+  "boundary": "This clarifies attribution only. It does not provide missing exact-head pre-merge readiness, satisfy the old review window, change historical checks or authorize weakening the corrective final acceptance gate. PR2644 remains reserved to the owning chat for verification and final merge."
+}

@@ -23,6 +23,7 @@ import {
   fallowAuditNeedsDiffFallbackForTesting,
   fallowCiUploadDiagnosticsForTesting,
 } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
+import { ensureOriginMainForTesting } from "@beep/repo-cli/commands/Quality/Quality.command";
 import { selectOsvPackageOverrideIdsForAudit } from "@beep/repo-cli/commands/Quality/Quality.osv-ignore";
 import {
   collectCoverageChangedFilesForTesting,
@@ -106,6 +107,7 @@ import {
   missingTestTsgoTaskMessageForTesting,
   parseQualityTaskInvocation,
   persistLaneProofs,
+  pinnedLaneProofBaseSha,
   planCoverageAffectedScope,
   planCoverageAffectedScopeWithBaseline,
   planCoverageBaselineWrite,
@@ -10029,4 +10031,137 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
+});
+
+// Perf audit M11: the cheap-gates and pre-push tiers of one Yeet run share the
+// lane-proof store. Their batteries differ only in Yeet's per-step bookkeeping
+// env and, when another checkout fetches, in where `origin/main` points.
+it.layer(PlatformLayer, { timeout: "60 seconds" })("lane-proof reuse across Yeet tiers", (it) => {
+  const gitOutput = (repoRoot: string, args: ReadonlyArray<string>) =>
+    runCapturedStreams({ command: "git", args, cwd: repoRoot, stdin: "ignore" }).pipe(
+      Effect.map((result) => Str.trim(result.stdout))
+    );
+  const tierWaves = (repoRoot: string) => [
+    GithubCheckLaneWaveSpec.make({
+      wave: "preflight",
+      lanes: [
+        laneProofTestLane(
+          repoRoot,
+          "fallow:health",
+          "preflight",
+          "mkdir -p .beep && echo run >> .beep/health-runs.txt"
+        ),
+      ],
+    }),
+  ];
+  const runTier = (repoRoot: string, tier: string, base: string) =>
+    withEnvVarEffect(
+      "BEEP_YEET_PROOF_BASE",
+      base,
+      withEnvVarEffect(
+        "BEEP_YEET_INNER_LANE_PARENT_ID",
+        `full:${tier}`,
+        collectGithubCheckLaneWavesForTesting(tier, tierWaves(repoRoot), "fail-fast", "active")
+      )
+    ).pipe(Effect.map(({ report }) => A.map(report.lanes, (lane) => lane.status)));
+  // A sibling of the base commit with the same tree: `origin/main` moves, HEAD does not.
+  const moveOriginMain = Effect.fnUntraced(function* (repoRoot: string, base: string) {
+    const tree = yield* gitOutput(repoRoot, ["rev-parse", "HEAD^{tree}"]);
+    const moved = yield* gitOutput(repoRoot, [
+      "-c",
+      "user.email=lane-proof@example.test",
+      "-c",
+      "user.name=Lane Proof Test",
+      "commit-tree",
+      tree,
+      "-p",
+      base,
+      "-m",
+      "moved base",
+    ]);
+    yield* runGit(repoRoot, ["update-ref", "refs/remotes/origin/main", moved]);
+    return moved;
+  });
+  const fixture = Effect.fnUntraced(function* (prefix: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix });
+    yield* initializeLaneProofRepository(repoRoot);
+    return { repoRoot, base: yield* gitOutput(repoRoot, ["rev-parse", "HEAD"]) };
+  });
+  const logged = Effect.map(TestConsole.logLines, (lines) => A.join(A.filter(lines, Str.isString), "\n"));
+
+  it.effect("reads only a full SHA as a pinned base", () =>
+    Effect.gen(function* () {
+      assertSome(
+        yield* withEnvVarEffect("BEEP_YEET_PROOF_BASE", Str.repeat(40)("a"), Effect.sync(pinnedLaneProofBaseSha)),
+        Str.repeat(40)("a")
+      );
+      assertNone(yield* withEnvVarEffect("BEEP_YEET_PROOF_BASE", "origin/main", Effect.sync(pinnedLaneProofBaseSha)));
+    })
+  );
+
+  it.effect("reuses the cheap-gates proof in the pre-push tier despite the per-tier parent id", () =>
+    Effect.gen(function* () {
+      const { repoRoot, base } = yield* fixture("lane-proof-cross-tier-");
+      expect(yield* runTier(repoRoot, "cheap-gates", base)).toEqual(["passed"]);
+      expect(yield* runTier(repoRoot, "pre-push", base)).toEqual(["reused"]);
+      expect(yield* logged).toContain("[lane-proof] reusing exact lane proof: fallow:health");
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+
+  it.effect("refuses, and says why, when the environment changed", () =>
+    Effect.gen(function* () {
+      const { repoRoot, base } = yield* fixture("lane-proof-env-changed-");
+      const run = (marker: string) =>
+        withEnvVarEffect("LANE_PROOF_TEST_MARKER", marker, runTier(repoRoot, "pre-push", base));
+      expect(yield* run("one")).toEqual(["passed"]);
+      expect(yield* run("two")).toEqual(["passed"]);
+      expect(yield* logged).toContain("[lane-proof] not reusing fallow:health: environment changed");
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+
+  it.effect("refuses a proof recorded against another pinned base", () =>
+    Effect.gen(function* () {
+      const { repoRoot, base } = yield* fixture("lane-proof-base-moved-");
+      expect(yield* runTier(repoRoot, "cheap-gates", base)).toEqual(["passed"]);
+      const moved = yield* moveOriginMain(repoRoot, base);
+      expect(yield* runTier(repoRoot, "pre-push", moved)).toEqual(["passed"]);
+      expect(yield* logged).toContain(
+        `[lane-proof] not reusing fallow:health: base moved (${Str.takeLeft(base, 12)} -> ${Str.takeLeft(moved, 12)})`
+      );
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+
+  it.effect("disables reuse when origin/main moved off the run's pinned base", () =>
+    Effect.gen(function* () {
+      const { repoRoot, base } = yield* fixture("lane-proof-pin-moved-");
+      const moved = yield* moveOriginMain(repoRoot, base);
+      expect(yield* runTier(repoRoot, "pre-push", base)).toEqual(["passed"]);
+      expect(yield* logged).toContain(
+        `[lane-proof] reuse disabled: origin/main moved from the run's pinned base ${Str.takeLeft(base, 12)} to ${Str.takeLeft(moved, 12)}`
+      );
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+
+  it.effect("skips the origin/main refetch while the parent run's pin still matches", () =>
+    Effect.gen(function* () {
+      // The fixture has no `origin` remote, so a fetch would fail.
+      const { repoRoot, base } = yield* fixture("lane-proof-pinned-fetch-");
+      yield* withEnvVarEffect("BEEP_YEET_PROOF_BASE", base, ensureOriginMainForTesting(repoRoot));
+      expect(yield* logged).toContain(`[github-checks] origin/main pinned at ${Str.takeLeft(base, 12)}`);
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+
+  it.effect("refetches when the pin no longer matches origin/main", () =>
+    Effect.gen(function* () {
+      const { repoRoot } = yield* fixture("lane-proof-stale-pin-");
+      const failure = yield* withEnvVarEffect(
+        "BEEP_YEET_PROOF_BASE",
+        Str.repeat(40)("0"),
+        ensureOriginMainForTesting(repoRoot)
+      ).pipe(Effect.flip);
+      expect(failure.message).not.toBe("");
+      expect(yield* logged).toContain("not the parent run's pinned base 000000000000; refreshing");
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
 });
