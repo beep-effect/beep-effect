@@ -11,7 +11,7 @@ import {
   prSizeLabelDiff,
   reviewerAppIntegrationMatches,
   SettingsEnvironment,
-  setupCacheWriteDisabled,
+  setupActionSavesNoCache,
   workflowPolicyDiagnostics,
 } from "@beep/repo-cli/commands/Ci";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
@@ -80,11 +80,15 @@ describe("CI governance policy", () => {
       expect(yield* workflowPolicyDiagnostics("bad.yml", "jobs: [").pipe(Effect.isFailure)).toBe(true);
     })
   );
-  it.effect("requires cache-write to default to false", () =>
+  it.effect("rejects a setup action that saves an Actions cache", () =>
     Effect.gen(function* () {
-      expect(yield* setupCacheWriteDisabled('inputs:\n  cache-write:\n    default: "false"\n')).toBe(true);
-      expect(yield* setupCacheWriteDisabled('inputs:\n  cache-write:\n    default: "true"\n')).toBe(false);
-      expect(yield* setupCacheWriteDisabled("inputs: {}\n")).toBe(false);
+      const action = (uses: string) =>
+        `runs:\n  using: composite\n  steps:\n    - run: bun install\n    - uses: ${uses}\n`;
+      expect(yield* setupActionSavesNoCache(action("actions/cache/restore@55cc8345"))).toBe(true);
+      expect(yield* setupActionSavesNoCache(action("actions/cache/save@55cc8345"))).toBe(false);
+      expect(yield* setupActionSavesNoCache(action("actions/cache@55cc8345"))).toBe(false);
+      expect(yield* setupActionSavesNoCache("runs:\n  steps: []\n")).toBe(true);
+      expect(yield* setupActionSavesNoCache("inputs: {}\n").pipe(Effect.isFailure)).toBe(true);
     })
   );
   it.effect("keeps exactly one size label and preserves unrelated labels", () =>

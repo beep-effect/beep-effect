@@ -672,7 +672,7 @@
     {"name":"CiGovernance.checkEqual","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiGovernance.makeClient","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiGovernance.request","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"CiGovernance.setupCacheWriteDisabled","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CiGovernance.setupActionSavesNoCache","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiGovernance.withClient","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiGovernance.workflowJobContexts","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiGovernance.workflowLint","owner":"@beep/repo-cli","family":"tooling","conforms":true},
