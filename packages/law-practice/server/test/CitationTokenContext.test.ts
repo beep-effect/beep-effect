@@ -117,6 +117,8 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const first = yield* context.plan(request);
         data.bytes.fill(0);
         expect(first.source).toEqual(native("Pword"));
+        expect(first.contextUnits).toBe(5);
+        expect(first.allocatedUnits).toBe(10);
         first.source.bytes.fill(0);
         const fresh = yield* context.plan({ ...request, words: [{ kind: "Text", data: native("word") }] });
         expect(fresh.source).toEqual(native("Pword"));

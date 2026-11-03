@@ -54,6 +54,9 @@ built-in extraction branch loop and full-citation class priority from `find.py`,
 using the existing authenticated frozen edition owner for source labels.
 `TokenContext.ts` adapts built-in word scanning, paragraph/string stops,
 Python-point truncation and directional anchoring from `helpers.match_on_tokens`.
+`ContextMatcher.ts` composes its exact forward/backward search wrappers with
+the existing worker. The context-matches corpus retains actual helper results
+and the source law/year pattern text under the same eyecite attribution.
 The nullable regex control corpus contains independently executed observations
 from CPython 3.11.15 re and regex 2023.12.25; it copies no regex implementation.
 `RegexV0Data.ts` additionally freezes observed regex 2023.12.25 V0 categories,

@@ -37,7 +37,12 @@ const Anchor = LiteralKit(["start", "end"]).pipe(
 );
 /** @internal @category models @since 0.0.0 */
 export class CitationTokenContextPlan extends S.Opaque<CitationTokenContextPlan, { readonly brand: unique symbol }>()(
-  S.Struct({ source: CitationPythonUnicodeStorage, anchor: Anchor }).pipe(
+  S.Struct({
+    source: CitationPythonUnicodeStorage,
+    anchor: Anchor,
+    contextUnits: S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.producedTextUtf16)),
+    allocatedUnits: S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.producedTextUtf16)),
+  }).pipe(
     $I.annoteSchema("CitationTokenContextPlan", { description: "Owned canonical native context and source anchoring." })
   )
 ) {}
@@ -138,10 +143,17 @@ export const makeCitationTokenContext = Effect.fn("Citation.makeTokenContext")(f
       start: 0,
       end: prefix.pythonLength,
     });
-    const source = yield* concatCitationPythonRanges(ranges, (layout) =>
-      retained + layout.utf16Units > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void
-    );
-    return CitationTokenContextPlan.make({ source, anchor: request.forward ? Anchor.Enum.start : Anchor.Enum.end });
+    let contextUnits = 0;
+    const source = yield* concatCitationPythonRanges(ranges, (layout) => {
+      contextUnits = layout.utf16Units;
+      return retained + contextUnits > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void;
+    });
+    return CitationTokenContextPlan.make({
+      source,
+      anchor: request.forward ? Anchor.Enum.start : Anchor.Enum.end,
+      contextUnits,
+      allocatedUnits: retained + contextUnits,
+    });
   }, timing.timed);
   return { plan };
 });

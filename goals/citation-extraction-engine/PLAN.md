@@ -1,5 +1,16 @@
 # Citation Extraction Engine Plan
 
+Context matching checkpoint (2026-11-03): the private matcher composes the
+existing context planner and Effect worker, returning owned native captures.
+The original helper supplies 144 observations over eight patterns, including
+actual law/year patterns and greedy/lazy nullable capture controls. Twelve
+focused tests pass; matcher smoke confirms forty child exits per runtime.
+The compiler preserves participating empty optional captures using ordered
+alternation, and the worker context copy is budgeted before admission. Hosted
+full replay requires 136 exits per runtime and remains pending. Metadata and
+public extraction remain open. See
+[context matching evidence](history/evidence/2026-11-03-context-matching.md).
+
 Latest extraction dispatch checkpoint (2026-11-03): the private schema-first
 planner connects native tokenizer indices and built-in token classes to source
 extraction branches. All 7,318 isolated source cases and 19,608 ordered edition

@@ -362,7 +362,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
         step: constVoid,
       });
     const skipNested = () => (categories.engine === "python-regex-v0" ? skipIgnored() : Effect.void);
-    const tokens = A.empty<CitationRegexProgramToken>();
+    let tokens = A.empty<CitationRegexProgramToken>();
     const intervals = A.empty<CitationRegexAtomInterval>();
     const atoms = MutableHashMap.empty<string, number>();
     let atomCount = 0;
@@ -542,7 +542,26 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       }
       return bounds;
     });
-    const repeat = Effect.fn("Citation.parseRegexRepeat")(function* (body: Summary) {
+    // Native optional quantifiers discard captures from an empty iteration.
+    // Ordered alternation preserves Python's participating-empty capture.
+    const optionalCapture = Effect.fn("Citation.lowerNullableOptionalCapture")(function* (
+      start: number,
+      lazy: boolean
+    ) {
+      if (A.length(tokens) + 3 > 4 * limits.patternUtf16) return yield* budget();
+      const structural = (kind: "open" | "alternative") =>
+        CitationRegexProgramToken.make({ kind, value: 0, name: "", maximum: 0, lazy: false });
+      tokens = yield* Effect.fromOption(A.insertAt(tokens, start, structural("open"))).pipe(
+        Effect.mapError(unsupported)
+      );
+      if (lazy) {
+        tokens = yield* Effect.fromOption(A.insertAt(tokens, start + 1, structural("alternative"))).pipe(
+          Effect.mapError(unsupported)
+        );
+      } else yield* emit("alternative");
+      yield* emit("close");
+    });
+    const repeat = Effect.fn("Citation.parseRegexRepeat")(function* (body: Summary, start = A.length(tokens)) {
       const parsed = yield* repeatBounds();
       if (O.isNone(parsed)) return body;
       const bounds = parsed.value;
@@ -552,7 +571,9 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       if (lazy) index++;
       if (peek() === 43) return yield* unsupported();
       const maximum = yield* S.decodeEffect(Maximum)(bounds.maximum).pipe(Effect.mapError(unsupported));
-      yield* emit("repeat", bounds.minimum, "", maximum, lazy);
+      if (body.minimum === 0 && body.captures && bounds.minimum === 0 && maximum === 1)
+        yield* optionalCapture(start, lazy);
+      else yield* emit("repeat", bounds.minimum, "", maximum, lazy);
       return repeatedSummary(body, bounds);
     });
     const captureName = Effect.fn("Citation.readRegexCaptureName")(function* () {
@@ -656,9 +677,10 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       yield* skipIgnored();
       while (peek() >= 0 && peek() !== 41 && peek() !== 124) {
         if (index % 64 === 0) yield* Effect.yieldNow;
+        const tokenStart = A.length(tokens);
         const citationResult5 = yield* parseAtom();
         yield* skipIgnored();
-        const citationResult6 = yield* repeat(citationResult5);
+        const citationResult6 = yield* repeat(citationResult5, tokenStart);
         result = combine(result, citationResult6, false);
         yield* skipIgnored();
       }

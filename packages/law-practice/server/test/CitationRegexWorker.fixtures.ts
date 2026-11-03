@@ -16,19 +16,33 @@ import {
 } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
-/** Actual runtime with controlled execution time, real cleanup and observed exits. */
-export const setupCitationRegexWorker = Effect.fn("RegexWorkerTest.setup")(function* (
-  bindings: unknown,
+/** Shared actual runtime, controlled execution Clock and real cleanup observations. */
+export const setupCitationRegexRuntime = Effect.fn("RegexWorkerTest.runtime")(function* (
   kind: CitationNativeRuntimeKind = "bun",
-  engineInput: unknown = "python-re"
+  producedTextUtf16?: number
 ) {
-  const limits = { ...(yield* defaultCitationEnginePolicy).limits, regexDeadline: Duration.millis(997) };
+  const defaults = (yield* defaultCitationEnginePolicy).limits;
+  const limits = {
+    ...defaults,
+    producedTextUtf16: producedTextUtf16 ?? defaults.producedTextUtf16,
+    regexDeadline: Duration.millis(997),
+  };
   const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
   const admission = yield* makeCitationNativeProcessAdmission(limits);
   const observed = yield* makeCitationObservedSpawner();
   const fs = yield* FileSystem.FileSystem;
   const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-regex-worker-" });
   const runtime = yield* makeCitationRegexTestRuntime(kind, cwd);
+
+  return { limits, timer, admission, observed, runtime };
+});
+/** Actual worker using the shared runtime and independent source bindings. */
+export const setupCitationRegexWorker = Effect.fn("RegexWorkerTest.setup")(function* (
+  bindings: unknown,
+  kind: CitationNativeRuntimeKind = "bun",
+  engineInput: unknown = "python-re"
+) {
+  const { limits, timer, admission, observed, runtime } = yield* setupCitationRegexRuntime(kind);
 
   const worker = yield* makeCitationRegexWorker(limits, runtime, bindings, engineInput).pipe(
     Effect.provideService(Clock.Clock, timer.clock),

@@ -548,6 +548,16 @@ instead of silently splitting delivery or weakening scope.
 
 ## Decision Log
 
+- **2026-11-03 context matching:** compose native context preparation with the
+  existing Effect RPC worker and source V0 descriptors; preserve both exact
+  source anchors and complete native captures. Include the extra worker context
+  copy in the receiving allocation budget before admission. Lower nullable
+  capturing zero-or-one repetition to ordered alternation to preserve empty
+  participation, with independently executed greedy/lazy source controls.
+  Reversal is private module removal and restoring the prior lowering; it
+  would reopen the documented capture mismatch, not justify a parity waiver.
+  See `history/evidence/2026-11-03-context-matching.md`.
+
 - **2026-11-03 verbose grammar:** parse original native words with contextual
   source-engine skipping, keeping fingerprints and raw-pattern limits intact.
   Share the closed 0/2/64/66 flag schema with the worker. Preserve the canonical
