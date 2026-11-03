@@ -26,7 +26,7 @@
     "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts",
     "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
     "packages/tooling/tool/cli/src/internal/repo-run/ProcessIdentity.ts",
-    "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
     "packages/tooling/tool/cli/test/codex-findings-refresh.test.ts",
     "packages/tooling/tool/cli/test/codex-findings-write.test.ts",
     "packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts",
@@ -58,7 +58,7 @@
     "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts",
     "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
     "packages/tooling/tool/cli/src/internal/repo-run/ProcessIdentity.ts",
-    "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts"
+    "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts"
   ],
   "packetUpstreamChanges": [
     "DECISIONS.md",

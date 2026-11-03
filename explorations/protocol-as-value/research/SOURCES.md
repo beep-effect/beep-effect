@@ -138,7 +138,7 @@ Papers/articles cited in RESEARCH.md (full per-claim URLs in
 | Goals PacketCore (CAS event chain, fold, fork repair) | `packages/tooling/tool/cli/src/commands/Goals/PacketCore/` | day-one customer |
 | Candor gate (recomputed-only verdict) | `packages/law-practice/use-cases/src/CandorPolicy/` | day-one customer |
 | Yeet proof/inbox/ack (fingerprint-bound proof) | `packages/tooling/tool/cli/src/commands/Yeet/internal/` | day-one customer |
-| RegistrationGeometry (topology-as-value precedent) | `packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/` | precedent |
+| RegistrationGeometry (topology-as-value precedent) | `packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/` | precedent |
 | @beep/acp (per-message protocol typing) | `packages/drivers/acp/` | consumer |
 | MCP servers ×4 + agents slice | `packages/drivers/{uspto,gov-legal,m365,nlp}-mcp/`, `packages/agents/` | consumers |
 | Fleet mirror + reserved messaging rung | `packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts` | consumer (future) |

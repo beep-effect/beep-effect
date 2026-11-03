@@ -10,7 +10,7 @@ source/row/proof hashes and exact proposed row are bound in
 
 ## Current shape
 
-`packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts:61-69` declares
+`packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts:61-69` declares
 the actual private `DiscoveredCandidate` type. Its connected members are
 `reapClass: TmpfsReapClass`, `classified: boolean`, `shapeSkipReason:
 Option<TmpfsReapSkipReason>` and `parentRepo: Option<string>`. Root, path and

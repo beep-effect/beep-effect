@@ -452,7 +452,7 @@
       "workingEqualsAuditedMergedHeadAtPreparation": true
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
       "auditGroups": ["non-Worktree scoped source"],
       "hashesByRef": {
         "93217d998f851e2e93d9864e2b5315552eaa58a7": "693383ab275abc92beb8c676a6fbf674cf33b70c25c28715367628f45c0c8a7f",
@@ -463,7 +463,7 @@
       "workingEqualsAuditedMergedHeadAtPreparation": true
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
       "auditGroups": ["non-Worktree supporting fixture/context"],
       "hashesByRef": {
         "93217d998f851e2e93d9864e2b5315552eaa58a7": "bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08",
@@ -474,7 +474,7 @@
       "workingEqualsAuditedMergedHeadAtPreparation": true
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "auditGroups": ["non-Worktree supporting fixture/context"],
       "hashesByRef": {
         "93217d998f851e2e93d9864e2b5315552eaa58a7": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",

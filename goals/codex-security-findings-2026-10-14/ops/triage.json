@@ -1231,7 +1231,7 @@
       "remediation": {
         "status": "implemented",
         "changedFiles": [
-          "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+          "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
           "packages/tooling/tool/cli/test/residue-reap.test.ts"
         ],
         "verificationCommands": [
@@ -1428,7 +1428,7 @@
       "remediation": {
         "status": "implemented",
         "changedFiles": [
-          "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
           "packages/tooling/tool/cli/test/tmpfs-reap.test.ts"
         ],
         "verificationCommands": [

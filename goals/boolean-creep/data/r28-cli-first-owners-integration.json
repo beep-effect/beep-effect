@@ -104,7 +104,7 @@
     {
       "id": "r3-tooling-registration-authored-kind-probes",
       "action": "withdraw-out-of-net",
-      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts",
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts",
       "seedRowSha256": "01db7adb39d85ac81341018973b63e359d4fb3e2205ee43088fd09997afa934e",
       "currentRowSha256": "01db7adb39d85ac81341018973b63e359d4fb3e2205ee43088fd09997afa934e",
       "proof": "RegistrationGeometry.probes.ts393-420: two predicate functions form callable AUTHORED_KIND_RULES entries; authoredKindFor returns a kind literal."
@@ -120,7 +120,7 @@
     {
       "id": "r3-tooling-tmpfs-name-brand-gates",
       "action": "withdraw-out-of-net",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "seedRowSha256": "2cd58c3f8ee50b75acd83af36bec66fde36c5aa4a770eacf0bcf4d49ea9ef4b5",
       "currentRowSha256": "2cd58c3f8ee50b75acd83af36bec66fde36c5aa4a770eacf0bcf4d49ea9ef4b5",
       "proof": "TmpfsReap.ts51,59 binds S.is guard functions; uses at337,624,638 call/filter them."
@@ -128,7 +128,7 @@
     {
       "id": "r25-cli-internal-root-residue-reap-name-brands",
       "action": "withdraw-out-of-net",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
       "seedRowSha256": "254b2a64ba37461abf7fa5bc6b1c844ea99059f6c7d7eeaf22241c18119ce2f0",
       "currentRowSha256": "254b2a64ba37461abf7fa5bc6b1c844ea99059f6c7d7eeaf22241c18119ce2f0",
       "proof": "ResidueReap.ts64,66 binds S.is guard functions; directory/PID filtering consumes callables at378,544."
@@ -248,7 +248,7 @@
     {
       "id": "r2-tooling-tmpfs-reap-classified-reaped",
       "action": "withdraw-out-of-net",
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts",
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
       "seedRowSha256": "3568c93bc01f57d16cfa8b49dbb8d39103408d16fda93e0b29ec70e16818deec",
       "currentRowSha256": "3568c93bc01f57d16cfa8b49dbb8d39103408d16fda93e0b29ec70e16818deec",
       "proof": "TmpfsReap.ts61-69 owns classified;101-104 separately owns reaped. A.zip at1259 combines nested candidate/outcome values for aggregation without declaring the claimed same-owner Boolean pair."
@@ -578,15 +578,15 @@
     "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": "16fe731bf9d23d882c229d2bd1004d3352fbee461513944d6b60effb7dddd081",
     "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts": "6ca599a6b7334fb956e4b0b089e5364a062e4bb9281d6295a422e5257173488e",
     "packages/tooling/tool/cli/src/internal/cli/Labs/LabsWorkspace.ts": "17b92ba8b2db3b3da580a40eb24155d5fc357a5c731bf0a7f903a14a6b4b3003",
-    "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts": "7d118605464a37620fe0fa59bc53f508b480a93566ce92720b17073845904ce5",
+    "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts": "7d118605464a37620fe0fa59bc53f508b480a93566ce92720b17073845904ce5",
     "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts": "860e455bcd130e8325f3499085313da11732500836cf2272cb129331bdcccacc",
     "packages/tooling/tool/cli/src/internal/github/JobShape.ts": "047736c71681b7b33b87c49b4223367d7592f30a39d21aab565dbe0ae6452e05",
     "packages/tooling/tool/cli/src/internal/process/StepExec.ts": "cd587a632e7e21fd1e913caaf78619ab8cca8be2ef9a86a514d252354dc1ffad",
     "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts": "7c3fd36bcf64ba5ea8f2ab472a8d137911333737326370a2345f55313ab8c429",
     "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts": "95ab5de3fb233bcb338ec41aad512b5ba2fae3725e9b4720aba9b8680c82e28d",
-    "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts": "693383ab275abc92beb8c676a6fbf674cf33b70c25c28715367628f45c0c8a7f",
-    "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts": "bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08",
-    "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
+    "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts": "693383ab275abc92beb8c676a6fbf674cf33b70c25c28715367628f45c0c8a7f",
+    "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts": "bad39e4279d1f1b9c0f6773a7645bd5b3fb31654209e312a4116066b7ea15b08",
+    "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": "2a0253141d3ebdadfbe6b8d715012b83cb75c36876ec50969e330e2f03a5da01",
     "packages/tooling/tool/cli/src/internal/repo-run/index.ts": "8700650d67f60eeebdbc9830b1f47c415fcd80d26b2d51e0c6d0b4314079934a",
     "packages/tooling/tool/cli/src/test/Docgen.test-kit.ts": "8c50a91eaac0d201ea4f8220766c6c3ed7e52d07dfb7b63d04451394799217de",
     "packages/tooling/tool/cli/src/test/RepoRun.test-kit.ts": "88affd301f15a26a60bc1aa7d9fc6bb6a43dab0fcfb35a437ab6d28a6e5f5f8f",

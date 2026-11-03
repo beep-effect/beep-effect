@@ -1,7 +1,7 @@
 # Instance
 
 - id: `r3-tooling-registration-deletion-note-phase`
-- file:line: `packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts:189`
+- file:line: `packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts:189`
 - symbol: `pending-changeset.deletionNote`
 - members: `hasDeletionNoteBasename`, `isCanonicalDeletionNote`
 - evidence: E4 at `RegistrationGeometry.probes.ts:189-199` — canonical is

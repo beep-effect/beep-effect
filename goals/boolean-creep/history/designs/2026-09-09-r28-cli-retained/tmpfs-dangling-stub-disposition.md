@@ -3,7 +3,7 @@
 - id: `tmpfs-dangling-stub-disposition`
 - exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
 - corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
-- file:line: `packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts:387`
+- file:line: `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts:387`
 - symbol: `discoverDanglingWorktreeStub`
 - members: `shape.classified`, `contentsAreExact`
 - evidence: E4 at `TmpfsReap.ts:387-394` — contents are inspected only after

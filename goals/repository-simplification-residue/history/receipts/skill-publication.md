@@ -157,7 +157,7 @@ unchanged and green, with the live exchange primitive for the skills tests.
 
 ## What was lifted or shared from Models
 
-- `commands/Models/internal/PublicationLedger.ts` holds the primitives #1880 and #1970
+- `internal/publication/PublicationLedger.ts` holds the primitives #1880 and #1970
   kept as private closures in `makeApply`: `writeDurable`, `syncFile`,
   `syncDirectory`, `publishRecord` (fsynced partial, exclusive link or rename,
   directory fsync), `currentOwner` and `ownerAlive` (`parsePublicationProcessStat`),

@@ -27,7 +27,7 @@ repo CLI's internal CLI tree. A future implementation can therefore live under
 the following private surface without creating a public package API:
 
 ```text
-packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/
+packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/
   RegistrationGeometry.schemas.ts
   RegistrationGeometry.errors.ts
   RegistrationGeometry.service.ts
@@ -78,7 +78,7 @@ import * as Effect from "effect/Effect";
 import * as Tuple from "effect/Tuple";
 import * as S from "effect/Schema"
 
-const $I = $RepoCliId.create("commands/DeletePackage/internal/RegistrationGeometry")
+const $I = $RepoCliId.create("internal/cli/RegistrationGeometry")
 
 export const RegistrationSurfaceKind = LiteralKit([
   "owned-tree",
