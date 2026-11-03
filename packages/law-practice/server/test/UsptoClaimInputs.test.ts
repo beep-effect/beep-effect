@@ -92,6 +92,38 @@ describe("failure-preserving public source adapter", () => {
     );
   });
 
+  for (const [label, root, dtd, subset] of [
+    ["grant", "us-patent-grant", "us-patent-grant-v45-2014-04-03.dtd", "[ ]"],
+    ["publication", "us-patent-application", "us-patent-application-v44-2014-04-03.dtd", "[ ]"],
+    ["compact grant", "us-patent-grant", "grant.dtd", "[]"],
+    ["multiline publication", "us-patent-application", "publication.dtd", "[ \n\t ]"],
+  ] as const) {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE ${root} SYSTEM "${dtd}" ${subset}><${root}>${valid}</${root}>`;
+    it.layer(recordedLayer(xml), { timeout: "10 seconds" })(`empty native subset ${label}`, (it) => {
+      it.effect("preserves both original records through a declaration-free native prolog", () =>
+        Effect.gen(function* () {
+          const set = yield* (yield* UsptoClaimInputs).inputs(source);
+          assert.strictEqual(set.input.records.length, 2);
+          assert.deepStrictEqual(
+            A.map(set.input.records, ({ numberText }) => O.getOrNull(numberText)),
+            ["00001", "00002"]
+          );
+          assert.deepStrictEqual(
+            A.map(set.input.records, ({ sourceText }) => sourceText),
+            [
+              '<claim num="00001"><claim-text>1. A fixture comprising a panel.</claim-text></claim>',
+              '<claim num="00002"><claim-text>2. The fixture of claim 1 wherein the panel is metallic.</claim-text></claim>',
+            ]
+          );
+          assert.deepStrictEqual(
+            A.map(set.input.records, ({ kind }) => kind),
+            ["text", "text"]
+          );
+        })
+      );
+    });
+  }
+
   it.layer(recordedLayer(mixed), { timeout: "10 seconds" })("malformed normalization sibling", (it) => {
     it.effect("actually decomposes independent siblings and retains affected ancestry", () =>
       Effect.gen(function* () {
@@ -327,6 +359,9 @@ describe("failure-preserving public source adapter", () => {
       '<?fixture <claim num="24"><claim-text>A fake fixture comprising a panel.</claim-text></claim> ?><claims><claim num="1"><claim-text>A real fixture comprising a sensor.</claim-text></claim></claims>',
       "malformed-claims",
     ],
+    ["nonempty declaration subset", `<!DOCTYPE claims [<!ELEMENT claims ANY>]>${valid}`, "malformed-claims"],
+    ["comment inside subset", `<!DOCTYPE claims [<!-- metadata -->]>${valid}`, "malformed-claims"],
+    ["unfinished internal subset", `<!DOCTYPE claims [${valid}`, "malformed-claims"],
     [
       "internal declaration spoof",
       '<!DOCTYPE claims [<!ENTITY demo \'<claim num="24"><claim-text>A fake fixture comprising a panel.</claim-text></claim>\'>]><claims><claim num="1"><claim-text>A real fixture comprising a sensor.</claim-text></claim></claims>',
