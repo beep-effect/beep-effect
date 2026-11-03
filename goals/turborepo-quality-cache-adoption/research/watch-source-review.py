@@ -31,7 +31,9 @@ def git(*arguments):
     result = subprocess.run(
         ["git", *arguments], cwd=root, capture_output=True, timeout=20
     )
-    assert result.returncode in (0, 1), "Tracked source inspection failed."
+    assert result.returncode == 0 or (
+        arguments[0] == "grep" and result.returncode == 1
+    ), "Tracked source inspection failed."
     assert len(result.stdout) <= 16 * 1024 * 1024
     return result
 
@@ -53,7 +55,9 @@ roots = [".github", "scripts", "infra", "apps", "packages", "package.json", "tur
 assert not git("diff", "HEAD", "--name-only", "--", *roots).stdout
 revision = git("rev-parse", "HEAD").stdout.decode().strip()
 assert re.fullmatch(r"[a-f0-9]{40,64}", revision)
-tracked = git("ls-files", "-z").stdout.decode().rstrip("\0").split("\0")
+tracked_output = git("ls-files", "-z").stdout
+assert tracked_output.endswith(b"\0"), "Tracked source inventory is incomplete."
+tracked = tracked_output.decode().rstrip("\0").split("\0")
 assert len(tracked) <= 60000
 eligible = [
     name for name in tracked

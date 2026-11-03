@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-watch-source-review/v1",
-  "recordedAt": "2026-11-03T07:39:43.496512+00:00",
-  "sourceRevision": "8fe07d3eed947c146448d1e469af4bb06148c7c3",
+  "recordedAt": "2026-11-03T07:49:50.174152+00:00",
+  "sourceRevision": "937bf44d224d81e56f17b24e83ed3ee1482efe1d",
   "authority": "Tracked source applicability only; no task, watcher, native matrix or qualification execution.",
   "roots": [
     ".github",
@@ -12,7 +12,7 @@
     "package.json",
     "turbo.json"
   ],
-  "trackedFiles": 46092,
+  "trackedFiles": 46096,
   "manifestCount": 213,
   "configurations": [
     {
@@ -225,7 +225,7 @@
       "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074"
     }
   ],
-  "driverSha256": "79d4b44f9456874262869551c8ab13abfe75ee9393b3e67b63ce1b64cd477d01",
+  "driverSha256": "276d4474b4f7ff9e7470ac4ca53cb1c78ca47704d7575ff4015c1c8c6bf42f2f",
   "tasksExecuted": 0,
   "configurationChanged": false,
   "qualificationGranted": false,

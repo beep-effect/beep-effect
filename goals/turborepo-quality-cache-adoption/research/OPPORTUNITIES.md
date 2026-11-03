@@ -778,3 +778,8 @@ text as an invocation. The config loader and raw model delegate flag declaration
 to `future_flags.rs`; the initial module probes did not establish availability
 and remain retained locally. Follow the import boundary and pin the owning
 module before making a feature claim. No runtime configuration changed.
+
+The collector now accepts Git exit 1 only for a no-match grep. Other Git errors
+and a truncated NUL-delimited inventory fail before applicability classification.
+The source-only replay and three early collector refusals remain separate from
+repository quality or native behavior proof.

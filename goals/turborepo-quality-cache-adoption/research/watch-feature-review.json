@@ -5,20 +5,20 @@
   "decision": "retain-current-absence",
   "disposition": "accepted-retain-current-absence",
   "authority": "Scoped applicability decision for current tracked repository commands. No native watch semantics, timing, runtime adoption, task qualification or whole-goal acceptance.",
-  "sourceBaseRevision": "8fe07d3eed947c146448d1e469af4bb06148c7c3",
+  "sourceBaseRevision": "937bf44d224d81e56f17b24e83ed3ee1482efe1d",
   "sourceObservation": {
     "path": "research/watch-source-observation.json",
-    "sha256": "90efbf673cf218a9e0bd45f7cd4b38eb5d919ae92e35906da0fe182c8cf90a36",
+    "sha256": "bd34ac182256e5b2456a2b2cd8929c754284f32bc56908c308b096fd53ffacb9",
     "trackedManifests": 213,
     "configurations": 27,
     "configuredFlagOccurrences": 0,
     "tasksExecuted": 0,
-    "rawReportSha256": "90efbf673cf218a9e0bd45f7cd4b38eb5d919ae92e35906da0fe182c8cf90a36",
+    "rawReportSha256": "bd34ac182256e5b2456a2b2cd8929c754284f32bc56908c308b096fd53ffacb9",
     "publicationEncoding": "Formatting-only JSON projection; decoded values must equal the retained original observation."
   },
   "driverControls": {
     "path": "research/watch-source-driver-controls.json",
-    "sha256": "665bb44709e030fa488a087cae1bedeeb39aaec33b965da891d6a605ee84328e",
+    "sha256": "e41f60c7bda8c84f3aab4d45f6cf114137c946b8ce68107089800cceebc4df56",
     "refusals": 3,
     "passingObservationUnchanged": true
   },
@@ -44,7 +44,7 @@
       "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074"
     }
   ],
-  "driverSha256": "79d4b44f9456874262869551c8ab13abfe75ee9393b3e67b63ce1b64cd477d01",
+  "driverSha256": "276d4474b4f7ff9e7470ac4ca53cb1c78ca47704d7575ff4015c1c8c6bf42f2f",
   "publishedTagsObserved": {
     "url": "https://registry.npmjs.org/-/package/turbo/dist-tags",
     "sha256": "e02b1ed750aa5e9b3550b1c642f9434390eb9c2636cbd43923abf4a105698753",
@@ -132,5 +132,7 @@
   "qualificationGranted": false,
   "productionConfigurationChanged": false,
   "wholeGoalAcceptanceChanged": false,
-  "rollback": "Revert this scoped decision registration and its research evidence; runtime configuration is unchanged."
+  "rollback": "Revert this scoped decision registration and its research evidence; runtime configuration is unchanged.",
+  "acceptedRuntimeBase": "8fe07d3eed947c146448d1e469af4bb06148c7c3",
+  "runtimeRootsIdenticalToAcceptedBase": true
 }

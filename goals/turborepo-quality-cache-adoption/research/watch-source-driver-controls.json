@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-watch-source-driver-controls/v1",
-  "recordedAt": "2026-11-03T07:40:53.218245+00:00",
-  "driverSha256": "79d4b44f9456874262869551c8ab13abfe75ee9393b3e67b63ce1b64cd477d01",
+  "recordedAt": "2026-11-03T07:51:37.573061+00:00",
+  "driverSha256": "276d4474b4f7ff9e7470ac4ca53cb1c78ca47704d7575ff4015c1c8c6bf42f2f",
   "rows": [
     {
       "case": "optimized-python",

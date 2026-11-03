@@ -374,7 +374,7 @@
   "priorSpecSha256AtWatchApplicability": "2cf3f45742fe3dc150c6f80cbde4c070e969c21aadf7ef356086bb0fbac9edb1",
   "watchFeatureReview": {
     "path": "research/watch-feature-review.json",
-    "sha256": "c0a2b2cfae50ff6c1b4cbecd1cd0a3a11082d04394bffa90f6e4e469a2facbb9",
+    "sha256": "d587ce4bf6fd40206e5b11a31e48032094eff26a24764eb6a41f4c96f8896bf0",
     "authority": "Scoped applicability decision for current tracked repository commands. No native watch semantics, timing, runtime adoption, task qualification or whole-goal acceptance."
   }
 }
