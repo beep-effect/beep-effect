@@ -6,6 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -19,8 +21,6 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheAdapterHostEvent, CacheProducerAdapterReceipt } from "./Cache.adapter.schemas.ts";
 import { readCacheDependencyMaterialization } from "./Cache.dependencies.ts";
 import { CacheCommandError } from "./Cache.errors.ts";

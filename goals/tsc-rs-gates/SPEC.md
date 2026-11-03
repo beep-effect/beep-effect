@@ -27,7 +27,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- `packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts`
+- `packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScripts.schemas.ts`
   (generated `beep:build`, `beep:check`, `beep:check:tests` defaults) and every
   workspace manifest it regenerates.
 - Root `package.json` (catalog `tsc-rs`, `check:configs`), `syncpack.config.ts`

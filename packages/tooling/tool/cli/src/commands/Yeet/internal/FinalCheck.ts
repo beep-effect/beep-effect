@@ -29,6 +29,7 @@
 
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { QualityTaskStep, runToExit } from "@beep/repo-cli-kit/process/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -42,7 +43,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { QualityTaskStep, runToExit } from "../../../internal/process/index.ts";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { collectExpectationRewrites, verifyExpectationRewrites } from "./ExpectationRewrite.ts";

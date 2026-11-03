@@ -3408,6 +3408,7 @@
         "@beep/libpff": "workspace:^",
         "@beep/m365": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
+        "@beep/party-use-cases": "workspace:^",
         "@beep/pglite": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/provenance": "workspace:^",
@@ -3423,6 +3424,7 @@
         "@beep/md": "workspace:^",
         "@beep/memfs": "workspace:^",
         "@beep/nlp": "workspace:^",
+        "@beep/repo-utils": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
@@ -3431,6 +3433,7 @@
         "@effect/vitest": "catalog:",
         "@electric-sql/pglite": "catalog:",
         "@types/node": "catalog:",
+        "@typescript/native": "catalog:",
         "bun-types": "catalog:",
       },
     },
@@ -3618,12 +3621,50 @@
       "name": "@beep/party-domain",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/epistemics": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
+        "@beep/utils": "workspace:^",
         "@noble/hashes": "catalog:",
         "effect": "catalog:",
         "libphonenumber-js": "catalog:",
         "tr46": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/party/server": {
+      "name": "@beep/party-server",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/epistemics": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/m365": "workspace:^",
+        "@beep/party-domain": "workspace:^",
+        "@beep/party-use-cases": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
+        "@noble/hashes": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/party/use-cases": {
+      "name": "@beep/party-use-cases",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/party-domain": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
+        "effect": "catalog:",
       },
       "devDependencies": {
         "@effect/vitest": "catalog:",
@@ -3808,6 +3849,38 @@
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/tooling/library/repo-cli-kit": {
+      "name": "@beep/repo-cli-kit",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/cli-kit": "workspace:^",
+        "@beep/duckdb": "workspace:^",
+        "@beep/file-processing": "workspace:^",
+        "@beep/git": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
+        "@beep/package-json": "workspace:^",
+        "@beep/repo-utils": "workspace:^",
+        "@beep/repo-workspaces": "workspace:^",
+        "@beep/runtime-env": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "@effect/platform-node": "catalog:",
+        "@noble/hashes": "catalog:",
+        "effect": "catalog:",
+        "ts-morph": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/commands": "workspace:^",
+        "@beep/memfs": "workspace:^",
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -4054,6 +4127,7 @@
         "@beep/poppler": "workspace:^",
         "@beep/qa-capture": "workspace:^",
         "@beep/repo-ai-metrics": "workspace:^",
+        "@beep/repo-cli-kit": "workspace:^",
         "@beep/repo-configs": "workspace:^",
         "@beep/repo-docgen": "workspace:^",
         "@beep/repo-tsconfig": "workspace:^",
@@ -4952,6 +5026,10 @@
 
     "@beep/party-domain": ["@beep/party-domain@workspace:packages/party/domain"],
 
+    "@beep/party-server": ["@beep/party-server@workspace:packages/party/server"],
+
+    "@beep/party-use-cases": ["@beep/party-use-cases@workspace:packages/party/use-cases"],
+
     "@beep/pdf-tools": ["@beep/pdf-tools@workspace:packages/drivers/pdf-tools"],
 
     "@beep/pglite": ["@beep/pglite@workspace:packages/drivers/pglite"],
@@ -4995,6 +5073,8 @@
     "@beep/repo-ai-metrics": ["@beep/repo-ai-metrics@workspace:packages/tooling/library/ai-metrics"],
 
     "@beep/repo-cli": ["@beep/repo-cli@workspace:packages/tooling/tool/cli"],
+
+    "@beep/repo-cli-kit": ["@beep/repo-cli-kit@workspace:packages/tooling/library/repo-cli-kit"],
 
     "@beep/repo-configs": ["@beep/repo-configs@workspace:packages/tooling/policy-pack/repo-configs"],
 

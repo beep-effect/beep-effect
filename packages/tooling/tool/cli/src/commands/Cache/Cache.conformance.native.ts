@@ -6,6 +6,9 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
+import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/index";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { CacheClientChannel } from "@beep/repo-configs/cache";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
@@ -26,9 +29,6 @@ import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
-import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheConformanceProxyOptions, makeCacheConformanceFaultProxy } from "./Cache.conformance.proxy.ts";
 import { CacheConformanceCaseResult, CacheConformanceClientRecord } from "./Cache.conformance.schemas.ts";
 import {

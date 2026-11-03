@@ -17,6 +17,7 @@
  * @since 0.0.0
  */
 
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { A, O, pipe } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -25,7 +26,6 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
 import { isJsonRecord } from "../Inventory.ts";
 import {
   PACKET_PROJECTOR_VERSION,

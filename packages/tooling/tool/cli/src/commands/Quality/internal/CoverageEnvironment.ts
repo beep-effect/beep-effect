@@ -6,11 +6,11 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { turboCachePullRequestPosture } from "@beep/repo-cli-kit/cli/TurboCache";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { turboCachePullRequestPosture } from "../../../internal/cli/TurboCache.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageEnvironment");
 
@@ -80,7 +80,7 @@ const coverageFastCheckSeed = (): string =>
 // metadata, and reduce the Turbo remote-cache quad to the pull-request posture
 // so local baseline generation, PR jobs, and main pushes all exercise the same
 // branches: a workstation's 1Password-backed TURBO_TOKEN and a main push's
-// literal token each reach arms of internal/cli/EnvConfig.ts that a PR job's
+// literal token each reach arms of @beep/repo-cli-kit/cli/EnvConfig that a PR job's
 // blank quad never does (ship-velocity B9). Step env wins over
 // turboEnvOverrides at spawn time, and the prebuild step never receives this
 // record, so main pushes keep their remote-cache reads for the build graph.

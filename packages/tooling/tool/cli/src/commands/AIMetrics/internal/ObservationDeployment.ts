@@ -5,6 +5,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
+import { SystemdUnitPath } from "@beep/repo-cli-kit/systemd/index";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -14,7 +15,6 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { SystemdUnitPath } from "../../../internal/systemd/index.ts";
 import { AiMetricsCommandError } from "../AIMetrics.errors.ts";
 
 const $I = $RepoCliId.create("commands/AIMetrics/internal/ObservationDeployment");

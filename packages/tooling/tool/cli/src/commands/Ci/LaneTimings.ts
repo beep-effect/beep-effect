@@ -41,6 +41,7 @@
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
+import { nearestRank } from "@beep/repo-cli-kit/stats/NearestRank";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
@@ -70,7 +71,6 @@ import {
   layerGithubRepoFor,
   selectGithubIdentity,
 } from "../../internal/github/index.ts";
-import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-adoption-feature-matrix-refresh/v1",
   "authority": "Source-backed applicability decisions and remaining feature-test obligations; no computation qualification or activation.",
-  "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
+  "sourceBaseRevision": "61e2a1402a1d181b14c831bb60cf86c640f81e8c",
   "clients": "current-client-pins.json",
   "rows": [
     {
@@ -11,12 +11,14 @@
         "stable": {
           "page": "crafting-your-repository/configuring-tasks.mdx",
           "sha256": "090b1851ddd0d330ffe0d72850d4fa3fe6bcb71d7531bb79042472763596bebc",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "crafting-your-repository/configuring-tasks.mdx",
           "sha256": "090b1851ddd0d330ffe0d72850d4fa3fe6bcb71d7531bb79042472763596bebc",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -51,6 +53,18 @@
         },
         "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
         "authority": "No feature acceptance, real computation qualification or activation."
+      },
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "crafting-your-repository/configuring-tasks.mdx",
+          "sha256": "090b1851ddd0d330ffe0d72850d4fa3fe6bcb71d7531bb79042472763596bebc",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "crafting-your-repository/configuring-tasks.mdx",
+          "sha256": "090b1851ddd0d330ffe0d72850d4fa3fe6bcb71d7531bb79042472763596bebc",
+          "termObserved": true
+        }
       }
     },
     {
@@ -60,12 +74,14 @@
         "stable": {
           "page": "reference/run.mdx",
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "reference/run.mdx",
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -100,12 +116,8 @@
         },
         "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
         "authority": "No feature acceptance, real computation qualification or activation."
-      }
-    },
-    {
-      "feature": "affected-selection",
-      "owner": "turborepo-quality-cache-adoption",
-      "availabilityEvidence": {
+      },
+      "historicalAvailabilityEvidence": {
         "stable": {
           "page": "reference/run.mdx",
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
@@ -115,6 +127,24 @@
           "page": "reference/run.mdx",
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
           "termObserved": true
+        }
+      }
+    },
+    {
+      "feature": "affected-selection",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true,
+          "clientVersion": "2.11.10"
+        },
+        "canary": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -127,12 +157,8 @@
       "correctnessCase": "Change a semantic input outside direct package source and verify the affected set.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "--affected"
-    },
-    {
-      "feature": "filter-selection",
-      "owner": "turborepo-quality-cache-adoption",
-      "availabilityEvidence": {
+      "availabilityTerm": "--affected",
+      "historicalAvailabilityEvidence": {
         "stable": {
           "page": "reference/run.mdx",
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
@@ -142,6 +168,24 @@
           "page": "reference/run.mdx",
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
           "termObserved": true
+        }
+      }
+    },
+    {
+      "feature": "filter-selection",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true,
+          "clientVersion": "2.11.10"
+        },
+        "canary": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -176,6 +220,18 @@
         },
         "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
         "authority": "No feature acceptance, real computation qualification or activation."
+      },
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        }
       }
     },
     {
@@ -185,12 +241,14 @@
         "stable": {
           "page": "reference/configuration.mdx",
           "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "reference/configuration.mdx",
-          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
-          "termObserved": true
+          "sha256": "83931582f49ac868d73981610f792452fc662a2e4cd128f546e94f79651b348a",
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -208,12 +266,8 @@
         "report": "native-input-controls.json",
         "scope": "Global input invalidation only; child configuration remains untested.",
         "authority": "synthetic feature observation only; real computation qualification remains pending"
-      }
-    },
-    {
-      "feature": "task-inputs",
-      "owner": "turborepo-quality-cache-adoption",
-      "availabilityEvidence": {
+      },
+      "historicalAvailabilityEvidence": {
         "stable": {
           "page": "reference/configuration.mdx",
           "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
@@ -223,6 +277,24 @@
           "page": "reference/configuration.mdx",
           "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
           "termObserved": true
+        }
+      }
+    },
+    {
+      "feature": "task-inputs",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/configuration.mdx",
+          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+          "termObserved": true,
+          "clientVersion": "2.11.10"
+        },
+        "canary": {
+          "page": "reference/configuration.mdx",
+          "sha256": "83931582f49ac868d73981610f792452fc662a2e4cd128f546e94f79651b348a",
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -240,6 +312,18 @@
         "report": "native-input-controls.json",
         "scope": "One synthetic task: declared input and implementation-byte invalidation.",
         "authority": "synthetic feature observation only; real computation qualification remains pending"
+      },
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "reference/configuration.mdx",
+          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/configuration.mdx",
+          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+          "termObserved": true
+        }
       }
     },
     {
@@ -249,12 +333,14 @@
         "stable": {
           "page": "crafting-your-repository/using-environment-variables.mdx",
           "sha256": "49ce6d27b0a6d30731a94c8cac3c683a797e6e08a8c3f0129cf9063542b3b959",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "crafting-your-repository/using-environment-variables.mdx",
           "sha256": "49ce6d27b0a6d30731a94c8cac3c683a797e6e08a8c3f0129cf9063542b3b959",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -272,6 +358,18 @@
         "report": "native-input-controls.json",
         "scope": "One synthetic strict task: semantic variables invalidate; benign passthrough changes reuse.",
         "authority": "synthetic feature observation only; real computation qualification remains pending"
+      },
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "crafting-your-repository/using-environment-variables.mdx",
+          "sha256": "49ce6d27b0a6d30731a94c8cac3c683a797e6e08a8c3f0129cf9063542b3b959",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "crafting-your-repository/using-environment-variables.mdx",
+          "sha256": "49ce6d27b0a6d30731a94c8cac3c683a797e6e08a8c3f0129cf9063542b3b959",
+          "termObserved": true
+        }
       }
     },
     {
@@ -281,12 +379,14 @@
         "stable": {
           "page": "crafting-your-repository/caching.mdx",
           "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "crafting-your-repository/caching.mdx",
           "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -304,6 +404,18 @@
         "report": "native-input-controls.json",
         "scope": "Output removal and local restoration agree; cross-machine portability remains untested.",
         "authority": "synthetic feature observation only; real computation qualification remains pending"
+      },
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "crafting-your-repository/caching.mdx",
+          "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "crafting-your-repository/caching.mdx",
+          "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
+          "termObserved": true
+        }
       }
     },
     {
@@ -313,12 +425,14 @@
         "stable": {
           "page": "reference/configuration.mdx",
           "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "reference/configuration.mdx",
-          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
-          "termObserved": true
+          "sha256": "83931582f49ac868d73981610f792452fc662a2e4cd128f546e94f79651b348a",
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -341,6 +455,18 @@
         "report": "task-descriptions-feature-review.json",
         "sourceBaseRevision": "d39e9ee2945c4d8e2dda46767f3400a49426f661",
         "reopenWhen": "A concrete task-inspection or UI consumer needs descriptions and a reviewed source/configuration change justifies their maintenance and invalidation cost."
+      },
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "reference/configuration.mdx",
+          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/configuration.mdx",
+          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+          "termObserved": true
+        }
       }
     },
     {
@@ -350,12 +476,14 @@
         "stable": {
           "page": "reference/watch.mdx",
           "sha256": "6a6c3d016a90c8cb6f7bc3f96d0fc8486cf7a9305d7d5d4365b62f4d0a283f84",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "reference/watch.mdx",
           "sha256": "6a6c3d016a90c8cb6f7bc3f96d0fc8486cf7a9305d7d5d4365b62f4d0a283f84",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -368,7 +496,19 @@
       "correctnessCase": "Persistent tasks remain non-reusable; change a watched input and inspect invalidation.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "watch"
+      "availabilityTerm": "watch",
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "reference/watch.mdx",
+          "sha256": "6a6c3d016a90c8cb6f7bc3f96d0fc8486cf7a9305d7d5d4365b62f4d0a283f84",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/watch.mdx",
+          "sha256": "6a6c3d016a90c8cb6f7bc3f96d0fc8486cf7a9305d7d5d4365b62f4d0a283f84",
+          "termObserved": true
+        }
+      }
     },
     {
       "feature": "concurrency",
@@ -377,12 +517,14 @@
         "stable": {
           "page": "reference/run.mdx",
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "reference/run.mdx",
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -395,7 +537,19 @@
       "correctnessCase": "Concurrent same-input runs and independent-output controls under scheduler limits.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "--concurrency"
+      "availabilityTerm": "--concurrency",
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        }
+      }
     },
     {
       "feature": "worktree-sharing",
@@ -404,12 +558,14 @@
         "stable": {
           "page": "crafting-your-repository/caching.mdx",
           "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "crafting-your-repository/caching.mdx",
           "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -422,7 +578,19 @@
       "correctnessCase": "Both cross-worktree directions with empty local directories and complete output/log comparison.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "worktree"
+      "availabilityTerm": "worktree",
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "crafting-your-repository/caching.mdx",
+          "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "crafting-your-repository/caching.mdx",
+          "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
+          "termObserved": true
+        }
+      }
     },
     {
       "feature": "remote-artifacts-and-signatures",
@@ -431,12 +599,14 @@
         "stable": {
           "page": "core-concepts/remote-caching.mdx",
           "sha256": "96dd2390be45fd2dbc312b1175d9836b0b39e114dd470d9fa050ce9e046b6052",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "core-concepts/remote-caching.mdx",
           "sha256": "96dd2390be45fd2dbc312b1175d9836b0b39e114dd470d9fa050ce9e046b6052",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -449,7 +619,19 @@
       "correctnessCase": "Valid control, missing/invalid tag, corrupt bytes, wrong team/key and no-materialization negatives.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "signature"
+      "availabilityTerm": "signature",
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "core-concepts/remote-caching.mdx",
+          "sha256": "96dd2390be45fd2dbc312b1175d9836b0b39e114dd470d9fa050ce9e046b6052",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "core-concepts/remote-caching.mdx",
+          "sha256": "96dd2390be45fd2dbc312b1175d9836b0b39e114dd470d9fa050ce9e046b6052",
+          "termObserved": true
+        }
+      }
     },
     {
       "feature": "summaries",
@@ -458,12 +640,14 @@
         "stable": {
           "page": "reference/run.mdx",
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "reference/run.mdx",
           "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -481,6 +665,18 @@
         "report": "native-input-controls.json",
         "scope": "Executed task, cache status, hash and restored output are observed together.",
         "authority": "synthetic feature observation only; real computation qualification remains pending"
+      },
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        }
       }
     },
     {
@@ -490,12 +686,14 @@
         "stable": {
           "page": "reference/query.mdx",
           "sha256": "f566af0c9acd7ce4b32d891a9adccd2cfdee481e0882917bb844f903e7d26c65",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "reference/query.mdx",
           "sha256": "f566af0c9acd7ce4b32d891a9adccd2cfdee481e0882917bb844f903e7d26c65",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -508,7 +706,19 @@
       "correctnessCase": "Compare query results with census and actual executed task identities.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "query"
+      "availabilityTerm": "query",
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "reference/query.mdx",
+          "sha256": "f566af0c9acd7ce4b32d891a9adccd2cfdee481e0882917bb844f903e7d26c65",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/query.mdx",
+          "sha256": "f566af0c9acd7ce4b32d891a9adccd2cfdee481e0882917bb844f903e7d26c65",
+          "termObserved": true
+        }
+      }
     },
     {
       "feature": "pruning",
@@ -517,12 +727,14 @@
         "stable": {
           "page": "reference/prune.mdx",
           "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "reference/prune.mdx",
           "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -540,6 +752,18 @@
         "review": "prune-global-feature-review.json",
         "native": "native-prune-global-controls.json",
         "authority": "Synthetic dependency source/install/input-presence only. No real pruned build or broad feature acceptance; this row stays pending."
+      },
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "reference/prune.mdx",
+          "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/prune.mdx",
+          "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
+          "termObserved": true
+        }
       }
     },
     {
@@ -549,12 +773,14 @@
         "stable": {
           "page": "reference/boundaries.mdx",
           "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "reference/boundaries.mdx",
           "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -567,7 +793,19 @@
       "correctnessCase": "Allowed and forbidden imports/config boundaries in controlled fixtures.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "boundaries"
+      "availabilityTerm": "boundaries",
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "reference/boundaries.mdx",
+          "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/boundaries.mdx",
+          "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380",
+          "termObserved": true
+        }
+      }
     },
     {
       "feature": "deployment-workflows",
@@ -576,12 +814,14 @@
         "stable": {
           "page": "reference/prune.mdx",
           "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.10"
         },
         "canary": {
           "page": "reference/prune.mdx",
           "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
-          "termObserved": true
+          "termObserved": true,
+          "clientVersion": "2.11.11-canary.1"
         }
       },
       "prerequisites": [
@@ -594,7 +834,19 @@
       "correctnessCase": "Named deployment prerequisite and portable output proof; no generic deployment claim.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "docker"
+      "availabilityTerm": "docker",
+      "historicalAvailabilityEvidence": {
+        "stable": {
+          "page": "reference/prune.mdx",
+          "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/prune.mdx",
+          "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
+          "termObserved": true
+        }
+      }
     },
     {
       "feature": "actions-archive-transport",
@@ -688,6 +940,12 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
       }
     },
     {
@@ -722,6 +980,12 @@
         "nativeReport": "native-log-controls.json",
         "pins": "errors-only-client-pins.json",
         "scope": "Final no-change presentation decision only; no actual computation qualification or performance claim."
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
       }
     },
     {
@@ -756,6 +1020,12 @@
         "nativeReport": "native-cargo-controls.json",
         "currentGraphReport": "native-cargo-applicability.json",
         "scope": "Final no-change discovery decision only; all real Rust computation qualification remains open."
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
       }
     },
     {
@@ -791,6 +1061,12 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
       }
     },
     {
@@ -826,7 +1102,13 @@
         "sha256": "b13adb1af9774cc9cc02528942b8f1407f495e600e2fc6831f2aa36e625de743",
         "scope": "Tracked configuration/caller applicability and synthetic native defaults only; no task qualification or enabled-exporter safety proof."
       },
-      "nativeDefaultEvidence": "native-observability-default-controls.json"
+      "nativeDefaultEvidence": "native-observability-default-controls.json",
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      }
     },
     {
       "feature": "futureFlag:experimentalPythonWorkspaces",
@@ -863,6 +1145,12 @@
           "Python quality decomposition would benefit from independent uv package ownership.",
           "A pinned client update changes root/nested discovery behavior or another Python project is added."
         ]
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
       }
     },
     {
@@ -897,6 +1185,12 @@
         "nativeReport": "native-setup-controls.json",
         "sourceBaseRevision": "8a17f413bb815a0a25896378e8ff56a788029a63",
         "scope": "Final feature applicability only; no task qualification, production activation or performance attribution."
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
       }
     },
     {
@@ -925,6 +1219,12 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
       }
     },
     {
@@ -959,6 +1259,12 @@
         "nativeReport": "native-base-ref-controls.json",
         "pins": "errors-only-client-pins.json",
         "scope": "Final no-change applicability decision only; no real task qualification or CI timing claim."
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
       }
     },
     {
@@ -1003,6 +1309,12 @@
         "report": "native-global-configuration-controls.json",
         "scope": "Two synthetic workspaces per layout, legacy/global projection, root/child input invalidation and output restoration on stable 2.11.10 and canary 2.11.11-canary.1.",
         "authority": "No computation qualification, production change or whole-goal acceptance."
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
       }
     },
     {
@@ -1037,6 +1349,12 @@
         "nativeReport": "native-signature-key-controls.json",
         "cases": 168,
         "scope": "Provided-key UTF8 byte enforcement; absent key, local-only and signature-disabled controls. No transport, rollout or qualification acceptance."
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
       }
     },
     {
@@ -1072,7 +1390,13 @@
         "sha256": "c1b55c24c7241e42860505af7b932cd03b8481d2d46ccef0719b636bbf22bfb9",
         "scope": "One tracked-repository applicability decision and pinned synthetic Linux file-presence controls. No real deployment, build portability, sensitive/ignored-file safety, computation qualification or measured performance acceptance."
       },
-      "nativePruneEvidence": "native-prune-global-controls.json"
+      "nativePruneEvidence": "native-prune-global-controls.json",
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      }
     },
     {
       "feature": "futureFlag:strictTaskEntrypointSelection",
@@ -1122,6 +1446,12 @@
         },
         "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
         "authority": "No feature acceptance, real computation qualification or activation."
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
       }
     },
     {
@@ -1134,11 +1464,11 @@
         "Exact-client regression evidence",
         "Change only one experimental flag at a time"
       ],
-      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
-      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending",
+      "beepUseCase": "Existing tracked development watchers belong to Bun and application frameworks; root development delegates through turbo run dev.",
+      "expectedBenefit": "No measured saving is claimed; review a named native watch consumer before changing its selection semantics.",
+      "correctnessCase": "Reopen for real file-event, complete-input, persistent-task, output ownership and portability controls on both exact clients before any activation.",
+      "disposition": "Retain the absent native watch-input flag; no configured native Turbo watch consumer was found in the reviewed tracked source.",
+      "acceptanceStatus": "accepted-retain-current-absence",
       "nativeConfigurationObservation": {
         "report": "native-future-flag-availability.json",
         "stable": {
@@ -1150,16 +1480,56 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "sourceApplicabilityReview": {
+        "path": "watch-feature-review.json",
+        "scope": "Current tracked caller applicability only; no native watch semantic or task qualification proof.",
+        "nativeObservationScope": "Older parser-only canary 2.11.9-canary.1 observation retained unchanged; no current-native watch behavior claim."
+      },
+      "currentNativeConfigurationObservation": {
+        "report": "native-future-flag-current-pair-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "One-flag false/true native dry-run parsing only; previous semantic/applicability observations retain their original source and client pins."
+      }
+    },
+    {
+      "feature": "futureFlag:hashFilePermissions",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableAvailable": false,
+      "canaryAvailable": true,
+      "canarySchemaDescription": "Include file executable permissions in task hashes. Disabled by default. Enabling this flag changes all task hashes. On Unix, any executable bit marks a regular file as executable. On Windows, files are non-executable. Symlink permissions and other permission bits do not affect hashes.",
+      "canaryDefault": false,
+      "enabledInObservedRoot": false,
+      "prerequisites": [
+        "Stable support or a separately approved canary-only profile.",
+        "Native executable-bit input perturbation and symlink/non-executable permission controls on supported platforms.",
+        "Requalify hashes and epochs before activation; this flag changes all task hashes."
+      ],
+      "beepUseCase": "Assess executable-bit changes as semantic task inputs across Linux, worktrees and hosted runners.",
+      "expectedBenefit": "Correct invalidation for permission-sensitive work; no timing or hit-rate benefit is claimed.",
+      "correctnessCase": "Compare unchanged bytes with executable-bit changes and other mode-bit controls; preserve Unix/Windows and symlink distinctions.",
+      "disposition": "Remain disabled; qualify the canary-only behavior before proposing a profile-specific activation.",
+      "acceptanceStatus": "pending",
+      "currentNativeConfigurationObservation": {
+        "report": "native-permission-flag-availability-2026-11-03.json",
+        "stableVersion": "2.11.10",
+        "canaryVersion": "2.11.11-canary.1",
+        "scope": "Stable rejects both boolean settings; canary accepts both in dry runs. No task body or hash-mode semantics executed."
       }
     }
   ],
   "counts": {
     "featureFamilies": 21,
     "stableFutureFlags": 14,
-    "entries": 35
+    "entries": 36,
+    "canaryFutureFlags": 15,
+    "canaryOnlyFutureFlags": 1
   },
   "sourceEvidence": {
-    "stableSchemaSha256": "e3042f9184a5e53260af50b724cbcbbb375f23d53bc1abdc6a3894216f10efaa"
+    "stableSchemaSha256": "e3042f9184a5e53260af50b724cbcbbb375f23d53bc1abdc6a3894216f10efaa",
+    "canarySchemaSha256": "bdd984dd8575fc1dae811fb453637c472d13aff403a5c1486e16233756f48b71",
+    "currentPairCheckpoint": "current-feature-client-refresh-2026-11-03.json"
   },
   "limits": [
     "Documented availability is not runtime correctness proof.",
@@ -1168,15 +1538,16 @@
   ],
   "reviewCounts": {
     "pending": 25,
-    "acceptedRetainCurrentAbsence": 7,
+    "acceptedRetainCurrentAbsence": 8,
     "acceptedRetainCurrentDefault": 1,
     "acceptedNotApplicable": 1,
     "acceptedRetainCurrentSetting": 1
   },
   "nativeAvailabilityCounts": {
-    "flagCasesAccepted": 56,
+    "flagCasesAccepted": 58,
     "baselineCasesAccepted": 2,
     "unknownControlsRefused": 2,
+    "unsupportedClientFlagCasesRefused": 2,
     "sentinelsExecuted": 0,
     "featuresSemanticallyQualified": 0
   },
@@ -1197,5 +1568,13 @@
     "sourceBindingReviewControls": "selection-review-source-controls.json",
     "siblingLoaderCompatibility": "selection-sibling-driver-compatibility.json",
     "siblingLoaderTests": 6
-  }
+  },
+  "historicalNativeAvailabilityCounts": {
+    "flagCasesAccepted": 56,
+    "baselineCasesAccepted": 2,
+    "unknownControlsRefused": 2,
+    "sentinelsExecuted": 0,
+    "featuresSemanticallyQualified": 0
+  },
+  "currentClientPairScope": "The current pin manifest and availability observations use stable2.11.10/current published canary2.11.11-canary.1. Historical semantic and applicability reports retain their original exact source/client envelopes; no qualification or prior result is transplanted."
 }

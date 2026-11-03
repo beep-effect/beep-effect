@@ -8,6 +8,8 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { hashFileSha256 } from "@beep/repo-cli-kit/cli/FsGuards";
+import { formatCommandLine, runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
@@ -26,8 +28,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
-import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
-import { formatCommandLine, runCaptured } from "../../internal/process/StepExec.ts";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { RunnersCommandError } from "./Runners.errors.ts";
 import {

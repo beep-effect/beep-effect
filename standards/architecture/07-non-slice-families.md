@@ -342,8 +342,8 @@ Inside a command tool, command topology is thresholded: tiny leaf commands may
 stay single-file, but command groups and commands with schemas, services,
 renderers, or multiple subcommands move into `commands/<Group>/`. The
 `commands/` namespace is for registered command surfaces and command-owned
-private roles; non-command helper models belong under `src/internal/cli/` or
-the package that owns the reusable substrate.
+private roles; non-command helper models belong in the package that owns the
+reusable substrate (repo-specific CLI helpers: `@beep/repo-cli-kit`).
 
 Canonical command group roles:
 

@@ -9,6 +9,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import * as Catalog from "@beep/observability/catalog";
+import { resolveShardScope, shardScopeIncludes } from "@beep/repo-cli-kit/cli/ShardScope";
+import { createWorkspaceOwnerResolver } from "@beep/repo-cli-kit/tsmorph/index";
 import { FsUtils } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
@@ -25,8 +27,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Project } from "ts-morph";
-import { resolveShardScope, shardScopeIncludes } from "../../internal/cli/ShardScope.ts";
-import { createWorkspaceOwnerResolver } from "../../internal/tsmorph/index.ts";
 import { ObservabilityCommandError } from "./Observability.errors.ts";
 import { combineHarvests, harvestSourceFile } from "./Observability.harvest.ts";
 import {

@@ -1,0 +1,20 @@
+{
+  "previous": "6d6b882f2b2f70853683379fcbcc79dbda552e63e070eef1905dfe2200da2fd2",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (W3 lane, refactor/beep-cli-w3-repo-cli-kit)",
+    "reason": "Re-record the root, repo-cli and new repo-cli-kit subjects after merging main (304565d49f); same W3 changes, no qualification granted.",
+    "basis": {
+      "path": "goals/beep-cli-composition/research/w3-cache-baseline-review.md",
+      "sha256": "b9856e7a73dccceddbf3ad4384d4fd15e6fa1f0559166d892fbcd85f2b85994a"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/repo-cli", "@beep/repo-cli-kit"]
+}

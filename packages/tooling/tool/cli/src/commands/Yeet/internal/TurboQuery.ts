@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { jsonObjectTextFromMixedOutput } from "@beep/repo-cli-kit/cli/MixedOutputJson";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -13,7 +14,6 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { jsonObjectTextFromMixedOutput } from "../../../internal/cli/MixedOutputJson.ts";
 import {
   resolveLocalRepoBinary,
   runRepoCommandCapture,

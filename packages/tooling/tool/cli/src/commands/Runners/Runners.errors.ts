@@ -6,11 +6,11 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { commandErrorFields } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
-import { commandErrorFields } from "../../internal/cli/CommandErrorFields.ts";
 
 const $I = $RepoCliId.create("commands/Runners/Runners.errors");
 

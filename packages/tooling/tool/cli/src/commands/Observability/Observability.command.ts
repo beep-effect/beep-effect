@@ -7,6 +7,10 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { jsonFlag } from "@beep/repo-cli-kit/cli/Flags";
+import { printCommandJson } from "@beep/repo-cli-kit/cli/Json";
+import { stageGeneratedFiles } from "@beep/repo-cli-kit/cli/ShardScope";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -17,10 +21,6 @@ import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { jsonFlag } from "../../internal/cli/Flags.ts";
-import { printCommandJson } from "../../internal/cli/Json.ts";
-import { stageGeneratedFiles } from "../../internal/cli/ShardScope.ts";
 import {
   CatalogRunReport,
   GeneratedFileStatus,

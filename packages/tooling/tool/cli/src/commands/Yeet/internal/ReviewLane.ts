@@ -35,6 +35,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { nearestRank } from "@beep/repo-cli-kit/stats/NearestRank";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
@@ -51,7 +52,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { nearestRank } from "../../../internal/stats/NearestRank.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { resolveProofLedgerLocation } from "./ArtifactPaths.ts";
 import {

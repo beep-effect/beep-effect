@@ -5,5 +5,5 @@
  * @since 0.0.0
  */
 
+export * from "@beep/repo-cli-kit/cli/Labs/index";
 export * from "../commands/Labs/Labs.command.ts";
-export * from "../internal/cli/Labs/index.ts";

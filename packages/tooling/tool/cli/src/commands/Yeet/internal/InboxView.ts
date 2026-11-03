@@ -25,6 +25,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
 import { thunkFalse } from "@beep/utils";
 import * as A from "effect/Array";
@@ -41,7 +42,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { readYeetAckState, YeetAckState } from "./Ack.ts";
 import {
   describeYeetInboxRow,

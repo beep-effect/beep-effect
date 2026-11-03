@@ -5,13 +5,13 @@
  * @since 0.0.0
  */
 
+import { validateDirectory as validateDirectoryShared } from "@beep/repo-cli-kit/cli/FsGuards";
 import { A, P, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
 import * as Path from "effect/Path";
-import { validateDirectory as validateDirectoryShared } from "../../../internal/cli/FsGuards.ts";
 import { FilesCommandError, formatPlatformError, PlatformErrorOptions } from "../Files.errors.ts";
 import { normalizeBareExtension } from "../Files.media.ts";
 import {

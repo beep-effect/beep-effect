@@ -17,6 +17,8 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
@@ -24,8 +26,6 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { GoalStatusInputError } from "./Goals.errors.ts";
 import { PacketStreamError } from "./PacketCore/PacketCore.errors.ts";
 import { isPacketRiskTier, isPacketSlug, PacketRiskTier } from "./PacketCore/PacketCore.schemas.ts";

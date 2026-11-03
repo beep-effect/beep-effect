@@ -14,6 +14,7 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { renderPrettyCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -28,7 +29,6 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { renderPrettyCommandJson } from "../../../internal/cli/Json.ts";
 import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
 import type * as Digest from "effect/crypto/Digest";

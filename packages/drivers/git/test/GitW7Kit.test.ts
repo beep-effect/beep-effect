@@ -567,7 +567,7 @@ describe("Git W7 extensions", () => {
         Effect.flatMap(Git, (git) => git.fetch(cwd, {})),
         () => ({ exit: 128, stderr: "fatal: couldn't find remote ref" })
       );
-      assert.strictEqual(S.is(UnknownRefError)(missing.error) ? missing.error.ref : "", "origin");
+      assert.strictEqual(S.is(UnknownRefError)(missing.error) ? missing.error.ref : "", "(configured refspecs)");
     })
   );
 

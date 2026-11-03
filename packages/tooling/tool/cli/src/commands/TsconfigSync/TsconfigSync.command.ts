@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -13,7 +14,6 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import {
   isCheckModeFlags,
   isDryRunModeFlags,

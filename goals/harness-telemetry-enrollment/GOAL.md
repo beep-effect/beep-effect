@@ -1,6 +1,6 @@
 # GOAL: Qualify every agent harness and surface
 
-This packet was authored paused on2026-10-27. Reading or preparing it does not start execution. On an explicit user launch, operate in the current beep-effect checkout and follow AGENTS.md.
+This packet was authored paused on 2026-10-27 and explicitly launched on 2026-11-03. Operate in the isolated enrollment worktree, follow AGENTS.md, and retain the recovery hold. Foundation PR2655 is canonically verified.
 
 Outcome: Enroll declared CLI, desktop and proxy routes without overstating coverage, preserving identity across clones, worktrees and hosts.
 
