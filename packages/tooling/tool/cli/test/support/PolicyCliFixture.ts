@@ -114,8 +114,9 @@ export const writeFixtureFiles = Effect.fnUntraced(function* (root: string, file
 });
 
 const CHECK_TASK = "//#lint:policy-fingerprint";
-const isFingerprintEdge = (dependency: string) =>
-  dependency === CHECK_TASK || Str.startsWith(`${CHECK_TASK}:`)(dependency);
+/** Every seal id carries it, whether CLI-workspace (`@beep/repo-cli#…`) or a legacy root seal (`//#…`). */
+const isSealTask = Str.includes("#lint:policy-fingerprint:");
+const isFingerprintEdge = (dependency: string) => dependency === CHECK_TASK || isSealTask(dependency);
 
 /**
  * Point every fingerprint edge of copied live task definitions back at the
@@ -128,7 +129,7 @@ export const withFingerprintMarker = (
   R.fromEntries(
     A.getSomes(
       A.map(R.toEntries(tasks), ([task, value]) => {
-        if (Str.startsWith(`${CHECK_TASK}:`)(task) || value === null || typeof value !== "object")
+        if (isSealTask(task) || value === null || typeof value !== "object")
           return O.none<readonly [string, Readonly<Record<string, unknown>>]>();
         const record = value as Readonly<Record<string, unknown>>;
         const dependsOn = record.dependsOn;

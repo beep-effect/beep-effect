@@ -1146,6 +1146,35 @@ and accepted-main integration remain required; this is no rollout or qualificati
 The [configuration review](research/private-object-a88d-baseline-review-2026-11-02.md) and [canonical CAS request](research/private-object-a88d-baseline-request-2026-11-02.json) retain the accepted main package expansion and the owned storage quality-seal input. The canonical census has 2,448 executable nodes: twelve new party-domain commands, with eight existing inherited cache settings. Only the two named root fingerprint input lists change among previous nodes; every other existing configuration and non-root review is preserved. Scope, profile, epoch and qualification ledger bytes are unchanged. No runtime setting, task eligibility, tuple qualification or whole-goal acceptance is granted. The earlier hosted new-file coverage identity failure remains open for a separate source-bound repair.
 
 
+### Resolve the admitted reusable producer workflow, 2026-11-02
+
+The [resolved Heavy approval checkpoint](research/resolved-heavy-approval-checkpoint-2026-11-02.json)
+adds independent approval of the same-repository main Heavy leaf. The default
+continues to deny reusable execution. The caller and callee each bind their
+exact reviewed commit and file digest within the existing aggregate byte
+budget; metadata re-reading includes the callee. Focused producer tests and
+package lint/type checks cover this component, with hosted review still
+required. Private evidence transport and a real protected signed R2 run remain
+next. None of the nine whole-goal acceptance criteria is complete.
+
+
+### Resolved-workflow hosted gate repairs, 2026-11-02
+
+The hosted Fallow audit attributed cognitive complexity twelve above the floor
+eight to the new workflow verification loop. Move that complete inspection into
+one private effect helper without changing source order, immutable digests or
+the aggregate byte budget. The hosted policy job also identified an introduced
+EV006 boolean assertion; a Result match now preserves the exact boundary outcome.
+The inherited GitHubApp schema-test defect is consumed from accepted main
+`389b01a327`, with no competing shared fix or baseline relaxation.
+
+The updated [checkpoint](research/resolved-heavy-approval-checkpoint-2026-11-02.json)
+preserves original source bindings and records 146 focused passing tests, quick
+lint/type checks, Fallow audit and health with no findings, and the complete
+effect-vitest ratchet. The canonical inventory retains the same finding totals.
+These remain component checks; protected R2 execution and whole-goal acceptance
+are still outstanding.
+
 ### Contained source directory aliases, 2026-11-02
 
 Protected inspection run `41413340460`, job `125171205116`, reached its admitted
