@@ -391,12 +391,16 @@ const StatusCountDocument = S.Struct({ findings: S.Array(S.Struct({ status: S.St
 
 const decodeStatusCountDocument = Jsonc.bind(StatusCountDocument).decode;
 
-// Finding count per status at one revision; an absent file has no findings,
-// and an undecodable one is none so the caller fails closed.
+// Finding count per status at one revision. Only a file absent at that revision has no findings;
+// a read that fails (an unknown revision, or output past the kit's bound) and an undecodable
+// document are both none, so the caller fails closed. The inventory outgrew the old 512 KiB
+// line capture, which failed every read and made each revision look like it had no findings.
 const statusCounts = Effect.fn("Yeet.finalCheckRefreshStatusCounts")(function* (repoRoot: string, revision: string) {
-  const text = yield* runGitOutput(repoRoot, ["show", `${revision}:${EffectVitestInventoryPath}`]).pipe(Effect.option);
-  if (O.isNone(text)) return O.some(HashMap.empty<string, number>());
-  const document = yield* decodeStatusCountDocument(text.value).pipe(Effect.option);
+  const git = yield* Git;
+  const read = yield* git.show(repoRoot, revision, EffectVitestInventoryPath).pipe(Effect.option);
+  if (O.isNone(read)) return O.none<HashMap.HashMap<string, number>>();
+  if (O.isNone(read.value)) return O.some(HashMap.empty<string, number>());
+  const document = yield* decodeStatusCountDocument(read.value.value).pipe(Effect.option);
   return O.map(document, ({ findings }) =>
     A.reduce(findings, HashMap.empty<string, number>(), (counts, finding) =>
       HashMap.set(counts, finding.status, O.getOrElse(HashMap.get(counts, finding.status), () => 0) + 1)
