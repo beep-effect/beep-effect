@@ -88,6 +88,8 @@ const fixtureArbitrary = Arbitrary.all([Arbitrary.schema(TaskSummary), Arbitrary
 // `goals:doctor` reads `git log --since` (clock and git history). The five tracked-file
 // law scans and `lint:holds` cache since 2026-11-02 (quality audit G10): their check
 // paths read declared files only (listed through `git ls-files`), no clock, no network.
+// The Fallow rows cache since 2026-11-02 (quality audit K2) except `fallow:audit:check`,
+// which diffs against the commit behind a base ref name that can move under its key.
 const nonReusableTasks: ReadonlyArray<string> = [
   "knowledge:semantic-delta",
   "knowledge:refs-check",
@@ -96,16 +98,8 @@ const nonReusableTasks: ReadonlyArray<string> = [
   "goals:doctor",
   "lint:typos",
   "fallow:audit:check",
-  "fallow:health:check",
-  "fallow:health:advisory",
-  "fallow:boundaries:advisory",
-  "fallow:flags:advisory",
-  "fallow:security:advisory",
-  "fallow:fix-preview:advisory",
   "changeset:status",
-  "fallow:dead-code:check",
   "repo-sanity:bun-audit",
-  "fallow:boundaries:config-check",
 ];
 
 const directInputs: Readonly<Record<string, string>> = {

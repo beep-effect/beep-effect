@@ -34,3 +34,6 @@ Merging `origin/main` brought #2633 (narrowed Turbo inputs, `$TURBO_ROOT$`-ancho
 regenerated with `bun run beep lint policy-fingerprint --write`, which again adds only
 `Yeet/internal/HeadInstallReceipt.ts` to the same three seals. The re-recorded request binds `previous`
 to main's baseline bytes.
+
+Main merge 2 (2026-11-02, origin/main 67c2e94867: #2634, #2641, #2612): baseline taken from main and the same
+three seals re-stamped; no other subject changed.
