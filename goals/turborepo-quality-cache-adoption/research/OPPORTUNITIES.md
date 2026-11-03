@@ -1,5 +1,22 @@
 # Friction and opportunities
 
+## Captured output lost at timeout, 2026-11-03
+
+Heavy / Lint Policy on #2686 timed out in `knowledge doctor ci` after its
+unchanged 900,000 ms budget. The timeout branch discarded all accumulated
+output, unlike the late-exit branch that already prints a bounded tail. The
+completed log identifies neither the last doctor phase nor the cause; the
+runner's host-wide samples show no swapping and ample available memory, which
+does not establish a per-command cause. A comparable successful run completed
+the doctor step in about 380 seconds.
+
+Preserve at most 2,000 trailing characters before interruption, even after a
+normal capture prefix fills. Add real subprocess regressions for stdout past
+the capture limit and stderr at timeout. Keep deadline failure and cleanup
+semantics unchanged. The source omission is established by inspection; hosted
+proof of the repair and the underlying doctor timeout diagnosis remain pending.
+No local verify, publish or package suite was run, per the operator's instruction.
+
 ## Global-input exclusion control, 2026-11-02
 
 The first native configuration experiment expected a child task to reuse after
