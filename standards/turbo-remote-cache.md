@@ -181,11 +181,13 @@ an input digest.
 
 Root task IDs are `//#<script>`, for example `//#lint:schema-first` or
 `//#fallow:audit:check`. Read the matching `tasks[].hash` from Turbo's JSON summary;
-its run ID is an invocation identity, not an input digest. CLI-backed root tasks
+its run ID is an invocation identity, not an input digest. CLI-backed tasks
 inherit checker implementation hashes through their generated seal,
-`//#lint:policy-fingerprint:<key>`, which chains to
-`//#lint:policy-fingerprint:shared`. The fingerprint file records the input
-declaration, not a committed content digest.
+`@beep/repo-cli#lint:policy-fingerprint:<key>`, a script-less CLI-workspace task
+that chains to `@beep/repo-cli#lint:policy-fingerprint:shared`. The seals are
+not root tasks, so a `turbo.json` edit does not reach package policy tasks
+through them. The fingerprint file records the input declaration, not a
+committed content digest.
 
 The C3.5 consumer plan requests `--summarize` on every Turbo invocation: four
 summaries per completed local policy run (cheap, medium, non-reusable, typed), and

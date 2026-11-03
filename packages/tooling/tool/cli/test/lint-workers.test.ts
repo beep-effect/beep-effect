@@ -207,6 +207,7 @@ describe("thin lint workers", { concurrent: false }, () => {
     it.effect(
       "checks and writes the per-task seals independently of formatting and source contents",
       Effect.fnUntraced(function* () {
+        const seal = "@beep/repo-cli#lint:policy-fingerprint:";
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "fingerprint-gate-" });
         yield* writeFixtureFiles(root, {
@@ -218,12 +219,12 @@ describe("thin lint workers", { concurrent: false }, () => {
           ...fixturePackageFiles("other"),
           "packages/cli/src/commands/Bar/BarHelper.ts": "export const value = 1;\n",
           "package.json":
-            '{\n  "name": "fixture",\n  "workspaces": ["packages/*"],\n  "scripts": {\n    "foo:check": "beep-cli foo --check",\n    "bar:check": "bun run beep bar",\n    "lint:policy-fingerprint": "beep-cli lint policy-fingerprint --check"\n  }\n}\n',
+            '{\n  "name": "fixture",\n  "workspaces": ["packages/*"],\n  "scripts": {\n    "foo:check": "beep-cli foo --check",\n    "bar:check": "bun run beep bar",\n    "lint:policy-fingerprint": "beep-cli lint policy-fingerprint --check",\n    "lint:policy-fingerprint:shared": "true"\n  }\n}\n',
           "standards/lint-policy.sweeps.jsonc": "{}\n",
         });
         const turboFile = `${root}/turbo.json`;
         const turboBefore =
-          '{\n  "tasks": {\n    "//#lint:policy-fingerprint": {\n      "cache": true,\n      "outputs": [],\n      "inputs": []\n    },\n    "//#foo:check": { "dependsOn": ["^build", "//#lint:policy-fingerprint"] },\n    "//#bar:check": { "dependsOn": ["//#lint:policy-fingerprint"] },\n    "untouched": { "inputs": ["keep/**"] }\n  }\n}\n';
+          '{\n  "tasks": {\n    "//#lint:policy-fingerprint": {\n      "cache": true,\n      "outputs": [],\n      "inputs": []\n    },\n    "//#lint:policy-fingerprint:shared": { "cache": true, "outputs": [], "inputs": ["package.json"] },\n    "//#foo:check": { "dependsOn": ["^build", "//#lint:policy-fingerprint"] },\n    "//#bar:check": { "dependsOn": ["//#lint:policy-fingerprint"] },\n    "untouched": { "inputs": ["keep/**"] }\n  }\n}\n';
         yield* fs.writeFileString(turboFile, turboBefore);
         const file = `${root}/standards/policy-tools.fingerprint.json`;
         const driftMessage = Effect.fnUntraced(function* () {
@@ -238,18 +239,22 @@ describe("thin lint workers", { concurrent: false }, () => {
           );
           yield* run(["policy-fingerprint", "--write"]);
           const declaration = yield* fs.readFileString(file);
-          expect(declaration).toContain("standards/lint-policy.sweeps.jsonc");
+          // No fixture module names the sweeps file, so no seal declares it; the check reads the declaration.
+          expect(declaration).not.toContain("standards/lint-policy.sweeps.jsonc");
+          expect(declaration).toContain("standards/policy-tools.fingerprint.json");
           const turbo = yield* fs.readFileString(turboFile);
           expect(turbo).toContain('"untouched": { "inputs": ["keep/**"] }');
           const tasks = (yield* decodeTurboTasks(turbo)).tasks;
-          expect(tasks["//#foo:check"]?.dependsOn).toEqual(["^build", "//#lint:policy-fingerprint:foo"]);
-          expect(tasks["//#bar:check"]?.dependsOn).toEqual(["//#lint:policy-fingerprint:bar"]);
-          expect(tasks["//#lint:policy-fingerprint:foo"]?.dependsOn).toEqual(["//#lint:policy-fingerprint:shared"]);
-          expect(tasks["//#lint:policy-fingerprint:foo"]?.inputs).toContain("packages/helper/src/index.ts");
-          expect(tasks["//#lint:policy-fingerprint:bar"]?.inputs).not.toContain("packages/helper/src/index.ts");
+          expect(tasks["//#foo:check"]?.dependsOn).toEqual(["^build", `${seal}foo`]);
+          expect(tasks["//#bar:check"]?.dependsOn).toEqual([`${seal}bar`]);
+          expect(tasks[`${seal}foo`]?.dependsOn).toEqual([`${seal}shared`]);
+          expect(tasks[`${seal}foo`]?.inputs).toContain("$TURBO_ROOT$/packages/helper/src/index.ts");
+          expect(tasks[`${seal}bar`]?.inputs).not.toContain("$TURBO_ROOT$/packages/helper/src/index.ts");
+          // The legacy root seal and its `true` script are gone: a CLI-workspace seal needs no script.
+          expect(tasks["//#lint:policy-fingerprint:shared"]).toBeUndefined();
           const manifest = yield* fs.readFileString(`${root}/package.json`);
-          expect(manifest).toContain('"lint:policy-fingerprint:foo": "true"');
-          expect(manifest).toContain('"lint:policy-fingerprint:shared": "true"');
+          expect(manifest).not.toContain('"lint:policy-fingerprint:shared"');
+          expect(manifest).toContain('"lint:policy-fingerprint": "beep-cli lint policy-fingerprint --check"');
           yield* run(["policy-fingerprint", "--check"]);
           // Idempotent bytes.
           yield* run(["policy-fingerprint", "--write"]);
@@ -265,7 +270,7 @@ describe("thin lint workers", { concurrent: false }, () => {
             `${root}/packages/cli/src/commands/Bar/BarHelper.ts`,
             'export { value } from "@beep/other";\n'
           );
-          expect(yield* driftMessage()).toContain('turbo.json tasks["//#lint:policy-fingerprint:bar"]');
+          expect(yield* driftMessage()).toContain(`turbo.json tasks["${seal}bar"]`);
           yield* run(["policy-fingerprint", "--write"]);
           expect(yield* fs.readFileString(file)).toContain("packages/other/src/index.ts");
           yield* run(["policy-fingerprint", "--check"]);

@@ -35,12 +35,21 @@ export const TurboSummaryCacheStatus = LiteralKit(["HIT", "MISS"]).pipe(
   $I.annoteSchema("TurboSummaryCacheStatus", { description: "Turbo run-summary cache status for one task." })
 );
 
+// Turbo writes the task's resolved definition into every summary row; only its `cache` flag is
+// read. A row without one is read as uncacheable (time-to-certainty ruling 69's lock).
+const TurboSummaryTaskDefinition = S.Struct({ cache: S.Boolean.pipe(S.optionalKey) }).pipe(
+  $I.annoteSchema("TurboSummaryTaskDefinition", {
+    description: "The slice of a task's resolved Turbo definition a lane digest reads: whether Turbo caches it.",
+  })
+);
+
 const TurboSummaryExecution = S.Struct({ exitCode: S.Finite.pipe(S.NullOr, S.optionalKey) }).pipe(
   $I.annoteSchema("TurboSummaryExecution", { description: "Exit code Turbo recorded for one executed task." })
 );
 
 /**
- * The slice of one `tasks[]` entry a lane digest needs: identity, hash, cache verdict, exit code.
+ * The slice of one `tasks[]` entry a lane digest needs: identity, hash, cache verdict, whether Turbo
+ * caches the task at all, exit code.
  *
  * **Example** (Decode a task entry)
  *
@@ -66,10 +75,11 @@ export class TurboSummaryTask extends S.Opaque<TurboSummaryTask, { readonly bran
     task: S.String,
     hash: S.String,
     cache: S.Struct({ status: TurboSummaryCacheStatus }),
+    resolvedTaskDefinition: TurboSummaryTaskDefinition.pipe(S.optionalKey),
     execution: TurboSummaryExecution.pipe(S.NullOr, S.optionalKey),
   }).pipe(
     $I.annoteSchema("TurboSummaryTask", {
-      description: "One Turbo run-summary task row: id, bare name, hash, cache status, exit.",
+      description: "One Turbo run-summary task row: id, bare name, hash, cache status, cacheability, exit.",
     })
   )
 ) {}
@@ -103,8 +113,24 @@ export class TurboRunSummary extends S.Opaque<TurboRunSummary, { readonly brand:
   )
 ) {}
 
+const taskCacheableDefault = false;
+const TurboLaneTaskCacheable = S.Boolean.pipe(
+  S.withConstructorDefault(Effect.succeed(taskCacheableDefault)),
+  S.withDecodingDefaultType(Effect.succeed(taskCacheableDefault))
+);
+
 /**
  * One task's contribution to a lane digest.
+ *
+ * **Details**
+ *
+ * `cacheable` is true when Turbo's resolved definition for the task leaves
+ * caching on. Only a cacheable task's hash is a contract Turbo itself relies
+ * on: Turbo replays a cached result on it, so a reused proof keyed on it claims
+ * no more than a cache hit would. An uncacheable task's hash spans only the
+ * inputs someone happened to declare (time-to-certainty ruling 69's lock). The
+ * flag is observation data and never part of the digest text. A row built or
+ * decoded without it is uncacheable, the conservative side of an unknown.
  *
  * **Example** (Describe a folded task)
  *
@@ -112,16 +138,21 @@ export class TurboRunSummary extends S.Opaque<TurboRunSummary, { readonly brand:
  * import { TurboLaneTaskHash } from "@beep/repo-cli/test/Quality"
  *
  * const row = TurboLaneTaskHash.make({ taskId: "//#lint:typos", hash: "b2", cacheStatus: "HIT" })
- * console.log(row.cacheStatus) // "HIT"
+ * console.log(row.cacheStatus, row.cacheable) // "HIT" false
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class TurboLaneTaskHash extends S.Opaque<TurboLaneTaskHash, { readonly brand: unique symbol }>()(
-  S.Struct({ taskId: S.String, hash: S.String, cacheStatus: TurboSummaryCacheStatus }).pipe(
+  S.Struct({
+    taskId: S.String,
+    hash: S.String,
+    cacheStatus: TurboSummaryCacheStatus,
+    cacheable: TurboLaneTaskCacheable,
+  }).pipe(
     $I.annoteSchema("TurboLaneTaskHash", {
-      description: "Task id, Turbo hash and cache status folded into a lane digest.",
+      description: "Task id, Turbo hash, cache status and Turbo cacheability folded into a lane digest.",
     })
   )
 ) {}
@@ -227,11 +258,61 @@ export const turboLaneDigestPackages = (digest: TurboLaneDigest): ReadonlyArray<
     A.sort(Order.String)
   );
 
+/**
+ * Whether every Turbo task a lane digest folds is one Turbo caches.
+ *
+ * **Details**
+ *
+ * This is the precondition time-to-certainty ruling 69's lock places on a
+ * lane decided by its digest alone. A changed path in no workspace — a
+ * `standards/*.jsonc` baseline, the Biome configuration, a workflow file — is
+ * covered for a cacheable lane: either a folded task declares it, so the digest
+ * moved, or Turbo would replay the same result on the same hash anyway, and
+ * input completeness is then the task definition's defect, not the ledger's.
+ * An uncacheable task makes no such promise. A digest with no tasks is not
+ * cacheable.
+ *
+ * **Example** (One uncacheable task decides the lane)
+ *
+ * ```ts
+ * import { TurboLaneDigest, TurboLaneTaskHash, turboLaneDigestCacheable } from "@beep/repo-cli/test/Quality"
+ *
+ * const digest = TurboLaneDigest.make({
+ *   digest: "ab12",
+ *   summaryIds: ["run"],
+ *   tasks: [
+ *     TurboLaneTaskHash.make({ taskId: "@beep/x#check", hash: "h1", cacheStatus: "HIT", cacheable: true }),
+ *     TurboLaneTaskHash.make({ taskId: "//#fallow:audit:check", hash: "h2", cacheStatus: "MISS", cacheable: false })
+ *   ]
+ * })
+ * console.log(turboLaneDigestCacheable(digest)) // false
+ * ```
+ *
+ * @param digest - A lane digest folded from one or more Turbo run summaries.
+ * @returns True when the digest folds at least one task and Turbo caches every one.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const turboLaneDigestCacheable = (digest: TurboLaneDigest): boolean =>
+  A.isReadonlyArrayNonEmpty(digest.tasks) && A.every(digest.tasks, (task) => task.cacheable);
+
+const taskDefinitionCaches = (task: TurboSummaryTask): boolean =>
+  pipe(
+    O.fromUndefinedOr(task.resolvedTaskDefinition),
+    O.flatMap((definition) => O.fromUndefinedOr(definition.cache)),
+    O.getOrElse(() => taskCacheableDefault)
+  );
+
 const rowOrder = Order.mapInput(Order.String, (row: TurboLaneTaskHash) => row.taskId);
 
 const selectedRows = (tasks: ReadonlyArray<TurboSummaryTask>): ReadonlyArray<TurboLaneTaskHash> =>
   A.map(tasks, (task) =>
-    TurboLaneTaskHash.make({ taskId: task.taskId, hash: task.hash, cacheStatus: task.cache.status })
+    TurboLaneTaskHash.make({
+      taskId: task.taskId,
+      hash: task.hash,
+      cacheStatus: task.cache.status,
+      cacheable: taskDefinitionCaches(task),
+    })
   );
 
 const digestRows = Effect.fnUntraced(function* (
