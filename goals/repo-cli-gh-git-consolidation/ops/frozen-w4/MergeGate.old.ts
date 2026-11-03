@@ -1,6 +1,10 @@
 /**
  * Frozen pre-W4 body for `ops/review-thread-differential-w4.ts`: `packages/tooling/tool/cli/src/commands/Yeet/internal/MergeGate.ts`, verbatim from
  * main 930758e06b except for import paths and the identity namespace. The reviewer gate is wrapped in `withReviewerOperatorClient` as W3 (#2614) did on main, so the copy builds after that merge.
+ * W6 (SPEC D-15) moved the review-window read onto `GithubRest`; this body takes it through
+ * `readYeetReviewWindowAsGhLogin`, the gh-login wrapper the live surfaces without services use.
+ * Imports follow later moves only (beep-cli-composition W1b #2645 and the W6 login wrappers in `GhOps.ts`);
+ * the replayed logic is unchanged.
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
@@ -20,6 +24,7 @@ import {
   enforceReviewerGate,
   withReviewerOperatorClient,
 } from "../../../../packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts";
+import { readYeetReviewWindowAsGhLogin } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts";
 import { MergeGateCheckRun } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MergeGate.schemas.ts";
 import {
@@ -30,7 +35,6 @@ import {
   yeetReviewThreadStateOutstanding,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewThreadState.ts";
 import {
-  readYeetReviewWindow,
   renderYeetReviewWindow,
   YeetReviewWindow,
 } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewWindow.ts";
@@ -1324,7 +1328,7 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
     requiredContexts: O.map(ruleset, (rules) => rules.contexts),
     checkRuns: A.map(checkRuns, toMergeGateCheckRun),
     baseRuns,
-    window: yield* readYeetReviewWindow(context, { prNumber: pull.number, headSha: pull.head.sha }),
+    window: yield* readYeetReviewWindowAsGhLogin(context, { prNumber: pull.number, headSha: pull.head.sha }),
     unresolvedThreads,
     squashCommitlint,
     readAt: yield* DateTime.now,

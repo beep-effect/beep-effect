@@ -31,16 +31,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, W5 in review (this PR). The hand-rolled `ChildProcessSpawner` test doubles move onto `@beep/commands`
-`ScriptedSpawner` (SPEC D-14): 51 repo-cli test files and `tailscale.test.ts` carry no double of their own, 5 more keep
-one guard or decorator beside their scripted doubles, and 33 files stay on their own doubles with a named reason
-(never-spawn `Effect.die` guards, decorators over the real spawner, and kill/stream/finalizer/filesystem shapes a
-`ScriptCompletion` cannot express; both ai-metrics suites among them). `@beep/test-utils` adds no second double (#291).
-Earlier waves merged: W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, D-10), W2b (#2606, D-11),
-the W3 kit (#2556), W3 sites (#2614, D-12), the W4 kit (#2600) and W4 sites (#2622, D-13). Next: closeout C.
+P1 Implement, W6 in review (this PR). The six Yeet modules SPEC D-13 deferred run their GitHub calls on
+`GithubRest`, `GitHubRepository`, the kit's `PullRequest` and `GitHubClient`, with one gh login per command surface and
+their `capture` seams retired (SPEC D-15); `gh pr view` of the branch, `gh pr view <branch>` in `Merge.ts` and
+`gh run view --log-failed` stay as KEEP rows. Earlier waves merged: W0 (#2514), the W1
+kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, D-10), W2b (#2606, D-11), the W3 kit (#2556), W3 sites (#2614,
+D-12), the W4 kit (#2600), W4 sites (#2622, D-13) and W5 (#2642, D-14). Next: closeout C.
 
 ## Latest Evidence
 
+- 2026-11-02 W6: `research/yeet-gh-seams-differential-w6.json` (51 scenarios, 40 same, 11 classified, 0 unclassified);
+  repo-cli `check` clean, every `yeet-*`, `proof-job` and `shared-internals` suite green on Node and Bun (65 files,
+  1885 tests), `goals/tsconfig.ops.json` clean; `lint effect-vitest`, Fallow audit and Fallow health introduce 0.
 - 2026-11-02 W5: the 86 repo-cli suites that held a `ChildProcessSpawner.make`/`makeHandle` double run 2737 tests
   before and after on Node and on Bun (baseline origin/main 71bc36fcb4), `tailscale.test.ts` 15 before and after on
   both; repo-cli `check` and tailscale `check` clean; `lint effect-vitest`, Fallow audit and Fallow health introduce
