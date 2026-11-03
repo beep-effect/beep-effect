@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (W1b lane, refactor/beep-cli-w1b-verifier)",
+      "reason": "Re-record the root and repo-ai-metrics subjects after merging W1a and main: policy seals name the W1b split modules, and repo-ai-metrics gains the repo-utils dependency for shellQuote; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "goals/beep-cli-composition/research/w1b-cache-baseline-review.md",
+        "sha256": "c99e29e8db2f2f90ad49fbc8d869fa5170cb2202272ea78948774ca125d53c7f"
       }
     },
     "@beep/acp": {
@@ -1138,11 +1138,11 @@
       }
     },
     "@beep/repo-ai-metrics": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-granularity, claude/perf-turbo-granularity-110eae)",
-      "reason": "Re-record input lists and policy-task fingerprint edges after quality audit M9, M10 and K3: package-root README/CHANGELOG/LICENSE leave transit, build, check and test hashes, test/** leaves build and transit (eleven test-compiling builds keep it), and the policy seals move to script-less @beep/repo-cli tasks with per-seal root-config routing. Commands, outputs, cache flags and environment are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (W1b lane, refactor/beep-cli-w1b-verifier)",
+      "reason": "Re-record the root and repo-ai-metrics subjects after merging W1a and main: policy seals name the W1b split modules, and repo-ai-metrics gains the repo-utils dependency for shellQuote; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-turbo-granularity-cache-review-2026-11-02.md",
-        "sha256": "1da98f30c3c2545b941ca97f7e8bc5fcfad15810713ff25c9f92e2f2ec82fc28"
+        "path": "goals/beep-cli-composition/research/w1b-cache-baseline-review.md",
+        "sha256": "c99e29e8db2f2f90ad49fbc8d869fa5170cb2202272ea78948774ca125d53c7f"
       }
     },
     "@beep/repo-cli": {
@@ -90192,6 +90192,7 @@
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
+          "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -90261,6 +90262,7 @@
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
+          "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -90316,6 +90318,7 @@
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
+          "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -90454,6 +90457,7 @@
           "@beep/observability#transit",
           "@beep/phoenix#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
+          "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -90671,6 +90675,7 @@
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
+          "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -90729,6 +90734,7 @@
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
+          "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -90795,6 +90801,7 @@
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
+          "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -120178,7 +120185,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "4e5616a183037a3b7e6c3bc370db346e46a1983912c32a0c9c4d2c71d5c5b6f8"
+        "sha256": "8e710c305117cf9751529cbfb138340d3089b4dcfe12e83865b3f55d5ad97a51"
       }
     ]
   }
