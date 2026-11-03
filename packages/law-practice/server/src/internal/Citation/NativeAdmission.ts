@@ -5,12 +5,10 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
-import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
-import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
-import * as Semaphore from "effect/Semaphore";
+import * as TxRef from "effect/TxRef";
 import { CitationAdmissionFailure, prepareCitationAdmissionPolicy } from "./Admission.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeAdmission");
@@ -69,10 +67,9 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
   const { limits, queueDeadline } = yield* prepareCitationAdmissionPolicy(policy);
   const clock = yield* Clock.Clock;
   const scope = yield* Scope.Scope;
-  // Lease flags and aggregate counters change together, including concurrent
-  // quarantine/retirement acknowledgement of the same exact lease.
-  const ownershipLock = yield* Semaphore.make(1);
-  const state = yield* Ref.make(
+  // Transactions commit lease flags and both capacity counters together.
+  // Retry watches this state directly; no parallel notification protocol exists.
+  const state = yield* TxRef.make(
     CitationNativeAdmissionSnapshot.make({
       active: 0,
       regexActive: 0,
@@ -81,35 +78,26 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
       closed: false,
     })
   );
-  const changed = yield* Ref.make(yield* Deferred.make<void>());
-  const notify = Effect.gen(function* () {
-    const previous = yield* Ref.getAndSet(changed, yield* Deferred.make<void>());
-    yield* Deferred.succeed(previous, undefined);
-  }).pipe(Effect.asVoid);
   const fail = (reason: CitationAdmissionFailure["reason"]) => CitationAdmissionFailure.make({ reason });
   const ensureOpen = Effect.gen(function* () {
-    const current = yield* Ref.get(state);
+    const current = yield* TxRef.get(state);
     if (current.closed) return yield* fail("closed");
     if (current.quarantined > 0) return yield* fail("quarantined");
   });
   yield* Scope.addFinalizer(
     scope,
-    ownershipLock.withPermit(
-      Ref.update(state, (current) => CitationNativeAdmissionSnapshot.make({ ...current, closed: true })).pipe(
-        Effect.andThen(notify)
-      )
-    )
+    TxRef.update(state, (current) => CitationNativeAdmissionSnapshot.make({ ...current, closed: true }))
   );
   const acquireKind = Effect.fn("Citation.acquireNativeProcessKind")(
     function* (operation: CitationSafetyLimitExceeded["operation"], regex: boolean) {
       return yield* Effect.uninterruptibleMask(
         Effect.fnUntraced(function* () {
-          const claimed = yield* Ref.make(false);
-          const isolated = yield* Ref.make(false);
+          const claimed = yield* TxRef.make(false);
+          const isolated = yield* TxRef.make(false);
           const release = Effect.gen(function* () {
-            if (!(yield* Ref.getAndSet(claimed, false))) return;
-            const quarantined = yield* Ref.getAndSet(isolated, false);
-            yield* Ref.update(state, (current) =>
+            if (!(yield* TxRef.modify(claimed, (current) => [current, false]))) return;
+            const quarantined = yield* TxRef.modify(isolated, (current) => [current, false]);
+            yield* TxRef.update(state, (current) =>
               CitationNativeAdmissionSnapshot.make({
                 ...current,
                 active: current.active - 1,
@@ -117,54 +105,43 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
                 quarantined: current.quarantined - (quarantined ? 1 : 0),
               })
             );
-            yield* notify;
-          }).pipe(ownershipLock.withPermit, Effect.uninterruptible);
-          const claim = ownershipLock.withPermit(
-            Effect.gen(function* () {
-              yield* ensureOpen;
-              const reserved = yield* Ref.modify(state, (current) => {
-                if (
-                  current.active >= limits.concurrentOperations ||
-                  (regex && current.regexActive >= limits.concurrentRegexProcesses)
-                )
-                  return [false, current];
-                return [
-                  true,
-                  CitationNativeAdmissionSnapshot.make({
-                    ...current,
-                    active: current.active + 1,
-                    regexActive: current.regexActive + (regex ? 1 : 0),
-                  }),
-                ];
-              });
-              if (reserved) yield* Ref.set(claimed, true);
-              return reserved;
-            })
-          );
+          }).pipe(Effect.tx, Effect.uninterruptible);
+          const claim = Effect.gen(function* () {
+            yield* ensureOpen;
+            const current = yield* TxRef.get(state);
+            if (
+              current.active >= limits.concurrentOperations ||
+              (regex && current.regexActive >= limits.concurrentRegexProcesses)
+            )
+              return false;
+            yield* TxRef.set(
+              state,
+              CitationNativeAdmissionSnapshot.make({
+                ...current,
+                active: current.active + 1,
+                regexActive: current.regexActive + (regex ? 1 : 0),
+              })
+            );
+            yield* TxRef.set(claimed, true);
+            return true;
+          }).pipe(Effect.tx);
           return yield* Effect.gen(function* () {
             if (!(yield* claim))
               yield* Effect.acquireUseRelease(
                 Effect.gen(function* () {
-                  const entered = yield* Ref.modify(state, (current) =>
-                    current.queued >= limits.queuedOperations
-                      ? [false, current]
-                      : [true, CitationNativeAdmissionSnapshot.make({ ...current, queued: current.queued + 1 })]
-                  );
-                  if (!entered)
+                  const current = yield* TxRef.get(state);
+                  if (current.queued >= limits.queuedOperations)
                     return yield* CitationSafetyLimitExceeded.make({ operation, limit: "queuedOperations" });
-                }),
+                  yield* TxRef.set(
+                    state,
+                    CitationNativeAdmissionSnapshot.make({ ...current, queued: current.queued + 1 })
+                  );
+                }).pipe(Effect.tx),
                 () =>
-                  Effect.uninterruptibleMask(
-                    Effect.fnUntraced(function* (restore) {
-                      while (true) {
-                        // Capture the notification before testing capacity: release,
-                        // quarantine or closure cannot be lost between claim and sleep.
-                        const signal = yield* Ref.get(changed);
-                        if (yield* claim) return;
-                        yield* restore(Deferred.await(signal));
-                      }
-                    })
-                  ).pipe(
+                  Effect.gen(function* () {
+                    if (!(yield* claim)) return yield* Effect.txRetry;
+                  }).pipe(
+                    Effect.tx,
                     Effect.timeoutOrElse({
                       duration: queueDeadline,
                       orElse: () =>
@@ -173,7 +150,7 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
                     Effect.interruptible
                   ),
                 () =>
-                  Ref.update(state, (current) =>
+                  TxRef.update(state, (current) =>
                     CitationNativeAdmissionSnapshot.make({ ...current, queued: current.queued - 1 })
                   )
               );
@@ -181,15 +158,15 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
             return {
               release,
               quarantine: Effect.gen(function* () {
-                if (!(yield* Ref.get(claimed)) || (yield* Ref.getAndSet(isolated, true))) return;
-                yield* Ref.update(state, (current) =>
+                if (!(yield* TxRef.get(claimed)) || (yield* TxRef.modify(isolated, (current) => [current, true])))
+                  return;
+                yield* TxRef.update(state, (current) =>
                   CitationNativeAdmissionSnapshot.make({
                     ...current,
                     quarantined: current.quarantined + 1,
                   })
                 );
-                yield* notify;
-              }).pipe(ownershipLock.withPermit, Effect.uninterruptible),
+              }).pipe(Effect.tx, Effect.uninterruptible),
             } satisfies CitationNativeProcessLease;
           }).pipe(Effect.onError(() => release));
         })
@@ -200,6 +177,6 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
   return CitationNativeProcessAdmission.of({
     acquire: Effect.fn("Citation.acquireNativeProcess")((operation) => acquireKind(operation, false)),
     acquireRegex: Effect.fn("Citation.acquireRegexProcess")((operation) => acquireKind(operation, true)),
-    snapshot: Ref.get(state).pipe(Effect.map((current) => CitationNativeAdmissionSnapshot.make({ ...current }))),
+    snapshot: TxRef.get(state).pipe(Effect.map((current) => CitationNativeAdmissionSnapshot.make({ ...current }))),
   });
 });

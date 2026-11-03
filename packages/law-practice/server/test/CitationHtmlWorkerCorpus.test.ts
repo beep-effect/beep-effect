@@ -7,6 +7,10 @@ import {
   encodeCitationHtmlJob,
   encodeCitationHtmlReply,
 } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
+import {
+  CitationNativeProcessAdmission,
+  makeCitationNativeProcessAdmission,
+} from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -52,12 +56,30 @@ const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);
 it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification", (it) => {
   it.effect("smoke-tests the actual worker entrypoint for parser errors and successful text", () =>
     Effect.gen(function* () {
-      const worker = yield* makeCitationHtmlWorker((yield* defaultCitationEnginePolicy).limits, yield* runtime);
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const admission = yield* makeCitationNativeProcessAdmission(limits);
+      const worker = yield* makeCitationHtmlWorker(limits, yield* runtime).pipe(
+        Effect.provideService(CitationNativeProcessAdmission, admission)
+      );
       expect(yield* worker.clean("").pipe(Effect.flip)).toMatchObject({
         _tag: "CitationHtmlKernelFailure",
         reason: "parse-error",
       });
+      expect(yield* admission.snapshot).toEqual({
+        active: 0,
+        regexActive: 0,
+        queued: 0,
+        quarantined: 0,
+        closed: false,
+      });
       expect(yield* worker.clean("<p>ok</p>")).toBe("ok");
+      expect(yield* admission.snapshot).toEqual({
+        active: 0,
+        regexActive: 0,
+        queued: 0,
+        quarantined: 0,
+        closed: false,
+      });
     })
   );
   it.effect(

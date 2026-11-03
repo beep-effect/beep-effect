@@ -525,7 +525,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorkerCorpus.test.ts",
-          "sha256": "0c2741f672b7d0c38aa2bc16d0908f7100cc111e44ed3a7009510c19692266c2"
+          "sha256": "07daf7956b21a1d3bad615c80fd07d925f4dd1ce6ba8c7571800ed6896716564"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-html-worker-qualification.md",
@@ -906,11 +906,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/NativeAdmission.ts",
-          "sha256": "c81ee418962b1e3d6d28cc91e3f1cc1928308e13b8dd98070613046f214a2bd8"
+          "sha256": "8027fcca41247c4dfe3820ba02ae9611d635a832193fd2b608c248d4d5b8d5df"
         },
         {
           "path": "packages/law-practice/server/test/CitationNativeAdmission.test.ts",
-          "sha256": "34e09d654693a1f6684c95f72e03bd3a1ac0f83ed177990afc410c4bace14c39"
+          "sha256": "f33a575e9d544228d5f419cb85040425d0a7ad93b90e37343033da490058132a"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",

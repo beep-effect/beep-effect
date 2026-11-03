@@ -186,3 +186,56 @@ it.effect("does not lose either kind of permit when queue handoff races cancella
       }
   })
 );
+
+it.effect("closure wakes every blocked HTML and regex claimant without acknowledging active children", () =>
+  Effect.gen(function* () {
+    const owner = yield* Scope.make();
+    const admission = yield* makeCitationNativeProcessAdmission({
+      ...(yield* defaultCitationEnginePolicy).limits,
+      concurrentOperations: 2,
+      concurrentRegexProcesses: 1,
+      queuedOperations: 3,
+    }).pipe(Effect.provideService(Scope.Scope, owner));
+    const regex = yield* admission.acquireRegex("extract");
+    const html = yield* admission.acquire("clean");
+    const waiting = yield* Effect.all([
+      admission.acquireRegex("extract").pipe(Effect.forkChild),
+      admission.acquire("clean").pipe(Effect.forkChild),
+      admission.acquireRegex("extract").pipe(Effect.forkChild),
+    ]);
+    yield* TestClock.adjust(Duration.zero);
+    expect(yield* admission.snapshot).toMatchObject({ active: 2, regexActive: 1, queued: 3 });
+    yield* Scope.close(owner, Exit.void);
+    yield* Effect.forEach(
+      waiting,
+      Effect.fnUntraced(function* (fiber) {
+        expect(yield* Fiber.join(fiber).pipe(Effect.flip)).toMatchObject({ reason: "closed" });
+      })
+    );
+    expect(yield* admission.snapshot).toEqual({ active: 2, regexActive: 1, queued: 0, quarantined: 0, closed: true });
+    yield* Effect.all([regex.release, html.release], { concurrency: 2 });
+    expect(yield* admission.snapshot).toEqual({ active: 0, regexActive: 0, queued: 0, quarantined: 0, closed: true });
+  })
+);
+
+it.effect("queue entry and cancellation notifications do not renew an older claimant's deadline", () =>
+  Effect.gen(function* () {
+    const admission = yield* makeCitationNativeProcessAdmission({
+      ...(yield* defaultCitationEnginePolicy).limits,
+      concurrentOperations: 1,
+      queuedOperations: 2,
+      queueDeadline: Duration.millis(20),
+    });
+    const owned = yield* admission.acquireRegex("extract");
+    const older = yield* admission.acquireRegex("extract").pipe(Effect.forkChild);
+    yield* TestClock.adjust(Duration.millis(5));
+    const newer = yield* admission.acquire("clean").pipe(Effect.forkChild);
+    yield* TestClock.adjust(Duration.millis(5));
+    expect(yield* admission.snapshot).toMatchObject({ active: 1, regexActive: 1, queued: 2 });
+    yield* Fiber.interrupt(newer);
+    yield* TestClock.adjust(Duration.millis(10));
+    expect(yield* Fiber.join(older).pipe(Effect.flip)).toMatchObject({ operation: "extract", limit: "queueDeadline" });
+    expect(yield* admission.snapshot).toEqual({ active: 1, regexActive: 1, queued: 0, quarantined: 0, closed: false });
+    yield* owned.release;
+  })
+);

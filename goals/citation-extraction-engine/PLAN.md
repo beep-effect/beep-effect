@@ -120,6 +120,17 @@ notices, output limits and failure recovery have focused proof. The owned
 worker, complete IPC accounting, shared deadline and engine translation remain
 open. See history/evidence/2026-10-31-html-kernel.md. No completion row advances.
 
+
+Latest upstream-reuse checkpoint (2026-11-03): native admission now commits
+closed/quarantine state, both capacity counters and exact lease flags through
+installed Effect 4.1.1 transactions. Transactional retry replaces the lock and
+generation-notification loop while retaining one queue deadline and retirement
+authority after owner closure. Seventeen admission tests and an injected-owner
+real HTML smoke pass; Fallow remains at zero introduced findings. See
+[transactional native admission](history/evidence/2026-11-03-transactional-native-admission.md).
+Shared Worker/RPC transport, native regex execution and exhaustive parity remain
+required work.
+
 Latest worker evidence (2026-10-31): private process ownership now covers bounded
 schema frames, captured Clock timers, queue/active limits, forced stop,
 acknowledged cleanup and quarantine without permit reuse. Real-process tests
