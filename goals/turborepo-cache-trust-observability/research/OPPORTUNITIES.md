@@ -2216,3 +2216,11 @@ preserving the same digest; no scanner configuration or allowlist changes.
   inspection caller receives the same repair without spending a known-bad run.
 - Result: focused repair authored for hosted CI; no local verify/publish,
   automatic rerun, secret delivery, new capacity or qualification claim.
+
+- Expanded attribution: Check run `41605514358` at repair head `d657d857d1`
+  also failed validation with zero jobs. The accepted execution leaf affects
+  every Heavy caller, not only optional preparation. Inventory found five
+  current callers; four need read ceilings and the execution caller already
+  has one. Extend the same PR and pin all five in one regression. Ordinary
+  verification leaves retain Heavy's narrower default. Primary was notified
+  that this is the shared main unblocker; no duplicate repair was opened.

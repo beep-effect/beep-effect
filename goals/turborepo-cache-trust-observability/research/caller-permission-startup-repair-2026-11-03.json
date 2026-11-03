@@ -15,6 +15,8 @@
   },
   "repair": {
     "callingJobs": [
+      "check.yml#heavy",
+      "heavy-admit.yml#heavy",
       "cache-producer-prepare.yml#prepare",
       "cache-producer-inspect.yml#inspect"
     ],
@@ -35,8 +37,16 @@
     "boundsChanged": false
   },
   "inspectionCallerEvidence": "Same source permission defect; no new inspection run was dispatched.",
-  "regressions": "Authored comparison to actual execution-leaf permission request, plus narrower Heavy default and no selected-leaf override; not executed locally.",
+  "regressions": "All five current Heavy caller ceilings compared with the actual execution-leaf request; narrower Heavy defaults and absent selected-leaf overrides retained. Authored for hosted CI, not run locally.",
   "sourceBindings": [
+    {
+      "path": ".github/workflows/check.yml",
+      "sha256": "9a6a6d47baacc3fed6bd312e45d0719c9076601958619dcc6003750a8328727b"
+    },
+    {
+      "path": ".github/workflows/heavy-admit.yml",
+      "sha256": "b4ab0e06cc909b12311d1d5a7c653638e5d28f850145d813c6a85b4bf269a1c8"
+    },
     {
       "path": ".github/workflows/cache-producer-prepare.yml",
       "sha256": "fac8c4dcf3f6c873ab6f7f8cc863a1ade574212b340a225fc69dcbad9ad4bc3f"
@@ -51,13 +61,22 @@
     },
     {
       "path": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "sha256": "7bf23b2d94b4f5fcf200c7c13ee213a79a3a5269c4f895a657bb1945f352f09f"
+      "sha256": "f146c00152e71f613728dcc572d48cbcbbcd584b3398f480dccf9ff6e331f9c2"
     }
   ],
-  "specSha256": "af64c5c04adc073350842d89922d448c8754f84b03e63454211b7f1b3f1e5126",
+  "specSha256": "79c70ca24093f61c4fdedbd26c6f38572f0e564d383e01714a187da509b3c304",
   "localVerification": "No verify, publish, package verification or repository test suite; normal Git hooks and targeted formatting only.",
   "hostedProofStatus": "pending new PR",
   "freshOperationalStartup": "not yet run",
   "wholeGoalAcceptanceChanged": false,
-  "rollback": "Disable optional callers and revert their job permission maps; retain defaults, failed run and earlier evidence."
+  "rollback": "Disable optional callers and revert their job permission maps; retain defaults, failed run and earlier evidence.",
+  "ordinaryCheckStartupFailure": {
+    "id": 41605514358,
+    "url": "https://github.com/beep-effect/beep-effect/actions/runs/41605514358",
+    "head": "d657d857d149600fd6dfebd6562bcfc62ae0a5cb",
+    "conclusion": "startup_failure",
+    "jobs": 0,
+    "diagnosis": "Same read permission ceiling mismatch in the ordinary Heavy caller."
+  },
+  "alreadyCorrectCaller": "cache-producer.yml#produce"
 }

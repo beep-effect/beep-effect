@@ -1379,10 +1379,18 @@ resolved Heavy at `7438cf69c6` but failed before scheduling a job. GitHub reject
 the execution leaf's `actions: read` request against the caller's `actions: none`
 ceiling. No compilation, artifact or credential delivery occurred.
 
-Repair the two affected caller jobs' read-only ceilings while retaining the
+Repair all four affected caller jobs' read-only ceilings while retaining the
 workflow/Heavy defaults at `contents: read`, then use exact-head hosted
 regressions and one fresh accepted-source preparation dispatch. Do not retry the
 unchanged failed source or treat conditional job guards as permission validation.
 The source-inspection caller has the same source defect but has not been
 dispatched in this round. Protected execution, signed trials, deployed trust,
 qualification, real observation windows and full-goal closeout remain open.
+
+The same cause also prevented the new repair PR's ordinary
+[Check run 41605514358](https://github.com/beep-effect/beep-effect/actions/runs/41605514358)
+from scheduling any job. Extend this same repair to `check.yml` and
+`heavy-admit.yml`; all five current Heavy callers now receive an explicit
+regression assertion against the actual leaf ceiling, including the already
+correct protected-execution caller. This is one shared main unblocker, not
+separate copied repairs. Preserve the first repair head and its failed run.

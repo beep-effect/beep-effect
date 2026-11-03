@@ -740,3 +740,7 @@ protected producer provenance, current-main qualification or production rollout.
 - [Source-bound repair checkpoint](caller-permission-startup-repair-2026-11-03.json):
   preserve the failed run and distinguish authored regressions from hosted
   execution and a later successful operational dispatch.
+
+- [Actual ordinary Check startup failure](https://github.com/beep-effect/beep-effect/actions/runs/41605514358):
+  the same validation annotation identifies the ordinary caller ceiling. The
+  workflow source inventory includes all five current Heavy callers.

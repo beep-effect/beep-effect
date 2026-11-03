@@ -1630,6 +1630,32 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
     })
   );
+  it.effect("keeps all five current Heavy callers within its requested read-only permission ceiling", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const heavy = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`));
+      const requested = yamlAt(heavy, ["jobs", "producer-execute", "permissions"]);
+      expect(requested).toEqual({ contents: "read", actions: "read" });
+      expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });
+      for (const caller of [
+        { file: "check.yml", job: "heavy" },
+        { file: "heavy-admit.yml", job: "heavy" },
+        { file: "cache-producer-prepare.yml", job: "prepare" },
+        { file: "cache-producer-inspect.yml", job: "inspect" },
+        { file: "cache-producer.yml", job: "produce" },
+      ]) {
+        const workflow = parseWorkflowYaml(yield* fs.readFileString(`${root}/.github/workflows/${caller.file}`));
+        expect(yamlAt(workflow, ["jobs", caller.job, "uses"])).toBe(
+          "beep-effect/beep-effect/.github/workflows/heavy.yml@main"
+        );
+        const ceiling = O.fromUndefinedOr(yamlAt(workflow, ["jobs", caller.job, "permissions"])).pipe(
+          O.getOrElse(() => yamlAt(workflow, ["permissions"]))
+        );
+        expect(ceiling).toEqual(requested);
+      }
+    })
+  );
   it.effect("keeps protected source inspection credential-free and retains only its bounded report", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
