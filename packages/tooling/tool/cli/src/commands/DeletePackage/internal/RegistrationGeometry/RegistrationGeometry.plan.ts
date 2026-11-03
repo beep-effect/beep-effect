@@ -2,7 +2,7 @@ import { GlobString } from "@beep/glob/GlobString";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, Str } from "@beep/utils";
 import * as O from "effect/Option";
-import { isLabsWorkspacePath, LAB_MANIFEST_FILENAME } from "../Labs/index.ts";
+import { isLabsWorkspacePath, LAB_MANIFEST_FILENAME } from "../../../../internal/cli/Labs/index.ts";
 import {
   AuthoredReferenceSurface,
   DataResourceSurface,
@@ -29,6 +29,29 @@ const slugOf = (packageName: string): string => Str.replace("@beep/", Str.empty)
 /**
  * Instantiate the closed P1 registration surface set for one package target.
  *
+ * **Details**
+ *
+ * The result is pure and deterministic. Lab targets with decoded lab facts also
+ * receive a data-resource surface for their Postgres schema.
+ *
+ * **Example** (List surface ids for a package)
+ *
+ * ```ts
+ * import * as A from "effect/Array"
+ * import { RegistrationTarget, surfacesForTarget } from "@beep/repo-cli/test/DeletePackage"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ *
+ * const target = RegistrationTarget.make({
+ *   packageName: "@beep/demo",
+ *   packagePath: PosixPath.make("packages/demo"),
+ *   private: true
+ * })
+ *
+ * console.log(A.map(surfacesForTarget(target), (surface) => surface.id))
+ * ```
+ *
+ * @param target - Package whose registration surfaces are declared.
+ * @returns Every surface the package occupies, in a stable declaration order.
  * @category constructors
  * @since 0.0.0
  */
@@ -332,6 +355,32 @@ const inverseOperation = RegistrationSurface.match({
     }),
 });
 
+/**
+ * Builds the create-direction plan for a target: one operation per surface
+ * that registers the package where its geometry says it belongs.
+ *
+ * **Example** (Plan package registration)
+ *
+ * ```ts
+ * import * as A from "effect/Array"
+ * import { planForwardForTarget, RegistrationTarget } from "@beep/repo-cli/test/DeletePackage"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ *
+ * const target = RegistrationTarget.make({
+ *   packageName: "@beep/demo",
+ *   packagePath: PosixPath.make("packages/demo"),
+ *   private: true
+ * })
+ * const plan = planForwardForTarget(target)
+ *
+ * console.log(A.map(plan.operations, (step) => step.operation))
+ * ```
+ *
+ * @param target - Package whose surfaces are instantiated.
+ * @returns A plan with one forward operation per declared surface, in surface order.
+ * @category constructors
+ * @since 0.0.0
+ */
 export const planForwardForTarget = (target: RegistrationTarget): RegistrationPlan =>
   RegistrationPlan.make({
     version: "registration-plan/v1",
@@ -339,6 +388,32 @@ export const planForwardForTarget = (target: RegistrationTarget): RegistrationPl
     operations: A.map(surfacesForTarget(target), forwardOperation),
   });
 
+/**
+ * Builds the delete-direction plan for a target: removals, rebuilds,
+ * preservation steps, and consent gates derived from the same surfaces.
+ *
+ * **Example** (Plan package deletion)
+ *
+ * ```ts
+ * import * as A from "effect/Array"
+ * import { planInverseForTarget, RegistrationTarget } from "@beep/repo-cli/test/DeletePackage"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ *
+ * const target = RegistrationTarget.make({
+ *   packageName: "@beep/demo",
+ *   packagePath: PosixPath.make("packages/demo"),
+ *   private: true
+ * })
+ * const plan = planInverseForTarget(target)
+ *
+ * console.log(A.map(plan.operations, (step) => step.detail))
+ * ```
+ *
+ * @param target - Package whose surfaces are instantiated.
+ * @returns A plan with one inverse operation per declared surface, in surface order.
+ * @category constructors
+ * @since 0.0.0
+ */
 export const planInverseForTarget = (target: RegistrationTarget): RegistrationPlan =>
   RegistrationPlan.make({
     version: "registration-plan/v1",

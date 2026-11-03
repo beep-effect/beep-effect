@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`.
+Status: `completed-retained` (verified via #2488); the committed `closeout` record in `ops/manifest.json` carries it (`goals set-status` adopted the verified proposal on 2026-11-02, #2629).
 
 The original fifteen Cloud findings and historical 123 dependency IDs are
 resolved. Implementation PR #2389 is merged, with all 35 hosted check jobs
@@ -21,11 +21,11 @@ receipts for both packets.
 | P2 validate | complete | Validate full detail evidence and source reachability; retain exploit limits. | Every item has strict verdict, disposition, rationale, and owner surface. |
 | P3 lane-partition | complete | Group shared root causes and disjoint paths. | Lanes recorded without overlapping file ownership. |
 | P4 remediate | complete | Fix all real findings with focused checks. | Changed files and passing targeted proof recorded per finding. |
-| P5 repo-proof | in-progress | Validate the final receipt scope and retained implementation evidence. | No packet drift; local proof green. |
+| P5 repo-proof | complete | Validate the final receipt scope and retained implementation evidence. | No packet drift; local proof green. Evidence: #2488's completion receipt verifies (`goals doctor`, 2026-11-02). |
 | P6 publish | complete | Publish final receipt PR #2488 through Yeet. | Exact branch head pushed and PR opened. |
-| P7 monitor | in-progress | Close #2488 hosted checks and reviews; preserve genuine readiness before merge. | Genuine final-head canonical readiness true before #2488 merge; review window elapsed. |
-| P8 merge-and-close | pending | Merge and close captured findings. | Final #2488 merged; original IDs remain resolved and supplemental dependency IDs close. |
-| P9 close | pending | Record evidence, reflection, and lifecycle. | Final addendum and derived `completed-retained` receipt recorded only after merge and exact-ID closure. |
+| P7 monitor | complete | Close #2488 hosted checks and reviews; preserve genuine readiness before merge. | Genuine final-head canonical readiness true before #2488 merge; review window elapsed. Evidence: #2488 merged with a verified exact-head readiness receipt (`goals doctor`: verified via #2488). |
+| P8 merge-and-close | complete | Merge and close captured findings. | Final #2488 merged; original IDs remain resolved and supplemental dependency IDs close. Evidence: Cloud 15/15 tracked records Fixed, zero open (`../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md`); supplemental dependency alerts #450–#469 fixed, 141 catalogued alerts fixed, #426/#431 withdrawn (HTTP 410), Dependabot/code-scanning/secret-scanning open inventories 0 (`../codex-security-findings-2026-10-28/research/2026-11-01-final-closeout.md`). |
+| P9 close | complete | Record evidence, reflection, and lifecycle. | Final addendum and derived `completed-retained` receipt recorded only after merge and exact-ID closure. Evidence: verified receipt for #2488; committed `closeout` record adopted 2026-11-02 (#2629). |
 
 ## Execution Rules
 

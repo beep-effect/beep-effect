@@ -23,21 +23,21 @@ import * as Str from "effect/String";
 import {
   invokerAncestryPids,
   isRegisteredWorktree,
-  ResidueTerminalLaneAuthority,
-  ResidueTerminalLaneProbe,
   runRepoCommandCapture,
   scanProcessAttachments,
 } from "../../../internal/repo-run/index.ts";
 import { openSessionRows } from "../../Session/Session.schemas.ts";
 import { layerSessionLedgerLive, SessionLedger } from "../../Session/SessionLedger.service.ts";
-import { mergedPullRequestsForBranch } from "../../Worktree/Worktree.service.ts";
 import { detectPrRepository } from "../../Yeet/internal/ProvenanceFooter.ts";
+import { mergedPullRequestsForBranch } from "../Worktree.service.ts";
+import { ResidueTerminalLaneAuthority } from "./ResidueReap.schemas.ts";
+import { ResidueTerminalLaneProbe } from "./ResidueTerminalLane.ts";
 import type * as Config from "effect/Config";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { ResidueTerminalLaneProbeShape } from "../../../internal/repo-run/index.ts";
-import type { WorktreeMergedPullRequest } from "../../Worktree/Worktree.service.ts";
+import type { WorktreeMergedPullRequest } from "../Worktree.service.ts";
+import type { ResidueTerminalLaneProbeShape } from "./ResidueTerminalLane.ts";
 
 const decodeGitObjectId = S.decodeUnknownEffect(GitObjectId);
 
@@ -47,7 +47,7 @@ const decodeGitObjectId = S.decodeUnknownEffect(GitObjectId);
  * **Example** (Describe a source with no merged pull requests)
  *
  * ```ts
- * import type { ResidueTerminalLanePullRequests } from "@beep/repo-cli/test/Quality"
+ * import type { ResidueTerminalLanePullRequests } from "@beep/repo-cli/test/Worktree"
  * import * as Effect from "effect/Effect"
  *
  * const none: ResidueTerminalLanePullRequests = () => Effect.succeedSome([])
@@ -193,7 +193,7 @@ const proveTerminalLane = Effect.fnUntraced(function* (
  * **Example** (Build the probe effect)
  *
  * ```ts
- * import { makeResidueTerminalLaneProbe } from "@beep/repo-cli/test/Quality"
+ * import { makeResidueTerminalLaneProbe } from "@beep/repo-cli/test/Worktree"
  * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(makeResidueTerminalLaneProbe())) // true
@@ -227,7 +227,7 @@ export const makeResidueTerminalLaneProbe = Effect.fnUntraced(function* (
  * **Example** (Reference the live layer)
  *
  * ```ts
- * import { ResidueTerminalLaneProbeLive } from "@beep/repo-cli/test/Quality"
+ * import { ResidueTerminalLaneProbeLive } from "@beep/repo-cli/test/Worktree"
  *
  * console.log(typeof ResidueTerminalLaneProbeLive) // "object"
  * ```

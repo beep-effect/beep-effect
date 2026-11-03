@@ -6,7 +6,7 @@
     "title": "beep CLI composition",
     "status": "active",
     "created": "2026-10-28",
-    "updated": "2026-10-31",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/beep-cli-composition",
@@ -38,7 +38,8 @@
     "research/design-record.md",
     "research/g3-lazy-dispatch.md",
     "research/g4-task-fingerprint.md",
-    "research/w0-retirements.md"
+    "research/w0-retirements.md",
+    "research/w1-edge-census.md"
   ],
   "agentLaunchers": [
     {
@@ -60,7 +61,7 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -90,5 +91,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P0 complete 2026-10-28: operator grill settled D1-D20 and an adversarial pass verified the package map (research/design-record.md); DECISIONS 2026-10-28 records the doctrine. Next: gate fix lanes G1-G4 and W0 retirements; W1 waits for goals/effected-promotion to close (D16)."
+  "statusNote": "P0 complete 2026-10-28; G1-G4 and W0 landed 2026-10-31 to 11-01. W1 unblocked by effected-promotion (#2476) and split into W1a (census + internal edges, D25/D26) and W1b (verifier must-fix list)."
 }

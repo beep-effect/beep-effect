@@ -4,13 +4,13 @@
     "id": "effect-string-migration",
     "packetId": "goal-packet/v1:5eb01a5f1eb882f1df0bad57cfb4d90411d02c2ade518144c3ae1161c5721619",
     "title": "effect/String migration",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-21",
     "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-string-migration",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Move native String method calls to effect/String so @effect/tsgo 0.55+ can arm preferEffectString at error",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -76,10 +76,6 @@
       "status": "complete"
     }
   ],
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 2324
-  },
   "verificationCommands": [
     "test \"$(wc -m < goals/effect-string-migration/GOAL.md)\" -le 4000",
     "jq . goals/effect-string-migration/ops/manifest.json",
@@ -91,5 +87,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2324
+  }
 }

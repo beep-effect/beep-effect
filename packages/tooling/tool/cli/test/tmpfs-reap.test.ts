@@ -1,11 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { Git } from "@beep/git/Git";
-import {
-  resolveBeepCacheRoot,
-  runRepoCommandCapture,
-  runTmpfsReap,
-  TmpfsReapReport,
-} from "@beep/repo-cli/test/RepoRun";
+import { resolveBeepCacheRoot, runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
+import { runTmpfsReap, TmpfsReapReport } from "@beep/repo-cli/test/Worktree";
 import { runTmpfsWorktreesStep } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
